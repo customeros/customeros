@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -32,10 +31,6 @@ func NewLocationService(log logger.Logger, repositories *repository.Repositories
 		log:          log,
 		repositories: repositories,
 	}
-}
-
-func (s *locationService) getNeo4jDriver() neo4j.DriverWithContext {
-	return *s.repositories.Drivers.Neo4jDriver
 }
 
 func (s *locationService) CreateLocationForEntity(ctx context.Context, entityType commonModel.EntityType, entityId string, source entity.SourceFields) (*neo4jentity.LocationEntity, error) {

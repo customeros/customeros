@@ -49,7 +49,7 @@ func DNS(s *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		// validate domain belongs to tenant
+    // validate domain belongs to tenant
 		domain := c.Param("domain")
 		mailboxTenant, err := s.CommonServices.MailstackService.GetTenantForMailstackDomain(ctx, domain)
 		if err != nil {

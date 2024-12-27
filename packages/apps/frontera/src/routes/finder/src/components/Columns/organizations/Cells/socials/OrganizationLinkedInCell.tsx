@@ -19,7 +19,7 @@ export const OrganizationLinkedInCell = observer(
       social.url.includes('linkedin'),
     );
 
-    if (organization.isEnriching && !linkedIn) {
+    if (organization?.isEnriching && !linkedIn) {
       return <span className='text-gray-400'>Enriching...</span>;
     }
 

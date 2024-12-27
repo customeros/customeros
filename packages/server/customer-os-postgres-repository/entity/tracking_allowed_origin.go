@@ -3,10 +3,11 @@ package entity
 import "time"
 
 type TrackingAllowedOrigin struct {
-	ID        string    `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
-	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-	Tenant    string    `gorm:"column:tenant;type:varchar(255);NOT NULL;index:name_domain_idx,unique" json:"tenant" binding:"required"`
-	Origin    string    `gorm:"column:origin;type:varchar(255);NOT NULL;index:name_domain_idx,unique" json:"name" binding:"required"`
+	ID        string    `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	Tenant    string    `gorm:"type:varchar(255);not null;uniqueIndex:idx_tenant_origin" json:"tenant" binding:"required"`
+	Origin    string    `gorm:"type:varchar(255);not null;uniqueIndex:idx_tenant_origin" json:"origin" binding:"required"`
+	Enabled   bool      `gorm:"default:true" json:"enabled"`
 }
 
 func (TrackingAllowedOrigin) TableName() string {

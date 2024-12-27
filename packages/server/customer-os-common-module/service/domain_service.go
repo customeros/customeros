@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
@@ -16,13 +19,13 @@ import (
 )
 
 type DomainService interface {
-	MergeDomain(ctx context.Context, domain string) error
+	MergeDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, domain string) error
 	GetPrimaryDomainForOrganizationWebsite(ctx context.Context, websiteUrl string) (string, string)
 	IsKnownCompanyHostingUrl(ctx context.Context, website string) bool
 	GetAllDomainsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.DomainEntities, error)
 	UpdateDomainPrimaryDetails(ctx context.Context, domain string) error
 	GetDomain(ctx context.Context, domain string) (*neo4jentity.DomainEntity, error)
-	AcceptedDomainForOrganization(ctx context.Context, domain string) bool
+	IsAcceptedDomainForOrganization(ctx context.Context, domain string) bool
 }
 
 type domainService struct {
@@ -65,7 +68,7 @@ func (s *domainService) GetPrimaryDomainForOrganizationWebsite(ctx context.Conte
 	}
 
 	// TODO: this to be moved into linking org with domain
-	if !s.AcceptedDomainForOrganization(ctx, primaryDomain) {
+	if !s.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
 		return "", returnedWebsiteUrl
 	}
 
@@ -169,7 +172,7 @@ func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain s
 
 		// If the domain is not primary, trigger the domain merge
 		if !isPrimary && primaryDomain != "" {
-			err = s.MergeDomain(context.Background(), primaryDomain)
+			err = s.MergeDomain(context.Background(), nil, primaryDomain)
 			if err != nil {
 				// Log the error during domain merging
 				tracing.TraceErr(span, errors.Wrap(err, "Error while merging primary domain asynchronously"))
@@ -181,7 +184,7 @@ func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain s
 	return nil
 }
 
-func (s *domainService) MergeDomain(ctx context.Context, domain string) error {
+func (s *domainService) MergeDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, domain string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.MergeDomain")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -194,26 +197,46 @@ func (s *domainService) MergeDomain(ctx context.Context, domain string) error {
 		return nil
 	}
 
-	// create domain db node in neo4j if missing
-	err := s.services.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, domain, neo4jentity.DataSourceOpenline.String(), common.GetAppSourceFromContext(ctx))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error while merging domain"))
-		return err
-	}
-
-	// read domain from neo4j
-	domainEntity, err := s.GetDomain(ctx, domain)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error while getting domain"))
-		return err
-	}
-
-	// if domain was already checked for primary skip the check
-	if domainEntity.IsPrimary == nil {
-		err = s.UpdateDomainPrimaryDetails(ctx, domain)
+	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		// create domain db node in neo4j if missing
+		domainJustCreated, err := s.services.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, nil, domain, neo4jentity.DataSourceOpenline.String(), common.GetAppSourceFromContext(ctx))
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error while checking and updating domain primary"))
+			return nil, err
 		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err = s.services.RabbitMQService.PublishEvent(ctx, domain, model.DOMAIN, dto.CreateDomain{Domain: domain, Source: neo4jentity.DataSourceOpenline.String()})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateDomain"))
+			}
+			return nil
+		})
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			if domainJustCreated {
+				// read domain from neo4j
+				domainEntity, err := s.GetDomain(ctx, domain)
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "Error while getting domain"))
+					return nil
+				}
+
+				// if domain was already checked for primary skip the check
+				if domainEntity.IsPrimary == nil {
+					err = s.UpdateDomainPrimaryDetails(ctx, domain)
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "Error while checking and updating domain primary"))
+					}
+				}
+			}
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	return nil
@@ -225,7 +248,7 @@ func (s *domainService) GetDomain(ctx context.Context, domain string) (*neo4jent
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, domain)
 
-	domainDbNode, err := s.services.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, domain)
+	domainDbNode, err := s.services.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, nil, domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -234,8 +257,8 @@ func (s *domainService) GetDomain(ctx context.Context, domain string) (*neo4jent
 	return domainEntity, nil
 }
 
-func (s *domainService) AcceptedDomainForOrganization(ctx context.Context, domain string) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.AcceptedDomainForOrganization")
+func (s *domainService) IsAcceptedDomainForOrganization(ctx context.Context, domain string) bool {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.IsAcceptedDomainForOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, domain)

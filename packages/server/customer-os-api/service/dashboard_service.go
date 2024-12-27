@@ -65,10 +65,6 @@ func NewDashboardService(log logger.Logger, repositories *repository.Repositorie
 	}
 }
 
-func (s *dashboardService) getNeo4jDriver() neo4j.DriverWithContext {
-	return *s.repositories.Drivers.Neo4jDriver
-}
-
 func (s *dashboardService) GetDashboardViewOrganizationsData(ctx context.Context, requestDetails DashboardViewOrganizationsRequest) (*utils.Pagination, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DashboardService.GetDashboardViewOrganizationsData")
 	defer span.Finish()

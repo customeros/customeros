@@ -1,6 +1,6 @@
 module github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module
 
-go 1.22.7
+go 1.23
 
 toolchain go1.23.1
 
@@ -13,7 +13,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai => ../customer-os-common-ai
 
 require (
-	github.com/PuerkitoBio/goquery v1.9.3
+	github.com/PuerkitoBio/goquery v1.10.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/coocood/freecache v1.2.4
@@ -48,7 +48,7 @@ require (
 	golang.org/x/oauth2 v0.24.0
 	google.golang.org/api v0.210.0
 	google.golang.org/grpc v1.69.2
-	google.golang.org/protobuf v1.36.0
+	google.golang.org/protobuf v1.36.1
 	gorm.io/datatypes v1.2.5
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
@@ -64,7 +64,7 @@ require (
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
-	github.com/andybalholm/cascadia v1.3.2 // indirect
+	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect

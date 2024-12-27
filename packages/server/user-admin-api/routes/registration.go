@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"log"
 	"net/http"
 	"strings"
@@ -123,7 +124,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				}
 			}
 
-			link := "https://app.customeros.ai/?mg=" + code
+			link := "https://app.customeros.ai/auth/success?mg=" + code
 			err = services.CommonServices.PostgresRepositories.MagicLinkRepository.Create(ctx, &entity.MagicLink{
 				Email: request.Email,
 				Code:  code,
@@ -147,6 +148,10 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				})
 				return
 			}
+
+			ginContext.JSON(http.StatusOK, gin.H{
+				"result": "OK",
+			})
 		},
 	)
 
@@ -163,7 +168,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 			if err := ginContext.BindJSON(&signInRequest); err != nil {
 				tracing.TraceErr(span, err)
 				ginContext.JSON(http.StatusInternalServerError, gin.H{
-					"result": fmt.Sprintf("unable to parse json: %v", err.Error()),
+					"result": fmt.Sprintf("INVALID_REQUEST"),
 				})
 				return
 			}
@@ -173,23 +178,23 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				if err != nil {
 					tracing.TraceErr(span, err)
 					ginContext.JSON(http.StatusInternalServerError, gin.H{
-						"result": fmt.Sprintf("unable to get magic link: %v", err.Error()),
+						"result": fmt.Sprintf("INTERNAL_SERVER_ERROR"),
 					})
 					return
 				}
 
 				if magicLink == nil {
 					ginContext.JSON(http.StatusUnauthorized, gin.H{
-						"result": fmt.Sprintf("magic link not found"),
+						"result": "MAGIC_LINK_NOT_FOUND",
 					})
 					return
 				}
 
-				signInRequest.Provider = "magic-link"
+				signInRequest.Provider = commonenum.WorkspaceProviderMagicLink.String()
 				signInRequest.LoggedInEmail = magicLink.Email
 			} else {
 				ginContext.JSON(http.StatusBadRequest, gin.H{
-					"result": fmt.Sprintf("code is required"),
+					"result": "MAGIC_LINK_NOT_FOUND",
 				})
 			}
 
@@ -247,9 +252,9 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				// Handle revocation based on provider
 				var revocationURL string
 				switch revokeRequest.Provider {
-				case "google":
+				case commonenum.WorkspaceProviderGoogle.String():
 					revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
-				case "azure-ad":
+				case commonenum.WorkspaceProviderAzure.String():
 					revocationURL = fmt.Sprintf("https://graph.microsoft.com/v1.0/me/revokeSignInSessions")
 				}
 
@@ -311,6 +316,7 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 	}
 
 	var tenantName *string
+	var userId *string
 
 	if signInRequest.Tenant == "" {
 		span.LogFields(tracingLog.String("flow", "authentication"))
@@ -330,7 +336,7 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 			AppSource: constants.AppSourceUserAdminApi,
 		})
 
-		err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName)
+		userId, err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -421,7 +427,7 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 	span.SetTag(tracing.SpanTagTenant, *tenantName)
 
 	// Handle Google provider
-	if signInRequest.Provider == "google" {
+	if signInRequest.Provider == commonenum.WorkspaceProviderGoogle.String() {
 		if isRequestEnablingOAuthSync(signInRequest) {
 			oauthToken, _ := services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
 			if oauthToken == nil {
@@ -453,7 +459,7 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 				return
 			}
 		}
-	} else if signInRequest.Provider == "azure-ad" {
+	} else if signInRequest.Provider == commonenum.WorkspaceProviderAzure.String() {
 		oauthToken, _ := services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
 		if oauthToken == nil {
 			oauthToken = &postgresEntity.OAuthTokenEntity{}
@@ -477,7 +483,7 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 			})
 			return
 		}
-	} else if signInRequest.Provider == "magic-link" {
+	} else if signInRequest.Provider == commonenum.WorkspaceProviderMagicLink.String() {
 	} else {
 		log.Printf("Unsupported provider: %s", signInRequest.Provider)
 		ginContext.JSON(http.StatusBadRequest, gin.H{
@@ -486,7 +492,12 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 		return
 	}
 
-	ginContext.JSON(http.StatusOK, gin.H{"status": "ok"})
+	ginContext.JSON(http.StatusOK, gin.H{
+		"status": "OK",
+		"email":  signInRequest.LoggedInEmail,
+		"tenant": *tenantName,
+		"userId": userId,
+	})
 }
 
 func getTenant(c context.Context, services *service.Services, personalEmailProvider []postgresEntity.PersonalEmailProvider, signInRequest model.SignInRequest, config *config.Config) (*string, bool, error) {
@@ -556,13 +567,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		}
 
 		// tenant not found by the requested login info, try to find it by another workspace with the same domain
-		var provider string
-		if signInRequest.Provider == "google" {
-			provider = "azure-ad"
-		} else if signInRequest.Provider == "azure-ad" {
-			provider = "google"
-		}
-		tenantNode, err = services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspaceProvider(ctx, domain, provider)
+		tenantNode, err = services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspace(ctx, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, false, err
@@ -625,9 +630,9 @@ func validateRequestAtProvider(c context.Context, config *config.Config, signInR
 	span, ctx := opentracing.StartSpanFromContext(c, "Registration.getUserInfoFromGoogle")
 	defer span.Finish()
 
-	if signInRequest.Provider == "magic-link" {
+	if signInRequest.Provider == commonenum.WorkspaceProviderMagicLink.String() {
 		return nil, nil, nil
-	} else if signInRequest.Provider == "google" {
+	} else if signInRequest.Provider == commonenum.WorkspaceProviderGoogle.String() {
 		userInfo, err := getUserInfoFromGoogle(ctx, config, signInRequest)
 		if err != nil {
 			tracing.TraceErr(nil, err)
@@ -635,7 +640,7 @@ func validateRequestAtProvider(c context.Context, config *config.Config, signInR
 		}
 
 		return &userInfo.GivenName, &userInfo.FamilyName, nil
-	} else if signInRequest.Provider == "azure-ad" {
+	} else if signInRequest.Provider == commonenum.WorkspaceProviderAzure.String() {
 		client := &http.Client{}
 		// Create a GET request with the Authorization header.
 		req, err := http.NewRequest("GET", "https://graph.microsoft.com/oidc/userinfo", nil)
@@ -705,7 +710,7 @@ func getUserInfoFromGoogle(c context.Context, config *config.Config, signInReque
 	return userInfo, nil
 }
 
-func initializeUser(c context.Context, services *service.Services, provider, providerAccountId, tenant, email string, firstName, lastName *string) error {
+func initializeUser(c context.Context, services *service.Services, provider, providerAccountId, tenant, email string, firstName, lastName *string) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "Registration.initializeUser")
 	defer span.Finish()
 
@@ -720,7 +725,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 	userNode, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, email)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return err
+		return nil, err
 	}
 	if userNode != nil {
 		userId = neo4jmapper.MapDbNodeToUserEntity(userNode).Id
@@ -732,7 +737,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 	playerNode, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetPlayerByAuthIdProvider(ctx, email, provider)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return err
+		return nil, err
 	}
 	if playerNode != nil {
 		playerId = neo4jmapper.MapDbNodeToPlayerEntity(playerNode).Id
@@ -766,32 +771,32 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to link user to email"))
-			return err
+			return nil, err
 		}
 
 		err = services.CommonServices.PostgresRepositories.UserWorkingScheduleRepository.Store(innerCtx, tenant, &defaultWorkSchedule)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
+			return nil, err
 		}
 	} else {
 		err = addDefaultMissingRoles(ctx, services, tenant, userId)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
+			return nil, err
 		}
 
 		workingSchedule, err := services.CommonServices.PostgresRepositories.UserWorkingScheduleRepository.GetForUser(ctx, tenant, userId)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
+			return nil, err
 		}
 
 		if len(workingSchedule) == 0 {
 			err = services.CommonServices.PostgresRepositories.UserWorkingScheduleRepository.Store(innerCtx, tenant, &defaultWorkSchedule)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				return err
+				return nil, err
 			}
 		}
 	}
@@ -805,7 +810,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
+			return nil, err
 		}
 	}
 
@@ -825,7 +830,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 		}
 	}
 
-	return nil
+	return &userId, nil
 }
 
 func addDefaultMissingRoles(c context.Context, services *service.Services, tenant, userId string) error {

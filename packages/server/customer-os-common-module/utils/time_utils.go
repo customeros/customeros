@@ -259,3 +259,38 @@ func IsAfter(t1, t2 *time.Time) bool {
 	}
 	return t1.After(*t2)
 }
+
+func ConvertToUTC(datetimeStr string) (time.Time, error) {
+	var err error
+
+	layouts := []string{
+		"2006-01-02T15:04:05Z07:00",
+
+		"Mon, 2 Jan 2006 15:04:05 -0700 (MST)",
+
+		"Mon, 2 Jan 2006 15:04:05 MST",
+
+		"Mon, 2 Jan 2006 15:04:05 -0700",
+
+		"Mon, 2 Jan 2006 15:04:05 +0000 (GMT)",
+
+		"Mon, 2 Jan 2006 15:04:05 -0700 (MST)",
+
+		"2 Jan 2006 15:04:05 -0700",
+	}
+	var parsedTime time.Time
+
+	// Try parsing with each layout until successful
+	for _, layout := range layouts {
+		parsedTime, err = time.Parse(layout, datetimeStr)
+		if err == nil {
+			break
+		}
+	}
+
+	if err != nil {
+		return time.Time{}, fmt.Errorf("unable to parse datetime string: %s", datetimeStr)
+	}
+
+	return parsedTime.UTC(), nil
+}

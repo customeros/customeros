@@ -1,6 +1,6 @@
 module github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers
 
-go 1.22.7
+go 1.23
 
 toolchain go1.23.1
 
@@ -45,7 +45,7 @@ require (
 	golang.org/x/net v0.33.0
 	golang.org/x/sync v0.10.0
 	google.golang.org/grpc v1.69.2
-	google.golang.org/protobuf v1.36.0
+	google.golang.org/protobuf v1.36.1
 	gorm.io/gorm v1.25.12
 )
 
@@ -55,9 +55,9 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
-	github.com/PuerkitoBio/goquery v1.9.3 // indirect
+	github.com/PuerkitoBio/goquery v1.10.1 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
-	github.com/andybalholm/cascadia v1.3.2 // indirect
+	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/aws/aws-sdk-go v1.55.3 // indirect
 	github.com/bytedance/sonic v1.12.2 // indirect

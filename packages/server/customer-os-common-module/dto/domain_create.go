@@ -1,12 +1,6 @@
 package dto
 
-type AddDomain struct {
+type CreateDomain struct {
 	Domain string `json:"domain"`
-}
-
-func NewAddDomainEvent(domain string) AddDomain {
-	output := AddDomain{
-		Domain: domain,
-	}
-	return output
+	Source string `json:"source"`
 }

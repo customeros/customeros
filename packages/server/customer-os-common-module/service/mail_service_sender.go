@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -174,9 +175,9 @@ func (s *mailService) sendEmailViaOAuth(
 	}
 
 	switch oauthToken.Provider {
-	case "google":
+	case commonenum.WorkspaceProviderGoogle.String():
 		return s.services.GoogleService.SendEmail(ctx, emailMessage)
-	case "azure-ad":
+	case commonenum.WorkspaceProviderAzure.String():
 		return s.services.AzureService.SendEmail(ctx, emailMessage)
 	default:
 		return fmt.Errorf("provider %s not supported", oauthToken.Provider)
@@ -197,7 +198,7 @@ func (s *mailService) storeEmailMessage(ctx context.Context, span opentracing.Sp
 func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, emailMessage *postgresentity.EmailMessage, span opentracing.Span) (any, error) {
 	tenant := common.GetTenantFromContext(ctx)
 
-	sessionID, err := s.getOrCreateInteractionSession(ctx, tx, span, tenant, emailMessage)
+	sessionID, err := s.getOrCreateInteractionSession(ctx, tx, tenant, emailMessage)
 	if err != nil {
 		err = fmt.Errorf("failed to get or create interaction session: %v", err)
 		tracing.TraceErr(span, err)
@@ -222,13 +223,10 @@ func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransac
 	return eventID, nil
 }
 
-func (s *mailService) getOrCreateInteractionSession(
-	ctx context.Context,
-	tx neo4j.ManagedTransaction,
-	span opentracing.Span,
-	tenant string,
-	emailMessage *postgresentity.EmailMessage,
-) (string, error) {
+func (s *mailService) getOrCreateInteractionSession(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, emailMessage *postgresentity.EmailMessage) (string, error) {
+	span, ctx := s.initializeTracing(ctx, "MailService.getOrCreateInteractionSession")
+	defer span.Finish()
+
 	// Try to get existing session
 	sessionNode, err := s.services.Neo4jRepositories.InteractionSessionReadRepository.GetByIdentifierAndChannel(
 		ctx, tenant, emailMessage.ProviderThreadId, "EMAIL",
@@ -245,9 +243,9 @@ func (s *mailService) getOrCreateInteractionSession(
 
 	// Create new session if none exists
 	sessionID, err := s.services.InteractionSessionService.CreateInTx(ctx, tx, &neo4jentity.InteractionSessionEntity{
-		Status:     "ACTIVE",
-		Type:       "THREAD",
-		Channel:    "EMAIL",
+		Status:     commonenum.InteractionSessionStatusActive,
+		Type:       commonenum.InteractionSessionTypeThread,
+		Channel:    commonenum.InteractionSessionChannelEmail,
 		Identifier: emailMessage.ProviderThreadId,
 		Name:       emailMessage.Subject,
 	})
@@ -337,13 +335,12 @@ func (s *mailService) createInteractionEvent(
 		InteractionEventEntity: &neo4jentity.InteractionEventEntity{
 			Content:                      emailMessage.Content,
 			ContentType:                  "text/html",
-			Channel:                      "EMAIL",
+			Channel:                      commonenum.InteractionEventChannelEmail,
 			ChannelData:                  *emailChannelData,
 			Identifier:                   emailMessage.ProviderMessageId,
 			CustomerOSInternalIdentifier: *emailMessage.UniqueInternalIdentifier,
 			Hide:                         false,
 			Source:                       "openline", // TODO
-			SourceOfTruth:                "openline", // TODO
 			AppSource:                    "TODO",     // TODO
 		},
 		SentBy:            participants.sentBy,

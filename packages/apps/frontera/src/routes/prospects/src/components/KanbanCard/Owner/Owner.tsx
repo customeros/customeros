@@ -88,7 +88,7 @@ export const Owner = observer(({ ownerId, opportunityId }: OwnerProps) => {
               name={user?.name ?? 'Unnamed'}
               src={user?.value?.profilePhotoUrl ?? ''}
               icon={<User01 className='text-gray-500 size-3' />}
-              className={'w-5 h-5 min-w-5 border border-gray-200'}
+              className={'w-5 h-5 min-h-5 min-w-5 border border-gray-200'}
             />
           </PopoverTrigger>
 

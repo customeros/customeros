@@ -33,7 +33,8 @@ func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge entity.FlowEdg
 
 	flowEdge.ID = utils.GenerateNanoIdWithPrefix("edge", 16)
 
-	err := f.gormDb.Create(&flowEdge).Error
+	var created entity.FlowEdge
+	err := f.gormDb.Create(&flowEdge).Scan(&created).Error
 	if err != nil {
 		return nil, err
 	}

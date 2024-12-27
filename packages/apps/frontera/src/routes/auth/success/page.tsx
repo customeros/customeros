@@ -7,6 +7,7 @@ import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
+import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 
 export const SuccessPage = observer(() => {
@@ -50,10 +51,27 @@ export const SuccessPage = observer(() => {
     <div
       className={cn(
         'absolute bg-white flex flex-col items-center justify-center top-0 right-0 bottom-0 left-0 z-10 opacity-100 transition-opacity duration-500',
-        store.session.isBootstrapped && 'opacity-0',
+        store.session.isBootstrapped &&
+          !store.session.error &&
+          !store.session.isLoading &&
+          'opacity-0',
       )}
     >
-      <Spinner label='loading' className='text-gray-300 fill-gray-500' />
+      {store.session.error &&
+        store.session.error === 'MAGIC_LINK_NOT_FOUND' && (
+          <div className='flex flex-col items-center gap-4'>
+            <p className='font-medium'>Sign-in link is invalid or expired</p>
+            <Button
+              colorScheme='primary'
+              onClick={() => navigate('/auth/signin')}
+            >
+              Send a new one
+            </Button>
+          </div>
+        )}
+      {!store.session.error && (
+        <Spinner label='loading' className='text-gray-300 fill-gray-500' />
+      )}
     </div>
   );
 });

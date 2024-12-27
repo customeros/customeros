@@ -90,15 +90,14 @@ ps:
 	cd ../deployment && podman-compose ps
 
 restart-api:
-	pkill -f "customer-os-platform-admin-api" || true 
-	cd ./server/customer-os-platform-admin-api && go run . > ../../admin-api.log 2>&1 & echo $$! > admin-api.pid
-	pkill -f "customer-os-api" || true
-	cd ./server/customer-os-api && go run . > ../../api.log 2>&1 & echo $$! > api.pid
-	sleep 5
-	echo "CustomerOS API restarted"
+    pkill -f "customer-os-platform-admin-api" || true
+    cd ./server/customer-os-platform-admin-api && go run . > ../../admin-api.log 2>&1 & echo $$! > admin-api.pid
+    pkill -f "customer-os-api" || true
+    cd ./server/customer-os-api && go run . > ../../api.log 2>&1 & echo $$! > api.pid
+    echo "CustomerOS API restarted"
 
 start:
-	cd ../deployment && podman-compose up rabbitmq jaeger postgres neo4j eventstore -d
+	cd ../deployment && podman-compose up rabbitmq jaeger postgres postgres-sidecar neo4j eventstore customer-os-platform-admin-api -d
 
 start-api:
     cd ./server/customer-os-platform-admin-api && go run . > ../../admin-api.log 2>&1 & echo $$! > admin-api.pid
@@ -115,14 +114,14 @@ start-events:
     cd ./server/events-subscribers && go run . > ../../events-subscribers.log 2>&1 & echo $$! > events-subscribers.pid
 
 start-fe:
-	cd ./apps/frontera && npm run dev
+    cd ../deployment && podman-compose up user-admin-api settings-api -d
+    cd ./apps/frontera && npm run dev
 
 stop:
-	kill `cat admin-api.pid` 2>/dev/null || true
 	kill `cat api.pid` 2>/dev/null || true
 	kill `cat events-subscribers.pid` 2>/dev/null || true
 	rm -f *.pid
-	cd ../deployment && podman-compose down rabbitmq jaeger postgres neo4j eventstore
+	cd ../deployment && podman-compose down rabbitmq jaeger postgres postgres-sidecar neo4j eventstore customer-os-platform-admin-api user-admin-api settings-api
 
 test-flow SERVICE:
 	python3 server/customer-os-api/test/flows/{{SERVICE}}_test.py

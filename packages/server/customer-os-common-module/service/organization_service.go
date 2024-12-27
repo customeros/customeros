@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"time"
 
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
@@ -146,12 +147,12 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	}
 
 	// prepare domains in advance
-	err = s.services.DomainService.MergeDomain(ctx, primaryDomain)
+	err = s.services.DomainService.MergeDomain(ctx, nil, primaryDomain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
 	}
 	for _, domain := range input.Domains {
-		err = s.services.DomainService.MergeDomain(ctx, domain)
+		err = s.services.DomainService.MergeDomain(ctx, nil, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
 		}
@@ -177,7 +178,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			// for each domain check that no org exists with that domain
 			// if exist reject creation and return existing org id
 			for _, domain := range domains {
-				orgByDomainDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
+				orgByDomainDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "Error fetching organization by domain"))
 					return "", err
@@ -678,7 +679,7 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	if !s.services.DomainService.AcceptedDomainForOrganization(ctx, domain) {
+	if !s.services.DomainService.IsAcceptedDomainForOrganization(ctx, domain) {
 		return nil
 	}
 
@@ -903,7 +904,7 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 		timelineEventType = neo4jenum.TouchpointTypeNote.String()
 	case model.NodeLabelInteractionEvent:
 		timelineEventInteractionEvent := timelineEvent.(*neo4jentity.InteractionEventEntity)
-		if timelineEventInteractionEvent.Channel == "EMAIL" {
+		if timelineEventInteractionEvent.Channel == commonenum.InteractionEventChannelEmail {
 			interactionEventSentByUser, err := s.services.Neo4jRepositories.InteractionEventReadRepository.InteractionEventSentByUser(ctx, tenant, timelineEventInteractionEvent.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -914,9 +915,9 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 			} else {
 				timelineEventType = neo4jenum.TouchpointTypeInteractionEventEmailReceived.String()
 			}
-		} else if timelineEventInteractionEvent.Channel == "VOICE" {
+		} else if timelineEventInteractionEvent.Channel == commonenum.InteractionEventChannelVoice {
 			timelineEventType = neo4jenum.TouchpointTypeInteractionEventPhoneCall.String()
-		} else if timelineEventInteractionEvent.Channel == "CHAT" {
+		} else if timelineEventInteractionEvent.Channel == commonenum.InteractionEventChannelChat {
 			timelineEventType = neo4jenum.TouchpointTypeInteractionEventChat.String()
 		} else if timelineEventInteractionEvent.EventType == "meeting" {
 			timelineEventType = neo4jenum.TouchpointTypeMeeting.String()

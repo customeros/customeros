@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
@@ -42,6 +43,10 @@ type InteractionEventUpdateFields struct {
 type InteractionEventWriteRepository interface {
 	CreateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionEventId string, data neo4jentity.InteractionEventEntity) error
 	Update(ctx context.Context, tenant, interactionEventId string, data InteractionEventUpdateFields) error
+	MergeByExternalSystem(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, syncDate time.Time, message commonmodel.SaveEmailMessage, source, appSource string) (string, error)
+	LinkInteractionEventToSession(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, interactionSessionId string) error
+	InteractionEventSentByEmail(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, emailId string) error
+	InteractionEventSentToEmails(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, sentType string, emailIds []string) error
 }
 
 type interactionEventWriteRepository struct {
@@ -71,7 +76,6 @@ func (r *interactionEventWriteRepository) CreateInTx(ctx context.Context, tx neo
 								i.createdAt=$createdAt,
 								i.updatedAt=datetime(),
 								i.source=$source,
-								i.sourceOfTruth=$sourceOfTruth,
 								i.appSource=$appSource,
 								i.content=$content,
 								i.contentType=$contentType,
@@ -81,27 +85,25 @@ func (r *interactionEventWriteRepository) CreateInTx(ctx context.Context, tx neo
 								i.eventType=$eventType,
 								i.hide=$hide
 							ON MATCH SET 	
-								i.content = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.content is null OR i.content = '' THEN $content ELSE i.content END,
-								i.contentType = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.contentType is null OR i.contentType = '' THEN $contentType ELSE i.contentType END,
-								i.channel = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.channel is null OR i.channel = '' THEN $channel ELSE i.channel END,
-								i.channelData = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.channelData is null OR i.channelData = '' THEN $channelData ELSE i.channelData END,
-								i.identifier = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.identifier is null OR i.identifier = '' THEN $identifier ELSE i.identifier END,
-								i.eventType = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.eventType is null OR i.eventType = '' THEN $eventType ELSE i.eventType END,
-								i.hide = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $hide ELSE i.hide END,
-								i.updatedAt = datetime(),
-								i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END
+								i.content = CASE WHEN $overwrite=true OR i.content is null OR i.content = '' THEN $content ELSE i.content END,
+								i.contentType = CASE WHEN $overwrite=true OR i.contentType is null OR i.contentType = '' THEN $contentType ELSE i.contentType END,
+								i.channel = CASE WHEN $overwrite=true OR i.channel is null OR i.channel = '' THEN $channel ELSE i.channel END,
+								i.channelData = CASE WHEN $overwrite=true OR i.channelData is null OR i.channelData = '' THEN $channelData ELSE i.channelData END,
+								i.identifier = CASE WHEN $overwrite=true OR i.identifier is null OR i.identifier = '' THEN $identifier ELSE i.identifier END,
+								i.eventType = CASE WHEN $overwrite=true OR i.eventType is null OR i.eventType = '' THEN $eventType ELSE i.eventType END,
+								i.hide = CASE WHEN $overwrite=true THEN $hide ELSE i.hide END,
+								i.updatedAt = datetime()
 							`, tenant, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
 		"interactionEventId": interactionEventId,
 		"createdAt":          utils.NowIfZero(data.CreatedAt),
-		"updatedAt":          utils.Now(),
 		"source":             data.Source,
 		"sourceOfTruth":      data.Source,
 		"appSource":          data.AppSource,
 		"content":            data.Content,
 		"contentType":        data.ContentType,
-		"channel":            data.Channel,
+		"channel":            data.Channel.String(),
 		"channelData":        data.ChannelData,
 		"identifier":         data.Identifier,
 		"eventType":          data.EventType,
@@ -160,5 +162,175 @@ func (r *interactionEventWriteRepository) Update(ctx context.Context, tenant, in
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+	return err
+}
+
+func (r *interactionEventWriteRepository) MergeByExternalSystem(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, syncDate time.Time, message commonmodel.SaveEmailMessage, source, appSource string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.MergeByExternalSystem")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogKV("source", source, "appSource", appSource)
+	tracing.LogObjectAsJson(span, "message", message)
+
+	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId}) 
+		 MERGE (ie:InteractionEvent_%s {source:$source, channel:$channel})-[rel:IS_LINKED_WITH {externalId:$externalId}]->(e) 
+		 ON CREATE SET 
+		  ie:InteractionEvent, 
+		  ie:TimelineEvent, 
+		  ie:TimelineEvent_%s, 
+		  rel.syncDate=$syncDate, 
+		  ie.createdAt=$createdAt, 
+		  ie.id=randomUUID(), 
+		  ie.identifier=$identifier, 
+		  ie.channel=$channel, 
+		  ie.channelData=$channelData, 
+		  ie.content=$content, 
+		  ie.contentType=$contentType, 
+		  ie.appSource=$appSource,
+		  ie.updatedAt=datetime()
+		 WITH ie 
+		 RETURN ie.id`, tenant, tenant)
+
+	params := map[string]interface{}{
+		"tenant":           tenant,
+		"identifier":       message.ExternalId,
+		"source":           source,
+		"appSource":        appSource,
+		"externalId":       message.ExternalId,
+		"externalSystemId": message.ExternalSystem,
+		"syncDate":         syncDate,
+		"createdAt":        message.CreatedAt,
+		"channel":          message.Channel,
+		"channelData":      message.ChannelData,
+	}
+
+	if message.Html != "" {
+		params["content"] = message.Html
+		params["contentType"] = "text/html"
+	} else {
+		params["content"] = message.Text
+		params["contentType"] = "text/plain"
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	queryResult, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		qr, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractSingleRecordFirstValueAsString(ctx, qr, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	return queryResult.(string), nil
+}
+
+func (r *interactionEventWriteRepository) LinkInteractionEventToSession(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, interactionSessionId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.LinkInteractionEventToSession")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, interactionEventId)
+	span.LogKV("interactionSessionId", interactionSessionId)
+
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}) 
+		 MATCH (is:InteractionSession_%s {id:$interactionSessionId}) 
+		 MERGE (ie)-[:PART_OF]->(is)`, tenant, tenant)
+
+	params := map[string]interface{}{
+		"tenant":               tenant,
+		"interactionEventId":   interactionEventId,
+		"interactionSessionId": interactionSessionId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
+}
+
+func (r *interactionEventWriteRepository) InteractionEventSentByEmail(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, emailId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.InteractionEventSentByEmail")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, interactionEventId)
+
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId})
+		 MATCH (e:Email_%s {id: $emailId})
+		 MERGE (ie)-[:SENT_BY]->(e)`, tenant, tenant)
+
+	params := map[string]interface{}{
+		"tenant":             tenant,
+		"interactionEventId": interactionEventId,
+		"emailId":            emailId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
+}
+
+func (r *interactionEventWriteRepository) InteractionEventSentToEmails(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, interactionEventId, sentType string, emailIds []string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.InteractionEventSentToEmails")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, interactionEventId)
+
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId})
+		 MATCH (e:Email_%s) WHERE e.id in $emailIds
+		 MERGE (ie)-[:SENT_TO {type: $sentType}]->(e)`, tenant, tenant)
+
+	params := map[string]interface{}{
+		"tenant":             tenant,
+		"interactionEventId": interactionEventId,
+		"sentType":           sentType,
+		"emailIds":           emailIds,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
 	return err
 }

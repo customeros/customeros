@@ -17,7 +17,7 @@ export const AddTagSubItemGroup = observer(() => {
   const context = store.ui.commandMenu.context;
 
   const entity = match(context.entity)
-    .returnType<Organization | Organization[] | undefined>()
+    .returnType<Organization | Organization[] | undefined | null>()
     .with('Organization', () =>
       store.organizations.getById(context.ids?.[0] as string),
     )

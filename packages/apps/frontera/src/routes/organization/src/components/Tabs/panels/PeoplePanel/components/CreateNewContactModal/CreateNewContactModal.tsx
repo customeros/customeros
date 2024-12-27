@@ -41,7 +41,7 @@ export const CreateNewContactModal = observer(
       contactCreate.getType === 'name' ? 'Add contact' : 'Add & enrich';
 
     useEffect(() => {
-      if (orgId) {
+      if (orgId && org) {
         contactCreate.setEntity(org);
       }
     }, [orgId]);

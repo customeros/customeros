@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/pkg/errors"
 	"strings"
@@ -19,13 +20,13 @@ import (
 )
 
 const (
-	PostmarkMessageStreamMagicLink = "magic-link"
+	PostmarkMessageStreamMagicLink = string(commonenum.WorkspaceProviderMagicLink)
 	PostmarkMessageStreamInvoice   = "invoices"
 )
 
 const (
 	WorkflowMagicLinkSubject = "One click away from CustomerOS"
-	WorkflowMagicLink        = "magic-link"
+	WorkflowMagicLink        = string(commonenum.WorkspaceProviderMagicLink)
 
 	WorkflowInvoicePaid                  = "invoice-paid"
 	WorkflowInvoicePaymentReceived       = "invoice-payment-received"

@@ -103,7 +103,7 @@ export const ContactPreviewCard = observer(() => {
       {store.ui.contactPreviewCardOpen && (
         <div
           data-state={store.ui.contactPreviewCardOpen ? 'open' : 'closed'}
-          className='data-[state=open]:animate-slideLeftAndFade data-[state=closed]:animate-slideRightAndFade flex flex-col absolute right-[12px] -top-[-53px] p-4 max-w-[390px] min-w-[350px] border border-gray-200 rounded-lg z-[1] bg-white'
+          className='data-[state=open]:animate-slideLeftAndFade data-[state=closed]:animate-slideRightAndFade flex flex-col absolute right-0 -top-[-41px] bottom-0 p-4 max-w-[390px] min-w-[350px] border border-r-0 border-gray-200 z-[1] bg-white'
         >
           <div className='flex justify-between items-start'>
             <Avatar
@@ -118,7 +118,7 @@ export const ContactPreviewCard = observer(() => {
                 <Tooltip asChild label='Enrich this contact'>
                   {requestedEnrichment ? (
                     <IconButton
-                      size='xxs'
+                      size='xs'
                       variant='ghost'
                       icon={<Star06 />}
                       onClick={() => setIsOpen(true)}
@@ -134,7 +134,7 @@ export const ContactPreviewCard = observer(() => {
                 </Tooltip>
               )}
               <IconButton
-                size='xxs'
+                size='xs'
                 icon={<X />}
                 variant='ghost'
                 aria-label='close'
@@ -302,11 +302,13 @@ export const ContactPreviewCard = observer(() => {
               </span>
             </div>
             {contact?.value?.enrichedAt && (
-              <div className='bg-grayModern-50 w-full rounded-[4px] border-[1px] border-grayModern-100 px-2 py-1'>
-                <p className='text-sm text-center'>{`Last enriched on ${DateTimeUtils.format(
-                  contact?.value.enrichedAt,
-                  DateTimeUtils.dateWithHourWithQomma,
-                )} `}</p>
+              <div className='text-xs text-gray-500'>
+                Last enriched{' '}
+                {DateTimeUtils.timeAgo(contact.value.enrichedAt, {
+                  addSuffix: true,
+                  strict: true,
+                  includeMin: true,
+                })}
               </div>
             )}
           </div>

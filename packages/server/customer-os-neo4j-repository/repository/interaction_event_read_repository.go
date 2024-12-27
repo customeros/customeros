@@ -20,6 +20,7 @@ type InteractionEventReadRepository interface {
 	GetReplyToFor(ctx context.Context, tenant string, ids []string, returnContent bool) ([]*utils.DbPropsAndId, error)
 	GetInteractionEventByCustomerOSIdentifier(ctx context.Context, customerOSInternalIdentifier string) (*dbtype.Node, error)
 	InteractionEventSentByUser(ctx context.Context, tenant, interactionEventId string) (bool, error)
+	GetInteractionEventIdByExternalId(ctx context.Context, tenant, externalSystemId, externalId string) (string, error)
 }
 
 type interactionEventReadRepository struct {
@@ -296,4 +297,37 @@ func (r *interactionEventReadRepository) InteractionEventSentByUser(ctx context.
 	}
 	span.LogFields(log.Bool("result", result.(bool)))
 	return result.(bool), nil
+}
+
+func (r *interactionEventReadRepository) GetInteractionEventIdByExternalId(ctx context.Context, tenant, externalSystemId, externalId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventReadRepository.GetInteractionEventIdByExternalId")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s)-[IS_LINKED_WITH{externalId:$externalId}]-(e:ExternalSystem{id:$externalSystemId}) RETURN ie.id`, tenant)
+	params := map[string]any{
+		"externalId":       externalId,
+		"externalSystemId": externalSystemId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsString(ctx, queryResult, err)
+		}
+	})
+	if err != nil && err.Error() == "Result contains no more records" {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return result.(string), nil
 }
