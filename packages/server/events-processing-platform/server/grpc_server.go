@@ -4,7 +4,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/interceptors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
-	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
@@ -68,7 +67,6 @@ func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	locationpb.RegisterLocationGrpcServiceServer(grpcServer, services.LocationService)
 	commentpb.RegisterCommentGrpcServiceServer(grpcServer, services.CommentService)
 	opportunitypb.RegisterOpportunityGrpcServiceServer(grpcServer, services.OpportunityService)
-	contractpb.RegisterContractGrpcServiceServer(grpcServer, services.ContractService)
 	servicelineitempb.RegisterServiceLineItemGrpcServiceServer(grpcServer, services.ServiceLineItemService)
 	invoicepb.RegisterInvoiceGrpcServiceServer(grpcServer, services.InvoiceService)
 	eventstorepb.RegisterEventStoreGrpcServiceServer(grpcServer, services.EventStoreService)

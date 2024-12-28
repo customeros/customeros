@@ -27,7 +27,6 @@ type Services struct {
 	LocationService        *locationService
 	CommentService         *commentService
 	OpportunityService     *opportunityService
-	ContractService        *contractService
 	ServiceLineItemService *serviceLineItemService
 	InvoiceService         *invoiceService
 	EventStoreService      *eventStoreService
@@ -48,7 +47,6 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.LocationService = NewLocationService(log, commandHandlers.Location)
 	services.CommentService = NewCommentService(&services, log, aggregateStore, cfg)
 	services.OpportunityService = NewOpportunityService(log, commandHandlers.Opportunity, aggregateStore, &services)
-	services.ContractService = NewContractService(log, aggregateStore, &services)
 	services.ServiceLineItemService = NewServiceLineItemService(log, aggregateStore, &services)
 	services.InvoiceService = NewInvoiceService(repositories, &services, log, aggregateStore)
 	services.EventStoreService = NewEventStoreService(&services, log, aggregateStore)

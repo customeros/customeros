@@ -32,6 +32,8 @@ type OpportunityService interface {
 	CloseWon(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant, opportunityId string) error
 	CloseLost(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error
 	Archive(ctx context.Context, tenant, opportunityId string) error
+
+	RolloutRenewalOpportunity(ctx context.Context, contractId string) error
 }
 
 type opportunityService struct {
@@ -491,6 +493,72 @@ func (s *opportunityService) Archive(ctx context.Context, tenant, opportunityId 
 	}
 
 	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithDelete())
+
+	return nil
+}
+
+func (s *opportunityService) RolloutRenewalOpportunity(ctx context.Context, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.RolloutRenewalOpportunity")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+
+	if contractEntity.LengthInMonths <= 0 {
+		return nil
+	}
+
+	currentRenewalOpportunityDbNode, err := s.services.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Failed getting renewal opportunity for contract"))
+		s.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	if currentRenewalOpportunityDbNode != nil {
+		currentOpportunity := neo4jmapper.MapDbNodeToOpportunityEntity(currentRenewalOpportunityDbNode)
+
+		err = s.services.OpportunityService.CloseWon(ctx, nil, tenant, currentOpportunity.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("CloseWinOpportunity failed: %s", err.Error())
+			return err
+		}
+	}
+
+	err = s.services.ContractService.RecalculateContractLtv(ctx, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	// Add action in timeline
+	status := "Renewed"
+	metadata, err := utils.ToJson(ActionStatusMetadata{
+		Status: status,
+	})
+	message := contractEntity.Name + " renewed"
+
+	_, err = s.services.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, contractId, commonModel.CONTRACT, neo4jenum.ActionContractRenewed, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed creating renewed action for contract %s: %s", contractId, err.Error())
+	}
+
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractId, commonModel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
