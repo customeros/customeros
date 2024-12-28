@@ -2,7 +2,6 @@ package grpc_client
 
 import (
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
-	contract_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	interactionsessionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_session"
 	invoice_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
@@ -14,7 +13,6 @@ import (
 )
 
 type Clients struct {
-	ContractClient           contract_grpc_service.ContractGrpcServiceClient
 	InvoiceClient            invoice_grpc_service.InvoiceGrpcServiceClient
 	OpportunityClient        opportunity_grpc_service.OpportunityGrpcServiceClient
 	OrganizationClient       organization_grpc_service.OrganizationGrpcServiceClient
@@ -31,7 +29,6 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 	}
 	clients := Clients{
 		OrganizationClient:       organization_grpc_service.NewOrganizationGrpcServiceClient(conn),
-		ContractClient:           contract_grpc_service.NewContractGrpcServiceClient(conn),
 		ServiceLineItemClient:    service_line_item_grpc_service.NewServiceLineItemGrpcServiceClient(conn),
 		OpportunityClient:        opportunity_grpc_service.NewOpportunityGrpcServiceClient(conn),
 		InvoiceClient:            invoice_grpc_service.NewInvoiceGrpcServiceClient(conn),

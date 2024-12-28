@@ -17,7 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
-	contractevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
@@ -36,7 +35,6 @@ type GraphSubscriber struct {
 	locationEventHandler        *LocationEventHandler
 	commentEventHandler         *CommentEventHandler
 	opportunityEventHandler     *OpportunityEventHandler
-	contractEventHandler        *ContractEventHandler
 	serviceLineItemEventHandler *ServiceLineItemEventHandler
 	invoiceEventHandler         *InvoiceEventHandler
 }
@@ -50,7 +48,6 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		locationEventHandler:        NewLocationEventHandler(services),
 		commentEventHandler:         NewCommentEventHandler(log, services),
 		opportunityEventHandler:     NewOpportunityEventHandler(log, services, grpcClients),
-		contractEventHandler:        NewContractEventHandler(log, services, grpcClients),
 		serviceLineItemEventHandler: NewServiceLineItemEventHandler(log, services, grpcClients),
 		invoiceEventHandler:         NewInvoiceEventHandler(log, services, grpcClients),
 	}
@@ -239,10 +236,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case opportunityevent.OpportunityCloseLooseV1:
 		_ = s.opportunityEventHandler.OnCloseLost(ctx, evt)
-		return nil
-
-	case contractevent.ContractRolloutRenewalOpportunityV1:
-		_ = s.contractEventHandler.OnRolloutRenewalOpportunity(ctx, evt)
 		return nil
 
 	case servicelineitemevent.ServiceLineItemCreateV1:
