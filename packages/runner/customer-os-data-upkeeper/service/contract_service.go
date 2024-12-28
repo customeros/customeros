@@ -92,26 +92,21 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 
 		//process contracts
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
-				return s.eventsProcessingClient.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
-					Tenant:    record.Tenant,
-					Id:        record.ContractId,
-					AppSource: constants.AppSourceDataUpkeeper,
-				})
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
 			})
+
+			err = s.services.ContractService.RefreshContractStatus(innerCtx, record.ContractId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error refreshing contract status: %s", err.Error())
-				grpcErr, ok := status.FromError(err)
-				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
-					s.resyncContract(ctx, record.Tenant, record.ContractId)
-				}
-			} else {
-				err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkStatusRenewalRequested(ctx, record.Tenant, record.ContractId)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					s.log.Errorf("Error marking status renewal requested: %s", err.Error())
-				}
+			}
+
+			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkStatusRenewalRequested(ctx, record.Tenant, record.ContractId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error marking status renewal requested: %s", err.Error())
 			}
 		}
 

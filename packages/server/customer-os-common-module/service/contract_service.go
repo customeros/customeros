@@ -26,8 +26,9 @@ import (
 )
 
 type ContractService interface {
-	GetById(ctx context.Context, id string) (*neo4jentity.ContractEntity, error)
-	Save(ctx context.Context, id *string, dataFields data_fields.ContractSaveFields) (string, error)
+	GetById(ctx context.Context, contactId string) (*neo4jentity.ContractEntity, error)
+	Save(ctx context.Context, contactId *string, dataFields data_fields.ContractSaveFields) (string, error)
+	RefreshContractStatus(ctx context.Context, contractId string) error
 }
 
 type contractService struct {
@@ -190,7 +191,7 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 			s.log.Errorf("Error while post create contract %s: %s", contractId, err.Error())
 		}
 	} else {
-		err = s.postUpdateContract(ctx, tenant, contractId, dataFields, beforeUpdateContractEntity)
+		err = s.postUpdateContract(ctx, tenant, contractId, beforeUpdateContractEntity)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error while post create contract %s: %s", contractId, err.Error())
@@ -236,7 +237,7 @@ func (s *contractService) postCreateContract(ctx context.Context, tenant, contra
 	return nil
 }
 
-func (s *contractService) postUpdateContract(ctx context.Context, tenant string, contractId string, dataFields data_fields.ContractSaveFields, beforeUpdateContractEntity *neo4jentity.ContractEntity) error {
+func (s *contractService) postUpdateContract(ctx context.Context, tenant string, contractId string, beforeUpdateContractEntity *neo4jentity.ContractEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.postCreateContract")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -361,7 +362,6 @@ func (s *contractService) updateStatus(ctx context.Context, tenant, contractId s
 			return "", false, err
 		}
 
-		// TODO add event for status change
 		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 
 		err = s.services.RabbitMQService.PublishEvent(ctx, contractId, model.CONTRACT, dto.ChangeStatusForContract{Status: status})
@@ -978,4 +978,63 @@ func monthsUntilContractEnd(start, end time.Time) int {
 	}
 
 	return totalMonths
+}
+
+func (s *contractService) RefreshContractStatus(ctx context.Context, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.RefreshContractStatus")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	status, statusChanged, err := s.updateStatus(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())
+		return err
+	}
+	span.LogFields(log.String("result.status", status))
+	span.LogFields(log.Bool("result.statusChanged", statusChanged))
+
+	if statusChanged {
+		err = s.updateOrganizationRelationship(ctx, tenant, contractId, statusChanged)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error while updating organization relationship for contract %s: %s", contractId, err.Error())
+		}
+		s.updateContractLtv(ctx, tenant, contractId)
+
+		contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+		s.createActionForStatusChange(ctx, tenant, contractId, status, contractEntity.Name)
+
+		s.startOnboardingIfEligible(ctx, tenant, contractId, span)
+		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+	}
+
+	if status == neo4jenum.ContractStatusEnded.String() {
+		err = s.updateActiveRenewalOpportunityRenewDateAndArr(ctx, tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
+		}
+
+		err = s.services.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, "")
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
+		}
+	}
+
+	return nil
 }

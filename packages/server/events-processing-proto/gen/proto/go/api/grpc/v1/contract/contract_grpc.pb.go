@@ -24,7 +24,6 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ContractGrpcServiceClient interface {
 	RolloutRenewalOpportunityOnExpiration(ctx context.Context, in *RolloutRenewalOpportunityOnExpirationGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
-	RefreshContractStatus(ctx context.Context, in *RefreshContractStatusGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 	RefreshContractLtv(ctx context.Context, in *RefreshContractLtvGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
 	SoftDeleteContract(ctx context.Context, in *SoftDeleteContractGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
@@ -40,15 +39,6 @@ func NewContractGrpcServiceClient(cc grpc.ClientConnInterface) ContractGrpcServi
 func (c *contractGrpcServiceClient) RolloutRenewalOpportunityOnExpiration(ctx context.Context, in *RolloutRenewalOpportunityOnExpirationGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error) {
 	out := new(ContractIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/ContractGrpcService/RolloutRenewalOpportunityOnExpiration", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *contractGrpcServiceClient) RefreshContractStatus(ctx context.Context, in *RefreshContractStatusGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error) {
-	out := new(ContractIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/ContractGrpcService/RefreshContractStatus", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +68,6 @@ func (c *contractGrpcServiceClient) SoftDeleteContract(ctx context.Context, in *
 // for forward compatibility
 type ContractGrpcServiceServer interface {
 	RolloutRenewalOpportunityOnExpiration(context.Context, *RolloutRenewalOpportunityOnExpirationGrpcRequest) (*ContractIdGrpcResponse, error)
-	RefreshContractStatus(context.Context, *RefreshContractStatusGrpcRequest) (*ContractIdGrpcResponse, error)
 	RefreshContractLtv(context.Context, *RefreshContractLtvGrpcRequest) (*ContractIdGrpcResponse, error)
 	SoftDeleteContract(context.Context, *SoftDeleteContractGrpcRequest) (*emptypb.Empty, error)
 }
@@ -89,9 +78,6 @@ type UnimplementedContractGrpcServiceServer struct {
 
 func (UnimplementedContractGrpcServiceServer) RolloutRenewalOpportunityOnExpiration(context.Context, *RolloutRenewalOpportunityOnExpirationGrpcRequest) (*ContractIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RolloutRenewalOpportunityOnExpiration not implemented")
-}
-func (UnimplementedContractGrpcServiceServer) RefreshContractStatus(context.Context, *RefreshContractStatusGrpcRequest) (*ContractIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RefreshContractStatus not implemented")
 }
 func (UnimplementedContractGrpcServiceServer) RefreshContractLtv(context.Context, *RefreshContractLtvGrpcRequest) (*ContractIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshContractLtv not implemented")
@@ -125,24 +111,6 @@ func _ContractGrpcService_RolloutRenewalOpportunityOnExpiration_Handler(srv inte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ContractGrpcServiceServer).RolloutRenewalOpportunityOnExpiration(ctx, req.(*RolloutRenewalOpportunityOnExpirationGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ContractGrpcService_RefreshContractStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RefreshContractStatusGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ContractGrpcServiceServer).RefreshContractStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/ContractGrpcService/RefreshContractStatus",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContractGrpcServiceServer).RefreshContractStatus(ctx, req.(*RefreshContractStatusGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -193,10 +161,6 @@ var ContractGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RolloutRenewalOpportunityOnExpiration",
 			Handler:    _ContractGrpcService_RolloutRenewalOpportunityOnExpiration_Handler,
-		},
-		{
-			MethodName: "RefreshContractStatus",
-			Handler:    _ContractGrpcService_RefreshContractStatus_Handler,
 		},
 		{
 			MethodName: "RefreshContractLtv",

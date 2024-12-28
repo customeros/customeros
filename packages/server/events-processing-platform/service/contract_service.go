@@ -26,30 +26,6 @@ func NewContractService(log logger.Logger, aggregateStore eventstore.AggregateSt
 	}
 }
 
-func (s *contractService) RefreshContractStatus(ctx context.Context, request *contractpb.RefreshContractStatusGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.RefreshContractStatus")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	if request.Id == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
-	}
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewContractTempAggregateWithTenantAndID(request.Tenant, request.Id)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{
-		SkipLoadEvents: true,
-	}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(RefreshContractStatus.HandleTemp) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &contractpb.ContractIdGrpcResponse{Id: request.Id}, nil
-}
-
 func (s *contractService) RefreshContractLtv(ctx context.Context, request *contractpb.RefreshContractLtvGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContractService.RefreshContractLtv")
 	defer span.Finish()

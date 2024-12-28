@@ -15,13 +15,6 @@ message RolloutRenewalOpportunityOnExpirationGrpcRequest {
   string appSource = 4;
 }
 
-message RefreshContractStatusGrpcRequest {
-  string id = 1;
-  string tenant = 2;
-  string loggedInUserId = 3;
-  string appSource = 4;
-}
-
 message RefreshContractLtvGrpcRequest {
   string id = 1;
   string tenant = 2;
@@ -45,7 +38,6 @@ message ContractIdGrpcResponse {
 // Service definition
 service ContractGrpcService {
   rpc RolloutRenewalOpportunityOnExpiration(RolloutRenewalOpportunityOnExpirationGrpcRequest) returns (ContractIdGrpcResponse);
-  rpc RefreshContractStatus(RefreshContractStatusGrpcRequest) returns (ContractIdGrpcResponse);
   rpc RefreshContractLtv(RefreshContractLtvGrpcRequest) returns (ContractIdGrpcResponse);
   rpc SoftDeleteContract(SoftDeleteContractGrpcRequest) returns (google.protobuf.Empty);
 }
