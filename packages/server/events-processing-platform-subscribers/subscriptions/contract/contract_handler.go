@@ -10,7 +10,6 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
@@ -45,18 +44,10 @@ func (h *contractHandler) UpdateContractLtv(ctx context.Context, tenant, contrac
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
-	// request contract LTV refresh
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
-		return h.grpcClients.ContractClient.RefreshContractLtv(ctx, &contractpb.RefreshContractLtvGrpcRequest{
-			Tenant:    tenant,
-			Id:        contractId,
-			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-		})
-	})
+	err := h.services.CommonServices.ContractService.RecalculateContractLtv(ctx, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		h.log.Errorf("RefreshContractLtv failed: %s", err.Error())
+		h.log.Errorf("RecalculateContractLtv failed: %s", err.Error())
 	}
 }
 
