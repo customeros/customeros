@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -28,7 +27,6 @@ var contractId = "769d1fb8-50a1-44bc-aff0-0f4338bd8ff2"
 type Clients struct {
 	OrganizationClient    organizationpb.OrganizationGrpcServiceClient
 	CommentClient         commentpb.CommentGrpcServiceClient
-	ContractClient        contractpb.ContractGrpcServiceClient
 	ServiceLineItemClient servicelineitempb.ServiceLineItemGrpcServiceClient
 	OpportunityClient     opportunitypb.OpportunityGrpcServiceClient
 	InvoiceClient         invoicepb.InvoiceGrpcServiceClient
@@ -45,7 +43,6 @@ func InitClients() {
 	clients = &Clients{
 		OrganizationClient:    organizationpb.NewOrganizationGrpcServiceClient(conn),
 		CommentClient:         commentpb.NewCommentGrpcServiceClient(conn),
-		ContractClient:        contractpb.NewContractGrpcServiceClient(conn),
 		OpportunityClient:     opportunitypb.NewOpportunityGrpcServiceClient(conn),
 		ServiceLineItemClient: servicelineitempb.NewServiceLineItemGrpcServiceClient(conn),
 		InvoiceClient:         invoicepb.NewInvoiceGrpcServiceClient(conn),
@@ -181,30 +178,6 @@ func testOrganizationLinkWithLocation() {
 	print(result)
 }
 
-func testAddContractService() {
-	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	contractId := "769d1fb8-50a1-44bc-aff0-0f4338bd8ff2"
-	price := 0.004
-	billed := commonpb.BilledType_ONCE_BILLED
-
-	result, err := clients.ServiceLineItemClient.CreateServiceLineItem(context.Background(), &servicelineitempb.CreateServiceLineItemGrpcRequest{
-		Tenant:         tenant,
-		LoggedInUserId: userId,
-		Name:           "Custom",
-		ContractId:     contractId,
-		Price:          price,
-		//Quantity:       int64(quantity),
-		Billed: billed,
-		SourceFields: &commonpb.SourceFields{
-			AppSource: "test_app",
-		},
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
-}
-
 func testCloseLooseOpportunity() {
 
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
@@ -215,22 +188,6 @@ func testCloseLooseOpportunity() {
 		Id:             opportunityId,
 		LoggedInUserId: userId,
 		AppSource:      appSource,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
-}
-
-func testCreateRenewalOpportunity() {
-
-	result, err := clients.OpportunityClient.CreateRenewalOpportunity(context.Background(), &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-		Tenant:         tenant,
-		LoggedInUserId: userId,
-		ContractId:     contractId,
-		SourceFields: &commonpb.SourceFields{
-			AppSource: appSource,
-		},
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
