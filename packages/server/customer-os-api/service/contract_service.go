@@ -20,7 +20,6 @@ import (
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -549,17 +548,10 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 			}
 			time.Sleep(500 * time.Millisecond)
 		}
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
-			return s.grpcClients.ContractClient.RolloutRenewalOpportunityOnExpiration(ctx, &contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest{
-				Id:             contractId,
-				Tenant:         common.GetTenantFromContext(ctx),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      constants.AppSourceCustomerOsApi,
-			})
-		})
+		err = s.services.CommonServices.OpportunityService.RolloutRenewalOpportunity(ctx, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error from events processing: %s", err.Error())
+			s.log.Errorf("failed to rollout renewal opportunity: %s", err.Error())
 			return err
 		}
 	}
