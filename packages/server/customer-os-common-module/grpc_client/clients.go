@@ -4,7 +4,6 @@ import (
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	contract_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
-	interactioneventpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	interactionsessionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_session"
 	invoice_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
@@ -21,7 +20,6 @@ type Clients struct {
 	OrganizationClient       organization_grpc_service.OrganizationGrpcServiceClient
 	ServiceLineItemClient    service_line_item_grpc_service.ServiceLineItemGrpcServiceClient
 	LocationClient           locationpb.LocationGrpcServiceClient
-	InteractionEventClient   interactioneventpb.InteractionEventGrpcServiceClient
 	InteractionSessionClient interactionsessionpb.InteractionSessionGrpcServiceClient
 	CommentClient            commentpb.CommentGrpcServiceClient
 	EventStoreClient         eventstorepb.EventStoreGrpcServiceClient
@@ -38,7 +36,6 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		OpportunityClient:        opportunity_grpc_service.NewOpportunityGrpcServiceClient(conn),
 		InvoiceClient:            invoice_grpc_service.NewInvoiceGrpcServiceClient(conn),
 		LocationClient:           locationpb.NewLocationGrpcServiceClient(conn),
-		InteractionEventClient:   interactioneventpb.NewInteractionEventGrpcServiceClient(conn),
 		InteractionSessionClient: interactionsessionpb.NewInteractionSessionGrpcServiceClient(conn),
 		CommentClient:            commentpb.NewCommentGrpcServiceClient(conn),
 		EventStoreClient:         eventstorepb.NewEventStoreGrpcServiceClient(conn),

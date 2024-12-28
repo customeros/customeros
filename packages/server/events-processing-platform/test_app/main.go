@@ -10,7 +10,6 @@ import (
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
-	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -27,14 +26,13 @@ var orgId = "ceae019f-d1e3-49b3-87c5-35ebb68a5ff1"
 var contractId = "769d1fb8-50a1-44bc-aff0-0f4338bd8ff2"
 
 type Clients struct {
-	InteractionEventClient iepb.InteractionEventGrpcServiceClient
-	OrganizationClient     organizationpb.OrganizationGrpcServiceClient
-	CommentClient          commentpb.CommentGrpcServiceClient
-	ContractClient         contractpb.ContractGrpcServiceClient
-	ServiceLineItemClient  servicelineitempb.ServiceLineItemGrpcServiceClient
-	OpportunityClient      opportunitypb.OpportunityGrpcServiceClient
-	InvoiceClient          invoicepb.InvoiceGrpcServiceClient
-	EventStoreClient       eventstorepb.EventStoreGrpcServiceClient
+	OrganizationClient    organizationpb.OrganizationGrpcServiceClient
+	CommentClient         commentpb.CommentGrpcServiceClient
+	ContractClient        contractpb.ContractGrpcServiceClient
+	ServiceLineItemClient servicelineitempb.ServiceLineItemGrpcServiceClient
+	OpportunityClient     opportunitypb.OpportunityGrpcServiceClient
+	InvoiceClient         invoicepb.InvoiceGrpcServiceClient
+	EventStoreClient      eventstorepb.EventStoreGrpcServiceClient
 }
 
 var clients *Clients
@@ -45,22 +43,19 @@ func InitClients() {
 			interceptor.ApiKeyEnricher(grpcApiKey),
 		))
 	clients = &Clients{
-		InteractionEventClient: iepb.NewInteractionEventGrpcServiceClient(conn),
-		OrganizationClient:     organizationpb.NewOrganizationGrpcServiceClient(conn),
-		CommentClient:          commentpb.NewCommentGrpcServiceClient(conn),
-		ContractClient:         contractpb.NewContractGrpcServiceClient(conn),
-		OpportunityClient:      opportunitypb.NewOpportunityGrpcServiceClient(conn),
-		ServiceLineItemClient:  servicelineitempb.NewServiceLineItemGrpcServiceClient(conn),
-		InvoiceClient:          invoicepb.NewInvoiceGrpcServiceClient(conn),
-		EventStoreClient:       eventstorepb.NewEventStoreGrpcServiceClient(conn),
+		OrganizationClient:    organizationpb.NewOrganizationGrpcServiceClient(conn),
+		CommentClient:         commentpb.NewCommentGrpcServiceClient(conn),
+		ContractClient:        contractpb.NewContractGrpcServiceClient(conn),
+		OpportunityClient:     opportunitypb.NewOpportunityGrpcServiceClient(conn),
+		ServiceLineItemClient: servicelineitempb.NewServiceLineItemGrpcServiceClient(conn),
+		InvoiceClient:         invoicepb.NewInvoiceGrpcServiceClient(conn),
+		EventStoreClient:      eventstorepb.NewEventStoreGrpcServiceClient(conn),
 	}
 }
 
 func main() {
 	InitClients()
 
-	//testRequestGenerateSummaryRequest()
-	//testRequestGenerateActionItemsRequest()
 	//testHideOrganization()
 	//testAddCustomField()
 	//testCreatePhoneNumber()
@@ -118,28 +113,6 @@ func PleasePayInvoiceNotification() {
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
 	}
-}
-
-func testRequestGenerateSummaryRequest() {
-
-	interactionEventId := "555263fe-2e39-48f0-a8c2-c4c7a5ffb23d"
-
-	result, _ := clients.InteractionEventClient.RequestGenerateSummary(context.Background(), &iepb.RequestGenerateSummaryGrpcRequest{
-		Tenant:             tenant,
-		InteractionEventId: interactionEventId,
-	})
-	print(result)
-}
-
-func testRequestGenerateActionItemsRequest() {
-
-	interactionEventId := "555263fe-2e39-48f0-a8c2-c4c7a5ffb23d"
-
-	result, _ := clients.InteractionEventClient.RequestGenerateActionItems(context.Background(), &iepb.RequestGenerateActionItemsGrpcRequest{
-		Tenant:             tenant,
-		InteractionEventId: interactionEventId,
-	})
-	print(result)
 }
 
 func testAddCustomField() {
