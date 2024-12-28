@@ -7,7 +7,6 @@ import (
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -67,7 +66,6 @@ func (server *Server) NewEventProcessorGrpcServer() (func() error, *grpc.Server,
 func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	organizationpb.RegisterOrganizationGrpcServiceServer(grpcServer, services.OrganizationService)
 	locationpb.RegisterLocationGrpcServiceServer(grpcServer, services.LocationService)
-	issuepb.RegisterIssueGrpcServiceServer(grpcServer, services.IssueService)
 	commentpb.RegisterCommentGrpcServiceServer(grpcServer, services.CommentService)
 	opportunitypb.RegisterOpportunityGrpcServiceServer(grpcServer, services.OpportunityService)
 	contractpb.RegisterContractGrpcServiceServer(grpcServer, services.ContractService)

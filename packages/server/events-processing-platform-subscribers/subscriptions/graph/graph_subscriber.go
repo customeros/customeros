@@ -19,7 +19,6 @@ import (
 	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
 	contractevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
-	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
@@ -35,7 +34,6 @@ type GraphSubscriber struct {
 	cfg                         *config.Config
 	organizationEventHandler    *OrganizationEventHandler
 	locationEventHandler        *LocationEventHandler
-	issueEventHandler           *IssueEventHandler
 	commentEventHandler         *CommentEventHandler
 	opportunityEventHandler     *OpportunityEventHandler
 	contractEventHandler        *ContractEventHandler
@@ -50,7 +48,6 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		cfg:                         cfg,
 		organizationEventHandler:    NewOrganizationEventHandler(log, services, grpcClients, cache),
 		locationEventHandler:        NewLocationEventHandler(services),
-		issueEventHandler:           NewIssueEventHandler(log, services, grpcClients),
 		commentEventHandler:         NewCommentEventHandler(log, services),
 		opportunityEventHandler:     NewOpportunityEventHandler(log, services, grpcClients),
 		contractEventHandler:        NewContractEventHandler(log, services, grpcClients),
@@ -223,19 +220,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case commentevent.CommentUpdateV1:
 		_ = s.commentEventHandler.OnUpdate(ctx, evt)
-		return nil
-
-	case issueevent.IssueAddUserAssigneeV1:
-		_ = s.issueEventHandler.OnAddUserAssignee(ctx, evt)
-		return nil
-	case issueevent.IssueRemoveUserAssigneeV1:
-		_ = s.issueEventHandler.OnRemoveUserAssignee(ctx, evt)
-		return nil
-	case issueevent.IssueAddUserFollowerV1:
-		_ = s.issueEventHandler.OnAddUserFollower(ctx, evt)
-		return nil
-	case issueevent.IssueRemoveUserFollowerV1:
-		_ = s.issueEventHandler.OnRemoveUserFollower(ctx, evt)
 		return nil
 
 	case opportunityevent.OpportunityCreateV1:
