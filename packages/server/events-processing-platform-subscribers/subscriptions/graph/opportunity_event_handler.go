@@ -22,7 +22,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/events"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -250,14 +249,7 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 		}
 
 		// refresh contract status
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
-			return h.grpcClients.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
-				Tenant:    eventData.Tenant,
-				Id:        contractEntity.Id,
-				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-			})
-		})
+		err = h.services.CommonServices.ContractService.RefreshContractStatus(ctx, contractEntity.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("RefreshContractStatus failed: %s", err.Error())

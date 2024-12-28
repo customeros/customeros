@@ -28,36 +28,12 @@ func (a *ContractTempAggregate) HandleGRPCRequest(ctx context.Context, request a
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *contractpb.RefreshContractStatusGrpcRequest:
-		return nil, a.refreshContractStatus(ctx, r)
 	case *contractpb.RefreshContractLtvGrpcRequest:
 		return nil, a.refreshContractLtv(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
-}
-
-func (a *ContractTempAggregate) refreshContractStatus(ctx context.Context, request *contractpb.RefreshContractStatusGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ContractAggregate.refreshContractStatus")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	updateEvent, err := event.NewContractRefreshStatusEvent(a)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewContractRefreshStatusEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.GetAppSource(),
-	})
-
-	return a.Apply(updateEvent)
 }
 
 func (a *ContractTempAggregate) refreshContractLtv(ctx context.Context, r *contractpb.RefreshContractLtvGrpcRequest) error {
