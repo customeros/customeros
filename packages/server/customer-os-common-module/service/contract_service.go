@@ -28,6 +28,7 @@ import (
 type ContractService interface {
 	GetById(ctx context.Context, contactId string) (*neo4jentity.ContractEntity, error)
 	Save(ctx context.Context, contactId *string, dataFields data_fields.ContractSaveFields) (string, error)
+	SoftDelete(ctx context.Context, contractId string) error
 	RefreshContractStatus(ctx context.Context, contractId string) error
 	RecalculateContractLtv(ctx context.Context, contractId string) error
 }
@@ -203,6 +204,70 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 	}
 
 	return contractId, nil
+}
+
+func (s *contractService) SoftDelete(ctx context.Context, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.SoftDelete")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, contractId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// fetch organization of the contract
+	organizationDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
+		return nil
+	}
+	if organizationDbNode == nil {
+		s.log.Errorf("Organization not found for contract %s", contractId)
+		return nil
+	}
+	organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+
+	err = s.services.Neo4jRepositories.ContractWriteRepository.SoftDelete(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while deleting contract %s: %s", contractId, err.Error())
+		return err
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.services.GrpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
+			Tenant:         tenant,
+			OrganizationId: organization.ID,
+			AppSource:      common.GetAppSourceFromContext(ctx),
+		})
+	})
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.services.GrpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         tenant,
+			OrganizationId: organization.ID,
+			AppSource:      common.GetAppSourceFromContext(ctx),
+		})
+	})
+
+	err = s.services.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, "")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
+		return err
+	}
+
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithDelete())
+
+	return nil
 }
 
 func (s *contractService) postCreateContract(ctx context.Context, tenant, contractId string, dataFields data_fields.ContractSaveFields) error {

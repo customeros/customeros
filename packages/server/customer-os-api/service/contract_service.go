@@ -25,7 +25,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"time"
 )
 
@@ -429,21 +428,11 @@ func (s *contractService) SoftDeleteContract(ctx context.Context, contractId str
 		return false, err
 	}
 
-	deleteRequest := contractpb.SoftDeleteContractGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             contractId,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
-		return s.grpcClients.ContractClient.SoftDeleteContract(ctx, &deleteRequest)
-	})
+	err = s.services.CommonServices.ContractService.SoftDelete(ctx, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
-		return false, err
+		s.log.Errorf("Failed to delete contract: %s", err.Error())
+		return false, nil
 	}
 
 	// wait for contract to be deleted from graph db

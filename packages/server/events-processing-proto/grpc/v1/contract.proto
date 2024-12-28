@@ -15,14 +15,6 @@ message RolloutRenewalOpportunityOnExpirationGrpcRequest {
   string appSource = 4;
 }
 
-// Permanently delete contract request
-message SoftDeleteContractGrpcRequest {
-  string id = 1;
-  string tenant = 2;
-  string loggedInUserId = 3;
-  string appSource = 4;
-}
-
 // Contract response message
 message ContractIdGrpcResponse {
   string id = 1;
@@ -31,5 +23,4 @@ message ContractIdGrpcResponse {
 // Service definition
 service ContractGrpcService {
   rpc RolloutRenewalOpportunityOnExpiration(RolloutRenewalOpportunityOnExpirationGrpcRequest) returns (ContractIdGrpcResponse);
-  rpc SoftDeleteContract(SoftDeleteContractGrpcRequest) returns (google.protobuf.Empty);
 }

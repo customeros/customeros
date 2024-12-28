@@ -10,12 +10,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -101,70 +99,6 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 	}
 
 	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, contractId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
-}
-
-func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractEventHandler.OnDeleteV1")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.ContractDeleteEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
-
-	// fetch organization of the contract
-	organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, eventData.Tenant, contractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
-		return nil
-	}
-	if organizationDbNode == nil {
-		h.log.Errorf("Organization not found for contract %s", contractId)
-		return nil
-	}
-	organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-
-	err = h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.SoftDelete(ctx, eventData.Tenant, contractId, eventData.UpdatedAt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while deleting contract %s: %s", contractId, err.Error())
-		return err
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return h.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
-			Tenant:         eventData.Tenant,
-			OrganizationId: organization.ID,
-			AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
-		})
-	})
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return h.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         eventData.Tenant,
-			OrganizationId: organization.ID,
-			AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
-		})
-	})
-
-	err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, eventData.Tenant, contractId, "")
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
-		return err
-	}
-
-	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }
