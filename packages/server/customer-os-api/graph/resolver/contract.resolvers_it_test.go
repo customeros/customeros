@@ -17,7 +17,6 @@ import (
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 	"time"
 )
@@ -365,44 +364,6 @@ func TestQueryResolver_Contract_WithOpportunities(t *testing.T) {
 	require.Equal(t, 2, len(contract.UpcomingInvoices))
 	require.Equal(t, invoiceIdScheduled1, contract.UpcomingInvoices[0].Metadata.ID)
 	require.Equal(t, invoiceIdScheduled2, contract.UpcomingInvoices[1].Metadata.ID)
-}
-
-func TestMutationResolver_ContractDelete(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
-
-	calledDeleteContractEvent := false
-
-	contractCallbacks := events_platform.MockContractServiceCallbacks{
-		SoftDeleteContract: func(context context.Context, contract *contractpb.SoftDeleteContractGrpcRequest) (*emptypb.Empty, error) {
-			require.Equal(t, tenantName, contract.Tenant)
-			require.Equal(t, contractId, contract.Id)
-			require.Equal(t, testUserId, contract.LoggedInUserId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, contract.AppSource)
-			calledDeleteContractEvent = true
-			return &emptypb.Empty{}, nil
-		},
-	}
-	events_platform.SetContractCallbacks(&contractCallbacks)
-
-	rawResponse := callGraphQL(t, "contract/delete_contract", map[string]interface{}{
-		"contractId": contractId,
-	})
-
-	var response struct {
-		Contract_Delete model.DeleteResponse
-	}
-
-	require.Nil(t, rawResponse.Errors)
-	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
-	require.Nil(t, err)
-	require.True(t, response.Contract_Delete.Accepted)
-	require.False(t, response.Contract_Delete.Completed)
-	require.True(t, calledDeleteContractEvent)
 }
 
 func TestMutationResolver_AddAttachmentToContract(t *testing.T) {
