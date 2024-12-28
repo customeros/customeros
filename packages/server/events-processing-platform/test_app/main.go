@@ -12,7 +12,6 @@ import (
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
@@ -30,7 +29,6 @@ var contractId = "769d1fb8-50a1-44bc-aff0-0f4338bd8ff2"
 type Clients struct {
 	InteractionEventClient iepb.InteractionEventGrpcServiceClient
 	OrganizationClient     organizationpb.OrganizationGrpcServiceClient
-	IssueClient            issuepb.IssueGrpcServiceClient
 	CommentClient          commentpb.CommentGrpcServiceClient
 	ContractClient         contractpb.ContractGrpcServiceClient
 	ServiceLineItemClient  servicelineitempb.ServiceLineItemGrpcServiceClient
@@ -49,7 +47,6 @@ func InitClients() {
 	clients = &Clients{
 		InteractionEventClient: iepb.NewInteractionEventGrpcServiceClient(conn),
 		OrganizationClient:     organizationpb.NewOrganizationGrpcServiceClient(conn),
-		IssueClient:            issuepb.NewIssueGrpcServiceClient(conn),
 		CommentClient:          commentpb.NewCommentGrpcServiceClient(conn),
 		ContractClient:         contractpb.NewContractGrpcServiceClient(conn),
 		OpportunityClient:      opportunitypb.NewOpportunityGrpcServiceClient(conn),
@@ -209,33 +206,6 @@ func testOrganizationLinkWithLocation() {
 		LocationId:     locationId,
 	})
 	print(result)
-}
-
-func testCreateComment() {
-
-	userId := "0fe25c46-bdac-485d-a5d5-a4a0390778ad"
-	content := "hellow world"
-	contentType := "text/plain"
-	issueId := "ed17dbab-e79b-4e87-8914-2d93ed55324b"
-
-	result, err := clients.CommentClient.UpsertComment(context.Background(), &commentpb.UpsertCommentGrpcRequest{
-		Tenant:           tenant,
-		Content:          content,
-		ContentType:      contentType,
-		AuthorUserId:     utils.StringPtr(userId),
-		CommentedIssueId: utils.StringPtr(issueId),
-		SourceFields: &commonpb.SourceFields{
-			AppSource: appSource,
-		},
-		ExternalSystemFields: &commonpb.ExternalSystemFields{
-			ExternalSystemId: "hubspot",
-			ExternalId:       "123",
-		},
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Created comment id: %v", result.Id)
 }
 
 func testAddContractService() {

@@ -18,6 +18,10 @@ import (
 
 type IssueService interface {
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, issueFields data_fields.IssueFields) (string, error)
+	AddUserAssignee(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, issueId, userId string) error
+	RemoveUserAssignee(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, issueId, userId string) error
+	AddUserFollower(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, issueId, userId string) error
+	RemoveUserFollower(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, issueId, userId string) error
 }
 
 type issueService struct {
@@ -173,4 +177,244 @@ func (s *issueService) Save(ctx context.Context, txWithPostCommit *utils.TxWithP
 	}
 
 	return issueId, nil
+}
+
+func (s *issueService) AddUserAssignee(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, issueId, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.AddUserAssignee")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("userId", userId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// validate issue exists
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, issueId, model.NodeLabelIssue)
+	if err != nil || !exists {
+		err = errors.New("issue not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tracing.TagEntity(span, issueId)
+
+	// validate user exists
+	exists, err = s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, model.NodeLabelUser)
+	if err != nil || !exists {
+		err = errors.New("user not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		err = s.services.Neo4jRepositories.IssueWriteRepository.AddUserAssignee(ctx, txWithPostCommit.Tx, tenant, issueId, userId)
+		if err != nil {
+			s.log.Errorf("Error while adding user assignee %s to issue %s: %s", userId, issueId, err.Error())
+			return nil, err
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err = s.services.RabbitMQService.PublishEvent(ctx, issueId, model.ISSUE, dto.AddUserAssigneeToIssue{UserID: userId})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddUserAssigneeToIssue"))
+			}
+			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
+			}
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *issueService) RemoveUserAssignee(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, issueId, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.RemoveUserAssignee")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("userId", userId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// validate issue exists
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, issueId, model.NodeLabelIssue)
+	if err != nil || !exists {
+		err = errors.New("issue not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tracing.TagEntity(span, issueId)
+
+	// validate user exists
+	exists, err = s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, model.NodeLabelUser)
+	if err != nil || !exists {
+		err = errors.New("user not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		err = s.services.Neo4jRepositories.IssueWriteRepository.RemoveUserAssignee(ctx, txWithPostCommit.Tx, tenant, issueId, userId)
+		if err != nil {
+			s.log.Errorf("Error while adding user assignee %s to issue %s: %s", userId, issueId, err.Error())
+			return nil, err
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err = s.services.RabbitMQService.PublishEvent(ctx, issueId, model.ISSUE, dto.RemoveUserAssigneeFromIssue{UserID: userId})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveUserAssigneeFromIssue"))
+			}
+			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
+			}
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *issueService) AddUserFollower(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, issueId, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.AddUserFollower")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("userId", userId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// validate issue exists
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, issueId, model.NodeLabelIssue)
+	if err != nil || !exists {
+		err = errors.New("issue not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tracing.TagEntity(span, issueId)
+
+	// validate user exists
+	exists, err = s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, model.NodeLabelUser)
+	if err != nil || !exists {
+		err = errors.New("user not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		err = s.services.Neo4jRepositories.IssueWriteRepository.AddUserFollower(ctx, txWithPostCommit.Tx, tenant, issueId, userId)
+		if err != nil {
+			s.log.Errorf("Error while adding user assignee %s to issue %s: %s", userId, issueId, err.Error())
+			return nil, err
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err = s.services.RabbitMQService.PublishEvent(ctx, issueId, model.ISSUE, dto.AddUserFollowerToIssue{UserID: userId})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddUserFollowerToIssue"))
+			}
+			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
+			}
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *issueService) RemoveUserFollower(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, issueId, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.RemoveUserFollower")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("userId", userId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// validate issue exists
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, issueId, model.NodeLabelIssue)
+	if err != nil || !exists {
+		err = errors.New("issue not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tracing.TagEntity(span, issueId)
+
+	// validate user exists
+	exists, err = s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, model.NodeLabelUser)
+	if err != nil || !exists {
+		err = errors.New("user not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		err = s.services.Neo4jRepositories.IssueWriteRepository.RemoveUserFollower(ctx, txWithPostCommit.Tx, tenant, issueId, userId)
+		if err != nil {
+			s.log.Errorf("Error while adding user assignee %s to issue %s: %s", userId, issueId, err.Error())
+			return nil, err
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err = s.services.RabbitMQService.PublishEvent(ctx, issueId, model.ISSUE, dto.RemoveUserFollowerFromIssue{UserID: userId})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveUserFollowerFromIssue"))
+			}
+			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
+			}
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }

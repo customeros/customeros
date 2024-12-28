@@ -14,10 +14,10 @@ import (
 type IssueWriteRepository interface {
 	Create(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId string, data data_fields.IssueFields) error
 	Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId string, data data_fields.IssueFields) error
-	AddUserAssignee(ctx context.Context, tenant, issueId, userId string) error
-	RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string) error
-	AddUserFollower(ctx context.Context, tenant, issueId, userId string) error
-	RemoveUserFollower(ctx context.Context, tenant, issueId, userId string) error
+	AddUserAssignee(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId, userId string) error
+	RemoveUserAssignee(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId, userId string) error
+	AddUserFollower(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId, userId string) error
+	RemoveUserFollower(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId, userId string) error
 
 	ReportedByOrganizationWithGroupId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, groupId string) error
 	RemoveReportedByOrganizationWithGroupId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, groupId string) error
@@ -162,13 +162,13 @@ func (r *issueWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTran
 	return err
 }
 
-func (r *issueWriteRepository) AddUserAssignee(ctx context.Context, tenant, issueId, userId string) error {
+func (r *issueWriteRepository) AddUserAssignee(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.AddUserAssignee")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, issueId)
-	span.LogFields(log.String("userId", userId))
+	tracing.TagEntity(span, issueId)
+	span.LogKV("userId", userId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
 				(t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
@@ -182,19 +182,27 @@ func (r *issueWriteRepository) AddUserAssignee(ctx context.Context, tenant, issu
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
-func (r *issueWriteRepository) AddUserFollower(ctx context.Context, tenant, issueId, userId string) error {
+func (r *issueWriteRepository) AddUserFollower(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.AddUserFollower")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, issueId)
+	tracing.TagEntity(span, issueId)
 	span.LogFields(log.String("userId", userId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
@@ -209,19 +217,27 @@ func (r *issueWriteRepository) AddUserFollower(ctx context.Context, tenant, issu
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
-func (r *issueWriteRepository) RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string) error {
+func (r *issueWriteRepository) RemoveUserAssignee(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.RemoveUserAssignee")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, issueId)
+	tracing.TagEntity(span, issueId)
 	span.LogFields(log.String("userId", userId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
@@ -237,19 +253,27 @@ func (r *issueWriteRepository) RemoveUserAssignee(ctx context.Context, tenant, i
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
-func (r *issueWriteRepository) RemoveUserFollower(ctx context.Context, tenant, issueId, userId string) error {
+func (r *issueWriteRepository) RemoveUserFollower(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.RemoveUserFollower")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, issueId)
+	tracing.TagEntity(span, issueId)
 	span.LogFields(log.String("userId", userId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId}),
@@ -265,10 +289,18 @@ func (r *issueWriteRepository) RemoveUserFollower(ctx context.Context, tenant, i
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
