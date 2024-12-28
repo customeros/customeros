@@ -12,13 +12,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	pkgerrors "github.com/pkg/errors"
 	"strings"
 	"sync"
 	"time"
@@ -253,18 +252,11 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				s.log.Error(reason)
 			}
 			if followerId != "" && followerLabel == commonmodel.NodeLabelUser && !utils.Contains(processedFollowerUserIds, followerId) {
-				_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
-					return s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
-						Tenant:    common.GetTenantFromContext(ctx),
-						IssueId:   issueId,
-						UserId:    followerId,
-						AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
-					})
-				})
+				err = s.services.CommonServices.IssueService.AddUserFollower(ctx, nil, issueId, followerId)
 				processedFollowerUserIds = append(processedFollowerUserIds, followerId)
 				if err != nil {
-					tracing.TraceErr(span, err, log.String("grpcMethod", "AddUserFollower"))
-					reason = fmt.Sprintf("failed sending event to add follower %s to issue %s for tenant %s :%s", followerId, issueId, tenant, err.Error())
+					tracing.TraceErr(span, pkgerrors.Wrap(err, "AddUserFollower"))
+					reason = fmt.Sprintf("failed to add follower %s to issue %s for tenant %s :%s", followerId, issueId, tenant, err.Error())
 					s.log.Error(reason)
 				}
 			}
@@ -282,18 +274,11 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 				s.log.Error(reason)
 			}
 			if collaboratorId != "" && collaboratorLabel == commonmodel.NodeLabelUser && !utils.Contains(processedFollowerUserIds, collaboratorId) {
-				_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
-					return s.grpcClients.IssueClient.AddUserFollower(ctx, &issuepb.AddUserFollowerToIssueGrpcRequest{
-						Tenant:    common.GetTenantFromContext(ctx),
-						IssueId:   issueId,
-						UserId:    collaboratorId,
-						AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
-					})
-				})
+				err = s.services.CommonServices.IssueService.AddUserFollower(ctx, nil, issueId, collaboratorId)
 				processedFollowerUserIds = append(processedFollowerUserIds, collaboratorId)
 				if err != nil {
-					tracing.TraceErr(span, err, log.String("grpcMethod", "AddUserFollower"))
-					reason = fmt.Sprintf("failed sending event to add follower %s to issue %s for tenant %s :%s", collaboratorId, issueId, tenant, err.Error())
+					tracing.TraceErr(span, pkgerrors.Wrap(err, "AddUserFollower"))
+					reason = fmt.Sprintf("failed to add follower %s to issue %s for tenant %s :%s", collaboratorId, issueId, tenant, err.Error())
 					s.log.Error(reason)
 				}
 			}
@@ -310,17 +295,10 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 			s.log.Error(reason)
 		}
 		if assigneeId != "" {
-			_, err = CallEventsPlatformGRPCWithRetry[*issuepb.IssueIdGrpcResponse](func() (*issuepb.IssueIdGrpcResponse, error) {
-				return s.grpcClients.IssueClient.AddUserAssignee(ctx, &issuepb.AddUserAssigneeToIssueGrpcRequest{
-					Tenant:    common.GetTenantFromContext(ctx),
-					IssueId:   issueId,
-					UserId:    assigneeId,
-					AppSource: utils.StringFirstNonEmpty(issueInput.AppSource, constants.AppSourceCustomerOsWebhooks),
-				})
-			})
+			err = s.services.CommonServices.IssueService.AddUserAssignee(ctx, nil, issueId, assigneeId)
 			if err != nil {
-				tracing.TraceErr(span, err, log.String("grpcMethod", "AddUserAssignee"))
-				reason = fmt.Sprintf("failed sending event to add assignee %s to issue %s for tenant %s :%s", assigneeId, issueId, tenant, err.Error())
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("failed to add assignee %s to issue %s for tenant %s :%s", assigneeId, issueId, tenant, err.Error())
 				s.log.Error(reason)
 			}
 		}
