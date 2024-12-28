@@ -41,8 +41,6 @@ func (a *ContractAggregate) HandleGRPCRequest(ctx context.Context, request any, 
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *contractpb.SoftDeleteContractGrpcRequest:
-		return nil, a.softDeleteContract(ctx, r)
 	case *contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest:
 		return nil, a.rolloutRenewalOpportunityOnExpiration(ctx, r)
 	default:
@@ -77,36 +75,12 @@ func isUpdated(field string, fieldsMask []string) bool {
 	return len(fieldsMask) == 0 || utils.Contains(fieldsMask, field)
 }
 
-func (a *ContractAggregate) softDeleteContract(ctx context.Context, r *contractpb.SoftDeleteContractGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ContractAggregate.softDeleteContract")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", r)
-
-	deleteEvent, err := event.NewContractDeleteEvent(a, utils.Now())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewContractDeleteEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&deleteEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: r.LoggedInUserId,
-		App:    r.AppSource,
-	})
-
-	return a.Apply(deleteEvent)
-}
-
 func (a *ContractAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.ContractUpdateStatusV1:
 		return a.onContractRefreshStatus(evt)
 	case event.ContractRolloutRenewalOpportunityV1:
 		return nil
-	case event.ContractDeleteV1:
-		return a.onContractDelete(evt)
 	default:
 		return nil
 	}
@@ -119,15 +93,5 @@ func (a *ContractAggregate) onContractRefreshStatus(evt eventstore.Event) error 
 	}
 
 	a.Contract.Status = eventData.Status
-	return nil
-}
-
-func (a *ContractAggregate) onContractDelete(evt eventstore.Event) error {
-	var eventData event.ContractDeleteEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.Contract.Removed = true
 	return nil
 }

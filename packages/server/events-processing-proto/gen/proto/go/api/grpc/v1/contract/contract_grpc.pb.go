@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -24,7 +23,6 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ContractGrpcServiceClient interface {
 	RolloutRenewalOpportunityOnExpiration(ctx context.Context, in *RolloutRenewalOpportunityOnExpirationGrpcRequest, opts ...grpc.CallOption) (*ContractIdGrpcResponse, error)
-	SoftDeleteContract(ctx context.Context, in *SoftDeleteContractGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type contractGrpcServiceClient struct {
@@ -44,21 +42,11 @@ func (c *contractGrpcServiceClient) RolloutRenewalOpportunityOnExpiration(ctx co
 	return out, nil
 }
 
-func (c *contractGrpcServiceClient) SoftDeleteContract(ctx context.Context, in *SoftDeleteContractGrpcRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/ContractGrpcService/SoftDeleteContract", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // ContractGrpcServiceServer is the server API for ContractGrpcService service.
 // All implementations should embed UnimplementedContractGrpcServiceServer
 // for forward compatibility
 type ContractGrpcServiceServer interface {
 	RolloutRenewalOpportunityOnExpiration(context.Context, *RolloutRenewalOpportunityOnExpirationGrpcRequest) (*ContractIdGrpcResponse, error)
-	SoftDeleteContract(context.Context, *SoftDeleteContractGrpcRequest) (*emptypb.Empty, error)
 }
 
 // UnimplementedContractGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -67,9 +55,6 @@ type UnimplementedContractGrpcServiceServer struct {
 
 func (UnimplementedContractGrpcServiceServer) RolloutRenewalOpportunityOnExpiration(context.Context, *RolloutRenewalOpportunityOnExpirationGrpcRequest) (*ContractIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RolloutRenewalOpportunityOnExpiration not implemented")
-}
-func (UnimplementedContractGrpcServiceServer) SoftDeleteContract(context.Context, *SoftDeleteContractGrpcRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SoftDeleteContract not implemented")
 }
 
 // UnsafeContractGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -101,24 +86,6 @@ func _ContractGrpcService_RolloutRenewalOpportunityOnExpiration_Handler(srv inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ContractGrpcService_SoftDeleteContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SoftDeleteContractGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ContractGrpcServiceServer).SoftDeleteContract(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/ContractGrpcService/SoftDeleteContract",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ContractGrpcServiceServer).SoftDeleteContract(ctx, req.(*SoftDeleteContractGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // ContractGrpcService_ServiceDesc is the grpc.ServiceDesc for ContractGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -129,10 +96,6 @@ var ContractGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RolloutRenewalOpportunityOnExpiration",
 			Handler:    _ContractGrpcService_RolloutRenewalOpportunityOnExpiration_Handler,
-		},
-		{
-			MethodName: "SoftDeleteContract",
-			Handler:    _ContractGrpcService_SoftDeleteContract_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

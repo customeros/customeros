@@ -26,7 +26,7 @@ type ContractWriteRepository interface {
 	MarkCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
 	MarkOffCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
 	MarkNextPreviewInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
-	SoftDelete(ctx context.Context, tenant, contractId string, deletedAt time.Time) error
+	SoftDelete(ctx context.Context, tenant, contractId string) error
 	SetLtv(ctx context.Context, tenant, contractId string, ltv float64) error
 }
 
@@ -509,7 +509,7 @@ func (r *contractWriteRepository) MarkNextPreviewInvoicingRequested(ctx context.
 	return err
 }
 
-func (r *contractWriteRepository) SoftDelete(ctx context.Context, tenant, contractId string, deletedAt time.Time) error {
+func (r *contractWriteRepository) SoftDelete(ctx context.Context, tenant, contractId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.SoftDelete")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -527,7 +527,7 @@ func (r *contractWriteRepository) SoftDelete(ctx context.Context, tenant, contra
 	params := map[string]any{
 		"tenant":     tenant,
 		"contractId": contractId,
-		"deletedAt":  deletedAt,
+		"deletedAt":  utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
