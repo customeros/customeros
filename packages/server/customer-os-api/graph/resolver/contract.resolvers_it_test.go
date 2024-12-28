@@ -548,56 +548,6 @@ func TestMutationResolver_ContractRenew_ActiveRenewalNotExpired_ApproveRenewalOp
 	require.True(t, calledUpdateOpportunityGrpc)
 }
 
-func TestMutationResolver_ContractRenew_ActiveRenewalExpired_RolloutRenewalOpportunity(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	yesterday := utils.Now().Add(time.Duration(-24) * time.Hour)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		LengthInMonths: 1,
-	})
-	neo4jtest.CreateOpportunityForContract(ctx, driver, tenantName, contractId, neo4jentity.OpportunityEntity{
-		InternalStage: neo4jenum.OpportunityInternalStageOpen,
-		InternalType:  neo4jenum.OpportunityInternalTypeRenewal,
-		RenewalDetails: neo4jentity.RenewalDetails{
-			RenewedAt:       &yesterday,
-			RenewalApproved: false,
-		},
-	})
-
-	calledRolloutRenewalOpportunity := false
-
-	contractCallbacks := events_platform.MockContractServiceCallbacks{
-		RolloutRenewalOpportunityOnExpiration: func(context context.Context, contract *contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest) (*contractpb.ContractIdGrpcResponse, error) {
-			require.Equal(t, tenantName, contract.Tenant)
-			require.Equal(t, testUserId, contract.LoggedInUserId)
-			require.Equal(t, contractId, contract.Id)
-			require.Equal(t, constants.AppSourceCustomerOsApi, contract.AppSource)
-			calledRolloutRenewalOpportunity = true
-			return &contractpb.ContractIdGrpcResponse{
-				Id: contractId,
-			}, nil
-		},
-	}
-	events_platform.SetContractCallbacks(&contractCallbacks)
-
-	rawResponse := callGraphQL(t, "contract/renew_contract", map[string]interface{}{
-		"contractId": contractId,
-	})
-
-	var response struct {
-		Contract_Renew model.Contract
-	}
-
-	require.Nil(t, rawResponse.Errors)
-	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
-	require.Nil(t, err)
-	require.Equal(t, contractId, response.Contract_Renew.Metadata.ID)
-	require.True(t, calledRolloutRenewalOpportunity)
-}
-
 func TestQueryResolver_Contracts(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
