@@ -1,7 +1,6 @@
 package aggregate
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -71,27 +70,11 @@ func (a *ContractAggregate) rolloutRenewalOpportunityOnExpiration(ctx context.Co
 	return a.Apply(updateEvent)
 }
 
-func isUpdated(field string, fieldsMask []string) bool {
-	return len(fieldsMask) == 0 || utils.Contains(fieldsMask, field)
-}
-
 func (a *ContractAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
-	case event.ContractUpdateStatusV1:
-		return a.onContractRefreshStatus(evt)
 	case event.ContractRolloutRenewalOpportunityV1:
 		return nil
 	default:
 		return nil
 	}
-}
-
-func (a *ContractAggregate) onContractRefreshStatus(evt eventstore.Event) error {
-	var eventData event.ContractUpdateStatusEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.Contract.Status = eventData.Status
-	return nil
 }
