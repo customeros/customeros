@@ -2,17 +2,14 @@ package contract
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -152,84 +149,6 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 			tracing.TraceErr(span, err)
 			h.log.Errorf("UpdateRenewalOpportunity failed: %s", err.Error())
 			return errors.Wrap(err, "UpdateRenewalOpportunity")
-		}
-	}
-
-	return nil
-}
-
-func (h *contractHandler) UpdateOrganizationRelationship(ctx context.Context, tenant, contractId string, statusChanged bool) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractHandler.UpdateOrganizationRelationship")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("contractId", contractId), log.Bool("statusChanged", statusChanged))
-
-	if !statusChanged {
-		return nil
-	}
-
-	// get contract
-	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
-		return err
-	}
-	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-
-	// get organization for contract
-	organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
-		return err
-	}
-	orgEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-
-	// get all contracts for organization
-	orgContracts, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{orgEntity.ID})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while getting contracts for organization %s: %s", orgEntity.ID, err.Error())
-		return err
-	}
-	orgContractEntities := []neo4jentity.ContractEntity{}
-	for _, orgContract := range orgContracts {
-		orgContractEntities = append(orgContractEntities, *neo4jmapper.MapDbNodeToContractEntity(orgContract.Node))
-	}
-
-	if statusChanged && contractEntity.ContractStatus == neo4jenum.ContractStatusEnded {
-		// check no other contract is active
-		activeContractFound := false
-		for _, orgContract := range orgContractEntities {
-			if orgContract.ContractStatus != neo4jenum.ContractStatusDraft && orgContract.ContractStatus != neo4jenum.ContractStatusEnded {
-				activeContractFound = true
-				break
-			}
-		}
-
-		if !activeContractFound {
-			_, err = h.services.CommonServices.OrganizationService.Save(ctx, nil, &orgEntity.ID, data_fields.OrganizationFields{
-				Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipFormerCustomer),
-				Stage:        utils.ToPtr(neo4jenum.Target),
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("UpdateOrganization failed: %s", err.Error())
-				return errors.Wrap(err, "UpdateOrganization")
-			}
-			_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return h.grpcClients.OrganizationClient.RefreshDerivedData(ctx, &organizationpb.RefreshDerivedDataGrpcRequest{
-					Tenant:         tenant,
-					OrganizationId: orgEntity.ID,
-					AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
-				})
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("RefreshDerivedData failed: %s", err.Error())
-				return errors.Wrap(err, "RefreshDerivedData")
-			}
 		}
 	}
 
