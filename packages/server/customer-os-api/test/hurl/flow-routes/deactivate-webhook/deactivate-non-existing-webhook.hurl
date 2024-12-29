@@ -1,4 +1,4 @@
-# Test: Deactivate non-existing webhooks
+# Test: Deactivate non-existing webhooks [Bug COS-6248]
 POST {{cos_url}}/flows/v1/hooks
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
@@ -38,4 +38,5 @@ HTTP *
 status == 404
 jsonpath "$.requestId" exists
 jsonpath "$.status" == "error"
-jsonpath "$.message" == "Webhook doesn't exist"
+jsonpath "$.message" == "Webhook successfully deactivated"
+body == ""

@@ -59,8 +59,6 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 HTTP 202
 [Asserts]
 header "Content-Type" == "application/json; charset=utf-8"
-#jsonpath "$.status" == "error"
-#jsonpath "$.requestId" exists
+jsonpath "$.status" == "processing"
+jsonpath "$.requestId" exists
 #jsonpath "$.message" == "Forbidden"
-body == ""
-

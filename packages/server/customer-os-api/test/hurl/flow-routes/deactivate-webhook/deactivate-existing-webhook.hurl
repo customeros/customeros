@@ -1,4 +1,4 @@
-# Test: Deactivate existing webhook
+# Test: Deactivate existing webhook [Bug COS-6247]
 POST {{cos_url}}/flows/v1/hooks
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}

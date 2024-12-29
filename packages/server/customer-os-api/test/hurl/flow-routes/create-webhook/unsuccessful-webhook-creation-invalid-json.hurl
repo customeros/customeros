@@ -10,4 +10,4 @@ HTTP 400
 header "Content-Type" == "application/json; charset=utf-8"
 jsonpath "$.status" == "error"
 jsonpath "$.requestId" exists
-jsonpath "$.message" == "Missing parameter: integration"
+jsonpath "$.message" == "please provide a valid integration value"
