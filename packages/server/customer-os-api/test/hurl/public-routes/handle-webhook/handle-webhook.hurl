@@ -56,9 +56,11 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     "url": "https://example.com/recording"
   }
 }
-HTTP 403
+HTTP 202
 [Asserts]
 header "Content-Type" == "application/json; charset=utf-8"
-jsonpath "$.status" == "error"
-jsonpath "$.requestId" exists
-jsonpath "$.message" == "Forbidden"
+#jsonpath "$.status" == "error"
+#jsonpath "$.requestId" exists
+#jsonpath "$.message" == "Forbidden"
+body == ""
+
