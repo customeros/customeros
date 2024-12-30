@@ -670,31 +670,6 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 	return nil
 }
 
-func (h *ServiceLineItemEventHandler) OnPause(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnPause")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.ServiceLineItemPauseEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
-	tracing.TagTenant(span, eventData.Tenant)
-	tracing.TagEntity(span, serviceLineItemId)
-
-	err := h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, eventData.Tenant, commonmodel.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), true)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while pausing service line item %s: %s", serviceLineItemId, err.Error())
-	}
-
-	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, serviceLineItemId, commonmodel.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
-}
-
 func (h *ServiceLineItemEventHandler) OnResume(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnResume")
 	defer span.Finish()
