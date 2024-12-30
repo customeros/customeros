@@ -237,7 +237,7 @@ func (s *issueService) syncIssue(ctx context.Context, syncMutex *sync.Mutex, iss
 			reason = fmt.Sprintf("error saving issue with external reference %s for tenant %s :%s", issueInput.ExternalId, common.GetTenantFromContext(ctx), err.Error())
 		}
 		issueInput.Id = issueId
-		span.LogFields(log.String("issueId", issueId))
+		tracing.TagEntity(span, issueId)
 	}
 
 	processedFollowerUserIds := make([]string, 0)

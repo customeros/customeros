@@ -28,6 +28,7 @@ type Services struct {
 	ContactService             ContactService
 	ContractService            ContractService
 	CommonService              CommonService
+	CommentService             CommentService
 	CurrencyService            CurrencyService
 	CustomFieldTemplateService CustomFieldTemplateService
 	EmailService               EmailService
@@ -92,6 +93,7 @@ func InitServices(globalConfig *config.GlobalConfig, postgresDB *config.Postgres
 	services.ContractService = NewContractService(log, services)
 	services.CurrencyService = NewCurrencyService(services.PostgresRepositories)
 	services.CustomFieldTemplateService = NewCustomFieldTemplateService(log, services)
+	services.CommentService = NewCommentService(log, services)
 	services.DomainService = NewDomainService(log, services)
 	services.EmailService = NewEmailService(services)
 	services.EmailingService = NewEmailingService(log, services)

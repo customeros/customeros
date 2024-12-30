@@ -5,20 +5,18 @@ import (
 	_e "errors"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"strings"
 	"sync"
 	"time"
@@ -169,58 +167,42 @@ func (s *commentService) syncComment(ctx context.Context, syncMutex *sync.Mutex,
 	}
 
 	if !failedSync {
-		matchingCommentFound := commentId != ""
-		span.LogFields(log.Bool("found matching comment", matchingCommentFound))
-		span.LogFields(log.String("commentId", commentId))
+		span.LogFields(log.Bool("found matching comment", commentId != ""))
 
-		request := commentpb.UpsertCommentGrpcRequest{
-			Id:          commentId,
-			Tenant:      tenant,
-			Content:     commentInput.Content,
-			ContentType: commentInput.ContentType,
-			CreatedAt:   timestamppb.New(utils.TimePtrAsAny(commentInput.CreatedAt, utils.NowPtr()).(time.Time)),
-			UpdatedAt:   timestamppb.New(utils.TimePtrAsAny(commentInput.UpdatedAt, utils.NowPtr()).(time.Time)),
-			SourceFields: &commonpb.SourceFields{
-				Source:    commentInput.ExternalSystem,
-				AppSource: utils.StringFirstNonEmpty(commentInput.AppSource, constants.AppSourceCustomerOsWebhooks),
-			},
-			ExternalSystemFields: &commonpb.ExternalSystemFields{
+		commentFields := data_fields.CommentFields{
+			Source:           utils.StringPtr(commentInput.ExternalSystem),
+			CreatedAt:        commentInput.CreatedAt,
+			CommentedIssueId: &commentedIssueId,
+			ExternalSystem: &neo4jmodel.ExternalSystem{
 				ExternalSystemId: commentInput.ExternalSystem,
 				ExternalId:       commentInput.ExternalId,
+				ExternalIdSecond: commentInput.ExternalIdSecond,
 				ExternalSource:   commentInput.ExternalSourceEntity,
 				ExternalUrl:      commentInput.ExternalUrl,
-				SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
+				SyncDate:         &syncDate,
 			},
+		}
+
+		if commentInput.Content != "" {
+			commentFields.Content = &commentInput.Content
+		}
+		if commentInput.ContentType != "" {
+			commentFields.ContentType = &commentInput.ContentType
 		}
 		userAuthorId, _ := s.services.UserService.GetIdForReferencedUser(ctx, tenant, commentInput.ExternalSystem, commentInput.AuthorUser)
 		if userAuthorId != "" {
-			request.AuthorUserId = utils.StringPtr(userAuthorId)
+			commentFields.AuthorUserId = &userAuthorId
 		}
-		if commentedIssueId != "" {
-			request.CommentedIssueId = utils.StringPtr(commentedIssueId)
-		}
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		response, err := CallEventsPlatformGRPCWithRetry[*commentpb.CommentIdGrpcResponse](func() (*commentpb.CommentIdGrpcResponse, error) {
-			return s.grpcClients.CommentClient.UpsertComment(ctx, &request)
-		})
+
+		commentId, err = s.services.CommonServices.CommentService.Save(ctx, nil, &commentId, commentFields)
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertComment"))
-			reason = fmt.Sprintf("failed sending event to upsert comment with external reference %s for tenant %s :%s", commentInput.ExternalId, tenant, err.Error())
+			reason = fmt.Sprintf("error saving comment with external reference %s for tenant %s :%s", commentInput.ExternalId, tenant, err.Error())
 			s.log.Error(reason)
-		} else {
-			commentId = response.GetId()
 		}
-		// Wait for comment to be created in neo4j
-		if !failedSync && !matchingCommentFound {
-			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-				comment, forErr := s.repositories.CommentRepository.GetById(ctx, commentId)
-				if comment != nil && forErr == nil {
-					break
-				}
-				time.Sleep(utils.BackOffExponentialDelay(i))
-			}
-		}
+		commentInput.Id = commentId
+		tracing.TagEntity(span, commentId)
 	}
 
 	span.LogFields(log.Bool("failedSync", failedSync))
