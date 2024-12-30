@@ -17,7 +17,3 @@ type FlowParticipantSchedule struct{}
 type MailstackProvisionBuyRequest struct{}
 
 type MailstackProvisionMailbox struct{}
-
-type PauseServiceLineItem struct{}
-
-type ResumeServiceLineItem struct{}

@@ -194,15 +194,7 @@ func (r *mutationResolver) ContractLineItemPause(ctx context.Context, id string)
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
-	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-		return r.Clients.ServiceLineItemClient.PauseServiceLineItem(ctx, &servicelineitempb.PauseServiceLineItemGrpcRequest{
-			Id:             id,
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			AppSource:      constants.AppSourceCustomerOsApi,
-		})
-	})
+	err = r.Services.CommonServices.ServiceLineItemService.PauseServiceLineItem(ctx, nil, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to pause contract line item")

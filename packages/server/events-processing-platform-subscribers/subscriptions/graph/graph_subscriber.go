@@ -240,9 +240,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case servicelineitemevent.ServiceLineItemCloseV1:
 		_ = s.serviceLineItemEventHandler.OnClose(ctx, evt)
 		return nil
-	case servicelineitemevent.ServiceLineItemPauseV1:
-		_ = s.serviceLineItemEventHandler.OnPause(ctx, evt)
-		return nil
 	case servicelineitemevent.ServiceLineItemResumeV1:
 		_ = s.serviceLineItemEventHandler.OnResume(ctx, evt)
 		return nil
