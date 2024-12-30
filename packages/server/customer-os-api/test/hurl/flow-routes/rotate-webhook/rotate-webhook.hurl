@@ -1,4 +1,4 @@
-# Test: Rotate Webhook
+# Test: Rotate Webhook [BUG COS-6332]
 POST {{cos_url}}/flows/v1/hooks
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}

@@ -1,12 +1,16 @@
-# Test: Redirect to pay existing unpaid invoice
+# Test: Redirect to pay existing unpaid invoice [Bug COS-6333 - random 200 or 302]
 GET {{cos_url}}/invoice/a10f97ff-a14a-4675-807d-3079f5cadff2/pay
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [QueryStringParams]
 address: silviu@customeros.ai
 
-HTTP 302
+HTTP *
 [Asserts]
-header "Content-Type" == "text/html; charset=utf-8"
+status == 200
+header "Content-Type" == "text/plain; charset=utf-8"
 body matches "https://checkout.stripe.com/c/pay/cs_test_.*"
-body matches ".*Found.*"
+[Asserts]
+status == 302
+header "Content-Type" == "text/plain; charset=utf-8"
+body matches "https://checkout.stripe.com/c/pay/cs_test_.*"

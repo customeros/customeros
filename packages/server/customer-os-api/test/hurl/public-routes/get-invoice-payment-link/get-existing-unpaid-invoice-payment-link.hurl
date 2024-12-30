@@ -1,4 +1,4 @@
-# Test: Get existing unpaid invoice payment link
+# Test: Get existing unpaid invoice payment link [Bug COS-6333 - random 200 or 302]
 GET {{cos_url}}/invoice/a10f97ff-a14a-4675-807d-3079f5cadff2/paymentLink
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}

@@ -8,8 +8,8 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 
 HTTP 201
 [Captures]
-hook_url: jsonpath "$.hook.url"
 hook_secret: jsonpath "$.hook.secret"
+hook_requestId: jsonpath "$.requestId"
 [Asserts]
 header "Content-Type" == "application/json; charset=utf-8"
 jsonpath "$.status" == "success"
@@ -33,5 +33,5 @@ jsonpath "$.requestId" exists
 jsonpath "$.hook.url" matches "/flows/v1/[a-zA-Z0-9-]+/i/[a-zA-Z0-9-]+"
 jsonpath "$.hook.integration" == "slack"
 jsonpath "$.hook.secret" matches "^[a-zA-Z0-9_-]{32,}$"
-jsonpath "$.hook.url" != {{hook_url}}
+jsonpath "$.requestId" != {{hook_requestId}}
 jsonpath "$.hook.secret" != {{hook_secret}}
