@@ -117,23 +117,23 @@ func (s *issueService) Save(ctx context.Context, txWithPostCommit *utils.TxWithP
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		if createFlow {
-			innerErr := s.services.Neo4jRepositories.IssueWriteRepository.Create(ctx, txWithPostCommit.Tx, tenant, issueId, issueFields)
-			if innerErr != nil {
+			err := s.services.Neo4jRepositories.IssueWriteRepository.Create(ctx, txWithPostCommit.Tx, tenant, issueId, issueFields)
+			if err != nil {
 				s.log.Errorf("Error while saving issue %s: %s", issueId, err.Error())
-				return nil, innerErr
+				return nil, err
 			}
 		} else {
-			innerErr := s.services.Neo4jRepositories.IssueWriteRepository.Update(ctx, txWithPostCommit.Tx, tenant, issueId, issueFields)
-			if innerErr != nil {
+			err := s.services.Neo4jRepositories.IssueWriteRepository.Update(ctx, txWithPostCommit.Tx, tenant, issueId, issueFields)
+			if err != nil {
 				s.log.Errorf("Error while updating issue %s: %s", issueId, err.Error())
-				return nil, innerErr
+				return nil, err
 			}
 		}
 		if issueFields.ExternalSystemAvailable() {
-			innerErr := s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, txWithPostCommit.Tx, tenant, issueId, model.NodeLabelIssue, *issueFields.ExternalSystem)
+			err := s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, txWithPostCommit.Tx, tenant, issueId, model.NodeLabelIssue, *issueFields.ExternalSystem)
 			if err != nil {
 				s.log.Errorf("Error while link issue %s with external system %s: %s", issueId, issueFields.ExternalSystem.ExternalSystemId, err.Error())
-				return nil, innerErr
+				return nil, err
 			}
 		}
 
@@ -141,18 +141,18 @@ func (s *issueService) Save(ctx context.Context, txWithPostCommit *utils.TxWithP
 			// send events
 			if createFlow {
 				if utils.IfNotNilString(issueFields.ReportedByOrganizationId) != "" {
-					err = s.services.OrganizationService.RequestRefreshLastTouchpoint(ctx, *issueFields.ReportedByOrganizationId)
+					err := s.services.OrganizationService.RequestRefreshLastTouchpoint(ctx, *issueFields.ReportedByOrganizationId)
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "unable to request refresh last touchpoint"))
 					}
 				}
-				err = s.services.RabbitMQService.PublishEvent(ctx, issueId, model.ISSUE, dto.CreateIssue{issueFields})
+				err := s.services.RabbitMQService.PublishEvent(ctx, issueId, model.ISSUE, dto.CreateIssue{issueFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateIssue"))
 				}
 				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithCreate())
 			} else {
-				err = s.services.RabbitMQService.PublishEvent(ctx, issueId, model.ISSUE, dto.UpdateIssue{issueFields})
+				err := s.services.RabbitMQService.PublishEvent(ctx, issueId, model.ISSUE, dto.UpdateIssue{issueFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateIssue"))
 				}
