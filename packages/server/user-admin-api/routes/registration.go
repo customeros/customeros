@@ -335,7 +335,6 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 			Tenant:    *tenantName,
 			AppSource: constants.AppSourceUserAdminApi,
 		})
-
 		userId, err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName)
 		if err != nil {
 			tracing.TraceErr(span, err)
