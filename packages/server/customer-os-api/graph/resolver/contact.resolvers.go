@@ -1033,12 +1033,12 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		tracing.TraceErr(span, err)
 	}
 	if emailLinked {
-		err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), true)
+		err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), true)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
 	} else {
-		err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), false)
+		err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), false)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -1051,12 +1051,12 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 			tracing.TraceErr(span, err)
 		}
 		if phoneLinked {
-			err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), true)
+			err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), true)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
 		} else {
-			err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), false)
+			err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), false)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}

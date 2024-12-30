@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
@@ -19,6 +22,7 @@ type ServiceLineItemService interface {
 	GetServiceLineItemsForContract(ctx context.Context, contractId string) (*neo4jentity.ServiceLineItemEntities, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*neo4jentity.ServiceLineItemEntities, error)
 	GetServiceLineItemsForInvoiceLines(ctx context.Context, invoiceLineIds []string) (*neo4jentity.ServiceLineItemEntities, error)
+	PauseServiceLineItem(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error
 }
 
 type serviceLineItemService struct {
@@ -104,4 +108,50 @@ func (s *serviceLineItemService) GetServiceLineItemsForInvoiceLines(ctx context.
 		serviceLineItemEntities = append(serviceLineItemEntities, *serviceLineItemEntity)
 	}
 	return &serviceLineItemEntities, nil
+}
+
+func (s *serviceLineItemService) PauseServiceLineItem(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.PauseServiceLineItem")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, serviceLineItemId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// validate SLI exists
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, serviceLineItemId, model.NodeLabelServiceLineItem)
+	if err != nil || !exists {
+		err = errors.New("service line item not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		err := s.services.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, tenant, model.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), true)
+		if err != nil {
+			return nil, err
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err := s.services.RabbitMQService.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.PauseServiceLineItem{})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message PauseServiceLineItem"))
+			}
+			return nil
+		})
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }

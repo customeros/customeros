@@ -684,7 +684,7 @@ func (h *ServiceLineItemEventHandler) OnPause(ctx context.Context, evt eventstor
 	tracing.TagTenant(span, eventData.Tenant)
 	tracing.TagEntity(span, serviceLineItemId)
 
-	err := h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, eventData.Tenant, commonmodel.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), true)
+	err := h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, eventData.Tenant, commonmodel.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while pausing service line item %s: %s", serviceLineItemId, err.Error())
@@ -709,7 +709,7 @@ func (h *ServiceLineItemEventHandler) OnResume(ctx context.Context, evt eventsto
 	tracing.TagTenant(span, eventData.Tenant)
 	tracing.TagEntity(span, serviceLineItemId)
 
-	err := h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, eventData.Tenant, commonmodel.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), false)
+	err := h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, eventData.Tenant, commonmodel.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while resuming service line item %s: %s", serviceLineItemId, err.Error())
