@@ -6,7 +6,6 @@ import (
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	registry "github.com/openline-ai/openline-customer-os/packages/server/events/event/_registry"
@@ -17,7 +16,6 @@ import (
 )
 
 type eventStoreService struct {
-	commentpb.UnimplementedCommentGrpcServiceServer
 	services       *Services
 	log            logger.Logger
 	aggregateStore eventstore.AggregateStore

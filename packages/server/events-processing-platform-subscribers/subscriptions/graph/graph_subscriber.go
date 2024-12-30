@@ -16,7 +16,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
 	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
@@ -33,7 +32,6 @@ type GraphSubscriber struct {
 	cfg                         *config.Config
 	organizationEventHandler    *OrganizationEventHandler
 	locationEventHandler        *LocationEventHandler
-	commentEventHandler         *CommentEventHandler
 	opportunityEventHandler     *OpportunityEventHandler
 	serviceLineItemEventHandler *ServiceLineItemEventHandler
 	invoiceEventHandler         *InvoiceEventHandler
@@ -46,7 +44,6 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		cfg:                         cfg,
 		organizationEventHandler:    NewOrganizationEventHandler(log, services, grpcClients, cache),
 		locationEventHandler:        NewLocationEventHandler(services),
-		commentEventHandler:         NewCommentEventHandler(log, services),
 		opportunityEventHandler:     NewOpportunityEventHandler(log, services, grpcClients),
 		serviceLineItemEventHandler: NewServiceLineItemEventHandler(log, services, grpcClients),
 		invoiceEventHandler:         NewInvoiceEventHandler(log, services, grpcClients),
@@ -210,13 +207,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case locationevents.LocationValidatedV1:
 		_ = s.locationEventHandler.OnLocationValidated(ctx, evt)
-		return nil
-
-	case commentevent.CommentCreateV1:
-		_ = s.commentEventHandler.OnCreate(ctx, evt)
-		return nil
-	case commentevent.CommentUpdateV1:
-		_ = s.commentEventHandler.OnUpdate(ctx, evt)
 		return nil
 
 	case opportunityevent.OpportunityCreateV1:
