@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -29,8 +29,8 @@ type CommentUpdateFields struct {
 }
 
 type CommentWriteRepository interface {
-	Create(ctx context.Context, tenant, commentId string, data CommentCreateFields) error
-	Update(ctx context.Context, tenant, commentId string, data CommentUpdateFields) error
+	Create(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, commentId string, data data_fields.CommentFields) error
+	Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, commentId string, data data_fields.CommentFields) error
 }
 
 type commentWriteRepository struct {
@@ -45,12 +45,12 @@ func NewCommentWriteRepository(driver *neo4j.DriverWithContext, database string)
 	}
 }
 
-func (r *commentWriteRepository) Create(ctx context.Context, tenant, commentId string, data CommentCreateFields) error {
+func (r *commentWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, commentId string, data data_fields.CommentFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentWriteRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, commentId)
+	tracing.TagEntity(span, commentId)
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
@@ -64,15 +64,9 @@ func (r *commentWriteRepository) Create(ctx context.Context, tenant, commentId s
 								c.createdAt=$createdAt,
 								c.updatedAt=datetime(),
 								c.source=$source,
-								c.sourceOfTruth=$sourceOfTruth,
 								c.appSource=$appSource,
 								c.content=$content,
 								c.contentType=$contentType	
-							ON MATCH SET
-								c.content = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.content is null OR c.content = '' THEN $content ELSE c.content END,
-								c.contentType = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.contentType is null OR c.contentType = '' THEN $contentType ELSE c.contentType END,
-								c.updatedAt = datetime(),
-								c.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE c.sourceOfTruth END
 							WITH c, t
 							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$authorUserId}) 
 							WHERE $authorUserId <> ""
@@ -83,26 +77,32 @@ func (r *commentWriteRepository) Create(ctx context.Context, tenant, commentId s
 		"tenant":           tenant,
 		"commentId":        commentId,
 		"createdAt":        data.CreatedAt,
-		"source":           data.SourceFields.Source,
-		"sourceOfTruth":    data.SourceFields.SourceOfTruth,
-		"appSource":        data.SourceFields.AppSource,
-		"content":          data.Content,
-		"contentType":      data.ContentType,
-		"commentedIssueId": data.CommentedIssueId,
-		"authorUserId":     data.AuthorUserId,
-		"overwrite":        data.SourceFields.Source == constants.SourceOpenline,
+		"source":           utils.IfNotNilString(data.Source),
+		"appSource":        utils.IfNotNilString(data.AppSource),
+		"content":          utils.IfNotNilString(data.Content),
+		"contentType":      utils.IfNotNilString(data.ContentType),
+		"commentedIssueId": utils.IfNotNilString(data.CommentedIssueId),
+		"authorUserId":     utils.IfNotNilString(data.AuthorUserId),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
-func (r *commentWriteRepository) Update(ctx context.Context, tenant, commentId string, data CommentUpdateFields) error {
+func (r *commentWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, commentId string, data data_fields.CommentFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentWriteRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -110,26 +110,34 @@ func (r *commentWriteRepository) Update(ctx context.Context, tenant, commentId s
 	span.SetTag(tracing.SpanTagEntityId, commentId)
 	tracing.LogObjectAsJson(span, "data", data)
 
-	cypher := `MATCH (c:Comment {id:$commentId})
-		 	SET	
-				c.content = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.content is null OR c.content = '' THEN $content ELSE c.content END,
-				c.contentType = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.contentType is null OR c.contentType = '' THEN $contentType ELSE c.contentType END,
-				c.updatedAt = datetime(),
-				c.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE c.sourceOfTruth END`
+	cypher := fmt.Sprintf(`MATCH (c:Comment_%s {id:$commentId})
+		 	SET updatedAt = datetime()`, tenant)
 	params := map[string]any{
-		"tenant":        tenant,
-		"commentId":     commentId,
-		"content":       data.Content,
-		"contentType":   data.ContentType,
-		"sourceOfTruth": data.Source,
-		"overwrite":     data.Source == constants.SourceOpenline,
+		commentId: commentId,
 	}
+	if data.Content != nil {
+		cypher += `, c.content = $content`
+		params["content"] = *data.Content
+	}
+	if data.ContentType != nil {
+		cypher += `, c.contentType = $contentType`
+		params["contentType"] = *data.ContentType
+	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }

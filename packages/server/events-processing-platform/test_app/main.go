@@ -7,7 +7,6 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
@@ -20,13 +19,11 @@ const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
 const appSource = "test_app"
 
 var tenant = "customerosai"
-var userId = "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 var orgId = "ceae019f-d1e3-49b3-87c5-35ebb68a5ff1"
 var contractId = "769d1fb8-50a1-44bc-aff0-0f4338bd8ff2"
 
 type Clients struct {
 	OrganizationClient    organizationpb.OrganizationGrpcServiceClient
-	CommentClient         commentpb.CommentGrpcServiceClient
 	ServiceLineItemClient servicelineitempb.ServiceLineItemGrpcServiceClient
 	OpportunityClient     opportunitypb.OpportunityGrpcServiceClient
 	InvoiceClient         invoicepb.InvoiceGrpcServiceClient
@@ -42,7 +39,6 @@ func InitClients() {
 		))
 	clients = &Clients{
 		OrganizationClient:    organizationpb.NewOrganizationGrpcServiceClient(conn),
-		CommentClient:         commentpb.NewCommentGrpcServiceClient(conn),
 		OpportunityClient:     opportunitypb.NewOpportunityGrpcServiceClient(conn),
 		ServiceLineItemClient: servicelineitempb.NewServiceLineItemGrpcServiceClient(conn),
 		InvoiceClient:         invoicepb.NewInvoiceGrpcServiceClient(conn),
