@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
@@ -13,6 +14,7 @@ import (
 	"time"
 )
 
+// TODO alexb delete me
 type ServiceLineItemCreateFields struct {
 	IsNewVersionForExistingSLI bool               `json:"isNewVersionForExistingSLI"`
 	PreviousQuantity           int64              `json:"previousQuantity"`
@@ -45,11 +47,11 @@ type ServiceLineItemUpdateFields struct {
 }
 
 type ServiceLineItemWriteRepository interface {
-	CreateForContract(ctx context.Context, tenant, serviceLineItemId string, data ServiceLineItemCreateFields) error
+	CreateForContract(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string, data data_fields.SLIFields) error
 	Update(ctx context.Context, tenant, serviceLineItemId string, data ServiceLineItemUpdateFields) error
 	Delete(ctx context.Context, tenant, serviceLineItemId string) error
 	Close(ctx context.Context, tenant, serviceLineItemId string, endedAt time.Time, isCanceled bool) error
-	AdjustEndDates(ctx context.Context, tenant, parentId string) error
+	AdjustEndDates(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, parentId string) error
 }
 
 type serviceLineItemWriteRepository struct {
@@ -64,11 +66,12 @@ func NewServiceLineItemWriteRepository(driver *neo4j.DriverWithContext, database
 	}
 }
 
-func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, tenant, serviceLineItemId string, data ServiceLineItemCreateFields) error {
+func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string, data data_fields.SLIFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.CreateForContract")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, serviceLineItemId)
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
@@ -80,7 +83,6 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 								sli.startedAt=$startedAt,
 								sli.endedAt=$endedAt,
 								sli.source=$source,
-								sli.sourceOfTruth=$sourceOfTruth,
 								sli.appSource=$appSource,
 								sli.name=$name,
 								sli.price=$price,
@@ -93,35 +95,37 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 	params := map[string]any{
 		"tenant":            tenant,
 		"serviceLineItemId": serviceLineItemId,
-		"contractId":        data.ContractId,
-		"parentId":          data.ParentId,
-		"createdAt":         data.CreatedAt,
-		"startedAt":         utils.ToDate(data.StartedAt),
+		"createdAt":         utils.IfNotNilTimeWithDefault(data.CreatedAt, utils.Now()),
+		"startedAt":         utils.ToDate(utils.IfNotNilTimeWithDefault(data.StartedAt, utils.Now())),
 		"endedAt":           utils.TimePtrAsAny(utils.ToDatePtr(data.EndedAt)),
-		"source":            data.SourceFields.Source,
-		"sourceOfTruth":     data.SourceFields.Source,
-		"appSource":         data.SourceFields.AppSource,
-		"price":             data.Price,
-		"quantity":          data.Quantity,
-		"name":              data.Name,
-		"billed":            data.Billed,
-		"comments":          data.Comments,
-		"vatRate":           data.VatRate,
+		"source":            utils.IfNotNilString(data.Source),
+		"appSource":         utils.IfNotNilString(data.AppSource),
+		"contractId":        utils.IfNotNilString(data.ContractId),
+		"parentId":          utils.IfNotNilString(data.ParentId),
+		"price":             utils.IfNotNilFloat64(data.Price),
+		"quantity":          utils.IfNotNilInt64(data.Quantity),
+		"name":              utils.IfNotNilString(data.Name),
+		"comments":          utils.IfNotNilString(data.Comments),
+		"vatRate":           utils.IfNotNilFloat64(data.TaxRate),
 	}
-	if data.IsNewVersionForExistingSLI {
-		cypher += `, sli.previousQuantity=$previousQuantity, sli.previousPrice=$previousPrice, sli.previousBilled=$previousBilled, sli.previousVatRate=toFloat($previousVatRate)`
-		params["previousQuantity"] = data.PreviousQuantity
-		params["previousPrice"] = data.PreviousPrice
-		params["previousBilled"] = data.PreviousBilled
-		params["previousVatRate"] = data.PreviousVatRate
+	if data.BilledType != nil {
+		params["billed"] = data.BilledType.String()
+	} else {
+		params["billed"] = ""
 	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
@@ -227,7 +231,7 @@ func (r *serviceLineItemWriteRepository) Close(ctx context.Context, tenant, serv
 	return err
 }
 
-func (r *serviceLineItemWriteRepository) AdjustEndDates(ctx context.Context, tenant, parentId string) error {
+func (r *serviceLineItemWriteRepository) AdjustEndDates(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, parentId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.AdjustEndDates")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -255,9 +259,14 @@ func (r *serviceLineItemWriteRepository) AdjustEndDates(ctx context.Context, ten
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }

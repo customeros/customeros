@@ -11,7 +11,6 @@ import (
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"google.golang.org/grpc"
 )
 
@@ -20,14 +19,12 @@ const appSource = "test_app"
 
 var tenant = "customerosai"
 var orgId = "ceae019f-d1e3-49b3-87c5-35ebb68a5ff1"
-var contractId = "769d1fb8-50a1-44bc-aff0-0f4338bd8ff2"
 
 type Clients struct {
-	OrganizationClient    organizationpb.OrganizationGrpcServiceClient
-	ServiceLineItemClient servicelineitempb.ServiceLineItemGrpcServiceClient
-	OpportunityClient     opportunitypb.OpportunityGrpcServiceClient
-	InvoiceClient         invoicepb.InvoiceGrpcServiceClient
-	EventStoreClient      eventstorepb.EventStoreGrpcServiceClient
+	OrganizationClient organizationpb.OrganizationGrpcServiceClient
+	OpportunityClient  opportunitypb.OpportunityGrpcServiceClient
+	InvoiceClient      invoicepb.InvoiceGrpcServiceClient
+	EventStoreClient   eventstorepb.EventStoreGrpcServiceClient
 }
 
 var clients *Clients
@@ -38,11 +35,10 @@ func InitClients() {
 			interceptor.ApiKeyEnricher(grpcApiKey),
 		))
 	clients = &Clients{
-		OrganizationClient:    organizationpb.NewOrganizationGrpcServiceClient(conn),
-		OpportunityClient:     opportunitypb.NewOpportunityGrpcServiceClient(conn),
-		ServiceLineItemClient: servicelineitempb.NewServiceLineItemGrpcServiceClient(conn),
-		InvoiceClient:         invoicepb.NewInvoiceGrpcServiceClient(conn),
-		EventStoreClient:      eventstorepb.NewEventStoreGrpcServiceClient(conn),
+		OrganizationClient: organizationpb.NewOrganizationGrpcServiceClient(conn),
+		OpportunityClient:  opportunitypb.NewOpportunityGrpcServiceClient(conn),
+		InvoiceClient:      invoicepb.NewInvoiceGrpcServiceClient(conn),
+		EventStoreClient:   eventstorepb.NewEventStoreGrpcServiceClient(conn),
 	}
 }
 
@@ -60,7 +56,6 @@ func main() {
 	//testOrganizationLinkWithPhoneNumber()
 	//testOrganizationLinkWithLocation()
 	//testCreateComment()
-	//testAddContractService()
 	//testCloseLooseOpportunity()
 	//testCreateRenewalOpportunity()
 	//testArchiveOpportunity()

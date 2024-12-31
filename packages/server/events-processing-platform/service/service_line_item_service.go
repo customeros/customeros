@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/google/uuid"
 	sliaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
@@ -27,33 +26,6 @@ func NewServiceLineItemService(log logger.Logger, aggregateStore eventstore.Aggr
 		aggregateStore: aggregateStore,
 		services:       services,
 	}
-}
-
-func (s *serviceLineItemService) CreateServiceLineItem(ctx context.Context, request *servicelineitempb.CreateServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ServiceLineItemService.CreateServiceLineItem")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.Object("request", request))
-
-	// Validate contract ID
-	if request.ContractId == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("contractId"))
-	}
-	// Check if the contract aggregate exists
-
-	serviceLineItemId := uuid.New().String()
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return sliaggregate.NewServiceLineItemAggregateWithTenantAndID(request.Tenant, serviceLineItemId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(CreateServiceLineItem) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	// Return the ID of the newly created service line item
-	return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: serviceLineItemId}, nil
 }
 
 func (s *serviceLineItemService) UpdateServiceLineItem(ctx context.Context, request *servicelineitempb.UpdateServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
