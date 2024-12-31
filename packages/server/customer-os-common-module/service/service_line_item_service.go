@@ -347,10 +347,10 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				if priceChanged && dataFields.BilledType != nil && dataFields.BilledType.IsRecurrent() {
 					message := ""
 					if utils.IfNotNilFloat64(dataFields.Price) > serviceLineItemEntity.Price {
-						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", dataFields.Price) + "/" + cycle
+						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + "/" + cycle
 					}
 					if utils.IfNotNilFloat64(dataFields.Price) < serviceLineItemEntity.Price {
-						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", dataFields.Price) + "/" + cycle
+						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + "/" + cycle
 					}
 					_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 					if err != nil {
@@ -362,10 +362,10 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				if priceChanged && dataFields.BilledType != nil && *dataFields.BilledType == neo4jenum.BilledTypeOnce {
 					message := ""
 					if utils.IfNotNilFloat64(dataFields.Price) > serviceLineItemEntity.Price {
-						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", dataFields.Price)
+						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price))
 					}
 					if utils.IfNotNilFloat64(dataFields.Price) < serviceLineItemEntity.Price {
-						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", dataFields.Price)
+						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price))
 					}
 					_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 					if err != nil {
@@ -376,10 +376,10 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				if priceChanged && *dataFields.BilledType == neo4jenum.BilledTypeUsage {
 					message := ""
 					if utils.IfNotNilFloat64(dataFields.Price) > serviceLineItemEntity.Price {
-						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", dataFields.Price)
+						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", utils.IfNotNilFloat64(dataFields.Price))
 					}
 					if utils.IfNotNilFloat64(dataFields.Price) < serviceLineItemEntity.Price {
-						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", dataFields.Price)
+						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", utils.IfNotNilFloat64(dataFields.Price))
 					}
 					_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 					if err != nil {
