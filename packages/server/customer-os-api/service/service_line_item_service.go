@@ -424,27 +424,14 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	span.LogFields(log.Bool("result.isRetroactiveCorrection", isRetroactiveCorrection))
 
 	if isRetroactiveCorrection == true {
-		serviceLineItemUpdateRequest := servicelineitempb.UpdateServiceLineItemGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			Id:             serviceLineItemDetails.Id,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			Name:           serviceLineItemDetails.SliName,
-			Quantity:       serviceLineItemDetails.SliQuantity,
-			Price:          serviceLineItemDetails.SliPrice,
-			Comments:       serviceLineItemDetails.SliComments,
-			VatRate:        serviceLineItemDetails.SliVatRate,
-			SourceFields: &commonpb.SourceFields{
-				Source:    string(serviceLineItemDetails.Source),
-				AppSource: utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
-			},
+		sliDataFields := data_fields.SLIFields{
+			Name:       utils.StringPtr(serviceLineItemDetails.SliName),
+			Quantity:   utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
+			Price:      utils.Float64Ptr(serviceLineItemDetails.SliPrice),
+			TaxRate:    utils.Float64Ptr(serviceLineItemDetails.SliVatRate),
+			Comments:   utils.StringPtr(serviceLineItemDetails.SliComments),
+			BilledType: utils.ToPtr(serviceLineItemDetails.SliBilledType),
 		}
-
-		billedType, err := convertBilledTypeToProto(serviceLineItemDetails.SliBilledType, span)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		serviceLineItemUpdateRequest.Billed = billedType
 
 		// if start date is changed, validate that change is allowed
 		if utils.ToDate(baseServiceLineItemEntity.StartedAt) != utils.ToDate(startedAt) {
@@ -461,16 +448,13 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 				tracing.TraceErr(span, err)
 				return err
 			}
-			serviceLineItemUpdateRequest.StartedAt = utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt)
+			sliDataFields.StartedAt = serviceLineItemDetails.StartedAt
 		}
 
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-			return s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
-		})
+		_, err = s.services.CommonServices.ServiceLineItemService.Save(ctx, nil, &serviceLineItemDetails.Id, sliDataFields)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error from events processing: %s", err.Error())
+			s.log.Errorf("Error on updating service line item with id {%s}: %s", serviceLineItemDetails.Id, err.Error())
 			return err
 		}
 	} else {
