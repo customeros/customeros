@@ -49,7 +49,7 @@ func (s *commentService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 	createFlow := false
 	commentId := ""
 
-	if utils.IfNotNilString(commentId) == "" {
+	if utils.IfNotNilString(id) == "" {
 		createFlow = true
 		span.LogKV("flow", "create")
 
