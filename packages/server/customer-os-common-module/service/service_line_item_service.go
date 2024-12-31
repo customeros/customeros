@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -22,6 +23,7 @@ type ServiceLineItemService interface {
 	GetServiceLineItemsForContract(ctx context.Context, contractId string) (*neo4jentity.ServiceLineItemEntities, error)
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*neo4jentity.ServiceLineItemEntities, error)
 	GetServiceLineItemsForInvoiceLines(ctx context.Context, invoiceLineIds []string) (*neo4jentity.ServiceLineItemEntities, error)
+	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.SLIFields) (string, error)
 	PauseServiceLineItem(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error
 	ResumeServiceLineItem(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error
 }
@@ -29,6 +31,118 @@ type ServiceLineItemService interface {
 type serviceLineItemService struct {
 	log      logger.Logger
 	services *Services
+}
+
+func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.SLIFields) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Save")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "dataFields", dataFields)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	createFlow := false
+	sliId := ""
+
+	if utils.IfNotNilString(id) == "" {
+		createFlow = true
+		span.LogKV("flow", "create")
+
+		// prepare missing fields
+		if dataFields.CreatedAt == nil || dataFields.CreatedAt.IsZero() {
+			dataFields.CreatedAt = utils.NowPtr()
+		}
+		if utils.IfNotNilString(dataFields.Source) == "" {
+			dataFields.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
+		}
+		if utils.IfNotNilString(dataFields.AppSource) == "" {
+			dataFields.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))
+		}
+
+		// validate given data exists
+		if utils.IfNotNilString(dataFields.ContractId) != "" {
+			exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, *dataFields.ContractId, model.NodeLabelContract)
+			if err != nil || !exists {
+				err = errors.New("contract not found")
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+		}
+
+		sliId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelServiceLineItem)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+	} else {
+		span.LogKV("flow", "update")
+		sliId = *id
+
+		// validate service line item exists
+		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, sliId, model.NodeLabelServiceLineItem)
+		if err != nil || !exists {
+			err = errors.New("comment not found")
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+	}
+	tracing.TagEntity(span, sliId)
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		if createFlow {
+			err := s.services.Neo4jRepositories.CommentWriteRepository.Create(ctx, txWithPostCommit.Tx, tenant, commentId, commentFields)
+			if err != nil {
+				s.log.Errorf("Error while saving comment %s: %s", commentId, err.Error())
+				return nil, err
+			}
+		} else {
+			err := s.services.Neo4jRepositories.CommentWriteRepository.Update(ctx, txWithPostCommit.Tx, tenant, commentId, commentFields)
+			if err != nil {
+				s.log.Errorf("Error while updating comment %s: %s", commentId, err.Error())
+				return nil, err
+			}
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// send events
+			if createFlow {
+				err := s.services.RabbitMQService.PublishEvent(ctx, commentId, model.COMMENT, dto.CreateComment{commentFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateComment"))
+				}
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, commentId, model.COMMENT, utils.NewEventCompletedDetails().WithCreate())
+			} else {
+				err := s.services.RabbitMQService.PublishEvent(ctx, commentId, model.COMMENT, dto.UpdateComment{commentFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateComment"))
+				}
+				if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
+					s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, commentId, model.COMMENT, utils.NewEventCompletedDetails().WithUpdate())
+				}
+			}
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	if createFlow {
+		span.LogFields(log.Bool("response.commentCreated", true))
+	} else {
+		span.LogFields(log.Bool("response.commentCreated", true))
+	}
+
+	return sliId, nil
 }
 
 func NewServiceLineItemService(log logger.Logger, services *Services) ServiceLineItemService {
