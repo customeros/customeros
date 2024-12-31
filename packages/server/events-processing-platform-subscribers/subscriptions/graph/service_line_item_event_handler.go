@@ -4,14 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
@@ -58,107 +56,6 @@ type SLIActionMetadata struct {
 	Quantity         int64      `json:"quantity"`
 	PreviousPrice    float64    `json:"previousPrice"`
 	PreviousQuantity int64      `json:"previousQuantity"`
-}
-
-func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnCreateV1")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-	var user *dbtype.Node
-	var message string
-	var name string
-	var priceChanged bool
-	var quantityChanged bool
-
-	if name == "" {
-		name = "Unnamed service"
-	}
-
-	metadataPrice, err := utils.ToJson(SLIActionMetadata{
-		UserName:        userName,
-		ServiceName:     name,
-		Quantity:        eventData.Quantity,
-		BilledType:      eventData.Billed,
-		PreviousPrice:   previousPrice,
-		Price:           eventData.Price,
-		Comment:         "price is " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " for service " + name,
-		ReasonForChange: reasonForChange,
-		StartedAt:       &eventData.StartedAt,
-		Currency:        contractEntity.Currency.String(),
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Failed to serialize price metadata: %s", err.Error())
-		return errors.Wrap(err, "Failed to serialize price metadata")
-	}
-	metadataQuantity, err := utils.ToJson(SLIActionMetadata{
-		UserName:         userName,
-		ServiceName:      name,
-		Price:            eventData.Price,
-		PreviousQuantity: previousQuantity,
-		Quantity:         eventData.Quantity,
-		BilledType:       eventData.Billed,
-		Comment:          "quantity is " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " for service " + name,
-		ReasonForChange:  reasonForChange,
-		StartedAt:        &eventData.StartedAt,
-		Currency:         contractEntity.Currency.String(),
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Failed to serialize quantity metadata: %s", err.Error())
-		return errors.Wrap(err, "Failed to serialize quantity metadata")
-	}
-	metadataBilledType, err := utils.ToJson(SLIActionMetadata{
-		UserName:        userName,
-		ServiceName:     name,
-		BilledType:      eventData.Billed,
-		Quantity:        eventData.Quantity,
-		Price:           eventData.Price,
-		Comment:         "billed type is " + serviceLineItemEntity.Billed.String() + " for service " + name,
-		ReasonForChange: reasonForChange,
-		StartedAt:       &eventData.StartedAt,
-		Currency:        contractEntity.Currency.String(),
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Failed to serialize billed type metadata: %s", err.Error())
-		return errors.Wrap(err, "Failed to serialize billed type metadata")
-	}
-	extraActionProperties := map[string]interface{}{
-		"comments": reasonForChange,
-	}
-	cycle := getBillingCycleNamingConvention(eventData.Billed)
-
-	if !isNewVersionForExistingSLI {
-		if serviceLineItemEntity.Billed.String() == model.AnnuallyBilled.String() || serviceLineItemEntity.Billed.String() == model.QuarterlyBilled.String() || serviceLineItemEntity.Billed.String() == model.MonthlyBilled.String() {
-			message = userName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " x " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, commonmodel.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Failed creating recurring billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
-			}
-		}
-		if serviceLineItemEntity.Billed.String() == model.OnceBilled.String() {
-			message = userName + " added a one time service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, commonmodel.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeOnceCreated, message, metadataBilledType, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Failed creating once billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
-			}
-		}
-		if serviceLineItemEntity.Billed.String() == model.UsageBilled.String() {
-			message = userName + " added a per use service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, commonmodel.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Failed creating per use billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
-			}
-		}
-	}
-
-	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, serviceLineItemId, commonmodel.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithCreate())
-
-	return nil
 }
 
 func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt eventstore.Event) error {
