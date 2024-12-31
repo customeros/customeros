@@ -69,120 +69,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 	var name string
 	var priceChanged bool
 	var quantityChanged bool
-	var eventData event.ServiceLineItemCreateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
 
-	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
-
-	isNewVersionForExistingSLI := serviceLineItemId != eventData.ParentId && eventData.PreviousVersionId != ""
-	previousPrice := float64(0)
-	previousQuantity := int64(0)
-	previousVatRate := float64(0)
-	reasonForChange := eventData.Comments
-	if isNewVersionForExistingSLI {
-		//get the previous service line item to get the previous price and quantity
-		previousSliDbNode, err := h.services.CommonServices.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, eventData.PreviousVersionId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("error while getting latest service line item with parent id %s: %s", eventData.ParentId, err.Error())
-		}
-		if previousSliDbNode != nil {
-			previousServiceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(previousSliDbNode)
-			previousPrice = previousServiceLineItem.Price
-			previousQuantity = previousServiceLineItem.Quantity
-			previousVatRate = previousServiceLineItem.VatRate
-			//use the booleans below to create the appropriate action message
-			priceChanged = previousServiceLineItem.Price != eventData.Price
-			quantityChanged = previousServiceLineItem.Quantity != eventData.Quantity
-		}
-	}
-	data := neo4jrepository.ServiceLineItemCreateFields{
-		IsNewVersionForExistingSLI: isNewVersionForExistingSLI,
-		PreviousQuantity:           previousQuantity,
-		PreviousPrice:              previousPrice,
-		PreviousVatRate:            previousVatRate,
-		SourceFields: neo4jmodel.SourceFields{
-			Source:        helper.GetSource(eventData.Source.Source),
-			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source.SourceOfTruth),
-			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
-		},
-		ContractId: eventData.ContractId,
-		ParentId:   eventData.ParentId,
-		CreatedAt:  eventData.CreatedAt,
-		StartedAt:  eventData.StartedAt,
-		EndedAt:    eventData.EndedAt,
-		Price:      eventData.Price,
-		Quantity:   eventData.Quantity,
-		Name:       eventData.Name,
-		Billed:     eventData.Billed,
-		Comments:   eventData.Comments,
-		VatRate:    eventData.VatRate,
-	}
-	err := h.services.CommonServices.Neo4jRepositories.ServiceLineItemWriteRepository.CreateForContract(ctx, eventData.Tenant, serviceLineItemId, data)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while saving service line item %s: %s", serviceLineItemId, err.Error())
-		return err
-	}
-
-	err = h.services.CommonServices.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, eventData.ParentId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemId, err.Error())
-		return err
-	}
-
-	serviceLineItemDbNode, err := h.services.CommonServices.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while getting service line item by id %s: %s", serviceLineItemId, err.Error())
-		return err
-	}
-	serviceLineItemEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
-
-	contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
-	err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, eventData.ContractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("error while updating renewal opportunity for contract %s: %s", eventData.ContractId, err.Error())
-		return nil
-	}
-	// Update contract LTV
-	contractHandler.UpdateContractLtv(ctx, eventData.Tenant, eventData.ContractId)
-
-	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, eventData.ContractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-
-	// get user
-	userName := ""
-	usrMetadata := userMetadata{}
-	if err = json.Unmarshal(evt.Metadata, &usrMetadata); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "json.Unmarshal")
-	} else {
-		if usrMetadata.UserId != "" {
-			user, err = h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, usrMetadata.UserId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
-			}
-			userEntity := *neo4jmapper.MapDbNodeToUserEntity(user)
-			userName = userEntity.GetFullName()
-		}
-	}
-	if eventData.Name == "" {
-		name = serviceLineItemEntity.Name
-	}
-	if serviceLineItemEntity.Name != "" {
-		name = serviceLineItemEntity.Name
-	}
 	if name == "" {
 		name = "Unnamed service"
 	}
@@ -269,62 +156,6 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		}
 	}
 
-	if isNewVersionForExistingSLI {
-		if priceChanged && (eventData.Billed == model.AnnuallyBilled.String() || eventData.Billed == model.QuarterlyBilled.String() || eventData.Billed == model.MonthlyBilled.String()) {
-			if eventData.Price > previousPrice {
-				message = userName + " increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + cycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			}
-			if eventData.Price < previousPrice {
-				message = userName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + cycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			}
-			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, commonmodel.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
-			}
-		}
-
-		if priceChanged && eventData.Billed == model.OnceBilled.String() {
-			if eventData.Price > previousPrice {
-				message = userName + " increased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + " to " + fmt.Sprintf("%.2f", eventData.Price) + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			}
-			if eventData.Price < serviceLineItemEntity.Price {
-				message = userName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + " to " + fmt.Sprintf("%.2f", eventData.Price) + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			}
-			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, commonmodel.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
-			}
-		}
-		if priceChanged && eventData.Billed == model.UsageBilled.String() {
-			if eventData.Price > previousPrice {
-				message = userName + " increased the price for " + name + " from " + fmt.Sprintf("%.4f", previousPrice) + " to " + fmt.Sprintf("%.4f", eventData.Price) + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			}
-			if eventData.Price < serviceLineItemEntity.Price {
-				message = userName + " decreased the price for " + name + " from " + fmt.Sprintf("%.4f", previousPrice) + " to " + fmt.Sprintf("%.4f", eventData.Price) + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			}
-			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, commonmodel.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
-			}
-		}
-		if quantityChanged {
-			if eventData.Quantity > previousQuantity {
-				message = userName + " increased the quantity of " + name + " from " + strconv.FormatInt(previousQuantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10) + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			}
-			if eventData.Quantity < previousQuantity {
-				message = userName + " decreased the quantity of " + name + " from " + strconv.FormatInt(previousQuantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10) + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			}
-			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, commonmodel.CONTRACT, neo4jenum.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractEntity.Id, err.Error())
-			}
-		}
-	}
-
 	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, serviceLineItemId, commonmodel.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithCreate())
 
 	return nil
@@ -370,7 +201,7 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		return err
 	}
 
-	err = h.services.CommonServices.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, serviceLineItemEntity.ParentID)
+	err = h.services.CommonServices.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, nil, eventData.Tenant, serviceLineItemEntity.ParentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemId, err.Error())
@@ -590,7 +421,7 @@ func (h *ServiceLineItemEventHandler) OnDeleteV1(ctx context.Context, evt events
 		h.log.Errorf("Error while deleting service line item %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
-	err = h.services.CommonServices.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, serviceLineItemEntity.ParentID)
+	err = h.services.CommonServices.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, nil, eventData.Tenant, serviceLineItemEntity.ParentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemId, err.Error())

@@ -96,10 +96,7 @@ func (r *issueWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTran
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		_, err := tx.Run(ctx, cypher, params)
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
+		return nil, err
 	})
 
 	if err != nil {

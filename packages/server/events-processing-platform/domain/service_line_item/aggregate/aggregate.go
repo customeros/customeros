@@ -49,82 +49,11 @@ func (a *ServiceLineItemAggregate) HandleGRPCRequest(ctx context.Context, reques
 		return nil, a.CloseServiceLineItem(ctx, r, params)
 	case *servicelineitempb.DeleteServiceLineItemGrpcRequest:
 		return nil, a.DeleteServiceLineItem(ctx, r)
-	case *servicelineitempb.CreateServiceLineItemGrpcRequest:
-		return nil, a.CreateServiceLineItem(ctx, r)
 	case *servicelineitempb.UpdateServiceLineItemGrpcRequest:
 		return nil, a.UpdateServiceLineItem(ctx, r)
 	default:
 		return nil, nil
 	}
-}
-
-func (a *ServiceLineItemAggregate) CreateServiceLineItem(ctx context.Context, r *servicelineitempb.CreateServiceLineItemGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.createServiceLineItem")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", r)
-
-	// fail if quantity is negative
-	if r.Quantity < 0 {
-		err := errors.New(events2.FieldValidation + ": quantity must not be negative")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// Adjust vat rate
-	if r.VatRate < 0 {
-		r.VatRate = 0
-	}
-	r.VatRate = utils.TruncateFloat64(r.VatRate, 2)
-
-	sourceFields := common.Source{}
-	sourceFields.FromGrpc(r.SourceFields)
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.CreatedAt), utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.UpdatedAt), createdAtNotNil)
-	startedAtNotNil := utils.ToDate(utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.StartedAt), utils.Now()))
-	endedAtNillable := utils.ToDatePtr(utils.TimestampProtoToTimePtr(r.EndedAt))
-
-	if endedAtNillable != nil && endedAtNillable.Before(startedAtNotNil) {
-		err := errors.New(events2.FieldValidation + ": endedAt must be after startedAt")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	dataFields := model.ServiceLineItemDataFields{
-		Billed:     model.BilledType(r.Billed),
-		Quantity:   r.Quantity,
-		Price:      r.Price,
-		Name:       r.Name,
-		ContractId: r.ContractId,
-		ParentId:   utils.StringFirstNonEmpty(r.ParentId, GetServiceLineItemObjectID(a.GetID(), a.GetTenant())),
-		VatRate:    r.VatRate,
-		Comments:   r.Comments,
-	}
-
-	createEvent, err := event.NewServiceLineItemCreateEvent(
-		a,
-		dataFields,
-		sourceFields,
-		createdAtNotNil,
-		updatedAtNotNil,
-		startedAtNotNil,
-		endedAtNillable,
-		"", //TODO: previousVersionId pass it from service
-	)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewServiceLineItemCreateEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&createEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: r.LoggedInUserId,
-		App:    sourceFields.AppSource,
-	})
-
-	return a.Apply(createEvent)
 }
 
 func (a *ServiceLineItemAggregate) UpdateServiceLineItem(ctx context.Context, r *servicelineitempb.UpdateServiceLineItemGrpcRequest) error {
@@ -275,8 +204,6 @@ func (a *ServiceLineItemAggregate) DeleteServiceLineItem(ctx context.Context, r 
 
 func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
-	case event.ServiceLineItemCreateV1:
-		return a.onCreate(evt)
 	case event.ServiceLineItemUpdateV1:
 		return a.onUpdate(evt)
 	case event.ServiceLineItemDeleteV1:
@@ -291,30 +218,6 @@ func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 		err.EventType = evt.GetEventType()
 		return err
 	}
-}
-
-func (a *ServiceLineItemAggregate) onCreate(evt eventstore.Event) error {
-	var eventData event.ServiceLineItemCreateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.ServiceLineItem.ID = a.ID
-	a.ServiceLineItem.ContractId = eventData.ContractId
-	a.ServiceLineItem.ParentId = eventData.ParentId
-	a.ServiceLineItem.Billed = eventData.Billed
-	a.ServiceLineItem.Quantity = eventData.Quantity
-	a.ServiceLineItem.Price = eventData.Price
-	a.ServiceLineItem.Name = eventData.Name
-	a.ServiceLineItem.CreatedAt = eventData.CreatedAt
-	a.ServiceLineItem.UpdatedAt = eventData.UpdatedAt
-	a.ServiceLineItem.Source = eventData.Source
-	a.ServiceLineItem.StartedAt = eventData.StartedAt
-	a.ServiceLineItem.EndedAt = eventData.EndedAt
-	a.ServiceLineItem.Comments = eventData.Comments
-	a.ServiceLineItem.VatRate = eventData.VatRate
-
-	return nil
 }
 
 // onServiceLineItemUpdate handles the update event for a service line item.

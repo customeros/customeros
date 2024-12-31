@@ -31,6 +31,7 @@ type ContractService interface {
 	SoftDelete(ctx context.Context, contractId string) error
 	RefreshContractStatus(ctx context.Context, contractId string) error
 	RecalculateContractLtv(ctx context.Context, contractId string) error
+	UpdateActiveRenewalOpportunityArr(ctx context.Context, contractId string) error
 }
 
 type contractService struct {
@@ -626,6 +627,26 @@ func (s *contractService) updateActiveRenewalOpportunityRenewDateAndArr(ctx cont
 		return nil
 	}
 	err = s.updateRenewalArr(ctx, tenant, contract, renewalOpportunity, span)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	return nil
+}
+
+func (s *contractService) UpdateActiveRenewalOpportunityArr(ctx context.Context, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.UpdateActiveRenewalOpportunityArr")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contractId", contractId))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	contract, renewalOpportunity, done := s.assertContractAndRenewalOpportunity(ctx, tenant, contractId)
+	if done {
+		return nil
+	}
+	err := s.updateRenewalArr(ctx, tenant, contract, renewalOpportunity, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil

@@ -22,7 +22,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ServiceLineItemGrpcServiceClient interface {
-	CreateServiceLineItem(ctx context.Context, in *CreateServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error)
 	UpdateServiceLineItem(ctx context.Context, in *UpdateServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error)
 	DeleteServiceLineItem(ctx context.Context, in *DeleteServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error)
 	CloseServiceLineItem(ctx context.Context, in *CloseServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error)
@@ -34,15 +33,6 @@ type serviceLineItemGrpcServiceClient struct {
 
 func NewServiceLineItemGrpcServiceClient(cc grpc.ClientConnInterface) ServiceLineItemGrpcServiceClient {
 	return &serviceLineItemGrpcServiceClient{cc}
-}
-
-func (c *serviceLineItemGrpcServiceClient) CreateServiceLineItem(ctx context.Context, in *CreateServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error) {
-	out := new(ServiceLineItemIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/ServiceLineItemGrpcService/CreateServiceLineItem", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *serviceLineItemGrpcServiceClient) UpdateServiceLineItem(ctx context.Context, in *UpdateServiceLineItemGrpcRequest, opts ...grpc.CallOption) (*ServiceLineItemIdGrpcResponse, error) {
@@ -76,7 +66,6 @@ func (c *serviceLineItemGrpcServiceClient) CloseServiceLineItem(ctx context.Cont
 // All implementations should embed UnimplementedServiceLineItemGrpcServiceServer
 // for forward compatibility
 type ServiceLineItemGrpcServiceServer interface {
-	CreateServiceLineItem(context.Context, *CreateServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error)
 	UpdateServiceLineItem(context.Context, *UpdateServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error)
 	DeleteServiceLineItem(context.Context, *DeleteServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error)
 	CloseServiceLineItem(context.Context, *CloseServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error)
@@ -86,9 +75,6 @@ type ServiceLineItemGrpcServiceServer interface {
 type UnimplementedServiceLineItemGrpcServiceServer struct {
 }
 
-func (UnimplementedServiceLineItemGrpcServiceServer) CreateServiceLineItem(context.Context, *CreateServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateServiceLineItem not implemented")
-}
 func (UnimplementedServiceLineItemGrpcServiceServer) UpdateServiceLineItem(context.Context, *UpdateServiceLineItemGrpcRequest) (*ServiceLineItemIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateServiceLineItem not implemented")
 }
@@ -108,24 +94,6 @@ type UnsafeServiceLineItemGrpcServiceServer interface {
 
 func RegisterServiceLineItemGrpcServiceServer(s grpc.ServiceRegistrar, srv ServiceLineItemGrpcServiceServer) {
 	s.RegisterService(&ServiceLineItemGrpcService_ServiceDesc, srv)
-}
-
-func _ServiceLineItemGrpcService_CreateServiceLineItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateServiceLineItemGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServiceLineItemGrpcServiceServer).CreateServiceLineItem(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/ServiceLineItemGrpcService/CreateServiceLineItem",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServiceLineItemGrpcServiceServer).CreateServiceLineItem(ctx, req.(*CreateServiceLineItemGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _ServiceLineItemGrpcService_UpdateServiceLineItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -189,10 +157,6 @@ var ServiceLineItemGrpcService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "ServiceLineItemGrpcService",
 	HandlerType: (*ServiceLineItemGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CreateServiceLineItem",
-			Handler:    _ServiceLineItemGrpcService_CreateServiceLineItem_Handler,
-		},
 		{
 			MethodName: "UpdateServiceLineItem",
 			Handler:    _ServiceLineItemGrpcService_UpdateServiceLineItem_Handler,
