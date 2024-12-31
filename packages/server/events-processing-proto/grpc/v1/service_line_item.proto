@@ -8,29 +8,6 @@ import "common/billing_type.proto";
 
 option go_package = "api/grpc/v1/service_line_item;service_line_item_grpc_service";
 
-enum ServiceLineItemFieldMask {
-  SLI_FIELD_NONE = 0; // No property, ignored by the server
-  SLI_FIELD_NAME = 1;
-}
-
-message UpdateServiceLineItemGrpcRequest {
-  string id = 1;
-  string tenant = 2;
-  string loggedInUserId = 3;
-  string name = 4;
-  double price = 5;
-  int64 quantity = 6;
-  BilledType billed = 7;
-  google.protobuf.Timestamp updatedAt = 8;
-  SourceFields sourceFields = 9;
-  string comments = 10;
-  bool isRetroactiveCorrection = 11 [deprecated = true];
-  string contractId = 12;
-  double vatRate = 13;
-  string parentId = 14;
-  google.protobuf.Timestamp startedAt = 15;
-}
-
 // Permanently delete service line item request
 message DeleteServiceLineItemGrpcRequest {
   string id = 1;
@@ -55,7 +32,6 @@ message ServiceLineItemIdGrpcResponse {
 
 // Service definition
 service ServiceLineItemGrpcService {
-  rpc UpdateServiceLineItem(UpdateServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
   rpc DeleteServiceLineItem(DeleteServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
   rpc CloseServiceLineItem(CloseServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
 }
