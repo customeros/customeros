@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"math"
 	"sort"
 	"time"
@@ -112,42 +111,26 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 		return "", err
 	}
 
-	createServiceLineItemRequest := servicelineitempb.CreateServiceLineItemGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		ContractId:     serviceLineItemDetails.ContractId,
-		Name:           serviceLineItemDetails.SliName,
-		Quantity:       serviceLineItemDetails.SliQuantity,
-		Price:          serviceLineItemDetails.SliPrice,
-		VatRate:        serviceLineItemDetails.SliVatRate,
-		StartedAt:      utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt),
-		EndedAt:        utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.EndedAt),
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		SourceFields: &commonpb.SourceFields{
-			Source:    string(serviceLineItemDetails.Source),
-			AppSource: utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
-		},
+	sliDataFields := data_fields.SLIFields{
+		ContractId: utils.StringPtr(serviceLineItemDetails.ContractId),
+		Name:       utils.StringPtr(serviceLineItemDetails.SliName),
+		Quantity:   utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
+		Price:      utils.Float64Ptr(serviceLineItemDetails.SliPrice),
+		TaxRate:    utils.Float64Ptr(serviceLineItemDetails.SliVatRate),
+		StartedAt:  serviceLineItemDetails.StartedAt,
+		EndedAt:    serviceLineItemDetails.EndedAt,
+		Source:     utils.StringPtr(serviceLineItemDetails.Source.String()),
 	}
 
-	billedType, err := convertBilledTypeToProto(serviceLineItemDetails.SliBilledType, span)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	createServiceLineItemRequest.Billed = billedType
+	sliDataFields.BilledType = utils.ToPtr(serviceLineItemDetails.SliBilledType)
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-		return s.grpcClients.ServiceLineItemClient.CreateServiceLineItem(ctx, &createServiceLineItemRequest)
-	})
+	sliId, err := s.services.CommonServices.ServiceLineItemService.Save(ctx, nil, nil, sliDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelServiceLineItem, span)
-
-	span.LogFields(log.String("output - createdServiceLineItemId", response.Id))
-	return response.Id, nil
+	return sliId, nil
 }
 
 func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLineItemNewVersionData) (string, error) {
@@ -269,42 +252,26 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 		}
 	}
 
-	createServiceLineItemRequest := servicelineitempb.CreateServiceLineItemGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		ContractId:     contractEntity.Id,
-		ParentId:       baseServiceLineItemEntity.ParentID,
-		Name:           utils.StringFirstNonEmpty(data.Name, baseServiceLineItemEntity.Name),
-		Quantity:       data.Quantity,
-		Price:          data.Price,
-		VatRate:        data.VatRate,
-		StartedAt:      utils.ConvertTimeToTimestampPtr(&startedAtDate),
-		Comments:       utils.IfNotNilString(data.Comments),
-		SourceFields: &commonpb.SourceFields{
-			Source:    data.Source.String(),
-			AppSource: utils.StringFirstNonEmpty(data.AppSource, constants.AppSourceCustomerOsApi),
-		},
+	sliDataFields := data_fields.SLIFields{
+		ContractId: utils.StringPtr(contractEntity.Id),
+		ParentId:   utils.StringPtr(baseServiceLineItemEntity.ID),
+		Name:       utils.StringPtr(utils.StringFirstNonEmpty(data.Name, baseServiceLineItemEntity.Name)),
+		Quantity:   utils.Int64Ptr(data.Quantity),
+		Price:      utils.Float64Ptr(data.Price),
+		TaxRate:    utils.Float64Ptr(data.VatRate),
+		StartedAt:  &startedAtDate,
+		Comments:   utils.StringPtr(data.Comments),
+		Source:     utils.StringPtr(data.Source.String()),
+		BilledType: utils.ToPtr(baseServiceLineItemEntity.Billed),
 	}
 
-	billedType, err := convertBilledTypeToProto(baseServiceLineItemEntity.Billed, span)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	createServiceLineItemRequest.Billed = billedType
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-		return s.grpcClients.ServiceLineItemClient.CreateServiceLineItem(ctx, &createServiceLineItemRequest)
-	})
+	sliId, err := s.services.CommonServices.ServiceLineItemService.Save(ctx, nil, nil, sliDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelServiceLineItem, span)
-
-	return response.Id, err
+	return sliId, err
 }
 
 func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDetails ServiceLineItemUpdateData) error {
