@@ -66,6 +66,8 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 
 	createFlow := false
 	sliId := ""
+	priceChanged := false
+	quantityChanged := false
 
 	if utils.IfNotNilString(id) == "" {
 		createFlow = true
@@ -130,56 +132,79 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 		span.LogKV("flow", "update")
 		sliId = *id
 
-		// validate service line item exists
-		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, sliId, model.NodeLabelServiceLineItem)
-		if err != nil || !exists {
-			err = errors.New("comment not found")
+		sliEntity, err := s.GetById(ctx, sliId)
+		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
 		}
+
+		// reset non-updatable fields
+		if sliEntity.Billed != neo4jenum.BilledTypeNone {
+			dataFields.BilledType = utils.ToPtr(sliEntity.Billed)
+		}
+		if utils.IfNotNilFloat64(dataFields.TaxRate) < 0 {
+			dataFields.TaxRate = utils.Float64Ptr(0)
+		}
+		dataFields.TaxRate = utils.Float64Ptr(utils.TruncateFloat64(utils.IfNotNilFloat64(dataFields.TaxRate), 2))
+
+		// validate data
+		if sliEntity.Canceled { // TODO add check for deleted SLI
+			err = errors.New("service line item is canceled")
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+
+		// validate data
+		if utils.IfNotNilInt64(dataFields.Quantity) < 0 {
+			err = errors.New("quantity cannot be negative")
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+
+		priceChanged = dataFields.Price != nil && sliEntity.Price != *dataFields.Price
+		quantityChanged = dataFields.Quantity != nil && sliEntity.Quantity != *dataFields.Quantity
 	}
 	tracing.TagEntity(span, sliId)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		if createFlow {
-			// created SLI in neo4j
 			err := s.services.Neo4jRepositories.ServiceLineItemWriteRepository.CreateForContract(ctx, txWithPostCommit.Tx, tenant, sliId, dataFields)
 			if err != nil {
 				s.log.Errorf("error creating service line item %s: %s", sliId, err.Error())
 				return nil, err
 			}
-			err = s.services.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, txWithPostCommit.Tx, tenant, *dataFields.ParentId)
+		} else {
+			err := s.services.Neo4jRepositories.ServiceLineItemWriteRepository.Update(ctx, txWithPostCommit.Tx, tenant, sliId, dataFields)
 			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error while adjusting end dates for service line item %s: %s", sliId, err.Error())
+				s.log.Errorf("error updating service line item %s: %s", sliId, err.Error())
 				return nil, err
 			}
+		}
 
-		} else {
-			// TODO implement update
-			//err := s.services.Neo4jRepositories.CommentWriteRepository.Update(ctx, txWithPostCommit.Tx, tenant, sliId, commentFields)
-			//if err != nil {
-			//	s.log.Errorf("Error while updating service line item %s: %s", sliId, err.Error())
-			//	return nil, err
-			//}
+		err := s.services.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, txWithPostCommit.Tx, tenant, *dataFields.ParentId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error while adjusting end dates for service line item %s: %s", sliId, err.Error())
+			return nil, err
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			if createFlow {
-				err = s.services.ContractService.UpdateActiveRenewalOpportunityArr(ctx, *dataFields.ContractId)
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-				err = s.services.ContractService.RecalculateContractLtv(ctx, *dataFields.ContractId)
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-				contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, *dataFields.ContractId)
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-				contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+			contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, tenant, sliId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
+			err = s.services.ContractService.UpdateActiveRenewalOpportunityArr(ctx, *dataFields.ContractId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			err = s.services.ContractService.RecalculateContractLtv(ctx, *dataFields.ContractId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			if createFlow {
 				if dataFields.BilledType != nil && utils.IfNotNilString(dataFields.BilledType.String()) != "" {
 					name := "Unnamed service"
 					if utils.IfNotNilString(dataFields.Name) != "" {
@@ -214,31 +239,30 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					if err != nil {
 						tracing.TraceErr(span, err)
 						s.log.Errorf("Failed to serialize billed type metadata: %s", err.Error())
+						return err
 					}
-					if err == nil {
-						if *dataFields.BilledType == neo4jenum.BilledTypeAnnually || *dataFields.BilledType == neo4jenum.BilledTypeQuarterly || *dataFields.BilledType == neo4jenum.BilledTypeMonthly {
-							message := userName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(utils.IfNotNilInt64(dataFields.Quantity), 10) + " x " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + "/" + cycle + " starting with " + dataFields.StartedAt.Format("2006-01-02")
-							_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
-							if err != nil {
-								tracing.TraceErr(span, err)
-								s.log.Errorf("Failed creating recurring billed type service line item created action for contract %s: %s", contractEntity.Id, err.Error())
-							}
+					if dataFields.BilledType.IsRecurrent() {
+						message := userName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(utils.IfNotNilInt64(dataFields.Quantity), 10) + " x " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + "/" + cycle + " starting with " + dataFields.StartedAt.Format("2006-01-02")
+						_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+						if err != nil {
+							tracing.TraceErr(span, err)
+							s.log.Errorf("Failed creating recurring billed type service line item created action for contract %s: %s", contractEntity.Id, err.Error())
 						}
-						if *dataFields.BilledType == neo4jenum.BilledTypeOnce {
-							message := userName + " added a one time service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + " starting with " + dataFields.StartedAt.Format("2006-01-02")
-							_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeOnceCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
-							if err != nil {
-								tracing.TraceErr(span, err)
-								s.log.Errorf("Failed creating once billed type service line item created action for contract %s: %s", contractEntity.Id, err.Error())
-							}
+					}
+					if *dataFields.BilledType == neo4jenum.BilledTypeOnce {
+						message := userName + " added a one time service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + " starting with " + dataFields.StartedAt.Format("2006-01-02")
+						_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeOnceCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+						if err != nil {
+							tracing.TraceErr(span, err)
+							s.log.Errorf("Failed creating once billed type service line item created action for contract %s: %s", contractEntity.Id, err.Error())
 						}
-						if *dataFields.BilledType == neo4jenum.BilledTypeUsage {
-							message := userName + " added a per use service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.4f", utils.IfNotNilFloat64(dataFields.Price)) + " starting with " + dataFields.StartedAt.Format("2006-01-02")
-							_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
-							if err != nil {
-								tracing.TraceErr(span, err)
-								s.log.Errorf("Failed creating per use billed type service line item created action for contract %s: %s", contractEntity.Id, err.Error())
-							}
+					}
+					if *dataFields.BilledType == neo4jenum.BilledTypeUsage {
+						message := userName + " added a per use service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.4f", utils.IfNotNilFloat64(dataFields.Price)) + " starting with " + dataFields.StartedAt.Format("2006-01-02")
+						_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+						if err != nil {
+							tracing.TraceErr(span, err)
+							s.log.Errorf("Failed creating per use billed type service line item created action for contract %s: %s", contractEntity.Id, err.Error())
 						}
 					}
 				}
@@ -255,25 +279,142 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, sliId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithCreate())
 				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 			} else {
+				name := "Unnamed service"
+				if utils.IfNotNilString(dataFields.Name) != "" {
+					name = *dataFields.Name
+				}
 
+				userName := ""
+				userDbNode, err := s.services.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+				if userDbNode != nil {
+					userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
+					userName = userEntity.GetFullName()
+				}
+				extraActionProperties := map[string]interface{}{
+					"comments": utils.IfNotNilString(dataFields.Comments),
+				}
+				cycle := getBillingCycleNamingConvention(dataFields.BilledType.String())
+
+				serviceLineItemEntity, err := s.GetById(ctx, sliId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return err
+				}
+
+				actionPriceMetadata := SLIActionMetadata{
+					UserName:        userName,
+					ServiceName:     serviceLineItemEntity.Name,
+					Price:           utils.IfNotNilFloat64(dataFields.Price),
+					PreviousPrice:   serviceLineItemEntity.Price,
+					BilledType:      serviceLineItemEntity.Billed.String(),
+					Quantity:        serviceLineItemEntity.Quantity,
+					Comment:         "price changed is " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " for service " + name,
+					ReasonForChange: utils.IfNotNilString(dataFields.Comments),
+					Currency:        contractEntity.Currency.String(),
+				}
+				actionQuantityMetadata := SLIActionMetadata{
+					UserName:         userName,
+					ServiceName:      serviceLineItemEntity.Name,
+					PreviousQuantity: serviceLineItemEntity.Quantity,
+					Quantity:         utils.IfNotNilInt64(dataFields.Quantity),
+					Price:            serviceLineItemEntity.Price,
+					BilledType:       serviceLineItemEntity.Billed.String(),
+					Comment:          "quantity changed is " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " for service " + name,
+					ReasonForChange:  utils.IfNotNilString(dataFields.Comments),
+					Currency:         contractEntity.Currency.String(),
+				}
+				if dataFields.StartedAt != nil {
+					actionPriceMetadata.StartedAt = dataFields.StartedAt
+					actionQuantityMetadata.StartedAt = dataFields.StartedAt
+				}
+				metadataPrice, err := utils.ToJson(actionPriceMetadata)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Failed to serialize price metadata: %s", err.Error())
+					return errors.Wrap(err, "Failed to serialize price metadata")
+				}
+				metadataQuantity, err := utils.ToJson(actionQuantityMetadata)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Failed to serialize quantity metadata: %s", err.Error())
+					return errors.Wrap(err, "Failed to serialize quantity metadata")
+				}
+				oldCycle := getBillingCycleNamingConvention(serviceLineItemEntity.Billed.String())
+
+				if priceChanged && dataFields.BilledType != nil && dataFields.BilledType.IsRecurrent() {
+					message := ""
+					if utils.IfNotNilFloat64(dataFields.Price) > serviceLineItemEntity.Price {
+						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", dataFields.Price) + "/" + cycle
+					}
+					if utils.IfNotNilFloat64(dataFields.Price) < serviceLineItemEntity.Price {
+						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", dataFields.Price) + "/" + cycle
+					}
+					_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						s.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+					}
+				}
+
+				if priceChanged && dataFields.BilledType != nil && *dataFields.BilledType == neo4jenum.BilledTypeOnce {
+					message := ""
+					if utils.IfNotNilFloat64(dataFields.Price) > serviceLineItemEntity.Price {
+						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", dataFields.Price)
+					}
+					if utils.IfNotNilFloat64(dataFields.Price) < serviceLineItemEntity.Price {
+						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", dataFields.Price)
+					}
+					_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						s.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+					}
+				}
+				if priceChanged && *dataFields.BilledType == neo4jenum.BilledTypeUsage {
+					message := ""
+					if utils.IfNotNilFloat64(dataFields.Price) > serviceLineItemEntity.Price {
+						message = userName + " retroactively increased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", dataFields.Price)
+					}
+					if utils.IfNotNilFloat64(dataFields.Price) < serviceLineItemEntity.Price {
+						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", dataFields.Price)
+					}
+					_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						s.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+					}
+				}
+
+				if quantityChanged {
+					message := ""
+					if utils.IfNotNilInt64(dataFields.Quantity) > serviceLineItemEntity.Quantity {
+						message = userName + " retroactively increased the quantity of " + name + " from " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " to " + strconv.FormatInt(utils.IfNotNilInt64(dataFields.Quantity), 10)
+					}
+					if utils.IfNotNilInt64(dataFields.Quantity) < serviceLineItemEntity.Quantity {
+						message = userName + " retroactively decreased the quantity of " + name + " from " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " to " + strconv.FormatInt(utils.IfNotNilInt64(dataFields.Quantity), 10)
+					}
+					_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						s.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractEntity.Id, err.Error())
+					}
+				}
+
+				err = s.services.RabbitMQService.PublishEvent(ctx, sliId, model.SERVICE_LINE_ITEM, dto.UpdateServiceLineItem{dataFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateServiceLineItem for SLI"))
+				}
+				err = s.services.RabbitMQService.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.UpdateServiceLineItem{dataFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateServiceLineItem for Contract"))
+				}
+
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, sliId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithUpdate())
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 			}
-			//	// send events
-			//	if createFlow {
-			//		err := s.services.RabbitMQService.PublishEvent(ctx, commentId, model.COMMENT, dto.CreateComment{commentFields})
-			//		if err != nil {
-			//			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateComment"))
-			//		}
-			//		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, commentId, model.COMMENT, utils.NewEventCompletedDetails().WithCreate())
-			//	} else {
-			// TODO implement update
-			//		err := s.services.RabbitMQService.PublishEvent(ctx, commentId, model.COMMENT, dto.UpdateComment{commentFields})
-			//		if err != nil {
-			//			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateComment"))
-			//		}
-			//		if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
-			//			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, commentId, model.COMMENT, utils.NewEventCompletedDetails().WithUpdate())
-			//		}
-			//	}
 			return nil
 		})
 

@@ -6,14 +6,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"strings"
 )
 
 const (
@@ -49,87 +46,9 @@ func (a *ServiceLineItemAggregate) HandleGRPCRequest(ctx context.Context, reques
 		return nil, a.CloseServiceLineItem(ctx, r, params)
 	case *servicelineitempb.DeleteServiceLineItemGrpcRequest:
 		return nil, a.DeleteServiceLineItem(ctx, r)
-	case *servicelineitempb.UpdateServiceLineItemGrpcRequest:
-		return nil, a.UpdateServiceLineItem(ctx, r)
 	default:
 		return nil, nil
 	}
-}
-
-func (a *ServiceLineItemAggregate) UpdateServiceLineItem(ctx context.Context, r *servicelineitempb.UpdateServiceLineItemGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.UpdateServiceLineItem")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", r)
-
-	// Do not allow updates on deleted or canceled service line items
-	if a.ServiceLineItem.IsDeleted {
-		err := errors.New(events2.Validate + ": cannot update a deleted service line item")
-		tracing.TraceErr(span, err)
-		return err
-	}
-	if a.ServiceLineItem.IsCanceled {
-		err := errors.New(events2.Validate + ": cannot update a canceled service line item")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// fail if quantity is negative
-	if r.Quantity < 0 {
-		err := errors.New(events2.FieldValidation + ": quantity must not be negative")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	billedType := model.BilledType(r.Billed)
-	// do not allow changing billed type
-	if a.ServiceLineItem.Billed != billedType.String() && a.ServiceLineItem.Billed != "" {
-		err := errors.New(events2.Validate + ": cannot change billed type")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// Adjust vat rate
-	if r.VatRate < 0 {
-		r.VatRate = 0
-	}
-	r.VatRate = utils.TruncateFloat64(r.VatRate, 2)
-
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(r.UpdatedAt), utils.Now())
-
-	source := common.Source{}
-	source.FromGrpc(r.SourceFields)
-
-	dataFields := model.ServiceLineItemDataFields{
-		Billed:   billedType,
-		Quantity: r.Quantity,
-		Price:    r.Price,
-		Name:     r.Name,
-		Comments: r.Comments,
-		VatRate:  r.VatRate,
-	}
-
-	// Prepare the data for the update event
-	updateEvent, err := event.NewServiceLineItemUpdateEvent(
-		a,
-		dataFields,
-		source,
-		updatedAtNotNil,
-		utils.TimestampProtoToTimePtr(r.StartedAt),
-	)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewServiceLineItemUpdateEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: r.LoggedInUserId,
-		App:    source.AppSource,
-	})
-
-	return a.Apply(updateEvent)
 }
 
 func (a *ServiceLineItemAggregate) CloseServiceLineItem(ctx context.Context, r *servicelineitempb.CloseServiceLineItemGrpcRequest, params map[string]any) error {
@@ -203,62 +122,5 @@ func (a *ServiceLineItemAggregate) DeleteServiceLineItem(ctx context.Context, r 
 }
 
 func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
-	switch evt.GetEventType() {
-	case event.ServiceLineItemUpdateV1:
-		return a.onUpdate(evt)
-	case event.ServiceLineItemDeleteV1:
-		return a.onDelete()
-	case event.ServiceLineItemCloseV1:
-		return a.onClose(evt)
-	default:
-		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
-			return nil
-		}
-		err := eventstore.ErrInvalidEventType
-		err.EventType = evt.GetEventType()
-		return err
-	}
-}
-
-// onServiceLineItemUpdate handles the update event for a service line item.
-func (a *ServiceLineItemAggregate) onUpdate(evt eventstore.Event) error {
-	var eventData event.ServiceLineItemUpdateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	// Apply the changes from the event to the service line item model
-	a.ServiceLineItem.Name = eventData.Name
-	a.ServiceLineItem.Price = eventData.Price
-	a.ServiceLineItem.Quantity = eventData.Quantity
-	a.ServiceLineItem.Billed = eventData.Billed
-	a.ServiceLineItem.UpdatedAt = eventData.UpdatedAt
-	if events2.SourceOpenline == eventData.Source.Source {
-		a.ServiceLineItem.Source.SourceOfTruth = eventData.Source.Source
-	}
-	a.ServiceLineItem.Comments = eventData.Comments
-	a.ServiceLineItem.VatRate = eventData.VatRate
-	if eventData.StartedAt != nil {
-		a.ServiceLineItem.StartedAt = *eventData.StartedAt
-	}
-
-	return nil
-}
-
-func (a *ServiceLineItemAggregate) onDelete() error {
-	a.ServiceLineItem.IsDeleted = true
-	return nil
-}
-
-func (a *ServiceLineItemAggregate) onClose(evt eventstore.Event) error {
-	var eventData event.ServiceLineItemCloseEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.ServiceLineItem.EndedAt = &eventData.EndedAt
-	a.ServiceLineItem.UpdatedAt = eventData.UpdatedAt
-	a.ServiceLineItem.IsCanceled = eventData.IsCanceled
-
 	return nil
 }
