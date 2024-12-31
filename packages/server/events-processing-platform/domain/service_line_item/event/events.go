@@ -5,5 +5,4 @@ const (
 	ServiceLineItemUpdateV1 = "V1_SERVICE_LINE_ITEM_UPDATE"
 	ServiceLineItemDeleteV1 = "V1_SERVICE_LINE_ITEM_DELETE"
 	ServiceLineItemCloseV1  = "V1_SERVICE_LINE_ITEM_CLOSE"
-	ServiceLineItemResumeV1 = "V1_SERVICE_LINE_ITEM_RESUME"
 )

@@ -9,7 +9,6 @@ import (
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -663,31 +662,6 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 		}
 		// Update contract LTV
 		contractHandler.UpdateContractLtv(ctx, eventData.Tenant, contract.Id)
-	}
-
-	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, serviceLineItemId, commonmodel.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
-}
-
-func (h *ServiceLineItemEventHandler) OnResume(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnResume")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.ServiceLineItemResumeEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
-	tracing.TagTenant(span, eventData.Tenant)
-	tracing.TagEntity(span, serviceLineItemId)
-
-	err := h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, eventData.Tenant, commonmodel.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), false)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while resuming service line item %s: %s", serviceLineItemId, err.Error())
 	}
 
 	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, serviceLineItemId, commonmodel.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithUpdate())
