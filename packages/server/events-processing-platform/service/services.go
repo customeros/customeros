@@ -23,12 +23,11 @@ type Services struct {
 	RequestHandler           *requestHandler // generic grpc request handler
 
 	//GRPC services
-	OrganizationService    *organizationService
-	LocationService        *locationService
-	OpportunityService     *opportunityService
-	ServiceLineItemService *serviceLineItemService
-	InvoiceService         *invoiceService
-	EventStoreService      *eventStoreService
+	OrganizationService *organizationService
+	LocationService     *locationService
+	OpportunityService  *opportunityService
+	InvoiceService      *invoiceService
+	EventStoreService   *eventStoreService
 }
 
 func InitServices(cfg *config.Config, repositories *repository.Repositories, aggregateStore eventstore.AggregateStore, commandHandlers *command.CommandHandlers, log logger.Logger, ebs *eventbuffer.EventBufferStoreService) *Services {
@@ -45,7 +44,6 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg, &services)
 	services.LocationService = NewLocationService(log, commandHandlers.Location)
 	services.OpportunityService = NewOpportunityService(log, commandHandlers.Opportunity, aggregateStore, &services)
-	services.ServiceLineItemService = NewServiceLineItemService(log, aggregateStore, &services)
 	services.InvoiceService = NewInvoiceService(repositories, &services, log, aggregateStore)
 	services.EventStoreService = NewEventStoreService(&services, log, aggregateStore)
 

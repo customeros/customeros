@@ -4,15 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -162,99 +159,4 @@ func TestMutationResolver_ServiceLineItemNewVersion_ContractInvoiced_PastVersion
 
 	require.Equal(t, fmt.Sprintf("failed to create new contract line item version"), response.Message)
 	require.Equal(t, "contractLineItem_NewVersion", response.Path[0])
-}
-
-func TestMutationResolver_ServiceLineItemDelete(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-
-	now := utils.Now()
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		InvoicingEnabled:     true,
-		BillingCycleInMonths: 1,
-		InvoicingStartDate:   &now,
-		ContractStatus:       neo4jenum.ContractStatusDraft,
-	})
-	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{})
-
-	calledDeleteServiceLineItem := false
-	serviceLineItemServiceCallbacks := events_platform.MockServiceLineItemServiceCallbacks{
-		DeleteServiceLineItem: func(context context.Context, serviceLineItem *servicelineitempb.DeleteServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-			require.Equal(t, tenantName, serviceLineItem.Tenant)
-			require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-			require.Equal(t, testUserId, serviceLineItem.LoggedInUserId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, constants.AppSourceCustomerOsApi)
-			calledDeleteServiceLineItem = true
-			return &servicelineitempb.ServiceLineItemIdGrpcResponse{
-				Id: serviceLineItemId,
-			}, nil
-		},
-	}
-	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
-
-	rawResponse := callGraphQL(t, "service_line_item/delete_service_line_item", map[string]interface{}{
-		"serviceLineItemId": serviceLineItemId,
-	})
-
-	var response struct {
-		ServiceLineItem_Delete model.DeleteResponse
-	}
-
-	require.Nil(t, rawResponse.Errors)
-	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
-	require.Nil(t, err)
-	require.True(t, response.ServiceLineItem_Delete.Accepted)
-	require.False(t, response.ServiceLineItem_Delete.Completed)
-	require.True(t, calledDeleteServiceLineItem)
-}
-
-func TestMutationResolver_ServiceLineItemClose(t *testing.T) {
-	ctx := context.TODO()
-	defer tearDownTestCase(ctx)(t)
-
-	now := utils.Now()
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		InvoicingEnabled:     true,
-		BillingCycleInMonths: 1,
-		InvoicingStartDate:   &now,
-	})
-	serviceLineItemId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenantName, contractId, neo4jentity.ServiceLineItemEntity{})
-
-	//mock grpc
-	calledCloseServiceLineItem := false
-	serviceLineItemServiceCallbacks := events_platform.MockServiceLineItemServiceCallbacks{
-		CloseServiceLineItem: func(context context.Context, serviceLineItem *servicelineitempb.CloseServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-			require.Equal(t, tenantName, serviceLineItem.Tenant)
-			require.Equal(t, serviceLineItemId, serviceLineItem.Id)
-			require.Equal(t, testUserId, serviceLineItem.LoggedInUserId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, constants.AppSourceCustomerOsApi)
-			require.Nil(t, serviceLineItem.EndedAt)
-			require.Nil(t, serviceLineItem.UpdatedAt)
-			calledCloseServiceLineItem = true
-			return &servicelineitempb.ServiceLineItemIdGrpcResponse{
-				Id: serviceLineItemId,
-			}, nil
-		},
-	}
-	events_platform.SetServiceLineItemCallbacks(&serviceLineItemServiceCallbacks)
-
-	rawResponse := callGraphQL(t, "service_line_item/close_service_line_item", map[string]interface{}{
-		"serviceLineItemId": serviceLineItemId,
-	})
-
-	var response map[string]interface{}
-
-	require.Nil(t, rawResponse.Errors)
-	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
-	require.Nil(t, err)
-	require.Equal(t, serviceLineItemId, response["id"])
-	require.True(t, calledCloseServiceLineItem)
 }

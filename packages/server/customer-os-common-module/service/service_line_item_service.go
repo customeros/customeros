@@ -44,6 +44,7 @@ type ServiceLineItemService interface {
 	Pause(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error
 	Resume(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error
 	Delete(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error
+	Close(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string, endedAt time.Time) error
 }
 
 type serviceLineItemService struct {
@@ -748,6 +749,90 @@ func (s *serviceLineItemService) Delete(ctx context.Context, txWithPostCommit *u
 
 			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, serviceLineItemId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithDelete())
 			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *serviceLineItemService) Close(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string, endedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Close")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, serviceLineItemId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// get contract for service line item
+	contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, tenant, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+
+	serviceLineItemEntity, err := s.GetById(ctx, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if serviceLineItemEntity.StartedAt.After(utils.Now()) {
+		return s.Delete(ctx, txWithPostCommit, serviceLineItemId)
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		err := s.services.Neo4jRepositories.ServiceLineItemWriteRepository.Close(ctx, txWithPostCommit.Tx, tenant, serviceLineItemId, endedAt, true)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.services.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, txWithPostCommit.Tx, tenant, serviceLineItemEntity.ParentID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemEntity.ParentID, err.Error())
+			return nil, err
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err = s.services.ContractService.UpdateActiveRenewalOpportunityArr(ctx, contractEntity.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			err = s.services.ContractService.RecalculateContractLtv(ctx, contractEntity.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			return nil
+		})
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err := s.services.RabbitMQService.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.CloseServiceLineItem{})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CloseServiceLineItem"))
+			}
+			err = s.services.RabbitMQService.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.CloseServiceLineItem{ServiceLineItemId: serviceLineItemId, EndedAt: endedAt})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CloseServiceLineItem for contract"))
+			}
+
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, serviceLineItemId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithUpdate())
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+
 			return nil
 		})
 

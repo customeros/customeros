@@ -27,7 +27,7 @@ type ServiceLineItemWriteRepository interface {
 	CreateForContract(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string, data data_fields.SLIFields) error
 	Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string, data data_fields.SLIFields) error
 	Delete(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string) error
-	Close(ctx context.Context, tenant, serviceLineItemId string, endedAt time.Time, isCanceled bool) error
+	Close(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string, endedAt time.Time, isCanceled bool) error
 	AdjustEndDates(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, parentId string) error
 }
 
@@ -194,12 +194,12 @@ func (r *serviceLineItemWriteRepository) Delete(ctx context.Context, tx *neo4j.M
 	return err
 }
 
-func (r *serviceLineItemWriteRepository) Close(ctx context.Context, tenant, serviceLineItemId string, endedAt time.Time, isCanceled bool) error {
+func (r *serviceLineItemWriteRepository) Close(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string, endedAt time.Time, isCanceled bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.Close")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
+	tracing.TagEntity(span, serviceLineItemId)
 	span.LogFields(log.Object("endedAt", endedAt), log.Bool("isCanceled", isCanceled))
 
 	params := map[string]any{
@@ -217,10 +217,15 @@ func (r *serviceLineItemWriteRepository) Close(ctx context.Context, tenant, serv
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 

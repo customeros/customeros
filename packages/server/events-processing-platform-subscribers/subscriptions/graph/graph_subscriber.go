@@ -18,7 +18,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
-	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/sync/errgroup"
@@ -27,26 +26,24 @@ import (
 )
 
 type GraphSubscriber struct {
-	log                         logger.Logger
-	db                          *esdb.Client
-	cfg                         *config.Config
-	organizationEventHandler    *OrganizationEventHandler
-	locationEventHandler        *LocationEventHandler
-	opportunityEventHandler     *OpportunityEventHandler
-	serviceLineItemEventHandler *ServiceLineItemEventHandler
-	invoiceEventHandler         *InvoiceEventHandler
+	log                      logger.Logger
+	db                       *esdb.Client
+	cfg                      *config.Config
+	organizationEventHandler *OrganizationEventHandler
+	locationEventHandler     *LocationEventHandler
+	opportunityEventHandler  *OpportunityEventHandler
+	invoiceEventHandler      *InvoiceEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
 	return &GraphSubscriber{
-		log:                         log,
-		db:                          db,
-		cfg:                         cfg,
-		organizationEventHandler:    NewOrganizationEventHandler(log, services, grpcClients, cache),
-		locationEventHandler:        NewLocationEventHandler(services),
-		opportunityEventHandler:     NewOpportunityEventHandler(log, services, grpcClients),
-		serviceLineItemEventHandler: NewServiceLineItemEventHandler(log, services, grpcClients),
-		invoiceEventHandler:         NewInvoiceEventHandler(log, services, grpcClients),
+		log:                      log,
+		db:                       db,
+		cfg:                      cfg,
+		organizationEventHandler: NewOrganizationEventHandler(log, services, grpcClients, cache),
+		locationEventHandler:     NewLocationEventHandler(services),
+		opportunityEventHandler:  NewOpportunityEventHandler(log, services, grpcClients),
+		invoiceEventHandler:      NewInvoiceEventHandler(log, services, grpcClients),
 	}
 }
 
@@ -226,10 +223,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case opportunityevent.OpportunityCloseLooseV1:
 		_ = s.opportunityEventHandler.OnCloseLost(ctx, evt)
-		return nil
-
-	case servicelineitemevent.ServiceLineItemCloseV1:
-		_ = s.serviceLineItemEventHandler.OnClose(ctx, evt)
 		return nil
 
 	case invoiceevents.InvoiceCreateForContractV1:
