@@ -107,7 +107,7 @@ func (r *issueWriteRepository) Create(ctx context.Context, tx *neo4j.ManagedTran
 }
 
 func (r *issueWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, issueId string, data data_fields.IssueFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.Ureate")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
@@ -117,7 +117,8 @@ func (r *issueWriteRepository) Update(ctx context.Context, tx *neo4j.ManagedTran
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$issueId})
 		 	SET	i.updatedAt = datetime() `
 	params := map[string]any{
-		"tenant": tenant,
+		"tenant":  tenant,
+		"issueId": issueId,
 	}
 
 	if data.GroupId != nil {
