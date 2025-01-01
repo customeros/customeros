@@ -190,7 +190,7 @@ func (r *mutationResolver) ContractLineItemPause(ctx context.Context, id string)
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
-	err = r.Services.CommonServices.ServiceLineItemService.PauseServiceLineItem(ctx, nil, id)
+	err = r.Services.CommonServices.ServiceLineItemService.Pause(ctx, nil, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to pause contract line item")
@@ -219,7 +219,7 @@ func (r *mutationResolver) ContractLineItemResume(ctx context.Context, id string
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
-	err = r.Services.CommonServices.ServiceLineItemService.ResumeServiceLineItem(ctx, nil, id)
+	err = r.Services.CommonServices.ServiceLineItemService.Resume(ctx, nil, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to resume contract line item")

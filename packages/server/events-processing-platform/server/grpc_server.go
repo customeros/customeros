@@ -8,7 +8,6 @@ import (
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -65,7 +64,6 @@ func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	organizationpb.RegisterOrganizationGrpcServiceServer(grpcServer, services.OrganizationService)
 	locationpb.RegisterLocationGrpcServiceServer(grpcServer, services.LocationService)
 	opportunitypb.RegisterOpportunityGrpcServiceServer(grpcServer, services.OpportunityService)
-	servicelineitempb.RegisterServiceLineItemGrpcServiceServer(grpcServer, services.ServiceLineItemService)
 	invoicepb.RegisterInvoiceGrpcServiceServer(grpcServer, services.InvoiceService)
 	eventstorepb.RegisterEventStoreGrpcServiceServer(grpcServer, services.EventStoreService)
 }
