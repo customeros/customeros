@@ -19,7 +19,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/validation-a
 replace github.com/openline-ai/openline-customer-os/packages/server/enrichment-api => ../enrichment-api
 
 require (
-	github.com/99designs/gqlgen v0.17.61
+	github.com/99designs/gqlgen v0.17.62
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/customeros/mailsherpa v0.3.8
 	github.com/customeros/mailwatcher v0.1.6
@@ -50,7 +50,6 @@ require (
 	golang.org/x/exp v0.0.0-20241204233417-43b7b7cde48d
 	golang.org/x/net v0.33.0
 	google.golang.org/grpc v1.69.2
-	google.golang.org/protobuf v1.36.1
 	gorm.io/gorm v1.25.12
 )
 
@@ -196,6 +195,7 @@ require (
 	golang.org/x/tools v0.28.0 // indirect
 	google.golang.org/api v0.210.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241118233622-e639e219e697 // indirect
+	google.golang.org/protobuf v1.36.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/datatypes v1.2.5 // indirect
 	gorm.io/driver/mysql v1.5.6 // indirect
