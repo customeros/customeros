@@ -28,30 +28,6 @@ func NewServiceLineItemService(log logger.Logger, aggregateStore eventstore.Aggr
 	}
 }
 
-func (s *serviceLineItemService) DeleteServiceLineItem(ctx context.Context, request *servicelineitempb.DeleteServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ServiceLineItemService.DeleteServiceLineItem")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	// Validate service line item ID
-	if request.Id == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
-	}
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return sliaggregate.NewServiceLineItemAggregateWithTenantAndID(request.Tenant, request.Id)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(DeleteServiceLineItem) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	// Return the ID of the deleted service line item
-	return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: request.Id}, nil
-}
-
 func (s *serviceLineItemService) CloseServiceLineItem(ctx context.Context, request *servicelineitempb.CloseServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ServiceLineItemService.CloseServiceLineItem")
 	defer span.Finish()

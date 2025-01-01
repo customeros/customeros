@@ -44,8 +44,6 @@ func (a *ServiceLineItemAggregate) HandleGRPCRequest(ctx context.Context, reques
 	switch r := request.(type) {
 	case *servicelineitempb.CloseServiceLineItemGrpcRequest:
 		return nil, a.CloseServiceLineItem(ctx, r, params)
-	case *servicelineitempb.DeleteServiceLineItemGrpcRequest:
-		return nil, a.DeleteServiceLineItem(ctx, r)
 	default:
 		return nil, nil
 	}
@@ -60,7 +58,7 @@ func (a *ServiceLineItemAggregate) CloseServiceLineItem(ctx context.Context, r *
 
 	// if future version - produce delete event
 	if a.ServiceLineItem.StartedAt.After(utils.Now()) {
-		deleteEvent, err := event.NewServiceLineItemDeleteEvent(a)
+		deleteEvent, err := event.NewServiceLineItemCloseEvent(a)
 
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -97,28 +95,6 @@ func (a *ServiceLineItemAggregate) CloseServiceLineItem(ctx context.Context, r *
 	})
 
 	return a.Apply(closeEvent)
-}
-
-func (a *ServiceLineItemAggregate) DeleteServiceLineItem(ctx context.Context, r *servicelineitempb.DeleteServiceLineItemGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.deleteServiceLineItem")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", r)
-
-	deleteEvent, err := event.NewServiceLineItemDeleteEvent(a)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewServiceLineItemDeleteEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&deleteEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: r.GetLoggedInUserId(),
-		App:    r.GetAppSource(),
-	})
-
-	return a.Apply(deleteEvent)
 }
 
 func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {

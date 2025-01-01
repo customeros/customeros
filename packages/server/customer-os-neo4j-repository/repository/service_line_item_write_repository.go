@@ -26,7 +26,7 @@ type ServiceLineItemUpdateFields struct {
 type ServiceLineItemWriteRepository interface {
 	CreateForContract(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string, data data_fields.SLIFields) error
 	Update(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string, data data_fields.SLIFields) error
-	Delete(ctx context.Context, tenant, serviceLineItemId string) error
+	Delete(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string) error
 	Close(ctx context.Context, tenant, serviceLineItemId string, endedAt time.Time, isCanceled bool) error
 	AdjustEndDates(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, parentId string) error
 }
@@ -162,7 +162,7 @@ func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tx *neo4j.M
 	return err
 }
 
-func (r *serviceLineItemWriteRepository) Delete(ctx context.Context, tenant, serviceLineItemId string) error {
+func (r *serviceLineItemWriteRepository) Delete(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, serviceLineItemId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.Delete")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -182,10 +182,15 @@ func (r *serviceLineItemWriteRepository) Delete(ctx context.Context, tenant, ser
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
 	return err
 }
 
