@@ -228,9 +228,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		_ = s.opportunityEventHandler.OnCloseLost(ctx, evt)
 		return nil
 
-	case servicelineitemevent.ServiceLineItemDeleteV1:
-		_ = s.serviceLineItemEventHandler.OnDeleteV1(ctx, evt)
-		return nil
 	case servicelineitemevent.ServiceLineItemCloseV1:
 		_ = s.serviceLineItemEventHandler.OnClose(ctx, evt)
 		return nil

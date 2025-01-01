@@ -41,13 +41,21 @@ type ServiceLineItemService interface {
 	GetServiceLineItemsForContracts(ctx context.Context, contractIds []string) (*neo4jentity.ServiceLineItemEntities, error)
 	GetServiceLineItemsForInvoiceLines(ctx context.Context, invoiceLineIds []string) (*neo4jentity.ServiceLineItemEntities, error)
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.SLIFields) (string, error)
-	PauseServiceLineItem(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error
-	ResumeServiceLineItem(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error
+	Pause(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error
+	Resume(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error
+	Delete(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error
 }
 
 type serviceLineItemService struct {
 	log      logger.Logger
 	services *Services
+}
+
+func NewServiceLineItemService(log logger.Logger, services *Services) ServiceLineItemService {
+	return &serviceLineItemService{
+		log:      log,
+		services: services,
+	}
 }
 
 func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.SLIFields) (string, error) {
@@ -434,13 +442,6 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 	return sliId, nil
 }
 
-func NewServiceLineItemService(log logger.Logger, services *Services) ServiceLineItemService {
-	return &serviceLineItemService{
-		log:      log,
-		services: services,
-	}
-}
-
 func (s *serviceLineItemService) GetById(ctx context.Context, serviceLineItemId string) (*neo4jentity.ServiceLineItemEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.GetById")
 	defer span.Finish()
@@ -514,8 +515,8 @@ func (s *serviceLineItemService) GetServiceLineItemsForInvoiceLines(ctx context.
 	return &serviceLineItemEntities, nil
 }
 
-func (s *serviceLineItemService) PauseServiceLineItem(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.PauseServiceLineItem")
+func (s *serviceLineItemService) Pause(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Pause")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, serviceLineItemId)
@@ -546,7 +547,7 @@ func (s *serviceLineItemService) PauseServiceLineItem(ctx context.Context, txWit
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 
-		err := s.services.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, tenant, model.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), true)
+		err := s.services.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), true)
 		if err != nil {
 			return nil, err
 		}
@@ -560,6 +561,9 @@ func (s *serviceLineItemService) PauseServiceLineItem(ctx context.Context, txWit
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message PauseServiceLineItem for contract"))
 			}
+
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+
 			return nil
 		})
 		return nil, nil
@@ -572,8 +576,8 @@ func (s *serviceLineItemService) PauseServiceLineItem(ctx context.Context, txWit
 	return nil
 }
 
-func (s *serviceLineItemService) ResumeServiceLineItem(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.ResumeServiceLineItem")
+func (s *serviceLineItemService) Resume(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Resume")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, serviceLineItemId)
@@ -604,7 +608,7 @@ func (s *serviceLineItemService) ResumeServiceLineItem(ctx context.Context, txWi
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 
-		err := s.services.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, nil, tenant, model.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), false)
+		err := s.services.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), false)
 		if err != nil {
 			return nil, err
 		}
@@ -618,6 +622,9 @@ func (s *serviceLineItemService) ResumeServiceLineItem(ctx context.Context, txWi
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message ResumeServiceLineItem for contract"))
 			}
+
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+
 			return nil
 		})
 		return nil, nil
@@ -641,4 +648,115 @@ func getBillingCycleNamingConvention(billedType string) string {
 	default:
 		return ""
 	}
+}
+
+func (s *serviceLineItemService) Delete(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, serviceLineItemId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Delete")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, serviceLineItemId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// get contract for service line item
+	contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, tenant, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+
+	serviceLineItemEntity, err := s.GetById(ctx, serviceLineItemId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		err := s.services.Neo4jRepositories.ServiceLineItemWriteRepository.Delete(ctx, txWithPostCommit.Tx, tenant, serviceLineItemId)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.services.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, txWithPostCommit.Tx, tenant, serviceLineItemEntity.ParentID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemEntity.ParentID, err.Error())
+			return nil, err
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err = s.services.ContractService.UpdateActiveRenewalOpportunityArr(ctx, contractEntity.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			err = s.services.ContractService.RecalculateContractLtv(ctx, contractEntity.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			serviceLineItemName := "Unnamed service"
+			if serviceLineItemEntity.Name != "" {
+				serviceLineItemName = serviceLineItemEntity.Name
+			}
+			userName := ""
+			userDbNode, err := s.services.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			if userDbNode != nil {
+				userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
+				userName = userEntity.GetFullName()
+			}
+			contractName := "Unnamed contract"
+			if contractEntity.Name != "" {
+				contractName = contractEntity.Name
+			}
+
+			metadata, err := utils.ToJson(SLIActionMetadata{
+				UserName:    userName,
+				ServiceName: serviceLineItemName,
+				Comment:     "service line item removed is " + serviceLineItemName + " from " + contractName + " by " + userName,
+			})
+			message := userName + " removed " + serviceLineItemName + " from " + contractName
+
+			_, err = s.services.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, contractEntity.Id, model.CONTRACT, neo4jenum.ActionServiceLineItemRemoved, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx))
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Failed remove service line item action for contract %s: %s", contractEntity.Id, err.Error())
+			}
+
+			return nil
+		})
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			err := s.services.RabbitMQService.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.DeleteServiceLineItem{})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteServiceLineItem"))
+			}
+			err = s.services.RabbitMQService.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.DeleteServiceLineItem{ServiceLineItemId: serviceLineItemId})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteServiceLineItem for contract"))
+			}
+
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, serviceLineItemId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithDelete())
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
