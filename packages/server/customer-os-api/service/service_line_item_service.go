@@ -21,7 +21,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -519,16 +518,7 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 		return false, err
 	}
 
-	deleteRequest := servicelineitempb.DeleteServiceLineItemGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             serviceLineItemId,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
-	}
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-		return s.grpcClients.ServiceLineItemClient.DeleteServiceLineItem(ctx, &deleteRequest)
-	})
+	err = s.services.CommonServices.ServiceLineItemService.Delete(ctx, nil, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -594,18 +584,7 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 		}
 	}
 
-	closeRequest := servicelineitempb.CloseServiceLineItemGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             serviceLineItemId,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
-		EndedAt:        utils.ConvertTimeToTimestampPtr(endedAt),
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-		return s.grpcClients.ServiceLineItemClient.CloseServiceLineItem(ctx, &closeRequest)
-	})
+	err = s.services.CommonServices.ServiceLineItemService.Close(ctx, nil, serviceLineItemId, utils.IfNotNilTimeWithDefault(endedAt, utils.Now()))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
