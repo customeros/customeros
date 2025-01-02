@@ -193,8 +193,6 @@ func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, req
 
 func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
-	case opportunityevent.OpportunityCreateV1:
-		return a.onOpportunityCreate(evt)
 	case opportunityevent.OpportunityUpdateV1:
 		return a.onOpportunityUpdate(evt)
 	case opportunityevent.OpportunityCreateRenewalV1:
@@ -213,38 +211,6 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 		err.EventType = evt.GetEventType()
 		return err
 	}
-}
-
-func (a *OpportunityAggregate) onOpportunityCreate(evt eventstore.Event) error {
-	var eventData events.OpportunityCreateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.Opportunity.ID = a.ID
-	a.Opportunity.Tenant = a.Tenant
-	a.Opportunity.OrganizationId = eventData.OrganizationId
-	a.Opportunity.Name = eventData.Name
-	a.Opportunity.MaxAmount = eventData.MaxAmount
-	a.Opportunity.Currency = eventData.Currency
-	a.Opportunity.LikelihoodRate = eventData.LikelihoodRate
-	a.Opportunity.InternalType = eventData.InternalType
-	a.Opportunity.ExternalType = eventData.ExternalType
-	a.Opportunity.InternalStage = eventData.InternalStage
-	a.Opportunity.ExternalStage = eventData.ExternalStage
-	a.Opportunity.EstimatedClosedAt = eventData.EstimatedClosedAt
-	a.Opportunity.OwnerUserId = eventData.OwnerUserId
-	a.Opportunity.CreatedByUserId = eventData.CreatedByUserId
-	a.Opportunity.GeneralNotes = eventData.GeneralNotes
-	a.Opportunity.NextSteps = eventData.NextSteps
-	a.Opportunity.CreatedAt = eventData.CreatedAt
-	a.Opportunity.UpdatedAt = eventData.UpdatedAt
-	a.Opportunity.Source = eventData.Source
-	if eventData.ExternalSystem.Available() {
-		a.Opportunity.ExternalSystems = []commonmodel.ExternalSystem{eventData.ExternalSystem}
-	}
-
-	return nil
 }
 
 func (a *OpportunityAggregate) onRenewalOpportunityCreate(evt eventstore.Event) error {

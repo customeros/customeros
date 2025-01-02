@@ -206,9 +206,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		_ = s.locationEventHandler.OnLocationValidated(ctx, evt)
 		return nil
 
-	case opportunityevent.OpportunityCreateV1:
-		_ = s.opportunityEventHandler.OnCreate(ctx, evt)
-		return nil
 	case opportunityevent.OpportunityUpdateNextCycleDateV1:
 		_ = s.opportunityEventHandler.OnUpdateNextCycleDate(ctx, evt)
 		return nil
