@@ -7,11 +7,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"time"
 )
@@ -259,14 +260,13 @@ func (s *contractService) createRenewalOpportunitiesIfMissing(ctx context.Contex
 
 		//process renewal opportunities
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-				return s.eventsProcessingClient.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-					Tenant:     record.Tenant,
-					ContractId: record.ContractId,
-					SourceFields: &commonpb.SourceFields{
-						AppSource: constants.AppSourceDataUpkeeper,
-					},
-				})
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+			_, err = s.services.OpportunityService.Save(innerCtx, nil, nil, &data_fields.OpportunityFields{
+				ContractId:   &record.ContractId,
+				InternalType: utils.ToPtr(neo4jenum.OpportunityInternalTypeRenewal),
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
