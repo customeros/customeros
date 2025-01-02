@@ -16,25 +16,6 @@ import (
 )
 
 // Deprecated
-type OpportunityCreateFields struct {
-	OrganizationId    string             `json:"organizationId"`
-	CreatedAt         time.Time          `json:"createdAt"`
-	SourceFields      model.SourceFields `json:"sourceFields"`
-	Name              string             `json:"name"`
-	MaxAmount         float64            `json:"maxAmount"`
-	InternalType      string             `json:"internalType"`
-	ExternalType      string             `json:"externalType"`
-	InternalStage     string             `json:"internalStage"`
-	ExternalStage     string             `json:"externalStage"`
-	EstimatedClosedAt *time.Time         `json:"estimatedClosedAt"`
-	GeneralNotes      string             `json:"generalNotes"`
-	NextSteps         string             `json:"nextSteps"`
-	CreatedByUserId   string             `json:"createdByUserId"`
-	Currency          enum.Currency      `json:"currency"`
-	LikelihoodRate    int64              `json:"likelihoodRate"`
-}
-
-// Deprecated
 type OpportunityUpdateFields struct {
 	Source                  string        `json:"source"`
 	Name                    string        `json:"name"`
@@ -92,8 +73,6 @@ type RenewalOpportunityUpdateFields struct {
 
 type OpportunityWriteRepository interface {
 	//Deprecated
-	CreateForOrganization(ctx context.Context, tenant, opportunityId string, data OpportunityCreateFields) error
-	//Deprecated
 	Update(ctx context.Context, tenant, opportunityId string, data OpportunityUpdateFields) error
 
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data data_fields.OpportunityFields) error
@@ -118,73 +97,6 @@ func NewOpportunityWriteRepository(driver *neo4j.DriverWithContext, database str
 		driver:   driver,
 		database: database,
 	}
-}
-
-func (r *opportunityWriteRepository) CreateForOrganization(ctx context.Context, tenant, opportunityId string, data OpportunityCreateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CreateForOrganizationOld")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
-	tracing.LogObjectAsJson(span, "data", data)
-
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId})
-							MERGE (t)<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity {id:$opportunityId})<-[:HAS_OPPORTUNITY]-(org)
-							ON CREATE SET 
-								op:Opportunity_%s,
-								op.createdAt=$createdAt,
-								op.updatedAt=datetime(),
-								op.stageUpdatedAt=datetime(),
-								op.source=$source,
-								op.sourceOfTruth=$sourceOfTruth,
-								op.appSource=$appSource,
-								op.name=$name,
-								op.maxAmount=$maxAmount,
-								op.internalType=$internalType,
-								op.externalType=$externalType,
-								op.internalStage=$internalStage,
-								op.externalStage=$externalStage,
-								op.estimatedClosedAt=$estimatedClosedAt,
-								op.generalNotes=$generalNotes,
-								op.nextSteps=$nextSteps,
-								op.currency=$currency,
-								op.likelihoodRate=$likelihoodRate,
-								org.updatedAt=datetime()
-							WITH op, t
-							OPTIONAL MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$createdByUserId}) 
-							WHERE $createdByUserId <> ""
-							FOREACH (ignore IN CASE WHEN u IS NOT NULL THEN [1] ELSE [] END |
-    							MERGE (op)-[:CREATED_BY]->(u))
-							`, tenant)
-	params := map[string]any{
-		"tenant":            tenant,
-		"opportunityId":     opportunityId,
-		"orgId":             data.OrganizationId,
-		"createdAt":         data.CreatedAt,
-		"source":            data.SourceFields.Source,
-		"sourceOfTruth":     data.SourceFields.Source,
-		"appSource":         data.SourceFields.AppSource,
-		"name":              data.Name,
-		"maxAmount":         data.MaxAmount,
-		"internalType":      data.InternalType,
-		"externalType":      data.ExternalType,
-		"internalStage":     data.InternalStage,
-		"externalStage":     data.ExternalStage,
-		"estimatedClosedAt": utils.TimePtrAsAny(data.EstimatedClosedAt),
-		"generalNotes":      data.GeneralNotes,
-		"nextSteps":         data.NextSteps,
-		"createdByUserId":   data.CreatedByUserId,
-		"currency":          data.Currency.String(),
-		"likelihoodRate":    data.LikelihoodRate,
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
 }
 
 func (r *opportunityWriteRepository) Update(ctx context.Context, tenant, opportunityId string, data OpportunityUpdateFields) error {
