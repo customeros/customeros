@@ -157,7 +157,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 		dataFields.TaxRate = utils.Float64Ptr(utils.TruncateFloat64(utils.IfNotNilFloat64(dataFields.TaxRate), 2))
 
 		// validate data
-		if sliEntity.Canceled { // TODO add check for deleted SLI
+		if sliEntity.Canceled {
 			err = errors.New("service line item is canceled")
 			tracing.TraceErr(span, err)
 			return "", err
@@ -190,7 +190,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 			}
 		}
 
-		err := s.services.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, txWithPostCommit.Tx, tenant, *dataFields.ParentId)
+		err := s.services.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, txWithPostCommit.Tx, tenant, utils.IfNotNilString(dataFields.ParentId))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error while adjusting end dates for service line item %s: %s", sliId, err.Error())
