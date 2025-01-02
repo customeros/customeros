@@ -96,8 +96,6 @@ func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, req
 
 func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
-	case opportunityevent.OpportunityCreateRenewalV1:
-		return a.onRenewalOpportunityCreate(evt)
 	case opportunityevent.OpportunityUpdateRenewalV1:
 		return a.onRenewalOpportunityUpdate(evt)
 	case opportunityevent.OpportunityUpdateNextCycleDateV1:
@@ -112,28 +110,6 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 		err.EventType = evt.GetEventType()
 		return err
 	}
-}
-
-func (a *OpportunityAggregate) onRenewalOpportunityCreate(evt eventstore.Event) error {
-	var eventData opportunityevent.OpportunityCreateRenewalEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.Opportunity.ID = a.ID
-	a.Opportunity.Tenant = a.Tenant
-	a.Opportunity.ContractId = eventData.ContractId
-	a.Opportunity.InternalType = neo4jenum.OpportunityInternalTypeRenewal.String()
-	a.Opportunity.InternalStage = eventData.InternalStage
-	a.Opportunity.CreatedAt = eventData.CreatedAt
-	a.Opportunity.UpdatedAt = eventData.UpdatedAt
-	a.Opportunity.Source = eventData.Source
-	a.Opportunity.RenewalDetails.RenewalLikelihood = eventData.RenewalLikelihood
-	a.Opportunity.RenewalDetails.RenewalApproved = eventData.RenewalApproved
-	a.Opportunity.RenewalDetails.RenewedAt = eventData.RenewedAt
-	a.Opportunity.RenewalDetails.RenewalAdjustedRate = eventData.RenewalAdjustedRate
-
-	return nil
 }
 
 func (a *OpportunityAggregate) onOpportunityUpdateNextCycleDate(evt eventstore.Event) error {

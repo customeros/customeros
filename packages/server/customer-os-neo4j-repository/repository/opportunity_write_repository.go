@@ -78,7 +78,7 @@ type OpportunityWriteRepository interface {
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data data_fields.OpportunityFields) error
 	ReplaceOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId, userId string) error
 	RemoveOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error
-	CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) (bool, error)
+	CreateRenewal(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data data_fields.OpportunityFields) (bool, error)
 	UpdateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityUpdateFields) error
 	UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, renewedAt *time.Time) error
 	CloseWon(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, closedAt time.Time) error
@@ -239,7 +239,7 @@ func (r *opportunityWriteRepository) Save(ctx context.Context, txx *neo4j.Manage
 		}
 		if data.InternalType != nil {
 			cypherUpdate += `, op.internalType = $internalType `
-			paramsUpdate["internalType"] = *data.InternalType
+			paramsUpdate["internalType"] = data.InternalType.String()
 		}
 		if data.Currency != nil {
 			cypherUpdate += `, op.currency = $currency `
@@ -338,13 +338,19 @@ func (r *opportunityWriteRepository) RemoveOwner(ctx context.Context, tx *neo4j.
 	return nil
 }
 
-func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) (bool, error) {
+func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data data_fields.OpportunityFields) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CreateRenewal")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 	tracing.LogObjectAsJson(span, "data", data)
+
+	if !data.IsRenewal() {
+		err := fmt.Errorf("opportunity is not a renewal opportunity")
+		tracing.TraceErr(span, err)
+		return false, err
+	}
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 							WHERE NOT (c)-[:ACTIVE_RENEWAL]->(:RenewalOpportunity)
@@ -355,7 +361,6 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 								newOp.createdAt=$createdAt,
 								newOp.updatedAt=datetime(),
 								newOp.source=$source,
-								newOp.sourceOfTruth=$sourceOfTruth,
 								newOp.appSource=$appSource,
 								newOp.internalType=$internalType,
 								newOp.internalStage=$internalStage,
@@ -369,30 +374,35 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 	params := map[string]any{
 		"tenant":              tenant,
 		"opportunityId":       opportunityId,
-		"contractId":          data.ContractId,
-		"createdAt":           data.CreatedAt,
-		"source":              data.SourceFields.Source,
-		"sourceOfTruth":       data.SourceFields.Source,
-		"appSource":           data.SourceFields.AppSource,
-		"internalType":        data.InternalType,
-		"internalStage":       data.InternalStage,
-		"renewalLikelihood":   data.RenewalLikelihood,
-		"renewalApproved":     data.RenewalApproved,
-		"renewalAdjustedRate": data.RenewalAdjustedRate,
+		"contractId":          utils.IfNotNilString(data.ContractId),
+		"createdAt":           utils.IfNotNilTimeWithDefault(data.CreatedAt, utils.Now()),
+		"source":              utils.IfNotNilString(data.Source),
+		"appSource":           utils.IfNotNilString(data.AppSource),
+		"internalStage":       utils.IfNotNilString(data.InternalStage),
+		"renewalApproved":     utils.IfNotNilBool(data.RenewalApproved),
+		"renewalAdjustedRate": utils.IfNotNilInt64(data.RenewalAdjustedRate),
 		"renewedAt":           utils.ToDateAsAny(data.RenewedAt),
 	}
+	if data.InternalType != nil {
+		params["internalType"] = data.InternalType.String()
+	} else {
+		params["internalType"] = ""
+	}
+	if data.RenewalLikelihood != nil {
+		params["renewalLikelihood"] = data.RenewalLikelihood.String()
+	} else {
+		params["renewalLikelihood"] = ""
+	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractSingleRecordFirstValueAsType[bool](ctx, queryResult, err)
-		}
+	result, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsType[bool](ctx, queryResult, err)
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

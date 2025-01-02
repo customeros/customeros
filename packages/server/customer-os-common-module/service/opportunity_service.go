@@ -150,12 +150,12 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 	opportunityId := ""
 
 	if utils.IfNotNilString(id) == "" {
-		if utils.IfNotNilString(input.OrganizationId) == "" && utils.IfNotNilString(input.InternalType) != neo4jenum.OpportunityInternalTypeRenewal.String() {
+		if utils.IfNotNilString(input.OrganizationId) == "" && !input.IsRenewal() {
 			err := fmt.Errorf("(OpportunityService.Save) organizationId and opportunityId and contractId are empty")
 			tracing.TraceErr(span, err)
 			return "", err
 		}
-		if utils.IfNotNilString(input.ContractId) == "" && utils.IfNotNilString(input.InternalType) == neo4jenum.OpportunityInternalTypeRenewal.String() {
+		if utils.IfNotNilString(input.ContractId) == "" && input.IsRenewal() {
 			err := fmt.Errorf("(OpportunityService.Save) contractId and opportunityId and contractId are empty")
 			tracing.TraceErr(span, err)
 			return "", err
@@ -205,7 +205,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 		}
 
 		// default values for renewal opportunity
-		if *input.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
+		if input.IsRenewal() {
 			if input.RenewalLikelihood == nil {
 				input.RenewalLikelihood = utils.ToPtr(neo4jenum.RenewalLikelihoodHigh)
 			}
@@ -219,6 +219,24 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 			}
 			if input.RenewalApproved == nil {
 				input.RenewalApproved = utils.BoolPtr(false)
+			}
+		}
+
+		// validate input
+		if input.IsRenewal() {
+			// check if active renewal opportunity already exists for this contract
+			opportunityDbNode, err := s.services.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, utils.IfNotNilString(input.ContractId))
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+			if opportunityDbNode != nil {
+				opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
+				if opportunity.RenewalDetails.RenewedAt != nil && opportunity.RenewalDetails.RenewedAt.After(utils.Now()) {
+					span.LogFields(log.String("result", "active renewal opportunity already exists, skip creation"))
+					s.log.Infof("active renewal opportunity already exists for contract %s", utils.IfNotNilString(input.ContractId))
+					return "", nil
+				}
 			}
 		}
 
@@ -253,11 +271,22 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 	tracing.TagEntity(span, opportunityId)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-
-		err = s.services.Neo4jRepositories.OpportunityWriteRepository.Save(ctx, txWithPostCommit.Tx, tenant, opportunityId, *input)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
+		newRenewalOpportunityCreated := false
+		if createFlow && input.IsRenewal() {
+			newRenewalOpportunityCreated, err = s.services.Neo4jRepositories.OpportunityWriteRepository.CreateRenewal(ctx, txWithPostCommit.Tx, tenant, opportunityId, *input)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("error while saving renewal opportunity %s: %s", opportunityId, err.Error())
+				return nil, err
+			}
+		} else if !createFlow && existing.IsRenewal() {
+			// TODO renewal opportunity update here
+		} else {
+			err = s.services.Neo4jRepositories.OpportunityWriteRepository.Save(ctx, txWithPostCommit.Tx, tenant, opportunityId, *input)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
 		}
 
 		if utils.IfNotNilString(input.OrganizationId) != "" {
@@ -292,7 +321,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 			}
 		}
 
-		if (input.Amount != nil || input.MaxAmount != nil) && existing.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
+		if createFlow == false && (input.Amount != nil || input.MaxAmount != nil) && existing.IsRenewal() {
 			// if amount changed, recalculate organization combined ARR forecast
 			organizationDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
 			if err != nil {
@@ -335,6 +364,18 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 				}
 			}
 		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			if newRenewalOpportunityCreated {
+				err = s.services.ContractService.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenant, utils.IfNotNilString(input.ContractId))
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
+					return nil
+				}
+			}
+			return nil
+		})
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			if createFlow {
