@@ -385,9 +385,8 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 	// if there is no renewal opportunity, create one
 	if currentRenewalOpportunityDbNode == nil {
 		if !contract.IsEnded() {
-			_, err = h.services.CommonServices.OpportunityService.Save(ctx, nil, nil, &data_fields.OpportunityFields{
-				ContractId:   &contractId,
-				InternalType: utils.ToPtr(neo4jenum.OpportunityInternalTypeRenewal),
+			_, err = h.services.CommonServices.OpportunityService.CreateRenewalOpportunity(ctx, nil, &data_fields.OpportunityFields{
+				ContractId: &contractId,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)

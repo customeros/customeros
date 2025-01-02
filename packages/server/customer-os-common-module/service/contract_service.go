@@ -285,11 +285,10 @@ func (s *contractService) postCreateContract(ctx context.Context, tenant, contra
 	}
 
 	if dataFields.LengthInMonths != nil && *dataFields.LengthInMonths > 0 {
-		_, err = s.services.OpportunityService.Save(ctx, nil, nil, &data_fields.OpportunityFields{
-			ContractId:   &contractId,
-			InternalType: utils.ToPtr(neo4jenum.OpportunityInternalTypeRenewal),
-			Source:       dataFields.Source,
-			AppSource:    dataFields.AppSource,
+		_, err = s.services.OpportunityService.CreateRenewalOpportunity(ctx, nil, &data_fields.OpportunityFields{
+			ContractId: &contractId,
+			Source:     dataFields.Source,
+			AppSource:  dataFields.AppSource,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -679,9 +678,8 @@ func (s *contractService) assertContractAndRenewalOpportunity(ctx context.Contex
 	// if there is no renewal opportunity, create one
 	if currentRenewalOpportunityDbNode == nil {
 		if !contract.IsEnded() {
-			_, err = s.services.OpportunityService.Save(ctx, nil, nil, &data_fields.OpportunityFields{
-				ContractId:   &contractId,
-				InternalType: utils.ToPtr(neo4jenum.OpportunityInternalTypeRenewal),
+			_, err = s.services.OpportunityService.CreateRenewalOpportunity(ctx, nil, &data_fields.OpportunityFields{
+				ContractId: &contractId,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)

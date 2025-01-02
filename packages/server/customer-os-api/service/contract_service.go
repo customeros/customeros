@@ -471,8 +471,7 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 	}
 	// if no active renewal opportunity found create new
 	if opportunityDbNode == nil {
-		_, err = s.services.CommonServices.OpportunityService.Save(ctx, nil, nil, &data_fields.OpportunityFields{
-			InternalType:    utils.ToPtr(neo4jenum.OpportunityInternalTypeRenewal),
+		_, err = s.services.CommonServices.OpportunityService.CreateRenewalOpportunity(ctx, nil, &data_fields.OpportunityFields{
 			ContractId:      &contractId,
 			RenewalApproved: utils.BoolPtr(true),
 			RenewedAt:       renewalDate,
