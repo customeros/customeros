@@ -284,16 +284,11 @@ func (s *contractService) postCreateContract(ctx context.Context, tenant, contra
 	}
 
 	if dataFields.LengthInMonths != nil && *dataFields.LengthInMonths > 0 {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			return s.services.GrpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-				Tenant:     tenant,
-				ContractId: contractId,
-				SourceFields: &commonpb.SourceFields{
-					Source:    *dataFields.Source,
-					AppSource: *dataFields.AppSource,
-				},
-			})
+		_, err = s.services.OpportunityService.Save(ctx, nil, nil, &data_fields.OpportunityFields{
+			ContractId:   &contractId,
+			InternalType: utils.ToPtr(neo4jenum.OpportunityInternalTypeRenewal),
+			Source:       dataFields.Source,
+			AppSource:    dataFields.AppSource,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -683,15 +678,9 @@ func (s *contractService) assertContractAndRenewalOpportunity(ctx context.Contex
 	// if there is no renewal opportunity, create one
 	if currentRenewalOpportunityDbNode == nil {
 		if !contract.IsEnded() {
-			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-				return s.services.GrpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-					Tenant:     tenant,
-					ContractId: contractId,
-					SourceFields: &commonpb.SourceFields{
-						AppSource: common.GetAppSourceFromContext(ctx),
-					},
-				})
+			_, err = s.services.OpportunityService.Save(ctx, nil, nil, &data_fields.OpportunityFields{
+				ContractId:   &contractId,
+				InternalType: utils.ToPtr(neo4jenum.OpportunityInternalTypeRenewal),
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)

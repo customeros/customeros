@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
@@ -29,33 +28,6 @@ func NewOpportunityService(log logger.Logger, commandHandlers *command_handler.C
 		opportunityCommandHandlers: commandHandlers,
 		aggregateStore:             aggregateStore,
 	}
-}
-
-func (s *opportunityService) CreateRenewalOpportunity(ctx context.Context, request *opportunitypb.CreateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OpportunityService.CreateRenewalOpportunity")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	// Validate contract ID
-	if request.ContractId == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("contractId"))
-	}
-
-	opportunityId := uuid.New().String()
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewOpportunityAggregateWithTenantAndID(request.Tenant, opportunityId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(CreateRenewalOpportunity) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	// Return the ID of the newly created opportunity
-	return &opportunitypb.OpportunityIdGrpcResponse{Id: opportunityId}, nil
 }
 
 func (s *opportunityService) UpdateRenewalOpportunity(ctx context.Context, request *opportunitypb.UpdateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {

@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -229,121 +228,6 @@ func (h *OpportunityEventHandler) sendEventToUpdateOrganizationArr(ctx context.C
 		tracing.TraceErr(span, err)
 		h.log.Errorf("RefreshArr failed: %v", err.Error())
 	}
-}
-
-func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnUpdate")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OpportunityUpdateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-
-	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, nil, eventData.Tenant, opportunityId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
-		return err
-	}
-	opportunityBeforeUpdate := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
-
-	data := neo4jrepository.OpportunityUpdateFields{
-		Source:                  eventData.Source,
-		Name:                    eventData.Name,
-		Amount:                  eventData.Amount,
-		MaxAmount:               eventData.MaxAmount,
-		ExternalStage:           eventData.ExternalStage,
-		ExternalType:            eventData.ExternalType,
-		EstimatedClosedAt:       eventData.EstimatedClosedAt,
-		InternalStage:           eventData.InternalStage,
-		LikelihoodRate:          eventData.LikelihoodRate,
-		NextSteps:               eventData.NextSteps,
-		Currency:                neo4jenum.DecodeCurrency(eventData.Currency),
-		UpdateName:              eventData.UpdateName(),
-		UpdateAmount:            eventData.UpdateAmount(),
-		UpdateMaxAmount:         eventData.UpdateMaxAmount(),
-		UpdateExternalStage:     eventData.UpdateExternalStage(),
-		UpdateExternalType:      eventData.UpdateExternalType(),
-		UpdateEstimatedClosedAt: eventData.UpdateEstimatedClosedAt(),
-		UpdateInternalStage:     eventData.UpdateInternalStage(),
-		UpdateCurrency:          eventData.UpdateCurrency(),
-		UpdateLikelihoodRate:    eventData.UpdateLikelihoodRate(),
-		UpdateNextSteps:         eventData.UpdateNextSteps(),
-	}
-	err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.Update(ctx, eventData.Tenant, opportunityId, data)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while saving opportunity %s: %s", opportunityId, err.Error())
-		return err
-	}
-
-	//on service
-	if eventData.UpdateOwnerUserId() {
-		if eventData.OwnerUserId != "" {
-			err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, nil, eventData.Tenant, opportunityId, eventData.OwnerUserId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
-			}
-		} else {
-			err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.RemoveOwner(ctx, nil, eventData.Tenant, opportunityId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Error while removing owner of opportunity %s: %s", opportunityId, err.Error())
-			}
-		}
-	}
-
-	//NOT on service
-	if eventData.ExternalSystem.Available() {
-		externalSystemData := neo4jmodel.ExternalSystem{
-			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
-			ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
-			ExternalId:       eventData.ExternalSystem.ExternalId,
-			ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
-			ExternalSource:   eventData.ExternalSystem.ExternalSource,
-			SyncDate:         eventData.ExternalSystem.SyncDate,
-		}
-		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, model.NodeLabelOpportunity, externalSystemData)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error while linking opportunity %s with external system %s: %s", opportunityId, eventData.ExternalSystem.ExternalSystemId, err.Error())
-			return err
-		}
-	}
-
-	opportunityDbNode, err = h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, nil, eventData.Tenant, opportunityId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
-		return err
-	}
-	opportunityAfterUpdate := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
-
-	//on service
-	if opportunityBeforeUpdate.InternalStage != opportunityAfterUpdate.InternalStage || opportunityBeforeUpdate.ExternalStage != opportunityAfterUpdate.ExternalStage {
-		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelOpportunity, opportunityId, string(neo4jentity.OpportunityPropertyStageUpdatedAt), utils.NowPtr())
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error while updating opportunity %s: %s", opportunityId, err.Error())
-		}
-	}
-
-	//on service
-	// if amount changed, recalculate organization combined ARR forecast
-	if (eventData.UpdateAmount() || eventData.UpdateMaxAmount()) && opportunityBeforeUpdate.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
-		h.sendEventToUpdateOrganizationArr(ctx, eventData.Tenant, opportunityId, span)
-	}
-
-	if eventData.AppSource != constants.AppSourceCustomerOsApi {
-		h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, opportunityId, model.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
-	}
-	return nil
 }
 
 func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt eventstore.Event) error {
