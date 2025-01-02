@@ -127,27 +127,6 @@ export const OrganizationCommands = observer(() => {
         </CommandItem>
 
         <CommandItem
-          leftAccessory={<Globe01 />}
-          keywords={[
-            'edit',
-            'website',
-            'change',
-            'domain',
-            'link',
-            'url',
-            'web address',
-          ]}
-          onSelect={() => {
-            store.ui.commandMenu.setType('RenameOrganizationProperty');
-            store.ui.commandMenu.setContext({
-              ...store.ui.commandMenu.context,
-              property: 'website',
-            });
-          }}
-        >
-          Edit website
-        </CommandItem>
-        <CommandItem
           leftAccessory={<AlignHorizontalCentre02 />}
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeRelationship');

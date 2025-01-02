@@ -1,9 +1,7 @@
-import { useState } from 'react';
-
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
-import { removeTrailingSlash } from '@utils/removeTrailingSlash.ts';
+import { removeTrailingSlash } from '@utils/removeTrailingSlash';
 import { getExternalUrl, getFormattedLink } from '@utils/getExternalLink';
 
 interface WebsiteCellProps {
@@ -12,7 +10,6 @@ interface WebsiteCellProps {
 
 export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
   const store = useStore();
-  const [metaKey, setMetaKey] = useState(false);
   const organization = store.organizations.getById(organizationId);
 
   const website = organization?.value?.website;
@@ -22,25 +19,9 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
   return (
     <div
       className='flex items-center cursor-pointer'
-      onKeyUp={() => metaKey && setMetaKey(false)}
-      onKeyDown={(e) => {
-        if (e.metaKey) {
-          setMetaKey(true);
-        }
-      }}
       onClick={(e) => {
-        if (e.metaKey) {
-          e.stopPropagation();
-          window.open(getExternalUrl(website ?? '/'), '_blank', 'noopener');
-
-          return;
-        }
-        store.ui.commandMenu.setType('RenameOrganizationProperty');
-        store.ui.commandMenu.setContext({
-          ...store.ui.commandMenu.context,
-          property: 'website',
-        });
-        store.ui.commandMenu.setOpen(true);
+        e.stopPropagation();
+        window.open(getExternalUrl(website ?? '/'), '_blank', 'noopener');
       }}
     >
       <p className='text-gray-700  truncate'>

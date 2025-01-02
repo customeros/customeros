@@ -40,7 +40,7 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
     [ColumnViewType.OrganizationsWebsite]: {
       fieldType: CustomFieldTemplateType.FreeText,
       fieldTypeName: 'Text',
-      fieldName: 'Website',
+      fieldName: 'Domain',
       columnAccesor: ColumnViewType.OrganizationsWebsite,
       icon: <Type01 className='mb-0.5' />,
     },

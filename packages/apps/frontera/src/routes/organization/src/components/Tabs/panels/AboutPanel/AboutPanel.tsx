@@ -9,7 +9,6 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
 import { Select } from '@ui/form/Select';
-import { UrlInput } from '@ui/form/UrlInput';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { Users03 } from '@ui/media/icons/Users03';
@@ -28,6 +27,7 @@ import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
+import { Domains } from '@organization/components/Tabs/panels/AboutPanel/components/Domains.tsx';
 import {
   EntityType,
   OrganizationStage,
@@ -167,20 +167,23 @@ export const AboutPanel = observer(() => {
             </div>
           )}
         </div>
-        <UrlInput
-          name='website'
-          autoComplete='off'
-          placeholder='www.'
-          dataTest='org-about-www'
-          value={organization.value?.website || ''}
-          onChange={(e) => {
-            organization.value!.website = e.target.value;
-          }}
-          onBlur={() => {
-            organization.draft();
-            organization.commit();
-          }}
-        />
+
+        <Domains />
+
+        {/*<UrlInput*/}
+        {/*  name='website'*/}
+        {/*  autoComplete='off'*/}
+        {/*  placeholder='www.'*/}
+        {/*  dataTest='org-about-www'*/}
+        {/*  value={organization.value?.website || ''}*/}
+        {/*  onChange={(e) => {*/}
+        {/*    organization.value!.website = e.target.value;*/}
+        {/*  }}*/}
+        {/*  onBlur={() => {*/}
+        {/*    organization.draft();*/}
+        {/*    organization.commit();*/}
+        {/*  }}*/}
+        {/*/>*/}
         <Textarea
           size='sm'
           spellCheck={false}

@@ -37,6 +37,7 @@ import {
   ChangeStage,
   EditJobTitle,
   EditTimeZone,
+  AddNewDomain,
   CreateNewFlow,
   FlowsCommands,
   DuplicateFlow,
@@ -77,6 +78,7 @@ import {
   RenameOrganizationProperty,
   ConfirmEmailContentChanges,
   ChooseOpportunityOrganization,
+  DuplicateDomainInformationModal,
   ContactEmailVerificationInfoModal,
 } from './commands';
 
@@ -125,12 +127,14 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   // Organization
   OrganizationHub: <OrganizationHub />,
   OrganizationBulkCommands: <OrganizationBulkCommands />,
+  AddNewDomain: <AddNewDomain />,
   OrganizationCommands: <OrganizationCommands />,
   ChangeBulkArrEstimate: <ChangeBulkArrEstimate />,
   MergeConfirmationModal: <MergeConfirmationModal />,
   EditCompanyLinkedin: <EditCompanyLinkedin />,
   AddNewOrganization: <AddNewOrganization />,
   RenameOrganizationProperty: <RenameOrganizationProperty />,
+  DuplicateDomainInformationModal: <DuplicateDomainInformationModal />,
 
   // Flows
   FlowHub: <FlowHub />,

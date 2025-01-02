@@ -481,6 +481,11 @@ export class OrganizationsService {
           });
       })
       .with(['updatedAt'], () => undefined)
+      .with(['domains', ...P.array()], async () => {
+        return await this.saveOrganization({
+          input: { id: organizationId, domains: store.value.domains },
+        });
+      })
       .otherwise(async () => {
         const payload = makePayload<OrganizationUpdateInput>(operation);
 

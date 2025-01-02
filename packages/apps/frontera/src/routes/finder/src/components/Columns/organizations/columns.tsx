@@ -106,7 +106,7 @@ export const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          title='Website'
+          title='Domain'
           id={ColumnViewType.OrganizationsWebsite}
           {...getTHeadProps<Organization>(props)}
         />
