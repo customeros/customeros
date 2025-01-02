@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
@@ -58,36 +59,6 @@ type OpportunityUpdateFields struct {
 	UpdateLikelihoodRate    bool          `json:"updateLikelihoodRate"`
 }
 
-type OpportunitySaveFields struct {
-	AppSource         string        `json:"appSource"`
-	Source            string        `json:"source"`
-	Name              string        `json:"name"`
-	Amount            float64       `json:"amount"`
-	MaxAmount         float64       `json:"maxAmount"`
-	ExternalStage     string        `json:"externalStage"`
-	ExternalType      string        `json:"externalType"`
-	EstimatedClosedAt *time.Time    `json:"estimatedClosedAt"`
-	InternalStage     string        `json:"internalStage"`
-	InternalType      string        `json:"internalType"`
-	Currency          enum.Currency `json:"currency"`
-	NextSteps         string        `json:"nextSteps"`
-	LikelihoodRate    int64         `json:"likelihoodRate"`
-	OwnerId           string        `json:"ownerId"`
-
-	UpdateName              bool `json:"updateName"`
-	UpdateAmount            bool `json:"updateAmount"`
-	UpdateMaxAmount         bool `json:"updateMaxAmount"`
-	UpdateExternalStage     bool `json:"updateExternalStage"`
-	UpdateExternalType      bool `json:"updateExternalType"`
-	UpdateEstimatedClosedAt bool `json:"updateEstimatedClosedAt"`
-	UpdateInternalStage     bool `json:"updateInternalStage"`
-	UpdateInternalType      bool `json:"updateInternalType"`
-	UpdateCurrency          bool `json:"updateCurrency"`
-	UpdateNextSteps         bool `json:"updateNextSteps"`
-	UpdateLikelihoodRate    bool `json:"updateLikelihoodRate"`
-	UpdateOwnerId           bool `json:"updateOwnerId"`
-}
-
 type RenewalOpportunityCreateFields struct {
 	ContractId          string             `json:"contractId"`
 	CreatedAt           time.Time          `json:"createdAt"`
@@ -125,7 +96,7 @@ type OpportunityWriteRepository interface {
 	//Deprecated
 	Update(ctx context.Context, tenant, opportunityId string, data OpportunityUpdateFields) error
 
-	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data OpportunitySaveFields) error
+	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data data_fields.OpportunityFields) error
 	ReplaceOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId, userId string) error
 	RemoveOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error
 	CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) (bool, error)
@@ -283,14 +254,12 @@ func (r *opportunityWriteRepository) Update(ctx context.Context, tenant, opportu
 	return err
 }
 
-func (r *opportunityWriteRepository) Save(ctx context.Context, txx *neo4j.ManagedTransaction, tenant, opportunityId string, data OpportunitySaveFields) error {
+func (r *opportunityWriteRepository) Save(ctx context.Context, txx *neo4j.ManagedTransaction, tenant, opportunityId string, data data_fields.OpportunityFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.Save")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
-
+	tracing.TagEntity(span, opportunityId)
 	tracing.LogObjectAsJson(span, "data", data)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, txx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -324,56 +293,54 @@ func (r *opportunityWriteRepository) Save(ctx context.Context, txx *neo4j.Manage
 			"tenant":        tenant,
 			"opportunityId": opportunityId,
 			"sourceOfTruth": data.Source,
-			"overwrite":     data.Source == constants.SourceOpenline,
 		}
 
-		cypherUpdate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity:Opportunity_%s {id:$opportunityId}) SET `, tenant)
-		if data.UpdateName {
-			cypherUpdate += ` op.name = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR op.name = '' THEN $name ELSE op.name END, `
-			paramsUpdate["name"] = data.Name
+		cypherUpdate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity:Opportunity_%s {id:$opportunityId}) 
+			SET op.updatedAt = datetime()`, tenant)
+		if data.Name != nil {
+			cypherUpdate += `, op.name = $name `
+			paramsUpdate["name"] = *data.Name
 		}
-		if data.UpdateAmount {
-			cypherUpdate += ` op.amount = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $amount ELSE op.amount END, `
-			paramsUpdate["amount"] = data.Amount
+		if data.Amount != nil {
+			cypherUpdate += `, op.amount = $amount `
+			paramsUpdate["amount"] = *data.Amount
 		}
-		if data.UpdateMaxAmount {
-			cypherUpdate += ` op.maxAmount = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $maxAmount ELSE op.maxAmount END, `
-			paramsUpdate["maxAmount"] = data.MaxAmount
+		if data.MaxAmount != nil {
+			cypherUpdate += `, op.maxAmount = $maxAmount `
+			paramsUpdate["maxAmount"] = *data.MaxAmount
 		}
-		if data.UpdateExternalType {
-			cypherUpdate += ` op.externalType = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $externalType ELSE op.externalType END, `
-			paramsUpdate["externalType"] = data.ExternalType
+		if data.ExternalStage != nil {
+			cypherUpdate += `, op.externalStage = $externalStage `
+			paramsUpdate["externalStage"] = *data.ExternalStage
 		}
-		if data.UpdateExternalStage {
-			cypherUpdate += ` op.externalStage = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $externalStage ELSE op.externalStage END, `
-			paramsUpdate["externalStage"] = data.ExternalStage
+		if data.ExternalType != nil {
+			cypherUpdate += `, op.externalType = $externalType `
+			paramsUpdate["externalType"] = *data.ExternalType
 		}
-		if data.UpdateEstimatedClosedAt {
-			cypherUpdate += ` op.estimatedClosedAt = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $estimatedClosedAt ELSE op.estimatedClosedAt END, `
+		if data.EstimatedClosedAt != nil {
+			cypherUpdate += `, op.estimatedClosedAt = $estimatedClosedAt `
 			paramsUpdate["estimatedClosedAt"] = utils.TimePtrAsAny(data.EstimatedClosedAt)
 		}
-		if data.UpdateInternalStage {
-			cypherUpdate += ` op.internalStage = $internalStage, `
-			paramsUpdate["internalStage"] = data.InternalStage
+		if data.InternalStage != nil {
+			cypherUpdate += `, op.internalStage = $internalStage `
+			paramsUpdate["internalStage"] = *data.InternalStage
 		}
-		if data.UpdateInternalType {
-			cypherUpdate += ` op.internalType = $internalType, `
-			paramsUpdate["internalType"] = data.InternalType
+		if data.InternalType != nil {
+			cypherUpdate += `, op.internalType = $internalType `
+			paramsUpdate["internalType"] = *data.InternalType
 		}
-		if data.UpdateCurrency {
-			cypherUpdate += ` op.currency = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $currency ELSE op.currency END, `
+		if data.Currency != nil {
+			cypherUpdate += `, op.currency = $currency `
 			paramsUpdate["currency"] = data.Currency.String()
 		}
-		if data.UpdateNextSteps {
-			cypherUpdate += ` op.nextSteps = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $nextSteps ELSE op.nextSteps END, `
-			paramsUpdate["nextSteps"] = data.NextSteps
+		if data.NextSteps != nil {
+			cypherUpdate += `, op.nextSteps = $nextSteps `
+			paramsUpdate["nextSteps"] = *data.NextSteps
 		}
-		if data.UpdateLikelihoodRate {
-			cypherUpdate += ` op.likelihoodRate = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $likelihoodRate ELSE op.likelihoodRate END, `
-			paramsUpdate["likelihoodRate"] = data.LikelihoodRate
+		if data.LikelihoodRate != nil {
+			cypherUpdate += `, op.likelihoodRate = $likelihoodRate `
+			paramsUpdate["likelihoodRate"] = *data.LikelihoodRate
 		}
-		cypherUpdate += ` op.updatedAt = datetime(),
-				op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`
 
 		span.LogFields(log.String("cypherUpdate", cypherUpdate))
 		tracing.LogObjectAsJson(span, "paramsUpdate", paramsUpdate)
