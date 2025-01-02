@@ -125,7 +125,7 @@ export const Devtools = observer(() => {
                   onMouseDown={(e) => startMove(e, true)}
                   className='border-b rounded-t-lg border-b-gray-200 pb-0.5 pl-0.5 w-full bg-gray-50 hover:cursor-grab'
                 >
-                  <ButtonGroup>
+                  <ButtonGroup variant='old'>
                     <Button
                       size='xxs'
                       onClick={() => devTools.toggleView('operations')}

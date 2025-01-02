@@ -96,12 +96,12 @@ export const TableViewsToggleNavigation = observer(() => {
   return (
     <>
       {showToggle && firstTableDef && secondTableDef && (
-        <ButtonGroup className='flex items-center'>
+        <ButtonGroup className='flex items-center w-auto'>
           <Button
             size='xs'
             onClick={() => firstTableDef && handleNavigate(firstTableDef)}
-            className={cn('bg-white !border-r px-4', {
-              'bg-gray-50 text-gray-500 font-normal': preset !== firstTableDef,
+            className={cn('px-4', {
+              selected: preset === firstTableDef,
             })}
           >
             {firstButtonLabel}
@@ -109,8 +109,8 @@ export const TableViewsToggleNavigation = observer(() => {
           <Button
             size='xs'
             onClick={() => secondTableDef && handleNavigate(secondTableDef)}
-            className={cn('bg-white px-4', {
-              'bg-gray-50 text-gray-500 font-normal': preset !== secondTableDef,
+            className={cn('px-4', {
+              selected: preset === secondTableDef,
             })}
           >
             {secondButtonLabel}

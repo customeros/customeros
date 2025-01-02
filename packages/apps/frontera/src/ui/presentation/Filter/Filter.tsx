@@ -38,7 +38,7 @@ export const Filter = ({
   icon,
 }: FilterProps) => {
   return (
-    <ButtonGroup className='flex items-center'>
+    <ButtonGroup variant='old' className='flex items-center'>
       <PropertyFilter icon={icon} name={filterName} />
       <OperatorFilter
         type={filterType}
