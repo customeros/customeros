@@ -32,6 +32,7 @@ type ContractService interface {
 	RefreshContractStatus(ctx context.Context, contractId string) error
 	RecalculateContractLtv(ctx context.Context, contractId string) error
 	UpdateActiveRenewalOpportunityArr(ctx context.Context, contractId string) error
+	UpdateActiveRenewalOpportunityRenewDateAndArr(ctx context.Context, tenant, contractId string) error
 }
 
 type contractService struct {
@@ -374,7 +375,7 @@ func (s *contractService) postUpdateContract(ctx context.Context, tenant string,
 				s.log.Errorf("Error while activating renewal opportunity for contract %s: %s", contractId, err.Error())
 			}
 		}
-		err = s.updateActiveRenewalOpportunityRenewDateAndArr(ctx, tenant, contractId)
+		err = s.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
@@ -605,7 +606,7 @@ func (s *contractService) startOnboardingIfEligible(ctx context.Context, tenant,
 	}
 }
 
-func (s *contractService) updateActiveRenewalOpportunityRenewDateAndArr(ctx context.Context, tenant, contractId string) error {
+func (s *contractService) UpdateActiveRenewalOpportunityRenewDateAndArr(ctx context.Context, tenant, contractId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.updateActiveRenewalOpportunityRenewDateAndArr")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -1074,7 +1075,7 @@ func (s *contractService) RefreshContractStatus(ctx context.Context, contractId 
 	}
 
 	if status == neo4jenum.ContractStatusEnded.String() {
-		err = s.updateActiveRenewalOpportunityRenewDateAndArr(ctx, tenant, contractId)
+		err = s.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())

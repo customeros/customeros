@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
@@ -20,16 +19,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/events"
-	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type OpportunityEventHandler struct {
@@ -49,85 +45,6 @@ func NewOpportunityEventHandler(log logger.Logger, services *service.Services, g
 type ActionLikelihoodMetadata struct {
 	Likelihood string `json:"likelihood"`
 	Reason     string `json:"reason"`
-}
-
-func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnCreateRenewal")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData opportunityevent.OpportunityCreateRenewalEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	// check if active renewal opportunity already exists for this contract
-	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, eventData.Tenant, eventData.ContractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("error while getting renewal opportunity for contract %s: %s", eventData.ContractId, err.Error())
-		return nil
-	}
-	if opportunityDbNode != nil {
-		opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
-		if opportunity.RenewalDetails.RenewedAt != nil && opportunity.RenewalDetails.RenewedAt.After(utils.Now()) {
-			span.LogFields(log.String("result", "active renewal opportunity already exists, skip creation"))
-			h.log.Infof("active renewal opportunity already exists for contract %s", eventData.ContractId)
-			return nil
-		}
-	}
-
-	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	data := neo4jrepository.RenewalOpportunityCreateFields{
-		ContractId: eventData.ContractId,
-		CreatedAt:  eventData.CreatedAt,
-		SourceFields: neo4jmodel.SourceFields{
-			Source:        helper.GetSource(eventData.Source.Source),
-			SourceOfTruth: helper.GetSource(eventData.Source.Source),
-			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
-		},
-		InternalType:        eventData.InternalType,
-		InternalStage:       eventData.InternalStage,
-		RenewalLikelihood:   eventData.RenewalLikelihood,
-		RenewalApproved:     eventData.RenewalApproved,
-		RenewedAt:           eventData.RenewedAt,
-		RenewalAdjustedRate: eventData.RenewalAdjustedRate,
-	}
-	newOpportunityCreated, err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.CreateRenewal(ctx, eventData.Tenant, opportunityId, data)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("error while saving renewal opportunity %s: %s", opportunityId, err.Error())
-		return err
-	}
-
-	if newOpportunityCreated {
-		contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
-		err = contractHandler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, eventData.Tenant, eventData.ContractId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("error while updating renewal opportunity %s: %s", opportunityId, err.Error())
-			return nil
-		}
-	} else {
-		// Mark event store stream for deletion
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
-			return h.grpcClients.EventStoreClient.DeleteEventStoreStream(ctx, &eventstorepb.DeleteEventStoreStreamRequest{
-				Tenant: eventData.Tenant,
-				Type:   constants.AggregateTypeOpportunity,
-				Id:     opportunityId,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("DeleteEventStoreStream failed: %v", err.Error())
-		}
-	}
-
-	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, opportunityId, model.OPPORTUNITY, utils.NewEventCompletedDetails().WithCreate())
-
-	return nil
 }
 
 func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt eventstore.Event) error {
