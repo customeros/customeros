@@ -69,9 +69,10 @@ export const IntercomStub: FC<{ intercomEvent: InteractionEventWithDate }> = ({
                 return (
                   <Avatar
                     size='xs'
+                    textSize='xs'
                     name={displayName}
-                    variant='roundedSquareSmall'
-                    icon={<User02 color='primary.700' />}
+                    variant='outlineSquare'
+                    icon={<User02 color='text-gray-700' />}
                     src={profilePhotoUrl ? profilePhotoUrl : undefined}
                     key={`uniq-intercom-thread-participant-${intercomEvent.id}-${id}`}
                   />
@@ -79,7 +80,7 @@ export const IntercomStub: FC<{ intercomEvent: InteractionEventWithDate }> = ({
               },
             )}
           </div>
-          <Button size='sm' variant='link' className='text-sm'>
+          <Button size='xs' variant='link' className='text-sm shadow-none'>
             {intercomEventReplies.length}{' '}
             {intercomEventReplies.length === 1 ? 'reply' : 'replies'}
           </Button>

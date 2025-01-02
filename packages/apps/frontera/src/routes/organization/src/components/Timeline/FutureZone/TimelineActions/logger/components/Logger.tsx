@@ -29,7 +29,7 @@ export const Logger = observer(({ hide }: LoggerProps) => {
   const handleChange = (html: string) => {
     setValue(html);
 
-    if (html === '<p><br></p>') {
+    if (html === '<p class="my-3"><br></p>') {
       store.ui.clearDirtyEditor();
     } else {
       store.ui.setDirtyEditor('log-entry');

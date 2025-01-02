@@ -41,22 +41,23 @@ export const SlackStub: FC<{ slackEvent: InteractionEventWithDate }> = ({
       sourceUrl={slackEvent?.externalLinks?.[0]?.externalUrl}
     >
       {!!slackEventReplies?.length && (
-        <div className='flex mt-1'>
+        <div className='flex mt-1 items-center'>
           <div className='flex gap-1 mr-1'>
             {uniqThreadParticipants?.map(({ id, displayName, photoUrl }) => {
               return (
                 <Avatar
                   size='xs'
+                  textSize='xs'
                   name={displayName}
+                  variant='outlineSquare'
                   src={photoUrl ?? undefined}
-                  variant='roundedSquareSmall'
-                  icon={<User02 className='text-primary-700' />}
+                  icon={<User02 className='text-gray-700' />}
                   key={`uniq-slack-thread-participant-${slackEvent.id}-${id}`}
                 />
               );
             })}
           </div>
-          <Button size='sm' variant='link' className='text-sm'>
+          <Button size='xs' variant='link' className='text-sm shadow-none'>
             {slackEventReplies.length}{' '}
             {slackEventReplies.length === 1 ? 'reply' : 'replies'}
           </Button>

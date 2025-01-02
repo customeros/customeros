@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import copy from 'copy-to-clipboard';
 import noteImg from '@assets/images/note-img-preview.png';
 
-import { Link03 } from '@ui/media/icons/Link03';
+import { Link01 } from '@ui/media/icons/Link01';
 import { XClose } from '@ui/media/icons/XClose';
 import { Editor } from '@ui/form/Editor/Editor';
 import { useStore } from '@shared/hooks/useStore';
@@ -99,7 +99,7 @@ export const LogEntryPreviewModal = ({
                   aria-label='Copy link to this entry'
                   className='text-sm text-gray-500 mr-1'
                   onClick={() => copy(window.location.href)}
-                  icon={<Link03 className='text-gray-500' />}
+                  icon={<Link01 className='text-gray-500' />}
                 />
               </div>
             </Tooltip>
