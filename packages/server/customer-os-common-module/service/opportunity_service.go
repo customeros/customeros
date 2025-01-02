@@ -16,8 +16,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -442,15 +440,9 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 				}
 				contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 				// create new renewal opportunity
-				_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-					return s.services.GrpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-						Tenant:     tenant,
-						ContractId: contractEntity.Id,
-						SourceFields: &commonpb.SourceFields{
-							Source:    neo4jentity.DataSourceOpenline.String(),
-							AppSource: common.GetAppSourceFromContext(ctx),
-						},
-					})
+				_, err = s.services.OpportunityService.Save(ctx, nil, nil, &data_fields.OpportunityFields{
+					InternalType: utils.ToPtr(neo4jenum.OpportunityInternalTypeRenewal),
+					ContractId:   utils.StringPtr(contractEntity.Id),
 				})
 				if err != nil {
 					tracing.TraceErr(span, err)
