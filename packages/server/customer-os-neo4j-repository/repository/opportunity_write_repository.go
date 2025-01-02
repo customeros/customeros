@@ -6,51 +6,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 	"time"
 )
-
-// Deprecated
-type OpportunityUpdateFields struct {
-	Source                  string        `json:"source"`
-	Name                    string        `json:"name"`
-	Amount                  float64       `json:"amount"`
-	MaxAmount               float64       `json:"maxAmount"`
-	ExternalStage           string        `json:"externalStage"`
-	ExternalType            string        `json:"externalType"`
-	EstimatedClosedAt       *time.Time    `json:"estimatedClosedAt"`
-	InternalStage           string        `json:"internalStage"`
-	Currency                enum.Currency `json:"currency"`
-	NextSteps               string        `json:"nextSteps"`
-	LikelihoodRate          int64         `json:"likelihoodRate"`
-	UpdateName              bool          `json:"updateName"`
-	UpdateAmount            bool          `json:"updateAmount"`
-	UpdateMaxAmount         bool          `json:"updateMaxAmount"`
-	UpdateExternalStage     bool          `json:"updateExternalStage"`
-	UpdateExternalType      bool          `json:"updateExternalType"`
-	UpdateEstimatedClosedAt bool          `json:"updateEstimatedClosedAt"`
-	UpdateInternalStage     bool          `json:"updateInternalStage"`
-	UpdateCurrency          bool          `json:"updateCurrency"`
-	UpdateNextSteps         bool          `json:"updateNextSteps"`
-	UpdateLikelihoodRate    bool          `json:"updateLikelihoodRate"`
-}
-
-type RenewalOpportunityCreateFields struct {
-	ContractId          string             `json:"contractId"`
-	CreatedAt           time.Time          `json:"createdAt"`
-	SourceFields        model.SourceFields `json:"sourceFields"`
-	InternalType        string             `json:"internalType"`
-	InternalStage       string             `json:"internalStage"`
-	RenewalLikelihood   string             `json:"renewalLikelihood"`
-	RenewalApproved     bool               `json:"renewalApproved"`
-	RenewedAt           *time.Time         `json:"renewedAt"`
-	RenewalAdjustedRate int64              `json:"renewalAdjustedRate"`
-}
 
 type RenewalOpportunityUpdateFields struct {
 	UpdatedAt                 time.Time  `json:"updatedAt"`
@@ -72,14 +33,11 @@ type RenewalOpportunityUpdateFields struct {
 }
 
 type OpportunityWriteRepository interface {
-	//Deprecated
-	Update(ctx context.Context, tenant, opportunityId string, data OpportunityUpdateFields) error
-
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data data_fields.OpportunityFields) error
 	ReplaceOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId, userId string) error
 	RemoveOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error
 	CreateRenewal(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data data_fields.OpportunityFields) (bool, error)
-	UpdateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityUpdateFields) error
+	UpdateRenewal(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data data_fields.OpportunityFields) error
 	UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, renewedAt *time.Time) error
 	CloseWon(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, closedAt time.Time) error
 	CloseLost(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, closedAt time.Time) error
@@ -97,73 +55,6 @@ func NewOpportunityWriteRepository(driver *neo4j.DriverWithContext, database str
 		driver:   driver,
 		database: database,
 	}
-}
-
-func (r *opportunityWriteRepository) Update(ctx context.Context, tenant, opportunityId string, data OpportunityUpdateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.Update")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
-	tracing.LogObjectAsJson(span, "data", data)
-
-	params := map[string]any{
-		"tenant":        tenant,
-		"opportunityId": opportunityId,
-		"sourceOfTruth": data.Source,
-		"overwrite":     data.Source == constants.SourceOpenline,
-	}
-	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:Opportunity_%s SET `, tenant)
-	if data.UpdateName {
-		cypher += ` op.name = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR op.name = '' THEN $name ELSE op.name END, `
-		params["name"] = data.Name
-	}
-	if data.UpdateAmount {
-		cypher += ` op.amount = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $amount ELSE op.amount END, `
-		params["amount"] = data.Amount
-	}
-	if data.UpdateMaxAmount {
-		cypher += ` op.maxAmount = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $maxAmount ELSE op.maxAmount END, `
-		params["maxAmount"] = data.MaxAmount
-	}
-	if data.UpdateExternalType {
-		cypher += ` op.externalType = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $externalType ELSE op.externalType END, `
-		params["externalType"] = data.ExternalType
-	}
-	if data.UpdateExternalStage {
-		cypher += ` op.externalStage = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $externalStage ELSE op.externalStage END, `
-		params["externalStage"] = data.ExternalStage
-	}
-	if data.UpdateEstimatedClosedAt {
-		cypher += ` op.estimatedClosedAt = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $estimatedClosedAt ELSE op.estimatedClosedAt END, `
-		params["estimatedClosedAt"] = utils.TimePtrAsAny(data.EstimatedClosedAt)
-	}
-	if data.UpdateInternalStage {
-		cypher += ` op.internalStage = $internalStage, `
-		params["internalStage"] = data.InternalStage
-	}
-	if data.UpdateCurrency {
-		cypher += ` op.currency = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $currency ELSE op.currency END, `
-		params["currency"] = data.Currency.String()
-	}
-	if data.UpdateNextSteps {
-		cypher += ` op.nextSteps = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $nextSteps ELSE op.nextSteps END, `
-		params["nextSteps"] = data.NextSteps
-	}
-	if data.UpdateLikelihoodRate {
-		cypher += ` op.likelihoodRate = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $likelihoodRate ELSE op.likelihoodRate END, `
-		params["likelihoodRate"] = data.LikelihoodRate
-	}
-	cypher += ` op.updatedAt = datetime(),
-				op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
 }
 
 func (r *opportunityWriteRepository) Save(ctx context.Context, txx *neo4j.ManagedTransaction, tenant, opportunityId string, data data_fields.OpportunityFields) error {
@@ -413,7 +304,7 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tx *neo4
 	return result.(bool), nil
 }
 
-func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityUpdateFields) error {
+func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data data_fields.OpportunityFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.UpdateRenewal")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -424,39 +315,30 @@ func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, 
 	params := map[string]any{
 		"tenant":        tenant,
 		"opportunityId": opportunityId,
-		"updatedAt":     data.UpdatedAt,
-		"sourceOfTruth": data.Source,
-		"overwrite":     data.Source == constants.SourceOpenline,
 	}
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) WHERE op:RenewalOpportunity AND op:Opportunity_%s 
-				SET op.updatedAt = datetime(),
-					op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`, tenant)
-	if data.SetUpdatedByUserId {
-		params["renewalUpdatedByUserId"] = data.UpdatedByUserId
-		cypher += `, op.renewalUpdatedByUserAt = $updatedAt, 
-					op.renewalUpdatedByUserId = $renewalUpdatedByUserId `
-	}
-	if data.UpdateComments {
+				SET op.updatedAt = datetime()`, tenant)
+	if data.Comments != nil {
 		cypher += `, op.comments = $comments `
-		params["comments"] = data.Comments
+		params["comments"] = *data.Comments
 	}
-	if data.UpdateAmount {
+	if data.Amount != nil {
 		cypher += `, op.amount = $amount `
-		params["amount"] = data.Amount
+		params["amount"] = *data.Amount
 	}
-	if data.UpdateRenewalLikelihood {
+	if data.RenewalLikelihood != nil {
 		cypher += `, op.renewalLikelihood = $renewalLikelihood `
-		params["renewalLikelihood"] = data.RenewalLikelihood
+		params["renewalLikelihood"] = data.RenewalLikelihood.String()
 	}
-	if data.UpdateRenewalApproved {
+	if data.RenewalApproved != nil {
 		cypher += `, op.renewalApproved = $renewalApproved `
-		params["renewalApproved"] = data.RenewalApproved
+		params["renewalApproved"] = *data.RenewalApproved
 	}
-	if data.UpdateRenewedAt {
+	if data.RenewedAt != nil {
 		cypher += `, op.renewedAt = $renewedAt `
 		params["renewedAt"] = utils.ToDateAsAny(data.RenewedAt)
 	}
-	if data.UpdateRenewalAdjustedRate {
+	if data.RenewalAdjustedRate != nil {
 		cypher += `, op.renewalAdjustedRate = $renewalAdjustedRate `
 		params["renewalAdjustedRate"] = data.RenewalAdjustedRate
 	}
@@ -464,11 +346,16 @@ func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+
+	return nil
 }
 
 func (r *opportunityWriteRepository) UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, renewedAt *time.Time) error {
