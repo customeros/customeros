@@ -2,12 +2,8 @@ package events
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"github.com/pkg/errors"
 	"time"
 )
 
@@ -29,39 +25,6 @@ type OpportunityUpdateEvent struct {
 	Currency          string                     `json:"currency"`
 	NextSteps         string                     `json:"nextSteps"`
 	LikelihoodRate    int64                      `json:"likelihoodRate"`
-}
-
-func NewOpportunityUpdateEvent(aggregate eventstore.Aggregate, dataFields model.OpportunityDataFields, source, appSource string, externalSystem commonmodel.ExternalSystem, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
-	eventData := OpportunityUpdateEvent{
-		Tenant:         aggregate.GetTenant(),
-		Name:           dataFields.Name,
-		Amount:         dataFields.Amount,
-		MaxAmount:      dataFields.MaxAmount,
-		ExternalStage:  dataFields.ExternalStage,
-		ExternalType:   dataFields.ExternalType,
-		OwnerUserId:    dataFields.OwnerUserId,
-		UpdatedAt:      updatedAt,
-		Source:         source,
-		AppSource:      appSource,
-		FieldsMask:     fieldsMask,
-		InternalStage:  string(dataFields.InternalStage.StringEnumValue()),
-		Currency:       dataFields.Currency,
-		NextSteps:      dataFields.NextSteps,
-		LikelihoodRate: dataFields.LikelihoodRate,
-	}
-	if externalSystem.Available() {
-		eventData.ExternalSystem = externalSystem
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OpportunityUpdateEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, opportunityevent.OpportunityUpdateV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OpportunityUpdateEvent")
-	}
-	return event, nil
 }
 
 func (e OpportunityUpdateEvent) UpdateName() bool {

@@ -209,9 +209,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case opportunityevent.OpportunityUpdateNextCycleDateV1:
 		_ = s.opportunityEventHandler.OnUpdateNextCycleDate(ctx, evt)
 		return nil
-	case opportunityevent.OpportunityUpdateV1:
-		_ = s.opportunityEventHandler.OnUpdate(ctx, evt)
-		return nil
 	case opportunityevent.OpportunityCreateRenewalV1:
 		_ = s.opportunityEventHandler.OnCreateRenewal(ctx, evt)
 		return nil

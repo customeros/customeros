@@ -64,7 +64,7 @@ func MapOpportunitySaveInputToEntity(input model.OpportunitySaveInput) *data_fie
 		mapped.InternalStage = utils.StringPtr(MapInternalStageFromModel(*input.InternalStage).String())
 	}
 	if input.InternalType != nil {
-		mapped.InternalType = utils.StringPtr(MapInternalTypeFromModel(*input.InternalType).String())
+		mapped.InternalType = utils.ToPtr(MapInternalTypeFromModel(*input.InternalType))
 	}
 	if input.Currency != nil {
 		mapped.Currency = utils.ToPtr(mapper.MapCurrencyFromModel(*input.Currency))

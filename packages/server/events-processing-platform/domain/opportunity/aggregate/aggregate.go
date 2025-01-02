@@ -42,59 +42,12 @@ func (a *OpportunityAggregate) HandleGRPCRequest(ctx context.Context, request an
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *opportunitypb.CreateRenewalOpportunityGrpcRequest:
-		return nil, a.createRenewalOpportunity(ctx, r)
 	case *opportunitypb.UpdateRenewalOpportunityGrpcRequest:
 		return nil, a.updateRenewalOpportunity(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
-}
-
-func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, request *opportunitypb.CreateRenewalOpportunityGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.createRenewalOpportunity")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), createdAtNotNil)
-	renewedAt := utils.TimestampProtoToTimePtr(request.RenewedAt)
-
-	sourceFields := commonmodel.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-	sourceFields.SetDefaultValues()
-
-	renewalLikelihood := model.RenewalLikelihood(request.RenewalLikelihood).StringEnumValue()
-	adjustedRate := request.RenewalAdjustedRate
-	if string(renewalLikelihood) == "" {
-		renewalLikelihood = neo4jenum.RenewalLikelihoodHigh
-	}
-	if renewalLikelihood == neo4jenum.RenewalLikelihoodHigh && adjustedRate == 0 {
-		adjustedRate = 100
-	}
-
-	if adjustedRate < 0 {
-		adjustedRate = 0
-	} else if adjustedRate > 100 {
-		adjustedRate = 100
-	}
-
-	createRenewalEvent, err := opportunityevent.NewOpportunityCreateRenewalEvent(a, request.ContractId, string(renewalLikelihood), request.RenewalApproved, sourceFields, createdAtNotNil, updatedAtNotNil, renewedAt, adjustedRate)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOpportunityCreateRenewalEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&createRenewalEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    sourceFields.AppSource,
-	})
-
-	return a.Apply(createRenewalEvent)
 }
 
 func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, request *opportunitypb.UpdateRenewalOpportunityGrpcRequest) error {
@@ -143,8 +96,6 @@ func (a *OpportunityAggregate) updateRenewalOpportunity(ctx context.Context, req
 
 func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
-	case opportunityevent.OpportunityUpdateV1:
-		return a.onOpportunityUpdate(evt)
 	case opportunityevent.OpportunityCreateRenewalV1:
 		return a.onRenewalOpportunityCreate(evt)
 	case opportunityevent.OpportunityUpdateRenewalV1:
@@ -192,80 +143,6 @@ func (a *OpportunityAggregate) onOpportunityUpdateNextCycleDate(evt eventstore.E
 	}
 
 	a.Opportunity.RenewalDetails.RenewedAt = eventData.RenewedAt
-
-	return nil
-}
-
-func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
-	var eventData events.OpportunityUpdateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	// Update only if the source of truth is 'openline' or the new source matches the source of truth
-	if eventData.Source == constants.SourceOpenline {
-		a.Opportunity.Source.SourceOfTruth = eventData.Source
-	}
-
-	if eventData.Source != a.Opportunity.Source.SourceOfTruth && a.Opportunity.Source.SourceOfTruth == constants.SourceOpenline {
-		// Update fields only if they are empty
-		if a.Opportunity.Name == "" && eventData.UpdateName() {
-			a.Opportunity.Name = eventData.Name
-		}
-	} else {
-		if eventData.UpdateName() {
-			a.Opportunity.Name = eventData.Name
-		}
-		if eventData.UpdateAmount() {
-			a.Opportunity.Amount = eventData.Amount
-		}
-		if eventData.UpdateMaxAmount() {
-			a.Opportunity.MaxAmount = eventData.MaxAmount
-		}
-		if eventData.UpdateExternalStage() {
-			a.Opportunity.ExternalStage = eventData.ExternalStage
-		}
-		if eventData.UpdateExternalType() {
-			a.Opportunity.ExternalType = eventData.ExternalType
-		}
-		if eventData.UpdateEstimatedClosedAt() {
-			a.Opportunity.EstimatedClosedAt = eventData.EstimatedClosedAt
-		}
-		if eventData.UpdateOwnerUserId() {
-			a.Opportunity.OwnerUserId = eventData.OwnerUserId
-		}
-		if eventData.UpdateInternalStage() {
-			a.Opportunity.InternalStage = eventData.InternalStage
-		}
-		if eventData.UpdateCurrency() {
-			a.Opportunity.Currency = eventData.Currency
-		}
-		if eventData.UpdateNextSteps() {
-			a.Opportunity.NextSteps = eventData.NextSteps
-		}
-		if eventData.UpdateLikelihoodRate() {
-			a.Opportunity.LikelihoodRate = eventData.LikelihoodRate
-		}
-	}
-	a.Opportunity.UpdatedAt = eventData.UpdatedAt
-
-	if eventData.ExternalSystem.Available() {
-		found := false
-		for _, externalSystem := range a.Opportunity.ExternalSystems {
-			if externalSystem.ExternalSystemId == eventData.ExternalSystem.ExternalSystemId && externalSystem.ExternalId == eventData.ExternalSystem.ExternalId {
-				found = true
-				externalSystem.ExternalUrl = eventData.ExternalSystem.ExternalUrl
-				externalSystem.ExternalSource = eventData.ExternalSystem.ExternalSource
-				externalSystem.SyncDate = eventData.ExternalSystem.SyncDate
-				if eventData.ExternalSystem.ExternalIdSecond != "" {
-					externalSystem.ExternalIdSecond = eventData.ExternalSystem.ExternalIdSecond
-				}
-			}
-		}
-		if !found {
-			a.Opportunity.ExternalSystems = append(a.Opportunity.ExternalSystems, eventData.ExternalSystem)
-		}
-	}
 
 	return nil
 }

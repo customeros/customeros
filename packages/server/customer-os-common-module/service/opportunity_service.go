@@ -151,11 +151,17 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 	createFlow := false
 	opportunityId := ""
 
-	if input.OrganizationId == nil && id == nil && input.ContractId == nil {
-		// TODO split this into separate errors for based on internal type renewal or nbo
-		err := fmt.Errorf("(OpportunityService.Save) organizationId and opportunityId and contractId are nil")
-		tracing.TraceErr(span, err)
-		return "", err
+	if utils.IfNotNilString(id) == "" {
+		if utils.IfNotNilString(input.OrganizationId) == "" && utils.IfNotNilString(input.InternalType) != neo4jenum.OpportunityInternalTypeRenewal.String() {
+			err := fmt.Errorf("(OpportunityService.Save) organizationId and opportunityId and contractId are empty")
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+		if utils.IfNotNilString(input.ContractId) == "" && utils.IfNotNilString(input.InternalType) == neo4jenum.OpportunityInternalTypeRenewal.String() {
+			err := fmt.Errorf("(OpportunityService.Save) contractId and opportunityId and contractId are empty")
+			tracing.TraceErr(span, err)
+			return "", err
+		}
 	}
 
 	if input.OrganizationId != nil {
@@ -174,7 +180,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 	if utils.IfNotNilString(id) == "" {
 		span.LogKV("flow", "create")
 
-		// set defaut values if not provided
+		// set default values if not provided
 		if input.CreatedAt == nil || input.CreatedAt.IsZero() {
 			input.CreatedAt = utils.NowPtr()
 		}
@@ -185,7 +191,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 			input.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))
 		}
 		if utils.IfNotNilString(input.InternalType) == "" {
-			input.InternalType = utils.StringPtr(neo4jenum.OpportunityInternalTypeNBO.String())
+			input.InternalType = utils.ToPtr(neo4jenum.OpportunityInternalTypeNBO)
 		}
 		if utils.IfNotNilString(input.InternalStage) == "" {
 			input.InternalStage = utils.StringPtr(neo4jenum.OpportunityInternalStageOpen.String())
@@ -198,6 +204,24 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 				return "", err
 			}
 			input.Currency = utils.ToPtr(tenantSettings.BaseCurrency)
+		}
+
+		// default values for renewal opportunity
+		if *input.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
+			if input.RenewalLikelihood == nil {
+				input.RenewalLikelihood = utils.ToPtr(neo4jenum.RenewalLikelihoodHigh)
+			}
+			if *input.RenewalLikelihood == neo4jenum.RenewalLikelihoodHigh && utils.IfNotNilInt64(input.RenewalAdjustedRate) == 0 {
+				input.RenewalAdjustedRate = utils.ToPtr(int64(100))
+			}
+			if utils.IfNotNilInt64(input.RenewalAdjustedRate) < 0 {
+				input.RenewalAdjustedRate = utils.ToPtr(int64(0))
+			} else if utils.IfNotNilInt64(input.RenewalAdjustedRate) > 100 {
+				input.RenewalAdjustedRate = utils.ToPtr(int64(100))
+			}
+			if input.RenewalApproved == nil {
+				input.RenewalApproved = utils.BoolPtr(false)
+			}
 		}
 
 		generatedId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelOpportunity)
