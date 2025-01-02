@@ -27,6 +27,7 @@ type OpportunityFields struct {
 	RenewalApproved     *bool                         `json:"renewalApproved,omitempty"`
 	RenewalAdjustedRate *int64                        `json:"renewalAdjustedRate,omitempty"`
 	RenewedAt           *time.Time                    `json:"renewedAt,omitempty"`
+	Comments            *string                       `json:"comments,omitempty"`
 }
 
 func (o OpportunityFields) IsRenewal() bool {

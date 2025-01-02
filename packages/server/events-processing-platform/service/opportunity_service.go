@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
@@ -28,30 +27,6 @@ func NewOpportunityService(log logger.Logger, commandHandlers *command_handler.C
 		opportunityCommandHandlers: commandHandlers,
 		aggregateStore:             aggregateStore,
 	}
-}
-
-func (s *opportunityService) UpdateRenewalOpportunity(ctx context.Context, request *opportunitypb.UpdateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OpportunityService.UpdateRenewalOpportunity")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-	span.SetTag(tracing.SpanTagEntityId, request.Id)
-
-	// Check if the opportunity ID is valid
-	if request.Id == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
-	}
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewOpportunityAggregateWithTenantAndID(request.Tenant, request.Id)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpdateRenewalOpportunity.Handle) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &opportunitypb.OpportunityIdGrpcResponse{Id: request.Id}, nil
 }
 
 func (s *opportunityService) CloseLooseOpportunity(ctx context.Context, request *opportunitypb.CloseLooseOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {

@@ -277,6 +277,18 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 		if utils.IfNotNilString(input.ExternalStage) != "" && existing.ExternalStage != utils.IfNotNilString(input.ExternalStage) && existing.InternalStage != neo4jenum.OpportunityInternalStageOpen {
 			input.InternalStage = utils.StringPtr(neo4jenum.OpportunityInternalStageOpen.String())
 		}
+
+		if existing.IsRenewal() {
+			if input.RenewalLikelihood != nil && input.RenewalLikelihood.ToV2() == "" {
+				input.RenewalLikelihood = utils.ToPtr(neo4jenum.RenewalLikelihoodHigh)
+				input.RenewalAdjustedRate = utils.ToPtr(int64(100))
+			}
+			if utils.IfNotNilInt64(input.RenewalAdjustedRate) < 0 {
+				input.RenewalAdjustedRate = utils.ToPtr(int64(0))
+			} else if utils.IfNotNilInt64(input.RenewalAdjustedRate) > 100 {
+				input.RenewalAdjustedRate = utils.ToPtr(int64(100))
+			}
+		}
 	}
 
 	tracing.TagEntity(span, opportunityId)

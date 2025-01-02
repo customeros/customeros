@@ -15,7 +15,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
@@ -940,21 +939,9 @@ func (s *contractService) updateActiveRenewalOpportunityLikelihood(ctx context.C
 	}
 
 	if renewalLikelihood != "" {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			return s.services.GrpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &opportunitypb.UpdateRenewalOpportunityGrpcRequest{
-				Tenant:              tenant,
-				Id:                  opportunityEntity.Id,
-				RenewalLikelihood:   renewalLikelihoodForGrpcRequest(renewalLikelihood),
-				RenewalAdjustedRate: renewalAdjustedRate,
-				SourceFields: &commonpb.SourceFields{
-					AppSource: common.GetAppSourceFromContext(ctx),
-				},
-				FieldsMask: []opportunitypb.OpportunityMaskField{
-					opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD,
-					opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ADJUSTED_RATE,
-				},
-			})
+		_, err = s.services.OpportunityService.Save(ctx, nil, &opportunityEntity.Id, &data_fields.OpportunityFields{
+			RenewalLikelihood:   &renewalLikelihood,
+			RenewalAdjustedRate: &renewalAdjustedRate,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -964,21 +951,6 @@ func (s *contractService) updateActiveRenewalOpportunityLikelihood(ctx context.C
 	}
 
 	return nil
-}
-
-func renewalLikelihoodForGrpcRequest(renewalLikelihood neo4jenum.RenewalLikelihood) opportunitypb.RenewalLikelihood {
-	switch renewalLikelihood {
-	case neo4jenum.RenewalLikelihoodHigh:
-		return opportunitypb.RenewalLikelihood_HIGH_RENEWAL
-	case neo4jenum.RenewalLikelihoodMedium:
-		return opportunitypb.RenewalLikelihood_MEDIUM_RENEWAL
-	case neo4jenum.RenewalLikelihoodLow:
-		return opportunitypb.RenewalLikelihood_LOW_RENEWAL
-	case neo4jenum.RenewalLikelihoodZero:
-		return opportunitypb.RenewalLikelihood_ZERO_RENEWAL
-	default:
-		return opportunitypb.RenewalLikelihood_HIGH_RENEWAL
-	}
 }
 
 func calculateNextCycleDate(from *time.Time, lengthInMonths int64, calculateUntilFirstFutureDate bool) *time.Time {
