@@ -24,7 +24,6 @@ const _ = grpc.SupportPackageIsVersion7
 type OpportunityGrpcServiceClient interface {
 	CreateRenewalOpportunity(ctx context.Context, in *CreateRenewalOpportunityGrpcRequest, opts ...grpc.CallOption) (*OpportunityIdGrpcResponse, error)
 	UpdateRenewalOpportunity(ctx context.Context, in *UpdateRenewalOpportunityGrpcRequest, opts ...grpc.CallOption) (*OpportunityIdGrpcResponse, error)
-	UpdateOpportunity(ctx context.Context, in *UpdateOpportunityGrpcRequest, opts ...grpc.CallOption) (*OpportunityIdGrpcResponse, error)
 	CloseLooseOpportunity(ctx context.Context, in *CloseLooseOpportunityGrpcRequest, opts ...grpc.CallOption) (*OpportunityIdGrpcResponse, error)
 	UpdateRenewalOpportunityNextCycleDate(ctx context.Context, in *UpdateRenewalOpportunityNextCycleDateGrpcRequest, opts ...grpc.CallOption) (*OpportunityIdGrpcResponse, error)
 }
@@ -55,15 +54,6 @@ func (c *opportunityGrpcServiceClient) UpdateRenewalOpportunity(ctx context.Cont
 	return out, nil
 }
 
-func (c *opportunityGrpcServiceClient) UpdateOpportunity(ctx context.Context, in *UpdateOpportunityGrpcRequest, opts ...grpc.CallOption) (*OpportunityIdGrpcResponse, error) {
-	out := new(OpportunityIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/opportunityGrpcService/UpdateOpportunity", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *opportunityGrpcServiceClient) CloseLooseOpportunity(ctx context.Context, in *CloseLooseOpportunityGrpcRequest, opts ...grpc.CallOption) (*OpportunityIdGrpcResponse, error) {
 	out := new(OpportunityIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/opportunityGrpcService/CloseLooseOpportunity", in, out, opts...)
@@ -88,7 +78,6 @@ func (c *opportunityGrpcServiceClient) UpdateRenewalOpportunityNextCycleDate(ctx
 type OpportunityGrpcServiceServer interface {
 	CreateRenewalOpportunity(context.Context, *CreateRenewalOpportunityGrpcRequest) (*OpportunityIdGrpcResponse, error)
 	UpdateRenewalOpportunity(context.Context, *UpdateRenewalOpportunityGrpcRequest) (*OpportunityIdGrpcResponse, error)
-	UpdateOpportunity(context.Context, *UpdateOpportunityGrpcRequest) (*OpportunityIdGrpcResponse, error)
 	CloseLooseOpportunity(context.Context, *CloseLooseOpportunityGrpcRequest) (*OpportunityIdGrpcResponse, error)
 	UpdateRenewalOpportunityNextCycleDate(context.Context, *UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*OpportunityIdGrpcResponse, error)
 }
@@ -102,9 +91,6 @@ func (UnimplementedOpportunityGrpcServiceServer) CreateRenewalOpportunity(contex
 }
 func (UnimplementedOpportunityGrpcServiceServer) UpdateRenewalOpportunity(context.Context, *UpdateRenewalOpportunityGrpcRequest) (*OpportunityIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateRenewalOpportunity not implemented")
-}
-func (UnimplementedOpportunityGrpcServiceServer) UpdateOpportunity(context.Context, *UpdateOpportunityGrpcRequest) (*OpportunityIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateOpportunity not implemented")
 }
 func (UnimplementedOpportunityGrpcServiceServer) CloseLooseOpportunity(context.Context, *CloseLooseOpportunityGrpcRequest) (*OpportunityIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CloseLooseOpportunity not implemented")
@@ -160,24 +146,6 @@ func _OpportunityGrpcService_UpdateRenewalOpportunity_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OpportunityGrpcService_UpdateOpportunity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateOpportunityGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OpportunityGrpcServiceServer).UpdateOpportunity(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/opportunityGrpcService/UpdateOpportunity",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OpportunityGrpcServiceServer).UpdateOpportunity(ctx, req.(*UpdateOpportunityGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _OpportunityGrpcService_CloseLooseOpportunity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CloseLooseOpportunityGrpcRequest)
 	if err := dec(in); err != nil {
@@ -228,10 +196,6 @@ var OpportunityGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateRenewalOpportunity",
 			Handler:    _OpportunityGrpcService_UpdateRenewalOpportunity_Handler,
-		},
-		{
-			MethodName: "UpdateOpportunity",
-			Handler:    _OpportunityGrpcService_UpdateOpportunity_Handler,
 		},
 		{
 			MethodName: "CloseLooseOpportunity",

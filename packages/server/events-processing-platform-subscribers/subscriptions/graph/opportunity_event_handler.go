@@ -493,7 +493,7 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 	// clean external stage
 	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeNBO {
 		if opportunity.ExternalStage != "" {
-			_, err = h.services.CommonServices.OpportunityService.Save(ctx, nil, &opportunityId, data_fields.OpportunityFields{
+			_, err = h.services.CommonServices.OpportunityService.Save(ctx, nil, &opportunityId, &data_fields.OpportunityFields{
 				ExternalStage: utils.ToPtr(""),
 			})
 			if err != nil {

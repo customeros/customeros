@@ -31,30 +31,6 @@ func NewOpportunityService(log logger.Logger, commandHandlers *command_handler.C
 	}
 }
 
-func (s *opportunityService) UpdateOpportunity(ctx context.Context, request *opportunitypb.UpdateOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OpportunityService.UpdateOpportunity")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-	span.SetTag(tracing.SpanTagEntityId, request.Id)
-
-	// Check if the opportunity ID is valid
-	if request.Id == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
-	}
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewOpportunityAggregateWithTenantAndID(request.Tenant, request.Id)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(UpdateRenewalOpportunity) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &opportunitypb.OpportunityIdGrpcResponse{Id: request.Id}, nil
-}
-
 func (s *opportunityService) CreateRenewalOpportunity(ctx context.Context, request *opportunitypb.CreateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OpportunityService.CreateRenewalOpportunity")
 	defer span.Finish()

@@ -42,8 +42,6 @@ func (a *OpportunityAggregate) HandleGRPCRequest(ctx context.Context, request an
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *opportunitypb.UpdateOpportunityGrpcRequest:
-		return nil, a.updateOpportunity(ctx, r)
 	case *opportunitypb.CreateRenewalOpportunityGrpcRequest:
 		return nil, a.createRenewalOpportunity(ctx, r)
 	case *opportunitypb.UpdateRenewalOpportunityGrpcRequest:
@@ -52,54 +50,6 @@ func (a *OpportunityAggregate) HandleGRPCRequest(ctx context.Context, request an
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
-}
-
-func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, request *opportunitypb.UpdateOpportunityGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.updateOpportunity")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.UpdatedAt), utils.Now())
-
-	sourceFields := commonmodel.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-	sourceFields.SetDefaultValues()
-
-	externalSystem := commonmodel.ExternalSystem{}
-	externalSystem.FromGrpc(request.ExternalSystemFields)
-
-	dataFields := model.OpportunityDataFields{
-		Name:              request.Name,
-		Amount:            request.Amount,
-		MaxAmount:         request.MaxAmount,
-		ExternalStage:     request.ExternalStage,
-		ExternalType:      request.ExternalType,
-		EstimatedClosedAt: utils.TimestampProtoToTimePtr(request.EstimatedCloseDate),
-		OwnerUserId:       request.OwnerUserId,
-		GeneralNotes:      request.GeneralNotes,
-		NextSteps:         request.NextSteps,
-		InternalStage:     model.OpportunityInternalStage(request.InternalStage),
-		Currency:          request.Currency,
-		LikelihoodRate:    request.LikelihoodRate,
-	}
-
-	fieldsMask := extractFieldsMask(request.FieldsMask)
-
-	updateEvent, err := events.NewOpportunityUpdateEvent(a, dataFields, sourceFields.Source, sourceFields.AppSource, externalSystem, updatedAtNotNil, fieldsMask)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOpportunityUpdateEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    sourceFields.AppSource,
-	})
-
-	return a.Apply(updateEvent)
 }
 
 func (a *OpportunityAggregate) createRenewalOpportunity(ctx context.Context, request *opportunitypb.CreateRenewalOpportunityGrpcRequest) error {
