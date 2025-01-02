@@ -30,14 +30,17 @@ func (r *mutationResolver) OpportunitySave(ctx context.Context, input model.Oppo
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	id, err := r.Services.CommonServices.OpportunityService.Save(ctx, nil, tenant, input.OrganizationID, input.OpportunityID, mapper.MapOpportunitySaveInputToEntity(input))
+	dataFields := mapper.MapOpportunitySaveInputToEntity(input)
+	dataFields.OrganizationId = input.OrganizationID
+
+	opportunityId, err := r.Services.CommonServices.OpportunityService.Save(ctx, nil, input.OpportunityID, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to save opportunity")
 		return nil, err
 	}
 
-	e, err := r.Services.CommonServices.OpportunityService.GetById(ctx, nil, tenant, *id)
+	e, err := r.Services.CommonServices.OpportunityService.GetById(ctx, nil, tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch opportunity details")
