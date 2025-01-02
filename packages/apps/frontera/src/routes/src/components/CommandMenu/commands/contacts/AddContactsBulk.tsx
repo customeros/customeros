@@ -116,9 +116,8 @@ export const AddContactsBulk = observer(() => {
               size='xs'
               onClick={() => setType('linkedin')}
               leftIcon={<LinkedinOutline className='text-inherit' />}
-              className={cn('bg-white !border-r w-full', {
-                'bg-gray-50 text-gray-500 font-normal': type === 'email',
-                'text-primary-600 hover:text-primary-600': type === 'linkedin',
+              className={cn('w-full', {
+                selected: type === 'linkedin',
               })}
             >
               LinkedIn
@@ -127,9 +126,8 @@ export const AddContactsBulk = observer(() => {
               size='xs'
               onClick={() => setType('email')}
               leftIcon={<Mail01 className='text-inherit' />}
-              className={cn('bg-white px-4 w-full', {
-                'bg-gray-50 text-gray-500 font-normal': type === 'linkedin',
-                'text-primary-600 hover:text-primary-600': type === 'email',
+              className={cn('px-4 w-full', {
+                selected: type === 'email',
               })}
             >
               Email

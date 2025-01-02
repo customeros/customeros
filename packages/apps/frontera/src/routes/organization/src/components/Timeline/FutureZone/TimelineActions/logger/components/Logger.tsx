@@ -110,7 +110,6 @@ export const Logger = observer(({ hide }: LoggerProps) => {
       <div className='absolute top-[-16px] right-[-24px]'>
         <img alt='' width={174} height={135} src={noteIcon} />
       </div>
-
       <div className='z-2 w-full h-full'>
         <Editor
           className='mb-10'

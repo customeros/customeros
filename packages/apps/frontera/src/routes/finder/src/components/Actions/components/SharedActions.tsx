@@ -31,7 +31,10 @@ export const SharedTableActions = ({
 
   return (
     <>
-      <ButtonGroup className='flex items-center translate-x-[-50%] justify-center bottom-[32px] *:border-none'>
+      <ButtonGroup
+        variant='old'
+        className='flex items-center translate-x-[-50%] justify-center bottom-[32px] *:border-none'
+      >
         {selectCount && (
           <div className='bg-gray-700 px-3 py-2 rounded-s-lg'>
             <p
