@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -14,8 +15,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -61,52 +60,18 @@ func (s *opportunityService) UpdateRenewal(ctx context.Context, opportunityId st
 		return err
 	}
 
-	fieldsMask := make([]opportunitypb.OpportunityMaskField, 0)
-	opportunityRenewalUpdateRequest := opportunitypb.UpdateRenewalOpportunityGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             opportunityId,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		OwnerUserId:    utils.IfNotNilString(ownerUserId),
-		SourceFields: &commonpb.SourceFields{
-			Source:    string(neo4jentity.DataSourceOpenline),
-			AppSource: appSource,
-		},
-	}
-	if amount != nil {
-		opportunityRenewalUpdateRequest.Amount = *amount
-		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT)
-	}
-	if comments != nil {
-		opportunityRenewalUpdateRequest.Comments = *comments
-		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS)
-	}
-	if adjustedRate != nil {
-		opportunityRenewalUpdateRequest.RenewalAdjustedRate = *adjustedRate
-		fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ADJUSTED_RATE)
+	dataFields := data_fields.OpportunityFields{
+		OwnerId:             ownerUserId,
+		Amount:              amount,
+		Comments:            comments,
+		RenewalAdjustedRate: adjustedRate,
+		RenewalLikelihood:   utils.ToPtr(renewalLikelihood),
 	}
 
-	switch renewalLikelihood {
-	case neo4jenum.RenewalLikelihoodHigh:
-		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_HIGH_RENEWAL
-	case neo4jenum.RenewalLikelihoodMedium:
-		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_MEDIUM_RENEWAL
-	case neo4jenum.RenewalLikelihoodLow:
-		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_LOW_RENEWAL
-	case neo4jenum.RenewalLikelihoodZero:
-		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_ZERO_RENEWAL
-	default:
-		opportunityRenewalUpdateRequest.RenewalLikelihood = opportunitypb.RenewalLikelihood_ZERO_RENEWAL
-	}
-	fieldsMask = append(fieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD)
-	opportunityRenewalUpdateRequest.FieldsMask = fieldsMask
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-		return s.grpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &opportunityRenewalUpdateRequest)
-	})
+	_, err := s.services.CommonServices.OpportunityService.Save(ctx, nil, &opportunityId, &dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
+		s.log.Error("error while updating renewal opportunity: ", err.Error())
 		return err
 	}
 
