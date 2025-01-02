@@ -32,6 +32,7 @@ type ContractService interface {
 	RecalculateContractLtv(ctx context.Context, contractId string) error
 	UpdateActiveRenewalOpportunityArr(ctx context.Context, contractId string) error
 	UpdateActiveRenewalOpportunityRenewDateAndArr(ctx context.Context, tenant, contractId string) error
+	UpdateActiveRenewalOpportunityLikelihood(ctx context.Context, tenant, contractId string) error
 }
 
 type contractService struct {
@@ -384,7 +385,7 @@ func (s *contractService) postUpdateContract(ctx context.Context, tenant string,
 		s.createActionForStatusChange(ctx, tenant, contractId, string(afterUpdateContractEntity.ContractStatus), afterUpdateContractEntity.Name)
 	}
 
-	err = s.updateActiveRenewalOpportunityLikelihood(ctx, tenant, contractId)
+	err = s.UpdateActiveRenewalOpportunityLikelihood(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
@@ -896,8 +897,8 @@ func (s *contractService) createActionForStatusChange(ctx context.Context, tenan
 	}
 }
 
-func (s *contractService) updateActiveRenewalOpportunityLikelihood(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.updateActiveRenewalOpportunityLikelihood")
+func (s *contractService) UpdateActiveRenewalOpportunityLikelihood(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.UpdateActiveRenewalOpportunityLikelihood")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("contractId", contractId))

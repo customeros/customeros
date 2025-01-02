@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
-	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -61,8 +60,7 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 	}
 	if contractDbNode != nil {
 		contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-		contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
-		err = contractHandler.UpdateActiveRenewalOpportunityLikelihood(ctx, eventData.Tenant, contractEntity.Id)
+		err = h.services.CommonServices.ContractService.UpdateActiveRenewalOpportunityLikelihood(ctx, eventData.Tenant, contractEntity.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractEntity.Id, err.Error())
