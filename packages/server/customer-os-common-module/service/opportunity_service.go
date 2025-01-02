@@ -29,6 +29,7 @@ type OpportunityService interface {
 	GetPaginatedOrganizationOpportunities(ctx context.Context, tenant string, page int, limit int) (*utils.Pagination, error)
 
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, opportunityId *string, input *data_fields.OpportunityFields) (string, error)
+	CreateRenewalOpportunity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, input *data_fields.OpportunityFields) (string, error)
 	CloseWon(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant, opportunityId string) error
 	CloseLost(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error
 	Archive(ctx context.Context, tenant, opportunityId string) error
@@ -129,6 +130,16 @@ func (s *opportunityService) GetPaginatedOrganizationOpportunities(ctx context.C
 	}
 	paginatedResult.SetRows(&opportunities)
 	return &paginatedResult, nil
+}
+
+func (s *opportunityService) CreateRenewalOpportunity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, input *data_fields.OpportunityFields) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.CreateRenewalOpportunity")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	input.InternalType = utils.ToPtr(neo4jenum.OpportunityInternalTypeRenewal)
+
+	return s.Save(ctx, txWithPostCommit, nil, input)
 }
 
 func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, input *data_fields.OpportunityFields) (string, error) {
@@ -481,9 +492,8 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 				}
 				contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 				// create new renewal opportunity
-				_, err = s.services.OpportunityService.Save(ctx, nil, nil, &data_fields.OpportunityFields{
-					InternalType: utils.ToPtr(neo4jenum.OpportunityInternalTypeRenewal),
-					ContractId:   utils.StringPtr(contractEntity.Id),
+				_, err = s.services.OpportunityService.CreateRenewalOpportunity(ctx, nil, &data_fields.OpportunityFields{
+					ContractId: utils.StringPtr(contractEntity.Id),
 				})
 				if err != nil {
 					tracing.TraceErr(span, err)

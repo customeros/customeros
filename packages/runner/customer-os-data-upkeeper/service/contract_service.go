@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"time"
 )
@@ -264,9 +263,8 @@ func (s *contractService) createRenewalOpportunitiesIfMissing(ctx context.Contex
 				Tenant:    record.Tenant,
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
-			_, err = s.services.OpportunityService.Save(innerCtx, nil, nil, &data_fields.OpportunityFields{
-				ContractId:   &record.ContractId,
-				InternalType: utils.ToPtr(neo4jenum.OpportunityInternalTypeRenewal),
+			_, err = s.services.OpportunityService.CreateRenewalOpportunity(innerCtx, nil, &data_fields.OpportunityFields{
+				ContractId: &record.ContractId,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
