@@ -169,23 +169,6 @@ func testOrganizationLinkWithLocation() {
 	print(result)
 }
 
-func testCloseLooseOpportunity() {
-
-	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	opportunityId := "d8305351-8568-4d97-9fe9-c6cf701636d0"
-
-	result, err := clients.OpportunityClient.CloseLooseOpportunity(context.Background(), &opportunitypb.CloseLooseOpportunityGrpcRequest{
-		Tenant:         tenant,
-		Id:             opportunityId,
-		LoggedInUserId: userId,
-		AppSource:      appSource,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
-}
-
 func testUpdateOnboardingStatus() {
 
 	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"

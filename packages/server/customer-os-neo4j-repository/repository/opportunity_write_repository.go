@@ -38,7 +38,6 @@ type OpportunityWriteRepository interface {
 	RemoveOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error
 	CreateRenewal(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data data_fields.OpportunityFields) (bool, error)
 	UpdateRenewal(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data data_fields.OpportunityFields) error
-	UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, renewedAt *time.Time) error
 	CloseWon(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, closedAt time.Time) error
 	CloseLost(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, closedAt time.Time) error
 	MarkRenewalRequested(ctx context.Context, tenant, opportunityId string) error
@@ -356,33 +355,6 @@ func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tx *neo4
 	}
 
 	return nil
-}
-
-func (r *opportunityWriteRepository) UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, renewedAt *time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.UpdateNextRenewalDate")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
-
-	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) 
-							WHERE op:RenewalOpportunity AND op:Opportunity_%s AND op.internalStage=$internalStage
-							SET op.updatedAt=datetime(), 
-								op.renewedAt=$renewedAt`, tenant)
-	params := map[string]any{
-		"tenant":        tenant,
-		"opportunityId": opportunityId,
-		"internalStage": enum.OpportunityInternalStageOpen.String(),
-		"renewedAt":     utils.ToDateAsAny(renewedAt),
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
 }
 
 func (r *opportunityWriteRepository) CloseWon(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, closedAt time.Time) error {

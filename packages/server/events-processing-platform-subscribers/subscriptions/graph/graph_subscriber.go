@@ -18,7 +18,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
-	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/sync/errgroup"
 
@@ -204,13 +203,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case locationevents.LocationValidatedV1:
 		_ = s.locationEventHandler.OnLocationValidated(ctx, evt)
-		return nil
-
-	case opportunityevent.OpportunityUpdateNextCycleDateV1:
-		_ = s.opportunityEventHandler.OnUpdateNextCycleDate(ctx, evt)
-		return nil
-	case opportunityevent.OpportunityCloseLooseV1:
-		_ = s.opportunityEventHandler.OnCloseLost(ctx, evt)
 		return nil
 
 	case invoiceevents.InvoiceCreateForContractV1:
