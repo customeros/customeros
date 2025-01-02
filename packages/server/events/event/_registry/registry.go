@@ -3,18 +3,12 @@ package _registry
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
-	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"reflect"
 )
 
 func InitAggregate(request event.BaseEvent) eventstore.Aggregate {
-	switch request.EntityType {
-	case model.OPPORTUNITY:
-		return opportunityevent.NewOpportunityAggregateWithTenantAndID(request.Tenant, request.EntityId)
-	}
 	return nil
 }
 

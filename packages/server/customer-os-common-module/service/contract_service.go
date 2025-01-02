@@ -15,7 +15,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -709,14 +708,7 @@ func (s *contractService) updateRenewalOpportunityRenewedAt(ctx context.Context,
 
 	// IF contract already ended, close the renewal opportunity
 	if contractEntity.IsEnded() {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			return s.services.GrpcClients.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
-				Tenant:    tenant,
-				Id:        renewalOpportunityEntity.Id,
-				AppSource: common.GetAppSourceFromContext(ctx),
-			})
-		})
+		err := s.services.OpportunityService.CloseLost(ctx, nil, tenant, renewalOpportunityEntity.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("CloseLooseOpportunity failed: %s", err.Error())
@@ -750,19 +742,13 @@ func (s *contractService) updateRenewalOpportunityRenewedAt(ctx context.Context,
 	renewedAt := calculateNextCycleDate(startRenewalDateCalculation, contractEntity.LengthInMonths, calculateUntilFirstFutureDate)
 	span.LogFields(log.Object("result.renewedAt", renewedAt))
 	if !utils.IsEqualTimePtr(renewedAt, renewalOpportunityEntity.RenewalDetails.RenewedAt) {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			return s.services.GrpcClients.OpportunityClient.UpdateRenewalOpportunityNextCycleDate(ctx, &opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest{
-				OpportunityId: renewalOpportunityEntity.Id,
-				Tenant:        tenant,
-				AppSource:     common.GetAppSourceFromContext(ctx),
-				RenewedAt:     utils.ConvertTimeToTimestampPtr(renewedAt),
-			})
+		_, err = s.services.OpportunityService.Save(ctx, nil, &renewalOpportunityEntity.Id, &data_fields.OpportunityFields{
+			RenewedAt: renewedAt,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("UpdateRenewalOpportunityNextCycleDate failed: %s", err.Error())
-			return errors.Wrap(err, "UpdateRenewalOpportunityNextCycleDate")
+			return err
 		}
 	}
 
