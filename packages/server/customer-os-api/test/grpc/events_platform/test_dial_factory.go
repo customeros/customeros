@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 
 	"log"
@@ -35,7 +34,6 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.ClientCo
 	server := grpc.NewServer()
 
 	organizationpb.RegisterOrganizationGrpcServiceServer(server, &MockOrganizationService{})
-	opportunitypb.RegisterOpportunityGrpcServiceServer(server, &MockOpportunityService{})
 	invoicepb.RegisterInvoiceGrpcServiceServer(server, &MockInvoiceService{})
 	eventstorepb.RegisterEventStoreGrpcServiceServer(server, &MockEventStoreService{})
 
