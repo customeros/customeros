@@ -2,6 +2,7 @@ package contract
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -261,22 +262,9 @@ func (h *contractHandler) updateRenewalArr(ctx context.Context, tenant string, c
 	// adjust with likelihood
 	currentArr := h.calculateCurrentArrByAdjustedRate(maxArr, renewalOpportunity.RenewalDetails.RenewalAdjustedRate)
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-		return h.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunitypb.UpdateOpportunityGrpcRequest{
-			Tenant:    tenant,
-			Id:        renewalOpportunity.Id,
-			Amount:    currentArr,
-			MaxAmount: maxArr,
-			SourceFields: &commonpb.SourceFields{
-				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-				Source:    constants.SourceOpenline,
-			},
-			FieldsMask: []opportunitypb.OpportunityMaskField{
-				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
-				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT,
-			},
-		})
+	_, err = h.services.CommonServices.OpportunityService.Save(ctx, nil, &renewalOpportunity.Id, &data_fields.OpportunityFields{
+		Amount:    &currentArr,
+		MaxAmount: &maxArr,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

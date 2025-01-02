@@ -21,9 +21,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/events"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -495,21 +493,12 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 	// clean external stage
 	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeNBO {
 		if opportunity.ExternalStage != "" {
-			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-			_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-				return h.grpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunitypb.UpdateOpportunityGrpcRequest{
-					Tenant:        eventData.Tenant,
-					Id:            opportunityId,
-					ExternalStage: "",
-					SourceFields: &commonpb.SourceFields{
-						AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-						Source:    constants.SourceOpenline,
-					},
-					FieldsMask: []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_EXTERNAL_STAGE},
-				})
+			_, err = h.services.CommonServices.OpportunityService.Save(ctx, nil, &opportunityId, data_fields.OpportunityFields{
+				ExternalStage: utils.ToPtr(""),
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
+				h.log.Errorf("error in UpdateOpportunity: %v", err.Error())
 			}
 		}
 	}
