@@ -3,8 +3,8 @@ import { convert } from 'html-to-text';
 
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@utils/date';
-import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
+import { Link01 } from '@ui/media/icons/Link01';
 import { getName } from '@utils/getParticipantsName';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Divider } from '@ui/presentation/Divider/Divider';
@@ -100,7 +100,7 @@ export const IntercomThreadPreviewModal = () => {
                   color='gray.500'
                   aria-label='Copy link to this thread'
                   onClick={() => copy(window.location.href)}
-                  icon={<Link03 className='text-gray-500' />}
+                  icon={<Link01 className='text-gray-500' />}
                 />
               </div>
             </Tooltip>

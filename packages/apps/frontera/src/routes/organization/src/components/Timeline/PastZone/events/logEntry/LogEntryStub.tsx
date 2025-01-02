@@ -85,7 +85,7 @@ export const LogEntryStub = ({ data }: LogEntryStubProps) => {
         isTemporary
           ? 'opacity-50 cursor-progress'
           : 'opacity-100 cursor-pointer',
-        'hover:shadow-md max-w-[549px] flex flex-col bg-white ml-6 shadow-xs border border-gray-200 rounded-lg transition-all duration-200 ease-in-out',
+        'hover:shadow-sm max-w-[549px] flex flex-col bg-white ml-6 shadow-none border border-gray-200 rounded-lg transition-all duration-200 ease-in-out',
       )}
     >
       <CardContent

@@ -1,8 +1,8 @@
 import copy from 'copy-to-clipboard';
 import { MarkdownEventType } from '@store/TimelineEvents/MarkdownEvent/types';
 
-import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
+import { Link01 } from '@ui/media/icons/Link01';
 import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { CardHeader, CardContent } from '@ui/presentation/Card/Card';
@@ -39,7 +39,7 @@ export const MarkdownEventPreviewModal = () => {
                   className='mr-1'
                   aria-label='Copy link to this event'
                   onClick={() => copy(window.location.href)}
-                  icon={<Link03 className='text-gray-500 size-4' />}
+                  icon={<Link01 className='text-gray-500 size-4' />}
                 />
               </div>
             </Tooltip>

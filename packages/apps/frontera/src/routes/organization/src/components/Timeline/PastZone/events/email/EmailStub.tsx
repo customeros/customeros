@@ -62,8 +62,8 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
         onClick={() => openModal(email.id)}
         className={cn(
           isSendByTenant ? 'ml-6' : 'ml-0',
-          'shadow-xs cursor-pointer text-sm border border-gray-200 bg-white flex max-w-[549px]',
-          'rounded-lg hover:shadow-md transition-all duration-200 ease-out',
+          'shadow-none cursor-pointer text-sm border border-gray-200 bg-white flex max-w-[549px]',
+          'rounded-lg hover:shadow-sm transition-all duration-200 ease-out',
         )}
       >
         <CardContent className='px-3 py-2 pr-0 overflow-hidden flex flex-row flex-1 '>

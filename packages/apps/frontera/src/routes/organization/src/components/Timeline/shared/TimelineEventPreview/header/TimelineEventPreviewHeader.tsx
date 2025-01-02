@@ -1,8 +1,8 @@
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
 
 import { DateTimeUtils } from '@utils/date';
-import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
+import { Link01 } from '@ui/media/icons/Link01';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
@@ -56,7 +56,7 @@ export const TimelineEventPreviewHeader = ({
                   colorScheme='gray'
                   aria-label={copyLabel}
                   onClick={() => copy(window.location.href)}
-                  icon={<Link03 height='18px' color='gray.500' />}
+                  icon={<Link01 height='18px' color='gray.500' />}
                 />
               </div>
             </Tooltip>

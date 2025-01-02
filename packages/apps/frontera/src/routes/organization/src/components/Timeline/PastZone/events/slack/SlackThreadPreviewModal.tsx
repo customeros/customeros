@@ -1,7 +1,7 @@
 import copy from 'copy-to-clipboard';
 
 import { DateTimeUtils } from '@utils/date';
-import { Link03 } from '@ui/media/icons/Link03';
+import { Link01 } from '@ui/media/icons/Link01';
 import { XClose } from '@ui/media/icons/XClose';
 import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
@@ -60,7 +60,7 @@ export const SlackThreadPreviewModal = () => {
                   className='mr-1'
                   aria-label='Copy link to this thread'
                   onClick={() => copy(window.location.href)}
-                  icon={<Link03 className='text-gray-500 size-4' />}
+                  icon={<Link01 className='text-gray-500 size-4' />}
                 />
               </div>
             </Tooltip>
