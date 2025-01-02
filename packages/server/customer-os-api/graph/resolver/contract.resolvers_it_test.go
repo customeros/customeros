@@ -452,48 +452,6 @@ func TestMutationResolver_RemoveAttachmentFromContract(t *testing.T) {
 	require.Equal(t, meeting.Contract_RemoveAttachment.Attachments[0].ID, attachmentId1)
 }
 
-func TestMutationResolver_ContractRenew_NoActiveRenewalOpportunity_CreateRenewalOpportunity(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{
-		LengthInMonths: 1,
-	})
-
-	calledCreatedRenewalOpportunityGrpc := false
-
-	opportunityCallbacks := events_platform.MockOpportunityServiceCallbacks{
-		CreateRenewalOpportunity: func(context context.Context, opportunity *opportunitypb.CreateRenewalOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			require.Equal(t, tenantName, opportunity.Tenant)
-			require.Equal(t, testUserId, opportunity.LoggedInUserId)
-			require.Equal(t, contractId, opportunity.ContractId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, opportunity.SourceFields.AppSource)
-			require.Equal(t, string(neo4jentity.DataSourceOpenline), opportunity.SourceFields.Source)
-			calledCreatedRenewalOpportunityGrpc = true
-			return &opportunitypb.OpportunityIdGrpcResponse{
-				Id: uuid.New().String(),
-			}, nil
-		},
-	}
-	events_platform.SetOpportunityCallbacks(&opportunityCallbacks)
-
-	rawResponse := callGraphQL(t, "contract/renew_contract", map[string]interface{}{
-		"contractId": contractId,
-	})
-
-	var response struct {
-		Contract_Renew model.Contract
-	}
-
-	require.Nil(t, rawResponse.Errors)
-	err := decode.Decode(rawResponse.Data.(map[string]any), &response)
-	require.Nil(t, err)
-	require.Equal(t, contractId, response.Contract_Renew.Metadata.ID)
-	require.True(t, calledCreatedRenewalOpportunityGrpc)
-}
-
 func TestMutationResolver_ContractRenew_ActiveRenewalNotExpired_ApproveRenewalOpportunity(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
