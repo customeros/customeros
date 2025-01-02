@@ -797,26 +797,14 @@ func (s *contractService) updateRenewalArr(ctx context.Context, tenant string, c
 	// adjust with likelihood
 	currentArr := calculateCurrentArrByAdjustedRate(maxArr, renewalOpportunity.RenewalDetails.RenewalAdjustedRate)
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-		return s.services.GrpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunitypb.UpdateOpportunityGrpcRequest{
-			Tenant:    tenant,
-			Id:        renewalOpportunity.Id,
-			Amount:    currentArr,
-			MaxAmount: maxArr,
-			SourceFields: &commonpb.SourceFields{
-				AppSource: common.GetAppSourceFromContext(ctx),
-				Source:    neo4jentity.DataSourceOpenline.String(),
-			},
-			FieldsMask: []opportunitypb.OpportunityMaskField{
-				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
-				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT,
-			},
-		})
+	_, err = s.services.OpportunityService.Save(ctx, nil, &renewalOpportunity.Id, &data_fields.OpportunityFields{
+		Amount:    &currentArr,
+		MaxAmount: &maxArr,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("UpdateOpportunity failed: %s", err.Error())
+		return err
 	}
 
 	return nil
