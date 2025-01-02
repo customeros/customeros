@@ -48,29 +48,6 @@ enum RenewalLikelihood {
   ZERO_RENEWAL = 3;
 }
 
-message UpdateOpportunityGrpcRequest {
-  string id = 1;
-  string tenant = 2;
-  string loggedInUserId = 3;
-  string name = 4;
-  double amount = 5;
-  double maxAmount = 6;
-  string externalType = 7;
-  string externalStage = 9;
-  google.protobuf.Timestamp estimatedCloseDate = 10;
-  string ownerUserId = 11;
-  string createdByUserId = 12;
-  google.protobuf.Timestamp updatedAt = 14;
-  string generalNotes = 15;
-  string nextSteps = 16;
-  SourceFields sourceFields = 17;
-  ExternalSystemFields externalSystemFields = 18;
-  repeated OpportunityMaskField fieldsMask = 19;
-  OpportunityInternalStage internalStage = 20;
-  int64 likelihoodRate = 21;
-  string currency = 22;
-}
-
 message CreateRenewalOpportunityGrpcRequest {
   string tenant = 1;
   string loggedInUserId = 2;
@@ -131,7 +108,6 @@ message OpportunityIdGrpcResponse {
 service opportunityGrpcService {
   rpc CreateRenewalOpportunity(CreateRenewalOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc UpdateRenewalOpportunity(UpdateRenewalOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
-  rpc UpdateOpportunity(UpdateOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc CloseLooseOpportunity(CloseLooseOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc UpdateRenewalOpportunityNextCycleDate(UpdateRenewalOpportunityNextCycleDateGrpcRequest) returns (OpportunityIdGrpcResponse);
 }
