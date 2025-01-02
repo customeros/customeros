@@ -430,6 +430,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 			TaxRate:    utils.Float64Ptr(serviceLineItemDetails.SliVatRate),
 			Comments:   utils.StringPtr(serviceLineItemDetails.SliComments),
 			BilledType: utils.ToPtr(serviceLineItemDetails.SliBilledType),
+			ParentId:   utils.StringPtr(baseServiceLineItemEntity.ParentID),
 		}
 
 		// if start date is changed, validate that change is allowed
