@@ -37,6 +37,7 @@ const (
 	TENANT_SETTINGS          EntityType = "TENANT_SETTINGS"
 	USER                     EntityType = "USER"
 	WEBHOOK_EVENT            EntityType = "WEBHOOK"
+	LOCATION                 EntityType = "LOCATION"
 )
 
 func (entityType EntityType) String() string {
@@ -101,6 +102,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelSocial
 	case MARKDOWN_EVENT:
 		return NodeLabelMarkdownEvent
+	case LOCATION:
+		return NodeLabelLocation
 	}
 	return "Unknown"
 }

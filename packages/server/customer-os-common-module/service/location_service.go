@@ -7,7 +7,10 @@ import (
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -20,36 +23,13 @@ import (
 	"strings"
 )
 
-type Location struct {
-	Country       string   `json:"country"`
-	CountryCodeA2 string   `json:"countryCodeA2"`
-	CountryCodeA3 string   `json:"countryCodeA3"`
-	Region        string   `json:"region"`
-	Locality      string   `json:"locality"`
-	Address       string   `json:"address"`
-	Address2      string   `json:"address2"`
-	Zip           string   `json:"zip"`
-	AddressType   string   `json:"addressType"`
-	HouseNumber   string   `json:"houseNumber"`
-	PostalCode    string   `json:"postalCode"`
-	PlusFour      string   `json:"plusFour"`
-	Commercial    bool     `json:"commercial"`
-	Predirection  string   `json:"predirection"`
-	District      string   `json:"district"`
-	Street        string   `json:"street"`
-	Latitude      *float64 `json:"latitude"`
-	Longitude     *float64 `json:"longitude"`
-	TimeZone      string   `json:"timeZone"`
-	UtcOffset     *float64 `json:"utcOffset"`
-}
-
 type LocationService interface {
 	GetAllForContact(ctx context.Context, contactId string) (*neo4jentity.LocationEntities, error)
 	GetAllForContacts(ctx context.Context, contactIds []string) (*neo4jentity.LocationEntities, error)
 	GetAllForOrganization(ctx context.Context, organizationId string) (*neo4jentity.LocationEntities, error)
 	GetAllForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.LocationEntities, error)
-
-	ExtractAndEnrichLocation(ctx context.Context, tenant, address string) (*Location, error)
+	ExtractAndEnrichLocation(ctx context.Context, tenant, address string) (*data_fields.LocationFields, error)
+	Create(ctx context.Context, commit *utils.TxWithPostCommit, locationFields data_fields.LocationFields, linkWith *LinkWith) (string, error)
 }
 
 type locationService struct {
@@ -126,7 +106,7 @@ func (s *locationService) GetAllForOrganizations(ctx context.Context, organizati
 	return &locationEntities, nil
 }
 
-func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, address string) (*Location, error) {
+func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, address string) (*data_fields.LocationFields, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationEventHandler.ExtractAndEnrichLocation")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -142,7 +122,7 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get location mapping"))
 	}
 	if locationMapping != nil {
-		var location Location
+		var location data_fields.LocationFields
 		err = json.Unmarshal([]byte(locationMapping.ResponseJson), &location)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal location"))
@@ -187,7 +167,7 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 		}
 	}
 
-	var location Location
+	var location data_fields.LocationFields
 	err = json.Unmarshal([]byte(aiResult), &location)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal location"))
@@ -207,4 +187,105 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 	}
 
 	return &location, nil
+}
+
+func (s *locationService) Create(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, locationFields data_fields.LocationFields, linkWith *LinkWith) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationService.Create")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "locationFields", locationFields)
+	tracing.LogObjectAsJson(span, "linkWith", linkWith)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// validate link with
+	if linkWith != nil {
+		if !linkWith.IsContact() && !linkWith.IsOrganization() {
+			err = errors.New("unsupported linkWith type")
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+		// validate contact exists
+		if linkWith.IsContact() {
+			_, err = s.services.ContactService.GetContactById(ctx, linkWith.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+		}
+		// validate organization exists
+		if linkWith.IsOrganization() {
+			_, err = s.services.OrganizationService.GetById(ctx, tenant, linkWith.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return "", err
+			}
+		}
+	}
+
+	// set default values
+	if locationFields.CreatedAt == nil {
+		locationFields.CreatedAt = utils.NowPtr()
+	}
+	if locationFields.Source == nil {
+		locationFields.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
+	}
+	if locationFields.AppSource == nil {
+		locationFields.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))
+	}
+
+	// generate location id
+	locationId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelLocation)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		err = s.services.Neo4jRepositories.LocationWriteRepository.CreateLocation(ctx, txWithPostCommit.Tx, tenant, locationId, locationFields)
+		if err != nil {
+			return "", err
+		}
+
+		if linkWith != nil {
+			if linkWith.IsContact() {
+				err = s.services.Neo4jRepositories.LocationWriteRepository.LinkWithContact(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, locationId)
+				if err != nil {
+					return "", err
+				}
+			} else if linkWith.IsOrganization() {
+				err = s.services.Neo4jRepositories.LocationWriteRepository.LinkWithOrganization(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, locationId)
+				if err != nil {
+					return "", err
+				}
+			}
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			innerErr := s.services.RabbitMQService.PublishEvent(ctx, locationId, model.CONTACT, dto.CreateLocation{locationFields})
+			if innerErr != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateLocation"))
+			}
+
+			if linkWith != nil {
+				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, linkWith.Id, linkWith.Type, utils.NewEventCompletedDetails().WithUpdate())
+			}
+
+			return nil
+		})
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	return locationId, nil
 }

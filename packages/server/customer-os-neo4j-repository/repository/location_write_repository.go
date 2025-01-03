@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -36,14 +36,6 @@ type AddressDetails struct {
 	UtcOffset     *float64 `json:"utcOffset"`
 }
 
-type LocationCreateFields struct {
-	SourceFields   model.SourceFields `json:"sourceFields"`
-	CreatedAt      time.Time          `json:"createdAt"`
-	RawAddress     string             `json:"rawAddress"`
-	Name           string             `json:"name"`
-	AddressDetails AddressDetails     `json:"addressDetails"`
-}
-
 type LocationUpdateFields struct {
 	AddressDetails AddressDetails `json:"addressDetails"`
 	Source         string         `json:"source"`
@@ -52,12 +44,12 @@ type LocationUpdateFields struct {
 }
 
 type LocationWriteRepository interface {
-	CreateLocation(ctx context.Context, tenant, locationId string, data LocationCreateFields) error
+	CreateLocation(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, locationId string, data data_fields.LocationFields) error
 	UpdateLocation(ctx context.Context, tenant, locationId string, data LocationUpdateFields) error
 	FailLocationValidation(ctx context.Context, tenant, locationId, validationError string, validatedAt time.Time) error
 	LocationValidated(ctx context.Context, tenant, locationId string, addressDetails AddressDetails, validatedAt time.Time) error
-	LinkWithOrganization(ctx context.Context, tenant, organizationId, locationId string) error
-	LinkWithContact(ctx context.Context, tenant, contactId, locationId string) error
+	LinkWithOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, locationId string) error
+	LinkWithContact(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, locationId string) error
 }
 
 type locationRepository struct {
@@ -72,7 +64,7 @@ func NewLocationWriteRepository(driver *neo4j.DriverWithContext, database string
 	}
 }
 
-func (r *locationRepository) CreateLocation(ctx context.Context, tenant, locationId string, data LocationCreateFields) error {
+func (r *locationRepository) CreateLocation(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, locationId string, data data_fields.LocationFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.CreateLocation")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -106,44 +98,44 @@ func (r *locationRepository) CreateLocation(ctx context.Context, tenant, locatio
 						l.timeZone = $timeZone,
 						l.utcOffset = $utcOffset,
 						l.source = $source,
-						l.sourceOfTruth = $sourceOfTruth,
 						l.appSource = $appSource,
 						l.createdAt = $createdAt,
 						l.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"id":            locationId,
 		"tenant":        tenant,
-		"source":        data.SourceFields.Source,
-		"sourceOfTruth": data.SourceFields.SourceOfTruth,
-		"appSource":     data.SourceFields.AppSource,
-		"createdAt":     data.CreatedAt,
+		"source":        utils.IfNotNilString(data.Source),
+		"appSource":     utils.IfNotNilString(data.AppSource),
+		"createdAt":     utils.IfNotNilTimeWithDefault(data.CreatedAt, utils.Now()),
 		"rawAddress":    data.RawAddress,
 		"name":          data.Name,
-		"latitude":      data.AddressDetails.Latitude,
-		"longitude":     data.AddressDetails.Longitude,
-		"country":       data.AddressDetails.Country,
-		"countryCodeA2": data.AddressDetails.CountryCodeA2,
-		"countryCodeA3": data.AddressDetails.CountryCodeA3,
-		"region":        data.AddressDetails.Region,
-		"district":      data.AddressDetails.District,
-		"locality":      data.AddressDetails.Locality,
-		"street":        data.AddressDetails.Street,
-		"address":       data.AddressDetails.Address,
-		"address2":      data.AddressDetails.Address2,
-		"zip":           data.AddressDetails.Zip,
-		"addressType":   data.AddressDetails.AddressType,
-		"houseNumber":   data.AddressDetails.HouseNumber,
-		"postalCode":    data.AddressDetails.PostalCode,
-		"plusFour":      data.AddressDetails.PlusFour,
-		"commercial":    data.AddressDetails.Commercial,
-		"predirection":  data.AddressDetails.Predirection,
-		"timeZone":      data.AddressDetails.TimeZone,
-		"utcOffset":     data.AddressDetails.UtcOffset,
+		"latitude":      data.Latitude,
+		"longitude":     data.Longitude,
+		"country":       data.Country,
+		"countryCodeA2": data.CountryCodeA2,
+		"countryCodeA3": data.CountryCodeA3,
+		"region":        data.Region,
+		"district":      data.District,
+		"locality":      data.Locality,
+		"street":        data.Street,
+		"address":       data.Address,
+		"address2":      data.Address2,
+		"zip":           data.Zip,
+		"addressType":   data.AddressType,
+		"houseNumber":   data.HouseNumber,
+		"postalCode":    data.PostalCode,
+		"plusFour":      data.PlusFour,
+		"commercial":    data.Commercial,
+		"predirection":  data.Predirection,
+		"timeZone":      data.TimeZone,
+		"utcOffset":     data.UtcOffset,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -160,7 +152,7 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, tenant, locatio
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location {id:$id})
 			WHERE l:Location_%s
-		 SET l.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE l.sourceOfTruth END,
+		 SET 
 			l.updatedAt = datetime(),
 			l.rawAddress = $rawAddress,
 			l.name = $name,
@@ -311,7 +303,7 @@ func (r *locationRepository) LocationValidated(ctx context.Context, tenant, loca
 	return err
 }
 
-func (r *locationRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, locationId string) error {
+func (r *locationRepository) LinkWithOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, locationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.LinkWithOrganization")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -331,14 +323,16 @@ func (r *locationRepository) LinkWithOrganization(ctx context.Context, tenant, o
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
 	return err
 }
 
-func (r *locationRepository) LinkWithContact(ctx context.Context, tenant, contactId, locationId string) error {
+func (r *locationRepository) LinkWithContact(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId, locationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.LinkWithContact")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -358,7 +352,9 @@ func (r *locationRepository) LinkWithContact(ctx context.Context, tenant, contac
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
