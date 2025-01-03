@@ -3,6 +3,8 @@ package customerbase
 
 import (
 	"fmt"
+	"github.com/opentracing/opentracing-go"
+	"golang.org/x/net/context"
 	"net/http"
 	"regexp"
 	"strings"
@@ -57,32 +59,34 @@ func handleJSONRequest(c *gin.Context, s *service.Services) {
 	tracing.TagComponentRest(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
-	var contact ContactRecord
-	if err := c.BindJSON(&contact); err == nil && (strings.TrimSpace(contact.Email) != "" || strings.TrimSpace(contact.LinkedInURL) != "") {
-		err, errValue := validateContact(&contact)
+	var contactRecord ContactRecord
+	if err := c.BindJSON(&contactRecord); err == nil && (strings.TrimSpace(contactRecord.Email) != "" || strings.TrimSpace(contactRecord.LinkedInURL) != "") {
+		err, errValue := validateContactRecord(&contactRecord)
 		if err != nil {
 			errMessage := fmt.Sprintf("%s | %s", errValue, err)
-			tracing.TraceErr(span, err)
+			span.LogFields(log.String("result.error", errMessage))
 			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage(errMessage))
 			return
 		}
-		contact.ContactId = processContact(c, s, contact)
+		contactRecord.ContactId = processContact(c, s, contactRecord)
 		c.JSON(http.StatusOK, SingleContactResponse{
 			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Contact:      contact,
+			Contact:      contactRecord,
 		})
 		return
 	}
 }
 
-func validateContact(record *ContactRecord) (error, string) {
+func validateContactRecord(record *ContactRecord) (error, string) {
 	var errValue string
-	if record.Email == "" && record.LinkedInURL == "" {
+	email := strings.TrimSpace(record.Email)
+	linkedInUrl := strings.TrimSpace(record.LinkedInURL)
+	if email == "" && linkedInUrl == "" {
 		return errors.New("must provide either email or LinkedIn URL"), errValue
 	}
 
-	if record.Email != "" {
-		errValue = record.Email
+	if email != "" {
+		errValue = email
 		emailSyntax := mailvalidate.ValidateEmailSyntax(record.Email)
 		switch {
 		case !emailSyntax.IsValid:
@@ -96,16 +100,16 @@ func validateContact(record *ContactRecord) (error, string) {
 		}
 	}
 
-	if record.LinkedInURL != "" && !isValidLinkedinContactUrl(record.LinkedInURL) {
-		errValue = record.LinkedInURL
+	if linkedInUrl != "" && !isValidLinkedinContactUrl(linkedInUrl) {
+		errValue = linkedInUrl
 		return errors.New("invalid LinkedIn URL format"), errValue
 	}
 
 	return nil, errValue
 }
 
-func processContact(c *gin.Context, s *service.Services, record ContactRecord) string {
-	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.processContact")
+func processContact(ctx context.Context, s *service.Services, record ContactRecord) string {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Customerbase.processContact")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
@@ -114,7 +118,7 @@ func processContact(c *gin.Context, s *service.Services, record ContactRecord) s
 	linkedInUrl := strings.TrimSpace(record.LinkedInURL)
 	email := strings.TrimSpace(record.Email)
 
-	if linkedInUrl == "" && strings.TrimSpace(record.Email) == "" {
+	if linkedInUrl == "" && email == "" {
 		span.LogFields(log.String("result", "No email or LinkedIn URL provided"))
 		return ""
 	}
@@ -137,14 +141,14 @@ func processContact(c *gin.Context, s *service.Services, record ContactRecord) s
 				return ""
 			}
 		} else {
-			associateEmailWithContact(c, s, email, createdContactId)
+			associateEmailWithContact(ctx, s, email, createdContactId)
 		}
 	}
 	return createdContactId
 }
 
-func associateEmailWithContact(c *gin.Context, s *service.Services, email, contactId string) {
-	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.associateEmailWithContact")
+func associateEmailWithContact(ctx context.Context, s *service.Services, email, contactId string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Customerbase.associateEmailWithContact")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
