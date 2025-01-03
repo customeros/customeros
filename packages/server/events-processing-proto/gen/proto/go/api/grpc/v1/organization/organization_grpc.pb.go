@@ -37,7 +37,6 @@ type OrganizationGrpcServiceClient interface {
 	UnlinkEmailFromBillingProfile(ctx context.Context, in *UnlinkEmailFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	LinkLocationToBillingProfile(ctx context.Context, in *LinkLocationToBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	UnlinkLocationFromBillingProfile(ctx context.Context, in *UnlinkLocationFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
-	AddLocation(ctx context.Context, in *OrganizationAddLocationGrpcRequest, opts ...grpc.CallOption) (*LocationIdGrpcResponse, error)
 	AdjustIndustry(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 }
 
@@ -184,15 +183,6 @@ func (c *organizationGrpcServiceClient) UnlinkLocationFromBillingProfile(ctx con
 	return out, nil
 }
 
-func (c *organizationGrpcServiceClient) AddLocation(ctx context.Context, in *OrganizationAddLocationGrpcRequest, opts ...grpc.CallOption) (*LocationIdGrpcResponse, error) {
-	out := new(LocationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/AddLocation", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *organizationGrpcServiceClient) AdjustIndustry(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
 	out := new(OrganizationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/AdjustIndustry", in, out, opts...)
@@ -221,7 +211,6 @@ type OrganizationGrpcServiceServer interface {
 	UnlinkEmailFromBillingProfile(context.Context, *UnlinkEmailFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	LinkLocationToBillingProfile(context.Context, *LinkLocationToBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	UnlinkLocationFromBillingProfile(context.Context, *UnlinkLocationFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
-	AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*LocationIdGrpcResponse, error)
 	AdjustIndustry(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 }
 
@@ -273,9 +262,6 @@ func (UnimplementedOrganizationGrpcServiceServer) LinkLocationToBillingProfile(c
 }
 func (UnimplementedOrganizationGrpcServiceServer) UnlinkLocationFromBillingProfile(context.Context, *UnlinkLocationFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnlinkLocationFromBillingProfile not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*LocationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddLocation not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) AdjustIndustry(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AdjustIndustry not implemented")
@@ -562,24 +548,6 @@ func _OrganizationGrpcService_UnlinkLocationFromBillingProfile_Handler(srv inter
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrganizationGrpcService_AddLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrganizationAddLocationGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).AddLocation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/AddLocation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).AddLocation(ctx, req.(*OrganizationAddLocationGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _OrganizationGrpcService_AdjustIndustry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OrganizationIdGrpcRequest)
 	if err := dec(in); err != nil {
@@ -664,10 +632,6 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnlinkLocationFromBillingProfile",
 			Handler:    _OrganizationGrpcService_UnlinkLocationFromBillingProfile_Handler,
-		},
-		{
-			MethodName: "AddLocation",
-			Handler:    _OrganizationGrpcService_AddLocation_Handler,
 		},
 		{
 			MethodName: "AdjustIndustry",

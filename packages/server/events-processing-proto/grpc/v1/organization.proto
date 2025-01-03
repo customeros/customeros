@@ -53,31 +53,6 @@ message UnlinkEmailFromBillingProfileGrpcRequest {
   string appSource = 6;
 }
 
-message LocationDetails {
-  string name = 1;
-  string rawAddress = 2;
-  string country = 3;
-  string countryCodeA2 = 4;
-  string countryCodeA3 = 5;
-  string region = 6;
-  string locality = 7;
-  string addressLine1 = 8;
-  string addressLine2 = 9;
-  string zipCode = 10;
-  string addressType = 11;
-  string houseNumber = 12;
-  string postalCode = 13;
-  bool commercial = 14;
-  string predirection = 15;
-  string district = 16;
-  string street = 17;
-  string latitude = 18;
-  string longitude = 19;
-  string plusFour = 20;
-  string timeZone = 21;
-  optional double utcOffset = 22;
-}
-
 message LocationIdGrpcResponse {
   string id = 1;
 }
@@ -224,16 +199,6 @@ message OrganizationRemoveTagGrpcRequest {
   string appSource = 5;
 }
 
-message OrganizationAddLocationGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string loggedInUserId = 3;
-  SourceFields sourceFields = 4;
-  string locationId = 5;
-  LocationDetails locationDetails = 6;
-  google.protobuf.Timestamp  createdAt = 7;
-}
-
 message OrganizationIdGrpcResponse {
   string id = 1;
 }
@@ -262,6 +227,5 @@ service organizationGrpcService {
   rpc UnlinkEmailFromBillingProfile(UnlinkEmailFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc LinkLocationToBillingProfile(LinkLocationToBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc UnlinkLocationFromBillingProfile(UnlinkLocationFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
-  rpc AddLocation(OrganizationAddLocationGrpcRequest) returns (LocationIdGrpcResponse);
   rpc AdjustIndustry(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
 }

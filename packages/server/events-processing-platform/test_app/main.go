@@ -48,10 +48,8 @@ func main() {
 	//testAddParentOrganization()
 	//testRemoveParentOrganization()
 	//testContactLinkWithPhoneNumber()
-	//testContactLinkWithLocation()
 	//testOrganizationLinkWithEmail()
 	//testOrganizationLinkWithPhoneNumber()
-	//testOrganizationLinkWithLocation()
 	//testCreateComment()
 	//testCloseLooseOpportunity()
 	//testCreateRenewalOpportunity()
@@ -150,19 +148,6 @@ func testRemoveParentOrganization() {
 	if err != nil {
 		print(err)
 	}
-	print(result)
-}
-
-func testOrganizationLinkWithLocation() {
-
-	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	locationId := "bafff70d-7e45-49e5-8732-6e2a362a3ee9"
-
-	result, _ := clients.OrganizationClient.LinkLocationToOrganization(context.Background(), &organizationpb.LinkLocationToOrganizationGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: orgId,
-		LocationId:     locationId,
-	})
 	print(result)
 }
 

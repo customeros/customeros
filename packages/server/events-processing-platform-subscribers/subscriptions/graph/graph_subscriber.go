@@ -183,9 +183,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case orgevents.OrganizationLocationUnlinkFromBillingProfileV1:
 		_ = s.organizationEventHandler.OnLocationUnlinkedFromBillingProfile(ctx, evt)
 		return nil
-	case orgevents.OrganizationAddLocationV1:
-		_ = s.organizationEventHandler.OnLocationAddedToOrganization(ctx, evt)
-		return nil
 
 	case invoiceevents.InvoiceCreateForContractV1:
 		_ = s.invoiceEventHandler.OnInvoiceCreateForContractV1(ctx, evt)
