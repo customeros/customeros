@@ -1156,7 +1156,7 @@ func (r *organizationReadRepository) GetPrimaryOrganizationsWithJobRoleForContac
 	span.LogFields(log.Object("contactIds", contactIds))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:WORKS_AS]->(j:JobRole {primary:true})-[:ROLE_IN]->(o:Organization)
-				WHERE c.id IN $contactIds
+				WHERE c.id IN $contactIds AND o.hide = false
 				RETURN o, j, c.id`
 	params := map[string]any{
 		"tenant":     tenant,
@@ -1170,11 +1170,8 @@ func (r *organizationReadRepository) GetPrimaryOrganizationsWithJobRoleForContac
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsAsDbNodePairAndId(ctx, queryResult, err)
-		}
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsAsDbNodePairAndId(ctx, queryResult, err)
 	})
 	if err != nil {
 		return nil, err
