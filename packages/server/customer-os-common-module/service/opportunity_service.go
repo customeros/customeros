@@ -207,7 +207,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 		if utils.IfNotNilString(input.AppSource) == "" {
 			input.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))
 		}
-		if utils.IfNotNilString(input.InternalType) == "" {
+		if input.InternalType == nil || utils.IfNotNilString(input.InternalType.String()) == "" {
 			input.InternalType = utils.ToPtr(neo4jenum.OpportunityInternalTypeNBO)
 		}
 		if utils.IfNotNilString(input.InternalStage) == "" {

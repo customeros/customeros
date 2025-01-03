@@ -197,9 +197,14 @@ func (s *domainService) MergeDomain(ctx context.Context, txWithPostCommit *utils
 		return nil
 	}
 
+	if !utils.IsValidDomain(domain) {
+		tracing.TraceErr(span, errors.New("Invalid domain: "+domain))
+		return nil
+	}
+
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		// create domain db node in neo4j if missing
-		domainJustCreated, err := s.services.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, nil, domain, neo4jentity.DataSourceOpenline.String(), common.GetAppSourceFromContext(ctx))
+		domainJustCreated, err := s.services.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, txWithPostCommit.Tx, domain, neo4jentity.DataSourceOpenline.String(), common.GetAppSourceFromContext(ctx))
 		if err != nil {
 			return nil, err
 		}
