@@ -70,3 +70,8 @@ func IsValidTLD(input string) bool {
 	}
 	return validtld
 }
+
+func IsValidDomain(input string) bool {
+	_, err := publicsuffix.EffectiveTLDPlusOne(input)
+	return err == nil
+}
