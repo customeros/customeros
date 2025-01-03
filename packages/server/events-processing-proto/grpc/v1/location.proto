@@ -31,38 +31,6 @@ message LocationDetails {
   optional double utcOffset = 22;
 }
 
-// Deprecated
-message UpsertLocationGrpcRequest {
-  string tenant = 1;
-  string id = 2;
-  string name = 3;
-  string appSource = 4 [deprecated = true];
-  string source = 5 [deprecated = true];
-  string sourceOfTruth = 6 [deprecated = true];
-  google.protobuf.Timestamp  createdAt = 7;
-  google.protobuf.Timestamp  updatedAt = 8;
-  string rawAddress = 9;
-  string country = 10;
-  string region = 11;
-  string locality = 12;
-  string addressLine1 = 13;
-  string addressLine2 = 14;
-  string zipCode = 15;
-  string addressType = 16;
-  string houseNumber = 17;
-  string postalCode = 18;
-  bool commercial = 19;
-  string predirection = 20;
-  string district = 21;
-  string street = 22;
-  string latitude = 23;
-  string longitude = 24;
-  string plusFour = 25;
-  string loggedInUserId = 26;
-  SourceFields sourceFields = 27;
-}
-
-// Deprecated
 message FailLocationValidationGrpcRequest {
   string tenant = 1;
   string locationId = 2;
@@ -73,7 +41,6 @@ message FailLocationValidationGrpcRequest {
   string country = 7;
 }
 
-// Deprecated
 message SkipLocationValidationGrpcRequest {
   string tenant = 1;
   string locationId = 2;
@@ -83,7 +50,6 @@ message SkipLocationValidationGrpcRequest {
   string reason = 6;
 }
 
-// Deprecated
 message PassLocationValidationGrpcRequest {
   string tenant = 1;
   string locationId = 2;
@@ -115,7 +81,6 @@ message LocationIdGrpcResponse {
 }
 
 service LocationGrpcService {
-  rpc UpsertLocation(UpsertLocationGrpcRequest) returns (LocationIdGrpcResponse);
   rpc FailLocationValidation(FailLocationValidationGrpcRequest) returns (LocationIdGrpcResponse);
   rpc SkipLocationValidation(SkipLocationValidationGrpcRequest) returns (LocationIdGrpcResponse);
   rpc PassLocationValidation(PassLocationValidationGrpcRequest) returns (LocationIdGrpcResponse);
