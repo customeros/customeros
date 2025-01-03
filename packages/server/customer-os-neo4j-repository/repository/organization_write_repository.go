@@ -75,13 +75,16 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 					org.createdAt = datetime(),
 					org.updatedAt = datetime(),
 					org.onboardingStatus = $onboardingStatus,
+					org.lastTouchpointAt = datetime(),
+					org.lastTouchpointType = $lastTouchpointType,
 					org.hide=false`, tenant)
 		paramsCreate := map[string]any{
-			"tenant":           tenant,
-			"organizationId":   organizationId,
-			"source":           utils.IfNotNilString(data.Source),
-			"appSource":        utils.IfNotNilString(data.AppSource),
-			"onboardingStatus": string(neo4jenum.OnboardingStatusNotApplicable),
+			"tenant":             tenant,
+			"organizationId":     organizationId,
+			"source":             utils.IfNotNilString(data.Source),
+			"appSource":          utils.IfNotNilString(data.AppSource),
+			"onboardingStatus":   string(neo4jenum.OnboardingStatusNotApplicable),
+			"lastTouchpointType": neo4jenum.TouchpointTypeActionCreated.String(),
 		}
 
 		span.LogFields(log.String("cypherCreate", cypherCreate))
