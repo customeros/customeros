@@ -192,12 +192,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		_ = s.organizationEventHandler.OnLocationAddedToOrganization(ctx, evt)
 		return nil
 
-	case locationevents.LocationCreateV1:
-		_ = s.locationEventHandler.OnLocationCreate(ctx, evt)
-		return nil
-	case locationevents.LocationUpdateV1:
-		_ = s.locationEventHandler.OnLocationUpdate(ctx, evt)
-		return nil
 	case locationevents.LocationValidationFailedV1:
 		_ = s.locationEventHandler.OnLocationValidationFailed(ctx, evt)
 		return nil

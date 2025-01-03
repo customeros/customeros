@@ -4,7 +4,6 @@ import "google/protobuf/timestamp.proto";
 import "common/source.proto";
 import "common/external_system.proto";
 import "common/common.proto";
-import "location.proto";
 
 option go_package = "api/grpc/v1/organization;organization_grpc_service";
 
@@ -52,6 +51,35 @@ message UnlinkEmailFromBillingProfileGrpcRequest {
   string emailId = 4;
   string loggedInUserId = 5;
   string appSource = 6;
+}
+
+message LocationDetails {
+  string name = 1;
+  string rawAddress = 2;
+  string country = 3;
+  string countryCodeA2 = 4;
+  string countryCodeA3 = 5;
+  string region = 6;
+  string locality = 7;
+  string addressLine1 = 8;
+  string addressLine2 = 9;
+  string zipCode = 10;
+  string addressType = 11;
+  string houseNumber = 12;
+  string postalCode = 13;
+  bool commercial = 14;
+  string predirection = 15;
+  string district = 16;
+  string street = 17;
+  string latitude = 18;
+  string longitude = 19;
+  string plusFour = 20;
+  string timeZone = 21;
+  optional double utcOffset = 22;
+}
+
+message LocationIdGrpcResponse {
+  string id = 1;
 }
 
 message LinkLocationToOrganizationGrpcRequest {

@@ -8,7 +8,6 @@ package organization_grpc_service
 
 import (
 	context "context"
-	location "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -38,7 +37,7 @@ type OrganizationGrpcServiceClient interface {
 	UnlinkEmailFromBillingProfile(ctx context.Context, in *UnlinkEmailFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	LinkLocationToBillingProfile(ctx context.Context, in *LinkLocationToBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	UnlinkLocationFromBillingProfile(ctx context.Context, in *UnlinkLocationFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
-	AddLocation(ctx context.Context, in *OrganizationAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error)
+	AddLocation(ctx context.Context, in *OrganizationAddLocationGrpcRequest, opts ...grpc.CallOption) (*LocationIdGrpcResponse, error)
 	AdjustIndustry(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 }
 
@@ -185,8 +184,8 @@ func (c *organizationGrpcServiceClient) UnlinkLocationFromBillingProfile(ctx con
 	return out, nil
 }
 
-func (c *organizationGrpcServiceClient) AddLocation(ctx context.Context, in *OrganizationAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error) {
-	out := new(location.LocationIdGrpcResponse)
+func (c *organizationGrpcServiceClient) AddLocation(ctx context.Context, in *OrganizationAddLocationGrpcRequest, opts ...grpc.CallOption) (*LocationIdGrpcResponse, error) {
+	out := new(LocationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/AddLocation", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -222,7 +221,7 @@ type OrganizationGrpcServiceServer interface {
 	UnlinkEmailFromBillingProfile(context.Context, *UnlinkEmailFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	LinkLocationToBillingProfile(context.Context, *LinkLocationToBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	UnlinkLocationFromBillingProfile(context.Context, *UnlinkLocationFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
-	AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error)
+	AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*LocationIdGrpcResponse, error)
 	AdjustIndustry(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 }
 
@@ -275,7 +274,7 @@ func (UnimplementedOrganizationGrpcServiceServer) LinkLocationToBillingProfile(c
 func (UnimplementedOrganizationGrpcServiceServer) UnlinkLocationFromBillingProfile(context.Context, *UnlinkLocationFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnlinkLocationFromBillingProfile not implemented")
 }
-func (UnimplementedOrganizationGrpcServiceServer) AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error) {
+func (UnimplementedOrganizationGrpcServiceServer) AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*LocationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddLocation not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) AdjustIndustry(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
