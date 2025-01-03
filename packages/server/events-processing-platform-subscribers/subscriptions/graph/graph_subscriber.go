@@ -17,7 +17,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
-	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/sync/errgroup"
 
@@ -29,8 +28,6 @@ type GraphSubscriber struct {
 	db                       *esdb.Client
 	cfg                      *config.Config
 	organizationEventHandler *OrganizationEventHandler
-	locationEventHandler     *LocationEventHandler
-	opportunityEventHandler  *OpportunityEventHandler
 	invoiceEventHandler      *InvoiceEventHandler
 }
 
@@ -40,8 +37,6 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		db:                       db,
 		cfg:                      cfg,
 		organizationEventHandler: NewOrganizationEventHandler(log, services, grpcClients, cache),
-		locationEventHandler:     NewLocationEventHandler(services),
-		opportunityEventHandler:  NewOpportunityEventHandler(log, services, grpcClients),
 		invoiceEventHandler:      NewInvoiceEventHandler(log, services, grpcClients),
 	}
 }
@@ -190,13 +185,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case orgevents.OrganizationAddLocationV1:
 		_ = s.organizationEventHandler.OnLocationAddedToOrganization(ctx, evt)
-		return nil
-
-	case locationevents.LocationValidationFailedV1:
-		_ = s.locationEventHandler.OnLocationValidationFailed(ctx, evt)
-		return nil
-	case locationevents.LocationValidatedV1:
-		_ = s.locationEventHandler.OnLocationValidated(ctx, evt)
 		return nil
 
 	case invoiceevents.InvoiceCreateForContractV1:
