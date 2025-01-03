@@ -378,7 +378,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		}
 
 		syncLocation := false // skip location sync for now
-		if orgInput.HasLocation() && syncLocation {
+		if orgInput.HasLocation() && syncLocation && !failedSync {
 			// Create or update location
 			locationId, err := s.repositories.LocationRepository.GetMatchedLocationIdForOrganizationBySource(ctx, organizationId, orgInput.ExternalSystem)
 			if err != nil {
@@ -387,30 +387,25 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				failedSync = true
 				s.log.Error(reason)
 			}
-			if !failedSync {
-				locationId, err = s.services.LocationService.CreateLocation(ctx, locationId, orgInput.ExternalSystem, orgInput.AppSource,
-					orgInput.LocationName, orgInput.Country, orgInput.Region, orgInput.Locality, "", orgInput.Address, orgInput.Address2, orgInput.Zip, "")
+			if locationId == "" {
+				locationId, err = s.services.CommonServices.LocationService.Create(ctx, nil,
+					data_fields.LocationFields{
+						Source:   utils.StringPtr(orgInput.ExternalSystem),
+						Name:     orgInput.LocationName,
+						Country:  orgInput.Country,
+						Region:   orgInput.Region,
+						Locality: orgInput.Locality,
+						Address:  orgInput.Address,
+						Address2: orgInput.Address2,
+						Zip:      orgInput.Zip,
+					}, &commonservice.LinkWith{
+						Type: commonmodel.ORGANIZATION,
+						Id:   organizationId,
+					})
 				if err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
 					reason = fmt.Sprintf("Failed to create location for organization %s: %s", organizationId, err.Error())
-					s.log.Error(reason)
-				}
-			}
-
-			// Link location to organization
-			if locationId != "" {
-				_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-					return s.grpcClients.OrganizationClient.LinkLocationToOrganization(ctx, &organizationpb.LinkLocationToOrganizationGrpcRequest{
-						Tenant:         common.GetTenantFromContext(ctx),
-						OrganizationId: organizationId,
-						LocationId:     locationId,
-					})
-				})
-				if err != nil {
-					failedSync = true
-					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkLocationToOrganization"))
-					reason = fmt.Sprintf("Failed to link location %s with organization %s: %s", locationId, organizationId, err.Error())
 					s.log.Error(reason)
 				}
 			}
