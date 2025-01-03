@@ -152,7 +152,7 @@ func handleBulkJSONRequest(c *gin.Context, s *service.Services) {
 	var validationErrors []BulkErrorDetails
 
 	for i, contact := range multipleContacts {
-		err, errValue := validateContact(&contact)
+		err, errValue := validateContactRecord(&contact)
 		total++
 		if err != nil {
 			fail++
@@ -294,7 +294,7 @@ func processCSVRecords(c *gin.Context, s *service.Services, reader *csv.Reader) 
 
 		total++
 
-		err, errVal := validateContact(&contactRecord)
+		err, errVal := validateContactRecord(&contactRecord)
 		if err != nil {
 			fail++
 			csvErrors = append(csvErrors, BulkErrorDetails{
