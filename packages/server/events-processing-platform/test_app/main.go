@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"google.golang.org/grpc"
 )
@@ -22,7 +21,6 @@ var orgId = "ceae019f-d1e3-49b3-87c5-35ebb68a5ff1"
 
 type Clients struct {
 	OrganizationClient organizationpb.OrganizationGrpcServiceClient
-	OpportunityClient  opportunitypb.OpportunityGrpcServiceClient
 	InvoiceClient      invoicepb.InvoiceGrpcServiceClient
 	EventStoreClient   eventstorepb.EventStoreGrpcServiceClient
 }
@@ -36,7 +34,6 @@ func InitClients() {
 		))
 	clients = &Clients{
 		OrganizationClient: organizationpb.NewOrganizationGrpcServiceClient(conn),
-		OpportunityClient:  opportunitypb.NewOpportunityGrpcServiceClient(conn),
 		InvoiceClient:      invoicepb.NewInvoiceGrpcServiceClient(conn),
 		EventStoreClient:   eventstorepb.NewEventStoreGrpcServiceClient(conn),
 	}
