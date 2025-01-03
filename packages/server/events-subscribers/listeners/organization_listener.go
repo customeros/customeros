@@ -19,9 +19,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -292,27 +289,22 @@ func (l *organizationListenerImpl) updateOrganizationWithEnrichData(ctx context.
 
 	// add location
 	if !data.Location.IsEmpty() {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*locationpb.LocationIdGrpcResponse](func() (*locationpb.LocationIdGrpcResponse, error) {
-			return l.services.GrpcClients.OrganizationClient.AddLocation(ctx, &organizationpb.OrganizationAddLocationGrpcRequest{
-				Tenant:         tenant,
-				OrganizationId: organizationEntity.ID,
-				LocationDetails: &locationpb.LocationDetails{
-					Country:       data.Location.Country,
-					CountryCodeA2: data.Location.CountryCodeA2,
-					CountryCodeA3: data.Location.CountryCodeA3,
-					Locality:      data.Location.Locality,
-					Region:        data.Location.Region,
-					PostalCode:    data.Location.PostalCode,
-					AddressLine1:  data.Location.AddressLine1,
-					AddressLine2:  data.Location.AddressLine2,
-				},
-				SourceFields: &commonpb.SourceFields{
-					AppSource: constants.AppEnrichment,
-					Source:    constants.SourceOpenline,
-				},
+		_, err := l.services.LocationService.Create(ctx, nil, data_fields.LocationFields{
+			Country:       data.Location.Country,
+			CountryCodeA2: data.Location.CountryCodeA2,
+			CountryCodeA3: data.Location.CountryCodeA3,
+			Region:        data.Location.Region,
+			Locality:      data.Location.Locality,
+			PostalCode:    data.Location.PostalCode,
+			Address:       data.Location.AddressLine1,
+			Address2:      data.Location.AddressLine2,
+			AppSource:     utils.StringPtr(constants.AppEnrichment),
+			Source:        utils.StringPtr(constants.SourceOpenline),
+		},
+			&service.LinkWith{
+				Id:   organizationEntity.ID,
+				Type: commonmodel.ORGANIZATION,
 			})
-		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
