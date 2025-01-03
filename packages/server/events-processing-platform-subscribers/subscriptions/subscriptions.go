@@ -42,19 +42,6 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
-	locationValidationSubscriptionSettings := esdb.SubscriptionSettingsDefault()
-	locationValidationSubscriptionSettings.ExtraStatistics = true
-	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.LocationValidationSubscription.GroupName,
-		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.LocationValidationSubscription.Prefix}},
-		&locationValidationSubscriptionSettings,
-		false,
-		false,
-		esdb.End{},
-	); err != nil {
-		return err
-	}
-
 	organizationSubscriptionSettings := esdb.SubscriptionSettingsDefault()
 	organizationSubscriptionSettings.MessageTimeout = s.cfg.Subscriptions.OrganizationSubscription.MessageTimeoutSec * 1000
 	organizationSubscriptionSettings.CheckpointLowerBound = s.cfg.Subscriptions.OrganizationSubscription.CheckpointLowerBound

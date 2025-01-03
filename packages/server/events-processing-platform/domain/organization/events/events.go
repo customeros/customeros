@@ -33,7 +33,6 @@ const (
 	// Deprecated
 	OrganizationRequestEnrichV1      = "V1_ORGANIZATION_ENRICH"
 	OrganizationRefreshDerivedDataV1 = "V1_ORGANIZATION_REFRESH_DERIVED_DATA"
-	OrganizationAddLocationV1        = "V1_ORGANIZATION_ADD_LOCATION"
 	OrganizationAdjustIndustryV1     = "V1_ORGANIZATION_ADJUST_INDUSTRY"
 )
 

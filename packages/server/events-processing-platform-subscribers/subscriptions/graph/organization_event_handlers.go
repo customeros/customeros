@@ -113,7 +113,7 @@ func (h *OrganizationEventHandler) OnLocationLinkedToOrganization(ctx context.Co
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.services.CommonServices.Neo4jRepositories.LocationWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.LocationId)
+	err := h.services.CommonServices.Neo4jRepositories.LocationWriteRepository.LinkWithOrganization(ctx, nil, eventData.Tenant, organizationId, eventData.LocationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -745,71 +745,6 @@ func (h *OrganizationEventHandler) deriveLtv(ctx context.Context, tenant string,
 
 	span.LogFields(log.String("result.ltv", fmt.Sprintf("%f", truncatedLtv)))
 	span.LogFields(log.String("result.ltvCurrency", ltvCurrency))
-
-	return nil
-}
-
-func (h *OrganizationEventHandler) OnLocationAddedToOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnLocationAddedToOrganization")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationAddLocationEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-
-	data := neo4jrepository.LocationCreateFields{
-		RawAddress: eventData.RawAddress,
-		Name:       eventData.Name,
-		CreatedAt:  eventData.CreatedAt,
-		SourceFields: neo4jmodel.SourceFields{
-			Source:        helper.GetSource(eventData.Source),
-			SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
-			AppSource:     helper.GetSource(eventData.AppSource),
-		},
-		AddressDetails: neo4jrepository.AddressDetails{
-			Latitude:      eventData.Latitude,
-			Longitude:     eventData.Longitude,
-			Country:       eventData.Country,
-			CountryCodeA2: eventData.CountryCodeA2,
-			CountryCodeA3: eventData.CountryCodeA3,
-			Region:        eventData.Region,
-			District:      eventData.District,
-			Locality:      eventData.Locality,
-			Street:        eventData.Street,
-			Address:       eventData.AddressLine1,
-			Address2:      eventData.AddressLine2,
-			Zip:           eventData.ZipCode,
-			AddressType:   eventData.AddressType,
-			HouseNumber:   eventData.HouseNumber,
-			PostalCode:    eventData.PostalCode,
-			PlusFour:      eventData.PlusFour,
-			Commercial:    eventData.Commercial,
-			Predirection:  eventData.Predirection,
-			TimeZone:      eventData.TimeZone,
-			UtcOffset:     eventData.UtcOffset,
-		},
-	}
-
-	err := h.services.CommonServices.Neo4jRepositories.LocationWriteRepository.CreateLocation(ctx, eventData.Tenant, eventData.LocationId, data)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("error while creating location %s: %s", eventData.LocationId, err.Error())
-		return err
-	}
-	err = h.services.CommonServices.Neo4jRepositories.LocationWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.LocationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("error while linking location %s to organization %s: %s", eventData.LocationId, organizationId, err.Error())
-		return err
-	}
-
-	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
