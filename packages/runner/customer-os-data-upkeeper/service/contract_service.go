@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"time"
 )
 
@@ -200,13 +199,11 @@ func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx c
 
 		//process renewal opportunities
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-				return s.eventsProcessingClient.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
-					Tenant:    record.Tenant,
-					Id:        record.OpportunityId,
-					AppSource: constants.AppSourceDataUpkeeper,
-				})
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
 			})
+			err = s.services.OpportunityService.CloseLost(innerCtx, nil, record.Tenant, record.OpportunityId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error closing renewal opportunity: %s", err.Error())
