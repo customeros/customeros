@@ -197,6 +197,8 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
       runInAction(() => {
         ui_organizations.forEach((raw) => {
+          if (raw.hide) return;
+
           const foundRecord = this.value.get(raw.id);
 
           if (foundRecord) {
@@ -327,6 +329,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
           'create-org-faillure',
         );
       });
+      this.refreshCurrentView();
     }
   }
 
@@ -375,11 +378,20 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         this.isLoading = false;
         this.invalidate(serverId);
       });
+      this.refreshCurrentView();
     }
   }
 
   async hide(ids: string[]) {
     ids.forEach((id) => {
+      this.getById(id)?.contacts.forEach((c) => {
+        const contact = this.root.contacts.getById(c.id);
+
+        contact?.draft();
+        contact?.removeOrganization();
+        contact?.commit({ syncOnly: true });
+      });
+
       this.value.delete(id);
     });
 
@@ -411,6 +423,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       runInAction(() => {
         this.isLoading = false;
       });
+      this.refreshCurrentView();
     }
   }
 
@@ -456,6 +469,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       runInAction(() => {
         this.isLoading = false;
       });
+      this.refreshCurrentView();
     }
   }
 
@@ -620,4 +634,14 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       organization.commit({ syncOnly: !mutate });
     });
   };
+
+  private refreshCurrentView() {
+    const currentPreset = new URLSearchParams(window.location.search).get(
+      'preset',
+    );
+
+    if (currentPreset) {
+      this.search(currentPreset);
+    }
+  }
 }
