@@ -43,6 +43,7 @@ type OrganizationService interface {
 	CheckOrganizationExistsWithEmail(ctx context.Context, email string) (bool, string, error)
 	CheckOrganizationExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
 	GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
+	ValidateOrganizationExists(ctx context.Context, organizationId string) error
 }
 
 type organizationService struct {
@@ -527,7 +528,7 @@ func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Hide")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	tracing.TagEntity(span, organizationId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
@@ -537,14 +538,8 @@ func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	organization, err := s.GetById(ctx, tenant, organizationId)
+	err = s.ValidateOrganizationExists(ctx, organizationId)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	if organization == nil {
-		err = fmt.Errorf("opportunity not found")
-		tracing.TraceErr(span, err)
 		return err
 	}
 
@@ -557,7 +552,20 @@ func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// send event completed for organization
 			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithDelete())
+
+			// send event completed for all organization contacts
+			contactDbNodes, innerErr := s.services.Neo4jRepositories.ContactReadRepository.GetActiveContactsForOrganizations(ctx, tenant, []string{organizationId})
+			if innerErr != nil {
+				tracing.TraceErr(span, innerErr)
+			} else {
+				for _, contactDbNode := range contactDbNodes {
+					contactEntity := neo4jmapper.MapDbNodeToContactEntity(contactDbNode.Node)
+					s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contactEntity.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+				}
+			}
+
 			return nil
 		})
 		return nil, nil
@@ -998,4 +1006,26 @@ func (s *organizationService) CheckOrganizationExistsWithLinkedIn(ctx context.Co
 		orgId = orgs[0].Props["id"].(string)
 	}
 	return len(orgs) > 0, orgId, nil
+}
+
+func (s *organizationService) ValidateOrganizationExists(ctx context.Context, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.ValidateOrganizationExists")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, organizationId)
+
+	if organizationId == "" {
+		err := errors.New("organizationId is required")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, model.NodeLabelOrganization)
+	if err != nil || !exists {
+		err = errors.New("organization not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
