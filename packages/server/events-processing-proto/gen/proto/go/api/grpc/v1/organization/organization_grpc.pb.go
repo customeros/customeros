@@ -27,8 +27,6 @@ type OrganizationGrpcServiceClient interface {
 	RefreshRenewalSummary(ctx context.Context, in *RefreshRenewalSummaryGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RefreshDerivedData(ctx context.Context, in *RefreshDerivedDataGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RefreshArr(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
-	AddParentOrganization(ctx context.Context, in *AddParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
-	RemoveParentOrganization(ctx context.Context, in *RemoveParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus(ctx context.Context, in *UpdateOnboardingStatusGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner(ctx context.Context, in *UpdateOrganizationOwnerGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	CreateBillingProfile(ctx context.Context, in *CreateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
@@ -87,24 +85,6 @@ func (c *organizationGrpcServiceClient) RefreshDerivedData(ctx context.Context, 
 func (c *organizationGrpcServiceClient) RefreshArr(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
 	out := new(OrganizationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/RefreshArr", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *organizationGrpcServiceClient) AddParentOrganization(ctx context.Context, in *AddParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/AddParentOrganization", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *organizationGrpcServiceClient) RemoveParentOrganization(ctx context.Context, in *RemoveParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/RemoveParentOrganization", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -201,8 +181,6 @@ type OrganizationGrpcServiceServer interface {
 	RefreshRenewalSummary(context.Context, *RefreshRenewalSummaryGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RefreshDerivedData(context.Context, *RefreshDerivedDataGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RefreshArr(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
-	AddParentOrganization(context.Context, *AddParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
-	RemoveParentOrganization(context.Context, *RemoveParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus(context.Context, *UpdateOnboardingStatusGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner(context.Context, *UpdateOrganizationOwnerGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	CreateBillingProfile(context.Context, *CreateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
@@ -232,12 +210,6 @@ func (UnimplementedOrganizationGrpcServiceServer) RefreshDerivedData(context.Con
 }
 func (UnimplementedOrganizationGrpcServiceServer) RefreshArr(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshArr not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) AddParentOrganization(context.Context, *AddParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddParentOrganization not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) RemoveParentOrganization(context.Context, *RemoveParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveParentOrganization not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) UpdateOnboardingStatus(context.Context, *UpdateOnboardingStatusGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOnboardingStatus not implemented")
@@ -364,42 +336,6 @@ func _OrganizationGrpcService_RefreshArr_Handler(srv interface{}, ctx context.Co
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OrganizationGrpcServiceServer).RefreshArr(ctx, req.(*OrganizationIdGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OrganizationGrpcService_AddParentOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddParentOrganizationGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).AddParentOrganization(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/AddParentOrganization",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).AddParentOrganization(ctx, req.(*AddParentOrganizationGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OrganizationGrpcService_RemoveParentOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RemoveParentOrganizationGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).RemoveParentOrganization(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/RemoveParentOrganization",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).RemoveParentOrganization(ctx, req.(*RemoveParentOrganizationGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -592,14 +528,6 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefreshArr",
 			Handler:    _OrganizationGrpcService_RefreshArr_Handler,
-		},
-		{
-			MethodName: "AddParentOrganization",
-			Handler:    _OrganizationGrpcService_AddParentOrganization_Handler,
-		},
-		{
-			MethodName: "RemoveParentOrganization",
-			Handler:    _OrganizationGrpcService_RemoveParentOrganization_Handler,
 		},
 		{
 			MethodName: "UpdateOnboardingStatus",

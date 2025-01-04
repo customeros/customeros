@@ -209,10 +209,6 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 		return a.upsertCustomField(ctx, c)
 	case *command.LinkLocationCommand:
 		return a.linkLocation(ctx, c)
-	case *command.AddParentCommand:
-		return a.addParentOrganization(ctx, c)
-	case *command.RemoveParentCommand:
-		return a.removeParentOrganization(ctx, c)
 	case *command.UpdateOnboardingStatusCommand:
 		return a.updateOnboardingStatus(ctx, c)
 	case *command.UpdateOrganizationOwnerCommand:
@@ -370,54 +366,6 @@ func (a *OrganizationAggregate) upsertCustomField(ctx context.Context, cmd *comm
 		return errors.Wrap(err, "NewOrganizationUpsertCustomField")
 	}
 	eventstore.EnrichEventWithMetadata(&event, &span, cmd.Tenant, cmd.LoggedInUserId)
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) addParentOrganization(ctx context.Context, cmd *command.AddParentCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.addParentOrganization")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	event, err := organizationEvents.NewOrganizationAddParentEvent(a, cmd.ParentOrganizationId, cmd.Type)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationAddParentEvent")
-	}
-
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: cmd.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.AppSource,
-	})
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) removeParentOrganization(ctx context.Context, cmd *command.RemoveParentCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.removeParentOrganization")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	event, err := organizationEvents.NewOrganizationRemoveParentEvent(a, cmd.ParentOrganizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationRemoveParentEvent")
-	}
-
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: cmd.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.AppSource,
-	})
 
 	return a.Apply(event)
 }

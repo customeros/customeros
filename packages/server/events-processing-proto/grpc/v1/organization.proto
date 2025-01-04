@@ -113,23 +113,6 @@ message CustomFieldForOrganizationGrpcRequest {
   string loggedInUserId = 12;
 }
 
-message AddParentOrganizationGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string parentOrganizationId = 3;
-  string loggedInUserId = 4;
-  string type = 5;
-  string appSource = 6;
-}
-
-message RemoveParentOrganizationGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string parentOrganizationId = 3;
-  string loggedInUserId = 4;
-  string appSource = 5;
-}
-
 message UpdateOnboardingStatusGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -217,8 +200,6 @@ service organizationGrpcService {
   rpc RefreshRenewalSummary(RefreshRenewalSummaryGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshDerivedData(RefreshDerivedDataGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshArr(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc AddParentOrganization(AddParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc RemoveParentOrganization(RemoveParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOnboardingStatus(UpdateOnboardingStatusGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationOwner(UpdateOrganizationOwnerGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc CreateBillingProfile(CreateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
