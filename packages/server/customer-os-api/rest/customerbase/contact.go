@@ -68,7 +68,7 @@ func handleJSONRequest(c *gin.Context, s *service.Services) {
 			rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage(errMessage))
 			return
 		}
-		contactRecord.ContactId = processContact(c, s, contactRecord)
+		contactRecord.ContactId = processContact(c.Request.Context(), s, contactRecord)
 		c.JSON(http.StatusOK, SingleContactResponse{
 			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Contact:      contactRecord,
