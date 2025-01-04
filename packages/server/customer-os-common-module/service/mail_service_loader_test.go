@@ -107,6 +107,22 @@ func TestParseParticipants(t *testing.T) {
 			},
 		},
 		{
+			name:  "Multiple sophisticated participants",
+			input: `\"John, Smith\" <john@example.com>, Jane Doe <jane@example.com>`,
+			expected: []EmailParticipant{
+				{
+					FirstName: "john",
+					LastName:  "smith",
+					Email:     "john@example.com",
+				},
+				{
+					FirstName: "jane",
+					LastName:  "doe",
+					Email:     "jane@example.com",
+				},
+			},
+		},
+		{
 			name:  "Mixed formats",
 			input: "john@example.com, Jane Doe <jane@example.com>",
 			expected: []EmailParticipant{

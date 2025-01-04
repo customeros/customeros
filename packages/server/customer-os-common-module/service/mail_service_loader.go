@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/emersion/go-message/mail"
 	"regexp"
 	"slices"
 	"sort"
@@ -51,6 +52,11 @@ func (l *mailService) LoadEmail(ctx context.Context, rawEmail *entity.RawEmail) 
 	email.Participants.ReplyTo = []EmailParticipant{l.parseEmailAndName(email.Headers.ReplyTo)}
 	l.getAllEmails(&email.Participants)
 
+	span.LogKV("result.From", email.Participants.From)
+	span.LogKV("result.To", email.Participants.To)
+	span.LogKV("result.Cc", email.Participants.Cc)
+	span.LogKV("result.Bcc", email.Participants.Bcc)
+
 	return email, nil
 }
 
@@ -93,56 +99,91 @@ func (l *mailService) getAllEmails(contacts *EmailParticipants) {
 
 func (l *mailService) parseEmailAndName(s string) EmailParticipant {
 	s = strings.ToLower(s)
-	results := EmailParticipant{}
+	result := EmailParticipant{}
 
 	if s == "" {
-		return results
+		return result
 	}
 
 	// Handle bare email case
 	if !strings.Contains(s, "<") {
 		r := strings.TrimSpace(s)
 		if r != "" {
-			results.Email = r
+			result.Email = r
 		}
-		return results
+		return result
 	}
 
 	// Extract email
-	results.Email = l.extractEmail(s)
+	result.Email = l.extractEmail(s)
 
 	// Extract name part
 	namePart := strings.TrimSpace(strings.Split(s, "<")[0])
 	if namePart == "" {
-		return results
+		return result
 	}
 
 	// Split name into parts
 	names := strings.Fields(namePart)
 	if len(names) > 0 {
-		results.FirstName = names[0]
+		result.FirstName = names[0]
 		if len(names) > 1 {
-			results.LastName = strings.Join(names[1:], " ")
+			result.LastName = strings.Join(names[1:], " ")
 		}
 	}
 
-	return results
+	return result
 }
 
 func (l *mailService) parseParticipants(s string) []EmailParticipant {
-	s = strings.ToLower(s)
-	participants := []EmailParticipant{}
+	trimmedInput := strings.TrimSpace(s)
 
-	// Split on commas
-	parts := strings.Split(s, ",")
+	// If empty input, return a single empty participant
+	if trimmedInput == "" {
+		return []EmailParticipant{{Email: "", FirstName: "", LastName: ""}}
+	}
 
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		participant := l.parseEmailAndName(part)
-		participants = append(participants, participant)
+	// Unescape any \" -> "
+	unescaped := strings.ReplaceAll(trimmedInput, `\"`, `"`)
+
+	// Use net/mail to parse addresses
+	addresses, err := mail.ParseAddressList(unescaped)
+	if err != nil || len(addresses) == 0 {
+		// On parse error or no addresses, return a single empty participant
+		return []EmailParticipant{{Email: "", FirstName: "", LastName: ""}}
+	}
+
+	var participants []EmailParticipant
+	for _, addr := range addresses {
+		email := strings.TrimSpace(strings.ToLower(addr.Address))
+		firstName, lastName := extractNameParts(addr.Name)
+		participants = append(participants, EmailParticipant{
+			Email:     email,
+			FirstName: firstName,
+			LastName:  lastName,
+		})
 	}
 
 	return participants
+}
+
+// extractNameParts splits the name into firstName and lastName.
+// It lowercases the string, removes surrounding quotes, and treats commas as spaces.
+func extractNameParts(fullName string) (string, string) {
+	// Example:  "John, Smith" -> "john," "smith"
+	// Goal: firstName="john", lastName="smith"
+	n := strings.ToLower(strings.TrimSpace(fullName))
+	n = strings.Trim(n, `"`)            // remove leftover surrounding quotes
+	n = strings.ReplaceAll(n, ",", " ") // treat commas as spaces
+	parts := strings.Fields(n)
+
+	if len(parts) == 0 {
+		return "", ""
+	}
+	if len(parts) == 1 {
+		return parts[0], ""
+	}
+	return parts[0], strings.Join(parts[1:], " ")
 }
 
 func (l *mailService) parseHeaders(headers map[string]string) EmailHeaders {
