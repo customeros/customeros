@@ -25,13 +25,14 @@ func main() {
 
 	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
 	appLogger.InitLogger()
-	appLogger.WithName("user-admin-api")
+	appLogger.WithName("USER-ADMIN-API")
 
 	// Initialize Tracing
 	tracingCloser := initTracing(cfg, appLogger)
 	if tracingCloser != nil {
 		defer tracingCloser.Close()
 	}
+	defer tracing.RecoverAndLogToJaeger(appLogger)
 
 	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
 		PostgresConfig:      &cfg.PostgresConfig,

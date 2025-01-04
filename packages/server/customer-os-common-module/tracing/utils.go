@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"io"
 	"net/http"
 	"runtime"
+	"runtime/debug"
 
 	"github.com/gin-gonic/gin"
 	"github.com/machinebox/graphql"
@@ -308,5 +310,23 @@ func RecoveryWithJaeger(tracer opentracing.Tracer) gin.HandlerFunc {
 			}
 		}()
 		c.Next()
+	}
+}
+
+func RecoverAndLogToJaeger(appLogger logger.Logger) {
+	if r := recover(); r != nil {
+		tracer := opentracing.GlobalTracer()
+		span := tracer.StartSpan("panic-recovery")
+		defer span.Finish()
+
+		stackTrace := string(debug.Stack())
+		span.LogKV(
+			"event", "error",
+			"error.object", r,
+			"stack", stackTrace,
+		)
+		span.SetTag("error", true)
+
+		appLogger.Errorf("Recovered from panic: %v\nStack trace:\n%s", r, stackTrace)
 	}
 }
