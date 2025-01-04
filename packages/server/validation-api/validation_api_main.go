@@ -30,6 +30,7 @@ func main() {
 	if tracingCloser != nil {
 		defer tracingCloser.Close()
 	}
+	defer tracing.RecoverAndLogToJaeger(appLogger)
 
 	ctx := context.Background()
 

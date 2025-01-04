@@ -47,6 +47,7 @@ func main() {
 	if tracingCloser != nil {
 		defer tracingCloser.Close()
 	}
+	defer tracing.RecoverAndLogToJaeger(appLogger)
 
 	// Setting up Neo4j
 	neo4jDriver, err := commonconf.NewNeo4jDriver(cfg.Neo4j)

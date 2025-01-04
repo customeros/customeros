@@ -37,6 +37,7 @@ func main() {
 	if tracingCloser != nil {
 		defer tracingCloser.Close()
 	}
+	defer tracing.RecoverAndLogToJaeger(appLogger)
 
 	// Initialize postgres db
 	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
