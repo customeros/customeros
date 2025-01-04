@@ -416,20 +416,10 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 		}
 	}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
-			Tenant:               common.GetTenantFromContext(ctx),
-			OrganizationId:       subsidiaryOrganizationId,
-			ParentOrganizationId: parentOrganizationId,
-			Type:                 subsidiaryType,
-			LoggedInUserId:       common.GetUserIdFromContext(ctx),
-			AppSource:            constants.AppSourceCustomerOsApi,
-		})
-	})
+	err = s.services.CommonServices.OrganizationService.AddParentOrganization(ctx, nil, parentOrganizationId, subsidiaryOrganizationId, subsidiaryType)
 	if err != nil {
-		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())
-		tracing.TraceErr(span, err, log.String("grpcMethod", "AddParentOrganization"))
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error adding parent organization: {%v}", err.Error())
 	}
 	return err
 }
@@ -466,19 +456,10 @@ func (s *organizationService) RemoveSubsidiary(ctx context.Context, parentOrgani
 		return err
 	}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return s.grpcClients.OrganizationClient.RemoveParentOrganization(ctx, &organizationpb.RemoveParentOrganizationGrpcRequest{
-			Tenant:               common.GetTenantFromContext(ctx),
-			OrganizationId:       subsidiaryOrganizationId,
-			ParentOrganizationId: parentOrganizationId,
-			LoggedInUserId:       common.GetUserIdFromContext(ctx),
-			AppSource:            constants.AppSourceCustomerOsApi,
-		})
-	})
+	err = s.services.CommonServices.OrganizationService.RemoveParentOrganization(ctx, nil, parentOrganizationId, subsidiaryOrganizationId)
 	if err != nil {
-		s.log.Errorf("error sending event to events-platform: {%v}", err.Error())
-		tracing.TraceErr(span, err, log.String("grpcMethod", "RemoveParentOrganization"))
+		tracing.TraceErr(span, err)
+		s.log.Errorf("error removing parent organization: {%v}", err.Error())
 	}
 	return err
 }

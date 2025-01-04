@@ -44,8 +44,6 @@ func main() {
 
 	//testHideOrganization()
 	//testAddCustomField()
-	//testCreatePhoneNumber()
-	//testAddParentOrganization()
 	//testRemoveParentOrganization()
 	//testContactLinkWithPhoneNumber()
 	//testOrganizationLinkWithEmail()
@@ -113,41 +111,6 @@ func testAddCustomField() {
 			StringValue: utils.StringPtr("super secret value"),
 		},
 	})
-	print(result)
-}
-
-func testAddParentOrganization() {
-
-	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	parentOrgId := ""
-	relType := "store"
-	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
-	result, err := clients.OrganizationClient.AddParentOrganization(context.Background(), &organizationpb.AddParentOrganizationGrpcRequest{
-		Tenant:               tenant,
-		OrganizationId:       orgId,
-		ParentOrganizationId: parentOrgId,
-		Type:                 relType,
-		AppSource:            appSource,
-		LoggedInUserId:       userId,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result)
-}
-
-func testRemoveParentOrganization() {
-
-	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	parentOrgId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	result, err := clients.OrganizationClient.RemoveParentOrganization(context.Background(), &organizationpb.RemoveParentOrganizationGrpcRequest{
-		Tenant:               tenant,
-		OrganizationId:       orgId,
-		ParentOrganizationId: parentOrgId,
-	})
-	if err != nil {
-		print(err)
-	}
 	print(result)
 }
 

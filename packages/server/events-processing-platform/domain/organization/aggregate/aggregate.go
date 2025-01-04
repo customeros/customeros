@@ -46,10 +46,6 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onLocationLink(event)
 	case organizationEvents.OrganizationUpsertCustomFieldV1:
 		return a.onUpsertCustomField(event)
-	case organizationEvents.OrganizationAddParentV1:
-		return a.onAddParent(event)
-	case organizationEvents.OrganizationRemoveParentV1:
-		return a.onRemoveParent(event)
 	case organizationEvents.OrganizationUpdateOnboardingStatusV1:
 		return a.onOnboardingStatusUpdate(event)
 	case organizationEvents.OrganizationUpdateOwnerV1:
@@ -127,30 +123,6 @@ func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) erro
 			CustomFieldValue:    eventData.CustomFieldValue,
 		}
 	}
-	return nil
-}
-
-func (a *OrganizationAggregate) onAddParent(event eventstore.Event) error {
-	var eventData organizationEvents.OrganizationAddParentEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	if a.Organization.ParentOrganizations == nil {
-		a.Organization.ParentOrganizations = make(map[string]model.ParentOrganization)
-	}
-	a.Organization.ParentOrganizations[eventData.ParentOrganizationId] = model.ParentOrganization{
-		OrganizationId: eventData.ParentOrganizationId,
-		Type:           eventData.Type,
-	}
-	return nil
-}
-
-func (a *OrganizationAggregate) onRemoveParent(event eventstore.Event) error {
-	var eventData organizationEvents.OrganizationRemoveParentEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	delete(a.Organization.ParentOrganizations, eventData.ParentOrganizationId)
 	return nil
 }
 

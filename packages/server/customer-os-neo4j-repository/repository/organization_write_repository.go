@@ -24,8 +24,8 @@ type OrganizationWriteRepository interface {
 	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt *time.Time, touchpointId, touchpointType string) error
 	SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error
-	LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error
-	UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error
+	LinkWithParentOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, subOrganizationId, parentOrganizationId, subOrganizationType string) error
+	UnlinkParentOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, subOrganizationId, parentOrganizationId string) error
 	UpdateArr(ctx context.Context, tenant, organizationId string) error
 	UpdateRenewalSummary(ctx context.Context, tenant, organizationId string, likelihood *string, likelihoodOrder *int64, nextRenewalDate *time.Time) error
 	WebScrapeRequested(ctx context.Context, tenant, organizationId, url string, attempt int64, requestedAt time.Time) error
@@ -436,12 +436,12 @@ func (r *organizationWriteRepository) SetCustomerOsIdIfMissing(ctx context.Conte
 	return err
 }
 
-func (r *organizationWriteRepository) LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error {
+func (r *organizationWriteRepository) LinkWithParentOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, subOrganizationId, parentOrganizationId, subOrganizationType string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.LinkWithParentOrganization")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.SetTag(tracing.SpanTagEntityId, subOrganizationId)
 	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationType", subOrganizationType))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization {id:$parentOrganizationId}),
@@ -453,26 +453,29 @@ func (r *organizationWriteRepository) LinkWithParentOrganization(ctx context.Con
 					parent.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":               tenant,
-		"subOrganizationId":    organizationId,
+		"subOrganizationId":    subOrganizationId,
 		"parentOrganizationId": parentOrganizationId,
 		"type":                 subOrganizationType,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+	return nil
 }
 
-func (r *organizationWriteRepository) UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error {
+func (r *organizationWriteRepository) UnlinkParentOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, subOrganizationId, parentOrganizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UnlinkParentOrganization")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.SetTag(tracing.SpanTagEntityId, subOrganizationId)
 	span.LogFields(log.String("parentOrganizationId", parentOrganizationId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization {id:$parentOrganizationId})<-[rel:SUBSIDIARY_OF]-(sub:Organization {id:$subOrganizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
@@ -481,17 +484,20 @@ func (r *organizationWriteRepository) UnlinkParentOrganization(ctx context.Conte
 					parent.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":               tenant,
-		"subOrganizationId":    organizationId,
+		"subOrganizationId":    subOrganizationId,
 		"parentOrganizationId": parentOrganizationId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+	return nil
 }
 
 func (r *organizationWriteRepository) UpdateArr(ctx context.Context, tenant, organizationId string) error {

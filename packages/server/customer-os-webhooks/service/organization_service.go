@@ -19,7 +19,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
@@ -317,18 +316,10 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	if !failedSync && orgInput.IsSubOrg() {
 		parentOrganizationId, _ := s.GetIdForReferencedOrganization(ctx, tenant, orgInput.ExternalSystem, orgInput.ParentOrganization.Organization)
 		if parentOrganizationId != "" {
-			_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return s.grpcClients.OrganizationClient.AddParentOrganization(ctx, &organizationpb.AddParentOrganizationGrpcRequest{
-					Tenant:               common.GetTenantFromContext(ctx),
-					OrganizationId:       organizationId,
-					ParentOrganizationId: parentOrganizationId,
-					Type:                 orgInput.ParentOrganization.Type,
-					AppSource:            appSource,
-				})
-			})
+			err = s.services.CommonServices.OrganizationService.AddParentOrganization(ctx, nil, parentOrganizationId, organizationId, orgInput.ParentOrganization.Type)
 			if err != nil {
 				failedSync = true
-				tracing.TraceErr(span, err, log.String("grpcFunction", "AddParentOrganization"))
+				tracing.TraceErr(span, err)
 				reason = fmt.Sprintf("Failed to link with parent for organization %s: %s", organizationId, err.Error())
 				s.log.Error(reason)
 			}

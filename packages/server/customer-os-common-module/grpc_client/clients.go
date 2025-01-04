@@ -2,17 +2,15 @@ package grpc_client
 
 import (
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
-	interactionsessionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_session"
 	invoice_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	organization_grpc_service "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"google.golang.org/grpc"
 )
 
 type Clients struct {
-	InvoiceClient            invoice_grpc_service.InvoiceGrpcServiceClient
-	OrganizationClient       organization_grpc_service.OrganizationGrpcServiceClient
-	InteractionSessionClient interactionsessionpb.InteractionSessionGrpcServiceClient
-	EventStoreClient         eventstorepb.EventStoreGrpcServiceClient
+	InvoiceClient      invoice_grpc_service.InvoiceGrpcServiceClient
+	OrganizationClient organization_grpc_service.OrganizationGrpcServiceClient
+	EventStoreClient   eventstorepb.EventStoreGrpcServiceClient
 }
 
 func InitClients(conn *grpc.ClientConn) *Clients {
@@ -20,10 +18,9 @@ func InitClients(conn *grpc.ClientConn) *Clients {
 		return &Clients{}
 	}
 	clients := Clients{
-		OrganizationClient:       organization_grpc_service.NewOrganizationGrpcServiceClient(conn),
-		InvoiceClient:            invoice_grpc_service.NewInvoiceGrpcServiceClient(conn),
-		InteractionSessionClient: interactionsessionpb.NewInteractionSessionGrpcServiceClient(conn),
-		EventStoreClient:         eventstorepb.NewEventStoreGrpcServiceClient(conn),
+		OrganizationClient: organization_grpc_service.NewOrganizationGrpcServiceClient(conn),
+		InvoiceClient:      invoice_grpc_service.NewInvoiceGrpcServiceClient(conn),
+		EventStoreClient:   eventstorepb.NewEventStoreGrpcServiceClient(conn),
 	}
 	return &clients
 }
