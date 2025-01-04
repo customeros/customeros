@@ -47,7 +47,7 @@ func NewTrackingService(cfg *config.Config, services *Services) TrackingService 
 }
 
 func (s *trackingService) ProcessNewRecords(ctx context.Context) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.ProcessNewRecords")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackingService.ProcessNewRecords")
 	defer span.Finish()
 
 	newRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetNewRecords(ctx)
@@ -68,7 +68,7 @@ func (s *trackingService) ProcessNewRecords(ctx context.Context) error {
 }
 
 func (s *trackingService) ProcessIPDataRequests(ctx context.Context) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.ProcessIPDataRequests")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackingService.ProcessIPDataRequests")
 	defer span.Finish()
 
 	sendRequestsRecords, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.GetForSendingRequests(ctx)
@@ -89,7 +89,7 @@ func (s *trackingService) ProcessIPDataRequests(ctx context.Context) error {
 }
 
 func (s *trackingService) ProcessIPDataResponses(ctx context.Context) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.ProcessIPDataResponses")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackingService.ProcessIPDataResponses")
 	defer span.Finish()
 
 	trackingRecordsWithIPData, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetForPrefilter(ctx)
@@ -110,7 +110,7 @@ func (s *trackingService) ProcessIPDataResponses(ctx context.Context) error {
 }
 
 func (s *trackingService) IdentifyTrackingRecords(ctx context.Context) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.IdentifyTrackingRecords")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackingService.IdentifyTrackingRecords")
 	defer span.Finish()
 
 	notIdentifiedTrackingRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetReadyForIdentification(ctx)
@@ -132,108 +132,118 @@ func (s *trackingService) IdentifyTrackingRecords(ctx context.Context) error {
 }
 
 func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.CreateOrganizationsFromTrackedData")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackingService.CreateOrganizationsFromTrackedData")
 	defer span.Finish()
 
-	identifiedRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetIdentifiedWithDistinctIP(ctx)
+	identifiedRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetIdentifiedWithDistinctIP(ctx, 100)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	for _, r := range identifiedRecords {
-
 		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 			Tenant:    r.Tenant,
 			AppSource: constants.AppTracking,
 		})
-
-		record, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetById(innerCtx, r.ID)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		if record.State != entity.TrackingIdentificationStateIdentified {
-			span.LogFields(log.String("skip", "bad state"))
-			continue
-		}
-
-		snitcherData, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(innerCtx, record.IP)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		if snitcherData == nil {
-			tracing.TraceErr(span, errors.New("snitcher record is nil"))
-			continue
-		}
-
-		if snitcherData.CompanyDomain == nil || *snitcherData.CompanyDomain == "" {
-			tracing.TraceErr(span, errors.New("company domain is empty"))
-			continue
-		}
-		span.LogFields(log.String("company_domain", *snitcherData.CompanyDomain))
-		span.LogFields(log.String("company_website", utils.StringOrEmpty(snitcherData.CompanyWebsite)))
-
-		organizationByDomainNode, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(innerCtx, nil, record.Tenant, *snitcherData.CompanyDomain)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		if organizationByDomainNode == nil {
-
-			// Save organization
-			organizationFields := data_fields.OrganizationFields{
-				Name:         snitcherData.CompanyName,
-				Website:      snitcherData.CompanyWebsite,
-				LeadSource:   utils.StringPtr("Reveal AI"),
-				Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
-				Stage:        utils.ToPtr(neo4jenum.Lead),
-				Domains:      []string{*snitcherData.CompanyDomain},
-				Source:       utils.StringPtr(constants.SourceOpenline),
-			}
-			orgId, err := s.services.CommonServices.OrganizationService.Save(innerCtx, nil, nil, organizationFields)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "failed to save organization"))
-				return err
-			}
-			if orgId == "" {
-				tracing.TraceErr(span, errors.New("organization id is nil"))
-				return nil
-			}
-
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(innerCtx, record.ID, orgId, snitcherData.CompanyName, snitcherData.CompanyDomain, snitcherData.CompanyWebsite)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAllExcludeIdWithState(innerCtx, record.ID, record.IP, entity.TrackingIdentificationStateOrganizationExists)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-		} else {
-			organizationId := utils.GetStringPropOrEmpty(organizationByDomainNode.Props, "id")
-
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(innerCtx, record.ID, organizationId, snitcherData.CompanyName, snitcherData.CompanyDomain, snitcherData.CompanyWebsite)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-
-			err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAllWithState(innerCtx, record.IP, entity.TrackingIdentificationStateOrganizationExists)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
+		innerErr, done := s.createOrganizationFromTrackingRecord(innerCtx, r)
+		if done {
+			tracing.TraceErr(span, innerErr)
+			return innerErr
 		}
 	}
 
 	return nil
+}
+
+func (s *trackingService) createOrganizationFromTrackingRecord(ctx context.Context, r *entity.Tracking) (error, bool) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackingService.createOrganizationFromTrackingRecord")
+	defer span.Finish()
+
+	record, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetById(ctx, r.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err, true
+	}
+
+	if record.State != entity.TrackingIdentificationStateIdentified {
+		span.LogFields(log.String("skip", "bad state"))
+		return nil, false
+	}
+
+	snitcherData, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, record.IP)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err, true
+	}
+
+	if snitcherData == nil {
+		tracing.TraceErr(span, errors.New("snitcher record is nil"))
+		return nil, false
+	}
+
+	if snitcherData.CompanyDomain == nil || *snitcherData.CompanyDomain == "" || utils.IsValidDomain(*snitcherData.CompanyDomain) == false {
+		tracing.TraceErr(span, errors.New("company domain is empty or not valid"))
+		return nil, false
+	}
+	span.LogFields(log.String("snitcher.company_domain", *snitcherData.CompanyDomain))
+	span.LogFields(log.String("snitcher.company_website", utils.StringOrEmpty(snitcherData.CompanyWebsite)))
+
+	organizationByDomainNode, err := s.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, record.Tenant, *snitcherData.CompanyDomain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err, true
+	}
+
+	if organizationByDomainNode == nil {
+
+		// Save organization
+		organizationFields := data_fields.OrganizationFields{
+			Name:         snitcherData.CompanyName,
+			Website:      snitcherData.CompanyWebsite,
+			LeadSource:   utils.StringPtr("Reveal AI"),
+			Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
+			Stage:        utils.ToPtr(neo4jenum.Lead),
+			Domains:      []string{*snitcherData.CompanyDomain},
+			Source:       utils.StringPtr(constants.SourceOpenline),
+		}
+		orgId, err := s.services.CommonServices.OrganizationService.Save(ctx, nil, nil, organizationFields)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to save organization"))
+			return err, true
+		}
+		if orgId == "" {
+			tracing.TraceErr(span, errors.New("organization id is nil"))
+			return nil, true
+		}
+
+		err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(ctx, record.ID, orgId, snitcherData.CompanyName, snitcherData.CompanyDomain, snitcherData.CompanyWebsite)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err, true
+		}
+
+		err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAllExcludeIdWithState(ctx, record.ID, record.IP, entity.TrackingIdentificationStateOrganizationExists)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err, true
+		}
+	} else {
+		organizationId := utils.GetStringPropOrEmpty(organizationByDomainNode.Props, "id")
+
+		err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAsOrganizationCreated(ctx, record.ID, organizationId, snitcherData.CompanyName, snitcherData.CompanyDomain, snitcherData.CompanyWebsite)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err, true
+		}
+
+		err = s.services.CommonServices.PostgresRepositories.TrackingRepository.MarkAllWithState(ctx, record.IP, entity.TrackingIdentificationStateOrganizationExists)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err, true
+		}
+	}
+	return nil, false
 }
 
 func (s *trackingService) processNewRecord(c context.Context, newRecord *entity.Tracking) error {
@@ -410,7 +420,8 @@ func (s *trackingService) processRecordIdentification(c context.Context, record 
 		return fmt.Errorf("failed to get better contact details: %v", err)
 	}
 
-	if snitcherByIp == nil {
+	// if data by ip is not found, or older than 90 days, ask snitcher
+	if snitcherByIp == nil || snitcherByIp.UpdatedAt.Before(utils.Now().AddDate(0, 0, -90)) {
 		snitcherByIp, err = s.askAndStoreSnitcherData(ctx, record.IP)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -503,13 +514,13 @@ func (s *trackingService) askAndStoreSnitcherData(c context.Context, ip string) 
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to store response: %v", err)
+		return nil, fmt.Errorf("failed to store response: %w", err)
 	}
 
 	byIP, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, ip)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("failed to get stored response: %v", err)
+		return nil, fmt.Errorf("failed to get stored response: %w", err)
 	}
 
 	return byIP, nil

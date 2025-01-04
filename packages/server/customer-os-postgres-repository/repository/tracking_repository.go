@@ -18,7 +18,7 @@ type TrackingRepository interface {
 	GetNewRecords(ctx context.Context) ([]*entity.Tracking, error)
 	GetForPrefilter(ctx context.Context) ([]*entity.Tracking, error)
 	GetReadyForIdentification(ctx context.Context) ([]*entity.Tracking, error)
-	GetIdentifiedWithDistinctIP(ctx context.Context) ([]*entity.Tracking, error)
+	GetIdentifiedWithDistinctIP(ctx context.Context, limit int) ([]*entity.Tracking, error)
 	GetForSlackNotifications(ctx context.Context, limit int) ([]*entity.Tracking, error)
 
 	Store(ctx context.Context, tracking entity.Tracking) (string, error)
@@ -129,7 +129,7 @@ func (r *trackingRepositoryImpl) GetReadyForIdentification(ctx context.Context) 
 	return entities, nil
 }
 
-func (r *trackingRepositoryImpl) GetIdentifiedWithDistinctIP(ctx context.Context) ([]*entity.Tracking, error) {
+func (r *trackingRepositoryImpl) GetIdentifiedWithDistinctIP(ctx context.Context, limit int) ([]*entity.Tracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetIdentifiedWithDistinctIP")
 	defer span.Finish()
 
@@ -139,7 +139,7 @@ func (r *trackingRepositoryImpl) GetIdentifiedWithDistinctIP(ctx context.Context
 		Where("state = ?", entity.TrackingIdentificationStateIdentified).
 		Distinct("ip", "id", "tenant", "created_at").
 		Order("created_at asc").
-		Limit(100).
+		Limit(limit).
 		Find(&entities).Error
 
 	if err != nil {
