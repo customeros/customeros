@@ -164,7 +164,7 @@ func handleBulkJSONRequest(c *gin.Context, s *service.Services) {
 
 			validationErrors = append(validationErrors, errDetails)
 		}
-		contact.ContactId = processContact(c, s, contact)
+		contact.ContactId = processContact(c.Request.Context(), s, contact)
 	}
 
 	switch {
@@ -258,8 +258,8 @@ func validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
 	return nil
 }
 
-func processCSVRecords(c *gin.Context, s *service.Services, reader *csv.Reader) {
-	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.processCSVRecords")
+func processCSVRecords(ginCtx *gin.Context, s *service.Services, reader *csv.Reader) {
+	span, _ := tracing.StartTracerSpan(ginCtx.Request.Context(), "Customerbase.processCSVRecords")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
@@ -303,7 +303,7 @@ func processCSVRecords(c *gin.Context, s *service.Services, reader *csv.Reader) 
 				Description:  fmt.Sprintf("%s", err),
 			})
 		}
-		contactRecord.ContactId = processContact(c, s, contactRecord)
+		contactRecord.ContactId = processContact(ginCtx.Request.Context(), s, contactRecord)
 	}
 
 	switch {
@@ -316,7 +316,7 @@ func processCSVRecords(c *gin.Context, s *service.Services, reader *csv.Reader) 
 				Failed:  fail,
 			},
 		}
-		c.JSON(http.StatusCreated, resp)
+		ginCtx.JSON(http.StatusCreated, resp)
 	case fail == 1:
 		resp := BulkResponse{
 			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
@@ -331,9 +331,9 @@ func processCSVRecords(c *gin.Context, s *service.Services, reader *csv.Reader) 
 				Description:  csvErrors[0].Description,
 			},
 		}
-		c.JSON(http.StatusCreated, resp)
+		ginCtx.JSON(http.StatusCreated, resp)
 	case fail == total:
-		rest.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No valid contacts found in request"))
+		rest.SendError(ginCtx, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No valid contacts found in request"))
 	default:
 		resp := BulkResponseMultipleErrors{
 			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
@@ -344,6 +344,6 @@ func processCSVRecords(c *gin.Context, s *service.Services, reader *csv.Reader) 
 			},
 			Details: csvErrors,
 		}
-		c.JSON(http.StatusCreated, resp)
+		ginCtx.JSON(http.StatusCreated, resp)
 	}
 }
