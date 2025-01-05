@@ -8,18 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 )
 
-type LinkLocationCommand struct {
-	eventstore.BaseCommand
-	LocationId string `json:"locationId" validate:"required"`
-}
-
-func NewLinkLocationCommand(organizationId, tenant, userId, locationId string) *LinkLocationCommand {
-	return &LinkLocationCommand{
-		BaseCommand: eventstore.NewBaseCommand(organizationId, tenant, userId),
-		LocationId:  locationId,
-	}
-}
-
 type UpsertCustomFieldCommand struct {
 	eventstore.BaseCommand
 	Source          common.Source

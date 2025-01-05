@@ -101,28 +101,6 @@ func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context
 	return nil
 }
 
-func (h *OrganizationEventHandler) OnLocationLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnLocationLinkedToOrganization")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationLinkLocationEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.services.CommonServices.Neo4jRepositories.LocationWriteRepository.LinkWithOrganization(ctx, nil, eventData.Tenant, organizationId, eventData.LocationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-
-	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
-
-	return err
-}
-
 func (h *OrganizationEventHandler) OnRefreshArr(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshArr")
 	defer span.Finish()

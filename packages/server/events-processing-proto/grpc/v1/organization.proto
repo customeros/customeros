@@ -57,13 +57,6 @@ message LocationIdGrpcResponse {
   string id = 1;
 }
 
-message LinkLocationToOrganizationGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string locationId = 3;
-  string loggedInUserId = 4;
-}
-
 message LinkLocationToBillingProfileGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -195,7 +188,6 @@ message BillingProfileIdGrpcResponse {
 }
 
 service organizationGrpcService {
-  rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpsertCustomFieldToOrganization(CustomFieldForOrganizationGrpcRequest) returns (CustomFieldIdGrpcResponse);
   rpc RefreshRenewalSummary(RefreshRenewalSummaryGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshDerivedData(RefreshDerivedDataGrpcRequest) returns (OrganizationIdGrpcResponse);

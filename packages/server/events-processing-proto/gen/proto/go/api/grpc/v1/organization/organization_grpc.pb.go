@@ -22,7 +22,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrganizationGrpcServiceClient interface {
-	LinkLocationToOrganization(ctx context.Context, in *LinkLocationToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpsertCustomFieldToOrganization(ctx context.Context, in *CustomFieldForOrganizationGrpcRequest, opts ...grpc.CallOption) (*CustomFieldIdGrpcResponse, error)
 	RefreshRenewalSummary(ctx context.Context, in *RefreshRenewalSummaryGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RefreshDerivedData(ctx context.Context, in *RefreshDerivedDataGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
@@ -44,15 +43,6 @@ type organizationGrpcServiceClient struct {
 
 func NewOrganizationGrpcServiceClient(cc grpc.ClientConnInterface) OrganizationGrpcServiceClient {
 	return &organizationGrpcServiceClient{cc}
-}
-
-func (c *organizationGrpcServiceClient) LinkLocationToOrganization(ctx context.Context, in *LinkLocationToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/LinkLocationToOrganization", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *organizationGrpcServiceClient) UpsertCustomFieldToOrganization(ctx context.Context, in *CustomFieldForOrganizationGrpcRequest, opts ...grpc.CallOption) (*CustomFieldIdGrpcResponse, error) {
@@ -176,7 +166,6 @@ func (c *organizationGrpcServiceClient) AdjustIndustry(ctx context.Context, in *
 // All implementations should embed UnimplementedOrganizationGrpcServiceServer
 // for forward compatibility
 type OrganizationGrpcServiceServer interface {
-	LinkLocationToOrganization(context.Context, *LinkLocationToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpsertCustomFieldToOrganization(context.Context, *CustomFieldForOrganizationGrpcRequest) (*CustomFieldIdGrpcResponse, error)
 	RefreshRenewalSummary(context.Context, *RefreshRenewalSummaryGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RefreshDerivedData(context.Context, *RefreshDerivedDataGrpcRequest) (*OrganizationIdGrpcResponse, error)
@@ -196,9 +185,6 @@ type OrganizationGrpcServiceServer interface {
 type UnimplementedOrganizationGrpcServiceServer struct {
 }
 
-func (UnimplementedOrganizationGrpcServiceServer) LinkLocationToOrganization(context.Context, *LinkLocationToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LinkLocationToOrganization not implemented")
-}
 func (UnimplementedOrganizationGrpcServiceServer) UpsertCustomFieldToOrganization(context.Context, *CustomFieldForOrganizationGrpcRequest) (*CustomFieldIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertCustomFieldToOrganization not implemented")
 }
@@ -248,24 +234,6 @@ type UnsafeOrganizationGrpcServiceServer interface {
 
 func RegisterOrganizationGrpcServiceServer(s grpc.ServiceRegistrar, srv OrganizationGrpcServiceServer) {
 	s.RegisterService(&OrganizationGrpcService_ServiceDesc, srv)
-}
-
-func _OrganizationGrpcService_LinkLocationToOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LinkLocationToOrganizationGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).LinkLocationToOrganization(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/LinkLocationToOrganization",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).LinkLocationToOrganization(ctx, req.(*LinkLocationToOrganizationGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _OrganizationGrpcService_UpsertCustomFieldToOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -509,10 +477,6 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "organizationGrpcService",
 	HandlerType: (*OrganizationGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "LinkLocationToOrganization",
-			Handler:    _OrganizationGrpcService_LinkLocationToOrganization_Handler,
-		},
 		{
 			MethodName: "UpsertCustomFieldToOrganization",
 			Handler:    _OrganizationGrpcService_UpsertCustomFieldToOrganization_Handler,
