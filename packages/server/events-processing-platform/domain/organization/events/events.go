@@ -13,9 +13,7 @@ import (
 )
 
 const (
-	OrganizationPhoneNumberLinkV1 = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
-	//Deprecated
-	OrganizationLocationLinkV1                     = "V1_ORGANIZATION_LOCATION_LINK"
+	OrganizationPhoneNumberLinkV1                  = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
 	OrganizationUpsertCustomFieldV1                = "V1_ORGANIZATION_UPSERT_CUSTOM_FIELD"
 	OrganizationRefreshArrV1                       = "V1_ORGANIZATION_REFRESH_ARR"
 	OrganizationRefreshRenewalSummaryV1            = "V1_ORGANIZATION_REFRESH_RENEWAL_SUMMARY"
@@ -56,30 +54,6 @@ func NewOrganizationLinkPhoneNumberEvent(aggregate eventstore.Aggregate, phoneNu
 	event := eventstore.NewBaseEvent(aggregate, OrganizationPhoneNumberLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkPhoneNumberEvent")
-	}
-	return event, nil
-}
-
-type OrganizationLinkLocationEvent struct {
-	Tenant     string    `json:"tenant" validate:"required"`
-	UpdatedAt  time.Time `json:"updatedAt"`
-	LocationId string    `json:"locationId" validate:"required"`
-}
-
-func NewOrganizationLinkLocationEvent(aggregate eventstore.Aggregate, locationId string, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := OrganizationLinkLocationEvent{
-		Tenant:     aggregate.GetTenant(),
-		UpdatedAt:  updatedAt,
-		LocationId: locationId,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationLinkLocationEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationLocationLinkV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkLocationEvent")
 	}
 	return event, nil
 }

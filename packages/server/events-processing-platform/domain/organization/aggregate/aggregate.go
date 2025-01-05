@@ -42,8 +42,6 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 	switch event.GetEventType() {
 	case organizationEvents.OrganizationPhoneNumberLinkV1:
 		return a.onPhoneNumberLink(event)
-	case organizationEvents.OrganizationLocationLinkV1:
-		return a.onLocationLink(event)
 	case organizationEvents.OrganizationUpsertCustomFieldV1:
 		return a.onUpsertCustomField(event)
 	case organizationEvents.OrganizationUpdateOnboardingStatusV1:
@@ -80,15 +78,6 @@ func (a *OrganizationAggregate) onPhoneNumberLink(event eventstore.Event) error 
 		Primary: eventData.Primary,
 	}
 	a.Organization.UpdatedAt = eventData.UpdatedAt
-	return nil
-}
-
-func (a *OrganizationAggregate) onLocationLink(event eventstore.Event) error {
-	var eventData organizationEvents.OrganizationLinkLocationEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	a.Organization.LocationIds = utils.AddToListIfNotExists(a.Organization.LocationIds, eventData.LocationId)
 	return nil
 }
 

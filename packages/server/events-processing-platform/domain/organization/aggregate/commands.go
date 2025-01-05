@@ -207,8 +207,6 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 	switch c := cmd.(type) {
 	case *command.UpsertCustomFieldCommand:
 		return a.upsertCustomField(ctx, c)
-	case *command.LinkLocationCommand:
-		return a.linkLocation(ctx, c)
 	case *command.UpdateOnboardingStatusCommand:
 		return a.updateOnboardingStatus(ctx, c)
 	case *command.UpdateOrganizationOwnerCommand:
@@ -259,27 +257,6 @@ func (a *OrganizationAggregate) SetPhoneNumberNonPrimary(ctx context.Context, te
 		return a.Apply(event)
 	}
 	return nil
-}
-
-func (a *OrganizationAggregate) linkLocation(ctx context.Context, cmd *command.LinkLocationCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.linkLocation")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	updatedAtNotNil := utils.Now()
-
-	event, err := organizationEvents.NewOrganizationLinkLocationEvent(a, cmd.LocationId, updatedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationLinkLocationEvent")
-	}
-
-	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
-
-	return a.Apply(event)
 }
 
 func (a *OrganizationTempAggregate) refreshArr(ctx context.Context, cmd *command.RefreshArrCommand) error {
