@@ -83,6 +83,7 @@ func (a *agentService) slackBotNotification(ctx context.Context, event *data_fie
 	actionExecutionRecord, saveErr := a.services.PostgresRepositories.FlowAgentExecutionRepository.Create(ctx, executionRecord)
 	if saveErr != nil {
 		tracing.TraceErr(span, saveErr)
+		return err
 	}
 
 	// save notification record
