@@ -2,10 +2,15 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
 )
 
 type AgentService interface {
@@ -28,6 +33,10 @@ func NewAgentService(services *Services) AgentService {
 func (a *agentService) publishAgentResultEvent(
 	ctx context.Context, flowExecutionId, actionExecutionId string, actionExecutionStatus enum.FlowAgentExecutionStatus, errorMessage *string,
 ) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.publishAgentResultEvent")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
 	resultEvent := dto.FlowAgentExecutionResultEvent{
 		FlowExecutionID:      flowExecutionId,
 		FlowAgentExecutionID: actionExecutionId,
