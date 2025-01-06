@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
@@ -15,7 +14,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 )
 
@@ -35,6 +33,10 @@ func HandleWebsiteVisitorEvent(c context.Context, s *service.Services, sourceEve
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
+	}
+
+	if len(*flows) == 0 {
+		return nil
 	}
 
 	var errs error
@@ -85,7 +87,7 @@ func publishSlackNotifyEvent(ctx context.Context, s *service.Services, flow *ent
 	eventData.OrganizationID = &orgId
 
 	// build the message
-	message, err := buildWebVisitorSlackNotification(ctx, s, eventData, sourceEvent)
+	message, err := buildWebVisitorSlackNotification(ctx, s, eventData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -94,6 +96,11 @@ func publishSlackNotifyEvent(ctx context.Context, s *service.Services, flow *ent
 	// build the slack.notify event
 	slackNotifyEvent, err := buildSlackNotifyEvent(ctx, s, eventData, message)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if slackNotifyEvent == nil {
+		err = fmt.Errorf("failed to build slack notify event for %s", eventData.Domain)
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -161,8 +168,15 @@ func buildSlackNotifyEvent(ctx context.Context, s *service.Services, eventData *
 
 	channelIds, err := s.PostgresRepositories.SlackChannelNotificationRepository.GetSlackChannels(ctx, eventData.Tenant, "REVEAL-AI")
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	if len(channelIds) == 0 {
+		err = fmt.Errorf("no slack channels found for tenant %s", eventData.Tenant)
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	channelId := channelIds[0]
 
 	ratelimit := MinHoursBetweenNotifications
@@ -185,7 +199,7 @@ func buildSlackNotifyEvent(ctx context.Context, s *service.Services, eventData *
 	return &event, nil
 }
 
-func buildWebVisitorSlackNotification(ctx context.Context, s *service.Services, eventData *data_fields.WebsiteVisitEvent, sourceEvent commonEnum.FlowListenerEvent) (string, error) {
+func buildWebVisitorSlackNotification(ctx context.Context, s *service.Services, eventData *data_fields.WebsiteVisitEvent) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.buildWebVisitorSlackNotification")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -196,37 +210,38 @@ func buildWebVisitorSlackNotification(ctx context.Context, s *service.Services, 
 		tracing.TraceErr(span, err)
 		return "", err
 	}
+	if globalOrg == nil {
+		err = s.PostgresRepositories.GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess(ctx, eventData.Domain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
 
 	// Build the text content for the section based on available data
 	var contentLines []string
+	primaryDomain := eventData.Domain
+	if globalOrg != nil {
+		primaryDomain = globalOrg.PrimaryDomain
+	}
+	website := "https://" + primaryDomain
 
-	website := globalOrg.Website
-	_, primaryDomain := domaincheck.PrimaryDomainCheck(website)
-	if primaryDomain == "" {
-		err := errors.New("primary domain does not exist")
-		return "", err
-	}
-	lowercaseWebsite := strings.ToLower(primaryDomain)
-	if !strings.HasPrefix(lowercaseWebsite, "http://") && !strings.HasPrefix(lowercaseWebsite, "https://") {
-		website = "https://" + primaryDomain
-	}
-	name := globalOrg.Name
-	if name == "" {
-		name = primaryDomain
+	name := eventData.Domain
+	if globalOrg != nil {
+		name = globalOrg.Name
 	}
 	contentLines = append(contentLines, fmt.Sprintf("<%s|*%s*> ", website, name))
-	if globalOrg.Description != "" {
+	if globalOrg != nil && globalOrg.Description != "" {
 		contentLines = append(contentLines, fmt.Sprintf("%s \n", globalOrg.Description))
 	}
 	// Add optional fields only if they're not empty
-	if globalOrg.PrimaryDomain != "" && globalOrg.Website != "" {
+	if website != "" {
 		contentLines = append(contentLines, fmt.Sprintf("*Website:* <%s|%s> ", website, primaryDomain))
 	}
-	if globalOrg.LinkedInUrl != "" && globalOrg.LinkedInAlias != "" {
+	if globalOrg != nil && globalOrg.LinkedInUrl != "" && globalOrg.LinkedInAlias != "" {
 		contentLines = append(contentLines, fmt.Sprintf("*LinkedIn:* <%s|/%s> ", globalOrg.LinkedInUrl, globalOrg.LinkedInAlias))
 	}
 	// Only add location if both city and country are available
-	if globalOrg.City != "" && globalOrg.CountryA2 != "" {
+	if globalOrg != nil && globalOrg.City != "" && globalOrg.CountryA2 != "" {
 		contentLines = append(contentLines, fmt.Sprintf("*Location:* %s, %s ", globalOrg.City, globalOrg.CountryA2))
 	}
 	// Add source/referrer only if it exists
@@ -252,7 +267,7 @@ func buildWebVisitorSlackNotification(ctx context.Context, s *service.Services, 
 	}`, sectionContent)
 
 	// If logo exists, add the accessory field
-	if globalOrg.LogoUrl != "" {
+	if globalOrg != nil && globalOrg.LogoUrl != "" {
 		sectionBlock = fmt.Sprintf(`{
 			"type": "section",
 			"text": {

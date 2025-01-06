@@ -42,7 +42,7 @@ func (s *enrichmentService) Snitcher(ctx context.Context, ipAddress string) (*Sn
 		"X-OPENLINE-API-KEY": s.config.InternalServices.EnrichmentApiConfig.ApiKey,
 	}
 
-	resp, err := s.makeGetRequest(ctx, s.config.InternalServices.EnrichmentApiConfig.Url, headers)
+	resp, err := s.makeGetRequest(ctx, s.config.InternalServices.EnrichmentApiConfig.Url+"/snitcher?ipAddress="+ipAddress, headers)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
