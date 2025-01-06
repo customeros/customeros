@@ -65,12 +65,7 @@ const columns: Record<string, Column> = {
     enableColumnFilter: false,
     enableSorting: true,
     cell: (props) => {
-      return (
-        <ContactNameCell
-          contactId={props.row.id}
-          canNavigate={props.getValue()?.hasActiveOrganization}
-        />
-      );
+      return <ContactNameCell contactId={props.row.id} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>

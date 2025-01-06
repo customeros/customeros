@@ -23,7 +23,7 @@ export const EditLatestOrgActive = observer(() => {
 
   if (!contactStore) return null;
 
-  const handleChangeOrganzation = (value: OrganizationDatum) => {
+  const handleChangeOrganization = (value: OrganizationDatum) => {
     contactStore?.draft();
 
     if (contactStore) {
@@ -63,7 +63,7 @@ export const EditLatestOrgActive = observer(() => {
         {organizations.map((option) => (
           <CommandItem
             onSelect={() =>
-              handleChangeOrganzation(option as unknown as OrganizationDatum)
+              handleChangeOrganization(option as unknown as OrganizationDatum)
             }
           >
             {option.name}
