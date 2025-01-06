@@ -6,10 +6,9 @@ import (
 )
 
 type MockOrganizationServiceCallbacks struct {
-	RefreshLastTouchpoint  func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	UpdateOnboardingStatus func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	RefreshRenewalSummary  func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	RefreshArr             func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	RefreshLastTouchpoint func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	RefreshRenewalSummary func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
+	RefreshArr            func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 }
 
 var organizationCallbacks = &MockOrganizationServiceCallbacks{}
@@ -41,11 +40,4 @@ func (MockOrganizationService) RefreshArr(ctx context.Context, proto *organizati
 		panic("organizationCallbacks.RefreshArr is not set")
 	}
 	return organizationCallbacks.RefreshArr(ctx, proto)
-}
-
-func (MockOrganizationService) UpdateOnboardingStatus(context context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	if organizationCallbacks.UpdateOnboardingStatus == nil {
-		panic("organizationCallbacks.UpdateOnboardingStatus is not set")
-	}
-	return organizationCallbacks.UpdateOnboardingStatus(context, proto)
 }
