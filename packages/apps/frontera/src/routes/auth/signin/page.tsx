@@ -13,10 +13,8 @@ import { useStore } from '@shared/hooks/useStore';
 import { Divider } from '@ui/presentation/Divider';
 import { Microsoft } from '@ui/media/logos/Microsoft';
 
-import Background from './login-bg.png';
 import CustomerOsLogo from './CustomerOS-logo.png';
-
-import BackgroundGridDot from '/backgrounds/grid/backgroundGridDot.png';
+import { InteractiveDonut } from './interactiveDonut/InteractiveDonut.tsx';
 
 const providers = [
   { id: 'google', name: 'Google' },
@@ -66,64 +64,52 @@ export const SignIn = observer(() => {
 
   if (hasMagicLinkSent) {
     return (
-      <div className='h-screen w-screen flex animate-fadeIn'>
-        <div className='flex-1'>
-          <div className='h-[50%] w-[100%]'>
-            <img
-              alt=''
-              src={BackgroundGridDot}
-              className='top-[-10%] relative w-[480px] m-auto'
-            />
-          </div>
-          <div className='h-full flex items-center justify-center relative top-[-50%]'>
-            <div className='flex flex-col items-center w-[360px]'>
-              <img
-                width={264}
-                height={264}
-                alt='CustomerOS'
-                src={CustomerOsLogo}
-              />
-              <h2 className='text-gray-900 leading-9 font-bold text-3xl py-3 mt-[-40px]'>
-                Check your email
-              </h2>
-              <p className='text-gray-500'>
-                We've sent you an email with a magic code
-              </p>
-              <Divider className='my-4' />
-              <Button
-                size='md'
-                variant='outline'
-                colorScheme='primary'
-                className={cn(`w-full py-[9px] px-4`)}
-                onClick={() => setHasMagicLinkSent(false)}
-              >
-                Resend email
-              </Button>
+      <div className='h-screen w-screen flex animate-fadeIn overflow-hidden max-h-screen max-w-screen'>
+        <div className='flex-1 items-center h-screen overflow-hidden'>
+          <div className='h-full flex items-center justify-center lg:justify-start lg:ml-[12%] relative'>
+            <div className='relative flex flex-col items-center justify-center w-[450px] h-full px-6 pb-6 bg-white  z-[99999] shadow-2xl'>
+              <div className='h-full flex items-center justify-center relative '>
+                <div className='flex flex-col items-center w-[360px]'>
+                  <img
+                    width={264}
+                    height={264}
+                    alt='CustomerOS'
+                    src={CustomerOsLogo}
+                  />
+                  <h2 className='text-gray-900 leading-9 font-bold text-3xl py-3 mt-[-40px]'>
+                    Check your email
+                  </h2>
+                  <p className='text-gray-500'>
+                    We've sent you an email with a magic code
+                  </p>
+                  <Divider className='my-4' />
+                  <Button
+                    size='md'
+                    variant='outline'
+                    colorScheme='primary'
+                    className={cn(`w-full py-[9px] px-4`)}
+                    onClick={() => setHasMagicLinkSent(false)}
+                  >
+                    Resend email
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <img
-          src={Background}
-          alt='Background'
-          className=' flex-1 bg-cover rounded-s-[80px] bg-no-repeat h-full w-[50vw]'
-        />
+        <div className='h-full w-[100%] absolute top-[-100vh]'>
+          <InteractiveDonut />
+        </div>
       </div>
     );
   }
 
   return (
     <>
-      <div className='h-screen w-screen flex animate-fadeIn'>
-        <div className='flex-1'>
-          <div className='h-[50%] w-[100%]'>
-            <img
-              alt=''
-              src={BackgroundGridDot}
-              className='top-[-10%] relative w-[480px] m-auto'
-            />
-          </div>
-          <div className='h-full flex items-center justify-center relative top-[-55%]'>
-            <div className='flex flex-col items-center w-[360px]'>
+      <div className='h-screen w-screen flex animate-fadeIn overflow-hidden max-h-screen max-w-screen'>
+        <div className='flex-1 items-center h-screen overflow-hidden'>
+          <div className='h-full flex items-center justify-center lg:justify-start lg:ml-[12%] relative'>
+            <div className='flex flex-col items-center justify-center w-[450px] h-full px-6 pb-6 bg-white  z-[99999] shadow-2xl'>
               <img
                 width={264}
                 height={264}
@@ -235,11 +221,9 @@ export const SignIn = observer(() => {
             </div>
           </div>
         </div>
-        <img
-          src={Background}
-          alt='Background'
-          className=' flex-1 bg-cover rounded-s-[80px] bg-no-repeat h-full w-[50vw]'
-        />
+        <div className='h-full w-[100%] absolute top-[-100vh]'>
+          <InteractiveDonut />
+        </div>
       </div>
     </>
   );
