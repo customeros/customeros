@@ -18,10 +18,6 @@ type PostmarkConfig struct {
 	DefaultInboundStreamWebhook string `env:"POSTMARK_DEFAULT_INBOUND_STREAM_WEBHOOK"`
 }
 
-type SlackConfig struct {
-	SlackBotAPIKey string `env:"SLACK_BOT_API_KEY"`
-}
-
 type StripeConfig struct {
 	ApiKey string `env:"STRIPE_API_KEY" envDefault:"N/A"`
 }

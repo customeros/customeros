@@ -28,6 +28,5 @@ type ExternalServices struct {
 	NamecheapConfig  NamecheapConfig
 	OpenSRSConfig    OpenSRSConfig
 	PostmarkConfig   PostmarkConfig
-	SlackConfig      SlackConfig
 	StripeConfig     StripeConfig
 }

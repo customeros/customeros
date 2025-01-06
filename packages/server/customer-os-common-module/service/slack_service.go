@@ -108,11 +108,6 @@ func (s *slackService) Notify(ctx context.Context, tenant, channelID string, mes
 	span, ctx := tracing.StartTracerSpan(ctx, "Slack.Notify")
 	defer span.Finish()
 
-	if s.cfg.ExternalServices.SlackConfig.SlackBotAPIKey == "" {
-		span.LogFields(log.String("skip", "no slack bot api key"))
-		return errors.New("no slack bot api key")
-	}
-
 	err := s.sendSlackMessage(ctx, tenant, channelID, *message)
 	if err != nil {
 		tracing.TraceErr(span, err)
