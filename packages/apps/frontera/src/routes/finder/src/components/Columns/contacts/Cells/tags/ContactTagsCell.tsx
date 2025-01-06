@@ -1,9 +1,5 @@
-import { useState } from 'react';
-
 import { observer } from 'mobx-react-lite';
 
-import { Edit01 } from '@ui/media/icons/Edit01';
-import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Tag } from '@shared/types/__generated__/graphql.types';
 
@@ -15,35 +11,19 @@ interface ContactCardProps {
 
 export const ContactsTagsCell = observer(({ id }: ContactCardProps) => {
   const store = useStore();
-  const [isHovered, setIsHovered] = useState(false);
   const contactStore = store.contacts.value.get(id);
 
   const tags = (contactStore?.value?.tags ?? []).filter((d) => !!d?.name);
 
   return (
     <div
-      className='flex items-center '
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onDoubleClick={() => {
+      className='flex items-center cursor-pointer'
+      onClick={() => {
         store.ui.commandMenu.setType('EditPersonaTag');
         store.ui.commandMenu.setOpen(true);
       }}
     >
       <TagsCell tags={(tags ?? []) as Tag[]} />
-      {isHovered && (
-        <IconButton
-          size='xxs'
-          variant='ghost'
-          className='ml-3'
-          aria-label='Edit tags'
-          icon={<Edit01 className='text-gray-500' />}
-          onClick={() => {
-            store.ui.commandMenu.setType('EditPersonaTag');
-            store.ui.commandMenu.setOpen(true);
-          }}
-        />
-      )}
     </div>
   );
 });

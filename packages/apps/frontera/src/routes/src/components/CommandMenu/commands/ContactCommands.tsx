@@ -13,6 +13,7 @@ import { Archive } from '@ui/media/icons/Archive';
 import { User03 } from '@ui/media/icons/User03.tsx';
 import { EyeOff } from '@ui/media/icons/EyeOff.tsx';
 import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
+import { Building07 } from '@ui/media/icons/Building07.tsx';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline.tsx';
@@ -181,6 +182,16 @@ export const ContactCommands = observer(() => {
         >
           Edit name
         </CommandItem>
+
+        <CommandItem
+          leftAccessory={<Building07 />}
+          keywords={contactKeywords.change_latest_org}
+          onSelect={() => {
+            store.ui.commandMenu.setType('EditLatestOrgActive');
+          }}
+        >
+          Edit organization
+        </CommandItem>
         {/* <CommandItem
           leftAccessory={<Phone />}
           keywords={contactKeywords.edit_phone_number}
@@ -299,5 +310,13 @@ const contactKeywords = {
     'profile',
   ],
   move_to_flow: ['move', 'to', 'flow'],
+  change_latest_org: [
+    'edit',
+    'organization',
+    'change',
+    'update',
+    'latest',
+    'active',
+  ],
   remove_from_flow: ['remove', 'flow', 'delete'],
 };

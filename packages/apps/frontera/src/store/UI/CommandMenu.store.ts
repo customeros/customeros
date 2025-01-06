@@ -58,7 +58,8 @@ export type CommandMenuType =
   | 'FlowValidationMessage'
   | 'ConfirmEmailContentChanges'
   | 'AddContactsBulk'
-  | 'ContactBulkCommands';
+  | 'ContactBulkCommands'
+  | 'EditLatestOrgActive';
 
 export type Context = {
   ids: Array<string>;
