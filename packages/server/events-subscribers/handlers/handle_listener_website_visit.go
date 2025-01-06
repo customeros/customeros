@@ -35,7 +35,7 @@ func HandleWebsiteVisitorEvent(c context.Context, s *service.Services, sourceEve
 		return err
 	}
 
-	if len(*flows) == 0 {
+	if flows == nil || len(*flows) == 0 {
 		return nil
 	}
 
