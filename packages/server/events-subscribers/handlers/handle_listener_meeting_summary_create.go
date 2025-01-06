@@ -34,7 +34,7 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 		return err
 	}
 
-	if len(*flows) == 0 {
+	if flows == nil || len(*flows) == 0 {
 		return nil
 	}
 
