@@ -5,15 +5,16 @@ import "time"
 type TrackingIdentificationState string
 
 const (
-	TrackingIdentificationStateError               TrackingIdentificationState = "ERROR"                // tracking record processing error
-	TrackingIdentificationStateNew                 TrackingIdentificationState = "NEW"                  // New tracking record
-	TrackingIdentificationStatePrefilteredAsked    TrackingIdentificationState = "PREFILTER_ASKED"      // tracking record passed the IPData prefilter
-	TrackingIdentificationStatePrefilteredPass     TrackingIdentificationState = "PREFILTER_PASS"       // tracking record passed the IPData prefilter
-	TrackingIdentificationStatePrefilteredFail     TrackingIdentificationState = "PREFILTER_FAIL"       // tracking record failed the IPData prefilter
-	TrackingIdentificationStateIdentified          TrackingIdentificationState = "IDENTIFIED"           // tracking record identified with scraping
-	TrackingIdentificationStateNotIdentified       TrackingIdentificationState = "NOT_IDENTIFIED"       // tracking record not identified with scraping
-	TrackingIdentificationStateOrganizationCreated TrackingIdentificationState = "ORGANIZATION_CREATED" // organization created for tracking record
-	TrackingIdentificationStateOrganizationExists  TrackingIdentificationState = "ORGANIZATION_EXISTS"  // organization already exists for tracking record
+	TrackingIdentificationStateError               TrackingIdentificationState = "ERROR"                         // tracking record processing error
+	TrackingIdentificationStateNew                 TrackingIdentificationState = "NEW"                           // New tracking record
+	TrackingIdentificationStatePrefilteredAsked    TrackingIdentificationState = "PREFILTER_ASKED"               // tracking record passed the IPData prefilter
+	TrackingIdentificationStatePrefilteredPass     TrackingIdentificationState = "PREFILTER_PASS"                // tracking record passed the IPData prefilter
+	TrackingIdentificationStatePrefilteredFail     TrackingIdentificationState = "PREFILTER_FAIL"                // tracking record failed the IPData prefilter
+	TrackingIdentificationStateIdentified          TrackingIdentificationState = "IDENTIFIED"                    // tracking record identified with scraping
+	TrackingIdentificationStateNotIdentified       TrackingIdentificationState = "NOT_IDENTIFIED"                // tracking record not identified with scraping
+	TrackingIdentificationStateOrganizationCreated TrackingIdentificationState = "ORGANIZATION_CREATED"          // organization created for tracking record
+	TrackingIdentificationStateOrganizationExists  TrackingIdentificationState = "ORGANIZATION_EXISTS"           // organization already exists for tracking record
+	TrackingIdentificationStateDomainNotValid      TrackingIdentificationState = "ORGANIZATION_DOMAIN_NOT_VALID" // organization already exists for tracking record
 )
 
 type Tracking struct {

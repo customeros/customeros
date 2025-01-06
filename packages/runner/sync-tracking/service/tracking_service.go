@@ -183,6 +183,10 @@ func (s *trackingService) createOrganizationFromTrackingRecord(ctx context.Conte
 	}
 
 	if snitcherData.CompanyDomain == nil || *snitcherData.CompanyDomain == "" || utils.IsValidDomain(*snitcherData.CompanyDomain) == false {
+		err = s.services.CommonServices.PostgresRepositories.TrackingRepository.SetStateById(ctx, r.ID, entity.TrackingIdentificationStateDomainNotValid)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
 		tracing.TraceErr(span, errors.New("company domain is empty or not valid"))
 		return nil, false
 	}
@@ -196,7 +200,6 @@ func (s *trackingService) createOrganizationFromTrackingRecord(ctx context.Conte
 	}
 
 	if organizationByDomainNode == nil {
-
 		// Save organization
 		organizationFields := data_fields.OrganizationFields{
 			Name:         snitcherData.CompanyName,
