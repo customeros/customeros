@@ -510,10 +510,10 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
   }
 
   async remove(id: string) {
+    const organizationId = this.value.get(id)?.organizationId;
+
     try {
       runInAction(() => {
-        const organizationId = this.value.get(id)?.organizationId;
-
         if (organizationId) {
           const organization =
             this.root.organizations.value.get(organizationId);
@@ -543,10 +543,10 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
   }
 
   async softDelete(id: string) {
+    const organizationId = this.value.get(id)?.organizationId;
+
     try {
       runInAction(() => {
-        const organizationId = this.value.get(id)?.organizationId;
-
         if (organizationId) {
           const organization =
             this.root.organizations.value.get(organizationId);
@@ -572,6 +572,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     } finally {
       runInAction(() => {
         this.sync({ action: 'DELETE', ids: [id] });
+        this.root.organizations.invalidate(organizationId || '');
       });
     }
   }

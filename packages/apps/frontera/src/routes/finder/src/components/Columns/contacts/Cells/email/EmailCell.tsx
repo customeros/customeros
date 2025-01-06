@@ -60,12 +60,6 @@ export const EmailCell = observer(
       ? 'Not found'
       : 'Not set';
 
-    // useEffect(() => {
-    //   if (contactStore) {
-    //     editEmailCase.setEntity(contactStore);
-    //   }
-    // }, [contactStore?.id]);
-
     return (
       <div
         ref={ref}
