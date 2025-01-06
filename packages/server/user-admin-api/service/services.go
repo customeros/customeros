@@ -33,6 +33,10 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresD
 			OpenSRSConfig:  cfg.OpenSRS,
 			PostmarkConfig: cfg.Postmark,
 		},
+		InternalServices: commonConfig.InternalServices{
+			EnrichmentApiConfig: cfg.InternalServices.EnrichmentApi,
+			ValidationApiConfig: cfg.InternalServices.ValidationApi,
+		},
 	}, postgresDB, driver, cfg.Neo4j.Database, grpcClients, appLogger)
 	services.RegistrationService = NewRegistrationService(&services)
 

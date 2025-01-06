@@ -123,7 +123,7 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services, config *
 		query = entity.TrackerEvents{
 			VisitorId:    trackerData.VisitorId,
 			Domain:       domain,
-			LinkedinSlug: domain,
+			LinkedinSlug: linkedinSlug,
 		}
 
 		_, err = services.CommonServices.PostgresRepositories.TrackerEventsRepository.UpdateWhereNoCompanyID(ctx, query)
@@ -177,6 +177,10 @@ func identifyIP(ctx context.Context, s *service.Services, ipAddress string) (dom
 		return nil, nil, err
 	}
 
+	if snitcherData == nil || snitcherData.Data == nil {
+		return nil, nil, nil
+	}
+
 	_, primaryDomain := domaincheck.PrimaryDomainCheck(snitcherData.Data.Domain)
 
 	return &primaryDomain, &snitcherData.Data.Profiles.LinkedIn.Handle, nil
@@ -198,7 +202,7 @@ func newOrRepeatVisitor(ctx context.Context, s *service.Services, tenant, domain
 		return VisitorUnknown, err
 	}
 
-	if len(*results) == 0 || results != nil {
+	if len(*results) == 0 {
 		return VisitorNew, nil
 	}
 	return VisitorRepeat, nil
