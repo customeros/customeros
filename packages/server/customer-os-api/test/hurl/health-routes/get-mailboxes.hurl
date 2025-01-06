@@ -5,4 +5,5 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 
 HTTP/2 200
 [Asserts]
-body == ""
+jsonpath "$.status" == "success"
+jsonpath "$.requestId" exists

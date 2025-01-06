@@ -27,11 +27,12 @@ export const RenameTableViewDef = observer(() => {
       return;
     }
 
-    tableViewDef?.update((opp) => {
-      opp.name = value;
+    if (tableViewDef) {
+      tableViewDef.draft();
+      tableViewDef.value.name = value;
+      tableViewDef.commit();
+    }
 
-      return opp;
-    });
     handleClose();
   };
 

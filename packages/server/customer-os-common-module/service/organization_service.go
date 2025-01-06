@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"time"
 
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
@@ -35,6 +36,11 @@ type OrganizationService interface {
 	Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
 	Show(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
 
+	AddParentOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, parentOrganizationId, subOrganizationId, relationType string) error
+	RemoveParentOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, parentOrganizationId, subOrganizationId string) error
+
+	UpdateOnboardingStatus(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string, dataFields data_fields.OrganizationOnboardingStatusFields) error
+
 	GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error)
 	GetMergedOrganizationIds(ctx context.Context, mergedAfter time.Time) ([]string, error)
 	RequestRefreshLastTouchpoint(ctx context.Context, organizationId string) error
@@ -42,6 +48,7 @@ type OrganizationService interface {
 	CheckOrganizationExistsWithEmail(ctx context.Context, email string) (bool, string, error)
 	CheckOrganizationExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
 	GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
+	ValidateOrganizationExists(ctx context.Context, organizationId string) error
 }
 
 type organizationService struct {
@@ -146,12 +153,12 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	}
 
 	// prepare domains in advance
-	err = s.services.DomainService.MergeDomain(ctx, primaryDomain)
+	err = s.services.DomainService.MergeDomain(ctx, nil, primaryDomain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
 	}
 	for _, domain := range input.Domains {
-		err = s.services.DomainService.MergeDomain(ctx, domain)
+		err = s.services.DomainService.MergeDomain(ctx, nil, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
 		}
@@ -177,7 +184,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			// for each domain check that no org exists with that domain
 			// if exist reject creation and return existing org id
 			for _, domain := range domains {
-				orgByDomainDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
+				orgByDomainDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "Error fetching organization by domain"))
 					return "", err
@@ -526,7 +533,7 @@ func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Hide")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	tracing.TagEntity(span, organizationId)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
@@ -536,14 +543,8 @@ func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	organization, err := s.GetById(ctx, tenant, organizationId)
+	err = s.ValidateOrganizationExists(ctx, organizationId)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	if organization == nil {
-		err = fmt.Errorf("opportunity not found")
-		tracing.TraceErr(span, err)
 		return err
 	}
 
@@ -556,7 +557,20 @@ func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// send event completed for organization
 			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithDelete())
+
+			// send event completed for all organization contacts
+			contactDbNodes, innerErr := s.services.Neo4jRepositories.ContactReadRepository.GetActiveContactsForOrganizations(ctx, tenant, []string{organizationId})
+			if innerErr != nil {
+				tracing.TraceErr(span, innerErr)
+			} else {
+				for _, contactDbNode := range contactDbNodes {
+					contactEntity := neo4jmapper.MapDbNodeToContactEntity(contactDbNode.Node)
+					s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contactEntity.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+				}
+			}
+
 			return nil
 		})
 		return nil, nil
@@ -608,6 +622,236 @@ func (s *organizationService) Show(ctx context.Context, txWithPostCommit *utils.
 		})
 		return nil, nil
 	})
+
+	return nil
+}
+
+func (s *organizationService) AddParentOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, parentOrganizationId, subOrganizationId, relationType string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddParentOrganization")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationId", subOrganizationId))
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// validate parent and sub organizations exist
+	err = s.ValidateOrganizationExists(ctx, parentOrganizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	err = s.ValidateOrganizationExists(ctx, subOrganizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		err = s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithParentOrganization(ctx, txWithPostCommit.Tx, tenant, subOrganizationId, parentOrganizationId, relationType)
+		if err != nil {
+			return nil, err
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// add events to both parent and sub organizations
+			err = s.services.RabbitMQService.PublishEvent(ctx, parentOrganizationId, model.ORGANIZATION, dto.AddSubOrganization{SubOrganizationId: subOrganizationId})
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			err = s.services.RabbitMQService.PublishEvent(ctx, subOrganizationId, model.ORGANIZATION, dto.AddParentOrganization{ParentOrganizationId: parentOrganizationId})
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, parentOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, subOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *organizationService) RemoveParentOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, parentOrganizationId, subOrganizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddParentOrganization")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationId", subOrganizationId))
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// validate parent and sub organizations exist
+	err = s.ValidateOrganizationExists(ctx, parentOrganizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	err = s.ValidateOrganizationExists(ctx, subOrganizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		err = s.services.Neo4jRepositories.OrganizationWriteRepository.UnlinkParentOrganization(ctx, txWithPostCommit.Tx, tenant, subOrganizationId, parentOrganizationId)
+		if err != nil {
+			return nil, err
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// add events to both parent and sub organizations
+			err = s.services.RabbitMQService.PublishEvent(ctx, parentOrganizationId, model.ORGANIZATION, dto.RemoveSubOrganization{SubOrganizationId: subOrganizationId})
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			err = s.services.RabbitMQService.PublishEvent(ctx, subOrganizationId, model.ORGANIZATION, dto.RemoveParentOrganization{ParentOrganizationId: parentOrganizationId})
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, parentOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, subOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *organizationService) UpdateOnboardingStatus(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string, dataFields data_fields.OrganizationOnboardingStatusFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateOnboardingStatus")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, organizationId)
+	tracing.LogObjectAsJson(span, "dataFields", dataFields)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// validate parent and sub organizations exist
+	err = s.ValidateOrganizationExists(ctx, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	organizationEntity, err := s.GetById(ctx, tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		err = s.services.Neo4jRepositories.OrganizationWriteRepository.UpdateOnboardingStatus(ctx, txWithPostCommit.Tx, tenant, organizationId, dataFields)
+		if err != nil {
+			return nil, err
+		}
+
+		if utils.IfNotNilString(dataFields.CausedByContractId) != "" {
+			err = s.services.Neo4jRepositories.ContractWriteRepository.ContractCausedOnboardingStatusChange(ctx, txWithPostCommit.Tx, tenant, utils.IfNotNilString(dataFields.CausedByContractId))
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			if dataFields.Status == nil || organizationEntity.OnboardingDetails.Status == dataFields.Status.String() {
+				return nil
+			}
+
+			type ActionOnboardingStatusMetadata struct {
+				Status     string `json:"status"`
+				Comments   string `json:"comments"`
+				UserId     string `json:"userId"`
+				ContractId string `json:"contractId"`
+			}
+
+			metadata, _ := utils.ToJson(ActionOnboardingStatusMetadata{
+				Status:     dataFields.Status.String(),
+				Comments:   utils.IfNotNilString(dataFields.Comments),
+				UserId:     common.GetUserIdFromContext(ctx),
+				ContractId: utils.IfNotNilString(dataFields.CausedByContractId),
+			})
+			message := ""
+			userName := ""
+			if common.GetUserIdFromContext(ctx) != "" {
+				userEntity, err := s.services.UserService.GetById(ctx, common.GetUserIdFromContext(ctx))
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil
+				}
+				userName = userEntity.GetFullName()
+			}
+			if common.GetUserIdFromContext(ctx) != "" {
+				message = fmt.Sprintf("%s changed the onboarding status to %s", userName, dataFields.Status.ReadableStringForActionMessage())
+			} else {
+				message = fmt.Sprintf("The onboarding status was automatically set to %s", dataFields.Status.ReadableStringForActionMessage())
+			}
+
+			extraActionProperties := map[string]interface{}{
+				"status":   dataFields.Status.String(),
+				"comments": utils.IfNotNilString(dataFields.Comments),
+			}
+			_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			return nil
+		})
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// add events to both parent and sub organizations
+			err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.UpdateOrganizationOnboardingStatus{dataFields})
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	return nil
 }
@@ -678,7 +922,7 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	if !s.services.DomainService.AcceptedDomainForOrganization(ctx, domain) {
+	if !s.services.DomainService.IsAcceptedDomainForOrganization(ctx, domain) {
 		return nil
 	}
 
@@ -903,7 +1147,7 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 		timelineEventType = neo4jenum.TouchpointTypeNote.String()
 	case model.NodeLabelInteractionEvent:
 		timelineEventInteractionEvent := timelineEvent.(*neo4jentity.InteractionEventEntity)
-		if timelineEventInteractionEvent.Channel == "EMAIL" {
+		if timelineEventInteractionEvent.Channel == commonenum.InteractionEventChannelEmail {
 			interactionEventSentByUser, err := s.services.Neo4jRepositories.InteractionEventReadRepository.InteractionEventSentByUser(ctx, tenant, timelineEventInteractionEvent.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -914,9 +1158,9 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 			} else {
 				timelineEventType = neo4jenum.TouchpointTypeInteractionEventEmailReceived.String()
 			}
-		} else if timelineEventInteractionEvent.Channel == "VOICE" {
+		} else if timelineEventInteractionEvent.Channel == commonenum.InteractionEventChannelVoice {
 			timelineEventType = neo4jenum.TouchpointTypeInteractionEventPhoneCall.String()
-		} else if timelineEventInteractionEvent.Channel == "CHAT" {
+		} else if timelineEventInteractionEvent.Channel == commonenum.InteractionEventChannelChat {
 			timelineEventType = neo4jenum.TouchpointTypeInteractionEventChat.String()
 		} else if timelineEventInteractionEvent.EventType == "meeting" {
 			timelineEventType = neo4jenum.TouchpointTypeMeeting.String()
@@ -997,4 +1241,26 @@ func (s *organizationService) CheckOrganizationExistsWithLinkedIn(ctx context.Co
 		orgId = orgs[0].Props["id"].(string)
 	}
 	return len(orgs) > 0, orgId, nil
+}
+
+func (s *organizationService) ValidateOrganizationExists(ctx context.Context, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.ValidateOrganizationExists")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, organizationId)
+
+	if organizationId == "" {
+		err := errors.New("organizationId is required")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, model.NodeLabelOrganization)
+	if err != nil || !exists {
+		err = errors.New("organization not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }

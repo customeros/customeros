@@ -137,13 +137,13 @@ func (s *logEntryService) Save(ctx context.Context, id *string, logEntryFields d
 		}
 		err = s.services.RabbitMQService.PublishEvent(ctx, logEntryId, model.LOG_ENTRY, dto.CreateLogEntry{logEntryFields})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContact"))
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateLogEntry"))
 		}
 		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, logEntryId, model.LOG_ENTRY, utils.NewEventCompletedDetails().WithCreate())
 	} else {
 		err = s.services.RabbitMQService.PublishEvent(ctx, logEntryId, model.LOG_ENTRY, dto.UpdateLogEntry{logEntryFields})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContact"))
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateLogEntry"))
 		}
 		if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
 			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, logEntryId, model.LOG_ENTRY, utils.NewEventCompletedDetails().WithUpdate())

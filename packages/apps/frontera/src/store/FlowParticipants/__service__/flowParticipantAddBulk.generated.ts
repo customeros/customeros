@@ -6,7 +6,5 @@ export type FlowParticipantAddBulkMutationVariables = Types.Exact<{
   entityType: Types.FlowEntityType;
 }>;
 
-export type FlowParticipantAddBulkMutation = {
-  __typename?: 'Mutation';
-  flowParticipant_AddBulk: { __typename?: 'Result'; result: boolean };
-};
+
+export type FlowParticipantAddBulkMutation = { __typename?: 'Mutation', flowParticipant_AddBulk: { __typename?: 'Result', result: boolean } };

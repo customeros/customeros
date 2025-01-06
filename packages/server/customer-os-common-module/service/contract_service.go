@@ -15,19 +15,23 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"math"
 	"time"
 )
 
 type ContractService interface {
-	GetById(ctx context.Context, id string) (*neo4jentity.ContractEntity, error)
-	Save(ctx context.Context, id *string, dataFields data_fields.ContractSaveFields) (string, error)
+	GetById(ctx context.Context, contactId string) (*neo4jentity.ContractEntity, error)
+	Save(ctx context.Context, contactId *string, dataFields data_fields.ContractSaveFields) (string, error)
+	SoftDelete(ctx context.Context, contractId string) error
+	RefreshContractStatus(ctx context.Context, contractId string) error
+	RecalculateContractLtv(ctx context.Context, contractId string) error
+	UpdateActiveRenewalOpportunityArr(ctx context.Context, contractId string) error
+	UpdateActiveRenewalOpportunityRenewDateAndArr(ctx context.Context, tenant, contractId string) error
+	UpdateActiveRenewalOpportunityLikelihood(ctx context.Context, tenant, contractId string) error
 }
 
 type contractService struct {
@@ -190,7 +194,7 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 			s.log.Errorf("Error while post create contract %s: %s", contractId, err.Error())
 		}
 	} else {
-		err = s.postUpdateContract(ctx, tenant, contractId, dataFields, beforeUpdateContractEntity)
+		err = s.postUpdateContract(ctx, tenant, contractId, beforeUpdateContractEntity)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error while post create contract %s: %s", contractId, err.Error())
@@ -201,6 +205,70 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 	}
 
 	return contractId, nil
+}
+
+func (s *contractService) SoftDelete(ctx context.Context, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.SoftDelete")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, contractId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// fetch organization of the contract
+	organizationDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
+		return nil
+	}
+	if organizationDbNode == nil {
+		s.log.Errorf("Organization not found for contract %s", contractId)
+		return nil
+	}
+	organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+
+	err = s.services.Neo4jRepositories.ContractWriteRepository.SoftDelete(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while deleting contract %s: %s", contractId, err.Error())
+		return err
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.services.GrpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
+			Tenant:         tenant,
+			OrganizationId: organization.ID,
+			AppSource:      common.GetAppSourceFromContext(ctx),
+		})
+	})
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return s.services.GrpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         tenant,
+			OrganizationId: organization.ID,
+			AppSource:      common.GetAppSourceFromContext(ctx),
+		})
+	})
+
+	err = s.services.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, "")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
+		return err
+	}
+
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithDelete())
+
+	return nil
 }
 
 func (s *contractService) postCreateContract(ctx context.Context, tenant, contractId string, dataFields data_fields.ContractSaveFields) error {
@@ -216,16 +284,10 @@ func (s *contractService) postCreateContract(ctx context.Context, tenant, contra
 	}
 
 	if dataFields.LengthInMonths != nil && *dataFields.LengthInMonths > 0 {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			return s.services.GrpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-				Tenant:     tenant,
-				ContractId: contractId,
-				SourceFields: &commonpb.SourceFields{
-					Source:    *dataFields.Source,
-					AppSource: *dataFields.AppSource,
-				},
-			})
+		_, err = s.services.OpportunityService.CreateRenewalOpportunity(ctx, nil, &data_fields.OpportunityFields{
+			ContractId: &contractId,
+			Source:     dataFields.Source,
+			AppSource:  dataFields.AppSource,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -236,7 +298,7 @@ func (s *contractService) postCreateContract(ctx context.Context, tenant, contra
 	return nil
 }
 
-func (s *contractService) postUpdateContract(ctx context.Context, tenant string, contractId string, dataFields data_fields.ContractSaveFields, beforeUpdateContractEntity *neo4jentity.ContractEntity) error {
+func (s *contractService) postUpdateContract(ctx context.Context, tenant string, contractId string, beforeUpdateContractEntity *neo4jentity.ContractEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.postCreateContract")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -311,7 +373,7 @@ func (s *contractService) postUpdateContract(ctx context.Context, tenant string,
 				s.log.Errorf("Error while activating renewal opportunity for contract %s: %s", contractId, err.Error())
 			}
 		}
-		err = s.updateActiveRenewalOpportunityRenewDateAndArr(ctx, tenant, contractId)
+		err = s.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
@@ -322,12 +384,15 @@ func (s *contractService) postUpdateContract(ctx context.Context, tenant string,
 		s.createActionForStatusChange(ctx, tenant, contractId, string(afterUpdateContractEntity.ContractStatus), afterUpdateContractEntity.Name)
 	}
 
-	err = s.updateActiveRenewalOpportunityLikelihood(ctx, tenant, contractId)
+	err = s.UpdateActiveRenewalOpportunityLikelihood(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
 	}
-	s.updateContractLtv(ctx, tenant, contractId)
+	err = s.RecalculateContractLtv(ctx, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
 	return nil
 }
 
@@ -361,7 +426,6 @@ func (s *contractService) updateStatus(ctx context.Context, tenant, contractId s
 			return "", false, err
 		}
 
-		// TODO add event for status change
 		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 
 		err = s.services.RabbitMQService.PublishEvent(ctx, contractId, model.CONTRACT, dto.ChangeStatusForContract{Status: status})
@@ -523,24 +587,18 @@ func (s *contractService) startOnboardingIfEligible(ctx context.Context, tenant,
 			return
 		}
 		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.services.GrpcClients.OrganizationClient.UpdateOnboardingStatus(ctx, &organizationpb.UpdateOnboardingStatusGrpcRequest{
-				Tenant:             tenant,
-				OrganizationId:     organization.ID,
-				CausedByContractId: contractEntity.Id,
-				OnboardingStatus:   organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED,
-				AppSource:          constants.AppSourceCustomerOsApi,
-			})
+		err = s.services.OrganizationService.UpdateOnboardingStatus(ctx, nil, organization.ID, data_fields.OrganizationOnboardingStatusFields{
+			CausedByContractId: &contractEntity.Id,
+			Status:             utils.ToPtr(neo4jenum.OnboardingStatusNotStarted),
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("UpdateOnboardingStatus gRPC request failed: %v", err.Error())
+			s.log.Errorf("UpdateOnboardingStatus failed: %v", err.Error())
 		}
 	}
 }
 
-func (s *contractService) updateActiveRenewalOpportunityRenewDateAndArr(ctx context.Context, tenant, contractId string) error {
+func (s *contractService) UpdateActiveRenewalOpportunityRenewDateAndArr(ctx context.Context, tenant, contractId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.updateActiveRenewalOpportunityRenewDateAndArr")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -557,6 +615,26 @@ func (s *contractService) updateActiveRenewalOpportunityRenewDateAndArr(ctx cont
 		return nil
 	}
 	err = s.updateRenewalArr(ctx, tenant, contract, renewalOpportunity, span)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	return nil
+}
+
+func (s *contractService) UpdateActiveRenewalOpportunityArr(ctx context.Context, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.UpdateActiveRenewalOpportunityArr")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contractId", contractId))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	contract, renewalOpportunity, done := s.assertContractAndRenewalOpportunity(ctx, tenant, contractId)
+	if done {
+		return nil
+	}
+	err := s.updateRenewalArr(ctx, tenant, contract, renewalOpportunity, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil
@@ -593,15 +671,8 @@ func (s *contractService) assertContractAndRenewalOpportunity(ctx context.Contex
 	// if there is no renewal opportunity, create one
 	if currentRenewalOpportunityDbNode == nil {
 		if !contract.IsEnded() {
-			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-				return s.services.GrpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-					Tenant:     tenant,
-					ContractId: contractId,
-					SourceFields: &commonpb.SourceFields{
-						AppSource: common.GetAppSourceFromContext(ctx),
-					},
-				})
+			_, err = s.services.OpportunityService.CreateRenewalOpportunity(ctx, nil, &data_fields.OpportunityFields{
+				ContractId: &contractId,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -631,14 +702,7 @@ func (s *contractService) updateRenewalOpportunityRenewedAt(ctx context.Context,
 
 	// IF contract already ended, close the renewal opportunity
 	if contractEntity.IsEnded() {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			return s.services.GrpcClients.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
-				Tenant:    tenant,
-				Id:        renewalOpportunityEntity.Id,
-				AppSource: common.GetAppSourceFromContext(ctx),
-			})
-		})
+		err := s.services.OpportunityService.CloseLost(ctx, nil, tenant, renewalOpportunityEntity.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("CloseLooseOpportunity failed: %s", err.Error())
@@ -672,19 +736,13 @@ func (s *contractService) updateRenewalOpportunityRenewedAt(ctx context.Context,
 	renewedAt := calculateNextCycleDate(startRenewalDateCalculation, contractEntity.LengthInMonths, calculateUntilFirstFutureDate)
 	span.LogFields(log.Object("result.renewedAt", renewedAt))
 	if !utils.IsEqualTimePtr(renewedAt, renewalOpportunityEntity.RenewalDetails.RenewedAt) {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			return s.services.GrpcClients.OpportunityClient.UpdateRenewalOpportunityNextCycleDate(ctx, &opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest{
-				OpportunityId: renewalOpportunityEntity.Id,
-				Tenant:        tenant,
-				AppSource:     common.GetAppSourceFromContext(ctx),
-				RenewedAt:     utils.ConvertTimeToTimestampPtr(renewedAt),
-			})
+		_, err = s.services.OpportunityService.Save(ctx, nil, &renewalOpportunityEntity.Id, &data_fields.OpportunityFields{
+			RenewedAt: renewedAt,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("UpdateRenewalOpportunityNextCycleDate failed: %s", err.Error())
-			return errors.Wrap(err, "UpdateRenewalOpportunityNextCycleDate")
+			return err
 		}
 	}
 
@@ -707,26 +765,14 @@ func (s *contractService) updateRenewalArr(ctx context.Context, tenant string, c
 	// adjust with likelihood
 	currentArr := calculateCurrentArrByAdjustedRate(maxArr, renewalOpportunity.RenewalDetails.RenewalAdjustedRate)
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-		return s.services.GrpcClients.OpportunityClient.UpdateOpportunity(ctx, &opportunitypb.UpdateOpportunityGrpcRequest{
-			Tenant:    tenant,
-			Id:        renewalOpportunity.Id,
-			Amount:    currentArr,
-			MaxAmount: maxArr,
-			SourceFields: &commonpb.SourceFields{
-				AppSource: common.GetAppSourceFromContext(ctx),
-				Source:    neo4jentity.DataSourceOpenline.String(),
-			},
-			FieldsMask: []opportunitypb.OpportunityMaskField{
-				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT,
-				opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT,
-			},
-		})
+	_, err = s.services.OpportunityService.Save(ctx, nil, &renewalOpportunity.Id, &data_fields.OpportunityFields{
+		Amount:    &currentArr,
+		MaxAmount: &maxArr,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("UpdateOpportunity failed: %s", err.Error())
+		return err
 	}
 
 	return nil
@@ -831,8 +877,8 @@ func (s *contractService) createActionForStatusChange(ctx context.Context, tenan
 	}
 }
 
-func (s *contractService) updateActiveRenewalOpportunityLikelihood(ctx context.Context, tenant, contractId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.updateActiveRenewalOpportunityLikelihood")
+func (s *contractService) UpdateActiveRenewalOpportunityLikelihood(ctx context.Context, tenant, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.UpdateActiveRenewalOpportunityLikelihood")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("contractId", contractId))
@@ -874,21 +920,9 @@ func (s *contractService) updateActiveRenewalOpportunityLikelihood(ctx context.C
 	}
 
 	if renewalLikelihood != "" {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			return s.services.GrpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &opportunitypb.UpdateRenewalOpportunityGrpcRequest{
-				Tenant:              tenant,
-				Id:                  opportunityEntity.Id,
-				RenewalLikelihood:   renewalLikelihoodForGrpcRequest(renewalLikelihood),
-				RenewalAdjustedRate: renewalAdjustedRate,
-				SourceFields: &commonpb.SourceFields{
-					AppSource: common.GetAppSourceFromContext(ctx),
-				},
-				FieldsMask: []opportunitypb.OpportunityMaskField{
-					opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD,
-					opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ADJUSTED_RATE,
-				},
-			})
+		_, err = s.services.OpportunityService.Save(ctx, nil, &opportunityEntity.Id, &data_fields.OpportunityFields{
+			RenewalLikelihood:   &renewalLikelihood,
+			RenewalAdjustedRate: &renewalAdjustedRate,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -898,42 +932,6 @@ func (s *contractService) updateActiveRenewalOpportunityLikelihood(ctx context.C
 	}
 
 	return nil
-}
-
-func (s *contractService) updateContractLtv(ctx context.Context, tenant, contractId string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.updateContractLtv")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagEntityId, contractId)
-
-	// request contract LTV refresh
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
-		return s.services.GrpcClients.ContractClient.RefreshContractLtv(ctx, &contractpb.RefreshContractLtvGrpcRequest{
-			Tenant:    tenant,
-			Id:        contractId,
-			AppSource: common.GetAppSourceFromContext(ctx),
-		})
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("RefreshContractLtv failed: %s", err.Error())
-	}
-}
-
-func renewalLikelihoodForGrpcRequest(renewalLikelihood neo4jenum.RenewalLikelihood) opportunitypb.RenewalLikelihood {
-	switch renewalLikelihood {
-	case neo4jenum.RenewalLikelihoodHigh:
-		return opportunitypb.RenewalLikelihood_HIGH_RENEWAL
-	case neo4jenum.RenewalLikelihoodMedium:
-		return opportunitypb.RenewalLikelihood_MEDIUM_RENEWAL
-	case neo4jenum.RenewalLikelihoodLow:
-		return opportunitypb.RenewalLikelihood_LOW_RENEWAL
-	case neo4jenum.RenewalLikelihoodZero:
-		return opportunitypb.RenewalLikelihood_ZERO_RENEWAL
-	default:
-		return opportunitypb.RenewalLikelihood_HIGH_RENEWAL
-	}
 }
 
 func calculateNextCycleDate(from *time.Time, lengthInMonths int64, calculateUntilFirstFutureDate bool) *time.Time {
@@ -978,4 +976,199 @@ func monthsUntilContractEnd(start, end time.Time) int {
 	}
 
 	return totalMonths
+}
+
+func (s *contractService) RefreshContractStatus(ctx context.Context, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.RefreshContractStatus")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	status, statusChanged, err := s.updateStatus(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())
+		return err
+	}
+	span.LogFields(log.String("result.status", status))
+	span.LogFields(log.Bool("result.statusChanged", statusChanged))
+
+	if statusChanged {
+		err = s.updateOrganizationRelationship(ctx, tenant, contractId, statusChanged)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error while updating organization relationship for contract %s: %s", contractId, err.Error())
+		}
+		err = s.RecalculateContractLtv(ctx, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error while updating contract %s ltv: %s", contractId, err.Error())
+		}
+
+		contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+		s.createActionForStatusChange(ctx, tenant, contractId, status, contractEntity.Name)
+
+		s.startOnboardingIfEligible(ctx, tenant, contractId, span)
+		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+	}
+
+	if status == neo4jenum.ContractStatusEnded.String() {
+		err = s.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("error while updating renewal opportunity for contract %s: %s", contractId, err.Error())
+		}
+
+		err = s.services.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, "")
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
+		}
+	}
+
+	return nil
+}
+
+func (s *contractService) RecalculateContractLtv(ctx context.Context, contractId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.RecalculateContractLtv")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, contractId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+
+	ltv := 0.0
+	recalculateContractLtv := true
+	if !(contractEntity.ContractStatus == neo4jenum.ContractStatusLive ||
+		contractEntity.ContractStatus == neo4jenum.ContractStatusOutOfContract ||
+		contractEntity.ContractStatus == neo4jenum.ContractStatusEnded) {
+		span.LogFields(log.String("result", fmt.Sprintf("contract status %s is not eligible for LTV calculation", contractEntity.ContractStatus)))
+		recalculateContractLtv = false
+	}
+
+	if recalculateContractLtv {
+		sliDbNodes, err := s.services.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		var sliEntities []*neo4jentity.ServiceLineItemEntity
+		for _, sliDbNode := range sliDbNodes {
+			sliEntities = append(sliEntities, neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode))
+		}
+
+		// Calculate LTV
+
+		// Step 1 calculate one times
+		for _, sliEntity := range sliEntities {
+			if sliEntity.IsOneTime() {
+				sliLtv := float64(sliEntity.Quantity) * sliEntity.Price
+				ltv += sliLtv
+				span.LogFields(log.String("result.sli - ltv", fmt.Sprintf("%s - %f", sliEntity.ID, utils.TruncateFloat64(sliLtv, 2))))
+			}
+		}
+
+		defaultEndDate := utils.Today()
+		if contractEntity.IsEnded() && contractEntity.EndedAt != nil {
+			defaultEndDate = *contractEntity.EndedAt
+		}
+		// Step 2 calculate recurring
+		for _, sliEntity := range sliEntities {
+			if sliEntity.IsRecurrent() {
+				endDate := defaultEndDate
+				if sliEntity.EndedAt != nil && sliEntity.EndedAt.Before(defaultEndDate) {
+					endDate = *sliEntity.EndedAt
+				}
+				duration := calculateDuration(sliEntity.StartedAt, endDate, sliEntity.Billed)
+				sliLtv := float64(sliEntity.Quantity) * sliEntity.Price * duration
+				ltv += sliLtv
+				span.LogFields(log.String("result.sli - ltv", fmt.Sprintf("%s - %f", sliEntity.ID, utils.TruncateFloat64(sliLtv, 2))))
+			}
+		}
+	}
+
+	truncatedLtv := utils.TruncateFloat64(ltv, 2)
+	err = s.services.Neo4jRepositories.ContractWriteRepository.SetLtv(ctx, tenant, contractId, truncatedLtv)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while updating contract %s ltv: %s", contractId, err.Error())
+		return err
+	}
+
+	// get organization for contract
+	organizationDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
+		return nil
+	}
+	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+
+	// request organization ltv refresh
+	if organizationEntity.ID != "" {
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return s.services.GrpcClients.OrganizationClient.RefreshDerivedData(ctx, &organizationpb.RefreshDerivedDataGrpcRequest{
+				Tenant:         tenant,
+				OrganizationId: organizationEntity.ID,
+				AppSource:      common.GetAppSourceFromContext(ctx),
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
+
+	s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+
+	return nil
+}
+
+func calculateDuration(startedAt, endedAt time.Time, billed neo4jenum.BilledType) float64 {
+	if startedAt.After(endedAt) {
+		return float64(0)
+	}
+	durationDays := math.Abs(float64(daysBetween(startedAt, endedAt)))
+
+	switch billed {
+	case neo4jenum.BilledTypeMonthly:
+		return durationDays / 30
+	case neo4jenum.BilledTypeQuarterly:
+		return durationDays / 90
+	case neo4jenum.BilledTypeAnnually:
+		return durationDays / 365
+	default:
+		return 0
+	}
+}
+
+func daysBetween(start, end time.Time) int {
+	duration := end.Sub(start)
+	return int(duration.Hours() / 24)
 }

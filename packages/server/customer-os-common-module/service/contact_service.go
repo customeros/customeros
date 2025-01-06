@@ -67,7 +67,7 @@ func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Contex
 		}
 
 		mailValidation := mailsherpa.ValidateEmailSyntax(email)
-		validDomainForOrganization := s.services.DomainService.AcceptedDomainForOrganization(ctx, mailValidation.Domain)
+		validDomainForOrganization := s.services.DomainService.IsAcceptedDomainForOrganization(ctx, mailValidation.Domain)
 
 		if validDomainForOrganization {
 			organizationId, innerErr := s.services.OrganizationService.Save(ctx, txWithPostCommit, nil, data_fields.OrganizationFields{
@@ -111,14 +111,10 @@ func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 	createFlow := false
 	contactId := ""
 
-	if id == nil || *id == "" {
+	if utils.IfNotNilString(id) == "" {
 		createFlow = true
 		span.LogKV("flow", "create")
-	} else {
-		span.LogKV("flow", "update")
-	}
 
-	if createFlow {
 		// generate id
 		contactId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelContact)
 		if err != nil {
@@ -142,6 +138,8 @@ func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 			contactFields.Hide = utils.BoolPtr(false)
 		}
 	} else {
+		span.LogKV("flow", "update")
+
 		contactId = *id
 		// validate contact exists
 		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, contactId, model.NodeLabelContact)

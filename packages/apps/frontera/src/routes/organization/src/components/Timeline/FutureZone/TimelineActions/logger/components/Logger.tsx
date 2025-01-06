@@ -29,7 +29,7 @@ export const Logger = observer(({ hide }: LoggerProps) => {
   const handleChange = (html: string) => {
     setValue(html);
 
-    if (html === '<p><br></p>') {
+    if (html === '<p class="my-3"><br></p>') {
       store.ui.clearDirtyEditor();
     } else {
       store.ui.setDirtyEditor('log-entry');
@@ -110,7 +110,6 @@ export const Logger = observer(({ hide }: LoggerProps) => {
       <div className='absolute top-[-16px] right-[-24px]'>
         <img alt='' width={174} height={135} src={noteIcon} />
       </div>
-
       <div className='z-2 w-full h-full'>
         <Editor
           className='mb-10'

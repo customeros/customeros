@@ -22,7 +22,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph"
 	invoice_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/invoice"
-	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/location"
 	notifications_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/notifications"
 	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -149,17 +148,6 @@ func (server *Server) InitSubscribers(ctx context.Context, grpcClients *grpc_cli
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {
 				server.Log.Errorf("(graphSubscriber.Connect) err: {%s}", err.Error())
-				cancel()
-			}
-		}()
-	}
-
-	if server.Config.Subscriptions.LocationValidationSubscription.Enabled {
-		locationValidationSubscriber := location_validation_subscription.NewLocationValidationSubscriber(server.Log, esdb, server.Config, server.Services, grpcClients)
-		go func() {
-			err := locationValidationSubscriber.Connect(ctx, locationValidationSubscriber.ProcessEvents)
-			if err != nil {
-				server.Log.Errorf("(locationValidationSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()

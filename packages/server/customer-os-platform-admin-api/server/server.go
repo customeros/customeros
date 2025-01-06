@@ -97,6 +97,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		SkipPaths:  []string{"/metrics", "/health", "/readiness", "/"},
 	}))
 	r.Use(ginzap.RecoveryWithZap(server.log.Logger(), true))
+	r.Use(tracing.RecoveryWithJaeger(opentracing.GlobalTracer()))
 	r.Use(prometheusMiddleware())
 	r.Use(bodyLoggerMiddleware)
 

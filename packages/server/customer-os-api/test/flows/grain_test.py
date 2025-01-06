@@ -14,8 +14,8 @@ def setup(api_key: str) -> str:
 
     ## Create flow
     flowBody = {
-        "name": "test_flow",
-        "description": "my test flow",
+        "name": "grain_test_flow",
+        "description": "my grain test flow",
         "triggerOn": "grain.meeting_summary.created",
     }
 

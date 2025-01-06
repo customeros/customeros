@@ -127,10 +127,6 @@ export const KanbanColumn = observer(
       viewDef?.setColumnName(columnId, e.target.value);
     };
 
-    const handleNameBlur = () => {
-      viewDef?.save();
-    };
-
     const handleCreateDraft = () => {
       store.ui.commandMenu.toggle('ChooseOpportunityOrganization', {
         ids: [],
@@ -159,7 +155,6 @@ export const KanbanColumn = observer(
                   variant='unstyled'
                   disabled={!canEdit}
                   value={column?.name}
-                  onBlur={handleNameBlur}
                   onChange={handleNameChange}
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                   className={cn(

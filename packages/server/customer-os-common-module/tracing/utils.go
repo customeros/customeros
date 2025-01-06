@@ -6,8 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"io"
 	"net/http"
+	"runtime"
+	"runtime/debug"
 
 	"github.com/gin-gonic/gin"
 	"github.com/machinebox/graphql"
@@ -27,7 +30,9 @@ const (
 	SpanTagEntityId       = "entity-id"
 	SpanTagComponent      = "component"
 	SpanTagExternalSystem = "external-system"
-	SpanTagAggregateId    = "aggregateID"
+	SpanTagExternalId     = "external-id"
+	//Deprecated
+	SpanTagAggregateId = "aggregateID"
 )
 
 const (
@@ -284,4 +289,44 @@ func TagComponentService(span opentracing.Span) {
 
 func TagComponentListener(span opentracing.Span) {
 	span.SetTag(SpanTagComponent, SpanTagComponentListener)
+}
+
+func RecoveryWithJaeger(tracer opentracing.Tracer) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer func() {
+			if r := recover(); r != nil {
+				// Log the panic to Jaeger
+				span := tracer.StartSpan("panic-recovery")
+				defer span.Finish()
+
+				buf := make([]byte, 4096)
+				stackSize := runtime.Stack(buf, false)
+				span.LogKV(
+					"event", "error",
+					"error.object", r,
+					"stack", string(buf[:stackSize]),
+				)
+				span.SetTag("error", true)
+			}
+		}()
+		c.Next()
+	}
+}
+
+func RecoverAndLogToJaeger(appLogger logger.Logger) {
+	if r := recover(); r != nil {
+		tracer := opentracing.GlobalTracer()
+		span := tracer.StartSpan("panic-recovery")
+		defer span.Finish()
+
+		stackTrace := string(debug.Stack())
+		span.LogKV(
+			"event", "error",
+			"error.object", r,
+			"stack", stackTrace,
+		)
+		span.SetTag("error", true)
+
+		appLogger.Errorf("Recovered from panic: %v\nStack trace:\n%s", r, stackTrace)
+	}
 }

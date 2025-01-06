@@ -4,7 +4,5 @@ export type AddTagsToContactMutationVariables = Types.Exact<{
   input: Types.ContactTagInput;
 }>;
 
-export type AddTagsToContactMutation = {
-  __typename?: 'Mutation';
-  contact_AddTag: { __typename?: 'ActionResponse'; accepted: boolean };
-};
+
+export type AddTagsToContactMutation = { __typename?: 'Mutation', contact_AddTag: { __typename?: 'ActionResponse', accepted: boolean } };

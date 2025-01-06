@@ -3,17 +3,19 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/repository"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/tracing"
+	"strconv"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/slack-go/slack"
-	"strconv"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/logger"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/repository"
+	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/tracing"
 )
 
 const pageSize = 200
@@ -85,7 +87,7 @@ func (s *slackService) FetchUserIdsFromSlackChannel(ctx context.Context, token, 
 
 	users := make([]string, 0)
 
-	var cursor = "" // initial empty cursor
+	cursor := "" // initial empty cursor
 	for {
 		params := slack.GetUsersInConversationParameters{
 			ChannelID: channelId,
@@ -153,7 +155,7 @@ func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, ten
 
 	messages := make([]slack.Message, 0, pageSize)
 
-	var cursor = "" // initial empty cursor
+	cursor := "" // initial empty cursor
 	for {
 		params := slack.GetConversationHistoryParameters{
 			ChannelID: channelId,
@@ -213,7 +215,7 @@ func (s *slackService) FetchMessagesFromSlackChannelWithReplies(ctx context.Cont
 	messages := make([]slack.Message, 0, pageSize)
 	from := utils.Now().AddDate(0, 0, 0-lookbackWindow)
 
-	var cursor = "" // initial empty cursor
+	cursor := "" // initial empty cursor
 	for {
 		params := slack.GetConversationHistoryParameters{
 			ChannelID: channelId,

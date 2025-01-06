@@ -1,15 +1,16 @@
 package entity
 
 import (
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 )
 
 const PropertyExternalSystemStripePaymentMethodTypes = "stripePaymentMethodTypes"
 
 type ExternalSystemEntity struct {
 	DataLoaderKey
-	ExternalSystemId neo4jenum.ExternalSystemId
+	ExternalSystemId enum.Source
 	Name             string
 	Relationship     struct {
 		ExternalId     string

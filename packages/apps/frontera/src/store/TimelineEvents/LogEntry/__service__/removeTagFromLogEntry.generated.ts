@@ -5,7 +5,5 @@ export type RemoveTagFromLogEntryMutationVariables = Types.Exact<{
   input: Types.TagIdOrNameInput;
 }>;
 
-export type RemoveTagFromLogEntryMutation = {
-  __typename?: 'Mutation';
-  logEntry_RemoveTag: string;
-};
+
+export type RemoveTagFromLogEntryMutation = { __typename?: 'Mutation', logEntry_RemoveTag: string };

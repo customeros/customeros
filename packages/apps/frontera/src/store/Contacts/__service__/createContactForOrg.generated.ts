@@ -5,7 +5,5 @@ export type CreateContactMutationVariables = Types.Exact<{
   organizationId: Types.Scalars['ID']['input'];
 }>;
 
-export type CreateContactMutation = {
-  __typename?: 'Mutation';
-  contact_CreateForOrganization: { __typename?: 'Contact'; id: string };
-};
+
+export type CreateContactMutation = { __typename?: 'Mutation', contact_CreateForOrganization: { __typename?: 'Contact', id: string } };

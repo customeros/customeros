@@ -16,8 +16,7 @@ const (
 	cache5MB  = 5 * 1024 * KB
 )
 const (
-	expire20Days = 20 * 24 * 60 * 60 // 20 days
-	expire1Hour  = 60 * 60           // 1 hour
+	expire1Hour = 60 * 60 // 1 hour
 )
 
 type Cache interface {
@@ -59,7 +58,7 @@ func (c *cache) SetIndustry(key, value string) {
 	keyBytes := []byte(strings.ToUpper(key))
 	valueBytes := []byte(value)
 
-	_ = c.industryCache.Set(keyBytes, valueBytes, expire20Days)
+	_ = c.industryCache.Set(keyBytes, valueBytes, expire1Hour)
 }
 
 func (c *cache) GetIndustry(key string) (string, bool) {

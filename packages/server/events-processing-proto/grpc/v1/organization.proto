@@ -4,7 +4,6 @@ import "google/protobuf/timestamp.proto";
 import "common/source.proto";
 import "common/external_system.proto";
 import "common/common.proto";
-import "location.proto";
 
 option go_package = "api/grpc/v1/organization;organization_grpc_service";
 
@@ -54,11 +53,8 @@ message UnlinkEmailFromBillingProfileGrpcRequest {
   string appSource = 6;
 }
 
-message LinkLocationToOrganizationGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string locationId = 3;
-  string loggedInUserId = 4;
+message LocationIdGrpcResponse {
+  string id = 1;
 }
 
 message LinkLocationToBillingProfileGrpcRequest {
@@ -110,44 +106,6 @@ message CustomFieldForOrganizationGrpcRequest {
   string loggedInUserId = 12;
 }
 
-message AddParentOrganizationGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string parentOrganizationId = 3;
-  string loggedInUserId = 4;
-  string type = 5;
-  string appSource = 6;
-}
-
-message RemoveParentOrganizationGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string parentOrganizationId = 3;
-  string loggedInUserId = 4;
-  string appSource = 5;
-}
-
-message UpdateOnboardingStatusGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string loggedInUserId = 3;
-  OnboardingStatus onboardingStatus = 4;
-  string comments = 5;
-  google.protobuf.Timestamp updatedAt = 6;
-  string appSource = 7;
-  string causedByContractId = 8;
-}
-
-enum OnboardingStatus {
-  ONBOARDING_STATUS_NOT_APPLICABLE = 0;
-  ONBOARDING_STATUS_NOT_STARTED = 1;
-  ONBOARDING_STATUS_ON_TRACK = 2;
-  ONBOARDING_STATUS_LATE = 3;
-  ONBOARDING_STATUS_STUCK = 4;
-  ONBOARDING_STATUS_DONE = 5;
-  ONBOARDING_STATUS_SUCCESSFUL = 6;
-}
-
 message UpdateOrganizationOwnerGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -196,16 +154,6 @@ message OrganizationRemoveTagGrpcRequest {
   string appSource = 5;
 }
 
-message OrganizationAddLocationGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string loggedInUserId = 3;
-  SourceFields sourceFields = 4;
-  string locationId = 5;
-  LocationDetails locationDetails = 6;
-  google.protobuf.Timestamp  createdAt = 7;
-}
-
 message OrganizationIdGrpcResponse {
   string id = 1;
 }
@@ -219,14 +167,10 @@ message BillingProfileIdGrpcResponse {
 }
 
 service organizationGrpcService {
-  rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpsertCustomFieldToOrganization(CustomFieldForOrganizationGrpcRequest) returns (CustomFieldIdGrpcResponse);
   rpc RefreshRenewalSummary(RefreshRenewalSummaryGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshDerivedData(RefreshDerivedDataGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshArr(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc AddParentOrganization(AddParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc RemoveParentOrganization(RemoveParentOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc UpdateOnboardingStatus(UpdateOnboardingStatusGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationOwner(UpdateOrganizationOwnerGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc CreateBillingProfile(CreateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc UpdateBillingProfile(UpdateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
@@ -234,6 +178,5 @@ service organizationGrpcService {
   rpc UnlinkEmailFromBillingProfile(UnlinkEmailFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc LinkLocationToBillingProfile(LinkLocationToBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc UnlinkLocationFromBillingProfile(UnlinkLocationFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
-  rpc AddLocation(OrganizationAddLocationGrpcRequest) returns (LocationIdGrpcResponse);
   rpc AdjustIndustry(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
 }

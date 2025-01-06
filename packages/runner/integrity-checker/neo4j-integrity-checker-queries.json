@@ -110,7 +110,11 @@
         },
         {
           "name": "Multiple organizations share same domain",
-          "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain) with t, d, count(org) as size_orgs where size_orgs > 1 return count(d)"
+          "query": "MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {hide:false})-[:HAS_DOMAIN]->(d:Domain) with t, d, count(DISTINCT org) as size_orgs where size_orgs > 1 return count(d)"
+        },
+        {
+          "name": "Multiple organizations share same primary domain",
+          "query": "MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {hide:false})-[:HAS_DOMAIN]->(d:Domain) where d.primaryDomain IS NOT NULL AND d.primaryDomain <> '' with t, d.primaryDomain as primaryDomain, count(DISTINCT org) as size_orgs where size_orgs > 1 return count(primaryDomain)"
         },
         {
           "name": "Organizations with missing properties",
@@ -182,6 +186,10 @@
         {
           "name": "Domains without primary flag",
           "query": "MATCH (d:Domain) WHERE d.primary IS NULL RETURN count(d)"
+        },
+        {
+          "name": "Domains with wrong format",
+          "query": "MATCH (d:Domain) WHERE d.domain STARTS WITH 'www.' OR d.domain STARTS WITH 'http://' OR d.domain STARTS WITH 'https://' OR d.domain ENDS WITH '/' OR NOT d.domain CONTAINS '.' RETURN count(d)"
         }
       ]
     },

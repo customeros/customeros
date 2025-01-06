@@ -19,13 +19,9 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"time"
 )
 
@@ -429,21 +425,11 @@ func (s *contractService) SoftDeleteContract(ctx context.Context, contractId str
 		return false, err
 	}
 
-	deleteRequest := contractpb.SoftDeleteContractGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             contractId,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
-		return s.grpcClients.ContractClient.SoftDeleteContract(ctx, &deleteRequest)
-	})
+	err = s.services.CommonServices.ContractService.SoftDelete(ctx, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
-		return false, err
+		s.log.Errorf("Failed to delete contract: %s", err.Error())
+		return false, nil
 	}
 
 	// wait for contract to be deleted from graph db
@@ -483,23 +469,14 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 	}
 	// if no active renewal opportunity found create new
 	if opportunityDbNode == nil {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			return s.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				ContractId:     contractId,
-				SourceFields: &commonpb.SourceFields{
-					Source:    neo4jentity.DataSourceOpenline.String(),
-					AppSource: constants.AppSourceCustomerOsApi,
-				},
-				RenewalApproved: true,
-				RenewedAt:       utils.ConvertTimeToTimestampPtr(renewalDate),
-			})
+		_, err = s.services.CommonServices.OpportunityService.CreateRenewalOpportunity(ctx, nil, &data_fields.OpportunityFields{
+			ContractId:      &contractId,
+			RenewalApproved: utils.BoolPtr(true),
+			RenewedAt:       renewalDate,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error from events processing: %s", err.Error())
+			s.log.Errorf("Error creating renewal opportunity: %s", err.Error())
 			return err
 		}
 		return nil
@@ -508,28 +485,13 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 
 	// if renewal opportunity is not expired - approve next renewal
 	if opportunityEntity.RenewalDetails.RenewedAt != nil && utils.Now().Before(*opportunityEntity.RenewalDetails.RenewedAt) {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			grpcUpdateRequest := opportunitypb.UpdateRenewalOpportunityGrpcRequest{
-				Id:              opportunityEntity.Id,
-				Tenant:          common.GetTenantFromContext(ctx),
-				LoggedInUserId:  common.GetUserIdFromContext(ctx),
-				RenewalApproved: true,
-				FieldsMask:      []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEW_APPROVED},
-				SourceFields: &commonpb.SourceFields{
-					Source:    neo4jentity.DataSourceOpenline.String(),
-					AppSource: constants.AppSourceCustomerOsApi,
-				},
-			}
-			if renewalDate != nil {
-				grpcUpdateRequest.RenewedAt = utils.ConvertTimeToTimestampPtr(renewalDate)
-				grpcUpdateRequest.FieldsMask = append(grpcUpdateRequest.FieldsMask, opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWED_AT)
-			}
-			return s.grpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &grpcUpdateRequest)
+		_, err = s.services.CommonServices.OpportunityService.Save(ctx, nil, &opportunityEntity.Id, &data_fields.OpportunityFields{
+			RenewalApproved: utils.BoolPtr(true),
+			RenewedAt:       renewalDate,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error from events processing: %s", err.Error())
+			s.log.Errorf("Error approving renewal opportunity: %s", err.Error())
 			return err
 		}
 	} else {
@@ -538,20 +500,9 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 			return nil
 		}
 		// if renewal opportunity is expired - rollout renewal opportunity
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		if renewalDate != nil {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-				return s.grpcClients.OpportunityClient.UpdateRenewalOpportunity(ctx, &opportunitypb.UpdateRenewalOpportunityGrpcRequest{
-					Id:             opportunityEntity.Id,
-					Tenant:         common.GetTenantFromContext(ctx),
-					LoggedInUserId: common.GetUserIdFromContext(ctx),
-					RenewedAt:      utils.ConvertTimeToTimestampPtr(renewalDate),
-					FieldsMask:     []opportunitypb.OpportunityMaskField{opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWED_AT},
-					SourceFields: &commonpb.SourceFields{
-						Source:    neo4jentity.DataSourceOpenline.String(),
-						AppSource: constants.AppSourceCustomerOsApi,
-					},
-				})
+			_, err = s.services.CommonServices.OpportunityService.Save(ctx, nil, &opportunityEntity.Id, &data_fields.OpportunityFields{
+				RenewedAt: renewalDate,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -560,17 +511,10 @@ func (s *contractService) RenewContract(ctx context.Context, contractId string, 
 			}
 			time.Sleep(500 * time.Millisecond)
 		}
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
-			return s.grpcClients.ContractClient.RolloutRenewalOpportunityOnExpiration(ctx, &contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest{
-				Id:             contractId,
-				Tenant:         common.GetTenantFromContext(ctx),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      constants.AppSourceCustomerOsApi,
-			})
-		})
+		err = s.services.CommonServices.OpportunityService.RolloutRenewalOpportunity(ctx, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error from events processing: %s", err.Error())
+			s.log.Errorf("failed to rollout renewal opportunity: %s", err.Error())
 			return err
 		}
 	}

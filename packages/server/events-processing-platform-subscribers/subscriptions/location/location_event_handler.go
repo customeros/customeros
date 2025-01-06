@@ -216,7 +216,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 		if result.Address.Longitude != nil {
 			request.Longitude = utils.FloatToString(result.Address.Longitude)
 		}
-		return h.grpcClients.LocationClient.PassLocationValidation(ctx, &request)
+		return h.grpcClients..PassLocationValidation(ctx, &request)
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

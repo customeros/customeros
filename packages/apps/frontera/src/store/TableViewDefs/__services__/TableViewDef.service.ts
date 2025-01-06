@@ -1,40 +1,50 @@
+import omit from 'lodash/omit';
+import { match } from 'ts-pattern';
+import { Operation } from '@store/types';
 import { Transport } from '@store/transport';
-import GetTableViewDefs from '@store/TableViewDefs/__services__/getTableViewDefs.graphql';
-import { TableViewDefsQuery } from '@store/TableViewDefs/__services__/getTableViewDefs.generated.ts';
-import CreateTableViewDefDocument from '@store/TableViewDefs/__services__/createTableViewDef.graphql';
-import UpdateTableViewDefDocument from '@store/TableViewDefs/__services__/updateTableViewDef.graphql';
-import ArchiveTableViewDefDocument from '@store/TableViewDefs/__services__/archiveTableViewDef.graphql';
+
+import { TableViewDef } from '../TableViewDef.dto';
+import GetTableViewDefsDocument from './getTableViewDefs.graphql';
+import { TableViewDefsQuery } from './getTableViewDefs.generated';
+import CreateTableViewDefDocument from './createTableViewDef.graphql';
+import UpdateTableViewDefDocument from './updateTableViewDef.graphql';
+import ArchiveTableViewDefDocument from './archiveTableViewDef.graphql';
+import UpdateTableViewDefSharedDocument from './updateTableViewDefShared.graphql';
 import {
   UpdateTableViewDefMutation,
   UpdateTableViewDefMutationVariables,
-} from '@store/TableViewDefs/__services__/updateTableViewDef.generated.ts';
+} from './updateTableViewDef.generated';
 import {
   CreateTableViewDefMutation,
   CreateTableViewDefMutationVariables,
-} from '@store/TableViewDefs/__services__/createTableViewDef.generated.ts';
+} from './createTableViewDef.generated';
 import {
   ArchiveTableViewDefMutation,
   ArchiveTableViewDefMutationVariables,
-} from '@store/TableViewDefs/__services__/archiveTableViewDef.generated.ts';
+} from './archiveTableViewDef.generated';
+import {
+  UpdateTableViewDefSharedMutation,
+  UpdateTableViewDefSharedMutationVariables,
+} from './updateTableViewDefShared.generated';
 
 export class TableViewDefsService {
   private static instance: TableViewDefsService | null = null;
-  private transport: Transport;
+  private transport = Transport.getInstance();
 
-  constructor(transport: Transport) {
-    this.transport = transport;
-  }
+  constructor() {}
 
-  public static getInstance(transport: Transport): TableViewDefsService {
+  public static getInstance(): TableViewDefsService {
     if (!TableViewDefsService.instance) {
-      TableViewDefsService.instance = new TableViewDefsService(transport);
+      TableViewDefsService.instance = new TableViewDefsService();
     }
 
     return TableViewDefsService.instance;
   }
 
   async getTableViewDefs(): Promise<TableViewDefsQuery> {
-    return this.transport.graphql.request<TableViewDefsQuery>(GetTableViewDefs);
+    return this.transport.graphql.request<TableViewDefsQuery>(
+      GetTableViewDefsDocument,
+    );
   }
 
   async createTableViewDef(
@@ -62,5 +72,43 @@ export class TableViewDefsService {
       UpdateTableViewDefMutation,
       UpdateTableViewDefMutationVariables
     >(UpdateTableViewDefDocument, variables);
+  }
+
+  async updateTableViewDefShared(
+    variables: UpdateTableViewDefSharedMutationVariables,
+  ): Promise<UpdateTableViewDefSharedMutation> {
+    return this.transport.graphql.request<
+      UpdateTableViewDefSharedMutation,
+      UpdateTableViewDefSharedMutationVariables
+    >(UpdateTableViewDefSharedDocument, variables);
+  }
+
+  public async mutateOperation(operation: Operation, store: TableViewDef) {
+    if (!operation.diff.length) {
+      return;
+    }
+
+    if (!operation.entityId) {
+      console.error('Missing entityId in Operation! Mutations will not fire.');
+
+      return;
+    }
+
+    const payload = {
+      input: omit(
+        store.value,
+        'updatedAt',
+        'createdAt',
+        'tableType',
+        'tableId',
+        'isPreset',
+        'isShared',
+        'defaultFilters',
+      ),
+    };
+
+    return match(store.value.isShared)
+      .with(true, async () => this.updateTableViewDefShared(payload))
+      .otherwise(async () => this.updateTableViewDef(payload));
   }
 }

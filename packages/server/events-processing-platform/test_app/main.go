@@ -7,15 +7,9 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
-	iepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/interaction_event"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"google.golang.org/grpc"
 )
 
@@ -23,20 +17,12 @@ const grpcApiKey = "082c1193-a5a2-42fc-87fc-e960e692fffd"
 const appSource = "test_app"
 
 var tenant = "customerosai"
-var userId = "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
 var orgId = "ceae019f-d1e3-49b3-87c5-35ebb68a5ff1"
-var contractId = "769d1fb8-50a1-44bc-aff0-0f4338bd8ff2"
 
 type Clients struct {
-	InteractionEventClient iepb.InteractionEventGrpcServiceClient
-	OrganizationClient     organizationpb.OrganizationGrpcServiceClient
-	IssueClient            issuepb.IssueGrpcServiceClient
-	CommentClient          commentpb.CommentGrpcServiceClient
-	ContractClient         contractpb.ContractGrpcServiceClient
-	ServiceLineItemClient  servicelineitempb.ServiceLineItemGrpcServiceClient
-	OpportunityClient      opportunitypb.OpportunityGrpcServiceClient
-	InvoiceClient          invoicepb.InvoiceGrpcServiceClient
-	EventStoreClient       eventstorepb.EventStoreGrpcServiceClient
+	OrganizationClient organizationpb.OrganizationGrpcServiceClient
+	InvoiceClient      invoicepb.InvoiceGrpcServiceClient
+	EventStoreClient   eventstorepb.EventStoreGrpcServiceClient
 }
 
 var clients *Clients
@@ -47,37 +33,22 @@ func InitClients() {
 			interceptor.ApiKeyEnricher(grpcApiKey),
 		))
 	clients = &Clients{
-		InteractionEventClient: iepb.NewInteractionEventGrpcServiceClient(conn),
-		OrganizationClient:     organizationpb.NewOrganizationGrpcServiceClient(conn),
-		IssueClient:            issuepb.NewIssueGrpcServiceClient(conn),
-		CommentClient:          commentpb.NewCommentGrpcServiceClient(conn),
-		ContractClient:         contractpb.NewContractGrpcServiceClient(conn),
-		OpportunityClient:      opportunitypb.NewOpportunityGrpcServiceClient(conn),
-		ServiceLineItemClient:  servicelineitempb.NewServiceLineItemGrpcServiceClient(conn),
-		InvoiceClient:          invoicepb.NewInvoiceGrpcServiceClient(conn),
-		EventStoreClient:       eventstorepb.NewEventStoreGrpcServiceClient(conn),
+		OrganizationClient: organizationpb.NewOrganizationGrpcServiceClient(conn),
+		InvoiceClient:      invoicepb.NewInvoiceGrpcServiceClient(conn),
+		EventStoreClient:   eventstorepb.NewEventStoreGrpcServiceClient(conn),
 	}
 }
 
 func main() {
 	InitClients()
 
-	//testRequestGenerateSummaryRequest()
-	//testRequestGenerateActionItemsRequest()
 	//testHideOrganization()
 	//testAddCustomField()
-	//testCreatePhoneNumber()
-	//testAddParentOrganization()
 	//testRemoveParentOrganization()
 	//testContactLinkWithPhoneNumber()
-	//testContactLinkWithLocation()
 	//testOrganizationLinkWithEmail()
 	//testOrganizationLinkWithPhoneNumber()
-	//testOrganizationLinkWithLocation()
-	//testCreateIssue()
-	//testUpdateIssue()
 	//testCreateComment()
-	//testAddContractService()
 	//testCloseLooseOpportunity()
 	//testCreateRenewalOpportunity()
 	//testArchiveOpportunity()
@@ -125,28 +96,6 @@ func PleasePayInvoiceNotification() {
 	}
 }
 
-func testRequestGenerateSummaryRequest() {
-
-	interactionEventId := "555263fe-2e39-48f0-a8c2-c4c7a5ffb23d"
-
-	result, _ := clients.InteractionEventClient.RequestGenerateSummary(context.Background(), &iepb.RequestGenerateSummaryGrpcRequest{
-		Tenant:             tenant,
-		InteractionEventId: interactionEventId,
-	})
-	print(result)
-}
-
-func testRequestGenerateActionItemsRequest() {
-
-	interactionEventId := "555263fe-2e39-48f0-a8c2-c4c7a5ffb23d"
-
-	result, _ := clients.InteractionEventClient.RequestGenerateActionItems(context.Background(), &iepb.RequestGenerateActionItemsGrpcRequest{
-		Tenant:             tenant,
-		InteractionEventId: interactionEventId,
-	})
-	print(result)
-}
-
 func testAddCustomField() {
 
 	organizationId := "5e72b6fb-5f20-4973-9b96-52f4543a0df3"
@@ -163,216 +112,6 @@ func testAddCustomField() {
 		},
 	})
 	print(result)
-}
-
-func testAddParentOrganization() {
-
-	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	parentOrgId := ""
-	relType := "store"
-	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
-	result, err := clients.OrganizationClient.AddParentOrganization(context.Background(), &organizationpb.AddParentOrganizationGrpcRequest{
-		Tenant:               tenant,
-		OrganizationId:       orgId,
-		ParentOrganizationId: parentOrgId,
-		Type:                 relType,
-		AppSource:            appSource,
-		LoggedInUserId:       userId,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result)
-}
-
-func testRemoveParentOrganization() {
-
-	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	parentOrgId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	result, err := clients.OrganizationClient.RemoveParentOrganization(context.Background(), &organizationpb.RemoveParentOrganizationGrpcRequest{
-		Tenant:               tenant,
-		OrganizationId:       orgId,
-		ParentOrganizationId: parentOrgId,
-	})
-	if err != nil {
-		print(err)
-	}
-	print(result)
-}
-
-func testOrganizationLinkWithLocation() {
-
-	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	locationId := "bafff70d-7e45-49e5-8732-6e2a362a3ee9"
-
-	result, _ := clients.OrganizationClient.LinkLocationToOrganization(context.Background(), &organizationpb.LinkLocationToOrganizationGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: orgId,
-		LocationId:     locationId,
-	})
-	print(result)
-}
-
-func testCreateIssue() {
-
-	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	subject := "test issue"
-	description := "nice issue"
-	status := "open"
-	priority := "high"
-	orgId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-
-	result, err := clients.IssueClient.UpsertIssue(context.Background(), &issuepb.UpsertIssueGrpcRequest{
-		Tenant:                   tenant,
-		Subject:                  subject,
-		Description:              description,
-		Status:                   status,
-		Priority:                 priority,
-		LoggedInUserId:           userId,
-		ReportedByOrganizationId: utils.StringPtr(orgId),
-		SourceFields: &commonpb.SourceFields{
-			AppSource: appSource,
-		},
-		ExternalSystemFields: &commonpb.ExternalSystemFields{
-			ExternalSystemId: "hubspot",
-			ExternalId:       "123",
-		},
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Created issue id: %v", result.Id)
-}
-
-func testUpdateIssue() {
-
-	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
-	issueId := "ed17dbab-e79b-4e87-8914-2d93ed55324b"
-	desription := "updated description"
-
-	result, err := clients.IssueClient.UpsertIssue(context.Background(), &issuepb.UpsertIssueGrpcRequest{
-		Tenant:         tenant,
-		Id:             issueId,
-		LoggedInUserId: userId,
-		Description:    desription,
-		SourceFields: &commonpb.SourceFields{
-			AppSource: appSource,
-		},
-		ExternalSystemFields: &commonpb.ExternalSystemFields{
-			ExternalSystemId: "hubspot",
-			ExternalId:       "456",
-		},
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	if issueId != result.Id {
-		log.Fatalf("Result is not expected")
-	}
-	log.Printf("Updated issue id: %v", result.Id)
-}
-
-func testCreateComment() {
-
-	userId := "0fe25c46-bdac-485d-a5d5-a4a0390778ad"
-	content := "hellow world"
-	contentType := "text/plain"
-	issueId := "ed17dbab-e79b-4e87-8914-2d93ed55324b"
-
-	result, err := clients.CommentClient.UpsertComment(context.Background(), &commentpb.UpsertCommentGrpcRequest{
-		Tenant:           tenant,
-		Content:          content,
-		ContentType:      contentType,
-		AuthorUserId:     utils.StringPtr(userId),
-		CommentedIssueId: utils.StringPtr(issueId),
-		SourceFields: &commonpb.SourceFields{
-			AppSource: appSource,
-		},
-		ExternalSystemFields: &commonpb.ExternalSystemFields{
-			ExternalSystemId: "hubspot",
-			ExternalId:       "123",
-		},
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Created comment id: %v", result.Id)
-}
-
-func testAddContractService() {
-	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	contractId := "769d1fb8-50a1-44bc-aff0-0f4338bd8ff2"
-	price := 0.004
-	billed := commonpb.BilledType_ONCE_BILLED
-
-	result, err := clients.ServiceLineItemClient.CreateServiceLineItem(context.Background(), &servicelineitempb.CreateServiceLineItemGrpcRequest{
-		Tenant:         tenant,
-		LoggedInUserId: userId,
-		Name:           "Custom",
-		ContractId:     contractId,
-		Price:          price,
-		//Quantity:       int64(quantity),
-		Billed: billed,
-		SourceFields: &commonpb.SourceFields{
-			AppSource: "test_app",
-		},
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
-}
-
-func testCloseLooseOpportunity() {
-
-	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	opportunityId := "d8305351-8568-4d97-9fe9-c6cf701636d0"
-
-	result, err := clients.OpportunityClient.CloseLooseOpportunity(context.Background(), &opportunitypb.CloseLooseOpportunityGrpcRequest{
-		Tenant:         tenant,
-		Id:             opportunityId,
-		LoggedInUserId: userId,
-		AppSource:      appSource,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
-}
-
-func testCreateRenewalOpportunity() {
-
-	result, err := clients.OpportunityClient.CreateRenewalOpportunity(context.Background(), &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-		Tenant:         tenant,
-		LoggedInUserId: userId,
-		ContractId:     contractId,
-		SourceFields: &commonpb.SourceFields{
-			AppSource: appSource,
-		},
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
-}
-
-func testUpdateOnboardingStatus() {
-
-	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-
-	result, err := clients.OrganizationClient.UpdateOnboardingStatus(context.Background(), &organizationpb.UpdateOnboardingStatusGrpcRequest{
-		Tenant:           tenant,
-		OrganizationId:   orgId,
-		LoggedInUserId:   userId,
-		Comments:         "test comments",
-		AppSource:        appSource,
-		OnboardingStatus: organizationpb.OnboardingStatus_ONBOARDING_STATUS_DONE,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
 }
 
 func testUpdateOrgOwner() {

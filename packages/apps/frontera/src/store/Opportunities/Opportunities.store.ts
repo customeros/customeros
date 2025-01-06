@@ -127,24 +127,23 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
     Object.assign(draft.value, payload);
 
     const tempId = draft.value.metadata.id;
+
     let serverId = '';
 
     this.value.set(tempId, draft);
 
-    if (!draft.value.organization?.metadata.id) return;
+    if (!payload.id) return;
 
     try {
       this.isLoading = true;
 
-      const payload: OpportunityCreateInput = {
-        name: draft.value.name,
-        organizationId: draft.value.organization?.metadata.id,
-        internalType: draft.value.internalType,
-        externalStage: draft.value.externalStage,
-      };
-
       const { opportunity_Save } = await this.service.saveOpportunity({
-        input: payload,
+        input: {
+          name: draft.value.name,
+          organizationId: payload.id,
+          internalType: draft.value.internalType,
+          externalStage: draft.value.externalStage,
+        } as OpportunityCreateInput,
       });
 
       runInAction(() => {
@@ -171,10 +170,8 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
         ids: [serverId],
       });
 
-      const opportunity = this.value.get(serverId);
-
       this.root.ui.toastSuccess(
-        `Opportunity created for ${opportunity?.organization?.value.name}`,
+        `Opportunity created for ${payload.organization?.name}`,
         'create-opportunity-success',
       );
     }

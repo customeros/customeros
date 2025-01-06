@@ -214,6 +214,17 @@ export class Contact extends Entity<ContactDatum> {
     }
   }
 
+  @action
+  removeOrganization() {
+    this.value.primaryOrganizationId = '';
+    this.value.primaryOrganizationName = '';
+    this.value.primaryOrganizationJobRoleId = '';
+    this.value.primaryOrganizationJobRoleTitle = '';
+    this.value.primaryOrganizationJobRoleDescription = '';
+    this.value.primaryOrganizationJobRoleStartDate = '';
+    this.value.primaryOrganizationJobRoleEndDate = '';
+  }
+
   static default(payload?: Partial<ContactDatum>): ContactDatum {
     return merge(
       {

@@ -35,7 +35,10 @@ type DNSConfig struct {
 
 type CloudflareService interface {
 	SetupDomainForMailStack(ctx context.Context, tenant, domain, destinationUrl string) ([]string, error)
+	AddDNSRecord(ctx context.Context, zoneID, recordType, name, content string, ttl int, proxied bool, priority *int) error
 	GetDNSRecords(ctx context.Context, domain string) (*[]DNSRecord, error)
+	DeleteDNSRecord(ctx context.Context, zoneID string, recordID string) error
+	CheckDomainExists(ctx context.Context, domain string) (bool, string, error)
 }
 
 type cloudflareService struct {
@@ -74,7 +77,7 @@ func (s *cloudflareService) SetupDomainForMailStack(ctx context.Context, tenant,
 	span.LogKV("domain", domain, "destinationUrl", destinationUrl)
 
 	// step 1: Check if the domain exists in Cloudflare
-	domainExists, zoneID, err := s.checkDomain(ctx, domain)
+	domainExists, zoneID, err := s.CheckDomainExists(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to check domain existence"))
 		s.log.Error("failed to check domain existence")
@@ -110,7 +113,7 @@ func (s *cloudflareService) SetupDomainForMailStack(ctx context.Context, tenant,
 		return nil, err
 	}
 	for _, dnsConfig := range dnsConfigs {
-		err = s.addDNSRecord(ctx, zoneID, dnsConfig.RecordType, dnsConfig.Name, dnsConfig.Content, dnsConfig.TTL, dnsConfig.Proxied, dnsConfig.Priority)
+		err = s.AddDNSRecord(ctx, zoneID, dnsConfig.RecordType, dnsConfig.Name, dnsConfig.Content, dnsConfig.TTL, dnsConfig.Proxied, dnsConfig.Priority)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to add DNS record"))
 			s.log.Errorf("failed to add DNS record %s %s -> %s", dnsConfig.RecordType, dnsConfig.Name, dnsConfig.Content)
@@ -136,6 +139,91 @@ func (s *cloudflareService) SetupDomainForMailStack(ctx context.Context, tenant,
 	return nameservers, nil
 }
 
+func (s *cloudflareService) AddDNSRecord(ctx context.Context, zoneID, recordType, name, content string, ttl int, proxied bool, priority *int) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.addDNSRecord")
+	defer span.Finish()
+	span.LogKV("zoneID", zoneID, "recordType", recordType, "name", name)
+	span.LogFields(tracingLog.String("content", content), tracingLog.Int("ttl", ttl), tracingLog.Bool("proxied", proxied))
+
+	cloudflareUrl := fmt.Sprintf("%s/zones/%s/dns_records", s.cfg.ExternalServices.CloudflareConfig.Url, zoneID)
+
+	// Create the request payload
+	payload := map[string]interface{}{
+		"type":    recordType,
+		"name":    name,
+		"content": content,
+		"ttl":     ttl,
+		"proxied": proxied,
+	}
+	// Include priority if the record type is MX
+	if recordType == "MX" && priority != nil {
+		payload["priority"] = *priority
+	}
+
+	payloadData, err := json.Marshal(payload)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal payload"))
+		s.log.Error("failed to marshal payload", err)
+		return err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", cloudflareUrl, bytes.NewBuffer(payloadData))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create HTTP request"))
+		s.log.Error("failed to create HTTP request", err)
+		return err
+	}
+
+	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
+	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.CloudflareConfig.ApiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to add DNS record to Cloudflare"))
+		s.log.Error("failed to add DNS record to Cloudflare", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+		s.log.Error("failed to read response body", err)
+		return err
+	}
+
+	// Define the response structure
+	var addDNSResponse struct {
+		Success bool `json:"success"`
+		Errors  []struct {
+			Message string `json:"message"`
+		} `json:"errors"`
+	}
+
+	if err = json.Unmarshal(body, &addDNSResponse); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response body"))
+		s.log.Error("failed to unmarshal response body", err)
+		return err
+	}
+
+	if !addDNSResponse.Success {
+		errMsg := "failed to add DNS record to Cloudflare"
+		if len(addDNSResponse.Errors) > 0 {
+			errMsg = addDNSResponse.Errors[0].Message
+		}
+		err := fmt.Errorf(errMsg)
+		tracing.TraceErr(span, err)
+		s.log.Error("Cloudflare API error: ", errMsg)
+		return err
+	}
+
+	// Log success
+	s.log.Infof("Successfully added DNS record to Cloudflare: %s %s -> %s", recordType, name, content)
+
+	return nil
+}
+
 func (s *cloudflareService) GetDNSRecords(ctx context.Context, domain string) (*[]DNSRecord, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.GetDNSRecords")
 	defer span.Finish()
@@ -144,7 +232,7 @@ func (s *cloudflareService) GetDNSRecords(ctx context.Context, domain string) (*
 	var recordsResponse DNSResponse
 	var dnsRecords []DNSRecord
 
-	domainExists, zoneID, err := s.checkDomain(ctx, domain)
+	domainExists, zoneID, err := s.CheckDomainExists(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to check domain existence"))
 		s.log.Error("failed to check domain existence")
@@ -208,6 +296,39 @@ func (s *cloudflareService) GetDNSRecords(ctx context.Context, domain string) (*
 	return &dnsRecords, nil
 }
 
+func (s *cloudflareService) DeleteDNSRecord(ctx context.Context, zoneID string, recordID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.DeleteDNSRecord")
+	defer span.Finish()
+	span.LogKV("zoneID", zoneID, "recordID", recordID)
+
+	delURL := fmt.Sprintf("%s/zones/%s/dns_records/%s", s.cfg.ExternalServices.CloudflareConfig.Url, zoneID, recordID)
+	deleteReq, err := http.NewRequestWithContext(ctx, "DELETE", delURL, nil)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create delete request"))
+		return err
+	}
+
+	deleteReq.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
+	deleteReq.Header.Set("X-Auth-Key", s.cfg.ExternalServices.CloudflareConfig.ApiKey)
+	deleteReq.Header.Set("Content-Type", "application/json")
+
+	delResp, err := http.DefaultClient.Do(deleteReq)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to delete DNS record"))
+		return err
+	}
+	defer delResp.Body.Close()
+
+	if delResp.StatusCode != http.StatusOK {
+		delBody, _ := io.ReadAll(delResp.Body)
+		err := fmt.Errorf("failed to delete DNS record: %s", string(delBody))
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
 func (s *cloudflareService) deleteAllDNSRecords(ctx context.Context, domain string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.deleteAllDNSRecords")
 	defer span.Finish()
@@ -219,29 +340,7 @@ func (s *cloudflareService) deleteAllDNSRecords(ctx context.Context, domain stri
 	}
 
 	for _, record := range *dnsRecords {
-		delURL := fmt.Sprintf("%s/zones/%s/dns_records/%s", s.cfg.ExternalServices.CloudflareConfig.Url, record.ZoneID, record.ID)
-		deleteReq, err := http.NewRequestWithContext(ctx, "DELETE", delURL, nil)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to create delete request"))
-			return err
-		}
-
-		deleteReq.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
-		deleteReq.Header.Set("X-Auth-Key", s.cfg.ExternalServices.CloudflareConfig.ApiKey)
-		deleteReq.Header.Set("Content-Type", "application/json")
-
-		delResp, err := http.DefaultClient.Do(deleteReq)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to delete DNS record"))
-			return err
-		}
-		defer delResp.Body.Close()
-
-		// Check if the deletion was successful
-		if delResp.StatusCode != http.StatusOK {
-			delBody, _ := io.ReadAll(delResp.Body)
-			err := fmt.Errorf("failed to delete DNS record: %s", string(delBody))
-			tracing.TraceErr(span, err)
+		if err := s.DeleteDNSRecord(ctx, record.ZoneID, record.ID); err != nil {
 			return err
 		}
 	}
@@ -250,7 +349,7 @@ func (s *cloudflareService) deleteAllDNSRecords(ctx context.Context, domain stri
 }
 
 // getZoneID fetches the zone ID for the given domain using the Cloudflare API
-func (s *cloudflareService) checkDomain(ctx context.Context, domain string) (bool, string, error) {
+func (s *cloudflareService) CheckDomainExists(ctx context.Context, domain string) (bool, string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.checkDomain")
 	defer span.Finish()
 
@@ -385,91 +484,6 @@ func (s *cloudflareService) addDomain(ctx context.Context, domain string) (strin
 	s.log.Infof("Successfully added domain to Cloudflare. Zone ID: %s", zoneID)
 
 	return zoneID, nil
-}
-
-func (s *cloudflareService) addDNSRecord(ctx context.Context, zoneID, recordType, name, content string, ttl int, proxied bool, priority *int) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.addDNSRecord")
-	defer span.Finish()
-	span.LogKV("zoneID", zoneID, "recordType", recordType, "name", name)
-	span.LogFields(tracingLog.String("content", content), tracingLog.Int("ttl", ttl), tracingLog.Bool("proxied", proxied))
-
-	cloudflareUrl := fmt.Sprintf("%s/zones/%s/dns_records", s.cfg.ExternalServices.CloudflareConfig.Url, zoneID)
-
-	// Create the request payload
-	payload := map[string]interface{}{
-		"type":    recordType,
-		"name":    name,
-		"content": content,
-		"ttl":     ttl,
-		"proxied": proxied,
-	}
-	// Include priority if the record type is MX
-	if recordType == "MX" && priority != nil {
-		payload["priority"] = *priority
-	}
-
-	payloadData, err := json.Marshal(payload)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal payload"))
-		s.log.Error("failed to marshal payload", err)
-		return err
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", cloudflareUrl, bytes.NewBuffer(payloadData))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create HTTP request"))
-		s.log.Error("failed to create HTTP request", err)
-		return err
-	}
-
-	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.CloudflareConfig.Email)
-	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.CloudflareConfig.ApiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to add DNS record to Cloudflare"))
-		s.log.Error("failed to add DNS record to Cloudflare", err)
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
-		s.log.Error("failed to read response body", err)
-		return err
-	}
-
-	// Define the response structure
-	var addDNSResponse struct {
-		Success bool `json:"success"`
-		Errors  []struct {
-			Message string `json:"message"`
-		} `json:"errors"`
-	}
-
-	if err = json.Unmarshal(body, &addDNSResponse); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response body"))
-		s.log.Error("failed to unmarshal response body", err)
-		return err
-	}
-
-	if !addDNSResponse.Success {
-		errMsg := "failed to add DNS record to Cloudflare"
-		if len(addDNSResponse.Errors) > 0 {
-			errMsg = addDNSResponse.Errors[0].Message
-		}
-		err := fmt.Errorf(errMsg)
-		tracing.TraceErr(span, err)
-		s.log.Error("Cloudflare API error: ", errMsg)
-		return err
-	}
-
-	// Log success
-	s.log.Infof("Successfully added DNS record to Cloudflare: %s %s -> %s", recordType, name, content)
-
-	return nil
 }
 
 func (s *cloudflareService) getNameservers(ctx context.Context, zoneID string) ([]string, error) {

@@ -13,15 +13,10 @@ import (
 )
 
 const (
-	OrganizationPhoneNumberLinkV1 = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
-	//Deprecated
-	OrganizationLocationLinkV1                     = "V1_ORGANIZATION_LOCATION_LINK"
+	OrganizationPhoneNumberLinkV1                  = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
 	OrganizationUpsertCustomFieldV1                = "V1_ORGANIZATION_UPSERT_CUSTOM_FIELD"
-	OrganizationAddParentV1                        = "V1_ORGANIZATION_ADD_PARENT"
-	OrganizationRemoveParentV1                     = "V1_ORGANIZATION_REMOVE_PARENT"
 	OrganizationRefreshArrV1                       = "V1_ORGANIZATION_REFRESH_ARR"
 	OrganizationRefreshRenewalSummaryV1            = "V1_ORGANIZATION_REFRESH_RENEWAL_SUMMARY"
-	OrganizationUpdateOnboardingStatusV1           = "V1_ORGANIZATION_UPDATE_ONBOARDING_STATUS"
 	OrganizationUpdateOwnerNotificationV1          = "V1_ORGANIZATION_UPDATE_OWNER_NOTIFICATION"
 	OrganizationUpdateOwnerV1                      = "V1_ORGANIZATION_UPDATE_OWNER" //DEPRECATED
 	OrganizationCreateBillingProfileV1             = "V1_ORGANIZATION_CREATE_BILLING_PROFILE"
@@ -30,11 +25,8 @@ const (
 	OrganizationEmailUnlinkFromBillingProfileV1    = "V1_ORGANIZATION_EMAIL_UNLINK_FROM_BILLING_PROFILE"
 	OrganizationLocationLinkToBillingProfileV1     = "V1_ORGANIZATION_LOCATION_LINK_TO_BILLING_PROFILE"
 	OrganizationLocationUnlinkFromBillingProfileV1 = "V1_ORGANIZATION_LOCATION_UNLINK_FROM_BILLING_PROFILE"
-	// Deprecated
-	OrganizationRequestEnrichV1      = "V1_ORGANIZATION_ENRICH"
-	OrganizationRefreshDerivedDataV1 = "V1_ORGANIZATION_REFRESH_DERIVED_DATA"
-	OrganizationAddLocationV1        = "V1_ORGANIZATION_ADD_LOCATION"
-	OrganizationAdjustIndustryV1     = "V1_ORGANIZATION_ADJUST_INDUSTRY"
+	OrganizationRefreshDerivedDataV1               = "V1_ORGANIZATION_REFRESH_DERIVED_DATA"
+	OrganizationAdjustIndustryV1                   = "V1_ORGANIZATION_ADJUST_INDUSTRY"
 )
 
 type OrganizationLinkPhoneNumberEvent struct {
@@ -61,30 +53,6 @@ func NewOrganizationLinkPhoneNumberEvent(aggregate eventstore.Aggregate, phoneNu
 	event := eventstore.NewBaseEvent(aggregate, OrganizationPhoneNumberLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkPhoneNumberEvent")
-	}
-	return event, nil
-}
-
-type OrganizationLinkLocationEvent struct {
-	Tenant     string    `json:"tenant" validate:"required"`
-	UpdatedAt  time.Time `json:"updatedAt"`
-	LocationId string    `json:"locationId" validate:"required"`
-}
-
-func NewOrganizationLinkLocationEvent(aggregate eventstore.Aggregate, locationId string, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := OrganizationLinkLocationEvent{
-		Tenant:     aggregate.GetTenant(),
-		UpdatedAt:  updatedAt,
-		LocationId: locationId,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationLinkLocationEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationLocationLinkV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkLocationEvent")
 	}
 	return event, nil
 }
@@ -167,52 +135,6 @@ func NewOrganizationUpsertCustomField(aggregate eventstore.Aggregate, sourceFiel
 	event := eventstore.NewBaseEvent(aggregate, OrganizationUpsertCustomFieldV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationUpsertCustomField")
-	}
-	return event, nil
-}
-
-type OrganizationAddParentEvent struct {
-	Tenant               string `json:"tenant" validate:"required"`
-	ParentOrganizationId string `json:"parentOrganizationId" validate:"required"`
-	Type                 string `json:"type"`
-}
-
-func NewOrganizationAddParentEvent(aggregate eventstore.Aggregate, parentOrganizationId, relType string) (eventstore.Event, error) {
-	eventData := OrganizationAddParentEvent{
-		Tenant:               aggregate.GetTenant(),
-		ParentOrganizationId: parentOrganizationId,
-		Type:                 relType,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationAddParentEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationAddParentV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationAddParentEvent")
-	}
-	return event, nil
-}
-
-type OrganizationRemoveParentEvent struct {
-	Tenant               string `json:"tenant" validate:"required"`
-	ParentOrganizationId string `json:"parentOrganizationId" validate:"required"`
-}
-
-func NewOrganizationRemoveParentEvent(aggregate eventstore.Aggregate, parentOrganizationId string) (eventstore.Event, error) {
-	eventData := OrganizationRemoveParentEvent{
-		Tenant:               aggregate.GetTenant(),
-		ParentOrganizationId: parentOrganizationId,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationRemoveParentEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationRemoveParentV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRemoveParentEvent")
 	}
 	return event, nil
 }

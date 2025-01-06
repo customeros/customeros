@@ -16,13 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
-	contractevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
-	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
-	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
-	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
-	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/sync/errgroup"
 
@@ -30,32 +24,20 @@ import (
 )
 
 type GraphSubscriber struct {
-	log                         logger.Logger
-	db                          *esdb.Client
-	cfg                         *config.Config
-	organizationEventHandler    *OrganizationEventHandler
-	locationEventHandler        *LocationEventHandler
-	issueEventHandler           *IssueEventHandler
-	commentEventHandler         *CommentEventHandler
-	opportunityEventHandler     *OpportunityEventHandler
-	contractEventHandler        *ContractEventHandler
-	serviceLineItemEventHandler *ServiceLineItemEventHandler
-	invoiceEventHandler         *InvoiceEventHandler
+	log                      logger.Logger
+	db                       *esdb.Client
+	cfg                      *config.Config
+	organizationEventHandler *OrganizationEventHandler
+	invoiceEventHandler      *InvoiceEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
 	return &GraphSubscriber{
-		log:                         log,
-		db:                          db,
-		cfg:                         cfg,
-		organizationEventHandler:    NewOrganizationEventHandler(log, services, grpcClients, cache),
-		locationEventHandler:        NewLocationEventHandler(services),
-		issueEventHandler:           NewIssueEventHandler(log, services, grpcClients),
-		commentEventHandler:         NewCommentEventHandler(log, services),
-		opportunityEventHandler:     NewOpportunityEventHandler(log, services, grpcClients),
-		contractEventHandler:        NewContractEventHandler(log, services, grpcClients),
-		serviceLineItemEventHandler: NewServiceLineItemEventHandler(log, services, grpcClients),
-		invoiceEventHandler:         NewInvoiceEventHandler(log, services, grpcClients),
+		log:                      log,
+		db:                       db,
+		cfg:                      cfg,
+		organizationEventHandler: NewOrganizationEventHandler(log, services, grpcClients, cache),
+		invoiceEventHandler:      NewInvoiceEventHandler(log, services, grpcClients),
 	}
 }
 
@@ -159,9 +141,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case orgevents.OrganizationPhoneNumberLinkV1:
 		_ = s.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
 		return nil
-	case orgevents.OrganizationLocationLinkV1:
-		_ = s.organizationEventHandler.OnLocationLinkedToOrganization(ctx, evt)
-		return nil
 	case orgevents.OrganizationRefreshArrV1:
 		_ = s.organizationEventHandler.OnRefreshArr(ctx, evt)
 		return nil
@@ -173,15 +152,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case orgevents.OrganizationUpsertCustomFieldV1:
 		_ = s.organizationEventHandler.OnUpsertCustomField(ctx, evt)
-		return nil
-	case orgevents.OrganizationAddParentV1:
-		_ = s.organizationEventHandler.OnLinkWithParentOrganization(ctx, evt)
-		return nil
-	case orgevents.OrganizationRemoveParentV1:
-		_ = s.organizationEventHandler.OnUnlinkFromParentOrganization(ctx, evt)
-		return nil
-	case orgevents.OrganizationUpdateOnboardingStatusV1:
-		_ = s.organizationEventHandler.OnUpdateOnboardingStatus(ctx, evt)
 		return nil
 	case orgevents.OrganizationCreateBillingProfileV1:
 		_ = s.organizationEventHandler.OnCreateBillingProfile(ctx, evt)
@@ -200,99 +170,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case orgevents.OrganizationLocationUnlinkFromBillingProfileV1:
 		_ = s.organizationEventHandler.OnLocationUnlinkedFromBillingProfile(ctx, evt)
-		return nil
-	case orgevents.OrganizationAddLocationV1:
-		_ = s.organizationEventHandler.OnLocationAddedToOrganization(ctx, evt)
-		return nil
-
-	case locationevents.LocationCreateV1:
-		_ = s.locationEventHandler.OnLocationCreate(ctx, evt)
-		return nil
-	case locationevents.LocationUpdateV1:
-		_ = s.locationEventHandler.OnLocationUpdate(ctx, evt)
-		return nil
-	case locationevents.LocationValidationFailedV1:
-		_ = s.locationEventHandler.OnLocationValidationFailed(ctx, evt)
-		return nil
-	case locationevents.LocationValidatedV1:
-		_ = s.locationEventHandler.OnLocationValidated(ctx, evt)
-		return nil
-
-	case commentevent.CommentCreateV1:
-		_ = s.commentEventHandler.OnCreate(ctx, evt)
-		return nil
-	case commentevent.CommentUpdateV1:
-		_ = s.commentEventHandler.OnUpdate(ctx, evt)
-		return nil
-
-	case issueevent.IssueCreateV1:
-		_ = s.issueEventHandler.OnCreate(ctx, evt)
-		return nil
-	case issueevent.IssueUpdateV1:
-		_ = s.issueEventHandler.OnUpdate(ctx, evt)
-		return nil
-	case issueevent.IssueAddUserAssigneeV1:
-		_ = s.issueEventHandler.OnAddUserAssignee(ctx, evt)
-		return nil
-	case issueevent.IssueRemoveUserAssigneeV1:
-		_ = s.issueEventHandler.OnRemoveUserAssignee(ctx, evt)
-		return nil
-	case issueevent.IssueAddUserFollowerV1:
-		_ = s.issueEventHandler.OnAddUserFollower(ctx, evt)
-		return nil
-	case issueevent.IssueRemoveUserFollowerV1:
-		_ = s.issueEventHandler.OnRemoveUserFollower(ctx, evt)
-		return nil
-
-	case opportunityevent.OpportunityCreateV1:
-		_ = s.opportunityEventHandler.OnCreate(ctx, evt)
-		return nil
-	case opportunityevent.OpportunityUpdateNextCycleDateV1:
-		_ = s.opportunityEventHandler.OnUpdateNextCycleDate(ctx, evt)
-		return nil
-	case opportunityevent.OpportunityUpdateV1:
-		_ = s.opportunityEventHandler.OnUpdate(ctx, evt)
-		return nil
-	case opportunityevent.OpportunityCreateRenewalV1:
-		_ = s.opportunityEventHandler.OnCreateRenewal(ctx, evt)
-		return nil
-	case opportunityevent.OpportunityUpdateRenewalV1:
-		_ = s.opportunityEventHandler.OnUpdateRenewal(ctx, evt)
-		return nil
-	case opportunityevent.OpportunityCloseLooseV1:
-		_ = s.opportunityEventHandler.OnCloseLost(ctx, evt)
-		return nil
-
-	case contractevent.ContractRolloutRenewalOpportunityV1:
-		_ = s.contractEventHandler.OnRolloutRenewalOpportunity(ctx, evt)
-		return nil
-	case contractevent.ContractDeleteV1:
-		_ = s.contractEventHandler.OnDeleteV1(ctx, evt)
-		return nil
-	case contractevent.ContractRefreshStatusV1:
-		_ = s.contractEventHandler.OnRefreshStatus(ctx, evt)
-		return nil
-	case contractevent.ContractRefreshLtvV1:
-		_ = s.contractEventHandler.OnRefreshLtv(ctx, evt)
-		return nil
-
-	case servicelineitemevent.ServiceLineItemCreateV1:
-		_ = s.serviceLineItemEventHandler.OnCreateV1(ctx, evt)
-		return nil
-	case servicelineitemevent.ServiceLineItemUpdateV1:
-		_ = s.serviceLineItemEventHandler.OnUpdateV1(ctx, evt)
-		return nil
-	case servicelineitemevent.ServiceLineItemDeleteV1:
-		_ = s.serviceLineItemEventHandler.OnDeleteV1(ctx, evt)
-		return nil
-	case servicelineitemevent.ServiceLineItemCloseV1:
-		_ = s.serviceLineItemEventHandler.OnClose(ctx, evt)
-		return nil
-	case servicelineitemevent.ServiceLineItemPauseV1:
-		_ = s.serviceLineItemEventHandler.OnPause(ctx, evt)
-		return nil
-	case servicelineitemevent.ServiceLineItemResumeV1:
-		_ = s.serviceLineItemEventHandler.OnResume(ctx, evt)
 		return nil
 
 	case invoiceevents.InvoiceCreateForContractV1:

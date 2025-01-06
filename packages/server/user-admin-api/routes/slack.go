@@ -3,22 +3,24 @@ package routes
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/sirupsen/logrus"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 )
 
 func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
 	rg.GET("/slack/requestAccess",
 		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
-			slackRequestAccessUrl := "https://slack.com/oauth/v2/authorize?client_id=" + config.Slack.ClientId + "&scope=chat:write,chat:write.public,channels:history,channels:join,channels:read,files:read,groups:history,groups:read,im:history,links:read,reactions:read,team:read,usergroups:read,users.profile:read,users:read,users:read.email&user_scope="
+			slackRequestAccessUrl := "https://slack.com/oauth/v2/authorize?client_id=" + config.Slack.ClientID + "&scope=chat:write,chat:write.public,channels:history,channels:join,channels:read,files:read,groups:history,groups:read,im:history,links:read,reactions:read,team:read,usergroups:read,users.profile:read,users:read,users:read.email&user_scope="
 
 			ctx.JSON(http.StatusOK, gin.H{"url": slackRequestAccessUrl})
 		})
@@ -41,7 +43,7 @@ func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *servic
 
 			requestData := url.Values{}
 			requestData.Set("code", code)
-			requestData.Set("client_id", config.Slack.ClientId)
+			requestData.Set("client_id", config.Slack.ClientID)
 			requestData.Set("client_secret", config.Slack.ClientSecret)
 
 			// Encode the form data
@@ -73,7 +75,7 @@ func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *servic
 				return
 			}
 
-			//convert body to OauthSlackResponse
+			// convert body to OauthSlackResponse
 			var slackResponse OauthSlackResponse
 			err = json.Unmarshal(body, &slackResponse)
 			if err != nil {
@@ -136,7 +138,7 @@ func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *servic
 				return
 			}
 
-			//convert body to OauthSlackResponse
+			// convert body to OauthSlackResponse
 			var slackResponse OauthSlackRevokeResponse
 			err = json.Unmarshal(body, &slackResponse)
 			if err != nil {

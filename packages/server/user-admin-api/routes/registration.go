@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"log"
 	"net/http"
 	"strings"
@@ -12,10 +11,12 @@ import (
 
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -189,7 +190,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 					return
 				}
 
-				signInRequest.Provider = "magic-link"
+				signInRequest.Provider = commonenum.WorkspaceProviderMagicLink.String()
 				signInRequest.LoggedInEmail = magicLink.Email
 			} else {
 				ginContext.JSON(http.StatusBadRequest, gin.H{
@@ -251,9 +252,9 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				// Handle revocation based on provider
 				var revocationURL string
 				switch revokeRequest.Provider {
-				case "google":
+				case commonenum.WorkspaceProviderGoogle.String():
 					revocationURL = fmt.Sprintf("https://accounts.google.com/o/oauth2/revoke?token=%s", oauthToken.RefreshToken)
-				case "azure-ad":
+				case commonenum.WorkspaceProviderAzure.String():
 					revocationURL = fmt.Sprintf("https://graph.microsoft.com/v1.0/me/revokeSignInSessions")
 				}
 
@@ -334,7 +335,6 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 			Tenant:    *tenantName,
 			AppSource: constants.AppSourceUserAdminApi,
 		})
-
 		userId, err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -426,7 +426,7 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 	span.SetTag(tracing.SpanTagTenant, *tenantName)
 
 	// Handle Google provider
-	if signInRequest.Provider == "google" {
+	if signInRequest.Provider == commonenum.WorkspaceProviderGoogle.String() {
 		if isRequestEnablingOAuthSync(signInRequest) {
 			oauthToken, _ := services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
 			if oauthToken == nil {
@@ -458,7 +458,7 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 				return
 			}
 		}
-	} else if signInRequest.Provider == "azure-ad" {
+	} else if signInRequest.Provider == commonenum.WorkspaceProviderAzure.String() {
 		oauthToken, _ := services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
 		if oauthToken == nil {
 			oauthToken = &postgresEntity.OAuthTokenEntity{}
@@ -482,7 +482,7 @@ func signIn(ctx context.Context, services *service.Services, ginContext *gin.Con
 			})
 			return
 		}
-	} else if signInRequest.Provider == "magic-link" {
+	} else if signInRequest.Provider == commonenum.WorkspaceProviderMagicLink.String() {
 	} else {
 		log.Printf("Unsupported provider: %s", signInRequest.Provider)
 		ginContext.JSON(http.StatusBadRequest, gin.H{
@@ -566,13 +566,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		}
 
 		// tenant not found by the requested login info, try to find it by another workspace with the same domain
-		var provider string
-		if signInRequest.Provider == "google" {
-			provider = "azure-ad"
-		} else if signInRequest.Provider == "azure-ad" {
-			provider = "google"
-		}
-		tenantNode, err = services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspaceProvider(ctx, domain, provider)
+		tenantNode, err = services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspace(ctx, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, false, err
@@ -624,8 +618,8 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		}
 	}
 
-	if config.Slack.NotifyNewTenantRegisteredWebhook != "" {
-		commonUtils.SendSlackMessage(ctx, config.Slack.NotifyNewTenantRegisteredWebhook, tenantStr+" tenant registered by "+signInRequest.LoggedInEmail)
+	if config.Slack.NotifyNewTenantRegisteredHook != "" {
+		commonUtils.SendSlackMessage(ctx, config.Slack.NotifyNewTenantRegisteredHook, tenantStr+" tenant registered by "+signInRequest.LoggedInEmail)
 	}
 
 	return &tenantEntity.Name, true, nil
@@ -635,9 +629,9 @@ func validateRequestAtProvider(c context.Context, config *config.Config, signInR
 	span, ctx := opentracing.StartSpanFromContext(c, "Registration.getUserInfoFromGoogle")
 	defer span.Finish()
 
-	if signInRequest.Provider == "magic-link" {
+	if signInRequest.Provider == commonenum.WorkspaceProviderMagicLink.String() {
 		return nil, nil, nil
-	} else if signInRequest.Provider == "google" {
+	} else if signInRequest.Provider == commonenum.WorkspaceProviderGoogle.String() {
 		userInfo, err := getUserInfoFromGoogle(ctx, config, signInRequest)
 		if err != nil {
 			tracing.TraceErr(nil, err)
@@ -645,7 +639,7 @@ func validateRequestAtProvider(c context.Context, config *config.Config, signInR
 		}
 
 		return &userInfo.GivenName, &userInfo.FamilyName, nil
-	} else if signInRequest.Provider == "azure-ad" {
+	} else if signInRequest.Provider == commonenum.WorkspaceProviderAzure.String() {
 		client := &http.Client{}
 		// Create a GET request with the Authorization header.
 		req, err := http.NewRequest("GET", "https://graph.microsoft.com/oidc/userinfo", nil)

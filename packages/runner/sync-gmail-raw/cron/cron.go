@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/service"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -135,7 +136,7 @@ func syncEmailsInState(config *config.Config, services *service.Services, state 
 				for _, email := range emailsToSync {
 					go func(tenant, email string) {
 						defer wgTenant.Done()
-						syncEmailsForEmailAddress(ctx, config, tenant, "google", email, services, state)
+						syncEmailsForEmailAddress(ctx, config, tenant, commonenum.WorkspaceProviderGoogle.String(), email, services, state)
 					}(tenant.Name, email)
 				}
 

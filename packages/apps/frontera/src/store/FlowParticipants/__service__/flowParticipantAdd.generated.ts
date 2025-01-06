@@ -6,10 +6,5 @@ export type FlowParticipantAddMutationVariables = Types.Exact<{
   entityType: Types.FlowEntityType;
 }>;
 
-export type FlowParticipantAddMutation = {
-  __typename?: 'Mutation';
-  flowParticipant_Add: {
-    __typename?: 'FlowParticipant';
-    metadata: { __typename?: 'Metadata'; id: string };
-  };
-};
+
+export type FlowParticipantAddMutation = { __typename?: 'Mutation', flowParticipant_Add: { __typename?: 'FlowParticipant', metadata: { __typename?: 'Metadata', id: string } } };

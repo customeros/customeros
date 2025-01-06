@@ -4,7 +4,5 @@ export type RemoveSocialMutationVariables = Types.Exact<{
   socialId: Types.Scalars['ID']['input'];
 }>;
 
-export type RemoveSocialMutation = {
-  __typename?: 'Mutation';
-  social_Remove: { __typename?: 'Result'; result: boolean };
-};
+
+export type RemoveSocialMutation = { __typename?: 'Mutation', social_Remove: { __typename?: 'Result', result: boolean } };

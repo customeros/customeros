@@ -19,8 +19,8 @@ export const MarkdownEventStub: FC<{ event: MarkdownEventType }> = ({
       <Card
         onClick={() => openModal(event.markdownEventMetadata?.id)}
         className={cn(
-          'ml-6 shadow-xs cursor-pointer text-sm border border-gray-200 bg-white flex max-w-[549px]',
-          'rounded-lg hover:shadow-md transition-all duration-200 ease-out',
+          'ml-6 shadow-none cursor-pointer text-sm border border-gray-200 bg-white flex max-w-[549px]',
+          'rounded-lg hover:shadow-sm transition-all duration-200 ease-out',
         )}
       >
         <CardContent className='p-3 pr-0 overflow-hidden text-sm w-full flex justify-between gap-2'>

@@ -3,11 +3,13 @@ package mapper
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"golang.org/x/exp/slices"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"golang.org/x/exp/slices"
 )
 
 func MapDbNodeToJobRoleEntity(dbNode *dbtype.Node) *entity.JobRoleEntity {
@@ -680,10 +682,10 @@ func MapDbNodeToExternalSystem(node *dbtype.Node) *entity.ExternalSystemEntity {
 	}
 	props := utils.GetPropsFromNode(*node)
 	externalSystemEntity := entity.ExternalSystemEntity{
-		ExternalSystemId: enum.DecodeExternalSystemId(utils.GetStringPropOrEmpty(props, "id")),
+		ExternalSystemId: commonenum.DecodeSource(utils.GetStringPropOrEmpty(props, "id")),
 		Name:             utils.GetStringPropOrEmpty(props, "name"),
 	}
-	if externalSystemEntity.ExternalSystemId == enum.Stripe {
+	if externalSystemEntity.ExternalSystemId == commonenum.SourceStripe {
 		externalSystemEntity.Stripe.PaymentMethodTypes = utils.GetListStringPropOrEmpty(props, entity.PropertyExternalSystemStripePaymentMethodTypes)
 	}
 	return &externalSystemEntity
@@ -896,7 +898,7 @@ func MapDbPropsToInteractionEventEntity(props map[string]interface{}) *entity.In
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Identifier:    utils.GetStringPropOrEmpty(props, "identifier"),
-		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
+		Channel:       commonenum.DecodeInteractionEventChannel(utils.GetStringPropOrEmpty(props, "channel")),
 		ChannelData:   utils.GetStringPropOrEmpty(props, "channelData"),
 		EventType:     utils.GetStringPropOrEmpty(props, "eventType"),
 		Hide:          utils.GetBoolPropOrFalse(props, "hide"),
@@ -916,12 +918,12 @@ func MapDbNodeToInteractionSessionEntity(node *dbtype.Node) *entity.InteractionS
 	props := utils.GetPropsFromNode(*node)
 	interactionSession := entity.InteractionSessionEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
+		Channel:       commonenum.DecodeInteractionSessionChannel(utils.GetStringPropOrEmpty(props, "channel")),
 		ChannelData:   utils.GetStringPropOrEmpty(props, "channelData"),
 		Identifier:    utils.GetStringPropOrEmpty(props, "identifier"),
-		Type:          utils.GetStringPropOrEmpty(props, "type"),
+		Type:          commonenum.DecodeInteractionSessionType(utils.GetStringPropOrEmpty(props, "type")),
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		Status:        utils.GetStringPropOrEmpty(props, "status"),
+		Status:        commonenum.DecodeInteractionSessionStatus(utils.GetStringPropOrEmpty(props, "status")),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),

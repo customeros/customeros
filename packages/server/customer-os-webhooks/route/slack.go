@@ -65,7 +65,7 @@ func syncSlackChannelsHandler(services *service.Services, log logger.Logger) gin
 		}
 
 		for _, slackChannel := range slackChannels {
-			err := services.CommonServices.SlackChannelService.StoreSlackChannel(ctx, tenant, slackChannel.ExternalSystem, slackChannel.ChannelId, slackChannel.ChannelName, nil)
+			err := services.CommonServices.SlackService.StoreSlackChannel(ctx, tenant, slackChannel.ExternalSystem, slackChannel.ChannelId, slackChannel.ChannelName, nil)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				log.Errorf("(SyncSlackChannels) error in sync users: %s", err.Error())

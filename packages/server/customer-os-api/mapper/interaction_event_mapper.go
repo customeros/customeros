@@ -13,7 +13,7 @@ func MapEntityToInteractionEvent(entity *neo4jentity.InteractionEventEntity) *mo
 		EventIdentifier: utils.StringPtrNillable(entity.Identifier),
 		Content:         utils.StringPtrNillable(entity.Content),
 		ContentType:     utils.StringPtrNillable(entity.ContentType),
-		Channel:         entity.Channel,
+		Channel:         entity.Channel.String(),
 		ChannelData:     &entity.ChannelData,
 		EventType:       &entity.EventType,
 		Source:          MapDataSourceToModel(entity.Source),

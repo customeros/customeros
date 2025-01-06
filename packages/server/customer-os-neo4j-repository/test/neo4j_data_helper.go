@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"fmt"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"time"
 
 	"github.com/google/uuid"
@@ -1271,7 +1272,7 @@ func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext
 		Identifier:  identifier,
 		Content:     content,
 		ContentType: contentType,
-		Channel:     channel,
+		Channel:     commonenum.DecodeInteractionEventChannel(channel),
 		CreatedAt:   createdAt,
 	})
 }
@@ -1295,7 +1296,7 @@ func CreateInteractionEventFromEntity(ctx context.Context, driver *neo4j.DriverW
 		"id":            interactionEventId.String(),
 		"content":       ie.Content,
 		"contentType":   ie.ContentType,
-		"channel":       ie.Channel,
+		"channel":       ie.Channel.String(),
 		"createdAt":     ie.CreatedAt,
 		"source":        "openline",
 		"sourceOfTruth": "openline",

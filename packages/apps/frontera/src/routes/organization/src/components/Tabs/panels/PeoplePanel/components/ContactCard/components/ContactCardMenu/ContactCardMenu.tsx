@@ -32,6 +32,7 @@ export const ContactCardMenu = observer(
               variant='ghost'
               aria-label='More options'
               icon={<DotsVertical className='text-gray-500' />}
+              className='group-hover/card:opacity-100 opacity-0'
             />
           </MenuButton>
           <MenuList>

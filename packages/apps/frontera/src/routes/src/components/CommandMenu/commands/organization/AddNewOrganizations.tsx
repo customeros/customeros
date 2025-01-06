@@ -40,6 +40,7 @@ export const AddNewOrganization = observer(() => {
         value={usecase.searchTerm}
         onValueChange={usecase.setSearchTerm}
         placeholder='Search by name or website'
+        dataTest={'organizations-create-new-org-org-name'}
         label={<p className='font-medium'>Search 300,000+ organizations</p>}
         rightElement={
           usecase.isValidatingDomain && (
@@ -74,6 +75,7 @@ export const AddNewOrganization = observer(() => {
           !usecase.domainValidationError &&
           usecase.searchTerm.length > 0 && (
             <CommandItem
+              data-test={'add-org-modal-add-org'}
               leftAccessory={<PlusCircle className='text-primary-700' />}
               onSelect={() => {
                 usecase.addNewOrganization();

@@ -1,12 +1,12 @@
 import { useMemo, useCallback } from 'react';
 
 import { ColumnDef, ColumnSizingState } from '@tanstack/react-table';
-import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store.ts';
+import { TableViewDef } from '@store/TableViewDefs/TableViewDef.dto';
 
 export const useColumnSizing = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tableColumns: ColumnDef<any, any>[],
-  tableViewDef?: TableViewDefStore,
+  tableViewDef: TableViewDef | null,
 ) => {
   const columnCache = useMemo(
     () => new Map<string, { minSize?: number; maxSize?: number }>(),

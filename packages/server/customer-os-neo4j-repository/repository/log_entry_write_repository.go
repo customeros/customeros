@@ -72,17 +72,11 @@ func (r *logEntryWriteRepository) CreateInTx(ctx context.Context, tx *neo4j.Mana
 	tracing.LogObjectAsJson(span, "params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, cypher, params)
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
+		return tx.Run(ctx, cypher, params)
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
-
 	return err
 }
 

@@ -3,8 +3,6 @@ import { useRef, ReactElement } from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
-import { Edit03 } from '@ui/media/icons/Edit03';
-import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { Rocket02 } from '@ui/media/icons/Rocket02';
@@ -45,22 +43,12 @@ export const ContactFlowCell = observer(
     if (!contactFlows?.length) {
       return (
         <div
-          onDoubleClick={open}
+          onClick={open}
           className={cn(
-            'flex w-full gap-1 items-center [&_.edit-button]:hover:opacity-100',
+            'flex w-full gap-1 items-center [&_.edit-button]:hover:opacity-100 cursor-pointer',
           )}
         >
           <div className='text-gray-400'>None</div>
-          <IconButton
-            size='xxs'
-            onClick={open}
-            variant='ghost'
-            id='edit-button'
-            aria-label='edit owner'
-            className='edit-button opacity-0'
-            dataTest={`contact-flow-edit-${contactId}`}
-            icon={<Edit03 className='text-gray-500 size-3' />}
-          />
         </div>
       );
     }
@@ -95,9 +83,9 @@ export const ContactFlowCell = observer(
         }
       >
         <div
-          onDoubleClick={open}
+          onClick={open}
           className={cn(
-            'cursor-default overflow-hidden overflow-ellipsis flex gap-1  [&_.edit-button]:hover:opacity-100',
+            'overflow-hidden overflow-ellipsis flex gap-1 [&_.edit-button]:hover:opacity-100 cursor-pointer',
           )}
         >
           <div ref={itemRef} className='flex overflow-hidden'>
@@ -114,15 +102,6 @@ export const ContactFlowCell = observer(
               </div>
             )}
           </div>
-          <IconButton
-            size='xxs'
-            onClick={open}
-            variant='ghost'
-            id='edit-button'
-            aria-label='edit owner'
-            className='edit-button opacity-0'
-            icon={<Edit03 className='text-gray-500 size-3' />}
-          />
         </div>
       </TableCellTooltip>
     );

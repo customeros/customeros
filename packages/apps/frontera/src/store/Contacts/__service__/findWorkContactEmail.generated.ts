@@ -5,7 +5,5 @@ export type FindWorkContactEmailMutationVariables = Types.Exact<{
   organizationId: Types.Scalars['ID']['input'];
 }>;
 
-export type FindWorkContactEmailMutation = {
-  __typename?: 'Mutation';
-  contact_FindWorkEmail: { __typename?: 'ActionResponse'; accepted: boolean };
-};
+
+export type FindWorkContactEmailMutation = { __typename?: 'Mutation', contact_FindWorkEmail: { __typename?: 'ActionResponse', accepted: boolean } };

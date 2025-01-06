@@ -5,11 +5,5 @@ export type FlowChangeNameMutationVariables = Types.Exact<{
   name: Types.Scalars['String']['input'];
 }>;
 
-export type FlowChangeNameMutation = {
-  __typename?: 'Mutation';
-  flow_ChangeName: {
-    __typename?: 'Flow';
-    name: string;
-    metadata: { __typename?: 'Metadata'; id: string };
-  };
-};
+
+export type FlowChangeNameMutation = { __typename?: 'Mutation', flow_ChangeName: { __typename?: 'Flow', name: string, metadata: { __typename?: 'Metadata', id: string } } };

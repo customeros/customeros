@@ -2,8 +2,11 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"testing"
+	"time"
+
 	"github.com/99designs/gqlgen/client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -13,8 +16,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestQueryResolver_Search_Organization_By_Name(t *testing.T) {
@@ -209,7 +210,8 @@ func TestQueryResolver_Search_Organization_By_Regions(t *testing.T) {
 
 func assert_Search_Organization_By_Regions(t *testing.T, region1 string, region2 *string) model.OrganizationPage {
 	query := "/dashboard_view/organization/dashboard_view_organization_filter_by_region"
-	options := []client.Option{client.Var("page", 1),
+	options := []client.Option{
+		client.Var("page", 1),
 		client.Var("limit", 10),
 		client.Var("region1", region1),
 	}
@@ -284,7 +286,8 @@ func TestQueryResolver_Search_Organization_By_Name_And_Regions(t *testing.T) {
 
 func assert_Search_Organization_By_Name_And_Regions(t *testing.T, region1 string, region2 *string, searchTerm string) model.OrganizationPage {
 	query := "/dashboard_view/organization/dashboard_view_organization_filter_by_name_and_region"
-	options := []client.Option{client.Var("page", 1),
+	options := []client.Option{
+		client.Var("page", 1),
 		client.Var("limit", 10),
 		client.Var("searchTerm", searchTerm),
 		client.Var("region1", region1),
@@ -428,8 +431,8 @@ func TestQueryResolver_Search_Organizations_By_External_Id(t *testing.T) {
 	organizationId1 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 1"})
 	organizationId2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Name: "org 2"})
 	neo4jt.CreateHubspotExternalSystem(ctx, driver, tenantName)
-	neo4jt.LinkWithExternalSystem(ctx, driver, organizationId1, externalId, string(neo4jenum.Hubspot), nil, nil, utils.Now())
-	neo4jt.LinkWithExternalSystem(ctx, driver, organizationId2, "otherId", string(neo4jenum.Hubspot), nil, nil, utils.Now())
+	neo4jt.LinkWithExternalSystem(ctx, driver, organizationId1, externalId, string(enum.SourceHubspot), nil, nil, utils.Now())
+	neo4jt.LinkWithExternalSystem(ctx, driver, organizationId2, "otherId", string(enum.SourceHubspot), nil, nil, utils.Now())
 
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelOrganization))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, model2.NodeLabelExternalSystem))
@@ -754,84 +757,6 @@ func TestQueryResolver_Sort_Organizations_ByOrganizationName_WithOrganizationHie
 	require.Equal(t, sub2_2OrgId, organizationsPageStruct.DashboardView_Organizations.Content[6].ID)
 }
 
-func TestQueryResolver_Search_Organization_ByOnboardingStatus(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jt.CreateTenantOrganization(ctx, driver, tenantName, "org excluded")
-
-	today := utils.Now()
-	yesterday := today.AddDate(0, 0, -1)
-
-	orgNA := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:    string(entity.OnboardingStatusNotApplicable),
-			UpdatedAt: nil,
-		},
-	})
-	orgSuccess := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusSuccessful),
-			UpdatedAt:    &today,
-			SortingOrder: utils.Int64Ptr(60),
-		},
-	})
-	orgStuckYesterday := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusStuck),
-			UpdatedAt:    &yesterday,
-			SortingOrder: utils.Int64Ptr(20),
-		},
-	})
-	orgDone := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusDone),
-			UpdatedAt:    &today,
-			SortingOrder: utils.Int64Ptr(50),
-		},
-	})
-	orgOnTrack := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusOnTrack),
-			UpdatedAt:    &yesterday,
-			SortingOrder: utils.Int64Ptr(40),
-		},
-	})
-	orgStuckToday := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusStuck),
-			UpdatedAt:    &today,
-			SortingOrder: utils.Int64Ptr(20),
-		},
-	})
-	orgLate := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusLate),
-			UpdatedAt:    &yesterday,
-			SortingOrder: utils.Int64Ptr(30),
-		},
-	})
-	orgNotStarted := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusNotStarted),
-			UpdatedAt:    &yesterday,
-			SortingOrder: utils.Int64Ptr(10),
-		},
-	})
-
-	require.Equal(t, 9, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"DONE"}, []string{orgDone})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"LATE"}, []string{orgLate})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"STUCK"}, []string{orgStuckYesterday, orgStuckToday})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"NOT_STARTED"}, []string{orgNotStarted})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"SUCCESSFUL"}, []string{orgSuccess})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"DONE", "LATE"}, []string{orgLate, orgDone})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"DONE", "LATE", "NOT_APPLICABLE"}, []string{orgLate, orgDone, orgNA})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{}, []string{orgNotStarted, orgStuckYesterday, orgStuckToday, orgLate, orgOnTrack, orgDone, orgSuccess, orgNA})
-}
-
 func assert_Search_Organization_ByOnboardingStatus(t *testing.T, searchStatuses []string, expectedOrgs []string) {
 	query := "/dashboard_view/organization/dashboard_view_organization_filter_by_onboarding_status"
 	options := []client.Option{
@@ -954,7 +879,8 @@ func TestQueryResolver_Sort_Renewals_ByForecastAmountASC(t *testing.T) {
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt: &daysFromNow20,
 		},
-		MaxAmount: 100})
+		MaxAmount: 100,
+	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId1, neo4jenum.BilledTypeAnnually, 3, 2, sli1StartedAt)
 
 	contractId2 := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenantName, organizationId3, neo4jentity.ContractEntity{
@@ -965,7 +891,8 @@ func TestQueryResolver_Sort_Renewals_ByForecastAmountASC(t *testing.T) {
 		RenewalDetails: neo4jentity.RenewalDetails{
 			RenewedAt: &daysFromNow10,
 		},
-		MaxAmount: 200})
+		MaxAmount: 200,
+	})
 	neo4jtest.InsertServiceLineItem(ctx, driver, tenantName, contractId2, neo4jenum.BilledTypeAnnually, 12, 2, sli1StartedAt)
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 3, "Contract": 2, "Opportunity": 2})
@@ -1180,7 +1107,8 @@ func TestQueryResolver_Search_Renewals_By_Owner_In_IncludeEmptyFalse(t *testing.
 			"ownerIdList":  []string{userId1},
 			"ownerIdEmpty": false,
 			"page":         1,
-			"limit":        10})
+			"limit":        10,
+		})
 
 	var renewalsPageStruct struct {
 		DashboardView_Renewals model.RenewalsPage

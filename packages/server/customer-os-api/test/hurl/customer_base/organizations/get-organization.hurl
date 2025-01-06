@@ -1,4 +1,4 @@
-# Test: Get Organization
+# Test: Get Organization [Bug COS-6045]
 POST {{cos_url}}/customerbase/v1/organizations
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}

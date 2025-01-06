@@ -118,7 +118,7 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 		defer wg.Done()
 		tracing.SetDefaultResolverSpanTags(ctx, span)
 
-		contacts, err := r.Services.Repositories.Neo4jRepositories.ContactReadRepository.GetContactsForOrganizations(ctx, tenant, ids)
+		contacts, err := r.Services.Repositories.Neo4jRepositories.ContactReadRepository.GetActiveContactsForOrganizations(ctx, tenant, ids)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			setError(err)

@@ -20,7 +20,7 @@ import { RemindersStore } from './Reminders/Reminders.store';
 import { CustomFieldsStore } from './Settings/CustomFields.store';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
 import { FlowSendersStore } from './FlowSenders/FlowSenders.store.ts';
-import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
+import { TableViewDefStore } from './TableViewDefs/TableViewDef.store';
 import { OpportunitiesStore } from './Opportunities/Opportunities.store';
 import { OrganizationsStore } from './Organizations/Organizations.store';
 import { TimelineEventsStore } from './TimelineEvents/TimelineEvents.store';
@@ -51,7 +51,7 @@ export class RootStore {
   globalCache: GlobalCacheStore;
   flowParticipants: FlowParticipantsStore;
   customFields: CustomFieldsStore;
-  tableViewDefs: TableViewDefsStore;
+  tableViewDefs: TableViewDefStore;
   organizations: OrganizationsStore;
   opportunities: OpportunitiesStore;
   timelineEvents: TimelineEventsStore;
@@ -67,9 +67,9 @@ export class RootStore {
 
     this.transactions = new TransactionService(this, this.transport);
 
+    this.tableViewDefs = new TableViewDefStore(this, this.transport);
     this.ui = new UIStore(this, this.transport);
     this.windowManager = new WindowManager(this);
-    this.tableViewDefs = new TableViewDefsStore(this, this.transport);
     this.mail = new MailStore(this, this.transport);
     this.tags = new TagsStore(this, this.transport);
     this.files = new FilesStore(this, this.transport);
@@ -98,17 +98,16 @@ export class RootStore {
     );
 
     when(
-      () => this.demoMode,
-      () => {
-        console.info('Demo mode enabled');
+      () => this.isAuthenticated,
+      async () => {
+        await this.bootstrap();
       },
     );
 
     when(
-      () => this.isAuthenticated && !this.isHydrated,
+      () => this.isHydrated,
       async () => {
         await Persister.attemptPurge();
-        await this.bootstrap();
       },
     );
 
@@ -131,7 +130,6 @@ export class RootStore {
       this.contracts.bootstrap(),
       this.externalSystemInstances.bootstrap(),
       this.users.bootstrap(),
-      this.contacts.bootstrap(),
       this.flows.bootstrap(),
       this.flowEmailVariables.bootstrap(),
     ]);
@@ -158,16 +156,16 @@ export class RootStore {
   }
 
   get isHydrated() {
-    if (this.demoMode) return true;
-
-    return this.organizations.isHydrated;
+    return (
+      this.organizations.isHydrated &&
+      this.tableViewDefs.isHydrated &&
+      this.contacts.isHydrated
+    );
   }
 
   get isBootstrapped() {
-    if (this.demoMode) return true;
-
     return (
-      this.tableViewDefs.isBootstrapped &&
+      (this.tableViewDefs.isHydrated || this.tableViewDefs.isBootstrapped) &&
       this.settings.isBootstrapped &&
       this.globalCache.isBootstrapped
     );

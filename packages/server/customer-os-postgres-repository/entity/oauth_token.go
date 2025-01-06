@@ -4,10 +4,6 @@ import (
 	"time"
 )
 
-const (
-	ProviderGoogle = "google"
-)
-
 type OAuthTokenEntity struct {
 	Provider                  string    `gorm:"primaryKey;autoIncrement:false;index:idx_primary;column:provider;size:255;not null"`
 	TenantName                string    `gorm:"primaryKey;autoIncrement:false;index:idx_primary;column:tenant_name;size:255;not null"`

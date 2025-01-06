@@ -16,6 +16,7 @@ type TenantReadRepository interface {
 	GetTenantByName(ctx context.Context, tenant string) (*dbtype.Node, error)
 	GetTenantByNameIgnoreCase(ctx context.Context, tenant string) (*dbtype.Node, error)
 	GetTenantForWorkspaceProvider(ctx context.Context, workspaceName, workspaceProvider string) (*dbtype.Node, error)
+	GetTenantForWorkspace(ctx context.Context, workspaceName string) (*dbtype.Node, error)
 	GetTenantForUserEmail(ctx context.Context, email string) (*dbtype.Node, error)
 	GetTenantSettings(ctx context.Context, tenant string) (*dbtype.Node, error)
 	GetTenantBillingProfiles(ctx context.Context, tenant string) ([]*dbtype.Node, error)
@@ -178,6 +179,45 @@ func (r *tenantReadRepository) GetTenantForWorkspaceProvider(ctx context.Context
 	params := map[string]any{
 		"name":     workspaceName,
 		"provider": workspaceProvider,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
+		}
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	}
+
+	span.LogFields(log.Bool("result.found", true))
+	return result.(*dbtype.Node), nil
+}
+
+func (r *tenantReadRepository) GetTenantForWorkspace(ctx context.Context, workspaceName string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantForWorkspaceProvider")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+
+	cypher := `MATCH (t:Tenant)-[:HAS_WORKSPACE]->(w:Workspace)
+			WHERE w.name=$name 
+			RETURN DISTINCT t`
+	params := map[string]any{
+		"name": workspaceName,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

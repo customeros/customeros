@@ -17,7 +17,7 @@ import { TargetsContactsView } from './__views__/TargetsContacts.view';
 
 export class ContactsStore extends Store<ContactDatum, Contact> {
   private chunkSize = 50;
-  private service: ContactService;
+  private service = ContactService.getInstance();
   @observable accessor searchResults: Map<string, string[]> = new Map();
   @observable accessor cursors: Map<string, number> = new Map();
   @observable accessor availableCounts: Map<string, number> = new Map();
@@ -28,7 +28,8 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       getId: (data) => data?.id,
       factory: Contact,
     });
-    this.service = ContactService.getInstance();
+
+    this.hydrate();
 
     new ContactsView(this);
     new FlowContactsView(this);
@@ -510,10 +511,10 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
   }
 
   async remove(id: string) {
+    const organizationId = this.value.get(id)?.organizationId;
+
     try {
       runInAction(() => {
-        const organizationId = this.value.get(id)?.organizationId;
-
         if (organizationId) {
           const organization =
             this.root.organizations.value.get(organizationId);
@@ -543,10 +544,10 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
   }
 
   async softDelete(id: string) {
+    const organizationId = this.value.get(id)?.organizationId;
+
     try {
       runInAction(() => {
-        const organizationId = this.value.get(id)?.organizationId;
-
         if (organizationId) {
           const organization =
             this.root.organizations.value.get(organizationId);
@@ -572,6 +573,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     } finally {
       runInAction(() => {
         this.sync({ action: 'DELETE', ids: [id] });
+        this.root.organizations.invalidate(organizationId || '');
       });
     }
   }

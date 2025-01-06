@@ -1,63 +1,19 @@
-import { useRef, useEffect, KeyboardEvent } from 'react';
-
-import { Input } from '@ui/form/Input';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
-import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick.ts';
 import { getExternalUrl, getFormattedLink } from '@utils/getExternalLink';
 
 interface LinkedInDisplayProps {
   link: string;
   type: string;
   alias?: string;
-  isEdit: boolean;
-  metaKey: boolean;
-  isHovered: boolean;
-  toggleEditMode: () => void;
-  setIsEdit: (value: boolean) => void;
-  setMetaKey: (value: boolean) => void;
-  setIsHovered: (value: boolean) => void;
 }
 
 export const LinkedInDisplay = ({
-  isHovered,
   alias,
-  isEdit,
-  setIsHovered,
-  setIsEdit,
-  metaKey,
   link,
-  setMetaKey,
-  toggleEditMode,
   type,
 }: LinkedInDisplayProps) => {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useOutsideClick({
-    ref: inputRef,
-    handler: () => {
-      setIsEdit(false);
-    },
-  });
-
-  const handleKeyEvents = (e: KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      inputRef.current?.blur();
-      setIsEdit(false);
-    }
-
-    if (e.key === 'Escape') {
-      setIsEdit(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isEdit) {
-      inputRef?.current?.focus();
-    }
-  }, [isEdit]);
-
   const formattedLink = getFormattedLink(link).replace(
     /^linkedin\.com\/(?:in\/|company\/)?/,
     '/',
@@ -71,49 +27,19 @@ export const LinkedInDisplay = ({
     : '';
 
   return (
-    <div
-      className='flex items-center'
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {isEdit ? (
-        <Input
-          size='xs'
-          ref={inputRef}
-          variant='unstyled'
-          value={link || ''}
-          onKeyDown={handleKeyEvents}
-          onBlur={() => setIsEdit(false)}
-          onFocus={(e) => {
-            e.target.focus();
-            setTimeout(() => e.target.select(), 0);
-          }}
-        />
-      ) : (
-        <Tooltip label={url ?? ''}>
-          <p
-            onDoubleClick={toggleEditMode}
-            onClick={() => metaKey && toggleEditMode()}
-            onKeyUp={() => metaKey && setMetaKey(false)}
-            onKeyDown={(e) => e.metaKey && setMetaKey(true)}
-            className='text-gray-700 cursor-default truncate'
-          >
-            {displayLink}
-          </p>
-        </Tooltip>
-      )}
-      {isHovered && !isEdit && (
-        <>
-          <IconButton
-            size='xxs'
-            variant='ghost'
-            aria-label='contact website'
-            className='ml-1 rounded-[5px]'
-            icon={<LinkExternal02 className='text-gray-500' />}
-            onClick={() => window.open(url, '_blank', 'noopener')}
-          />
-        </>
-      )}
+    <div className='flex items-center group'>
+      <Tooltip label={url ?? ''}>
+        <p className='text-gray-700 cursor-default truncate'>{displayLink}</p>
+      </Tooltip>
+
+      <IconButton
+        size='xxs'
+        variant='ghost'
+        aria-label='contact website'
+        icon={<LinkExternal02 className='text-gray-500' />}
+        onClick={() => window.open(url, '_blank', 'noopener')}
+        className='ml-1 rounded-[5px] opacity-0 group-hover:opacity-100'
+      />
     </div>
   );
 };

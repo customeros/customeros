@@ -22,6 +22,7 @@ import {
 
 import { AddEmail } from './commands/contacts/AddEmail';
 import { AddLinkedinUrl } from './commands/contacts/AddLinkedin';
+import { EditLatestOrgActive } from './commands/contacts/EditLatestOrgActive';
 import {
   FlowHub,
   EditName,
@@ -110,6 +111,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   ConfirmSingleFlowEdit: <ConfirmSingleFlowEdit />,
   AddContactsBulk: <AddContactsBulk />,
   AddEmail: <AddEmail />,
+  EditLatestOrgActive: <EditLatestOrgActive />,
 
   // Opportunity
   OpportunityHub: <OpportunityHub />,

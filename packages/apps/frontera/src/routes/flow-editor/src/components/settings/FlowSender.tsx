@@ -88,7 +88,13 @@ export const FlowSender = observer(
                 </Button>
               )}
 
-              {hasLinkedInToken && <LinkedinBlue />}
+              {hasLinkedInToken && (
+                <Tooltip label='LinkedIn extension installed'>
+                  <div className='flex items-center'>
+                    <LinkedinBlue />
+                  </div>
+                </Tooltip>
+              )}
               <div className='h-[10px] w-[1px] bg-gray-300 mx-1' />
             </>
           )}

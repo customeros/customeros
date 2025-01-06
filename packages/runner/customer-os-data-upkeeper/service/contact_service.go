@@ -723,7 +723,7 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 				continue
 			}
 
-			organizationByDomainNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
+			organizationByDomainNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
 			if err != nil {
 				//TODO uncomment when data is fixed in DB
 				//tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
@@ -1033,12 +1033,12 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 			tracing.TraceErr(span, err)
 		}
 		if emailLinked {
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), true)
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, nil, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), true)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
 		} else {
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), false)
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, nil, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactFound), false)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
@@ -1051,12 +1051,12 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 				tracing.TraceErr(span, err)
 			}
 			if phoneLinked {
-				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), true)
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, nil, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), true)
 				if err != nil {
 					tracing.TraceErr(span, err)
 				}
 			} else {
-				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), false)
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(innerCtx, nil, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindMobilePhoneWithBetterContactFound), false)
 				if err != nil {
 					tracing.TraceErr(span, err)
 				}

@@ -74,14 +74,14 @@ func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWith
 		return nil, nil
 	}
 
-	// check if email already exists
-	emailId, err = s.services.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, tenant, emailFields.Email)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		// check if email already exists
+		emailId, err = s.services.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, txWithPostCommit.Tx, tenant, emailFields.Email)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
 		// email not exist, create one
 		if emailId == "" {
 			emailId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonmodel.NodeLabelEmail)

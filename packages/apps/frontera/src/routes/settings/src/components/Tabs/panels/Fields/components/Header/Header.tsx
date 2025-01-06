@@ -38,18 +38,6 @@ export const Header = ({
   const checkIsActiveCustom = checkIsActive('custom');
   const checkIsActiveCore = checkIsActive('core');
 
-  const dynamicClassesCustom = cn(
-    checkIsActiveCustom
-      ? ['font-medium', 'bg-white']
-      : ['font-normal', 'bg-transparent', 'text-gray-500'],
-  );
-
-  const dynamicClassesCore = cn(
-    checkIsActiveCore
-      ? ['font-medium', 'bg-white']
-      : ['font-normal', 'bg-transparent', 'text-gray-500'],
-  );
-
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const params = new URLSearchParams(searchParams?.toString() ?? '');
 
@@ -72,18 +60,22 @@ export const Header = ({
       </div>
       <h2 className='text-sm'>{subTitle}</h2>
       <div className='flex flex-col gap-4 mt-4'>
-        <ButtonGroup>
+        <ButtonGroup className='items-center'>
           <Button
             size='sm'
             onClick={handleItemClick('custom')}
-            className={`w-[50%] ${dynamicClassesCustom} !border-r-[1px]`}
+            className={cn('w-full', {
+              selected: checkIsActiveCustom,
+            })}
           >
             Custom • {numberOfCustomFields}
           </Button>
           <Button
             size='sm'
             onClick={handleItemClick('core')}
-            className={`w-[50%] ${dynamicClassesCore}`}
+            className={cn('w-full', {
+              selected: checkIsActiveCore,
+            })}
           >
             Core • {numberOfCoreFields}
           </Button>

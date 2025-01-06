@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 )
@@ -27,10 +28,14 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresD
 
 	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{
 		GoogleOAuthConfig: &cfg.GoogleOAuth,
-		RabbitMQConfig:    &cfg.RabbitMQConfig,
+		RabbitMQConfig:    &cfg.RabbitMQ,
 		ExternalServices: commonConfig.ExternalServices{
-			OpenSRSConfig:  cfg.OpenSRSConfig,
-			PostmarkConfig: cfg.PostmarkConfig,
+			OpenSRSConfig:  cfg.OpenSRS,
+			PostmarkConfig: cfg.Postmark,
+		},
+		InternalServices: commonConfig.InternalServices{
+			EnrichmentApiConfig: cfg.InternalServices.EnrichmentApi,
+			ValidationApiConfig: cfg.InternalServices.ValidationApi,
 		},
 	}, postgresDB, driver, cfg.Neo4j.Database, grpcClients, appLogger)
 	services.RegistrationService = NewRegistrationService(&services)

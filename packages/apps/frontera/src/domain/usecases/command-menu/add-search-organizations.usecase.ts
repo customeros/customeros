@@ -321,14 +321,19 @@ export class AddSearchOrganizationsUsecase {
 
   public async addNewOrganization(option?: AddSearchOrganizationOption) {
     if (!option) {
+      const isUrl = validateUrl(this.searchTerm);
+
       await this.root.organizations.create({
         ...this.getViewDefDefaults(),
-        name: this.searchTerm || 'Unnamed',
+        name: isUrl ? 'Unnamed' : this.searchTerm || 'Unnamed',
+        website: !isUrl ? undefined : this.searchTerm || '',
       });
     }
 
     if (option?.source !== 'global') {
       this.root.ui.commandMenu.toggle('AddNewOrganization');
+      this.reset();
+      this.searchGlobal();
 
       return;
     }
@@ -342,6 +347,7 @@ export class AddSearchOrganizationsUsecase {
         ...this.getViewDefDefaults(),
         ...rest,
       });
+      this.searchGlobal();
     }
 
     this.root.ui.commandMenu.toggle('AddNewOrganization');

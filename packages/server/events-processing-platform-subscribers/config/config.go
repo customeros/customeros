@@ -28,12 +28,11 @@ type Config struct {
 }
 
 type Subscriptions struct {
-	GraphSubscription              GraphSubscription
-	LocationValidationSubscription LocationValidationSubscription
-	OrganizationSubscription       OrganizationSubscription
-	ContractSubscription           ContractSubscription
-	NotificationsSubscription      NotificationsSubscription
-	InvoiceSubscription            InvoiceSubscription
+	GraphSubscription         GraphSubscription
+	OrganizationSubscription  OrganizationSubscription
+	ContractSubscription      ContractSubscription
+	NotificationsSubscription NotificationsSubscription
+	InvoiceSubscription       InvoiceSubscription
 }
 
 type GraphSubscription struct {
@@ -42,14 +41,6 @@ type GraphSubscription struct {
 	PoolSize             int    `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_POOL_SIZE" envDefault:"10" validate:"required,gte=0"`
 	BufferSizeClient     uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 	CheckpointLowerBound int32  `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_CHECKPOINT_LOWER_BOUND" envDefault:"10" validate:"required,gte=0"`
-}
-
-type LocationValidationSubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_GROUP_NAME" envDefault:"locationValidation-v3" validate:"required"`
-	Prefix           string `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_PREFIX" envDefault:"location-" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_LOCATION_VALIDATION_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 }
 
 type OrganizationSubscription struct {

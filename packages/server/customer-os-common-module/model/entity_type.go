@@ -9,6 +9,7 @@ const (
 	CONTRACT                 EntityType = "CONTRACT"
 	CUSTOM_FIELD             EntityType = "CUSTOM_FIELD"
 	CUSTOM_FIELD_TEMPLATE    EntityType = "CUSTOM_FIELD_TEMPLATE"
+	DOMAIN                   EntityType = "DOMAIN"
 	EMAIL                    EntityType = "EMAIL"
 	FLOW                     EntityType = "FLOW"
 	FLOW_ACTION              EntityType = "FLOW_ACTION"
@@ -36,6 +37,7 @@ const (
 	TENANT_SETTINGS          EntityType = "TENANT_SETTINGS"
 	USER                     EntityType = "USER"
 	WEBHOOK_EVENT            EntityType = "WEBHOOK"
+	LOCATION                 EntityType = "LOCATION"
 )
 
 func (entityType EntityType) String() string {
@@ -56,6 +58,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelOrganization
 	case OPPORTUNITY:
 		return NodeLabelOpportunity
+	case DOMAIN:
+		return NodeLabelDomain
 	case EMAIL:
 		return NodeLabelEmail
 	case PHONE_NUMBER:
@@ -98,6 +102,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelSocial
 	case MARKDOWN_EVENT:
 		return NodeLabelMarkdownEvent
+	case LOCATION:
+		return NodeLabelLocation
 	}
 	return "Unknown"
 }

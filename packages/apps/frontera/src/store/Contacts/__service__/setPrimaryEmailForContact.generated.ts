@@ -5,7 +5,5 @@ export type SetPrimaryEmailForContactMutationVariables = Types.Exact<{
   email: Types.Scalars['String']['input'];
 }>;
 
-export type SetPrimaryEmailForContactMutation = {
-  __typename?: 'Mutation';
-  emailSetPrimaryForContact: { __typename?: 'Result'; result: boolean };
-};
+
+export type SetPrimaryEmailForContactMutation = { __typename?: 'Mutation', emailSetPrimaryForContact: { __typename?: 'Result', result: boolean } };

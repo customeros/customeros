@@ -1,7 +1,7 @@
 import { match } from 'ts-pattern';
 import { RootStore } from '@store/root';
 import { ColumnDef } from '@tanstack/react-table';
-import { TableViewDefsStore } from '@store/TableViewDefs/TableViewDefs.store';
+import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store';
 
 import { TableViewDef, TableViewType } from '@graphql/types';
 
@@ -104,7 +104,7 @@ export const computeFinderColumns = (
 
 function makeColumnParser(store: RootStore) {
   return function (
-    presetKey: keyof TableViewDefsStore,
+    presetKey: keyof TableViewDefStore,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getColumnConfig: (viewDef: TableViewDef) => ColumnDef<any, any>[],
   ) {

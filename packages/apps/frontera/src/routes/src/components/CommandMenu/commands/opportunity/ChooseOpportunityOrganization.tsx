@@ -64,6 +64,7 @@ export const ChooseOpportunityOrganization = observer(() => {
     store.opportunities.create({
       // @ts-expect-error this will be autofixed when Opportunity store will use OpportunityDatum
       organization,
+      id: organization?.id,
       name: `${organization.name}'s opportunity`,
       internalType: InternalType.Nbo,
       externalStage: isInternalStage ? '' : stage,

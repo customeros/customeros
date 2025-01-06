@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -19,10 +19,10 @@ import (
 )
 
 type WebhookService interface {
-	GetIntegration(s string) (enum.ExternalSystemId, error)
-	CreateIntegrationWebhook(ctx context.Context, tenant string, integration enum.ExternalSystemId) (webhookUrl string, secret string, err error)
+	GetIntegration(s string) (enum.Source, error)
+	CreateIntegrationWebhook(ctx context.Context, tenant string, integration enum.Source) (webhookUrl string, secret string, err error)
 	ValidateTenantId(ctx context.Context, tenant, tenantId string) (bool, error)
-	GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (enum.ExternalSystemId, error)
+	GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (enum.Source, error)
 	DeactivateWebhook(ctx context.Context, webhookPath string) error
 }
 
@@ -40,8 +40,8 @@ func NewWebhookService(log logger.Logger, repositories *repository.Repositories,
 	}
 }
 
-func (w *webhookService) GetIntegration(s string) (enum.ExternalSystemId, error) {
-	integration := enum.DecodeExternalSystemId(s)
+func (w *webhookService) GetIntegration(s string) (enum.Source, error) {
+	integration := enum.DecodeSource(s)
 	if integration == "" {
 		return "", fmt.Errorf("Invalid integration %s", s)
 	}
@@ -63,7 +63,7 @@ func (w *webhookService) ValidateTenantId(ctx context.Context, tenant, tenantId 
 	return tenantFromDb == tenant, nil
 }
 
-func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (enum.ExternalSystemId, error) {
+func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (enum.Source, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.GetIntegrationFromWebhookPath")
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
@@ -77,19 +77,19 @@ func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tena
 	if err != nil {
 		err = fmt.Errorf("Unable to lookup webhook path: %v", err)
 		tracing.TraceErr(span, err)
-		return enum.NotSet, err
+		return enum.SourceUnknown, err
 	}
 
 	if !webhook.Enabled {
 		err = fmt.Errorf("Webhook is disabled: %v", err)
 		tracing.TraceErr(span, err)
-		return enum.NotSet, err
+		return enum.SourceUnknown, err
 	}
 
-	return enum.DecodeExternalSystemId(webhook.Integration), nil
+	return enum.DecodeSource(webhook.Integration), nil
 }
 
-func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant string, integration enum.ExternalSystemId) (string, string, error) {
+func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant string, integration enum.Source) (string, string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.CreateIntegrationWebhook")
 	defer span.Finish()
 	span.LogFields(log.String("tenant", tenant))

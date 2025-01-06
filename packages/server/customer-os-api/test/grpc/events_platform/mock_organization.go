@@ -7,11 +7,8 @@ import (
 )
 
 type MockOrganizationServiceCallbacks struct {
-	AddParent                        func(context.Context, *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	RemoveParent                     func(context.Context, *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshArr                       func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshRenewalSummary            func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	UpdateOnboardingStatus           func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner          func(ctx context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	CreateBillingProfile             func(ctx context.Context, proto *organizationpb.CreateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
 	UpdateBillingProfile             func(ctx context.Context, proto *organizationpb.UpdateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
@@ -29,27 +26,6 @@ func SetOrganizationCallbacks(callbacks *MockOrganizationServiceCallbacks) {
 
 type MockOrganizationService struct {
 	organizationpb.UnimplementedOrganizationGrpcServiceServer
-}
-
-func (MockOrganizationService) AddParentOrganization(context context.Context, proto *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	if organizationCallbacks.AddParent == nil {
-		panic("organizationCallbacks.AddParent is not set")
-	}
-	return organizationCallbacks.AddParent(context, proto)
-}
-
-func (MockOrganizationService) RemoveParentOrganization(context context.Context, proto *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	if organizationCallbacks.RemoveParent == nil {
-		panic("organizationCallbacks.RemoveParent is not set")
-	}
-	return organizationCallbacks.RemoveParent(context, proto)
-}
-
-func (MockOrganizationService) UpdateOnboardingStatus(context context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	if organizationCallbacks.UpdateOnboardingStatus == nil {
-		panic("organizationCallbacks.UpdateOnboardingStatus is not set")
-	}
-	return organizationCallbacks.UpdateOnboardingStatus(context, proto)
 }
 
 func (MockOrganizationService) UpdateOrganizationOwner(context context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {

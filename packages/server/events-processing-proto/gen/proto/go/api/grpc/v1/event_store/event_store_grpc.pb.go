@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -23,7 +22,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EventStoreGrpcServiceClient interface {
-	DeleteEventStoreStream(ctx context.Context, in *DeleteEventStoreStreamRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	StoreEvent(ctx context.Context, in *StoreEventGrpcRequest, opts ...grpc.CallOption) (*StoreEventGrpcResponse, error)
 }
 
@@ -33,15 +31,6 @@ type eventStoreGrpcServiceClient struct {
 
 func NewEventStoreGrpcServiceClient(cc grpc.ClientConnInterface) EventStoreGrpcServiceClient {
 	return &eventStoreGrpcServiceClient{cc}
-}
-
-func (c *eventStoreGrpcServiceClient) DeleteEventStoreStream(ctx context.Context, in *DeleteEventStoreStreamRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/EventStoreGrpcService/DeleteEventStoreStream", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *eventStoreGrpcServiceClient) StoreEvent(ctx context.Context, in *StoreEventGrpcRequest, opts ...grpc.CallOption) (*StoreEventGrpcResponse, error) {
@@ -57,7 +46,6 @@ func (c *eventStoreGrpcServiceClient) StoreEvent(ctx context.Context, in *StoreE
 // All implementations should embed UnimplementedEventStoreGrpcServiceServer
 // for forward compatibility
 type EventStoreGrpcServiceServer interface {
-	DeleteEventStoreStream(context.Context, *DeleteEventStoreStreamRequest) (*emptypb.Empty, error)
 	StoreEvent(context.Context, *StoreEventGrpcRequest) (*StoreEventGrpcResponse, error)
 }
 
@@ -65,9 +53,6 @@ type EventStoreGrpcServiceServer interface {
 type UnimplementedEventStoreGrpcServiceServer struct {
 }
 
-func (UnimplementedEventStoreGrpcServiceServer) DeleteEventStoreStream(context.Context, *DeleteEventStoreStreamRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteEventStoreStream not implemented")
-}
 func (UnimplementedEventStoreGrpcServiceServer) StoreEvent(context.Context, *StoreEventGrpcRequest) (*StoreEventGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreEvent not implemented")
 }
@@ -81,24 +66,6 @@ type UnsafeEventStoreGrpcServiceServer interface {
 
 func RegisterEventStoreGrpcServiceServer(s grpc.ServiceRegistrar, srv EventStoreGrpcServiceServer) {
 	s.RegisterService(&EventStoreGrpcService_ServiceDesc, srv)
-}
-
-func _EventStoreGrpcService_DeleteEventStoreStream_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteEventStoreStreamRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(EventStoreGrpcServiceServer).DeleteEventStoreStream(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/EventStoreGrpcService/DeleteEventStoreStream",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventStoreGrpcServiceServer).DeleteEventStoreStream(ctx, req.(*DeleteEventStoreStreamRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _EventStoreGrpcService_StoreEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -126,10 +93,6 @@ var EventStoreGrpcService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "EventStoreGrpcService",
 	HandlerType: (*EventStoreGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "DeleteEventStoreStream",
-			Handler:    _EventStoreGrpcService_DeleteEventStoreStream_Handler,
-		},
 		{
 			MethodName: "StoreEvent",
 			Handler:    _EventStoreGrpcService_StoreEvent_Handler,

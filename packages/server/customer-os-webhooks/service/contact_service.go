@@ -122,6 +122,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, contactInput.ExternalSystem)
+	span.SetTag(tracing.SpanTagExternalId, contactInput.ExternalId)
 	span.LogFields(log.Object("syncDate", syncDate))
 	tracing.LogObjectAsJson(span, "contactInput", contactInput)
 
@@ -365,8 +366,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		}
 
 		syncLocation := false // skip location sync for now
-		if contactInput.HasLocation() && syncLocation {
-			// Create or update location
+		if contactInput.HasLocation() && syncLocation && !failedSync {
 			locationId, err := s.repositories.LocationRepository.GetMatchedLocationIdForContactBySource(ctx, contactId, contactInput.ExternalSystem)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -375,23 +375,26 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				s.log.Error(reason)
 			}
 
-			if !failedSync {
-				locationId, err = s.services.LocationService.CreateLocation(ctx, locationId, contactInput.ExternalSystem, contactInput.AppSource,
-					contactInput.LocationName, contactInput.Country, contactInput.Region, contactInput.Locality, contactInput.Street, contactInput.Address, "", contactInput.Zip, contactInput.PostalCode)
+			if locationId == "" {
+				locationId, err = s.services.CommonServices.LocationService.Create(ctx, nil,
+					data_fields.LocationFields{
+						Source:     utils.StringPtr(contactInput.ExternalSystem),
+						Name:       contactInput.LocationName,
+						Country:    contactInput.Country,
+						Region:     contactInput.Region,
+						Locality:   contactInput.Locality,
+						Street:     contactInput.Street,
+						Address:    contactInput.Address,
+						Zip:        contactInput.Zip,
+						PostalCode: contactInput.PostalCode,
+					}, &commonservice.LinkWith{
+						Type: commonmodel.CONTACT,
+						Id:   contactId,
+					})
 				if err != nil {
 					failedSync = true
 					tracing.TraceErr(span, err)
 					reason = fmt.Sprintf("Failed to create location for contact %s: %s", contactId, err.Error())
-					s.log.Error(reason)
-				}
-			}
-			// Link location to contact
-			if locationId != "" {
-				err = s.services.CommonServices.Neo4jRepositories.LocationWriteRepository.LinkWithContact(ctx, tenant, contactId, locationId)
-				if err != nil {
-					failedSync = true
-					tracing.TraceErr(span, err, log.String("method", "LinkWithContact"))
-					reason = fmt.Sprintf("Failed to link location %s with contact %s: %s", locationId, contactId, err.Error())
 					s.log.Error(reason)
 				}
 			}

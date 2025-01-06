@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -11,20 +12,26 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type WorkflowService interface {
 	// Flow
 	SaveFlow(ctx context.Context, flowRecord entity.Flow) (*entity.Flow, error)
 	GetFlowsByTrigger(ctx context.Context, listenerEvent enum.FlowListenerEvent) (*[]entity.Flow, error)
-	GetNextStepInFlow(ctx context.Context, flowId, fromNodeId string) (*FlowNextStep, error)
+	GetNextStepInFlow(ctx context.Context, flowId string, fromNodeId *string) (*FlowNextStep, error)
+	GetFlowsForListenerEvent(ctx context.Context, sourceEvent enum.FlowListenerEvent, eventType string, eventData any) (*[]entity.Flow, error)
 
 	// Flow Execution
+	BuildAndSaveFlowExecutionRecord(ctx context.Context, flowStatus, flowId, flowNodeId, entityId, entityType, currentStep string, eventData any) (*entity.FlowExecution, error)
 	SaveFlowExecutionRecord(ctx context.Context, flowExecutionRecord entity.FlowExecution) (*entity.FlowExecution, error)
 	GetFlowExecutionRecordById(ctx context.Context, id string) (*entity.FlowExecution, error)
 
 	// FlowAgent Execution
 	SaveFlowAgentExecutionRecord(ctx context.Context, flowAgentExecutionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error)
+
+	// Dead Flow Events
+	SendToDeadEvents(ctx context.Context, sourceEvent enum.FlowListenerEvent, eventType string, eventData any) error
 
 	// Validation
 	ValidateEventType(ctx context.Context, nodeType enum.FlowNodeType, event string) bool
@@ -101,7 +108,72 @@ type FlowNextStep struct {
 	ToNodeAgent enum.FlowAgent
 }
 
-func (w *workflowService) GetNextStepInFlow(ctx context.Context, flowId, fromNodeId string) (*FlowNextStep, error) {
+func (w *workflowService) GetNextStepInFlow(ctx context.Context, flowId string, fromNodeId *string) (*FlowNextStep, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.getNextStepInFlow")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	if fromNodeId == nil {
+		query := entity.Flow{
+			ID:     flowId,
+			Tenant: common.GetTenantFromContext(ctx),
+		}
+
+		flow, err := w.services.PostgresRepositories.FlowRepository.Find(ctx, query)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		if flow == nil {
+			err = errors.New("flow does not exist")
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		fromNodeId = &flow.TriggerNodeID
+	}
+
+	nextStep, err := w.nextStepInFlow(ctx, flowId, *fromNodeId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("failed to get next step for flow %s: %w", flowId, err)
+	}
+
+	// validate the transition to next action
+	validAgent, err := w.ValidateTransition(ctx, *fromNodeId, nextStep.ToNodeID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("failed to validate transition for flow %s: %w", flowId, err)
+	}
+	if !validAgent {
+		err = fmt.Errorf("not a valid action transition for flow %s", flowId)
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return nextStep, nil
+}
+
+func (w *workflowService) GetFlowsForListenerEvent(ctx context.Context, sourceEvent enum.FlowListenerEvent, eventType string, eventData any) (*[]entity.Flow, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.getFlowsForEvent")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	// check to see if tenant has flows configured for this event
+	flows, err := w.GetFlowsByTrigger(ctx, sourceEvent)
+	// send to dead events if no flows configured to receive event
+	if err != nil || len(*flows) == 0 {
+		err := w.SendToDeadEvents(ctx, sourceEvent, eventType, eventData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		return nil, err
+	}
+
+	return flows, nil
+}
+
+func (w *workflowService) nextStepInFlow(ctx context.Context, flowId, fromNodeId string) (*FlowNextStep, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.GetNextStepInFlow")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -183,6 +255,8 @@ func (w *workflowService) GetFlowExecutionRecordById(ctx context.Context, id str
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.GetFlowExecutionRecordById")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	span.LogKV("id", id)
+	tenant := common.GetTenantFromContext(ctx)
 
 	if id == "" {
 		err := errors.New("ID is empty")
@@ -190,7 +264,6 @@ func (w *workflowService) GetFlowExecutionRecordById(ctx context.Context, id str
 		return nil, err
 	}
 
-	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("Tenant is not set")
 		tracing.TraceErr(span, err)
@@ -208,6 +281,59 @@ func (w *workflowService) GetFlowExecutionRecordById(ctx context.Context, id str
 		return nil, err
 	}
 	return result, nil
+}
+
+func (w *workflowService) BuildAndSaveFlowExecutionRecord(
+	ctx context.Context,
+	flowStatus, flowId, flowNodeId, entityId, entityType, currentStep string,
+	eventData any,
+) (*entity.FlowExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.BuildAndSaveFlowExecutionRecord")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	data, err := utils.ObjectToString(eventData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	record := entity.FlowExecution{
+		Tenant:            common.GetTenantFromContext(ctx),
+		FlowID:            flowId,
+		EntityID:          entityId,
+		EntityType:        entityType,
+		Status:            enum.FlowExecutionRunning.String(),
+		StartedAt:         utils.NowPtr(),
+		CurrentStep:       currentStep,
+		CurrentStepNodeId: flowNodeId,
+		CreatedAt:         utils.Now(),
+		Context:           &data,
+	}
+
+	switch flowStatus {
+	case "INACTIVE":
+		reason := enum.FlowBlockedNotActive.String()
+		record.Status = enum.FlowExecutionBlocked.String()
+		record.BlockedReason = &reason
+
+	case "ARCHIVED":
+		reason := enum.FlowBlockedArchived.String()
+		record.Status = enum.FlowExecutionBlocked.String()
+		record.BlockedReason = &reason
+
+	default:
+		record.Status = enum.FlowExecutionRunning.String()
+	}
+
+	// save flow execution record
+	flowExecutionRecord, err := w.SaveFlowExecutionRecord(ctx, record)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return flowExecutionRecord, nil
 }
 
 func (w *workflowService) SaveFlowExecutionRecord(ctx context.Context, flowExecutionRecord entity.FlowExecution) (*entity.FlowExecution, error) {
@@ -254,4 +380,45 @@ func (w *workflowService) SaveFlowAgentExecutionRecord(ctx context.Context, flow
 	}
 
 	return w.services.PostgresRepositories.FlowAgentExecutionRepository.Update(ctx, flowAgentExecutionRecord)
+}
+
+// Dead Flow Events
+
+func (w *workflowService) SendToDeadEvents(ctx context.Context, sourceEvent enum.FlowListenerEvent, eventType string, eventData any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.SendToDeadEvents")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	deadEvent, err := w.buildDeadEvent(ctx, sourceEvent, eventType, eventData)
+	if err != nil {
+		return err
+	}
+
+	_, err = w.services.PostgresRepositories.FlowDeadEventsRepository.Create(ctx, deadEvent)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return nil
+}
+
+func (w *workflowService) buildDeadEvent(ctx context.Context, sourceEvent enum.FlowListenerEvent, eventType string, eventData any) (entity.FlowDeadEvents, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.buildDeadEventFromMeetingSummary")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	data, err := utils.ObjectToString(eventData)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return entity.FlowDeadEvents{}, err
+	}
+
+	return entity.FlowDeadEvents{
+		Tenant:    common.GetTenantFromContext(ctx),
+		NodeType:  enum.NodeFlowListenerEvent.String(),
+		EventType: eventType,
+		Event:     sourceEvent.String(),
+		CreatedAt: utils.Now(),
+		Data:      &data,
+	}, nil
 }

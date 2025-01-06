@@ -16,8 +16,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/constants"
 	"github.com/opentracing/opentracing-go"
@@ -418,50 +416,12 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 			tracing.TraceErr(span, errors.Wrap(err, "ExtractAndEnrichLocation"))
 		}
 		if contactLocation != nil {
-
-			data := neo4jrepository.LocationCreateFields{
-				RawAddress: scrapinContactResponse.Person.Location,
-				CreatedAt:  utils.Now(),
-				SourceFields: neo4jmodel.SourceFields{
-					Source:    constants.SourceOpenline,
-					AppSource: constants.AppScrapin,
-				},
-				AddressDetails: neo4jrepository.AddressDetails{
-					Latitude:      contactLocation.Latitude,
-					Longitude:     contactLocation.Longitude,
-					Country:       contactLocation.Country,
-					CountryCodeA2: contactLocation.CountryCodeA2,
-					CountryCodeA3: contactLocation.CountryCodeA3,
-					Region:        contactLocation.Region,
-					District:      contactLocation.District,
-					Locality:      contactLocation.Locality,
-					Street:        contactLocation.Street,
-					Address:       contactLocation.Address,
-					Address2:      contactLocation.Address2,
-					Zip:           contactLocation.Zip,
-					AddressType:   contactLocation.AddressType,
-					HouseNumber:   contactLocation.HouseNumber,
-					PostalCode:    contactLocation.PostalCode,
-					PlusFour:      contactLocation.PlusFour,
-					Commercial:    contactLocation.Commercial,
-					Predirection:  contactLocation.Predirection,
-					TimeZone:      contactLocation.TimeZone,
-					UtcOffset:     contactLocation.UtcOffset,
-				},
-			}
-
-			locationId, err := c.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelLocation)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-
-			err = c.services.Neo4jRepositories.LocationWriteRepository.CreateLocation(ctx, tenant, locationId, data)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-			err = c.services.Neo4jRepositories.LocationWriteRepository.LinkWithContact(ctx, tenant, contact.Id, locationId)
+			contactLocation.RawAddress = scrapinContactResponse.Person.Location
+			contactLocation.AppSource = utils.StringPtr(constants.AppScrapin)
+			_, err := c.services.LocationService.Create(ctx, nil, *contactLocation, &service.LinkWith{
+				Id:   contact.Id,
+				Type: model.CONTACT,
+			})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
@@ -564,7 +524,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 			domain, _ := c.services.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
 			span.LogFields(log.String("extractedDomainFromWebsite", domain))
 			if domain != "" {
-				organizationDbNode, err = c.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
+				organizationDbNode, err = c.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
 					c.log.Errorf("Error getting organization by domain: %s", err.Error())

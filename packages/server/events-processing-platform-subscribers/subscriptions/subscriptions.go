@@ -28,8 +28,6 @@ func NewSubscriptions(log logger.Logger, db *esdb.Client, cfg *config.Config) *S
 
 func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 
-	_ = s.permanentlyDeletePersistentSubscription(ctx, "enrich-v3")
-
 	graphSubscriptionSettings := esdb.SubscriptionSettingsDefault()
 	graphSubscriptionSettings.ExtraStatistics = true
 	graphSubscriptionSettings.CheckpointLowerBound = s.cfg.Subscriptions.GraphSubscription.CheckpointLowerBound
@@ -37,19 +35,6 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		s.cfg.Subscriptions.GraphSubscription.GroupName,
 		nil,
 		&graphSubscriptionSettings,
-		false,
-		false,
-		esdb.End{},
-	); err != nil {
-		return err
-	}
-
-	locationValidationSubscriptionSettings := esdb.SubscriptionSettingsDefault()
-	locationValidationSubscriptionSettings.ExtraStatistics = true
-	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.LocationValidationSubscription.GroupName,
-		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.LocationValidationSubscription.Prefix}},
-		&locationValidationSubscriptionSettings,
 		false,
 		false,
 		esdb.End{},

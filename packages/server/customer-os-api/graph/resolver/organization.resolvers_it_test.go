@@ -2,6 +2,7 @@ package resolver
 
 import (
 	"context"
+	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -647,10 +648,10 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 1", now)
 
 	// prepare contact and org interaction events
-	channel := "EMAIL"
-	interactionEventId1 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", channel, now)
-	interactionEventId2 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", channel, now)
-	interactionEventId3 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", channel, now)
+	channel := commonenum.InteractionEventChannelEmail
+	interactionEventId1 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", channel.String(), now)
+	interactionEventId2 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", channel.String(), now)
+	interactionEventId3 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", channel.String(), now)
 	interactionEventId4Hidden := neo4jtest.CreateInteractionEventFromEntity(ctx, driver, tenantName, neo4jentity.InteractionEventEntity{
 		Identifier:  "myExternalId",
 		Content:     "IE text 4",
@@ -1332,105 +1333,6 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 //	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
 //}
 
-func TestMutationResolver_OrganizationAddSubsidiary(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "parent")
-	subOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "sub")
-	subsidiaryType := "shop"
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
-
-	calledAddParent := false
-
-	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		AddParent: func(context context.Context, org *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, subsidiaryType, org.Type)
-			require.Equal(t, subOrgId, org.OrganizationId)
-			require.Equal(t, parentOrgId, org.ParentOrganizationId)
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
-			require.Equal(t, testUserId, org.LoggedInUserId)
-			calledAddParent = true
-			neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrgId, subOrgId, subsidiaryType)
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: subOrgId,
-			}, nil
-		},
-	}
-	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
-
-	rawResponse, err := c.RawPost(getQuery("organization/add_subsidiary"),
-		client.Var("organizationId", parentOrgId),
-		client.Var("subsidiaryId", subOrgId),
-		client.Var("type", subsidiaryType),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var organizationStruct struct {
-		Organization_AddSubsidiary model.Organization
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
-	organization := organizationStruct.Organization_AddSubsidiary
-	require.NotNil(t, organization)
-	require.Equal(t, parentOrgId, organization.ID)
-	require.True(t, calledAddParent)
-
-	// below changes were done directly in DB, checking for returned data consistency
-	require.Equal(t, 1, len(organization.Subsidiaries))
-	require.Equal(t, subOrgId, organization.Subsidiaries[0].Organization.ID)
-	require.Equal(t, "shop", *organization.Subsidiaries[0].Type)
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
-	neo4jtest.AssertRelationship(ctx, t, driver, subOrgId, "SUBSIDIARY_OF", parentOrgId)
-}
-
-func TestMutationResolver_OrganizationRemoveSubsidiary(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	parentOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "main")
-	subOrgId := neo4jt.CreateOrganization(ctx, driver, tenantName, "sub")
-	neo4jt.LinkOrganizationAsSubsidiary(ctx, driver, parentOrgId, subOrgId, "shop")
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
-
-	calledRemoveParent := false
-
-	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		RemoveParent: func(context context.Context, org *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, subOrgId, org.OrganizationId)
-			require.Equal(t, parentOrgId, org.ParentOrganizationId)
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
-			require.Equal(t, testUserId, org.LoggedInUserId)
-			calledRemoveParent = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: subOrgId,
-			}, nil
-		},
-	}
-	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
-
-	rawResponse, err := c.RawPost(getQuery("organization/remove_subsidiary"),
-		client.Var("organizationId", parentOrgId),
-		client.Var("subsidiaryId", subOrgId),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var organizationStruct struct {
-		Organization_RemoveSubsidiary model.Organization
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
-	organization := organizationStruct.Organization_RemoveSubsidiary
-	require.NotNil(t, organization)
-	require.Equal(t, parentOrgId, organization.ID)
-	require.True(t, calledRemoveParent)
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Organization": 2})
-}
-
 func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -1555,45 +1457,4 @@ func TestMutationResolver_OrganizationUnsetOwner(t *testing.T) {
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 0, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
-}
-
-func TestMutationResolver_OrganizationUpdateOnboardingStatus(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-
-	calledEventsPlatform := false
-
-	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		UpdateOnboardingStatus: func(context context.Context, org *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, organizationId, org.OrganizationId)
-			require.Equal(t, testUserId, org.LoggedInUserId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
-			require.Equal(t, organizationpb.OnboardingStatus_ONBOARDING_STATUS_DONE, org.OnboardingStatus)
-			require.Equal(t, "Set to done", org.Comments)
-			calledEventsPlatform = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: organizationId,
-			}, nil
-		},
-	}
-	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
-
-	rawResponse := callGraphQL(t, "organization/update_onboarding_status",
-		map[string]interface{}{"organizationId": organizationId})
-
-	var organizationStruct struct {
-		Organization_UpdateOnboardingStatus model.Organization
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
-	require.Nil(t, err)
-	require.NotNil(t, organizationStruct)
-
-	organization := organizationStruct.Organization_UpdateOnboardingStatus
-	require.Equal(t, organizationId, organization.ID)
-	require.True(t, calledEventsPlatform)
 }

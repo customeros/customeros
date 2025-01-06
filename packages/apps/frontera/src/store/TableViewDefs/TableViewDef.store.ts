@@ -1,470 +1,320 @@
 import type { RootStore } from '@store/root';
+import type { Transport } from '@store/transport';
 
-import set from 'lodash/set';
-import omit from 'lodash/omit';
-import { Channel } from 'phoenix';
-import { P, match } from 'ts-pattern';
-import { gql } from 'graphql-request';
-import debounce from 'lodash/debounce';
-import { Transport } from '@store/transport';
-import { runInAction, makeAutoObservable } from 'mobx';
-import { Store, makeAutoSyncable } from '@store/store';
-import { Filter, Operation, FilterItem } from '@store/types';
+import { runInAction } from 'mobx';
+import { Store } from '@store/_store';
 
-import {
-  SortBy,
-  TableIdType,
-  TableViewDef,
-  TableViewType,
-  SortingDirection,
-  TableViewDefUpdateInput,
-} from '@graphql/types';
+import { TableIdType, TableViewType } from '@graphql/types';
 
-export class TableViewDefStore implements Store<TableViewDef> {
-  value: TableViewDef = getDefaultValue();
-  version = 0;
-  isLoading = false;
-  history: Operation[] = [];
-  error: string | null = null;
-  channel: Channel | undefined;
-  subscribe = makeAutoSyncable.subscribe;
-  load = makeAutoSyncable.load<TableViewDef>();
-  update = makeAutoSyncable.update<TableViewDef>();
-  private readonly debouncedSave: () => void;
+import { TableViewDef, type TableViewDefDatum } from './TableViewDef.dto';
+import { TableViewDefsService } from './__services__/TableViewDef.service';
+
+export class TableViewDefStore extends Store<TableViewDefDatum, TableViewDef> {
+  private service: TableViewDefsService = TableViewDefsService.getInstance();
 
   constructor(public root: RootStore, public transport: Transport) {
-    makeAutoSyncable(this, { channelName: 'TableViewDef', mutator: this.save });
-    makeAutoObservable(this);
-    this.debouncedSave = debounce(this.save, 500);
-  }
-
-  set id(id: string) {
-    this.value.id = id;
-  }
-
-  get name() {
-    return this.value.name;
-  }
-
-  reorderColumn(sourceColumnId: number, targetColumnId: number) {
-    this.update((value) => {
-      const fromIndex = value.columns.findIndex(
-        (c) => c.columnId === sourceColumnId,
-      );
-      const toIndex = value.columns.findIndex(
-        (c) => c.columnId === targetColumnId,
-      );
-      const column = value.columns[fromIndex];
-
-      value.columns.splice(fromIndex, 1);
-      value.columns.splice(toIndex, 0, column);
-
-      return value;
-    });
-  }
-
-  orderColumnsByVisibility() {
-    const prevLastVisibleIndex = [
-      ...this.value.columns.map((c) => c.visible),
-    ].lastIndexOf(true);
-
-    const orderedColumns = this.value.columns.sort((a, b) => {
-      if (a.visible === b.visible) return 0;
-      if (a.visible) return -1;
-
-      return 1;
+    super(root, transport, {
+      name: 'TableViewDefs',
+      getId: (data) => data.id,
+      factory: TableViewDef,
     });
 
-    const currentLastVisibleIndex = orderedColumns
-      .map((c) => c.visible)
-      .lastIndexOf(true);
-
-    if (prevLastVisibleIndex === currentLastVisibleIndex) return;
-
-    this.update((value) => {
-      value.columns.sort((a, b) => {
-        if (a.visible === b.visible) return 0;
-        if (a.visible) return -1;
-
-        return 1;
-      });
-
-      return value;
-    });
+    this.hydrate();
   }
 
-  setColumnName(columnId: number, name: string) {
-    this.update(
-      (value) => {
-        const columnIdx = value.columns.findIndex(
-          (c) => c.columnId === columnId,
-        );
-
-        value.columns[columnIdx].name = name;
-
-        return value;
-      },
-      { mutate: false },
-    );
+  get defaultPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Customers && t.value.isPreset,
+    )?.value.id;
   }
 
-  setColumnSize(columnType: string, size: number) {
-    runInAction(() => {
-      const columnIdx = this.value.columns.findIndex(
-        (c) => c.columnType === columnType,
-      );
+  get opportunitiesPreset() {
+    return this?.toArray().find(
+      (t) =>
+        t.value.tableId === TableIdType.Opportunities &&
+        t.value.isShared &&
+        t.value.isPreset,
+    )?.value.id;
+  }
 
-      if (columnIdx !== -1) {
-        this.value.columns[columnIdx].width = size;
+  get opportunitiesTablePreset() {
+    return this?.toArray().find(
+      (t) =>
+        t.value.tableId === TableIdType.OpportunitiesRecords &&
+        !t.value.isShared &&
+        t.value.isPreset,
+    )?.value.id;
+  }
+
+  get targetsPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Targets && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get organizationsPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Organizations && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get upcomingInvoicesPreset() {
+    return this?.toArray().find(
+      (t) =>
+        t.value.tableId === TableIdType.UpcomingInvoices && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get pastInvoicesPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.PastInvoices && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get contactsPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Contacts && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get contactsTargetPreset() {
+    return this?.toArray().find(
+      (t) =>
+        t.value.tableId === TableIdType.ContactsForTargetOrganizations &&
+        t.value.isPreset,
+    )?.value.id;
+  }
+
+  get contactsFlowsPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.FlowContacts,
+    )?.value.id;
+  }
+
+  get contractsPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Contracts && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get flowsPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.FlowActions && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get flowContactsPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.FlowContacts && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get customPresets() {
+    return this.toArray().filter((p) => !p.value.isShared && !p.value.isPreset);
+  }
+
+  get teamPresets() {
+    return this.toArray().filter((p) => p.value.isShared && !p.value.isPreset);
+  }
+
+  public getById(id: string) {
+    const tableViewDefStore = this.value.get(id);
+
+    if (!tableViewDefStore && this.isBootstrapped) {
+      const defaultPresetId = this.defaultPreset;
+      const navigateToDefaultPreset =
+        window.location.pathname.includes('finder');
+
+      if (defaultPresetId && navigateToDefaultPreset) {
+        const defaultTableViewDefStore = this.value.get(defaultPresetId);
+
+        if (defaultTableViewDefStore) {
+          const url = new URL(window.location.href);
+
+          url.searchParams.set('preset', defaultPresetId);
+          window.history.replaceState(null, '', url.toString());
+
+          return defaultTableViewDefStore;
+        }
       }
-    });
+    }
 
-    this.debouncedSave();
+    return tableViewDefStore ?? null;
   }
 
-  async invalidate() {}
-
-  async save() {
-    const mutation = this.value.isShared
-      ? UPDATE_TABLE_VIEW_DEF_SHARED
-      : UPDATE_TABLE_VIEW_DEF;
-
-    const payload: PAYLOAD = {
-      input: omit(
-        this.value,
-        'updatedAt',
-        'createdAt',
-        'tableType',
-        'tableId',
-        'isPreset',
-        'isShared',
-        'defaultFilters',
-      ),
-    };
+  public async bootstrap() {
+    if (this.isBootstrapped) return;
 
     try {
       this.isLoading = true;
-      await this.transport.graphql.request(mutation, payload);
+
+      const { tableViewDefs } = await this.service.getTableViewDefs();
+
+      runInAction(() => {
+        tableViewDefs.forEach((raw) => {
+          this.value.set(raw.id, new TableViewDef(this, raw));
+        });
+        this.isBootstrapped = true;
+      });
     } catch (e) {
-      this.error = (e as Error)?.message;
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
     } finally {
-      this.isLoading = false;
+      runInAction(() => {
+        this.isLoading = false;
+        this.persistGroup();
+      });
     }
   }
 
-  getFilters() {
+  public async invalidate() {
     try {
-      return match(this.value.filters)
-        .with(P.string.includes('AND'), (data) => JSON.parse(data))
-        .otherwise(() => null);
-    } catch (err) {
-      console.error('Error parsing filters', err);
+      this.isLoading = true;
 
-      return null;
-    }
-  }
+      const { tableViewDefs } = await this.service.getTableViewDefs();
 
-  toSearchPayload(): { sort: SortBy; where: Filter | null } {
-    const activeFilters =
-      this.getFilters()
-        ?.AND?.filter((f: Filter) => f?.filter && 'value' in f.filter)
-        .map?.((f: Filter) => ({
-          filter: omit(f.filter, 'active') as Filter['filter'],
-        })) ?? [];
-
-    const defaultFilters =
-      this.getDefaultFilters()
-        ?.AND?.filter((f: Filter) => f?.filter && 'value' in f.filter)
-        .map?.((f: Filter) => ({
-          filter: omit(f.filter, 'active') as Filter['filter'],
-        })) ?? [];
-
-    const where = {
-      AND: [...defaultFilters, ...activeFilters],
-    };
-
-    const viewDefSorting = this.getSorting();
-    const sort = {
-      by: viewDefSorting.id,
-      direction: viewDefSorting.desc
-        ? SortingDirection.Desc
-        : SortingDirection.Asc,
-    };
-
-    return { where, sort };
-  }
-
-  getSorting() {
-    try {
-      return match(this.value.sorting)
-        .with(P.string.includes('id'), (data) => JSON.parse(data))
-        .otherwise(() => null);
-    } catch (err) {
-      console.error('Error parsing sorting', err);
-
-      return null;
-    }
-  }
-
-  getDefaultFilters() {
-    try {
-      return match(this.value.defaultFilters)
-        .with(P.string.includes('AND'), (data) => JSON.parse(data))
-        .otherwise(() => null);
-    } catch (err) {
-      console.error('Error parsing default filters', err);
-
-      return null;
-    }
-  }
-
-  setDefaultFilters(filter: FilterItem) {
-    this.update((value) => {
-      const draft = this.getDefaultFilters();
-
-      if (!draft) {
-        this.appendDefaultFilter({ ...filter, active: true });
-
-        return value;
-      }
-      const foundIndex = (draft.AND as Filter[])?.findIndex(
-        (f) => f.filter?.property === filter.property,
-      );
-
-      if (foundIndex !== -1) {
-        draft.AND[foundIndex].filter = filter;
-        value.filters = JSON.stringify(draft);
-      } else {
-        this.appendDefaultFilter({ ...filter, active: true });
-      }
-
-      return value;
-    });
-  }
-
-  hasFilters() {
-    return this.getFilters()?.AND?.length > 0;
-  }
-
-  getFilter(id: string) {
-    const filters = this.getFilters();
-
-    return (filters?.AND as Filter[])?.find((f) => f.filter?.property === id)
-      ?.filter;
-  }
-
-  appendFilter(filter: FilterItem) {
-    this.update((value) => {
-      let draft = this.getFilters() as Filter;
-
-      if (draft) {
-        (draft as Filter).AND?.push({ filter });
-      } else {
-        draft = { AND: [{ filter }] };
-      }
-
-      value.filters = JSON.stringify(draft);
-
-      return value;
-    });
-  }
-
-  appendDefaultFilter(filter: FilterItem) {
-    this.update((value) => {
-      let draft = this.getDefaultFilters() as Filter;
-
-      if (draft) {
-        (draft as Filter).AND?.push({ filter });
-      } else {
-        draft = { AND: [{ filter }] };
-      }
-
-      value.filters = JSON.stringify(draft);
-
-      return value;
-    });
-  }
-
-  removeFilter(id: string, index?: number) {
-    this.update((value) => {
-      const draft = this.getFilters();
-
-      if (draft) {
-        if (index !== undefined) {
-          draft.AND?.splice(index, 1);
-        } else {
-          draft.AND = (draft.AND as Filter[])?.filter(
-            (f) => f.filter?.property !== id,
-          );
-        }
-        value.filters = JSON.stringify(draft);
-      }
-
-      return value;
-    });
-  }
-
-  removeFilters() {
-    this.update((value) => {
-      value.filters = JSON.stringify({ AND: [] });
-
-      return value;
-    });
-  }
-
-  toggleFilter(filter: FilterItem) {
-    this.update((value) => {
-      const draft = this.getFilters();
-
-      if (draft) {
-        const foundFilter = (draft.AND as Filter[])?.find(
-          (f) => f.filter?.property === filter.property,
-        )?.filter;
-
-        if (foundFilter) {
-          set(foundFilter, 'active', !filter?.active);
-          value.filters = JSON.stringify(draft);
-        } else {
-          this.appendFilter({ ...filter, active: true });
-        }
-      }
-
-      return value;
-    });
-  }
-
-  setFilterv2(filter: FilterItem, index: number) {
-    this.update((value) => {
-      const draft = this.getFilters();
-
-      if (!draft) {
-        this.appendFilter({ ...filter, active: true });
-
-        return value;
-      }
-
-      if (draft.AND && draft.AND[index]) {
-        draft.AND[index].filter = filter;
-      } else {
-        draft.AND?.push({ filter });
-      }
-
-      value.filters = JSON.stringify(draft);
-
-      return value;
-    });
-  }
-
-  setFilter(filter: FilterItem) {
-    this.update((value) => {
-      const draft = this.getFilters();
-
-      if (!draft) {
-        this.appendFilter({ ...filter, active: true });
-
-        return value;
-      }
-      const foundIndex = (draft.AND as Filter[])?.findIndex(
-        (f) => f.filter?.property === filter.property,
-      );
-
-      if (foundIndex !== -1) {
-        draft.AND![foundIndex]!.filter = filter;
-        value.filters = JSON.stringify(draft);
-      } else {
-        this.appendFilter({ ...filter, active: true });
-      }
-
-      return value;
-    });
-  }
-
-  setPropertyFilter(property: string) {
-    this.update((value) => {
-      const draft = this.getFilters();
-
-      if (!draft) {
-        this.appendFilter({
-          property,
-          active: false,
-          value: undefined,
+      runInAction(() => {
+        tableViewDefs.forEach((raw) => {
+          this.value.set(raw.id, new TableViewDef(this, raw));
         });
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
 
-        return value;
-      }
+  public createFavorite = async (
+    {
+      id,
+      isShared,
+      name,
+    }: {
+      id: string;
+      name?: string;
+      isShared: boolean;
+    },
+    options?: { onSuccess?: (serverId: string) => void },
+  ) => {
+    const favoritePreset = this.getById(id)?.getPayloadToCopy();
 
-      const foundIndex = (draft.AND as Filter[])?.findIndex(
-        (f) => f.filter?.property === property,
-      );
+    const newTableViewDef = new TableViewDef(
+      this,
+      TableViewDef.default({
+        ...favoritePreset,
+        name: name
+          ? name
+          : `Copy of ${
+              favoritePreset?.tableType === TableViewType.Invoices
+                ? ` ${favoritePreset?.name} Invoices`
+                : favoritePreset?.name
+            }`,
+        isPreset: false,
+        isShared,
+        filters: '',
+        defaultFilters: favoritePreset?.filters || '',
+      }),
+    );
 
-      if (foundIndex !== -1) {
-        draft.AND![foundIndex].filter = { property, active: false };
-        value.filters = JSON.stringify(draft);
-      } else {
-        this.appendFilter({
-          property,
-          active: false,
-          value: undefined,
+    const {
+      id: _id,
+      createdAt,
+      updatedAt,
+      defaultFilters,
+      ...payload
+    } = newTableViewDef.value;
+
+    const tempId = newTableViewDef.id;
+    let serverId = '';
+
+    this.value.set(tempId, newTableViewDef);
+    runInAction(() => {
+      this.isLoading = true;
+    });
+
+    try {
+      const { tableViewDef_Create } = await this.service.createTableViewDef({
+        input: {
+          ...payload,
+          defaultFilters: newTableViewDef.value.defaultFilters,
+        },
+      });
+
+      runInAction(() => {
+        serverId = tableViewDef_Create.id;
+
+        newTableViewDef.value.id = serverId;
+
+        this.value.set(serverId, newTableViewDef);
+        this.value.delete(tempId);
+        this.version++;
+
+        this.sync({
+          action: 'APPEND',
+          ids: [serverId],
         });
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+
+      if (serverId) {
+        options?.onSuccess?.(serverId);
       }
+    }
+  };
 
-      return value;
+  public archive = async (id: string, options?: { onSuccess?: () => void }) => {
+    runInAction(() => {
+      this.isLoading = true;
     });
-  }
 
-  setSorting(columndId: string, isDesc: boolean) {
-    this.update((values) => {
-      const sorting = this.getFilters() as { id: string; desc: boolean };
+    const viewName = this.getById(id)?.value.name;
 
-      if (!sorting) {
-        values.sorting = JSON.stringify({ id: columndId, desc: isDesc });
+    try {
+      const { tableViewDef_Archive } = await this.service.archiveTableViewDef({
+        id,
+      });
 
-        return values;
+      if (tableViewDef_Archive.accepted) {
+        runInAction(() => {
+          this.value.delete(id);
+          this.version++;
+
+          this.sync({
+            action: 'DELETE',
+            ids: [id],
+          });
+        });
+        this.root.ui.toastSuccess(
+          `${viewName} is now archived`,
+          'archive-view-success',
+        );
       }
-      sorting.id = columndId;
-      sorting.desc = isDesc;
-
-      values.sorting = JSON.stringify(sorting);
-
-      return values;
-    });
-  }
-
-  getPayloadToCopy = () => {
-    return omit(this.value, 'id', 'createdAt', 'updatedAt');
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+      });
+      this.root.ui.toastError(
+        `We couldn't archive ${viewName} view`,
+        'archive-view-error',
+      );
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+      options?.onSuccess?.();
+    }
   };
 }
-
-type PAYLOAD = { input: TableViewDefUpdateInput };
-const UPDATE_TABLE_VIEW_DEF = gql`
-  mutation updateTableViewDef($input: TableViewDefUpdateInput!) {
-    tableViewDef_Update(input: $input) {
-      id
-    }
-  }
-`;
-
-const UPDATE_TABLE_VIEW_DEF_SHARED = gql`
-  mutation updateTableViewDefShared($input: TableViewDefUpdateInput!) {
-    tableViewDef_UpdateShared(input: $input) {
-      id
-    }
-  }
-`;
-
-export const getDefaultValue = (): TableViewDef => ({
-  tableId: TableIdType.Organizations,
-  columns: [],
-  createdAt: '',
-  filters: '',
-  icon: '',
-  id: '',
-  name: '',
-  order: 0,
-  defaultFilters: '',
-  sorting: '',
-  updatedAt: '',
-  isPreset: false,
-  isShared: false,
-  tableType: TableViewType.Organizations,
-});

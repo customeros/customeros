@@ -110,6 +110,20 @@ func (r *flowListenerRegistryRepository) Initialize(ctx context.Context) error {
 			Description:    "New AI meeting summary created by Grain",
 			Status:         commonenum.FlowNodeEdgeStatusActive.String(),
 		},
+		{
+			ExternalSystem: "reveal",
+			ListenerEvent:  commonenum.EventRevealWebsiteVisitNew.String(),
+			FriendlyName:   "New Website Visitor",
+			Description:    "Organization visits your website for the first time",
+			Status:         commonenum.FlowNodeEdgeStatusActive.String(),
+		},
+		{
+			ExternalSystem: "reveal",
+			ListenerEvent:  commonenum.EventRevealWebsiteVisitRepeat.String(),
+			FriendlyName:   "Repeat Webpage Visitor",
+			Description:    "Organization comes back to your website",
+			Status:         commonenum.FlowNodeEdgeStatusActive.String(),
+		},
 	}
 
 	for _, event := range requiredEvents {

@@ -140,6 +140,7 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	serviceContainer := service.InitServices(server.log, &neo4jDriver, postgresDb, server.cfg, commonServices, grpcContainer)
 	r.Use(cors.New(corsConfig))
+	r.Use(tracing.RecoveryWithJaeger(opentracing.GlobalTracer()))
 	r.Use(ginzap.GinzapWithConfig(server.log.Logger(), &ginzap.Config{
 		TimeFormat: time.RFC3339,
 		UTC:        true,

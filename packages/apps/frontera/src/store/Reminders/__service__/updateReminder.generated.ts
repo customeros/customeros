@@ -4,7 +4,5 @@ export type UpdateReminderMutationVariables = Types.Exact<{
   input: Types.ReminderUpdateInput;
 }>;
 
-export type UpdateReminderMutation = {
-  __typename?: 'Mutation';
-  reminder_Update?: string | null;
-};
+
+export type UpdateReminderMutation = { __typename?: 'Mutation', reminder_Update?: string | null };

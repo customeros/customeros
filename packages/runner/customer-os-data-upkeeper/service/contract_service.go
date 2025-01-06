@@ -12,18 +12,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"time"
 )
 
 type ContractService interface {
 	UpkeepContracts()
-	resyncContract(ctx context.Context, tenant, contractId string)
 }
 
 type contractService struct {
@@ -92,26 +85,21 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 
 		//process contracts
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
-				return s.eventsProcessingClient.ContractClient.RefreshContractStatus(ctx, &contractpb.RefreshContractStatusGrpcRequest{
-					Tenant:    record.Tenant,
-					Id:        record.ContractId,
-					AppSource: constants.AppSourceDataUpkeeper,
-				})
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
 			})
+
+			err = s.services.ContractService.RefreshContractStatus(innerCtx, record.ContractId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error refreshing contract status: %s", err.Error())
-				grpcErr, ok := status.FromError(err)
-				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
-					s.resyncContract(ctx, record.Tenant, record.ContractId)
-				}
-			} else {
-				err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkStatusRenewalRequested(ctx, record.Tenant, record.ContractId)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					s.log.Errorf("Error marking status renewal requested: %s", err.Error())
-				}
+			}
+
+			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkStatusRenewalRequested(ctx, record.Tenant, record.ContractId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error marking status renewal requested: %s", err.Error())
 			}
 		}
 
@@ -155,26 +143,19 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 
 		//process contracts
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*contractpb.ContractIdGrpcResponse](func() (*contractpb.ContractIdGrpcResponse, error) {
-				return s.eventsProcessingClient.ContractClient.RolloutRenewalOpportunityOnExpiration(ctx, &contractpb.RolloutRenewalOpportunityOnExpirationGrpcRequest{
-					Tenant:    record.Tenant,
-					Id:        record.ContractId,
-					AppSource: constants.AppSourceDataUpkeeper,
-				})
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
 			})
+			err = s.services.OpportunityService.RolloutRenewalOpportunity(innerCtx, record.ContractId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error rollout renewal opportunity: %s", err.Error())
-				grpcErr, ok := status.FromError(err)
-				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
-					s.resyncContract(ctx, record.Tenant, record.ContractId)
-				}
-			} else {
-				err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkRolloutRenewalRequested(ctx, record.Tenant, record.ContractId)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					s.log.Errorf("Error marking renewal rollout requested: %s", err.Error())
-				}
+			}
+			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkRolloutRenewalRequested(ctx, record.Tenant, record.ContractId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error marking renewal rollout requested: %s", err.Error())
 			}
 		}
 
@@ -218,13 +199,11 @@ func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx c
 
 		//process renewal opportunities
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-				return s.eventsProcessingClient.OpportunityClient.CloseLooseOpportunity(ctx, &opportunitypb.CloseLooseOpportunityGrpcRequest{
-					Tenant:    record.Tenant,
-					Id:        record.OpportunityId,
-					AppSource: constants.AppSourceDataUpkeeper,
-				})
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
 			})
+			err = s.services.OpportunityService.CloseLost(innerCtx, nil, record.Tenant, record.OpportunityId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error closing renewal opportunity: %s", err.Error())
@@ -277,14 +256,12 @@ func (s *contractService) createRenewalOpportunitiesIfMissing(ctx context.Contex
 
 		//process renewal opportunities
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-				return s.eventsProcessingClient.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-					Tenant:     record.Tenant,
-					ContractId: record.ContractId,
-					SourceFields: &commonpb.SourceFields{
-						AppSource: constants.AppSourceDataUpkeeper,
-					},
-				})
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+			_, err = s.services.OpportunityService.CreateRenewalOpportunity(innerCtx, nil, &data_fields.OpportunityFields{
+				ContractId: &record.ContractId,
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -294,45 +271,5 @@ func (s *contractService) createRenewalOpportunitiesIfMissing(ctx context.Contex
 
 		// process only single batch per cycle
 		return
-	}
-}
-
-func (s *contractService) resyncContract(ctx context.Context, tenant, contractId string) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.ResyncContract")
-	defer span.Finish()
-
-	contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error getting contract {%s}: %s", contractId, err.Error())
-		return
-	}
-
-	props := utils.GetPropsFromNode(*contractDbNode)
-
-	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant:    tenant,
-		AppSource: constants.AppSourceDataUpkeeper,
-	})
-
-	contractDataFields := data_fields.ContractSaveFields{
-		Name:                 utils.StringPtr(utils.GetStringPropOrEmpty(props, "name")),
-		ContractUrl:          utils.StringPtr(utils.GetStringPropOrEmpty(props, "contractUrl")),
-		ServiceStartedAt:     utils.GetTimePropOrNil(props, "serviceStartedAt"),
-		SignedAt:             utils.GetTimePropOrNil(props, "signedAt"),
-		EndedAt:              utils.GetTimePropOrNil(props, "endedAt"),
-		InvoicingStartDate:   utils.GetTimePropOrNil(props, "invoicingStartDate"),
-		LengthInMonths:       utils.Int64Ptr(utils.GetInt64PropOrZero(props, "lengthInMonths")),
-		BillingCycleInMonths: utils.Int64Ptr(utils.GetInt64PropOrZero(props, "billingCycleInMonths")),
-	}
-	currency := utils.GetStringPropOrEmpty(props, "currency")
-	if currency != "" {
-		contractDataFields.Currency = utils.ToPtr(neo4jenum.DecodeCurrency(currency))
-	}
-
-	_, err = s.services.ContractService.Save(innerCtx, &contractId, contractDataFields)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error re-syncing contract {%s}: %s", contractId, err.Error())
 	}
 }

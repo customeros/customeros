@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { CreateContact } from '@domain/usecases/people-contact-card/create-contact.usecase';
 
+import { cn } from '@ui/utils/cn.ts';
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
@@ -56,13 +57,15 @@ export const CreateNewContactModal = observer(
               <ModalCloseButton asChild />
             </ModalHeader>
             <ModalBody className='flex flex-col w-full gap-4'>
-              <ButtonGroup className=' flex w-full'>
+              <ButtonGroup className='flex items-center w-full'>
                 <Button
                   size='xs'
                   leftIcon={<LinkedinOutline />}
                   onClick={() => contactCreate.setType('linkedin')}
                   data-inactive={contactCreate.getType !== 'linkedin'}
-                  className='w-full data-[inactive=true]:bg-gray-50 focus:bg-white !border-r-[1px] border-gray-300 !border-r-gray-300'
+                  className={cn('w-full', {
+                    selected: contactCreate.getType === 'linkedin',
+                  })}
                 >
                   LinkedIn
                 </Button>
@@ -78,9 +81,12 @@ export const CreateNewContactModal = observer(
                 <Button
                   size='xs'
                   leftIcon={<Signature />}
+                  dataTest='org-people-add-by-name'
                   onClick={() => contactCreate.setType('name')}
                   data-inactive={contactCreate.getType !== 'name'}
-                  className='w-full data-[inactive=true]:bg-gray-50 focus:bg-white'
+                  className={cn('w-full', {
+                    selected: contactCreate.getType === 'name',
+                  })}
                 >
                   Name
                 </Button>
@@ -102,6 +108,7 @@ export const CreateNewContactModal = observer(
                 size='sm'
                 className='w-full'
                 colorScheme='primary'
+                dataTest='org-people-add-contact'
                 onClick={() => {
                   contactCreate.setOrganizationId(orgId);
                   contactCreate.submit();

@@ -117,6 +117,7 @@ func (s *logEntryService) syncLogEntry(ctx context.Context, syncMutex *sync.Mute
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagExternalSystem, logEntryInput.ExternalSystem)
+	span.SetTag(tracing.SpanTagExternalId, logEntryInput.ExternalId)
 	span.LogFields(log.Object("syncDate", syncDate))
 	tracing.LogObjectAsJson(span, "logEntryInput", logEntryInput)
 

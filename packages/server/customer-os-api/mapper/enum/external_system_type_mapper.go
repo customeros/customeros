@@ -1,35 +1,35 @@
 package enummapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
 
-var externalSystemTypeByModel = map[model.ExternalSystemType]neo4jenum.ExternalSystemId{
-	model.ExternalSystemTypeHubspot:        neo4jenum.Hubspot,
-	model.ExternalSystemTypeZendeskSupport: neo4jenum.ZendeskSupport,
-	model.ExternalSystemTypeCalcom:         neo4jenum.CalCom,
-	model.ExternalSystemTypePipedrive:      neo4jenum.Pipedrive,
-	model.ExternalSystemTypeSLACk:          neo4jenum.Slack,
-	model.ExternalSystemTypeIntercom:       neo4jenum.Intercom,
-	model.ExternalSystemTypeSalesforce:     neo4jenum.Salesforce,
-	model.ExternalSystemTypeStripe:         neo4jenum.Stripe,
-	model.ExternalSystemTypeMixpanel:       neo4jenum.Mixpanel,
-	model.ExternalSystemTypeClose:          neo4jenum.Close,
-	model.ExternalSystemTypeOutlook:        neo4jenum.Outlook,
-	model.ExternalSystemTypeUnthread:       neo4jenum.Unthread,
-	model.ExternalSystemTypeAttio:          neo4jenum.Attio,
-	model.ExternalSystemTypeWeconnect:      neo4jenum.WeConnect,
-	model.ExternalSystemTypeZendeskSell:    neo4jenum.ZendeskSell,
+var externalSystemTypeByModel = map[model.ExternalSystemType]enum.Source{
+	model.ExternalSystemTypeAttio:          enum.SourceAttio,
+	model.ExternalSystemTypeCalcom:         enum.SourceCalCom,
+	model.ExternalSystemTypeClose:          enum.SourceClose,
+	model.ExternalSystemTypeHubspot:        enum.SourceHubspot,
+	model.ExternalSystemTypeZendeskSupport: enum.SourceZendeskSupport,
+	model.ExternalSystemTypePipedrive:      enum.SourcePipedrive,
+	model.ExternalSystemTypeSLACk:          enum.SourceSlack,
+	model.ExternalSystemTypeIntercom:       enum.SourceIntercom,
+	model.ExternalSystemTypeSalesforce:     enum.SourceSalesforce,
+	model.ExternalSystemTypeStripe:         enum.SourceStripe,
+	model.ExternalSystemTypeMixpanel:       enum.SourceMixpanel,
+	model.ExternalSystemTypeOutlook:        enum.SourceOutlook,
+	model.ExternalSystemTypeUnthread:       enum.SourceUnthread,
+	model.ExternalSystemTypeZendeskSell:    enum.SourceZendeskSell,
 }
 
 var externalSystemTypeByValue = utils.ReverseMap(externalSystemTypeByModel)
 
-func MapExternalSystemTypeFromModel(input model.ExternalSystemType) neo4jenum.ExternalSystemId {
+func MapExternalSystemTypeFromModel(input model.ExternalSystemType) enum.Source {
 	return externalSystemTypeByModel[input]
 }
 
-func MapExternalSystemTypeToModel(input neo4jenum.ExternalSystemId) model.ExternalSystemType {
+func MapExternalSystemTypeToModel(input enum.Source) model.ExternalSystemType {
 	return externalSystemTypeByValue[input]
 }

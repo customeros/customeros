@@ -47,6 +47,7 @@ export const AddLinkedInToContactModal = observer(
             <p>We'll auto-enrich this contact using their LinkedIn profile</p>
             <Input
               variant='unstyled'
+              dataTest='linkedin-url-input'
               value={linkedInUseCase.inputValue}
               placeholder='linkedin.com/in/john-lemon'
               onChange={(e) => linkedInUseCase.setInputValue(e.target.value)}
@@ -59,6 +60,7 @@ export const AddLinkedInToContactModal = observer(
             <Button
               className='w-full'
               colorScheme='primary'
+              dataTest='add-linkedin-url'
               onClick={() => {
                 linkedInUseCase.setLinkedInUrl();
                 onClose();

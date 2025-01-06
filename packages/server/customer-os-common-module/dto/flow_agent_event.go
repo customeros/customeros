@@ -1,14 +1,13 @@
 package dto
 
 import (
-	neoEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 )
 
 type FlowAgentEvent struct {
 	FlowExecutionId  string
-	ExternalSystemId neoEnum.ExternalSystemId
+	Tenant           string
+	ExternalSystemId enum.Source
 	SourceEvent      enum.FlowListenerEvent
 	Name             enum.FlowAgent
 	DataType         string

@@ -4,7 +4,5 @@ export type UpdateContactPhoneNumberMutationVariables = Types.Exact<{
   input: Types.PhoneNumberUpdateInput;
 }>;
 
-export type UpdateContactPhoneNumberMutation = {
-  __typename?: 'Mutation';
-  phoneNumber_Update: { __typename?: 'PhoneNumber'; id: string };
-};
+
+export type UpdateContactPhoneNumberMutation = { __typename?: 'Mutation', phoneNumber_Update: { __typename?: 'PhoneNumber', id: string } };

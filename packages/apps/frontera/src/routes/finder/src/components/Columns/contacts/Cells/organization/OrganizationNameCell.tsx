@@ -1,19 +1,12 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { useRef, useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
-import { cn } from '@ui/utils/cn';
-import { Combobox } from '@ui/form/Combobox';
-import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from '@ui/overlay/Popover/Popover';
+import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 
 interface OrganizationNameCellProps {
   org: string;
@@ -23,8 +16,6 @@ interface OrganizationNameCellProps {
 export const OrganizationNameCell = observer(
   ({ org, contactId, orgId }: OrganizationNameCellProps) => {
     const store = useStore();
-    const [isOpen, setIsOpen] = useState(false);
-    const [isHoverd, setIsHoverd] = useState(false);
 
     const [tabs] = useLocalStorage<{
       [key: string]: string;
@@ -37,13 +28,6 @@ export const OrganizationNameCell = observer(
 
     const isEnriching = contactStore?.isEnriching;
 
-    const organizations = store.organizations.toArray();
-
-    const options = organizations.map((org) => ({
-      label: org.value.name,
-      value: org.value.id,
-    }));
-
     if (!org?.length && isEnriching) {
       return (
         <p className='text-gray-400'>
@@ -53,62 +37,34 @@ export const OrganizationNameCell = observer(
     }
 
     return (
-      <div
-        className='flex items-center'
-        onMouseEnter={() => setIsHoverd(true)}
-        onMouseLeave={() => setIsHoverd(false)}
-      >
+      <div className='flex items-center gap-2 group'>
         <span className='inline truncate'>
           {org.length ? (
-            <Link
-              to={href}
-              ref={linkRef}
-              className='inline text-gray-700 no-underline hover:no-underline font-normal'
+            <span
+              className='inline text-gray-700 no-underline hover:no-underline font-normal cursor-pointer'
+              onClick={() => {
+                store.ui.commandMenu.setType('EditLatestOrgActive');
+                store.ui.commandMenu.setOpen(true);
+              }}
             >
               {contactStore?.value.primaryOrganizationName}
-            </Link>
+            </span>
           ) : (
             <span className='text-gray-400'>None</span>
           )}
         </span>
-        <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
-          <PopoverTrigger asChild>
+
+        {contactStore?.value.primaryOrganizationName && (
+          <Link to={href} ref={linkRef}>
             <IconButton
               size='xxs'
               variant='ghost'
-              icon={<Edit03 />}
-              aria-label='edit-organization'
-              onClick={() => setIsOpen(true)}
-              className={cn('opacity-0 ml-2', isHoverd && 'opacity-100')}
+              icon={<LinkExternal02 />}
+              className='opacity-0 group-hover:opacity-100'
+              aria-label={`navigate-to-${contactStore?.value.primaryOrganizationName}`}
             />
-          </PopoverTrigger>
-          <PopoverContent align='end' side='bottom' className='w-[200px]'>
-            <Combobox
-              options={options}
-              onChange={(value) => {
-                contactStore?.draft();
-
-                if (contactStore) {
-                  contactStore.value.primaryOrganizationId = value.value;
-                }
-
-                contactStore?.commit();
-
-                if (contactStore) {
-                  contactStore?.draft();
-                  contactStore.value.primaryOrganizationName = value.label;
-                  contactStore?.commit({ syncOnly: true });
-                }
-                const orgStore = store.organizations.getById(value.value);
-
-                orgStore?.draft();
-                orgStore?.value.contacts.push(contactId);
-                orgStore?.commit({ syncOnly: true });
-                setIsOpen(false);
-              }}
-            />
-          </PopoverContent>
-        </Popover>
+          </Link>
+        )}
       </div>
     );
   },

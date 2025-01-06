@@ -4,36 +4,43 @@ import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
 
-export const Image = observer(
-  ({ src, ...props }: React.ImgHTMLAttributes<HTMLImageElement>) => {
-    const store = useStore();
+interface ImageProps
+  extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> {
+  src?: string | null;
+  fallbackSrc?: string;
+}
 
-    useEffect(() => {
-      if (
-        !src ||
-        src?.startsWith('http') ||
-        src?.startsWith('blob') ||
-        src?.startsWith('/')
-      )
-        return;
+export const Image = observer(({ src, fallbackSrc, ...props }: ImageProps) => {
+  const store = useStore();
 
-      store.files.download(src);
-
-      () => {
-        store.files.clear(src);
-      };
-    }, [src]);
-
+  useEffect(() => {
     if (
+      !src ||
       src?.startsWith('http') ||
       src?.startsWith('blob') ||
       src?.startsWith('/')
-    ) {
-      return <img src={src} {...props} />;
-    }
+    )
+      return;
 
-    return (
-      <img src={src ? store.files.values.get(src) : undefined} {...props} />
-    );
-  },
-);
+    store.files.download(src);
+
+    () => {
+      store.files.clear(src);
+    };
+  }, [src]);
+
+  if (
+    src?.startsWith('http') ||
+    src?.startsWith('blob') ||
+    src?.startsWith('/')
+  ) {
+    return <img src={src ?? fallbackSrc} {...props} />;
+  }
+
+  return (
+    <img
+      src={src ? store.files.values.get(src) ?? fallbackSrc : fallbackSrc}
+      {...props}
+    />
+  );
+});

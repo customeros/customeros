@@ -6,12 +6,5 @@ export type SearchOrganizationsQueryVariables = Types.Exact<{
   sort?: Types.InputMaybe<Types.SortBy>;
 }>;
 
-export type SearchOrganizationsQuery = {
-  __typename?: 'Query';
-  ui_organizations_search: {
-    __typename?: 'OrganizationSearchResult';
-    ids: Array<string>;
-    totalElements: any;
-    totalAvailable: any;
-  };
-};
+
+export type SearchOrganizationsQuery = { __typename?: 'Query', ui_organizations_search: { __typename?: 'OrganizationSearchResult', ids: Array<string>, totalElements: any, totalAvailable: any } };

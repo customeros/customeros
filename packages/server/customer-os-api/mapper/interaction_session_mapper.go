@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
@@ -15,9 +16,9 @@ func MapEntityToInteractionSession(entity *neo4jentity.InteractionSessionEntity)
 		UpdatedAt:     entity.UpdatedAt,
 		Identifier:    entity.Identifier,
 		Name:          entity.Name,
-		Status:        entity.Status,
-		Type:          &entity.Type,
-		Channel:       &entity.Channel,
+		Status:        entity.Status.String(),
+		Type:          utils.StringPtr(entity.Type.String()),
+		Channel:       utils.StringPtr(entity.Channel.String()),
 		ChannelData:   &entity.ChannelData,
 		AppSource:     entity.AppSource,
 		Source:        MapDataSourceToModel(entity.Source),

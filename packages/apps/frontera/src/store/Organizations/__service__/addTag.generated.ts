@@ -4,7 +4,5 @@ export type AddTagsToOrganizationMutationVariables = Types.Exact<{
   input: Types.OrganizationTagInput;
 }>;
 
-export type AddTagsToOrganizationMutation = {
-  __typename?: 'Mutation';
-  organization_AddTag: { __typename?: 'ActionResponse'; accepted: boolean };
-};
+
+export type AddTagsToOrganizationMutation = { __typename?: 'Mutation', organization_AddTag: { __typename?: 'ActionResponse', accepted: boolean } };

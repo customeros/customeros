@@ -47,9 +47,19 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
         {website?.length && formattedLink ? (
           removeTrailingSlash(formattedLink)
         ) : organization?.isEnriching ? (
-          <span className='text-gray-400'>Enriching...</span>
+          <span
+            className='text-gray-400'
+            data-test='organization-website-in-all-orgs-table'
+          >
+            Enriching...
+          </span>
         ) : (
-          <span className='text-gray-400'>Not set</span>
+          <span
+            className='text-gray-400'
+            data-test='organization-website-in-all-orgs-table'
+          >
+            Not set
+          </span>
         )}
       </p>
     </div>

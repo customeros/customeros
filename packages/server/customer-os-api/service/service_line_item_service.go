@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"math"
 	"sort"
 	"time"
@@ -22,7 +21,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -112,42 +110,26 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 		return "", err
 	}
 
-	createServiceLineItemRequest := servicelineitempb.CreateServiceLineItemGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		ContractId:     serviceLineItemDetails.ContractId,
-		Name:           serviceLineItemDetails.SliName,
-		Quantity:       serviceLineItemDetails.SliQuantity,
-		Price:          serviceLineItemDetails.SliPrice,
-		VatRate:        serviceLineItemDetails.SliVatRate,
-		StartedAt:      utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt),
-		EndedAt:        utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.EndedAt),
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		SourceFields: &commonpb.SourceFields{
-			Source:    string(serviceLineItemDetails.Source),
-			AppSource: utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
-		},
+	sliDataFields := data_fields.SLIFields{
+		ContractId: utils.StringPtr(serviceLineItemDetails.ContractId),
+		Name:       utils.StringPtr(serviceLineItemDetails.SliName),
+		Quantity:   utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
+		Price:      utils.Float64Ptr(serviceLineItemDetails.SliPrice),
+		TaxRate:    utils.Float64Ptr(serviceLineItemDetails.SliVatRate),
+		StartedAt:  serviceLineItemDetails.StartedAt,
+		EndedAt:    serviceLineItemDetails.EndedAt,
+		Source:     utils.StringPtr(serviceLineItemDetails.Source.String()),
 	}
 
-	billedType, err := convertBilledTypeToProto(serviceLineItemDetails.SliBilledType, span)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	createServiceLineItemRequest.Billed = billedType
+	sliDataFields.BilledType = utils.ToPtr(serviceLineItemDetails.SliBilledType)
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-		return s.grpcClients.ServiceLineItemClient.CreateServiceLineItem(ctx, &createServiceLineItemRequest)
-	})
+	sliId, err := s.services.CommonServices.ServiceLineItemService.Save(ctx, nil, nil, sliDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelServiceLineItem, span)
-
-	span.LogFields(log.String("output - createdServiceLineItemId", response.Id))
-	return response.Id, nil
+	return sliId, nil
 }
 
 func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLineItemNewVersionData) (string, error) {
@@ -269,42 +251,26 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data ServiceLin
 		}
 	}
 
-	createServiceLineItemRequest := servicelineitempb.CreateServiceLineItemGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		ContractId:     contractEntity.Id,
-		ParentId:       baseServiceLineItemEntity.ParentID,
-		Name:           utils.StringFirstNonEmpty(data.Name, baseServiceLineItemEntity.Name),
-		Quantity:       data.Quantity,
-		Price:          data.Price,
-		VatRate:        data.VatRate,
-		StartedAt:      utils.ConvertTimeToTimestampPtr(&startedAtDate),
-		Comments:       utils.IfNotNilString(data.Comments),
-		SourceFields: &commonpb.SourceFields{
-			Source:    data.Source.String(),
-			AppSource: utils.StringFirstNonEmpty(data.AppSource, constants.AppSourceCustomerOsApi),
-		},
+	sliDataFields := data_fields.SLIFields{
+		ContractId: utils.StringPtr(contractEntity.Id),
+		ParentId:   utils.StringPtr(baseServiceLineItemEntity.ID),
+		Name:       utils.StringPtr(utils.StringFirstNonEmpty(data.Name, baseServiceLineItemEntity.Name)),
+		Quantity:   utils.Int64Ptr(data.Quantity),
+		Price:      utils.Float64Ptr(data.Price),
+		TaxRate:    utils.Float64Ptr(data.VatRate),
+		StartedAt:  &startedAtDate,
+		Comments:   utils.StringPtr(data.Comments),
+		Source:     utils.StringPtr(data.Source.String()),
+		BilledType: utils.ToPtr(baseServiceLineItemEntity.Billed),
 	}
 
-	billedType, err := convertBilledTypeToProto(baseServiceLineItemEntity.Billed, span)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	createServiceLineItemRequest.Billed = billedType
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-		return s.grpcClients.ServiceLineItemClient.CreateServiceLineItem(ctx, &createServiceLineItemRequest)
-	})
+	sliId, err := s.services.CommonServices.ServiceLineItemService.Save(ctx, nil, nil, sliDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelServiceLineItem, span)
-
-	return response.Id, err
+	return sliId, err
 }
 
 func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDetails ServiceLineItemUpdateData) error {
@@ -457,27 +423,15 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	span.LogFields(log.Bool("result.isRetroactiveCorrection", isRetroactiveCorrection))
 
 	if isRetroactiveCorrection == true {
-		serviceLineItemUpdateRequest := servicelineitempb.UpdateServiceLineItemGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			Id:             serviceLineItemDetails.Id,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			Name:           serviceLineItemDetails.SliName,
-			Quantity:       serviceLineItemDetails.SliQuantity,
-			Price:          serviceLineItemDetails.SliPrice,
-			Comments:       serviceLineItemDetails.SliComments,
-			VatRate:        serviceLineItemDetails.SliVatRate,
-			SourceFields: &commonpb.SourceFields{
-				Source:    string(serviceLineItemDetails.Source),
-				AppSource: utils.StringFirstNonEmpty(serviceLineItemDetails.AppSource, constants.AppSourceCustomerOsApi),
-			},
+		sliDataFields := data_fields.SLIFields{
+			Name:       utils.StringPtr(serviceLineItemDetails.SliName),
+			Quantity:   utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
+			Price:      utils.Float64Ptr(serviceLineItemDetails.SliPrice),
+			TaxRate:    utils.Float64Ptr(serviceLineItemDetails.SliVatRate),
+			Comments:   utils.StringPtr(serviceLineItemDetails.SliComments),
+			BilledType: utils.ToPtr(serviceLineItemDetails.SliBilledType),
+			ParentId:   utils.StringPtr(baseServiceLineItemEntity.ParentID),
 		}
-
-		billedType, err := convertBilledTypeToProto(serviceLineItemDetails.SliBilledType, span)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		serviceLineItemUpdateRequest.Billed = billedType
 
 		// if start date is changed, validate that change is allowed
 		if utils.ToDate(baseServiceLineItemEntity.StartedAt) != utils.ToDate(startedAt) {
@@ -494,16 +448,13 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 				tracing.TraceErr(span, err)
 				return err
 			}
-			serviceLineItemUpdateRequest.StartedAt = utils.ConvertTimeToTimestampPtr(serviceLineItemDetails.StartedAt)
+			sliDataFields.StartedAt = serviceLineItemDetails.StartedAt
 		}
 
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-			return s.grpcClients.ServiceLineItemClient.UpdateServiceLineItem(ctx, &serviceLineItemUpdateRequest)
-		})
+		_, err = s.services.CommonServices.ServiceLineItemService.Save(ctx, nil, &serviceLineItemDetails.Id, sliDataFields)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error from events processing: %s", err.Error())
+			s.log.Errorf("Error on updating service line item with id {%s}: %s", serviceLineItemDetails.Id, err.Error())
 			return err
 		}
 	} else {
@@ -568,16 +519,7 @@ func (s *serviceLineItemService) Delete(ctx context.Context, serviceLineItemId s
 		return false, err
 	}
 
-	deleteRequest := servicelineitempb.DeleteServiceLineItemGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             serviceLineItemId,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
-	}
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-		return s.grpcClients.ServiceLineItemClient.DeleteServiceLineItem(ctx, &deleteRequest)
-	})
+	err = s.services.CommonServices.ServiceLineItemService.Delete(ctx, nil, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())
@@ -643,18 +585,7 @@ func (s *serviceLineItemService) Close(ctx context.Context, serviceLineItemId st
 		}
 	}
 
-	closeRequest := servicelineitempb.CloseServiceLineItemGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             serviceLineItemId,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
-		EndedAt:        utils.ConvertTimeToTimestampPtr(endedAt),
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
-		return s.grpcClients.ServiceLineItemClient.CloseServiceLineItem(ctx, &closeRequest)
-	})
+	err = s.services.CommonServices.ServiceLineItemService.Close(ctx, nil, serviceLineItemId, utils.IfNotNilTimeWithDefault(endedAt, utils.Now()))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())

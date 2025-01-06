@@ -8,7 +8,6 @@ package organization_grpc_service
 
 import (
 	context "context"
-	location "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -23,14 +22,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrganizationGrpcServiceClient interface {
-	LinkLocationToOrganization(ctx context.Context, in *LinkLocationToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpsertCustomFieldToOrganization(ctx context.Context, in *CustomFieldForOrganizationGrpcRequest, opts ...grpc.CallOption) (*CustomFieldIdGrpcResponse, error)
 	RefreshRenewalSummary(ctx context.Context, in *RefreshRenewalSummaryGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RefreshDerivedData(ctx context.Context, in *RefreshDerivedDataGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RefreshArr(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
-	AddParentOrganization(ctx context.Context, in *AddParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
-	RemoveParentOrganization(ctx context.Context, in *RemoveParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
-	UpdateOnboardingStatus(ctx context.Context, in *UpdateOnboardingStatusGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner(ctx context.Context, in *UpdateOrganizationOwnerGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	CreateBillingProfile(ctx context.Context, in *CreateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	UpdateBillingProfile(ctx context.Context, in *UpdateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
@@ -38,7 +33,6 @@ type OrganizationGrpcServiceClient interface {
 	UnlinkEmailFromBillingProfile(ctx context.Context, in *UnlinkEmailFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	LinkLocationToBillingProfile(ctx context.Context, in *LinkLocationToBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	UnlinkLocationFromBillingProfile(ctx context.Context, in *UnlinkLocationFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
-	AddLocation(ctx context.Context, in *OrganizationAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error)
 	AdjustIndustry(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 }
 
@@ -48,15 +42,6 @@ type organizationGrpcServiceClient struct {
 
 func NewOrganizationGrpcServiceClient(cc grpc.ClientConnInterface) OrganizationGrpcServiceClient {
 	return &organizationGrpcServiceClient{cc}
-}
-
-func (c *organizationGrpcServiceClient) LinkLocationToOrganization(ctx context.Context, in *LinkLocationToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/LinkLocationToOrganization", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *organizationGrpcServiceClient) UpsertCustomFieldToOrganization(ctx context.Context, in *CustomFieldForOrganizationGrpcRequest, opts ...grpc.CallOption) (*CustomFieldIdGrpcResponse, error) {
@@ -89,33 +74,6 @@ func (c *organizationGrpcServiceClient) RefreshDerivedData(ctx context.Context, 
 func (c *organizationGrpcServiceClient) RefreshArr(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
 	out := new(OrganizationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/RefreshArr", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *organizationGrpcServiceClient) AddParentOrganization(ctx context.Context, in *AddParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/AddParentOrganization", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *organizationGrpcServiceClient) RemoveParentOrganization(ctx context.Context, in *RemoveParentOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/RemoveParentOrganization", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *organizationGrpcServiceClient) UpdateOnboardingStatus(ctx context.Context, in *UpdateOnboardingStatusGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/UpdateOnboardingStatus", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -185,15 +143,6 @@ func (c *organizationGrpcServiceClient) UnlinkLocationFromBillingProfile(ctx con
 	return out, nil
 }
 
-func (c *organizationGrpcServiceClient) AddLocation(ctx context.Context, in *OrganizationAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error) {
-	out := new(location.LocationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/AddLocation", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *organizationGrpcServiceClient) AdjustIndustry(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
 	out := new(OrganizationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/AdjustIndustry", in, out, opts...)
@@ -207,14 +156,10 @@ func (c *organizationGrpcServiceClient) AdjustIndustry(ctx context.Context, in *
 // All implementations should embed UnimplementedOrganizationGrpcServiceServer
 // for forward compatibility
 type OrganizationGrpcServiceServer interface {
-	LinkLocationToOrganization(context.Context, *LinkLocationToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpsertCustomFieldToOrganization(context.Context, *CustomFieldForOrganizationGrpcRequest) (*CustomFieldIdGrpcResponse, error)
 	RefreshRenewalSummary(context.Context, *RefreshRenewalSummaryGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RefreshDerivedData(context.Context, *RefreshDerivedDataGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RefreshArr(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
-	AddParentOrganization(context.Context, *AddParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
-	RemoveParentOrganization(context.Context, *RemoveParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
-	UpdateOnboardingStatus(context.Context, *UpdateOnboardingStatusGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner(context.Context, *UpdateOrganizationOwnerGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	CreateBillingProfile(context.Context, *CreateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	UpdateBillingProfile(context.Context, *UpdateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
@@ -222,7 +167,6 @@ type OrganizationGrpcServiceServer interface {
 	UnlinkEmailFromBillingProfile(context.Context, *UnlinkEmailFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	LinkLocationToBillingProfile(context.Context, *LinkLocationToBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	UnlinkLocationFromBillingProfile(context.Context, *UnlinkLocationFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
-	AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error)
 	AdjustIndustry(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 }
 
@@ -230,9 +174,6 @@ type OrganizationGrpcServiceServer interface {
 type UnimplementedOrganizationGrpcServiceServer struct {
 }
 
-func (UnimplementedOrganizationGrpcServiceServer) LinkLocationToOrganization(context.Context, *LinkLocationToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LinkLocationToOrganization not implemented")
-}
 func (UnimplementedOrganizationGrpcServiceServer) UpsertCustomFieldToOrganization(context.Context, *CustomFieldForOrganizationGrpcRequest) (*CustomFieldIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertCustomFieldToOrganization not implemented")
 }
@@ -244,15 +185,6 @@ func (UnimplementedOrganizationGrpcServiceServer) RefreshDerivedData(context.Con
 }
 func (UnimplementedOrganizationGrpcServiceServer) RefreshArr(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshArr not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) AddParentOrganization(context.Context, *AddParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddParentOrganization not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) RemoveParentOrganization(context.Context, *RemoveParentOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveParentOrganization not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) UpdateOnboardingStatus(context.Context, *UpdateOnboardingStatusGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateOnboardingStatus not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) UpdateOrganizationOwner(context.Context, *UpdateOrganizationOwnerGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateOrganizationOwner not implemented")
@@ -275,9 +207,6 @@ func (UnimplementedOrganizationGrpcServiceServer) LinkLocationToBillingProfile(c
 func (UnimplementedOrganizationGrpcServiceServer) UnlinkLocationFromBillingProfile(context.Context, *UnlinkLocationFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnlinkLocationFromBillingProfile not implemented")
 }
-func (UnimplementedOrganizationGrpcServiceServer) AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddLocation not implemented")
-}
 func (UnimplementedOrganizationGrpcServiceServer) AdjustIndustry(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AdjustIndustry not implemented")
 }
@@ -291,24 +220,6 @@ type UnsafeOrganizationGrpcServiceServer interface {
 
 func RegisterOrganizationGrpcServiceServer(s grpc.ServiceRegistrar, srv OrganizationGrpcServiceServer) {
 	s.RegisterService(&OrganizationGrpcService_ServiceDesc, srv)
-}
-
-func _OrganizationGrpcService_LinkLocationToOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LinkLocationToOrganizationGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).LinkLocationToOrganization(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/LinkLocationToOrganization",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).LinkLocationToOrganization(ctx, req.(*LinkLocationToOrganizationGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _OrganizationGrpcService_UpsertCustomFieldToOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -379,60 +290,6 @@ func _OrganizationGrpcService_RefreshArr_Handler(srv interface{}, ctx context.Co
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OrganizationGrpcServiceServer).RefreshArr(ctx, req.(*OrganizationIdGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OrganizationGrpcService_AddParentOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddParentOrganizationGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).AddParentOrganization(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/AddParentOrganization",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).AddParentOrganization(ctx, req.(*AddParentOrganizationGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OrganizationGrpcService_RemoveParentOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RemoveParentOrganizationGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).RemoveParentOrganization(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/RemoveParentOrganization",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).RemoveParentOrganization(ctx, req.(*RemoveParentOrganizationGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OrganizationGrpcService_UpdateOnboardingStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateOnboardingStatusGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).UpdateOnboardingStatus(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/UpdateOnboardingStatus",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).UpdateOnboardingStatus(ctx, req.(*UpdateOnboardingStatusGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -563,24 +420,6 @@ func _OrganizationGrpcService_UnlinkLocationFromBillingProfile_Handler(srv inter
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrganizationGrpcService_AddLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrganizationAddLocationGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).AddLocation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/AddLocation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).AddLocation(ctx, req.(*OrganizationAddLocationGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _OrganizationGrpcService_AdjustIndustry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OrganizationIdGrpcRequest)
 	if err := dec(in); err != nil {
@@ -607,10 +446,6 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*OrganizationGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "LinkLocationToOrganization",
-			Handler:    _OrganizationGrpcService_LinkLocationToOrganization_Handler,
-		},
-		{
 			MethodName: "UpsertCustomFieldToOrganization",
 			Handler:    _OrganizationGrpcService_UpsertCustomFieldToOrganization_Handler,
 		},
@@ -625,18 +460,6 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefreshArr",
 			Handler:    _OrganizationGrpcService_RefreshArr_Handler,
-		},
-		{
-			MethodName: "AddParentOrganization",
-			Handler:    _OrganizationGrpcService_AddParentOrganization_Handler,
-		},
-		{
-			MethodName: "RemoveParentOrganization",
-			Handler:    _OrganizationGrpcService_RemoveParentOrganization_Handler,
-		},
-		{
-			MethodName: "UpdateOnboardingStatus",
-			Handler:    _OrganizationGrpcService_UpdateOnboardingStatus_Handler,
 		},
 		{
 			MethodName: "UpdateOrganizationOwner",
@@ -665,10 +488,6 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnlinkLocationFromBillingProfile",
 			Handler:    _OrganizationGrpcService_UnlinkLocationFromBillingProfile_Handler,
-		},
-		{
-			MethodName: "AddLocation",
-			Handler:    _OrganizationGrpcService_AddLocation_Handler,
 		},
 		{
 			MethodName: "AdjustIndustry",

@@ -24,12 +24,12 @@ type OrganizationWriteRepository interface {
 	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt *time.Time, touchpointId, touchpointType string) error
 	SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error
-	LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error
-	UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error
+	LinkWithParentOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, subOrganizationId, parentOrganizationId, subOrganizationType string) error
+	UnlinkParentOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, subOrganizationId, parentOrganizationId string) error
 	UpdateArr(ctx context.Context, tenant, organizationId string) error
 	UpdateRenewalSummary(ctx context.Context, tenant, organizationId string, likelihood *string, likelihoodOrder *int64, nextRenewalDate *time.Time) error
 	WebScrapeRequested(ctx context.Context, tenant, organizationId, url string, attempt int64, requestedAt time.Time) error
-	UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, statusOrder *int64, updatedAt time.Time) error
+	UpdateOnboardingStatus(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data data_fields.OrganizationOnboardingStatusFields) error
 	UpdateTimeProperty(ctx context.Context, tenant, organizationId, property string, value *time.Time) error
 	UpdateFloatProperty(ctx context.Context, tenant, organizationId, property string, value float64) error
 	UpdateStringProperty(ctx context.Context, tenant, organizationId, property string, value string) error
@@ -75,13 +75,16 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 					org.createdAt = datetime(),
 					org.updatedAt = datetime(),
 					org.onboardingStatus = $onboardingStatus,
+					org.lastTouchpointAt = datetime(),
+					org.lastTouchpointType = $lastTouchpointType,
 					org.hide=false`, tenant)
 		paramsCreate := map[string]any{
-			"tenant":           tenant,
-			"organizationId":   organizationId,
-			"source":           utils.IfNotNilString(data.Source),
-			"appSource":        utils.IfNotNilString(data.AppSource),
-			"onboardingStatus": string(neo4jenum.OnboardingStatusNotApplicable),
+			"tenant":             tenant,
+			"organizationId":     organizationId,
+			"source":             utils.IfNotNilString(data.Source),
+			"appSource":          utils.IfNotNilString(data.AppSource),
+			"onboardingStatus":   string(neo4jenum.OnboardingStatusNotApplicable),
+			"lastTouchpointType": neo4jenum.TouchpointTypeActionCreated.String(),
 		}
 
 		span.LogFields(log.String("cypherCreate", cypherCreate))
@@ -433,12 +436,12 @@ func (r *organizationWriteRepository) SetCustomerOsIdIfMissing(ctx context.Conte
 	return err
 }
 
-func (r *organizationWriteRepository) LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error {
+func (r *organizationWriteRepository) LinkWithParentOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, subOrganizationId, parentOrganizationId, subOrganizationType string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.LinkWithParentOrganization")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.SetTag(tracing.SpanTagEntityId, subOrganizationId)
 	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationType", subOrganizationType))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization {id:$parentOrganizationId}),
@@ -450,26 +453,29 @@ func (r *organizationWriteRepository) LinkWithParentOrganization(ctx context.Con
 					parent.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":               tenant,
-		"subOrganizationId":    organizationId,
+		"subOrganizationId":    subOrganizationId,
 		"parentOrganizationId": parentOrganizationId,
 		"type":                 subOrganizationType,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+	return nil
 }
 
-func (r *organizationWriteRepository) UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error {
+func (r *organizationWriteRepository) UnlinkParentOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, subOrganizationId, parentOrganizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UnlinkParentOrganization")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	span.SetTag(tracing.SpanTagEntityId, subOrganizationId)
 	span.LogFields(log.String("parentOrganizationId", parentOrganizationId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(parent:Organization {id:$parentOrganizationId})<-[rel:SUBSIDIARY_OF]-(sub:Organization {id:$subOrganizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
@@ -478,17 +484,20 @@ func (r *organizationWriteRepository) UnlinkParentOrganization(ctx context.Conte
 					parent.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":               tenant,
-		"subOrganizationId":    organizationId,
+		"subOrganizationId":    subOrganizationId,
 		"parentOrganizationId": parentOrganizationId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+	return nil
 }
 
 func (r *organizationWriteRepository) UpdateArr(ctx context.Context, tenant, organizationId string) error {
@@ -579,37 +588,42 @@ func (r *organizationWriteRepository) WebScrapeRequested(ctx context.Context, te
 	return err
 }
 
-func (r *organizationWriteRepository) UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, statusOrder *int64, updatedAt time.Time) error {
+func (r *organizationWriteRepository) UpdateOnboardingStatus(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data data_fields.OrganizationOnboardingStatusFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateOnboardingStatus")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	tracing.TagEntity(span, organizationId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-				SET org.onboardingUpdatedAt = CASE WHEN org.onboardingStatus IS NULL OR org.onboardingStatus <> $status THEN $updatedAt ELSE org.onboardingUpdatedAt END,
-					org.onboardingStatus=$status,
-					org.onboardingStatusOrder=$statusOrder,
-					org.onboardingComments=$comments,
-					org.onboardingUpdatedAt=$updatedAt,
+				SET org.onboardingUpdatedAt = CASE WHEN org.onboardingStatus IS NULL OR (org.onboardingStatus <> $status AND $status IS NULL) THEN datetime() ELSE org.onboardingUpdatedAt END,
+					org.onboardingStatus = CASE WHEN $status IS NULL THEN org.onboardingStatus ELSE $status END,
+					org.onboardingStatusOrder = CASE WHEN $status IS NULL THEN org.onboardingStatusOrder ELSE $statusOrder END,
+					org.onboardingComments = CASE WHEN $comments IS NULL THEN org.onboardingComments ELSE $comments END,
 					org.updatedAt=datetime()`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
-		"status":         status,
-		"statusOrder":    statusOrder,
-		"comments":       comments,
-		"updatedAt":      updatedAt,
-		"now":            utils.Now(),
+		"comments":       data.Comments,
+	}
+	if data.Status != nil {
+		params["status"] = data.Status.String()
+		params["statusOrder"] = data.Status.GetOrder()
+	} else {
+		params["status"] = nil
+		params["statusOrder"] = nil
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+	return nil
 }
 
 func (r *organizationWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, organizationId, property string, value *time.Time) error {

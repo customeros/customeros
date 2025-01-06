@@ -58,11 +58,11 @@ func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, log
 		tracing.TraceErr(span, errors.Wrap(err, "Error configuring test mailbox during tenant onboarding"))
 	}
 
-	if err := s.ConfigureDefaultFlowData(ctx, testUser); err != nil {
+	if err = s.ConfigureDefaultFlowData(ctx, testUser); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error configuring test flow data during tenant onboarding"))
 	}
 
-	if err := s.CreatePostmarkServer(ctx); err != nil {
+	if err = s.CreatePostmarkServer(ctx); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error creating postmark server during tenant onboarding"))
 	}
 
@@ -70,7 +70,7 @@ func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, log
 }
 
 func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, testUser *testUserSetup) error {
-	span, ctx := s.initializeTracing(ctx, "ConfigureDefaultFlowData", nil)
+	span, ctx := s.initializeTracing(ctx, "RegistrationService.ConfigureDefaultFlowData", nil)
 	defer span.Finish()
 
 	if err := common.ValidateTenant(ctx); err != nil {

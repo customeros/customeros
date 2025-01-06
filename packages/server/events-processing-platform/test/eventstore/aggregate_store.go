@@ -10,10 +10,6 @@ type TestAggregateStore struct {
 	aggregateMap map[string][]eventstore.Event
 }
 
-func NewTestAggregateStore() *TestAggregateStore {
-	return &TestAggregateStore{aggregateMap: make(map[string][]eventstore.Event)}
-}
-
 func (as *TestAggregateStore) Load(ctx context.Context, aggregate eventstore.Aggregate) error {
 	if _, ok := as.aggregateMap[aggregate.GetID()]; !ok {
 		return eventstore.ErrAggregateNotFound

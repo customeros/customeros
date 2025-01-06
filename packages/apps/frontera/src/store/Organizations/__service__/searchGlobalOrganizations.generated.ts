@@ -5,16 +5,5 @@ export type SearchGlobalOrganizationsQueryVariables = Types.Exact<{
   limit: Types.Scalars['Int']['input'];
 }>;
 
-export type SearchGlobalOrganizationsQuery = {
-  __typename?: 'Query';
-  globalOrganizations_Search: Array<{
-    __typename?: 'GlobalOrganization';
-    id: any;
-    name: string;
-    primaryDomain: string;
-    website: string;
-    logoUrl: string;
-    iconUrl: string;
-    organizationId?: string | null;
-  }>;
-};
+
+export type SearchGlobalOrganizationsQuery = { __typename?: 'Query', globalOrganizations_Search: Array<{ __typename?: 'GlobalOrganization', id: any, name: string, primaryDomain: string, website: string, logoUrl: string, iconUrl: string, organizationId?: string | null }> };

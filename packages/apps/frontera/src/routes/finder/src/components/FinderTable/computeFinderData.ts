@@ -5,7 +5,7 @@ import { match } from 'ts-pattern';
 import { RootStore } from '@store/root';
 import { inPlaceSort } from 'fast-sort';
 import { SortingState } from '@tanstack/table-core';
-import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store';
+import { TableViewDef } from '@store/TableViewDefs/TableViewDef.dto';
 
 import { TableViewType } from '@graphql/types';
 
@@ -28,7 +28,7 @@ import {
 interface ComputeFinderDataOptions {
   searchTerm: string;
   sorting: SortingState;
-  tableViewDef?: TableViewDefStore;
+  tableViewDef: TableViewDef | null;
   urlParams: Readonly<Params<string>>;
 }
 

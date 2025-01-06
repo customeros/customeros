@@ -70,7 +70,7 @@ export class Organization extends Entity<OrganizationDatum> {
   @computed
   get contacts() {
     return this.value.contacts.reduce((acc, id) => {
-      const record = this.store.root.contacts.value.get(id);
+      const record = this.store.root.contacts.getById(id);
 
       if (record) acc.push(record.value);
 

@@ -4,10 +4,5 @@ export type UpdateTagMutationVariables = Types.Exact<{
   input: Types.TagUpdateInput;
 }>;
 
-export type UpdateTagMutation = {
-  __typename?: 'Mutation';
-  tag_Update?: {
-    __typename?: 'Tag';
-    metadata: { __typename?: 'Metadata'; id: string };
-  } | null;
-};
+
+export type UpdateTagMutation = { __typename?: 'Mutation', tag_Update?: { __typename?: 'Tag', metadata: { __typename?: 'Metadata', id: string } } | null };
