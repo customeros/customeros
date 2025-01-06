@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { SearchSortContact } from '@domain/usecases/people-contact-card/search-sort-contacts';
+import { SearchSortContact } from '@domain/usecases/people-contact-card/search-sort-contacts.usecase';
 
 import { IconButton } from '@ui/form/IconButton';
 import { SwitchVertical01 } from '@ui/media/icons/SwitchVertical01';
