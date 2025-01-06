@@ -153,9 +153,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case orgevents.OrganizationUpsertCustomFieldV1:
 		_ = s.organizationEventHandler.OnUpsertCustomField(ctx, evt)
 		return nil
-	case orgevents.OrganizationUpdateOnboardingStatusV1:
-		_ = s.organizationEventHandler.OnUpdateOnboardingStatus(ctx, evt)
-		return nil
 	case orgevents.OrganizationCreateBillingProfileV1:
 		_ = s.organizationEventHandler.OnCreateBillingProfile(ctx, evt)
 		return nil

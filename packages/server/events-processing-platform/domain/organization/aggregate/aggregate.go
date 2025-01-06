@@ -44,8 +44,6 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onPhoneNumberLink(event)
 	case organizationEvents.OrganizationUpsertCustomFieldV1:
 		return a.onUpsertCustomField(event)
-	case organizationEvents.OrganizationUpdateOnboardingStatusV1:
-		return a.onOnboardingStatusUpdate(event)
 	case organizationEvents.OrganizationUpdateOwnerV1:
 		return a.onOrganizationOwnerUpdate(event)
 	case organizationEvents.OrganizationCreateBillingProfileV1:
@@ -112,21 +110,6 @@ func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) erro
 			CustomFieldValue:    eventData.CustomFieldValue,
 		}
 	}
-	return nil
-}
-
-func (a *OrganizationAggregate) onOnboardingStatusUpdate(event eventstore.Event) error {
-	var eventData organizationEvents.UpdateOnboardingStatusEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.Organization.OnboardingDetails = model.OnboardingDetails{
-		Status:    eventData.Status,
-		Comments:  eventData.Comments,
-		UpdatedAt: eventData.UpdatedAt,
-	}
-
 	return nil
 }
 
