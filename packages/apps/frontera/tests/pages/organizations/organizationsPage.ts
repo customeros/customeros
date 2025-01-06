@@ -26,6 +26,7 @@ export class OrganizationsPage {
     'button[data-test="create-organization-from-table"]';
   private organizationsCreateNewOrgOrgName =
     'input[data-test="organizations-create-new-org-org-name"]';
+  private addOrgModalAddOrg = 'div[data-test="add-org-modal-add-org"]';
   private organizationNameInAllOrgsTable =
     'p[data-test="organization-name-in-all-orgs-table"]';
   private organizationWebsiteInAllOrgsTable =
@@ -65,18 +66,24 @@ export class OrganizationsPage {
   }
 
   async addInitialOrganization() {
-    return await this.addOrganization(this.createOrganizationFromTable);
+    const initialOrg = true;
+
+    return await this.addOrganization(this.allOrgsAddOrg, initialOrg);
   }
 
   async addNonInitialOrganization(testInfo: TestInfo) {
+    const initialOrg = false;
+
     return await this.addOrganization(
       this.createOrganizationFromTable,
+      initialOrg,
       testInfo,
     );
   }
 
   async addOrganization(
     organizationCreatorLocator: string,
+    initialOrg: boolean,
     testInfo?: TestInfo,
   ) {
     await clickLocatorsThatAreVisible(
@@ -101,9 +108,11 @@ export class OrganizationsPage {
 
     await this.page.keyboard.type(organizationName);
     await this.page.waitForTimeout(300);
-    await this.page.keyboard.press('Enter');
-
+    await clickLocatorThatIsVisible(this.page, this.addOrgModalAddOrg);
+    // await this.page.keyboard.press('Enter');
     await Promise.all([requestPromise, responsePromise]);
+
+    initialOrg && (await this.page.reload());
     await this.page.waitForSelector(
       `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,
       { timeout: 30000 },
