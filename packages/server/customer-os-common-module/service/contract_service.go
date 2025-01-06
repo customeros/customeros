@@ -587,19 +587,13 @@ func (s *contractService) startOnboardingIfEligible(ctx context.Context, tenant,
 			return
 		}
 		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.services.GrpcClients.OrganizationClient.UpdateOnboardingStatus(ctx, &organizationpb.UpdateOnboardingStatusGrpcRequest{
-				Tenant:             tenant,
-				OrganizationId:     organization.ID,
-				CausedByContractId: contractEntity.Id,
-				OnboardingStatus:   organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED,
-				AppSource:          constants.AppSourceCustomerOsApi,
-			})
+		err = s.services.OrganizationService.UpdateOnboardingStatus(ctx, nil, organization.ID, data_fields.OrganizationOnboardingStatusFields{
+			CausedByContractId: &contractEntity.Id,
+			Status:             utils.ToPtr(neo4jenum.OnboardingStatusNotStarted),
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("UpdateOnboardingStatus gRPC request failed: %v", err.Error())
+			s.log.Errorf("UpdateOnboardingStatus failed: %v", err.Error())
 		}
 	}
 }

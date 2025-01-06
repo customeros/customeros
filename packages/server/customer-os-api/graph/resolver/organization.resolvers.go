@@ -25,7 +25,6 @@ import (
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
@@ -330,43 +329,17 @@ func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Contex
 	span.SetTag(tracing.SpanTagEntityId, input.OrganizationID)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	tentant := common.GetTenantFromContext(ctx)
+	tenant := common.GetTenantFromContext(ctx)
 
-	grpcRequest := organizationpb.UpdateOnboardingStatusGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		OrganizationId: input.OrganizationID,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		Comments:       utils.IfNotNilString(input.Comments),
-		AppSource:      constants.AppSourceCustomerOsApi,
-	}
-	switch input.Status {
-	case model.OnboardingStatusNotApplicable:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_APPLICABLE
-	case model.OnboardingStatusNotStarted:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED
-	case model.OnboardingStatusOnTrack:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_ON_TRACK
-	case model.OnboardingStatusLate:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_LATE
-	case model.OnboardingStatusStuck:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_STUCK
-	case model.OnboardingStatusDone:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_DONE
-	case model.OnboardingStatusSuccessful:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_SUCCESSFUL
-	default:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_APPLICABLE
-	}
-
-	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.UpdateOnboardingStatus(ctx, &grpcRequest)
+	err := r.Services.CommonServices.OrganizationService.UpdateOnboardingStatus(ctx, nil, input.OrganizationID, data_fields.OrganizationOnboardingStatusFields{
+		Comments: input.Comments,
+		Status:   utils.ToPtr(mapper.MapOnboardingStatusFromModel(input.Status)),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update onboarding status for organization %s", input.OrganizationID)
 	}
-	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tentant, input.OrganizationID)
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, input.OrganizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch organization %s", input.OrganizationID)

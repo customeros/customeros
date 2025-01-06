@@ -29,7 +29,7 @@ type OrganizationWriteRepository interface {
 	UpdateArr(ctx context.Context, tenant, organizationId string) error
 	UpdateRenewalSummary(ctx context.Context, tenant, organizationId string, likelihood *string, likelihoodOrder *int64, nextRenewalDate *time.Time) error
 	WebScrapeRequested(ctx context.Context, tenant, organizationId, url string, attempt int64, requestedAt time.Time) error
-	UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, statusOrder *int64, updatedAt time.Time) error
+	UpdateOnboardingStatus(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data data_fields.OrganizationOnboardingStatusFields) error
 	UpdateTimeProperty(ctx context.Context, tenant, organizationId, property string, value *time.Time) error
 	UpdateFloatProperty(ctx context.Context, tenant, organizationId, property string, value float64) error
 	UpdateStringProperty(ctx context.Context, tenant, organizationId, property string, value string) error
@@ -588,37 +588,42 @@ func (r *organizationWriteRepository) WebScrapeRequested(ctx context.Context, te
 	return err
 }
 
-func (r *organizationWriteRepository) UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, statusOrder *int64, updatedAt time.Time) error {
+func (r *organizationWriteRepository) UpdateOnboardingStatus(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data data_fields.OrganizationOnboardingStatusFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateOnboardingStatus")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
+	tracing.TagEntity(span, organizationId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-				SET org.onboardingUpdatedAt = CASE WHEN org.onboardingStatus IS NULL OR org.onboardingStatus <> $status THEN $updatedAt ELSE org.onboardingUpdatedAt END,
-					org.onboardingStatus=$status,
-					org.onboardingStatusOrder=$statusOrder,
-					org.onboardingComments=$comments,
-					org.onboardingUpdatedAt=$updatedAt,
+				SET org.onboardingUpdatedAt = CASE WHEN org.onboardingStatus IS NULL OR (org.onboardingStatus <> $status AND $status IS NULL) THEN datetime() ELSE org.onboardingUpdatedAt END,
+					org.onboardingStatus = CASE WHEN $status IS NULL THEN org.onboardingStatus ELSE $status END,
+					org.onboardingStatusOrder = CASE WHEN $status IS NULL THEN org.onboardingStatusOrder ELSE $statusOrder END,
+					org.onboardingComments = CASE WHEN $comments IS NULL THEN org.onboardingComments ELSE $comments END,
 					org.updatedAt=datetime()`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
-		"status":         status,
-		"statusOrder":    statusOrder,
-		"comments":       comments,
-		"updatedAt":      updatedAt,
-		"now":            utils.Now(),
+		"comments":       data.Comments,
+	}
+	if data.Status != nil {
+		params["status"] = data.Status.String()
+		params["statusOrder"] = data.Status.GetOrder()
+	} else {
+		params["status"] = nil
+		params["statusOrder"] = nil
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+	return nil
 }
 
 func (r *organizationWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, organizationId, property string, value *time.Time) error {

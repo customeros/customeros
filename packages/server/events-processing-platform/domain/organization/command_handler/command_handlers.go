@@ -11,7 +11,6 @@ import (
 type CommandHandlers struct {
 	UpsertCustomFieldCommand UpsertCustomFieldCommandHandler
 	RefreshArr               RefreshArrCommandHandler
-	UpdateOnboardingStatus   UpdateOnboardingStatusCommandHandler
 	UpdateOrganizationOwner  UpdateOrganizationOwnerCommandHandler
 }
 
@@ -19,7 +18,6 @@ func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.Agg
 	return &CommandHandlers{
 		UpsertCustomFieldCommand: NewUpsertCustomFieldCommandHandler(log, es),
 		RefreshArr:               NewRefreshArrCommandHandler(log, es, cfg.Utils),
-		UpdateOnboardingStatus:   NewUpdateOnboardingStatusCommandHandler(log, es, cfg.Utils),
 		UpdateOrganizationOwner:  NewUpdateOrganizationOwnerCommandHandler(log, es, cfg.Utils, ebs),
 	}
 }

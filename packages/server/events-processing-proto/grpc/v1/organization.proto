@@ -106,27 +106,6 @@ message CustomFieldForOrganizationGrpcRequest {
   string loggedInUserId = 12;
 }
 
-message UpdateOnboardingStatusGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string loggedInUserId = 3;
-  OnboardingStatus onboardingStatus = 4;
-  string comments = 5;
-  google.protobuf.Timestamp updatedAt = 6;
-  string appSource = 7;
-  string causedByContractId = 8;
-}
-
-enum OnboardingStatus {
-  ONBOARDING_STATUS_NOT_APPLICABLE = 0;
-  ONBOARDING_STATUS_NOT_STARTED = 1;
-  ONBOARDING_STATUS_ON_TRACK = 2;
-  ONBOARDING_STATUS_LATE = 3;
-  ONBOARDING_STATUS_STUCK = 4;
-  ONBOARDING_STATUS_DONE = 5;
-  ONBOARDING_STATUS_SUCCESSFUL = 6;
-}
-
 message UpdateOrganizationOwnerGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -192,7 +171,6 @@ service organizationGrpcService {
   rpc RefreshRenewalSummary(RefreshRenewalSummaryGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshDerivedData(RefreshDerivedDataGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshArr(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc UpdateOnboardingStatus(UpdateOnboardingStatusGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UpdateOrganizationOwner(UpdateOrganizationOwnerGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc CreateBillingProfile(CreateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc UpdateBillingProfile(UpdateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
