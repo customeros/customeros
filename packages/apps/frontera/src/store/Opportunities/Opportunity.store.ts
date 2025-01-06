@@ -53,7 +53,8 @@ export class OpportunityStore implements Store<Opportunity> {
   }
 
   get organization() {
-    const organizationId = this.value.organization?.metadata.id;
+    const organizationId =
+      this.value.organization?.id || this.value.organization?.metadata.id;
 
     if (!organizationId) return null;
 

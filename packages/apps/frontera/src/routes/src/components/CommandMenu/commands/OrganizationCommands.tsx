@@ -250,6 +250,7 @@ export const OrganizationCommands = observer(() => {
             store.opportunities.create({
               // @ts-expect-error will be autofixed when opportunity store will use OpportunityDatum
               organization: organization?.value,
+              id: organization?.value.id,
               name: `${organization?.value.name}'s opportunity`,
               internalType: InternalType.Nbo,
               externalStage: String(
