@@ -182,6 +182,7 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                       variant='ghost'
                       aria-label='collapse'
                       icon={<ChevronCollapse />}
+                      dataTest='org-people-collapse'
                       onClick={() => setIsExpanded(!isExpanded)}
                     />
                     <ContactCardMenu contactId={id} />
@@ -201,6 +202,7 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                     size='xxs'
                     variant='unstyled'
                     placeholder='Job title'
+                    dataTest='org-people-contact-title'
                     value={
                       contactStore.value.primaryOrganizationJobRoleTitle || ''
                     }
@@ -236,6 +238,7 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
             <div className='flex items-center max-h-6'>
               <Linkedin className='text-gray-500 mr-4' />
               <span
+                data-test={'org-people-linkedin'}
                 className={cn(
                   'text-sm cursor-pointer',
                   !linkedInProfile && 'text-gray-400',

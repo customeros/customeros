@@ -30,7 +30,7 @@ export class OrganizationsPage {
   private organizationNameInAllOrgsTable =
     'p[data-test="organization-name-in-all-orgs-table"]';
   private organizationWebsiteInAllOrgsTable =
-    'p[data-test="organization-website-in-all-orgs-table"]';
+    'span[data-test="organization-website-in-all-orgs-table"]';
   private organizationRelationshipInAllOrgsTable =
     'p[data-test="organization-relationship-in-all-orgs-table"]';
   private organizationHealthInAllOrgsTable =
@@ -38,11 +38,11 @@ export class OrganizationsPage {
   private organizationNextRenewalInAllOrgsTable =
     'span[data-test="organization-next-renewal-in-all-orgs-table"]';
   private organizationOnboardingInAllOrgsTable =
-    'p[data-test="organization-onboarding-in-all-orgs-table"]';
+    'span[data-test="organization-onboarding-in-all-orgs-table"]';
   private organizationArrForecastInAllOrgsTable =
     'span[data-test="organization-arr-forecast-in-all-orgs-table"]';
   private organizationOwnerInAllOrgsTable =
-    'p[data-test="organization-owner-in-all-orgs-table"]';
+    'div[data-test="organization-owner-in-all-orgs-table"]';
   private organizationContactsInAllOrgsTable =
     'div[data-test="organization-contacts-in-all-orgs-table"]';
   private organizationStageInAllOrgsTable =
@@ -138,13 +138,15 @@ export class OrganizationsPage {
     const maxAttempts = 3;
     const retryInterval = 20000;
 
-    const newEntry = this.page
-      .locator(
-        `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,
-      )
-      .locator('..')
-      .locator('..')
-      .locator('..');
+    // const newEntry = this.page
+    //   .locator(
+    //     `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,
+    //   )
+    //   .locator('..')
+    //   .locator('..');
+    const newEntry = this.page.locator(
+      `${this.finderTableOrganizations} div:has(${this.organizationNameInAllOrgsTable}:text("${organizationName}"))`,
+    );
 
     await this.page.waitForTimeout(2000);
     // await this.page.reload();
