@@ -41,8 +41,6 @@ cd ../sync-gmail
 go mod tidy
 cd ../sync-customer-os-data
 go mod tidy
-cd ../sync-tracking
-go mod tidy
 cd ../sync-slack
 go mod tidy
 cd ../customer-os-dedup
