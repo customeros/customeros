@@ -79,7 +79,7 @@ func (r *actionReadRepository) GetLastAction(ctx context.Context, tenant, entity
 	cypher := fmt.Sprintf(`MATCH  (n:%s_%s {id:$entityId}) `, entityType.Neo4jLabel(), tenant)
 	cypher += `WITH n
 			  MATCH (n)<-[:ACTION_ON]-(a:Action {type:$type})
-			  RETURN a limit 1 ORDER BY a.createdAt DESC`
+			  RETURN a ORDER BY a.createdAt DESC LIMIT 1`
 	params := map[string]any{
 		"entityId": entityId,
 		"type":     actionType,

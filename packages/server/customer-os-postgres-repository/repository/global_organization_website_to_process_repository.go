@@ -13,6 +13,7 @@ import (
 type GlobalOrganizationWebsiteToProcessRepository interface {
 	GetWebsitesToProcess(ctx context.Context, limit int) ([]*entity.GlobalOrganizationWebsiteToProcess, error)
 	MarkAsProcessed(ctx context.Context, id uint64, notes string) error
+	AddWebsiteToProcess(ctx context.Context, website string) error
 }
 
 type globalOrganizationWebsiteToProcessRepository struct {
@@ -56,6 +57,21 @@ func (r globalOrganizationWebsiteToProcessRepository) MarkAsProcessed(ctx contex
 			"processed_at": utils.Now(),
 			"notes":        notes,
 		}).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r globalOrganizationWebsiteToProcessRepository) AddWebsiteToProcess(ctx context.Context, website string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	err := r.db.Create(&entity.GlobalOrganizationWebsiteToProcess{
+		Website: website,
+	}).Error
 	if err != nil {
 		return err
 	}
