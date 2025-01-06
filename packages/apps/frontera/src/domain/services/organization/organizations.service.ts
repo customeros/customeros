@@ -54,7 +54,7 @@ export class OrganizationService {
 
       await this.root.organizations.retrieve(results);
     } catch (_err) {
-      console.info(_err);
+      throw new Error('Failed to search for tenant');
     }
   }
 }

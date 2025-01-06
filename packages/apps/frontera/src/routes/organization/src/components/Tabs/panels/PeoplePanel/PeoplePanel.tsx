@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-import { SearchSortContact } from '@domain/usecases/people-contact-card/search-sort-contacts';
+import { SearchSortContact } from '@domain/usecases/people-contact-card/search-sort-contacts.usecase';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
@@ -15,7 +15,7 @@ import { OrganizationPanel } from '@organization/components/Tabs/shared/Organiza
 import { SortOptionsMenu } from './components/SortOptionsMenu';
 import { ContactCard } from './components/ContactCard/ContactCard';
 import { CreateNewContactModal } from './components/CreateNewContactModal';
-const searchSortContactUseCase = SearchSortContact.getInstance();
+const searchSortContactUseCase = new SearchSortContact();
 
 export const PeoplePanel = observer(() => {
   const store = useStore();

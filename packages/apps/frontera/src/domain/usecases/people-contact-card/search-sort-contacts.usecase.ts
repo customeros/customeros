@@ -13,14 +13,6 @@ export class SearchSortContact {
     this.setSortDirection = this.setSortDirection.bind(this);
   }
 
-  public static getInstance(): SearchSortContact {
-    if (!SearchSortContact.instance) {
-      SearchSortContact.instance = new SearchSortContact();
-    }
-
-    return new SearchSortContact();
-  }
-
   @action
   setSearch(search: string) {
     this.search = search;
