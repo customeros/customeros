@@ -171,18 +171,14 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                       )}
                     </div>
                   </div>
-                  <div
-                    className={cn(
-                      'group-hover/card:opacity-100 opacity-0',
-                      isExpanded && 'opacity-100',
-                    )}
-                  >
+                  <div>
                     <IconButton
                       size='xxs'
                       variant='ghost'
                       aria-label='collapse'
                       icon={<ChevronCollapse />}
                       onClick={() => setIsExpanded(!isExpanded)}
+                      className='group-hover/card:opacity-100 opacity-0'
                     />
                     <ContactCardMenu contactId={id} />
                   </div>
