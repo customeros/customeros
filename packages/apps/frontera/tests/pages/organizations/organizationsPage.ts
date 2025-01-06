@@ -109,7 +109,6 @@ export class OrganizationsPage {
     await this.page.keyboard.type(organizationName);
     await this.page.waitForTimeout(300);
     await clickLocatorThatIsVisible(this.page, this.addOrgModalAddOrg);
-    // await this.page.keyboard.press('Enter');
     await Promise.all([requestPromise, responsePromise]);
 
     initialOrg && (await this.page.reload());
@@ -138,18 +137,11 @@ export class OrganizationsPage {
     const maxAttempts = 3;
     const retryInterval = 20000;
 
-    // const newEntry = this.page
-    //   .locator(
-    //     `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,
-    //   )
-    //   .locator('..')
-    //   .locator('..');
     const newEntry = this.page.locator(
       `${this.finderTableOrganizations} div:has(${this.organizationNameInAllOrgsTable}:text("${organizationName}"))`,
     );
 
     await this.page.waitForTimeout(2000);
-    // await this.page.reload();
     await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
 
     await assertWithRetry(async () => {
