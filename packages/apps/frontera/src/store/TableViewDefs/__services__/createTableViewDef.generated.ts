@@ -4,7 +4,5 @@ export type CreateTableViewDefMutationVariables = Types.Exact<{
   input: Types.TableViewDefCreateInput;
 }>;
 
-export type CreateTableViewDefMutation = {
-  __typename?: 'Mutation';
-  tableViewDef_Create: { __typename?: 'TableViewDef'; id: string };
-};
+
+export type CreateTableViewDefMutation = { __typename?: 'Mutation', tableViewDef_Create: { __typename?: 'TableViewDef', id: string } };

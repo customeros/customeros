@@ -4,7 +4,5 @@ export type LinkOrganizationMutationVariables = Types.Exact<{
   input: Types.ContactOrganizationInput;
 }>;
 
-export type LinkOrganizationMutation = {
-  __typename?: 'Mutation';
-  contact_AddOrganizationById: { __typename?: 'Contact'; id: string };
-};
+
+export type LinkOrganizationMutation = { __typename?: 'Mutation', contact_AddOrganizationById: { __typename?: 'Contact', id: string } };

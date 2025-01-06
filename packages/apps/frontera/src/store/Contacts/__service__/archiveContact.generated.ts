@@ -4,7 +4,5 @@ export type ArchiveContactMutationVariables = Types.Exact<{
   contactId: Types.Scalars['ID']['input'];
 }>;
 
-export type ArchiveContactMutation = {
-  __typename?: 'Mutation';
-  contact_Hide: { __typename?: 'ActionResponse'; accepted: boolean };
-};
+
+export type ArchiveContactMutation = { __typename?: 'Mutation', contact_Hide: { __typename?: 'ActionResponse', accepted: boolean } };

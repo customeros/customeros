@@ -383,6 +383,13 @@ export const FinderTable = observer(() => {
       .otherwise(() => false);
   };
 
+  const enableRowSelection = match(tableType)
+    .with(TableViewType.Organizations, () => enableFeature || true)
+    .with(TableViewType.Contacts, () => true)
+    .with(TableViewType.Opportunities, () => true)
+    .with(TableViewType.Flow, () => true)
+    .otherwise(() => false);
+
   if (checkIfEmpty()) {
     return <EmptyState />;
   }
@@ -418,6 +425,7 @@ export const FinderTable = observer(() => {
         onFocusedRowChange={handleSetFocused}
         tableId={tableViewDef?.value?.tableId}
         dataTest={`finder-table-${tableType}`}
+        enableRowSelection={enableRowSelection}
         isLoading={store.organizations.isLoading}
         fullRowSelection={tableType === TableViewType.Invoices}
         enableKeyboardShortcuts={
@@ -428,14 +436,6 @@ export const FinderTable = observer(() => {
           store.contacts.loadNext(preset!);
         }}
         enableTableActions={
-          tableType &&
-          [TableViewType.Invoices, TableViewType.Contracts].includes(tableType)
-            ? false
-            : enableFeature !== null
-            ? enableFeature
-            : true
-        }
-        enableRowSelection={
           tableType &&
           [TableViewType.Invoices, TableViewType.Contracts].includes(tableType)
             ? false

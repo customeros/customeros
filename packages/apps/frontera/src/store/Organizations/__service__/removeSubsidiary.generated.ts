@@ -5,23 +5,5 @@ export type RemoveSubsidiaryToOrganizationMutationVariables = Types.Exact<{
   subsidiaryId: Types.Scalars['ID']['input'];
 }>;
 
-export type RemoveSubsidiaryToOrganizationMutation = {
-  __typename?: 'Mutation';
-  organization_RemoveSubsidiary: {
-    __typename?: 'Organization';
-    id: string;
-    subsidiaries: Array<{
-      __typename?: 'LinkedOrganization';
-      organization: {
-        __typename?: 'Organization';
-        id: string;
-        name: string;
-        locations: Array<{
-          __typename?: 'Location';
-          id: string;
-          address?: string | null;
-        }>;
-      };
-    }>;
-  };
-};
+
+export type RemoveSubsidiaryToOrganizationMutation = { __typename?: 'Mutation', organization_RemoveSubsidiary: { __typename?: 'Organization', id: string, subsidiaries: Array<{ __typename?: 'LinkedOrganization', organization: { __typename?: 'Organization', id: string, name: string, locations: Array<{ __typename?: 'Location', id: string, address?: string | null }> } }> } };

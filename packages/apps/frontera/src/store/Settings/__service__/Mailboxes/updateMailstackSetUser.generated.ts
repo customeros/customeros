@@ -5,7 +5,5 @@ export type MailstackSetUserMutationVariables = Types.Exact<{
   userId: Types.Scalars['ID']['input'];
 }>;
 
-export type MailstackSetUserMutation = {
-  __typename?: 'Mutation';
-  mailstack_SetUser: { __typename?: 'Result'; result: boolean };
-};
+
+export type MailstackSetUserMutation = { __typename?: 'Mutation', mailstack_SetUser: { __typename?: 'Result', result: boolean } };

@@ -4,10 +4,5 @@ export type FlowOffMutationVariables = Types.Exact<{
   id: Types.Scalars['ID']['input'];
 }>;
 
-export type FlowOffMutation = {
-  __typename?: 'Mutation';
-  flow_Off: {
-    __typename?: 'Flow';
-    metadata: { __typename?: 'Metadata'; id: string };
-  };
-};
+
+export type FlowOffMutation = { __typename?: 'Mutation', flow_Off: { __typename?: 'Flow', metadata: { __typename?: 'Metadata', id: string } } };

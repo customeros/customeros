@@ -4,7 +4,5 @@ export type UpdateSocialMutationVariables = Types.Exact<{
   input: Types.SocialUpdateInput;
 }>;
 
-export type UpdateSocialMutation = {
-  __typename?: 'Mutation';
-  social_Update: { __typename?: 'Social'; id: string; url: string };
-};
+
+export type UpdateSocialMutation = { __typename?: 'Mutation', social_Update: { __typename?: 'Social', id: string, url: string } };

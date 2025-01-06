@@ -1,8 +1,7 @@
-import React from 'react';
 import { useLocation } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store.ts';
+import { TableViewDef } from '@store/TableViewDefs/TableViewDef.dto';
 
 import { cn } from '@ui/utils/cn.ts';
 import { TableIdType } from '@graphql/types';
@@ -62,7 +61,7 @@ export const GeneralViewsSection = observer(
         store.tableViewDefs.upcomingInvoicesPreset ?? '',
       ),
       store.tableViewDefs.getById(store.tableViewDefs.pastInvoicesPreset ?? ''),
-    ].filter((e): e is TableViewDefStore => e !== undefined);
+    ].filter((e): e is TableViewDef => e !== undefined);
 
     const upcomingInvoices = invoicesViews[0];
     const allOrganizationsActivePreset = [allOrganizationsView?.[0]?.value?.id];

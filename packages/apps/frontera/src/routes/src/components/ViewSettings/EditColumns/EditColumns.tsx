@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
+import { runInAction } from 'mobx';
 import difference from 'lodash/difference';
 import { observer } from 'mobx-react-lite';
 import { useTableColumnOptionsMap } from '@finder/hooks/useTableColumnOptionsMap.tsx';
@@ -175,15 +176,18 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
                       draggableColumns[rubric.source.index]?.name
                     }
                     onCheck={(columnId) => {
-                      tableViewDef?.update((value) => {
-                        const columnIndex = value.columns.findIndex(
-                          (c) => c.columnId === columnId,
-                        );
+                      if (!tableViewDef) return;
+                      runInAction(() => {
+                        const columnIndex =
+                          tableViewDef.value.columns.findIndex(
+                            (c) => c.columnId === columnId,
+                          );
 
-                        value.columns[columnIndex].visible =
-                          !value?.columns?.[columnIndex]?.visible;
+                        tableViewDef.draft();
+                        tableViewDef.value.columns[columnIndex].visible =
+                          !tableViewDef.value?.columns?.[columnIndex]?.visible;
 
-                        return value;
+                        tableViewDef.commit();
                       });
                     }}
                   />
@@ -207,15 +211,18 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
                         label={col?.label || col?.name}
                         noPointerEvents={isDraggingOver}
                         onCheck={(columnId) => {
-                          tableViewDef?.update((value) => {
-                            const columnIndex = value.columns.findIndex(
-                              (c) => c.columnId === columnId,
-                            );
+                          if (!tableViewDef) return;
+                          runInAction(() => {
+                            const columnIndex =
+                              tableViewDef.value.columns.findIndex(
+                                (c) => c.columnId === columnId,
+                              );
 
-                            value.columns[columnIndex].visible =
-                              !value?.columns?.[columnIndex]?.visible;
-
-                            return value;
+                            tableViewDef.draft();
+                            tableViewDef.value.columns[columnIndex].visible =
+                              !tableViewDef.value?.columns?.[columnIndex]
+                                ?.visible;
+                            tableViewDef.commit();
                           });
                         }}
                       />

@@ -4,10 +4,5 @@ export type ImportOrganizationMutationVariables = Types.Exact<{
   globalOrganizationId: Types.Scalars['Int64']['input'];
 }>;
 
-export type ImportOrganizationMutation = {
-  __typename?: 'Mutation';
-  organization_SaveByGlobalOrganization: {
-    __typename?: 'OrganizationUiDetails';
-    id: string;
-  };
-};
+
+export type ImportOrganizationMutation = { __typename?: 'Mutation', organization_SaveByGlobalOrganization: { __typename?: 'OrganizationUiDetails', id: string } };

@@ -5,7 +5,5 @@ export type AddTagToLogEntryMutationVariables = Types.Exact<{
   input: Types.TagIdOrNameInput;
 }>;
 
-export type AddTagToLogEntryMutation = {
-  __typename?: 'Mutation';
-  logEntry_AddTag: string;
-};
+
+export type AddTagToLogEntryMutation = { __typename?: 'Mutation', logEntry_AddTag: string };

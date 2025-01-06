@@ -4,7 +4,5 @@ export type RemoveTagFromOrganizationMutationVariables = Types.Exact<{
   input: Types.OrganizationTagInput;
 }>;
 
-export type RemoveTagFromOrganizationMutation = {
-  __typename?: 'Mutation';
-  organization_RemoveTag: { __typename?: 'ActionResponse'; accepted: boolean };
-};
+
+export type RemoveTagFromOrganizationMutation = { __typename?: 'Mutation', organization_RemoveTag: { __typename?: 'ActionResponse', accepted: boolean } };
