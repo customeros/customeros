@@ -9,7 +9,6 @@ import (
 type MockOrganizationServiceCallbacks struct {
 	RefreshArr                       func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshRenewalSummary            func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	UpdateOnboardingStatus           func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	UpdateOrganizationOwner          func(ctx context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	CreateBillingProfile             func(ctx context.Context, proto *organizationpb.CreateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
 	UpdateBillingProfile             func(ctx context.Context, proto *organizationpb.UpdateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
@@ -27,13 +26,6 @@ func SetOrganizationCallbacks(callbacks *MockOrganizationServiceCallbacks) {
 
 type MockOrganizationService struct {
 	organizationpb.UnimplementedOrganizationGrpcServiceServer
-}
-
-func (MockOrganizationService) UpdateOnboardingStatus(context context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	if organizationCallbacks.UpdateOnboardingStatus == nil {
-		panic("organizationCallbacks.UpdateOnboardingStatus is not set")
-	}
-	return organizationCallbacks.UpdateOnboardingStatus(context, proto)
 }
 
 func (MockOrganizationService) UpdateOrganizationOwner(context context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
