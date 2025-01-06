@@ -201,8 +201,12 @@ func (w *workflowService) nextStepInFlow(ctx context.Context, flowId, fromNodeId
 		return nil, err
 	}
 
-	if len(*edges) == 0 {
-		return nil, nil
+	if len(*edges) == 0 { // mark flow as completed
+		return &FlowNextStep{
+			FlowID:     flowId,
+			FromNodeID: fromNodeId,
+			ToNodeType: enum.NodeFlowEnd,
+		}, nil
 	}
 
 	// take the first result
