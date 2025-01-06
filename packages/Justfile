@@ -8,45 +8,63 @@ bin_dir := "bin"
 # Build all services
 build-all: ensure-bin-dir
     #!/usr/bin/env bash
-    echo "Building server services..."
-    for module in {{server_modules}}; do
+    echo "Building all services in parallel..."
+    
+    # Function to build a single module
+    build_module() {
+        local module=$1
+        local type=$2  # "server" or "runner"
+        
         if [[ ! -d "$module" ]]; then
             echo "Skipping $module - directory not found"
-            continue
+            return
         fi
         
         # Look for *main.go files only in the root of the module
-        main_file=$(find "$module" -maxdepth 1 -name "*main.go" | head -n 1)
+        local main_file=$(find "$module" -maxdepth 1 -name "*main.go" | head -n 1)
         if [[ -z "$main_file" ]]; then
             echo "No main.go found in root of $module - skipping"
-            continue
+            return
         fi
         
         echo "Building $module using $main_file"
         binary_name=$(basename $module)
-        (cd "$module" && go build -o "../../{{bin_dir}}/server/$binary_name" "$(basename $main_file)") || exit 1
+        (cd "$module" && go build -o "../../{{bin_dir}}/$type/$binary_name" "$(basename $main_file)") || exit 1
+    }
+    
+    # Export the function so it's available to parallel processes
+    export -f build_module
+    
+    # Start building server modules in parallel
+    echo "Building server services..."
+    pids=()
+    for module in {{server_modules}}; do
+        build_module "$module" "server" &
+        pids+=($!)
     done
     
+    # Start building runner modules in parallel
     echo "Building runner services..."
     for module in {{runner_modules}}; do
-        if [[ ! -d "$module" ]]; then
-            echo "Skipping $module - directory not found"
-            continue
-        fi
-        
-        # Look for *main.go files only in the root of the module
-        main_file=$(find "$module" -maxdepth 1 -name "*main.go" | head -n 1)
-        if [[ -z "$main_file" ]]; then
-            echo "No main.go found in root of $module - skipping"
-            continue
-        fi
-        
-        echo "Building $module using $main_file"
-        binary_name=$(basename $module)
-        (cd "$module" && go build -o "../../{{bin_dir}}/runner/$binary_name" "$(basename $main_file)") || exit 1
+        build_module "$module" "runner" &
+        pids+=($!)
     done
     
-    echo "All services built successfully!"
+    # Wait for all builds to complete
+    failed=0
+    for pid in "${pids[@]}"; do
+        if ! wait $pid; then
+            echo "Build process $pid failed"
+            failed=1
+        fi
+    done
+    
+    if [ $failed -eq 0 ]; then
+        echo "All services built successfully!"
+    else
+        echo "Some builds failed"
+        exit 1
+    fi
 
 # Ensure binary output directories exist
 ensure-bin-dir:

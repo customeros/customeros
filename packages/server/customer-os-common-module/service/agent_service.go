@@ -2,14 +2,11 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 )
 
