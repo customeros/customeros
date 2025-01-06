@@ -6,7 +6,5 @@ export type FlowEmailActionTestMutationVariables = Types.Exact<{
   sendToEmailAddress: Types.Scalars['String']['input'];
 }>;
 
-export type FlowEmailActionTestMutation = {
-  __typename?: 'Mutation';
-  flowEmailActionTest: { __typename?: 'Result'; result: boolean };
-};
+
+export type FlowEmailActionTestMutation = { __typename?: 'Mutation', flowEmailActionTest: { __typename?: 'Result', result: boolean } };

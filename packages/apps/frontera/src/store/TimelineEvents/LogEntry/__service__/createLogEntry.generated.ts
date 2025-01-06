@@ -5,7 +5,5 @@ export type CreateLogEntryMutationVariables = Types.Exact<{
   logEntry: Types.LogEntryInput;
 }>;
 
-export type CreateLogEntryMutation = {
-  __typename?: 'Mutation';
-  logEntry_CreateForOrganization: string;
-};
+
+export type CreateLogEntryMutation = { __typename?: 'Mutation', logEntry_CreateForOrganization: string };

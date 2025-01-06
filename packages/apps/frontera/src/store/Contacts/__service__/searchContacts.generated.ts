@@ -6,12 +6,5 @@ export type SearchContactsQueryVariables = Types.Exact<{
   sort?: Types.InputMaybe<Types.SortBy>;
 }>;
 
-export type SearchContactsQuery = {
-  __typename?: 'Query';
-  ui_contacts_search: {
-    __typename?: 'ContactSearchResult';
-    ids: Array<string>;
-    totalElements: any;
-    totalAvailable: any;
-  };
-};
+
+export type SearchContactsQuery = { __typename?: 'Query', ui_contacts_search: { __typename?: 'ContactSearchResult', ids: Array<string>, totalElements: any, totalAvailable: any } };

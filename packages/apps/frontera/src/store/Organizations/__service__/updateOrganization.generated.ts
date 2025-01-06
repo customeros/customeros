@@ -4,10 +4,5 @@ export type UpdateOrganizationMutationVariables = Types.Exact<{
   input: Types.OrganizationUpdateInput;
 }>;
 
-export type UpdateOrganizationMutation = {
-  __typename?: 'Mutation';
-  organization_Update: {
-    __typename?: 'Organization';
-    metadata: { __typename?: 'Metadata'; id: string };
-  };
-};
+
+export type UpdateOrganizationMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', metadata: { __typename?: 'Metadata', id: string } } };

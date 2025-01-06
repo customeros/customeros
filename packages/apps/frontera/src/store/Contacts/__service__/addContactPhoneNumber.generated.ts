@@ -5,11 +5,5 @@ export type AddContactPhoneNumberMutationVariables = Types.Exact<{
   input: Types.PhoneNumberInput;
 }>;
 
-export type AddContactPhoneNumberMutation = {
-  __typename?: 'Mutation';
-  phoneNumberMergeToContact: {
-    __typename?: 'PhoneNumber';
-    id: string;
-    rawPhoneNumber?: string | null;
-  };
-};
+
+export type AddContactPhoneNumberMutation = { __typename?: 'Mutation', phoneNumberMergeToContact: { __typename?: 'PhoneNumber', id: string, rawPhoneNumber?: string | null } };

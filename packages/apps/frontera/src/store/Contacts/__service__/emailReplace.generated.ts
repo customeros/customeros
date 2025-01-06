@@ -6,7 +6,5 @@ export type UpdateContactEmailMutationVariables = Types.Exact<{
   input: Types.EmailInput;
 }>;
 
-export type UpdateContactEmailMutation = {
-  __typename?: 'Mutation';
-  emailReplaceForContact?: { __typename?: 'Email'; id: string } | null;
-};
+
+export type UpdateContactEmailMutation = { __typename?: 'Mutation', emailReplaceForContact?: { __typename?: 'Email', id: string } | null };

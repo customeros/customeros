@@ -21,13 +21,6 @@ export class TenantStore {
   }
 
   async bootstrap() {
-    if (this.root.demoMode) {
-      this.value = mock.data.tenantSettings as TenantSettings;
-      this.isBootstrapped = true;
-
-      return;
-    }
-
     if (this.isBootstrapped || this.isLoading) return;
 
     this.load();
@@ -35,7 +28,9 @@ export class TenantStore {
 
   async load() {
     try {
-      this.isLoading = true;
+      runInAction(() => {
+        this.isLoading = true;
+      });
 
       const { tenantSettings } = await this.service.getTenantSettings();
 
@@ -116,37 +111,3 @@ export class TenantStore {
     }
   }
 }
-
-const mock = {
-  data: {
-    tenantSettings: {
-      logoUrl: '59e1ad09-49fe-40b1-9e9a-e1f94682d12d',
-      logoRepositoryFileId: '59e1ad09-49fe-40b1-9e9a-e1f94682d12d',
-      baseCurrency: 'USD',
-      billingEnabled: true,
-      opportunityStages: [
-        {
-          id: '1',
-          value: 'STAGE1',
-          order: 1,
-          label: 'Identified',
-          visible: true,
-        },
-        {
-          id: '2',
-          value: 'STAGE2',
-          order: 2,
-          label: 'Qualified',
-          visible: true,
-        },
-        {
-          id: '3',
-          value: 'STAGE3',
-          order: 3,
-          label: 'Committed',
-          visible: true,
-        },
-      ],
-    },
-  },
-};

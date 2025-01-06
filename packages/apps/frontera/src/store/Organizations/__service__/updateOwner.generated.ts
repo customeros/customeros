@@ -5,7 +5,5 @@ export type SetOrganizationOwnerMutationVariables = Types.Exact<{
   userId: Types.Scalars['ID']['input'];
 }>;
 
-export type SetOrganizationOwnerMutation = {
-  __typename?: 'Mutation';
-  organization_SetOwner: { __typename?: 'Organization'; id: string };
-};
+
+export type SetOrganizationOwnerMutation = { __typename?: 'Mutation', organization_SetOwner: { __typename?: 'Organization', id: string } };

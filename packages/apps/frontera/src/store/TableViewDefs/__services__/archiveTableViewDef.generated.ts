@@ -4,7 +4,5 @@ export type ArchiveTableViewDefMutationVariables = Types.Exact<{
   id: Types.Scalars['ID']['input'];
 }>;
 
-export type ArchiveTableViewDefMutation = {
-  __typename?: 'Mutation';
-  tableViewDef_Archive: { __typename?: 'ActionResponse'; accepted: boolean };
-};
+
+export type ArchiveTableViewDefMutation = { __typename?: 'Mutation', tableViewDef_Archive: { __typename?: 'ActionResponse', accepted: boolean } };

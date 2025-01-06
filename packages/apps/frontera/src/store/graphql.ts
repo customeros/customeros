@@ -7,6 +7,7 @@ import { RootStore } from './root';
 import { ContactService } from './Contacts/__service__/Contacts.service';
 import { InvoicesService } from './Invoices/__service__/Invoices.service';
 import { MailboxesService } from './Settings/__service__/Mailboxes/Mailboxes.service';
+import { TableViewDefsService } from './TableViewDefs/__services__/TableViewDef.service';
 import { OrganizationsService } from './Organizations/__service__/Organizations.service';
 import { CustomFieldsService } from './Settings/__service__/CustomFields/CustomFields.service';
 
@@ -16,6 +17,7 @@ export class GraphqlService {
   private invoiceService: InvoicesService;
   private contactService: ContactService;
   private mailboxService: MailboxesService;
+  private tableViewDefService: TableViewDefsService;
 
   constructor(private root: RootStore, private transport: Transport) {
     this.organizationsService = OrganizationsService.getInstance();
@@ -23,6 +25,7 @@ export class GraphqlService {
     this.invoiceService = InvoicesService.getInstance(this.transport);
     this.contactService = ContactService.getInstance();
     this.mailboxService = MailboxesService.getInstance(this.transport);
+    this.tableViewDefService = TableViewDefsService.getInstance();
     this.getStore = this.getStore.bind(this);
   }
 
@@ -71,6 +74,13 @@ export class GraphqlService {
         if (!store) return;
 
         return await this.mailboxService.mutateOperation(operation, store);
+      })
+      .with('TableViewDefs', async () => {
+        const store = this.getStore(operation, 'tableViewDefs');
+
+        if (!store) return;
+
+        return await this.tableViewDefService.mutateOperation(operation, store);
       })
       .otherwise(() => {});
   }

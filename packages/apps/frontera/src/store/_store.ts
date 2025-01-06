@@ -3,7 +3,7 @@ import type { Channel } from 'phoenix';
 import set from 'lodash/set';
 import { match } from 'ts-pattern';
 import { getDiff, applyDiff } from 'recursive-diff';
-import { when, action, reaction, observable } from 'mobx';
+import { when, action, reaction, observable, runInAction } from 'mobx';
 
 import type { RootStore } from './root';
 import type { Transport } from './transport';
@@ -51,16 +51,16 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
   ) {
     this.options = opts;
     when(
-      () => !!this.root.session.sessionToken && !this.root.demoMode,
+      () => !!this.root.session?.sessionToken,
       () => {
         this.persister = Persister.getInstance(opts.name);
       },
     );
 
     when(
-      () => !!this.root.session.value.tenant && !this.root.demoMode,
+      () => !!this.root.session?.value?.tenant && !this.root.demoMode,
       async () => {
-        const tenant = this.root.session.value.tenant;
+        const tenant = this.root.session?.value?.tenant;
 
         try {
           await this.initChannelConnection(tenant);
@@ -78,11 +78,8 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
     );
 
     reaction(
-      () => this.size,
+      () => `${this.size}-${this.version}`,
       () => {
-        if (this.value.size === 0) {
-          this.setActiveRange(0, 99);
-        }
         this.persistGroup();
       },
     );
@@ -133,14 +130,20 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
   };
 
   @action
-  public hydrate = async (options: { idsToDrop: string[] }) => {
+  public hydrate = async (options?: { idsToDrop: string[] }) => {
     await this.drop(options?.idsToDrop ?? []);
 
     try {
       const factory = this.options.factory as EntityFactoryClass<T, E>;
       const persisted = await this.persister?.getItem<Map<string, T>>('data');
 
-      if (!persisted) return;
+      if (!persisted) {
+        runInAction(() => {
+          this.isHydrated = true;
+        });
+
+        return;
+      }
 
       const initialized = new Map<string, E>();
 
@@ -148,12 +151,17 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
         initialized.set(k, new factory(this, v));
       });
 
-      this.value = initialized;
-      this.totalElements = initialized.size;
+      runInAction(() => {
+        this.value = initialized;
+        this.totalElements = initialized.size;
+      });
     } catch (e) {
       console.error('Failed to hydrate group', e);
+    } finally {
+      runInAction(() => {
+        this.isHydrated = true;
+      });
     }
-    this.isHydrated = true;
   };
 
   private async initChannelConnection(tenant: string) {

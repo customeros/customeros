@@ -6,8 +6,8 @@ import { observer } from 'mobx-react-lite';
 import { FlowStore } from '@store/Flows/Flow.store';
 import { Contact } from '@store/Contacts/Contact.dto';
 import { Organization } from '@store/Organizations/Organization.dto';
+import { TableViewDef } from '@store/TableViewDefs/TableViewDef.dto';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
-import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store';
 
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
@@ -30,10 +30,11 @@ export const DeleteConfirmationModal = observer(() => {
     .returnType<
       | OpportunityStore
       | Organization
-      | TableViewDefStore
+      | TableViewDef
       | Contact
       | FlowStore
       | undefined
+      | null
     >()
     .with('Opportunity', () => store.opportunities.value.get(context.ids?.[0]))
     .with('Organization', () => store.organizations.value.get(context.ids?.[0]))
@@ -189,7 +190,7 @@ export const DeleteConfirmationModal = observer(() => {
     )
     .with(
       'TableViewDef',
-      () => `Archive '${(entity as TableViewDefStore)?.value.name}' ?`,
+      () => `Archive '${(entity as TableViewDef)?.value.name}' ?`,
     )
     .otherwise(() => `Archive selected ${context.entity?.toLowerCase()}`);
   const description = match(context.entity)

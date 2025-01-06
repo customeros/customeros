@@ -4,7 +4,6 @@ import { observer } from 'mobx-react-lite';
 
 import { Image } from '@ui/media/Image/Image';
 import { Spinner } from '@ui/feedback/Spinner';
-import { Skeleton } from '@ui/feedback/Skeleton';
 import { useStore } from '@shared/hooks/useStore';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { CloudOff } from '@ui/media/icons/CloudOff';
@@ -18,8 +17,6 @@ import logoCustomerOs from '../../../../../src/assets/customer-os-small.png';
 export const LogoSection = observer(() => {
   const store = useStore();
   const navigate = useNavigate();
-
-  const isLoading = store.globalCache?.isLoading;
 
   const handleSignOutClick = () => {
     store.session.clearSession();
@@ -37,25 +34,18 @@ export const LogoSection = observer(() => {
       <Menu>
         <div data-test='logo-button' className='py-2 pr-3 pl-[18px]'>
           <MenuButton className='flex items-center gap-1.5 !outline-none'>
-            {!isLoading ? (
-              <>
-                <Image
-                  width={20}
-                  height={20}
-                  alt='CustomerOS'
-                  className='logo-image rounded'
-                  src={
-                    store.settings.tenant.value?.workspaceLogo || logoCustomerOs
-                  }
-                />
-                <span className='font-semibold  text-start w-[fit-content] overflow-hidden text-ellipsis whitespace-nowrap'>
-                  {store.settings.tenant.value?.workspaceName || 'CustomerOS'}
-                </span>
-                <ChevronDown className='size-3 min-w-3' />
-              </>
-            ) : (
-              <Skeleton className='w-full h-8 mr-2' />
-            )}
+            <Image
+              width={20}
+              height={20}
+              alt='CustomerOS'
+              fallbackSrc={logoCustomerOs}
+              className='logo-image rounded'
+              src={store.settings.tenant.value?.workspaceLogo}
+            />
+            <span className='font-semibold  text-start w-[fit-content] overflow-hidden text-ellipsis whitespace-nowrap'>
+              {store.settings.tenant.value?.workspaceName || 'CustomerOS'}
+            </span>
+            <ChevronDown className='size-3 min-w-3' />
           </MenuButton>
         </div>
         <MenuList align='start' side='bottom' className='min-w-[137px]'>

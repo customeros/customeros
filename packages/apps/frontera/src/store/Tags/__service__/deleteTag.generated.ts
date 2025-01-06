@@ -4,7 +4,5 @@ export type DeleteTagMutationVariables = Types.Exact<{
   id: Types.Scalars['ID']['input'];
 }>;
 
-export type DeleteTagMutation = {
-  __typename?: 'Mutation';
-  tag_Delete?: { __typename?: 'Result'; result: boolean } | null;
-};
+
+export type DeleteTagMutation = { __typename?: 'Mutation', tag_Delete?: { __typename?: 'Result', result: boolean } | null };

@@ -4,7 +4,5 @@ export type FlowSenderDeleteMutationVariables = Types.Exact<{
   id: Types.Scalars['ID']['input'];
 }>;
 
-export type FlowSenderDeleteMutation = {
-  __typename?: 'Mutation';
-  flowSender_Delete: { __typename?: 'Result'; result: boolean };
-};
+
+export type FlowSenderDeleteMutation = { __typename?: 'Mutation', flowSender_Delete: { __typename?: 'Result', result: boolean } };

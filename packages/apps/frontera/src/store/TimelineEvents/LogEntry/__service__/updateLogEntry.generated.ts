@@ -5,7 +5,5 @@ export type UpdateLogEntryMutationVariables = Types.Exact<{
   input: Types.LogEntryUpdateInput;
 }>;
 
-export type UpdateLogEntryMutation = {
-  __typename?: 'Mutation';
-  logEntry_Update: string;
-};
+
+export type UpdateLogEntryMutation = { __typename?: 'Mutation', logEntry_Update: string };

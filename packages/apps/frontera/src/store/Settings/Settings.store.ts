@@ -98,9 +98,9 @@ export class SettingsStore {
 
     await Promise.all([
       await this.getTenantApiKey(),
+      await this.tenant.bootstrap(),
       await this.slack.load(),
       await this.oauthToken.load(),
-      await this.tenant.bootstrap(),
       await this.features.load(),
       await this.bankAccounts.bootstrap(),
       await this.tenantBillingProfiles.bootstrap(),

@@ -4,7 +4,5 @@ export type GetArchivedOrganizationsAfterQueryVariables = Types.Exact<{
   date: Types.Scalars['Time']['input'];
 }>;
 
-export type GetArchivedOrganizationsAfterQuery = {
-  __typename?: 'Query';
-  organizations_HiddenAfter: Array<string>;
-};
+
+export type GetArchivedOrganizationsAfterQuery = { __typename?: 'Query', organizations_HiddenAfter: Array<string> };

@@ -4,10 +4,5 @@ export type UpdateInvoiceStatusMutationVariables = Types.Exact<{
   input: Types.InvoiceUpdateInput;
 }>;
 
-export type UpdateInvoiceStatusMutation = {
-  __typename?: 'Mutation';
-  invoice_Update: {
-    __typename?: 'Invoice';
-    metadata: { __typename?: 'Metadata'; id: string };
-  };
-};
+
+export type UpdateInvoiceStatusMutation = { __typename?: 'Mutation', invoice_Update: { __typename?: 'Invoice', metadata: { __typename?: 'Metadata', id: string } } };

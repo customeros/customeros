@@ -1,8 +1,7 @@
-import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store.ts';
+import { TableViewDef } from '@store/TableViewDefs/TableViewDef.dto';
 
 import { cn } from '@ui/utils/cn.ts';
 import { TableIdType } from '@graphql/types';
@@ -38,25 +37,25 @@ export const LifecycleStagesSection = observer(
 
     const noOfOrganizationsMovedByICP = store.ui.movedIcpOrganization;
 
-    const lifecycleStagesView: TableViewDefStore[] = [
+    const lifecycleStagesView = [
       store.tableViewDefs.getById(store.tableViewDefs.targetsPreset ?? ''),
       store.tableViewDefs.getById(
         store.tableViewDefs.opportunitiesPreset ?? '',
       ),
       store.tableViewDefs.getById(store.tableViewDefs.defaultPreset ?? ''),
-    ].filter((e): e is TableViewDefStore => e !== undefined);
+    ].filter(Boolean) as TableViewDef[];
 
     const contractsPreset = tableViewDefsList.find(
       (e) => e.value.tableId === TableIdType.ContactsForTargetOrganizations,
-    )?.value.id;
+    )?.id;
 
     const currentPreset = searchParams?.get('preset');
     const activePreset = tableViewDefsList.find(
       (e) => e.value.id === currentPreset,
-    )?.value?.id;
+    )?.id;
     const targetsPreset = tableViewDefsList.find(
       (e) => e.value.name === 'Targets',
-    )?.value.id;
+    )?.id;
 
     if (activePreset === targetsPreset) {
       setTimeout(() => {

@@ -8,7 +8,7 @@ export const IntegrationsProvider = observer(
     const store = useStore();
 
     return (
-      <IntegrationAppProvider token={store.session.value.integrations_token}>
+      <IntegrationAppProvider token={store.session?.value?.integrations_token}>
         {children}
       </IntegrationAppProvider>
     );

@@ -4,10 +4,5 @@ export type BulkUpdateOpportunityRenewalMutationVariables = Types.Exact<{
   input: Types.OpportunityRenewalUpdateAllForOrganizationInput;
 }>;
 
-export type BulkUpdateOpportunityRenewalMutation = {
-  __typename?: 'Mutation';
-  opportunityRenewal_UpdateAllForOrganization: {
-    __typename?: 'Organization';
-    metadata: { __typename?: 'Metadata'; id: string };
-  };
-};
+
+export type BulkUpdateOpportunityRenewalMutation = { __typename?: 'Mutation', opportunityRenewal_UpdateAllForOrganization: { __typename?: 'Organization', metadata: { __typename?: 'Metadata', id: string } } };

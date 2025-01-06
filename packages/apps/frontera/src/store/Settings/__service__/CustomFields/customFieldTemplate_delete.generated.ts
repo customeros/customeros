@@ -4,7 +4,5 @@ export type DeleteCustomFieldTemplateMutationVariables = Types.Exact<{
   id: Types.Scalars['ID']['input'];
 }>;
 
-export type DeleteCustomFieldTemplateMutation = {
-  __typename?: 'Mutation';
-  customFieldTemplate_Delete?: boolean | null;
-};
+
+export type DeleteCustomFieldTemplateMutation = { __typename?: 'Mutation', customFieldTemplate_Delete?: boolean | null };

@@ -5,7 +5,5 @@ export type AddContactSocialMutationVariables = Types.Exact<{
   input: Types.SocialInput;
 }>;
 
-export type AddContactSocialMutation = {
-  __typename?: 'Mutation';
-  contact_AddSocial: { __typename?: 'Social'; id: string };
-};
+
+export type AddContactSocialMutation = { __typename?: 'Mutation', contact_AddSocial: { __typename?: 'Social', id: string } };

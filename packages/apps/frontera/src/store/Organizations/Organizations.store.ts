@@ -45,6 +45,8 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       factory: Organization,
     });
 
+    this.hydrate();
+
     new ProfileView(this);
     new CustomersView(this);
     new TargetsView(this);

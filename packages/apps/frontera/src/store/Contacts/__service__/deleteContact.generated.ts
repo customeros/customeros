@@ -4,7 +4,5 @@ export type DeleteContactMutationVariables = Types.Exact<{
   contactId: Types.Scalars['ID']['input'];
 }>;
 
-export type DeleteContactMutation = {
-  __typename?: 'Mutation';
-  contact_HardDelete: { __typename?: 'Result'; result: boolean };
-};
+
+export type DeleteContactMutation = { __typename?: 'Mutation', contact_HardDelete: { __typename?: 'Result', result: boolean } };

@@ -5,11 +5,5 @@ export type FlowSenderMergeMutationVariables = Types.Exact<{
   input: Types.FlowSenderMergeInput;
 }>;
 
-export type FlowSenderMergeMutation = {
-  __typename?: 'Mutation';
-  flowSender_Merge: {
-    __typename?: 'FlowSender';
-    metadata: { __typename?: 'Metadata'; id: string };
-    user?: { __typename?: 'User'; id: string } | null;
-  };
-};
+
+export type FlowSenderMergeMutation = { __typename?: 'Mutation', flowSender_Merge: { __typename?: 'FlowSender', metadata: { __typename?: 'Metadata', id: string }, user?: { __typename?: 'User', id: string } | null } };

@@ -4,12 +4,5 @@ export type CreateTagMutationVariables = Types.Exact<{
   input: Types.TagInput;
 }>;
 
-export type CreateTagMutation = {
-  __typename?: 'Mutation';
-  tag_Create: {
-    __typename?: 'Tag';
-    name: string;
-    entityType: Types.EntityType;
-    metadata: { __typename?: 'Metadata'; id: string };
-  };
-};
+
+export type CreateTagMutation = { __typename?: 'Mutation', tag_Create: { __typename?: 'Tag', name: string, entityType: Types.EntityType, metadata: { __typename?: 'Metadata', id: string } } };

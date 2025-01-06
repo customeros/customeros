@@ -5,7 +5,5 @@ export type RemoveContactPhoneNumberMutationVariables = Types.Exact<{
   id: Types.Scalars['ID']['input'];
 }>;
 
-export type RemoveContactPhoneNumberMutation = {
-  __typename?: 'Mutation';
-  phoneNumberRemoveFromContactById: { __typename?: 'Result'; result: boolean };
-};
+
+export type RemoveContactPhoneNumberMutation = { __typename?: 'Mutation', phoneNumberRemoveFromContactById: { __typename?: 'Result', result: boolean } };

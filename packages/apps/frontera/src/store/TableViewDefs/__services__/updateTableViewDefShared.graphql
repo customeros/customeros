@@ -1,0 +1,5 @@
+mutation updateTableViewDefShared($input: TableViewDefUpdateInput!) {
+  tableViewDef_UpdateShared(input: $input) {
+    id
+  }
+}

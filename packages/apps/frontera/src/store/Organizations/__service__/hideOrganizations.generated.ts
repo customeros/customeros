@@ -4,7 +4,5 @@ export type HideOrganizationsMutationVariables = Types.Exact<{
   ids: Array<Types.Scalars['ID']['input']> | Types.Scalars['ID']['input'];
 }>;
 
-export type HideOrganizationsMutation = {
-  __typename?: 'Mutation';
-  organization_HideAll?: { __typename?: 'Result'; result: boolean } | null;
-};
+
+export type HideOrganizationsMutation = { __typename?: 'Mutation', organization_HideAll?: { __typename?: 'Result', result: boolean } | null };
