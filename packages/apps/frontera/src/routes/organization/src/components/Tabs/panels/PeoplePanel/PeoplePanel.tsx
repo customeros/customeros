@@ -1,28 +1,49 @@
 import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+import { SearchSortContact } from '@domain/usecases/people-contact-card/search-sort-contacts.usecase';
 
+import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
-import { IconButton } from '@ui/form/IconButton';
 import { Users03 } from '@ui/media/icons/Users03';
 import { useStore } from '@shared/hooks/useStore';
+import { SearchSm } from '@ui/media/icons/SearchSm';
 import { UsersPlus } from '@ui/media/icons/UsersPlus';
-import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
+import { SortOptionsMenu } from './components/SortOptionsMenu';
 import { ContactCard } from './components/ContactCard/ContactCard';
 import { CreateNewContactModal } from './components/CreateNewContactModal';
+const searchSortContactUseCase = new SearchSortContact();
 
 export const PeoplePanel = observer(() => {
   const store = useStore();
   const { open, onOpen, onClose } = useDisclosure();
   const id = useParams()?.id as string;
   const organization = store.organizations.getById(id);
-
   const contacts = store.organizations.getById(id)?.contacts;
 
   if (!contacts) return null;
+
+  const searchSortContact = searchSortContactUseCase;
+
+  const search = searchSortContact.getSearch();
+  const sortDir = searchSortContact.getSortDirection();
+  const sortBy = searchSortContact.getSort();
+
+  const filteredContactsState =
+    contacts.filter((v) => {
+      if (!search) return true;
+
+      return (
+        v.name.toLowerCase().includes(search.toLowerCase()) ||
+        v.firstName.toLowerCase().includes(search.toLowerCase()) ||
+        (v.primaryOrganizationJobRoleTitle || '')
+          .toLowerCase()
+          .includes(search.toLowerCase())
+      );
+    }).length === 0 && search;
 
   return (
     <OrganizationPanel
@@ -36,24 +57,16 @@ export const PeoplePanel = observer(() => {
       }
       actionItem={
         !!contacts.length && (
-          <IconButton
+          <Button
             size='xs'
             variant='outline'
             onClick={() => onOpen()}
             aria-label='Add contact'
-            className='text-gray-500'
+            leftIcon={<UsersPlus />}
             dataTest={'org-people-add-contact'}
-            icon={<UsersPlus className='text-gray-500' />}
-            spinner={
-              <Spinner
-                size='sm'
-                label='adding'
-                className='text-gray-300 fill-gray-400'
-              />
-            }
           >
             Add
-          </IconButton>
+          </Button>
         )
       }
     >
@@ -83,11 +96,99 @@ export const PeoplePanel = observer(() => {
           </div>
         </div>
       )}
-      {contacts.map((contact) => (
-        <div key={contact?.id} className='group/card' style={{ width: '100%' }}>
-          <ContactCard id={contact?.id} />
+
+      {contacts.length > 0 && (
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center gap-2'>
+            <SearchSm className='text-gray-500 size-4' />
+            <Input
+              type='text'
+              value={search}
+              variant='unstyled'
+              placeholder='Search name or title...'
+              onChange={(e) => searchSortContact.setSearch(e.target.value)}
+            />
+          </div>
+          <SortOptionsMenu searchSortContact={searchSortContact} />
         </div>
-      ))}
+      )}
+
+      {/* Filtered contacts */}
+      {contacts
+        .sort((a, b) => {
+          if (sortBy === 'First name') {
+            if (sortDir === 'asc') {
+              return a.name.localeCompare(b.name);
+            } else {
+              return b.name.localeCompare(a.name);
+            }
+          }
+
+          if (sortBy === 'Created') {
+            const dateA = new Date(a.createdAt);
+            const dateB = new Date(b.createdAt);
+
+            if (sortDir === 'asc') {
+              return dateA.getTime() - dateB.getTime();
+            } else {
+              return dateB.getTime() - dateA.getTime();
+            }
+          }
+
+          if (sortBy === 'Updated') {
+            const dateA = new Date(a.updatedAt);
+            const dateB = new Date(b.updatedAt);
+
+            if (sortDir === 'asc') {
+              return dateA.getTime() - dateB.getTime();
+            } else {
+              return dateB.getTime() - dateA.getTime();
+            }
+          }
+
+          if (sortBy === 'Tenure') {
+            const aTenure =
+              a.primaryOrganizationJobRoleStartDate -
+              a.primaryOrganizationJobRoleEndDate;
+            const bTenure =
+              b.primaryOrganizationJobRoleStartDate -
+              b.primaryOrganizationJobRoleEndDate;
+
+            if (sortDir === 'asc') {
+              return aTenure - bTenure;
+            } else {
+              return bTenure - aTenure;
+            }
+          }
+
+          return 0;
+        })
+        .filter((v) => {
+          if (!search) return true;
+
+          return (
+            v.name.toLowerCase().includes(search.toLowerCase()) ||
+            v.firstName.toLowerCase().includes(search.toLowerCase()) ||
+            (v.primaryOrganizationJobRoleTitle || '')
+              .toLowerCase()
+              .includes(search.toLowerCase())
+          );
+        })
+        .map((contact) => (
+          <div
+            key={contact?.id}
+            className='group/card'
+            style={{ width: '100%' }}
+          >
+            <ContactCard id={contact?.id} />
+          </div>
+        ))}
+
+      {filteredContactsState && (
+        <div className='text-center text-gray-500 mt-4 text-sm'>
+          No matches found—looks like a ghost town in here
+        </div>
+      )}
 
       <CreateNewContactModal orgId={id} open={open} onClose={onClose} />
     </OrganizationPanel>

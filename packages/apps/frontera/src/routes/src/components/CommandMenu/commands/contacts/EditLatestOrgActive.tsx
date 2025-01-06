@@ -1,10 +1,10 @@
 import { observer } from 'mobx-react-lite';
 import { OrganizationDatum } from '@store/Organizations/Organization.dto';
-import { AddSearchOrganizationsUsecase } from '@domain/usecases/command-menu/add-search-organizations.usecase';
+import { EditLatestOrganizationActive } from '@domain/usecases/command-menu/edit-latest-org.usecase';
 
 import { useStore } from '@shared/hooks/useStore';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
-const usecase = new AddSearchOrganizationsUsecase();
+const usecase = new EditLatestOrganizationActive();
 
 export const EditLatestOrgActive = observer(() => {
   const store = useStore();
@@ -18,7 +18,7 @@ export const EditLatestOrgActive = observer(() => {
     store.ui.commandMenu.setType('ContactCommands');
   };
 
-  const organizations = usecase.mixedOptions;
+  const organizations = store.organizations.toArray();
   const contactStore = store.contacts.value.get(context.ids?.[0] as string);
 
   if (!contactStore) return null;
@@ -47,7 +47,7 @@ export const EditLatestOrgActive = observer(() => {
   };
 
   return (
-    <Command shouldFilter={false}>
+    <Command>
       <CommandInput
         label={label}
         value={usecase.searchTerm}
