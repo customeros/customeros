@@ -25,3 +25,14 @@ func MapOnboardingStatusFromModel(input model.OnboardingStatus) neo4jenum.Onboar
 func MapOnboardingStatusToModel(input neo4jenum.OnboardingStatus) model.OnboardingStatus {
 	return onboardingStatusByValue[input]
 }
+
+func MapOnboardingStatusFromString(input *string) string {
+	if input == nil {
+		return ""
+	}
+	if v, exists := onboardingStatusByModel[model.OnboardingStatus(*input)]; exists {
+		return string(v)
+	} else {
+		return ""
+	}
+}
