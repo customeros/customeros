@@ -1,0 +1,63 @@
+package service
+
+import (
+	"context"
+	"errors"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/clients"
+	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/enum"
+)
+
+type AIService interface {
+	AskAI(ctx context.Context, model enum.AIModel, prompt *string) (*string, error)
+}
+
+type aiService struct {
+	config   *config.Config
+	services *Services
+}
+
+func NewAIService(config *config.Config, services *Services) AIService {
+	return &aiService{
+		config:   config,
+		services: services,
+	}
+}
+
+func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, prompt *string) (*string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AIModelService.AskAI")
+	defer span.Finish()
+	span.LogKV("model", model)
+	span.LogKV("prompt", prompt)
+
+	switch model {
+	case
+		enum.AIModelAnthropicHaiku,
+		enum.AIModelAnthropicSonnet:
+
+		return s.askAnthropic(ctx, model, prompt)
+
+	default:
+		err := errors.New("Unsupported model")
+		return nil, err
+	}
+}
+
+func (s *aiService) askAnthropic(ctx context.Context, model enum.AIModel, prompt *string) (*string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AIModelService.AskAnthropic")
+	defer span.Finish()
+
+	// setup client
+	client := clients.NewAnthropicClient(s.config, model)
+	response, err := client.Invoke(ctx, prompt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &response, nil
+}

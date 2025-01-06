@@ -4,20 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"time"
+
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/logger"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"io"
-	"net/http"
-	"net/url"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/logger"
 )
 
 type ScrapinService interface {
