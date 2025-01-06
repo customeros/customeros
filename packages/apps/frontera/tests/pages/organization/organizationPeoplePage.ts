@@ -5,10 +5,8 @@ import {
   writeTextInLocator,
   createRequestPromise,
   createResponsePromise,
-  ensureLocatorIsVisible,
   clickLocatorThatIsVisible,
   clickLocatorsThatAreVisible,
-  doubleClickLocatorThatIsVisible,
 } from '../../helper';
 
 export class OrganizationPeoplePage {
@@ -19,27 +17,24 @@ export class OrganizationPeoplePage {
   private page: Page;
 
   private orgPeopleAddSomeone = 'button[data-test="org-people-add-someone"]';
+  private orgPeopleAddByName = 'button[data-test="org-people-add-by-name"]';
   private orgPeopleAddContact = 'button[data-test="org-people-add-contact"]';
+  private orgPeopleCollapse = 'button[data-test="org-people-collapse"]';
   private orgPeopleContactName = 'input[data-test="org-people-contact-name"]';
   private orgPeopleContactTitle = 'input[data-test="org-people-contact-title"]';
-  private orgPeopleContactJobRoles =
-    'div[data-test="org-people-contact-job-roles"]';
-  private jobRoleInfluencer = 'div[role="option"]:has-text("Influencer")';
-  private orgPeopleContactClose =
-    'button[data-test="org-people-contact-close"]';
-  private orgPeopleContactDelete =
-    'button[data-test="org-people-contact-delete"]';
-  private orgPeopleContactEmail = 'input[data-test="org-people-contact-email"]';
-  private orgPeopleContactPhoneNumber =
-    'input[data-test="org-people-contact-phone-number"]';
-  private orgPeopleContactPersonas =
-    'div[data-test="org-people-contact-personas"]';
-  private orgPeopleContactSocialLink =
-    'input[data-test="org-people-contact-social-link"]';
-  private orgPeopleContactTimezone =
-    'div[data-test="org-people-contact-timezone"]';
+  private orgPeopleContactEmail = 'p[data-test="add-work-email"]';
+  private orgPeopleLinkedInUrl = 'span[data-test="org-people-linkedin"]';
+  private orgPeopleLinkedInInput = 'input[data-test="linkedin-url-input"]';
+  private orgPeopleConfirmLinkedInUrl = 'button[data-test="add-linkedin-url"]';
+  private orgPeopleorgAboutTags = 'div[data-test="org-about-tags"]';
 
   async addContact(contactCreation: string) {
+    await clickLocatorsThatAreVisible(
+      this.page,
+      contactCreation,
+      this.orgPeopleAddByName,
+    );
+
     const createContactResponsePromise = createResponsePromise(
       this.page,
       'contact_CreateForOrganization?.id',
@@ -48,16 +43,16 @@ export class OrganizationPeoplePage {
 
     const contactResponsePromise = createResponsePromise(
       this.page,
-      'contact?.metadata?.id',
+      'ui_contacts',
       undefined,
     );
     const organizationResponsePromise = createResponsePromise(
       this.page,
-      'organization?.metadata?.id',
+      'ui_organizations',
       undefined,
     );
 
-    await clickLocatorsThatAreVisible(this.page, contactCreation);
+    await clickLocatorsThatAreVisible(this.page, this.orgPeopleAddContact);
 
     await Promise.all([
       createContactResponsePromise,
@@ -68,6 +63,7 @@ export class OrganizationPeoplePage {
 
   async addNameToContact() {
     await this.page.waitForTimeout(3000);
+    await clickLocatorThatIsVisible(this.page, this.orgPeopleCollapse);
 
     const orgPeopleContactNameInput = this.page.locator(
       this.orgPeopleContactName,
@@ -117,34 +113,6 @@ export class OrganizationPeoplePage {
     await expect(orgPeopleContactTitleInput).toHaveValue('CTO');
   }
 
-  async addJobRolesToContact() {
-    const orgPeopleContactJobRolesInput = this.page.locator(
-      this.orgPeopleContactJobRoles,
-    );
-
-    await orgPeopleContactJobRolesInput.click();
-
-    await this.page.waitForSelector('[role="listbox"]', { state: 'visible' });
-
-    const influencerOption = this.page.locator(this.jobRoleInfluencer);
-
-    const requestPromise = createRequestPromise(
-      this.page,
-      'description',
-      'Influencer',
-    );
-
-    const responsePromise = createResponsePromise(
-      this.page,
-      'jobRole_Update?.id',
-      undefined,
-    );
-
-    await influencerOption.click();
-    await this.page.waitForTimeout(500);
-    await Promise.all([requestPromise, responsePromise]);
-  }
-
   private async addDetailsToCustomer() {
     await clickLocatorThatIsVisible(this.page, this.orgPeopleContactTitle);
 
@@ -154,56 +122,24 @@ export class OrganizationPeoplePage {
       'contact@org.com',
     );
 
-    page = await writeTextInLocator(
-      page,
-      this.orgPeopleContactPhoneNumber,
-      '0741111111',
-    );
-
-    page = await writeTextInLocator(
-      page,
-      this.orgPeopleContactPersonas,
-      'testPersonas',
-    );
-
     await page.keyboard.press('Enter');
-    await clickLocatorsThatAreVisible(
-      page,
-      this.orgPeopleContactClose,
-      this.orgPeopleContactTitle,
-    );
 
     const contactLinkedInProfile = 'www.linkedin.com/in/' + randomUUID();
 
+    await clickLocatorThatIsVisible(page, this.orgPeopleLinkedInUrl);
     page = await writeTextInLocator(
-      this.page,
-      this.orgPeopleContactSocialLink,
-      contactLinkedInProfile,
-    );
-
-    const requestPromise = createRequestPromise(
-      this.page,
-      'url',
-      contactLinkedInProfile,
-    );
-
-    const responsePromise = createResponsePromise(
-      this.page,
-      'contact_AddSocial?.id',
-      undefined,
-    );
-
-    await clickLocatorsThatAreVisible(page, this.orgPeopleContactTimezone);
-    await Promise.all([requestPromise, responsePromise]);
-
-    await doubleClickLocatorThatIsVisible(page, this.orgPeopleContactTimezone);
-
-    const locator = await ensureLocatorIsVisible(
       page,
-      this.orgPeopleContactTimezone,
+      this.orgPeopleLinkedInInput,
+      contactLinkedInProfile,
+    );
+    await clickLocatorThatIsVisible(page, this.orgPeopleConfirmLinkedInUrl);
+
+    page = await writeTextInLocator(
+      page,
+      this.orgPeopleorgAboutTags,
+      'testPersonas',
     );
 
-    await locator.pressSequentially('new salem');
     await page.keyboard.press('Enter');
   }
 
@@ -213,19 +149,6 @@ export class OrganizationPeoplePage {
     const { contactName, contactId } = await this.addNameToContact();
 
     await this.addTitleToContact();
-    await this.addJobRolesToContact();
-    await this.addDetailsToCustomer();
-
-    return { contactName, contactId };
-  }
-
-  async createNextContact() {
-    await this.addContact(this.orgPeopleAddContact);
-
-    const { contactName, contactId } = await this.addNameToContact();
-
-    await this.addTitleToContact();
-    await this.addJobRolesToContact();
     await this.addDetailsToCustomer();
 
     return { contactName, contactId };

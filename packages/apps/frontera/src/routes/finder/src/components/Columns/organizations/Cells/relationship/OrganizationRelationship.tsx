@@ -29,8 +29,8 @@ export const OrganizationRelationshipCell = observer(
         }}
       >
         <p
+          data-test='organization-relationship-in-all-orgs-table'
           className={cn('text-gray-700', !value && 'text-gray-400')}
-          data-test='organization-relationship-in-all-orgs-table truncate'
         >
           {value?.label
             ? value.label

@@ -44,6 +44,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
           {allEmails.length === 0 && (
             <div className='flex w-full gap-2 items-center'>
               <p
+                data-test='add-work-email'
                 className='text-gray-400 cursor-pointer text-sm'
                 onClick={() => {
                   store.ui.commandMenu.setContext({

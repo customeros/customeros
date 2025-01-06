@@ -26,10 +26,11 @@ export class OrganizationsPage {
     'button[data-test="create-organization-from-table"]';
   private organizationsCreateNewOrgOrgName =
     'input[data-test="organizations-create-new-org-org-name"]';
+  private addOrgModalAddOrg = 'div[data-test="add-org-modal-add-org"]';
   private organizationNameInAllOrgsTable =
     'p[data-test="organization-name-in-all-orgs-table"]';
   private organizationWebsiteInAllOrgsTable =
-    'p[data-test="organization-website-in-all-orgs-table"]';
+    'span[data-test="organization-website-in-all-orgs-table"]';
   private organizationRelationshipInAllOrgsTable =
     'p[data-test="organization-relationship-in-all-orgs-table"]';
   private organizationHealthInAllOrgsTable =
@@ -37,11 +38,11 @@ export class OrganizationsPage {
   private organizationNextRenewalInAllOrgsTable =
     'span[data-test="organization-next-renewal-in-all-orgs-table"]';
   private organizationOnboardingInAllOrgsTable =
-    'p[data-test="organization-onboarding-in-all-orgs-table"]';
+    'span[data-test="organization-onboarding-in-all-orgs-table"]';
   private organizationArrForecastInAllOrgsTable =
     'span[data-test="organization-arr-forecast-in-all-orgs-table"]';
   private organizationOwnerInAllOrgsTable =
-    'p[data-test="organization-owner-in-all-orgs-table"]';
+    'div[data-test="organization-owner-in-all-orgs-table"]';
   private organizationContactsInAllOrgsTable =
     'div[data-test="organization-contacts-in-all-orgs-table"]';
   private organizationStageInAllOrgsTable =
@@ -65,18 +66,24 @@ export class OrganizationsPage {
   }
 
   async addInitialOrganization() {
-    return await this.addOrganization(this.createOrganizationFromTable);
+    const initialOrg = true;
+
+    return await this.addOrganization(this.allOrgsAddOrg, initialOrg);
   }
 
   async addNonInitialOrganization(testInfo: TestInfo) {
+    const initialOrg = false;
+
     return await this.addOrganization(
       this.createOrganizationFromTable,
+      initialOrg,
       testInfo,
     );
   }
 
   async addOrganization(
     organizationCreatorLocator: string,
+    initialOrg: boolean,
     testInfo?: TestInfo,
   ) {
     await clickLocatorsThatAreVisible(
@@ -101,9 +108,10 @@ export class OrganizationsPage {
 
     await this.page.keyboard.type(organizationName);
     await this.page.waitForTimeout(300);
-    await this.page.keyboard.press('Enter');
-
+    await clickLocatorThatIsVisible(this.page, this.addOrgModalAddOrg);
     await Promise.all([requestPromise, responsePromise]);
+
+    initialOrg && (await this.page.reload());
     await this.page.waitForSelector(
       `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,
       { timeout: 30000 },
@@ -129,16 +137,11 @@ export class OrganizationsPage {
     const maxAttempts = 3;
     const retryInterval = 20000;
 
-    const newEntry = this.page
-      .locator(
-        `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,
-      )
-      .locator('..')
-      .locator('..')
-      .locator('..');
+    const newEntry = this.page.locator(
+      `${this.finderTableOrganizations} div:has(${this.organizationNameInAllOrgsTable}:text("${organizationName}"))`,
+    );
 
     await this.page.waitForTimeout(2000);
-    // await this.page.reload();
     await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
 
     await assertWithRetry(async () => {
