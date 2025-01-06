@@ -332,6 +332,8 @@ export class AddSearchOrganizationsUsecase {
 
     if (option?.source !== 'global') {
       this.root.ui.commandMenu.toggle('AddNewOrganization');
+      this.reset();
+      this.searchGlobal();
 
       return;
     }
