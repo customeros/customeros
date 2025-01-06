@@ -1,0 +1,21 @@
+.donut * {
+  image-rendering: crisp-edges;
+}
+
+@keyframes wobble {
+  0% {
+    transform: rotate3d(1, -1, 0, 10deg);
+  }
+  25% {
+    transform: rotate3d(1, 1, 0, 10deg);
+  }
+  50% {
+    transform: rotate3d(-1, 1, 0, 10deg);
+  }
+  75% {
+    transform: rotate3d(-1, -1, 0, 10deg);
+  }
+  100% {
+    transform: rotate3d(1, -1, 0, 10deg);
+  }
+}
