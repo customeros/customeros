@@ -186,6 +186,7 @@ func (s *trackingService) createOrganizationFromTrackingRecord(ctx context.Conte
 		err = s.services.CommonServices.PostgresRepositories.TrackingRepository.SetStateById(ctx, r.ID, entity.TrackingIdentificationStateDomainNotValid)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			return err, true
 		}
 		tracing.TraceErr(span, errors.New("company domain is empty or not valid"))
 		return nil, false
