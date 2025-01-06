@@ -309,6 +309,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         this.value.delete(tempId);
 
         this.version++;
+        this.totalElements++;
 
         tempId = record.id;
 
