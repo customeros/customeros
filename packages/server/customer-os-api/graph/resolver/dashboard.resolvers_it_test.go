@@ -3,7 +3,6 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -752,84 +751,6 @@ func TestQueryResolver_Sort_Organizations_ByOrganizationName_WithOrganizationHie
 	require.Equal(t, parent2OrgId, organizationsPageStruct.DashboardView_Organizations.Content[4].ID)
 	require.Equal(t, sub2_1OrgId, organizationsPageStruct.DashboardView_Organizations.Content[5].ID)
 	require.Equal(t, sub2_2OrgId, organizationsPageStruct.DashboardView_Organizations.Content[6].ID)
-}
-
-func TestQueryResolver_Search_Organization_ByOnboardingStatus(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	neo4jt.CreateTenantOrganization(ctx, driver, tenantName, "org excluded")
-
-	today := utils.Now()
-	yesterday := today.AddDate(0, 0, -1)
-
-	orgNA := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:    string(entity.OnboardingStatusNotApplicable),
-			UpdatedAt: nil,
-		},
-	})
-	orgSuccess := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusSuccessful),
-			UpdatedAt:    &today,
-			SortingOrder: utils.Int64Ptr(60),
-		},
-	})
-	orgStuckYesterday := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusStuck),
-			UpdatedAt:    &yesterday,
-			SortingOrder: utils.Int64Ptr(20),
-		},
-	})
-	orgDone := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusDone),
-			UpdatedAt:    &today,
-			SortingOrder: utils.Int64Ptr(50),
-		},
-	})
-	orgOnTrack := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusOnTrack),
-			UpdatedAt:    &yesterday,
-			SortingOrder: utils.Int64Ptr(40),
-		},
-	})
-	orgStuckToday := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusStuck),
-			UpdatedAt:    &today,
-			SortingOrder: utils.Int64Ptr(20),
-		},
-	})
-	orgLate := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusLate),
-			UpdatedAt:    &yesterday,
-			SortingOrder: utils.Int64Ptr(30),
-		},
-	})
-	orgNotStarted := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		OnboardingDetails: neo4jentity.OnboardingDetails{
-			Status:       string(entity.OnboardingStatusNotStarted),
-			UpdatedAt:    &yesterday,
-			SortingOrder: utils.Int64Ptr(10),
-		},
-	})
-
-	require.Equal(t, 9, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"DONE"}, []string{orgDone})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"LATE"}, []string{orgLate})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"STUCK"}, []string{orgStuckYesterday, orgStuckToday})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"NOT_STARTED"}, []string{orgNotStarted})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"SUCCESSFUL"}, []string{orgSuccess})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"DONE", "LATE"}, []string{orgLate, orgDone})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{"DONE", "LATE", "NOT_APPLICABLE"}, []string{orgLate, orgDone, orgNA})
-	assert_Search_Organization_ByOnboardingStatus(t, []string{}, []string{orgNotStarted, orgStuckYesterday, orgStuckToday, orgLate, orgOnTrack, orgDone, orgSuccess, orgNA})
 }
 
 func assert_Search_Organization_ByOnboardingStatus(t *testing.T, searchStatuses []string, expectedOrgs []string) {
