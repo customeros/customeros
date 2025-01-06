@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -31,10 +30,6 @@ func OnFlowAgentEventCreated(ctx context.Context, s *service.Services, input any
 		tracing.TraceErr(span, err)
 		return err
 	}
-
-	ctx = common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant: flowAgentEvent.Tenant,
-	})
 
 	// determine event handler
 	switch flowAgentEvent.Name.Agent() {
