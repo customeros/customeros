@@ -207,8 +207,6 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 	switch c := cmd.(type) {
 	case *command.UpsertCustomFieldCommand:
 		return a.upsertCustomField(ctx, c)
-	case *command.UpdateOnboardingStatusCommand:
-		return a.updateOnboardingStatus(ctx, c)
 	case *command.UpdateOrganizationOwnerCommand:
 		return a.UpdateOrganizationOwner(ctx, c)
 
@@ -343,32 +341,6 @@ func (a *OrganizationAggregate) upsertCustomField(ctx context.Context, cmd *comm
 		return errors.Wrap(err, "NewOrganizationUpsertCustomField")
 	}
 	eventstore.EnrichEventWithMetadata(&event, &span, cmd.Tenant, cmd.LoggedInUserId)
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) updateOnboardingStatus(ctx context.Context, cmd *command.UpdateOnboardingStatusCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.updateOnboardingStatus")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
-
-	event, err := organizationEvents.NewUpdateOnboardingStatusEvent(a, cmd.Status, cmd.Comments, cmd.LoggedInUserId, cmd.CausedByContractId, updatedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewUpdateOnboardingStatusEvent")
-	}
-
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: a.GetTenant(),
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.AppSource,
-	})
 
 	return a.Apply(event)
 }

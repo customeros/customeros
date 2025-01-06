@@ -39,6 +39,8 @@ type OrganizationService interface {
 	AddParentOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, parentOrganizationId, subOrganizationId, relationType string) error
 	RemoveParentOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, parentOrganizationId, subOrganizationId string) error
 
+	UpdateOnboardingStatus(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string, dataFields data_fields.OrganizationOnboardingStatusFields) error
+
 	GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error)
 	GetMergedOrganizationIds(ctx context.Context, mergedAfter time.Time) ([]string, error)
 	RequestRefreshLastTouchpoint(ctx context.Context, organizationId string) error
@@ -730,6 +732,116 @@ func (s *organizationService) RemoveParentOrganization(ctx context.Context, txWi
 
 			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, parentOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, subOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *organizationService) UpdateOnboardingStatus(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string, dataFields data_fields.OrganizationOnboardingStatusFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateOnboardingStatus")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, organizationId)
+	tracing.LogObjectAsJson(span, "dataFields", dataFields)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// validate parent and sub organizations exist
+	err = s.ValidateOrganizationExists(ctx, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	organizationEntity, err := s.GetById(ctx, tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		err = s.services.Neo4jRepositories.OrganizationWriteRepository.UpdateOnboardingStatus(ctx, txWithPostCommit.Tx, tenant, organizationId, dataFields)
+		if err != nil {
+			return nil, err
+		}
+
+		if utils.IfNotNilString(dataFields.CausedByContractId) != "" {
+			err = s.services.Neo4jRepositories.ContractWriteRepository.ContractCausedOnboardingStatusChange(ctx, txWithPostCommit.Tx, tenant, utils.IfNotNilString(dataFields.CausedByContractId))
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			if dataFields.Status == nil || organizationEntity.OnboardingDetails.Status == dataFields.Status.String() {
+				return nil
+			}
+
+			type ActionOnboardingStatusMetadata struct {
+				Status     string `json:"status"`
+				Comments   string `json:"comments"`
+				UserId     string `json:"userId"`
+				ContractId string `json:"contractId"`
+			}
+
+			metadata, _ := utils.ToJson(ActionOnboardingStatusMetadata{
+				Status:     dataFields.Status.String(),
+				Comments:   utils.IfNotNilString(dataFields.Comments),
+				UserId:     common.GetUserIdFromContext(ctx),
+				ContractId: utils.IfNotNilString(dataFields.CausedByContractId),
+			})
+			message := ""
+			userName := ""
+			if common.GetUserIdFromContext(ctx) != "" {
+				userEntity, err := s.services.UserService.GetById(ctx, common.GetUserIdFromContext(ctx))
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil
+				}
+				userName = userEntity.GetFullName()
+			}
+			if common.GetUserIdFromContext(ctx) != "" {
+				message = fmt.Sprintf("%s changed the onboarding status to %s", userName, dataFields.Status.ReadableStringForActionMessage())
+			} else {
+				message = fmt.Sprintf("The onboarding status was automatically set to %s", dataFields.Status.ReadableStringForActionMessage())
+			}
+
+			extraActionProperties := map[string]interface{}{
+				"status":   dataFields.Status.String(),
+				"comments": utils.IfNotNilString(dataFields.Comments),
+			}
+			_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			return nil
+		})
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// add events to both parent and sub organizations
+			err = s.services.RabbitMQService.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.UpdateOrganizationOnboardingStatus{dataFields})
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 			return nil
 		})

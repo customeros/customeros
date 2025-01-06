@@ -20,7 +20,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -246,139 +245,11 @@ func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt 
 	return nil
 }
 
-func (h *OrganizationEventHandler) OnUpdateOnboardingStatus(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnUpdateOnboardingStatus")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.UpdateOnboardingStatusEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-
-	organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Failed to get organization %s: %s", organizationId, err.Error())
-		return err
-	}
-	if organizationDbNode == nil {
-		err = errors.New(fmt.Sprintf("Organization %s not found", organizationId))
-		tracing.TraceErr(span, err)
-		return nil
-	}
-	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-
-	err = h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateOnboardingStatus(ctx, eventData.Tenant, organizationId, eventData.Status, eventData.Comments, getOrderForOnboardingStatus(eventData.Status), eventData.UpdatedAt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Failed to update onboarding status for organization %s: %s", organizationId, err.Error())
-		return err
-	}
-
-	if eventData.CausedByContractId != "" {
-		err = h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.ContractCausedOnboardingStatusChange(ctx, eventData.Tenant, eventData.CausedByContractId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Failed to update contract %s caused onboarding status change: %s", eventData.CausedByContractId, err.Error())
-		}
-	}
-
-	if organizationEntity.OnboardingDetails.Status != eventData.Status {
-		err = h.saveOnboardingStatusChangeAction(ctx, organizationId, eventData, span)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Failed to save onboarding status change action for organization %s: %s", organizationId, err.Error())
-		}
-	}
-
-	h.services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
-}
-
-func getOrderForOnboardingStatus(status string) *int64 {
-	switch status {
-	case string(model.OnboardingStatusNotStarted):
-		return utils.Int64Ptr(constants.OnboardingStatus_Order_NotStarted)
-	case string(model.OnboardingStatusOnTrack):
-		return utils.Int64Ptr(constants.OnboardingStatus_Order_OnTrack)
-	case string(model.OnboardingStatusLate):
-		return utils.Int64Ptr(constants.OnboardingStatus_Order_Late)
-	case string(model.OnboardingStatusStuck):
-		return utils.Int64Ptr(constants.OnboardingStatus_Order_Stuck)
-	case string(model.OnboardingStatusDone):
-		return utils.Int64Ptr(constants.OnboardingStatus_Order_Done)
-	case string(model.OnboardingStatusSuccessful):
-		return utils.Int64Ptr(constants.OnboardingStatus_Order_Successful)
-	default:
-		return nil
-	}
-}
-
 type ActionOnboardingStatusMetadata struct {
 	Status     string `json:"status"`
 	Comments   string `json:"comments"`
 	UserId     string `json:"userId"`
 	ContractId string `json:"contractId"`
-}
-
-func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.Context, organizationId string, eventData events.UpdateOnboardingStatusEvent, span opentracing.Span) error {
-	metadata, _ := utils.ToJson(ActionOnboardingStatusMetadata{
-		Status:     eventData.Status,
-		Comments:   eventData.Comments,
-		UserId:     eventData.UpdatedByUserId,
-		ContractId: eventData.CausedByContractId,
-	})
-	message := ""
-	userName := ""
-	if eventData.UpdatedByUserId != "" {
-		userDbNode, err := h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, eventData.UpdatedByUserId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Failed to get user %s: %s", eventData.UpdatedByUserId, err.Error())
-		}
-		if userDbNode != nil {
-			user := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
-			userName = user.GetFullName()
-		}
-	}
-	if eventData.UpdatedByUserId != "" {
-		message = fmt.Sprintf("%s changed the onboarding status to %s", userName, onboardingStatusReadableStringForActionMessage(eventData.Status))
-	} else {
-		message = fmt.Sprintf("The onboarding status was automatically set to %s", onboardingStatusReadableStringForActionMessage(eventData.Status))
-	}
-
-	extraActionProperties := map[string]interface{}{
-		"status":   eventData.Status,
-		"comments": eventData.Comments,
-	}
-	_, err := h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
-	return err
-}
-
-func onboardingStatusReadableStringForActionMessage(status string) string {
-	switch status {
-	case string(neo4jenum.OnboardingStatusNotApplicable):
-		return "Not applicable"
-	case string(neo4jenum.OnboardingStatusNotStarted):
-		return "Not started"
-	case string(neo4jenum.OnboardingStatusOnTrack):
-		return "On track"
-	case string(neo4jenum.OnboardingStatusLate):
-		return "Late"
-	case string(neo4jenum.OnboardingStatusStuck):
-		return "Stuck"
-	case string(neo4jenum.OnboardingStatusDone):
-		return "Done"
-	case string(neo4jenum.OnboardingStatusSuccessful):
-		return "Successful"
-	default:
-		return status
-	}
 }
 
 func (h *OrganizationEventHandler) OnCreateBillingProfile(ctx context.Context, evt eventstore.Event) error {
