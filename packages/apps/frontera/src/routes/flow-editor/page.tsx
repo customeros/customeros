@@ -26,7 +26,7 @@ export const FlowEditor = observer(() => {
   const store = useStore();
   const navigate = useNavigate();
   const { id } = useParams();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => !store.flows.isBootstrapped);
 
   const [hasNewChanges, setHasNewChanges] = useState(false);
   const [isSidePanelOpen, setIsSidePanelOpen] = useState<boolean>(false);
