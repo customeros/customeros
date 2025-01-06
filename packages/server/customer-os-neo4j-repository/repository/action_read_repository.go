@@ -71,15 +71,15 @@ func (r *actionReadRepository) GetLastAction(ctx context.Context, tenant, entity
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("entityId", entityId),
+	tracing.TagEntity(span, entityId)
+	span.LogFields(
 		log.String("entityType", entityType.String()),
 		log.String("actionType", string(actionType)))
 
 	cypher := fmt.Sprintf(`MATCH  (n:%s_%s {id:$entityId}) `, entityType.Neo4jLabel(), tenant)
 	cypher += `WITH n
 			  MATCH (n)<-[:ACTION_ON]-(a:Action {type:$type})
-			  ORDER BY a.createdAt DESC
-			  RETURN a limit 1`
+			  RETURN a limit 1 ORDER BY a.createdAt DESC`
 	params := map[string]any{
 		"entityId": entityId,
 		"type":     actionType,
