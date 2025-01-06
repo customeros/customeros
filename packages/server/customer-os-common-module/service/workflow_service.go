@@ -255,6 +255,8 @@ func (w *workflowService) GetFlowExecutionRecordById(ctx context.Context, id str
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.GetFlowExecutionRecordById")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	span.LogKV("id", id)
+	tenant := common.GetTenantFromContext(ctx)
 
 	if id == "" {
 		err := errors.New("ID is empty")
@@ -262,7 +264,6 @@ func (w *workflowService) GetFlowExecutionRecordById(ctx context.Context, id str
 		return nil, err
 	}
 
-	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("Tenant is not set")
 		tracing.TraceErr(span, err)
