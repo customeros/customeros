@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -24,6 +25,27 @@ func (r *queryResolver) GlobalOrganizationsSearch(ctx context.Context, searchTer
 
 	var globalOrganizationEntities []*postgresentity.GlobalOrganization
 	var err error
+
+	protocols := []string{
+		"https://www.",
+		"http://www.",
+		"https://",
+		"http://",
+		"www.",
+	}
+	searchTerm = strings.ToLower(searchTerm)
+
+	for _, p := range protocols {
+		if strings.HasPrefix(searchTerm, p) {
+			// If exactly matches the protocol, do not strip the prefix
+			if len(searchTerm) == len(p) {
+				break
+			}
+			// Otherwise, strip the prefix
+			searchTerm = searchTerm[len(p):]
+			break
+		}
+	}
 
 	if searchTerm == "" {
 		globalOrganizationEntities, err = r.Services.CommonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomains(ctx, r.cfg.AppConfig.DefaultGlobalOrgPrimaryDomainsInSearch)
