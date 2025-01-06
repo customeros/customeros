@@ -333,7 +333,7 @@ func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Contex
 
 	err := r.Services.CommonServices.OrganizationService.UpdateOnboardingStatus(ctx, nil, input.OrganizationID, data_fields.OrganizationOnboardingStatusFields{
 		Comments: input.Comments,
-		Status:   utils.ToPtr(mapper.MapOnboardingStatusFromModel(input.Status)),
+		Status:   utils.ToPtr(enummapper.MapOnboardingStatusFromModel(input.Status)),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

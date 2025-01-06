@@ -1,11 +1,11 @@
 package mapper
 
 import (
-	localentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
+	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"time"
 )
 
@@ -28,14 +28,14 @@ func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, ou
 	output.Public = utils.BoolPtr(entity.IsPublic)
 	output.Employees = utils.Int64Ptr(entity.Employees)
 	output.Market = MapMarketToModel(entity.Market)
-	output.LastFundingRound = mapper.MapFundingRoundToModel(entity.LastFundingRound)
+	output.LastFundingRound = enummapper.MapFundingRoundToModel(entity.LastFundingRound)
 	output.YearFounded = entity.YearFounded
 	output.SlackChannelID = utils.StringPtr(entity.SlackChannelId)
 	output.LogoURL = utils.StringPtr(entity.LogoUrl)
 	output.IconURL = utils.StringPtr(entity.IconUrl)
 	output.Notes = utils.StringPtr(entity.Note)
-	output.Stage = utils.ToPtr(mapper.MapStageToModel(entity.Stage))
-	output.Relationship = utils.ToPtr(mapper.MapRelationshipToModel(entity.Relationship))
+	output.Stage = utils.ToPtr(enummapper.MapStageToModel(entity.Stage))
+	output.Relationship = utils.ToPtr(enummapper.MapRelationshipToModel(entity.Relationship))
 	output.LeadSource = utils.StringPtr(entity.LeadSource)
 
 	output.Ltv = utils.Float64Ptr(entity.DerivedData.Ltv)
@@ -47,12 +47,12 @@ func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, ou
 	output.RenewalSummaryNextRenewalAt = entity.RenewalSummary.NextRenewalAt
 	output.RenewalSummaryRenewalLikelihood = MapOpportunityRenewalLikelihoodToModelPtr(entity.RenewalSummary.RenewalLikelihood)
 
-	output.OnboardingStatus = MapOnboardingStatusToModel(localentity.GetOnboardingStatus(entity.OnboardingDetails.Status))
+	output.OnboardingStatus = enummapper.MapOnboardingStatusToModel(neo4jenum.DecodeOnboardingStatus(entity.OnboardingDetails.Status))
 	output.OnboardingStatusUpdatedAt = entity.OnboardingDetails.UpdatedAt
 	output.OnboardingComments = utils.StringPtr(entity.OnboardingDetails.Comments)
 
 	output.LastTouchPointAt = entity.LastTouchpointAt
-	output.LastTouchPointType = mapper.MapLastTouchpointTypeToModel(entity.LastTouchpointType)
+	output.LastTouchPointType = enummapper.MapLastTouchpointTypeToModel(entity.LastTouchpointType)
 
 	output.EnrichedAt = entity.EnrichDetails.EnrichedAt
 	output.EnrichedRequestedAt = entity.EnrichDetails.EnrichRequestedAt

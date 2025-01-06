@@ -1,13 +1,13 @@
 package mapper
 
 import (
-	localentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
+	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"time"
 )
 
@@ -36,7 +36,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		Public:             utils.BoolPtr(entity.IsPublic),
 		Employees:          utils.Int64Ptr(entity.Employees),
 		Market:             MapMarketToModel(entity.Market),
-		LastFundingRound:   mapper.MapFundingRoundToModel(entity.LastFundingRound),
+		LastFundingRound:   enummapper.MapFundingRoundToModel(entity.LastFundingRound),
 		LastFundingAmount:  utils.StringPtr(entity.LastFundingAmount),
 		YearFounded:        entity.YearFounded,
 		Headquarters:       utils.StringPtr(entity.Headquarters),
@@ -56,23 +56,23 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 				RenewalLikelihood: MapOpportunityRenewalLikelihoodToModelPtr(entity.RenewalSummary.RenewalLikelihood),
 			},
 			Onboarding: &model.OnboardingDetails{
-				Status:    MapOnboardingStatusToModel(localentity.GetOnboardingStatus(entity.OnboardingDetails.Status)),
+				Status:    enummapper.MapOnboardingStatusToModel(neo4jenum.DecodeOnboardingStatus(entity.OnboardingDetails.Status)),
 				UpdatedAt: entity.OnboardingDetails.UpdatedAt,
 				Comments:  utils.StringPtr(entity.OnboardingDetails.Comments),
 			},
 			Churned:     entity.DerivedData.ChurnedAt,
 			Ltv:         utils.Float64Ptr(entity.DerivedData.Ltv),
-			LtvCurrency: utils.ToPtr(mapper.MapCurrencyToModel(entity.DerivedData.LtvCurrency)),
+			LtvCurrency: utils.ToPtr(enummapper.MapCurrencyToModel(entity.DerivedData.LtvCurrency)),
 		},
 		LastTouchpoint: &model.LastTouchpoint{
 			LastTouchPointTimelineEventID: entity.LastTouchpointId,
 			LastTouchPointAt:              entity.LastTouchpointAt,
-			LastTouchPointType:            mapper.MapLastTouchpointTypeToModel(entity.LastTouchpointType),
+			LastTouchPointType:            enummapper.MapLastTouchpointTypeToModel(entity.LastTouchpointType),
 		},
 		Hide:             entity.Hide,
 		Notes:            utils.StringPtr(entity.Note),
-		Stage:            utils.ToPtr(mapper.MapStageToModel(entity.Stage)),
-		Relationship:     utils.ToPtr(mapper.MapRelationshipToModel(entity.Relationship)),
+		Stage:            utils.ToPtr(enummapper.MapStageToModel(entity.Stage)),
+		Relationship:     utils.ToPtr(enummapper.MapRelationshipToModel(entity.Relationship)),
 		LeadSource:       utils.StringPtr(entity.LeadSource),
 		StageLastUpdated: entity.StageUpdatedAt,
 		EnrichDetails:    prepareOrganizationEnrichDetails(entity.EnrichDetails.EnrichRequestedAt, entity.EnrichDetails.EnrichedAt, entity.EnrichDetails.EnrichFailedAt),
@@ -87,7 +87,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		UpdatedAt:                     entity.UpdatedAt,
 		LastTouchPointTimelineEventID: entity.LastTouchpointId,
 		LastTouchPointAt:              entity.LastTouchpointAt,
-		LastTouchPointType:            mapper.MapLastTouchpointTypeToModel(entity.LastTouchpointType),
+		LastTouchPointType:            enummapper.MapLastTouchpointTypeToModel(entity.LastTouchpointType),
 	}
 
 	if organization.Relationship != nil && *organization.Relationship == model.OrganizationRelationshipCustomer {
@@ -154,13 +154,13 @@ func MapOrganizationSaveInputToEntity(input model.OrganizationSaveInput) *data_f
 		mapped.Market = utils.StringPtr(MapMarketFromModel(input.Market))
 	}
 	if input.Stage != nil {
-		mapped.Stage = utils.ToPtr(mapper.MapStageFromModel(*input.Stage))
+		mapped.Stage = utils.ToPtr(enummapper.MapStageFromModel(*input.Stage))
 	}
 	if input.Relationship != nil {
-		mapped.Relationship = utils.ToPtr(mapper.MapRelationshipFromModel(*input.Relationship))
+		mapped.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(*input.Relationship))
 	}
 	if input.LastFundingRound != nil {
-		mapped.LastFundingRound = utils.ToPtr(mapper.MapFundingRoundFromModel(input.LastFundingRound))
+		mapped.LastFundingRound = utils.ToPtr(enummapper.MapFundingRoundFromModel(input.LastFundingRound))
 	}
 
 	return &mapped
