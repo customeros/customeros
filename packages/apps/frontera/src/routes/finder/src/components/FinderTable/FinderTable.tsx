@@ -387,6 +387,7 @@ export const FinderTable = observer(() => {
     .with(TableViewType.Organizations, () => enableFeature || true)
     .with(TableViewType.Contacts, () => true)
     .with(TableViewType.Opportunities, () => true)
+    .with(TableViewType.Flow, () => true)
     .otherwise(() => false);
 
   if (checkIfEmpty()) {
