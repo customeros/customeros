@@ -22,13 +22,14 @@ type VerifyService interface {
 }
 
 type verifyService struct {
-	cfg      *config.ValidationAPIConfig
+	cfg      *config.GlobalConfig
 	services *Services
 }
 
-func NewVerifyService(services *Services) VerifyService {
+func NewVerifyService(services *Services, cfg *config.GlobalConfig) VerifyService {
 	return &verifyService{
 		services: services,
+		cfg:      cfg,
 	}
 }
 
@@ -128,7 +129,7 @@ func (s *verifyService) callVerifyAPIForIpData(ctx context.Context, ipAddress st
 		return nil, err
 	}
 	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("POST", s.cfg.Url+"/ipLookup", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", s.cfg.InternalServices.ValidationApiConfig.Url+"/ipLookup", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		return nil, err
@@ -137,7 +138,7 @@ func (s *verifyService) callVerifyAPIForIpData(ctx context.Context, ipAddress st
 	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, s.cfg.ApiKey)
+	req.Header.Set(security.ApiKeyHeader, s.cfg.InternalServices.ValidationApiConfig.ApiKey)
 	req.Header.Set(security.TenantHeader, "")
 
 	// Make the HTTP request

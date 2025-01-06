@@ -135,7 +135,7 @@ func InitServices(globalConfig *config.GlobalConfig, postgresDB *config.Postgres
 	services.TenantService = NewTenantService(log, services)
 	services.TenantSettingsService = NewTenantSettingsService(log, services)
 	services.UserService = NewUserService(services)
-	services.VerifyService = NewVerifyService(services)
+	services.VerifyService = NewVerifyService(services, globalConfig)
 	services.WorkflowService = NewWorkflowService(services)
 	services.WorkspaceService = NewWorkspaceService(services)
 
