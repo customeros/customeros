@@ -31,7 +31,7 @@ type OrganizationService interface {
 
 	CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64) (string, error)
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.OrganizationFields) (string, error)
-	LinkWithDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) error
+	LinkWithDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) (bool, error)
 	UnlinkDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) error
 
 	Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error
@@ -138,8 +138,8 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	createFlow := false
 	organizationId := ""
 
-	// prepare primary domain from website
 	primaryDomain := utils.IfNotNilString(input.PrimaryDomain)
+	// prepare primary domain from website
 	adjustedWebsite := utils.IfNotNilString(input.Website)
 	if input.GlobalOrgId == nil {
 		if utils.IfNotNilString(input.Website) != "" {
@@ -374,26 +374,16 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			}
 		}
 
-		if utils.IfNotNilString(input.Website) != "" && adjustedWebsite != "" {
-			input.Website = utils.StringPtr(adjustedWebsite)
-			if primaryDomain != "" {
-				newDomains = append(newDomains, primaryDomain)
-				err = s.LinkWithDomain(ctx, txWithPostCommit, organizationId, primaryDomain)
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "failed to link with domain"))
-					return nil, err
-				}
-			}
-		}
-
 		if input.Domains != nil && len(input.Domains) > 0 {
 			for _, domain := range input.Domains {
-				err = s.LinkWithDomain(ctx, txWithPostCommit, organizationId, domain)
+				linked, err := s.LinkWithDomain(ctx, txWithPostCommit, organizationId, domain)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err
 				}
-				newDomains = append(newDomains, domain)
+				if linked {
+					newDomains = append(newDomains, domain)
+				}
 			}
 		}
 
@@ -908,7 +898,7 @@ func (s *organizationService) GetPrimaryOrganizationsWithJobRoleForContacts(ctx 
 	return &orgWithJobRoleEntities, nil
 }
 
-func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) error {
+func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.LinkWithDomain")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -919,16 +909,59 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 	err := common.ValidateTenant(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return err
+		return false, err
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
 	if !s.services.DomainService.IsAcceptedDomainForOrganization(ctx, domain) {
-		return nil
+		return false, nil
 	}
 
+	domainLinkedSuccessfully := false
+
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-		domainLinkedSuccessfully, err := s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, txWithPostCommit.Tx, tenant, organizationId, domain)
+
+		_, isPrimary, primaryDomain := s.services.DomainService.CheckDomainWithMailsherpa(ctx, domain)
+		// check if organization other organization is linked with the domain
+		orgByDomainDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Error fetching organization by domain"))
+			return "", err
+		}
+		// organization by domain found
+		if orgByDomainDbNode != nil {
+			organizationByDomainEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgByDomainDbNode)
+			if organizationByDomainEntity.IsHidden() {
+				err = s.Show(ctx, txWithPostCommit, organizationByDomainEntity.ID)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, nil
+				}
+			}
+			return nil, nil
+		}
+		// check if organization other organization is linked with primary domain
+		if !isPrimary && primaryDomain != "" {
+			orgByDomainDbNode, err = s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, primaryDomain)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "Error fetching organization by domain"))
+				return "", err
+			}
+			// organization by domain found
+			if orgByDomainDbNode != nil {
+				organizationByDomainEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgByDomainDbNode)
+				if organizationByDomainEntity.IsHidden() {
+					err = s.Show(ctx, txWithPostCommit, organizationByDomainEntity.ID)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						return nil, nil
+					}
+				}
+				return nil, nil
+			}
+		}
+
+		domainLinkedSuccessfully, err = s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, txWithPostCommit.Tx, tenant, organizationId, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to link domain in neo4j"))
 			return nil, err
@@ -961,7 +994,7 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 		return nil, nil
 	})
 
-	return err
+	return domainLinkedSuccessfully, err
 }
 
 func (s *organizationService) UnlinkDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) error {

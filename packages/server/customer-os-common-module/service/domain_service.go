@@ -26,6 +26,7 @@ type DomainService interface {
 	UpdateDomainPrimaryDetails(ctx context.Context, domain string) error
 	GetDomain(ctx context.Context, domain string) (*neo4jentity.DomainEntity, error)
 	IsAcceptedDomainForOrganization(ctx context.Context, domain string) bool
+	CheckDomainWithMailsherpa(ctx context.Context, domain string) (bool, bool, string)
 }
 
 type domainService struct {
@@ -280,4 +281,17 @@ func (s *domainService) IsAcceptedDomainForOrganization(ctx context.Context, dom
 	}
 
 	return true
+}
+
+func (s *domainService) CheckDomainWithMailsherpa(ctx context.Context, domain string) (bool, bool, string) {
+	if domain == "" {
+		return false, false, ""
+	}
+	isPrimary, primaryDomain := domaincheck.PrimaryDomainCheck(domain)
+
+	accessible := true
+	if !isPrimary && primaryDomain == "" {
+		accessible = false
+	}
+	return accessible, isPrimary, primaryDomain
 }
