@@ -410,6 +410,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 9, ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 10, ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 11, ColumnType: model.ColumnViewTypeOrganizationsParentOrganization.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 12, ColumnType: model.ColumnViewTypeOrganizationsCountry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeOrganizations.String():
@@ -418,7 +419,6 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 1, ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 2, ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 3, ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 24, ColumnType: model.ColumnViewTypeOrganizationsHeadquarters.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 22, ColumnType: model.ColumnViewTypeOrganizationsIndustry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 16, ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 23, ColumnType: model.ColumnViewTypeOrganizationsIsPublic.String(), Width: 100, Visible: true, Name: "", Filter: ""},
@@ -440,6 +440,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 19, ColumnType: model.ColumnViewTypeOrganizationsLeadSource.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 25, ColumnType: model.ColumnViewTypeOrganizationsParentOrganization.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 26, ColumnType: model.ColumnViewTypeOrganizationsUpdatedDate.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 27, ColumnType: model.ColumnViewTypeOrganizationsCountry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeTargets.String():
@@ -463,6 +464,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 16, ColumnType: model.ColumnViewTypeOrganizationsContactCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 17, ColumnType: model.ColumnViewTypeOrganizationsParentOrganization.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 18, ColumnType: model.ColumnViewTypeOrganizationsUpdatedDate.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 19, ColumnType: model.ColumnViewTypeOrganizationsCountry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeUpcomingInvoices.String():
