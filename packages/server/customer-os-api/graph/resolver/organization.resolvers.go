@@ -385,6 +385,27 @@ func (r *mutationResolver) OrganizationUnlinkAllDomains(ctx context.Context, org
 	return outputOrganization, nil
 }
 
+// OrganizationRemoveDomain is the resolver for the organization_RemoveDomain field.
+func (r *mutationResolver) OrganizationRemoveDomain(ctx context.Context, organizationID string, domain string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveDomain", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.domain", domain))
+
+	err := r.Services.CommonServices.OrganizationService.UnlinkDomain(ctx, nil, organizationID, domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to unlink domain %s from organization %s", domain, organizationID)
+		return &model.ActionResponse{
+			Accepted: false,
+		}, nil
+	}
+
+	return &model.ActionResponse{
+		Accepted: true,
+	}, nil
+}
+
 // OrganizationUpdate is the resolver for the organization_Update field.
 func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUpdate", graphql.GetOperationContext(ctx))
