@@ -164,7 +164,6 @@ export class ContractsStore implements GroupStore<Contract> {
 
     record?.draft();
     record?.value.contracts?.unshift(newContract.value.metadata.id);
-    record?.commit({ syncOnly: true });
 
     try {
       const { contract_Create } = await this.service.createContract({
@@ -178,6 +177,9 @@ export class ContractsStore implements GroupStore<Contract> {
 
         this.value.set(serverId, newContract);
         this.value.delete(tempId);
+
+        record!.value.contracts[0] = serverId;
+        record?.commit({ syncOnly: true });
 
         this.sync({ action: 'APPEND', ids: [serverId] });
       });
