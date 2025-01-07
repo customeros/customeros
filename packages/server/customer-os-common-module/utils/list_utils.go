@@ -60,6 +60,9 @@ func LowercaseSliceOfStrings(arr []string) []string {
 }
 
 func Contains(slice []string, value string) bool {
+	if slice == nil {
+		return false
+	}
 	for _, v := range slice {
 		if v == value {
 			return true
