@@ -195,6 +195,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 	}
 
 	if utils.IfNotNilString(id) == "" {
+		createFlow = true
 		span.LogKV("flow", "create")
 
 		// set default values if not provided
