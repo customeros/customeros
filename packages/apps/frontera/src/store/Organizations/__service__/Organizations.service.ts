@@ -480,6 +480,7 @@ export class OrganizationsService {
               });
           });
       })
+      .with(['updatedAt'], () => undefined)
       .otherwise(async () => {
         const payload = makePayload<OrganizationUpdateInput>(operation);
 
