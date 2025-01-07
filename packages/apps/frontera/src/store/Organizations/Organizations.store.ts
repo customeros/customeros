@@ -73,7 +73,9 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     if (!this.value || typeof id !== 'string') return null;
 
     if (!this?.value.has(id)) {
-      this.retrieve([id]);
+      setTimeout(() => {
+        this.retrieve([id]);
+      }, 0);
     }
 
     return this.value.get(id) as Organization;
