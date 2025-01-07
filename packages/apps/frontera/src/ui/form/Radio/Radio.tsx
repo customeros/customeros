@@ -44,7 +44,9 @@ export const Radio = forwardRef<
       >
         <RadixRadioGroup.Indicator className='flex items-center justify-center w-full h-full relative data-[disabled]:after:bg-gray-300 data-[state=checked]:after:bg-primary-600 data-[state=checked]:after:rounded-full data-[state=checked]:after:size-2 data-[state=checked]:after:block data-[state=checked]:after:content-[""]' />
       </RadixRadioGroup.Item>
-      <label htmlFor={props.value}>{children}</label>
+      <label htmlFor={props.value} className='cursor-pointer'>
+        {children}
+      </label>
     </div>
   );
 });

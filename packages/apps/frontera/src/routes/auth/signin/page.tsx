@@ -82,7 +82,6 @@ export const SignIn = observer(() => {
                   <p className='text-gray-500'>
                     We've sent you an email with a magic code
                   </p>
-                  <Divider className='my-4' />
                   <Button
                     size='md'
                     variant='outline'
