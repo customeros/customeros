@@ -684,8 +684,8 @@ export const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
 
-  [ColumnViewType.OrganizationsHeadquarters]: columnHelper.accessor('id', {
-    id: ColumnViewType.OrganizationsHeadquarters,
+  [ColumnViewType.OrganizationsCountry]: columnHelper.accessor('id', {
+    id: ColumnViewType.OrganizationsCountry,
     size: 210,
     minSize: 91,
     maxSize: 400,
@@ -699,7 +699,7 @@ export const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Country'
         filterWidth='auto'
-        id={ColumnViewType.OrganizationsHeadquarters}
+        id={ColumnViewType.OrganizationsCountry}
         {...getTHeadProps<Organization>(props)}
       />
     ),

@@ -323,7 +323,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         return filterTypeNumber(filter, ltv);
       },
     )
-    .with({ property: ColumnViewType.OrganizationsHeadquarters }, (filter) => {
+    .with({ property: ColumnViewType.OrganizationsCountry }, (filter) => {
       return (row: Organization) => {
         if (!filter.active) return true;
         const locations = row?.value.locations;
