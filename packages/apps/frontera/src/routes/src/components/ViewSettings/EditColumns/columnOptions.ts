@@ -109,7 +109,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsCity]: 'City',
   [ColumnViewType.OrganizationsIsPublic]: 'Ownership Type',
   [ColumnViewType.OrganizationsContactCount]: 'Contacts',
-  [ColumnViewType.OrganizationsHeadquarters]: 'Country',
+  [ColumnViewType.OrganizationsCountry]: 'Country',
   [ColumnViewType.OrganizationsParentOrganization]: 'Parent Org',
   [ColumnViewType.OrganizationsUpdatedDate]: 'Last Updated',
 };
