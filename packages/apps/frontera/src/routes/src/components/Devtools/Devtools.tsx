@@ -85,12 +85,23 @@ export const Devtools = observer(() => {
       | (typeof store)['organizations']
       | (typeof store)['tableViewDefs']
       | (typeof store)['contacts']
+      | (typeof store)['contracts']
       | null
     >()
     .with('tableViewDefs', () => store.tableViewDefs)
     .with('organizations', () => store.organizations)
     .with('contacts', () => store.contacts)
+    .with('contracts', () => store.contracts)
     .otherwise(() => null);
+
+  const getEntityName = (entity: Record<string, string>) =>
+    match(devTools.detailedStore)
+      .returnType<string>()
+      .with('organizations', () => get(entity, 'value.name', 'Unnamed'))
+      .with('tableViewDefs', () => get(entity, 'name', 'Unnamed'))
+      .with('contacts', () => get(entity, 'name', 'Unnamed'))
+      .with('contracts', () => get(entity, 'value.contractName', 'Unnamed'))
+      .otherwise(() => 'Unnamed');
 
   return createPortal(
     open ? (
@@ -299,6 +310,10 @@ export const Devtools = observer(() => {
                             Array.from(detailedStore?.value)?.map(([k, v]) => {
                               const isSelected =
                                 devTools.detailedEntityId === k;
+                              const name =
+                                getEntityName(
+                                  v as unknown as Record<string, string>,
+                                ) || 'Unnamed';
 
                               return (
                                 <div
@@ -313,7 +328,7 @@ export const Devtools = observer(() => {
                                     )}
                                   >
                                     <span className='text-xs font-medium mr-0.5'>
-                                      {v?.name ?? 'Unnamed'}
+                                      {name}
                                     </span>
                                     <span className='text-xs text-gray-500'>
                                       ({k})

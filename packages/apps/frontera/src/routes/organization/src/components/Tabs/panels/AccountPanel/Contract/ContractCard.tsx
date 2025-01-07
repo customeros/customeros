@@ -95,7 +95,7 @@ export const ContractCard = observer(
                 contractStore?.updateContractName(e.target.value);
               }}
               className='font-semibold hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis border-0'
-              onChange={(e) =>
+              onChange={(e) => {
                 contractStore?.update(
                   (prev) => ({
                     ...prev,
@@ -104,8 +104,8 @@ export const ContractCard = observer(
                   {
                     mutate: false,
                   },
-                )
-              }
+                );
+              }}
             />
 
             <ContractCardActions
