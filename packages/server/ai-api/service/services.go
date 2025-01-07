@@ -9,9 +9,7 @@ import (
 
 type Services struct {
 	CommonServices *commonService.Services
-
-	AnthropicService AnthropicService
-	OpenAiService    OpenAiService
+	AIService      AIService
 }
 
 func InitServices(cfg *config.Config, postgresDB *commonConfig.PostgresDB, appLogger logger.Logger) *Services {
@@ -19,8 +17,7 @@ func InitServices(cfg *config.Config, postgresDB *commonConfig.PostgresDB, appLo
 		CommonServices: commonService.InitServices(&commonConfig.GlobalConfig{}, postgresDB, nil, "", nil, appLogger),
 	}
 
-	services.OpenAiService = NewOpenAiService(cfg)
-	services.AnthropicService = NewAnthropicService(cfg)
+	services.AIService = NewAIService(cfg, services)
 
 	return services
 }
