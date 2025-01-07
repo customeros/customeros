@@ -123,6 +123,7 @@ interface EditorProps extends VariantProps<typeof contentEditableVariants> {
   onMentionsSearch?: (q: string | null) => void;
   onHashtagsChange?: (hashtags: SelectOption[]) => void;
   onBlur?: (e: React.FocusEvent<HTMLDivElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLDivElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
@@ -132,6 +133,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
       size,
       onBlur,
       dataTest,
+      onFocus,
       children,
       onChange,
       className,
@@ -274,6 +276,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
               <div ref={onRef} className={cn('relative', className)}>
                 <ContentEditable
                   onBlur={onBlur}
+                  onFocus={onFocus}
                   spellCheck='false'
                   data-test={dataTest}
                   onKeyDown={(e) =>

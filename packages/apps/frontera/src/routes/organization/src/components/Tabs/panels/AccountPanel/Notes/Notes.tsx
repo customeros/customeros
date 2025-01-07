@@ -32,13 +32,13 @@ export const Notes = observer(({ id }: NotesProps) => {
             className='cursor-text'
             namespace='opportunity-next-step'
             placeholderClassName='cursor-text'
+            onFocus={() => organization?.draft()}
             onBlur={() => organization?.commit()}
             dataTest='organization-account-notes-editor'
             defaultHtmlValue={organization?.value?.notes ?? ''}
             placeholder='Write some notes or anything related to this customer'
             onChange={(html) => {
               if (!organization) return;
-
               organization.value.notes = html;
             }}
           />

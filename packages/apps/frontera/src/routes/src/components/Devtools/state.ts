@@ -22,7 +22,7 @@ export class DevtoolsStore {
   @observable accessor detailedStore: string | null = null;
   @observable accessor detailedEntityId: string | null = null;
 
-  visibleStores = ['organizations', 'tableViewDefs', 'contacts'];
+  visibleStores = ['organizations', 'tableViewDefs', 'contacts', 'contracts'];
 
   constructor() {}
 
@@ -63,7 +63,8 @@ export class DevtoolsStore {
     this.responseSearchTerm = term;
   }
 
-  @action toggleView(view: 'operations' | 'store') {
+  @action
+  toggleView(view: 'operations' | 'store') {
     this.view = view;
   }
 
