@@ -62,7 +62,8 @@ type OrganizationUiDetails {
     lastTouchPointType: LastTouchpointType
 
     # data from associated entities
-    domains:              [String!]!
+    domains:              [String!]! @deprecated(reason: "Use domainsDetails")
+    domainsDetails:       [Domain!]!
     contracts:            [String!]! # in profile
     contacts:             [String!]! # in profile
     contactCount:         Int        # in table

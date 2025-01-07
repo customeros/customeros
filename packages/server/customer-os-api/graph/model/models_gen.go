@@ -965,6 +965,12 @@ type DeleteResponse struct {
 	Completed bool `json:"completed"`
 }
 
+type Domain struct {
+	Domain        string  `json:"domain"`
+	Primary       *bool   `json:"primary,omitempty"`
+	PrimaryDomain *string `json:"primaryDomain,omitempty"`
+}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
 type Email struct {
@@ -2239,6 +2245,7 @@ type OrganizationUIDetails struct {
 	LastTouchPointAt                *time.Time                    `json:"lastTouchPointAt,omitempty"`
 	LastTouchPointType              *LastTouchpointType           `json:"lastTouchPointType,omitempty"`
 	Domains                         []string                      `json:"domains"`
+	DomainsDetails                  []*Domain                     `json:"domainsDetails"`
 	Contracts                       []string                      `json:"contracts"`
 	Contacts                        []string                      `json:"contacts"`
 	ContactCount                    *int                          `json:"contactCount,omitempty"`

@@ -1,0 +1,5 @@
+type Domain {
+    domain:         String!
+    primary:        Boolean
+    primaryDomain:  String
+}
