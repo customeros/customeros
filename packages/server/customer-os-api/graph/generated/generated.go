@@ -1128,6 +1128,7 @@ type ComplexityRoot struct {
 		OrganizationHide                           func(childComplexity int, id string) int
 		OrganizationHideAll                        func(childComplexity int, ids []string) int
 		OrganizationMerge                          func(childComplexity int, primaryOrganizationID string, mergedOrganizationIds []string) int
+		OrganizationRemoveDomain                   func(childComplexity int, organizationID string, domain string) int
 		OrganizationRemoveSocial                   func(childComplexity int, organizationID string, socialID string) int
 		OrganizationRemoveSubsidiary               func(childComplexity int, organizationID string, subsidiaryID string) int
 		OrganizationRemoveTag                      func(childComplexity int, input model.OrganizationTagInput) int
@@ -1991,6 +1992,7 @@ type MutationResolver interface {
 	OrganizationRemoveSocial(ctx context.Context, organizationID string, socialID string) (*model.ActionResponse, error)
 	OrganizationUpdateOnboardingStatus(ctx context.Context, input model.OnboardingStatusInput) (*model.Organization, error)
 	OrganizationUnlinkAllDomains(ctx context.Context, organizationID string) (*model.Organization, error)
+	OrganizationRemoveDomain(ctx context.Context, organizationID string, domain string) (*model.ActionResponse, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
 	OrganizationSetOwner(ctx context.Context, organizationID string, userID string) (*model.Organization, error)
 	OrganizationUnsetOwner(ctx context.Context, organizationID string) (*model.Organization, error)
@@ -8350,6 +8352,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.OrganizationMerge(childComplexity, args["primaryOrganizationId"].(string), args["mergedOrganizationIds"].([]string)), true
+
+	case "Mutation.organization_RemoveDomain":
+		if e.complexity.Mutation.OrganizationRemoveDomain == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_organization_RemoveDomain_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OrganizationRemoveDomain(childComplexity, args["organizationId"].(string), args["domain"].(string)), true
 
 	case "Mutation.organization_RemoveSocial":
 		if e.complexity.Mutation.OrganizationRemoveSocial == nil {
@@ -15402,6 +15416,7 @@ extend type Mutation {
 
     organization_UpdateOnboardingStatus(input: OnboardingStatusInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_UnlinkAllDomains(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_RemoveDomain(organizationId: ID!, domain: String!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     #TODO: to remove after FE migration
     organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
@@ -21989,6 +22004,57 @@ func (ec *executionContext) field_Mutation_organization_Merge_argsMergedOrganiza
 	}
 
 	var zeroVal []string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_organization_RemoveDomain_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_organization_RemoveDomain_argsOrganizationID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["organizationId"] = arg0
+	arg1, err := ec.field_Mutation_organization_RemoveDomain_argsDomain(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["domain"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_organization_RemoveDomain_argsOrganizationID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["organizationId"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+	if tmp, ok := rawArgs["organizationId"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_organization_RemoveDomain_argsDomain(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["domain"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("domain"))
+	if tmp, ok := rawArgs["domain"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -71790,6 +71856,99 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_organization_RemoveDomain(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organization_RemoveDomain(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().OrganizationRemoveDomain(rctx, fc.Args["organizationId"].(string), fc.Args["domain"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.ActionResponse
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.ActionResponse
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.ActionResponse
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.ActionResponse); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.ActionResponse`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ActionResponse)
+	fc.Result = res
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organization_RemoveDomain(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accepted":
+				return ec.fieldContext_ActionResponse_accepted(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organization_RemoveDomain_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_organization_Update(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_organization_Update(ctx, field)
 	if err != nil {
@@ -121434,6 +121593,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "organization_UnlinkAllDomains":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_organization_UnlinkAllDomains(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "organization_RemoveDomain":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organization_RemoveDomain(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
