@@ -306,7 +306,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				continue
 			}
 			if !domainInUse {
-				err = s.services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, organizationId, domain)
+				_, err = s.services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, organizationId, domain)
 				if err != nil {
 					tracing.TraceErr(span, pkgerrors.Wrapf(err, "failed to link domain %s with organization %s", domain, organizationId))
 				}

@@ -232,7 +232,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 
 			primaryDomain, _ := s.commonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(innerCtx, organizationEntity.Website)
 			if primaryDomain != "" {
-				err = s.commonServices.OrganizationService.LinkWithDomain(innerCtx, nil, record.OrganizationId, primaryDomain)
+				_, err = s.commonServices.OrganizationService.LinkWithDomain(innerCtx, nil, record.OrganizationId, primaryDomain)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					s.log.Errorf("Error linking with domain {%s}: %s", record.OrganizationId, err.Error())
