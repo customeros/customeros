@@ -30,7 +30,6 @@ import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import {
-  Social,
   EntityType,
   OrganizationStage,
   OrganizationRelationship,
@@ -91,69 +90,6 @@ export const AboutPanel = observer(() => {
   const applicableStageOptions = getStageOptions(
     organization.value?.relationship,
   );
-
-  const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const id = (e.target as HTMLInputElement).id;
-    const value = e.target.value;
-
-    if (organization) {
-      const idx = organization.value?.socialMedia.findIndex((s) => s.id === id);
-
-      if (!idx || idx < 0) return;
-
-      organization.draft();
-      organization.value!.socialMedia[idx].url = value;
-      organization.commit();
-    }
-  };
-
-  const handleSocialBlur = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    newInputRef: React.RefObject<HTMLInputElement>,
-  ) => {
-    const id = (e.target as HTMLInputElement).id;
-
-    const idx = organization.value?.socialMedia.findIndex((s) => s.id === id);
-
-    if (!idx || idx < 0) return;
-
-    if (organization.value?.socialMedia[idx].url === '') {
-      organization.draft();
-      organization.value.socialMedia.splice(idx, 1);
-      newInputRef.current?.focus();
-      organization.commit();
-    }
-  };
-
-  const handleSocialKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    newInputRef: React.RefObject<HTMLInputElement>,
-  ) => {
-    const id = (e.target as HTMLInputElement).id;
-
-    const idx = organization.value?.socialMedia.findIndex((s) => s.id === id);
-
-    if (!idx || idx < 0) return;
-    const social = organization.value?.socialMedia[idx];
-
-    if (!social) return;
-
-    if (social.url === '') {
-      organization.draft();
-      organization.value?.socialMedia.splice(idx, 1);
-      newInputRef.current?.focus();
-      organization.commit();
-    }
-  };
-
-  const handleCreateSocial = (value: string) => {
-    organization.draft();
-    organization.value?.socialMedia.push({
-      id: crypto.randomUUID(),
-      url: value,
-    } as Social);
-    organization.commit();
-  };
 
   const handleCreateOption = (value: string) => {
     store.tags?.create(
@@ -468,10 +404,6 @@ export const AboutPanel = observer(() => {
           <SocialIconInput
             name='socials'
             placeholder='Social link'
-            onBlur={handleSocialBlur}
-            onChange={handleSocialChange}
-            onCreate={handleCreateSocial}
-            onKeyDown={handleSocialKeyDown}
             dataTest='org-about-social-link'
             leftElement={<Share07 className='text-gray-500' />}
             value={organization?.value.socialMedia.map((s) => ({
