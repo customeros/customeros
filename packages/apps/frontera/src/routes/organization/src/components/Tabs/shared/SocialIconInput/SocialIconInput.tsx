@@ -1,6 +1,11 @@
-import React, { useRef, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import React, { useRef, useMemo, useEffect } from 'react';
+
+import { observer } from 'mobx-react-lite';
+import { AddSocialLinkCase } from '@domain/usecases/organization-about-tab/add-social-link.usecase.ts';
 
 import { Input } from '@ui/form/Input';
+import { useStore } from '@shared/hooks/useStore';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
 
 import { SocialIcon } from './SocialIcons';
@@ -12,100 +17,142 @@ interface SocialIconInputProps {
   isReadOnly?: boolean;
   placeholder?: string;
   leftElement?: React.ReactNode;
-  onCreate?: (value: string) => void;
   value?: { label: string; value: string }[];
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onBlur?: (
-    e: React.ChangeEvent<HTMLInputElement>,
-    newInputRef: React.RefObject<HTMLInputElement>,
-  ) => void;
-  onKeyDown?: (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    newInputRef: React.RefObject<HTMLInputElement>,
-  ) => void;
 }
+const addSocialLinkUseCase = new AddSocialLinkCase();
 
-export const SocialIconInput = ({
-  value,
-  name = 'socialMedia',
-  leftElement,
-  isReadOnly,
-  onBlur,
-  dataTest,
-  onChange,
-  onCreate,
-  onKeyDown,
-  ...rest
-}: SocialIconInputProps) => {
-  const [socialIconValue, setSocialIconValue] = useState('');
-  const _leftElement = useMemo(() => leftElement, [leftElement]);
-  const newInputRef = useRef<HTMLInputElement>(null);
+export const SocialIconInput = observer(
+  ({
+    value,
+    name = 'socialMedia',
+    leftElement,
+    isReadOnly,
+    dataTest,
+    ...rest
+  }: SocialIconInputProps) => {
+    const store = useStore();
+    const id = useParams()?.id as string;
+    const organization = store.organizations.getById(id);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange?.(e);
-  };
+    const _leftElement = useMemo(() => leftElement, [leftElement]);
+    const newInputRef = useRef<HTMLInputElement>(null);
 
-  const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onBlur?.(e, newInputRef);
-  };
+    useEffect(() => {
+      if (organization) {
+        addSocialLinkUseCase.setEntity(organization);
+      }
+    }, [organization?.id]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    onKeyDown?.(e, newInputRef);
-  };
+    if (!organization || !organization?.value) return null;
 
-  const handleNewSocial = () => {
-    const value = newInputRef.current?.value;
+    const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const id = (e.target as HTMLInputElement).id;
+      const value = e.target.value;
 
-    if (!value) return;
-    onCreate?.(value);
-    newInputRef.current!.value = '';
-    setSocialIconValue('');
-  };
+      if (organization) {
+        const idx = organization.value?.socialMedia.findIndex(
+          (s) => s.id === id,
+        );
 
-  return (
-    <>
-      {value?.map(({ value: v, label: l }) => (
-        <SocialInput
-          id={v}
-          key={v}
-          value={l}
-          name={name}
-          dataTest={dataTest}
-          onBlur={handleBlur}
-          onChange={handleChange}
-          isReadOnly={isReadOnly}
-          onKeyDown={handleKeyDown}
-          leftElement={_leftElement}
-        />
-      ))}
+        if (typeof idx !== 'number' || idx < 0) return;
 
-      {!isReadOnly && (
-        <InputGroup>
-          {leftElement && (
-            <LeftElement>
-              <SocialIcon url={socialIconValue}>{leftElement}</SocialIcon>
-            </LeftElement>
-          )}
-          <Input
+        organization.draft();
+        organization.value!.socialMedia[idx].url = value;
+      }
+    };
+
+    const handleSocialBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const id = (e.target as HTMLInputElement).id;
+
+      const idx = organization.value?.socialMedia.findIndex((s) => s.id === id);
+
+      if (typeof idx !== 'number' || idx < 0) return;
+
+      if (e.target?.value === '') {
+        organization.draft();
+        organization.value.socialMedia.splice(idx, 1);
+        newInputRef.current?.focus();
+        organization.commit();
+      } else {
+        organization.draft();
+        organization.value!.socialMedia[idx].url = e.target.value;
+        organization.commit();
+      }
+    };
+
+    const handleSocialKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      const id = (e.target as HTMLInputElement).id;
+
+      const idx = organization.value?.socialMedia.findIndex((s) => s.id === id);
+
+      if (typeof idx !== 'number' || idx < 0) return;
+      const social = organization.value?.socialMedia[idx];
+
+      if (!social) return;
+
+      if ((e.target as HTMLInputElement).value === '') {
+        organization.draft();
+        organization.value.socialMedia.splice(idx, 1);
+        organization.commit();
+      } else {
+        organization.draft();
+        organization.value!.socialMedia[idx].url = (
+          e.target as HTMLInputElement
+        ).value;
+
+        organization.commit();
+      }
+      newInputRef.current?.focus();
+    };
+
+    return (
+      <>
+        {value?.map(({ value: v, label: l }) => (
+          <SocialInput
+            id={v}
+            key={v}
+            value={l}
             name={name}
-            ref={newInputRef}
             dataTest={dataTest}
-            onBlur={handleNewSocial}
-            onChange={(e) => {
-              setSocialIconValue(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              e.stopPropagation();
-
-              if (e.key === 'Enter') {
-                handleNewSocial?.();
-              }
-            }}
-            className='border-b border-transparent hover:border-transparent hover:border-b-none text-md focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
+            isReadOnly={isReadOnly}
+            onBlur={handleSocialBlur}
+            leftElement={_leftElement}
+            onChange={handleSocialChange}
+            onKeyDown={handleSocialKeyDown}
             {...rest}
           />
-        </InputGroup>
-      )}
-    </>
-  );
-};
+        ))}
+
+        {!isReadOnly && (
+          <InputGroup>
+            {leftElement && (
+              <LeftElement>
+                <SocialIcon url={addSocialLinkUseCase.url}>
+                  {leftElement}
+                </SocialIcon>
+              </LeftElement>
+            )}
+            <Input
+              name={name}
+              ref={newInputRef}
+              dataTest={dataTest}
+              onBlur={addSocialLinkUseCase.submit}
+              onChange={(e) => {
+                addSocialLinkUseCase.setInputValue(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+
+                if (e.key === 'Enter') {
+                  addSocialLinkUseCase.submit();
+                }
+              }}
+              className='border-b border-transparent hover:border-transparent hover:border-b-none text-md focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
+              {...rest}
+            />
+          </InputGroup>
+        )}
+      </>
+    );
+  },
+);

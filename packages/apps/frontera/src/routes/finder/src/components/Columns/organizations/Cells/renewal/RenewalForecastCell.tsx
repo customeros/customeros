@@ -48,17 +48,6 @@ export const RenewalForecastCell = observer(
 
     const [value, setValue] = useState(initialValue);
 
-    if (!contractCount) {
-      return (
-        <span
-          className='text-gray-400'
-          data-test='organization-arr-forecast-in-all-orgs-table'
-        >
-          No contract
-        </span>
-      );
-    }
-
     const formattedAmount =
       amount !== null && amount >= 0
         ? formatCurrency((potentialAmount ?? 0) * (value / 100), 0)
@@ -110,6 +99,17 @@ export const RenewalForecastCell = observer(
     useEffect(() => {
       setValue(initialValue);
     }, [initialValue]);
+
+    if (!contractCount) {
+      return (
+        <span
+          className='text-gray-400'
+          data-test='organization-arr-forecast-in-all-orgs-table'
+        >
+          No contract
+        </span>
+      );
+    }
 
     const textColor = amount ? 'text-gray-700' : 'text-gray-500';
 

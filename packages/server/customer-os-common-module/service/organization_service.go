@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"strings"
 	"time"
 
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
@@ -687,7 +688,7 @@ func (s *organizationService) AddParentOrganization(ctx context.Context, txWithP
 }
 
 func (s *organizationService) RemoveParentOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, parentOrganizationId, subOrganizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddParentOrganization")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.RemoveParentOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationId", subOrganizationId))
@@ -970,6 +971,11 @@ func (s *organizationService) UnlinkDomain(ctx context.Context, txWithPostCommit
 	tracing.TagEntity(span, organizationId)
 	span.LogKV("domain", domain)
 
+	domain = strings.ToLower(strings.TrimSpace(domain))
+	if domain == "" {
+		return nil
+	}
+
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
@@ -978,10 +984,16 @@ func (s *organizationService) UnlinkDomain(ctx context.Context, txWithPostCommit
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
+	// validate organization exists
+	err = s.ValidateOrganizationExists(ctx, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		err := s.services.Neo4jRepositories.OrganizationWriteRepository.UnlinkDomain(ctx, txWithPostCommit.Tx, tenant, organizationId, domain)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unlink domain in neo4j"))
 			return nil, err
 		}
 
@@ -1000,8 +1012,12 @@ func (s *organizationService) UnlinkDomain(ctx context.Context, txWithPostCommit
 
 		return nil, nil
 	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
-	return err
+	return nil
 }
 
 func (s *organizationService) GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error) {

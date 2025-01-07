@@ -41,7 +41,7 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
   return (
     <span className='inline'>
       <p
-        role='button'
+        role='link'
         onClick={handleNavigate}
         data-test='organization-name-in-all-orgs-table'
         className='overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer'

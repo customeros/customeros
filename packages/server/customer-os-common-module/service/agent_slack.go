@@ -9,7 +9,9 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 )
@@ -56,9 +58,32 @@ func (a *agentService) slackBotNotification(ctx context.Context, event *data_fie
 	}
 
 	err := a.services.SlackService.Notify(ctx, event.Tenant, event.ChannelID, &event.Message)
+
+	// build agent execution record
+	executionRecord := entity.FlowAgentExecution{
+		FlowExecutionID: flowExecutionID,
+		Agent:           enum.AgentSlackNotify.String(),
+		FlowNodeID:      "",
+		StartedAt:       utils.NowPtr(),
+	}
+
 	if err != nil {
+		executionRecord.Status = enum.FlowAgentExecutionFail.String()
+		errMessage := fmt.Sprintf("Unable to send slack notification: %v", err)
+		executionRecord.ErrorMessage = &errMessage
 		tracing.TraceErr(span, err)
-		return err
+	} else {
+		executionRecord.Status = enum.FlowAgentExecutionSuccess.String()
+		executionRecord.CompletedAt = utils.NowPtr()
+		result := fmt.Sprintf("Slack Notification ID: %s", event.ID)
+		executionRecord.Result = &result
+	}
+
+	// write action execution to db
+	actionExecutionRecord, saveErr := a.services.PostgresRepositories.FlowAgentExecutionRepository.Create(ctx, executionRecord)
+	if saveErr != nil {
+		tracing.TraceErr(span, saveErr)
+		return saveErr
 	}
 
 	// save notification record
@@ -81,6 +106,12 @@ func (a *agentService) slackBotNotification(ctx context.Context, event *data_fie
 	_, err = a.services.PostgresRepositories.SlackNotificationEventsRepository.Update(ctx, record)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// fire action completion event
+	err = a.publishAgentResultEvent(ctx, flowExecutionID, actionExecutionRecord.ID, enum.FlowAgentExecutionStatus(executionRecord.Status), executionRecord.ErrorMessage)
+	if err != nil {
 		return err
 	}
 

@@ -384,10 +384,10 @@ export const getFilterTypes = (store?: RootStore) => {
       })),
     },
 
-    [ColumnViewType.OrganizationsHeadquarters]: {
+    [ColumnViewType.OrganizationsCountry]: {
       filterType: 'list',
       filterName: 'Country',
-      filterAccesor: ColumnViewType.OrganizationsHeadquarters,
+      filterAccesor: ColumnViewType.OrganizationsCountry,
       filterOperators: [
         ComparisonOperator.In,
         ComparisonOperator.NotIn,

@@ -19,7 +19,7 @@ export const ButtonGroup = ({
 const defaultButtonGroup = `
   border border-grayModern-300 rounded-lg flex transition-all duration-200 ease-out 
   [&>*]:border-0
-  [&>*.selected]:border-x
+  [&>*.selected]:border
   [&>*.selected]:border-grayModern-300
   [&>*.selected]:!rounded-lg
   [&>*.selected]:-mt-[1px]

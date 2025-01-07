@@ -27,6 +27,8 @@ export const SocialInput = memo(
     dataTest,
     leftElement,
     isReadOnly,
+    onKeyDown,
+    onChange,
     ...rest
   }: SocialInputGroupProps) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -68,16 +70,19 @@ export const SocialInput = memo(
                 </LeftElement>
               )}
               <Input
+                {...rest}
                 ref={inputRef}
                 onBlur={handleBlur}
                 data-test={dataTest}
                 readOnly={isReadOnly}
                 onFocus={handleFocus}
                 value={isFocused ? value : ''}
+                onChange={(e) => onChange?.(e)}
+                placeholder={isFocused ? rest.placeholder : ''}
+                onKeyDown={(e) => e.key === 'Enter' && onKeyDown?.(e)}
                 className={
                   'border-b border-transparent hover:border-transparent hover:border-b-none text-md focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
                 }
-                {...rest}
               />
             </InputGroup>
 

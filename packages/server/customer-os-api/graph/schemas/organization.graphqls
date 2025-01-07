@@ -27,6 +27,7 @@ extend type Mutation {
 
     organization_UpdateOnboardingStatus(input: OnboardingStatusInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_UnlinkAllDomains(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_RemoveDomain(organizationId: ID!, domain: String!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     #TODO: to remove after FE migration
     organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
