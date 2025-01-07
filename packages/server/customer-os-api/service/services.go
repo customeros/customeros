@@ -2,13 +2,14 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/file_store_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 )
 
 type Services struct {
@@ -20,7 +21,6 @@ type Services struct {
 	CommonServices      *commonService.Services
 	FileStoreApiService fsc.FileStoreApiService
 
-	AIService                  AIService
 	BankAccountService         BankAccountService
 	ContactService             ContactService
 	OrganizationService        OrganizationService

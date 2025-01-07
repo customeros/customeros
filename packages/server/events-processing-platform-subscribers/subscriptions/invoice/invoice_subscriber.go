@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"

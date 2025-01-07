@@ -10,8 +10,6 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../events-processing-proto
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai => ../customer-os-common-ai
-
 require (
 	github.com/PuerkitoBio/goquery v1.10.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
@@ -30,7 +28,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mrz1836/postmark v1.6.7
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai v0.0.0-20241028063002-b2d4aaf8096f
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c
@@ -83,7 +80,6 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.0 // indirect

@@ -1,4 +1,4 @@
-package client
+package anthropic_client
 
 // AnthropicApiRequest represents the request structure for Claude API
 type AnthropicApiRequest struct {

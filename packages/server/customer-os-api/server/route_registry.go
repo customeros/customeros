@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 

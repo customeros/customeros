@@ -3,8 +3,6 @@ package customerbase
 
 import (
 	"fmt"
-	"github.com/opentracing/opentracing-go"
-	"golang.org/x/net/context"
 	"net/http"
 	"regexp"
 	"strings"
@@ -16,8 +14,10 @@ import (
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"

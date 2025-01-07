@@ -2,7 +2,6 @@ FROM golang:1.21.0-alpine3.17 AS builder
 
 WORKDIR /app
 COPY customer-os-common-module/. ./customer-os-common-module/
-COPY customer-os-common-ai/. ./customer-os-common-ai/
 COPY customer-os-neo4j-repository/. ./customer-os-neo4j-repository/
 COPY customer-os-postgres-repository/. ./customer-os-postgres-repository/
 COPY enrichment-api/. ./enrichment-api/

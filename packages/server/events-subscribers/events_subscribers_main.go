@@ -9,7 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"

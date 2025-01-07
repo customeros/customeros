@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/anthropic_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
 type AIService interface {
@@ -17,11 +17,11 @@ type AIService interface {
 }
 
 type aiService struct {
-	config   *config.Config
+	config   *config.GlobalConfig
 	services *Services
 }
 
-func NewAIService(config *config.Config, services *Services) AIService {
+func NewAIService(config *config.GlobalConfig, services *Services) AIService {
 	return &aiService{
 		config:   config,
 		services: services,
@@ -52,7 +52,7 @@ func (s *aiService) askAnthropic(ctx context.Context, model enum.AIModel, prompt
 	defer span.Finish()
 
 	// setup client
-	client := client.NewAnthropicClient(s.config, model)
+	client := anthropic_client.NewAnthropicClient(s.config, model)
 	response, err := client.Invoke(ctx, prompt)
 	if err != nil {
 		tracing.TraceErr(span, err)

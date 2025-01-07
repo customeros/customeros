@@ -3,7 +3,7 @@ package config
 import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
-	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstoredb"
 

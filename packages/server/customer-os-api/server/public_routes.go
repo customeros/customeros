@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/flows"
 	integrations "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/flows_integrations"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/public"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 )
 
 func register(ctx context.Context, r *gin.Engine, s *service.Services, cache *caches.Cache) {
@@ -64,5 +65,4 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 		handler:   public.TrackUnsubscribeRequest(s),
 		routeType: RoutePublic,
 	})
-
 }

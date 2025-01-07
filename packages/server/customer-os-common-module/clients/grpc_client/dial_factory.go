@@ -4,11 +4,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
+	"log"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"log"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client/interceptor"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 )
 
 type DialFactory interface {
@@ -60,7 +62,6 @@ func (dfi DialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.ClientConn, 
 				interceptor.ApiKeyEnricher(dfi.conf.EventsProcessingPlatformApiKey),
 			),
 		)
-
 		if err != nil {
 			log.Fatalf("Failed to connect to gRPC server: %v", err)
 		}

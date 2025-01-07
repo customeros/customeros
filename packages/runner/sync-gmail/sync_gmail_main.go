@@ -10,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"

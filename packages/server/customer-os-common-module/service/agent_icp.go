@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/opentracing/opentracing-go"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
 )
 
 func (a *agentService) ICPAgent(ctx context.Context, event *dto.FlowAgentEvent) error {
@@ -37,6 +38,22 @@ func (a *agentService) buildICPQualificationReport(ctx context.Context, eventDat
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.buildICPQualificationReport")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
+
+	// get ICP definition
+
+	// get all company context
+
+	// build prompt
+
+	// askAI
+
+	// save to timeline
+
+	// build agent execution record
+
+	// write agent execution to db
+
+	// fire action completion event
 
 	return nil
 }

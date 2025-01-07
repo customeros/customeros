@@ -2,11 +2,16 @@ package organization
 
 import (
 	"context"
+	"strings"
+
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
-	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	orgevts "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -14,11 +19,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	orgevts "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
-	"strings"
 )
 
 type OrganizationSubscriber struct {
@@ -29,23 +29,11 @@ type OrganizationSubscriber struct {
 }
 
 func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, services *service.Services, caches caches.Cache, grpcClients *grpc_client.Clients) *OrganizationSubscriber {
-	aiCfg := aiConfig.Config{
-		OpenAi: aiConfig.AiModelConfigOpenAi{
-			ApiKey:       cfg.Services.Ai.ApiKey,
-			Organization: cfg.Services.OpenAi.Organization,
-			Model:        "gpt-3.5-turbo-1106", // 1106 has an extra parameter available that locks response as JSON)
-		},
-		Anthropic: aiConfig.AiModelConfigAnthropic{
-			ApiPath: cfg.Services.Ai.ApiPath,
-			ApiKey:  cfg.Services.Ai.ApiKey,
-		},
-	}
-	aiModel := ai.NewAiModel(ai.AnthropicModelType, aiCfg)
 	return &OrganizationSubscriber{
 		log:                      log,
 		db:                       db,
 		cfg:                      cfg,
-		organizationEventHandler: NewOrganizationEventHandler(services, log, cfg, caches, aiModel, grpcClients),
+		organizationEventHandler: NewOrganizationEventHandler(services, log, cfg, caches, grpcClients),
 	}
 }
 
@@ -76,7 +64,6 @@ func (s *OrganizationSubscriber) runWorker(ctx context.Context, worker subscript
 }
 
 func (s *OrganizationSubscriber) ProcessEvents(ctx context.Context, sub *esdb.PersistentSubscription, workerID int) error {
-
 	for {
 		event := sub.Recv()
 		select {

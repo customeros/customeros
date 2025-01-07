@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/private"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )

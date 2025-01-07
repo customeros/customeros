@@ -1,4 +1,4 @@
-package client
+package anthropic_client
 
 import (
 	"bytes"
@@ -14,8 +14,8 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 )
 
 const (
@@ -43,10 +43,10 @@ type AnthropicClient struct {
 	client *http.Client
 }
 
-func NewAnthropicClient(cfg *config.Config, model enum.AIModel) *AnthropicClient {
+func NewAnthropicClient(cfg *config.GlobalConfig, model enum.AIModel) *AnthropicClient {
 	return &AnthropicClient{
-		apiKey: cfg.ExternalServices.Anthropic.ApiKey,
-		apiUrl: cfg.ExternalServices.Anthropic.ApiPath,
+		apiKey: cfg.ExternalServices.AnthropicConfig.ApiKey,
+		apiUrl: cfg.ExternalServices.AnthropicConfig.ApiPath,
 		model:  model.String(),
 		client: &http.Client{
 			Timeout: DefaultTimeoutSeconds * time.Second,

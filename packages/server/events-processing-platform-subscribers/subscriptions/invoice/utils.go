@@ -3,7 +3,7 @@ package invoice
 import (
 	"bytes"
 	"fmt"
-	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"

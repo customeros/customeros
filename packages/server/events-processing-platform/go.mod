@@ -10,7 +10,6 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events => ..
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform => ../events-processing-platform
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai => ../customer-os-common-ai
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
@@ -117,7 +116,6 @@ require (
 	github.com/mrz1836/postmark v1.6.7 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai v0.0.0-20241028063002-b2d4aaf8096f // indirect
 	github.com/openline-ai/openline-customer-os/packages/server/validation-api v0.0.0-20241227133740-5fd01d93a97a // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

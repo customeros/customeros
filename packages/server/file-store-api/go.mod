@@ -90,7 +90,6 @@ require (
 	github.com/mrz1836/postmark v1.6.7 // indirect
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai v0.0.0-20241028063002-b2d4aaf8096f // indirect
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427 // indirect
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c // indirect
 	github.com/openline-ai/openline-customer-os/packages/server/validation-api v0.0.0-20241227133740-5fd01d93a97a // indirect

@@ -23,7 +23,7 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers"
-	restverify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/verify"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/verify"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 )
@@ -469,7 +469,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		for i := range response.Data.Emails {
 			emailRecord := &response.Data.Emails[i]
 			if emailRecord.Address != "" {
-				emailValidationResult, err := restverify.CallApiValidateEmail(ctx, services, emailRecord.Address, true)
+				emailValidationResult, err := verify.CallApiValidateEmail(ctx, services, emailRecord.Address, true)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
 					continue
@@ -626,7 +626,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		for i := range response.Data.Emails {
 			email := &response.Data.Emails[i] // Get a pointer to the email in the slice
 			if email.Address != "" {
-				emailValidationResult, err := restverify.CallApiValidateEmail(ctx, services, email.Address, true)
+				emailValidationResult, err := verify.CallApiValidateEmail(ctx, services, email.Address, true)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
 					continue

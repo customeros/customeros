@@ -5,17 +5,18 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/billing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/customerbase"
-	enrich "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/enrich"
+	restEnrich "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/enrich"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/flows"
-	mailstack "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/mailstack"
-	outreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/outreach"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/mailstack"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/outreach"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/reveal"
-	verify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/verify"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/verify"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 )
 
 const (
@@ -103,7 +104,7 @@ func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/person", EnrichPath),
-		handler:   enrich.EnrichPerson(s),
+		handler:   restEnrich.EnrichPerson(s),
 		routeType: RouteCustomer,
 		services:  s,
 		cache:     cache,
@@ -112,7 +113,7 @@ func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/person/results/:id", EnrichPath),
-		handler:   enrich.EnrichPersonCallback(s),
+		handler:   restEnrich.EnrichPersonCallback(s),
 		routeType: RouteCustomer,
 		services:  s,
 		cache:     cache,
@@ -121,7 +122,7 @@ func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/person/organization", EnrichPath),
-		handler:   enrich.EnrichOrganization(s),
+		handler:   restEnrich.EnrichOrganization(s),
 		routeType: RouteCustomer,
 		services:  s,
 		cache:     cache,
@@ -350,7 +351,6 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *service.Services,
 		services:  s,
 		cache:     cache,
 	})
-
 }
 
 func registerIDRoutes(ctx context.Context, r *gin.Engine, s *service.Services) {
@@ -444,7 +444,6 @@ func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *service.Serv
 		services:  s,
 		cache:     cache,
 	})
-
 }
 
 func registerOutreachRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *caches.Cache) {
