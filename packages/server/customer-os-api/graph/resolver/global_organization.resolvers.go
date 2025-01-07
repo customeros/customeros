@@ -53,7 +53,7 @@ func (r *queryResolver) GlobalOrganizationsSearch(ctx context.Context, searchTer
 	)
 
 	if searchTerm == "" {
-		globalOrganizationEntities, err = r.Services.CommonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomains(ctx, r.cfg.AppConfig.DefaultGlobalOrgPrimaryDomainsInSearch)
+		globalOrganizationEntities, err = r.Services.CommonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomains(ctx, r.cfg.App.DefaultGlobalOrgPrimaryDomainsInSearch)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to get default global organizations")

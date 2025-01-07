@@ -45,7 +45,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/resolver"
-	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
+	graphHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/metrics"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 )
@@ -76,7 +76,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	// Setting up tracing
-	tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.Jaeger, server.log)
+	tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.Observability.Jaeger, server.log)
 	if err != nil {
 		server.log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 	}
@@ -87,8 +87,8 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	// Initialize postgres db
 	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
-		PostgresConfig:      &server.cfg.PostgresConfig,
-		PostgresAsyncConfig: &server.cfg.PostgresAsyncConfig,
+		PostgresConfig:      &server.cfg.Database.Postgres,
+		PostgresAsyncConfig: &server.cfg.Database.PostgresAsync,
 	})
 	if err != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
@@ -96,19 +96,19 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer postgresDb.Close()
 
 	// Setting up Neo4j
-	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Neo4j)
+	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Database.Neo4j)
 	if err != nil {
-		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
+		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Database.Neo4j.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
 	// check neo4j connectivity
 	err = neo4jDriver.VerifyConnectivity(ctx)
 	if err != nil {
-		server.log.Fatalf("Could not verify connectivity with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
+		server.log.Fatalf("Could not verify connectivity with neo4j at: %v, error: %v", server.cfg.Database.Neo4j.Target, err.Error())
 	}
 
 	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(&server.cfg.GrpcClientConfig)
+	df := grpc_client.NewDialFactory(&server.cfg.GrpcClient)
 	gRPCconn, err := df.GetEventsProcessingPlatformConn()
 	if err != nil {
 		server.log.Fatalf("Failed to connect: %v", err)
@@ -118,25 +118,25 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	// Setting up Postgres repositories
 	commonServices := commonservice.InitServices(&commonConfig.GlobalConfig{
-		RabbitMQConfig: &server.cfg.RabbitMQConfig,
+		RabbitMQConfig: &server.cfg.Messaging.RabbitMQ,
 		ExternalServices: commonConfig.ExternalServices{
-			OpenSRSConfig:    server.cfg.ExternalServices.OpenSRSConfig,
-			StripeConfig:     server.cfg.ExternalServices.StripeConfig,
-			NamecheapConfig:  server.cfg.ExternalServices.NamecheapConfig,
-			PostmarkConfig:   server.cfg.ExternalServices.PostmarkConfig,
-			CloudflareConfig: server.cfg.ExternalServices.CloudflareConfig,
+			OpenSRSConfig:    server.cfg.ExternalServices.OpenSRS,
+			StripeConfig:     server.cfg.ExternalServices.Stripe,
+			NamecheapConfig:  server.cfg.ExternalServices.Namecheap,
+			PostmarkConfig:   server.cfg.ExternalServices.Postmark,
+			CloudflareConfig: server.cfg.ExternalServices.Cloudflare,
 		},
-	}, postgresDb, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer, server.log)
+	}, postgresDb, &neo4jDriver, server.cfg.Database.Neo4j.Database, grpcContainer, server.log)
 
 	// Setting up Gin
 	r := gin.Default()
 
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = server.cfg.AppConfig.AllowOrigins
-	for _, header := range server.cfg.AppConfig.AllowHeaders {
+	corsConfig.AllowOrigins = server.cfg.App.CORS.AllowOrigins
+	for _, header := range server.cfg.App.CORS.AllowHeaders {
 		corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, strings.TrimSpace(header))
 	}
-	adminApiHandler := cosHandler.NewAdminApiHandler(server.cfg, commonServices)
+	adminApiHandler := graphHandler.NewAdminApiHandler(server.cfg, commonServices)
 
 	serviceContainer := service.InitServices(server.log, &neo4jDriver, postgresDb, server.cfg, commonServices, grpcContainer)
 	r.Use(cors.New(corsConfig))
@@ -177,19 +177,19 @@ func (server *server) Run(parentCtx context.Context) error {
 	// rest routes
 	RegisterRestRoutes(ctx, r, grpcContainer, serviceContainer, commonServices.Cache)
 
-	if server.cfg.ApiPort == server.cfg.MetricsPort {
-		r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
+	if server.cfg.Server.ApiPort == server.cfg.Server.MetricsPort {
+		r.GET(server.cfg.Observability.Metrics.PrometheusPath, metricsHandler)
 	} else {
 		go func() {
 			mr := gin.Default()
 			mr.Use(prometheusMiddleware())
 			mr.Use(bodyLoggerMiddleware)
-			mr.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
-			mr.Run(":" + server.cfg.MetricsPort)
+			mr.GET(server.cfg.Observability.Metrics.PrometheusPath, metricsHandler)
+			mr.Run(":" + server.cfg.Observability.Metrics.PrometheusPath)
 		}()
 	}
 
-	r.Run(":" + server.cfg.ApiPort)
+	r.Run(":" + server.cfg.Server.ApiPort)
 
 	<-server.doneCh
 
@@ -252,8 +252,8 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 	// make a data loader
 	loader := dataloader.NewDataLoader(serviceContainer)
 	schemaConfig := generated.Config{Resolvers: graphResolver}
-	schemaConfig.Directives.HasRole = cosHandler.GetRoleChecker()
-	schemaConfig.Directives.HasTenant = cosHandler.GetTenantChecker()
+	schemaConfig.Directives.HasRole = graphHandler.GetRoleChecker()
+	schemaConfig.Directives.HasTenant = graphHandler.GetTenantChecker()
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(schemaConfig))
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {

@@ -20,6 +20,7 @@ type Services struct {
 	CommonServices      *commonService.Services
 	FileStoreApiService fsc.FileStoreApiService
 
+	AIService                  AIService
 	BankAccountService         BankAccountService
 	ContactService             ContactService
 	OrganizationService        OrganizationService
@@ -54,7 +55,7 @@ type Services struct {
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, cfg *config.Config, commonServices *commonService.Services, grpcClients *grpc_client.Clients) *Services {
-	repositories := repository.InitRepos(driver, cfg.Neo4j.Database, postgresDB)
+	repositories := repository.InitRepos(driver, cfg.Database.Neo4j.Database, postgresDB)
 
 	services := Services{
 		CommonServices:             commonServices,
@@ -89,7 +90,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 	services.BillingProfileService = NewBillingProfileService(log, repositories, grpcClients)
 	services.InvoiceService = NewInvoiceService(log, repositories, grpcClients, &services)
 	services.SlackService = NewSlackService(log, repositories, grpcClients, &services)
-	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.InternalServices.FileStoreApiConfig)
+	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.InternalServices.FileStoreApi)
 	services.EnrichmentService = NewEnrichmentService(log, &services, cfg)
 	services.WebhookService = NewWebhookService(log, repositories, &services)
 
