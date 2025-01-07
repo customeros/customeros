@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"strings"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -104,46 +103,34 @@ func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, test
 		Employees: utils.Int64Ptr(int64(100)),
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error saving organization during tenant onboarding"))
 		return err
 	}
 
-	contactId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelContact)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	err = s.services.Neo4jRepositories.ContactWriteRepository.SaveContactInTx(ctx, nil, tenant, contactId, data_fields.ContactFields{
+	contactId, err := s.services.ContactService.Save(ctx, nil, nil, data_fields.ContactFields{
 		FirstName: utils.StringPtr("Justin"),
 		LastName:  utils.StringPtr("Example"),
 	}, false)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error saving contact during tenant onboarding"))
 		return err
 	}
 
-	emailId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelEmail)
+	_, err = s.services.EmailService.Merge(ctx, nil, tenant, EmailFields{
+		Email: fmt.Sprintf("%s@%s", tenant, TEST_MAILBOX_DOMAIN),
+	},
+		&LinkWith{
+			Id:   contactId,
+			Type: model.CONTACT,
+		})
 	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	err = s.services.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, nil, tenant, emailId, repository.EmailCreateFields{
-		RawEmail: fmt.Sprintf("%s@%s", tenant, TEST_MAILBOX_DOMAIN),
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	err = s.services.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, nil, tenant, contactId, emailId, true)
-	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error saving email during tenant onboarding"))
 		return err
 	}
 
 	err = s.services.ContactService.LinkContactWithOrganization(ctx, nil, contactId, organizationId, "Chief Testing Officer", "", constants.AppSourceUserAdminApi, true, utils.TimePtr(utils.Now()), nil)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error linking contact with organization during tenant onboarding"))
 		return err
 	}
 
