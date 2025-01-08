@@ -16,7 +16,6 @@ type TrackerEventsRepository interface {
 	Create(ctx context.Context, trackerData entity.TrackerEvents) (*entity.TrackerEvents, error)
 	FindAll(ctx context.Context, trackerData entity.TrackerEvents, cacheLookbackInDays *int) (*[]entity.TrackerEvents, error)
 	Update(ctx context.Context, trackerData entity.TrackerEvents) (*entity.TrackerEvents, error)
-	UpdateWhereNoCompanyID(ctx context.Context, trackerData entity.TrackerEvents) (*entity.TrackerEvents, error)
 }
 
 type trackerEventsRepository struct {
@@ -70,39 +69,30 @@ func (f *trackerEventsRepository) Update(ctx context.Context, trackerData entity
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	if trackerData.IP == "" && trackerData.VisitorId == "" {
+	if trackerData.IP == "" && trackerData.VisitorID == "" {
 		err := errors.New("visitor ID or IP address is missing")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	var updatedRecord entity.TrackerEvents
-	err := f.gormDb.Model(&trackerData).Updates(&trackerData).First(&updatedRecord).Error
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
+	query := f.gormDb.Model(&entity.TrackerEvents{})
+
+	// Build WHERE conditions based on provided fields
+	if trackerData.IP != "" {
+		query = query.Where("ip = ?", trackerData.IP)
+	}
+	if trackerData.VisitorID != "" {
+		query = query.Where("visitor_id = ?", trackerData.VisitorID)
 	}
 
-	return &updatedRecord, nil
-}
-
-func (f *trackerEventsRepository) UpdateWhereNoCompanyID(ctx context.Context, trackerData entity.TrackerEvents) (*entity.TrackerEvents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackerEventsRepository.UpdateWhereNoCompanyID")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-
-	if trackerData.IP == "" && trackerData.VisitorId == "" {
-		err := errors.New("visitor ID or IP address is missing")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	var updatedRecord entity.TrackerEvents
-	err := f.gormDb.
-		Model(&trackerData).
-		Where("(domain IS NULL OR domain = '')").
-		Updates(&trackerData).
+	err := query.
+		Updates(map[string]interface{}{
+			"domain":        trackerData.Domain,
+			"linkedin_slug": trackerData.LinkedinSlug,
+		}).
 		First(&updatedRecord).Error
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

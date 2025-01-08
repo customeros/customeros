@@ -1,33 +1,20 @@
 package public
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-)
-
-type NewOrRepeatVisitor string
-
-const (
-	VisitorNew     NewOrRepeatVisitor = "new"
-	VisitorRepeat  NewOrRepeatVisitor = "repeat"
-	VisitorUnknown NewOrRepeatVisitor = ""
-)
-
-type RawTrackerEvent string
-
-const (
-	EventPageExit RawTrackerEvent = "page_exit"
-	EventPageView RawTrackerEvent = "page_view"
-	EventClick    RawTrackerEvent = "click"
 )
 
 func RevealWebsiteVisitors(services *service.Services) gin.HandlerFunc {
@@ -69,7 +56,7 @@ func RevealWebsiteVisitors(services *service.Services) gin.HandlerFunc {
 
 		span.SetTag(tracing.SpanTagTenant, *tenant)
 
-		trackerData := buildTrackerEventData(c, tenant)
+		trackerData := buildTrackerDbData(c, tenant)
 		if trackerData == nil {
 			err = fmt.Errorf("unable to build tracking record")
 			tracing.TraceErr(span, err)
@@ -94,63 +81,21 @@ func RevealWebsiteVisitors(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		// try to deanonymize the IP address
-		domain, linkedinSlug, err := identifyIP(ctx, services, trackerData.IP)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return
-		}
-
-		if domain == nil {
-			return
-		}
-
-		// update all IP events w/ ID data
-		query := entity.TrackerEvents{
-			IP:           trackerData.IP,
-			Domain:       domain,
-			LinkedinSlug: linkedinSlug,
-		}
-
-		_, err = services.CommonServices.PostgresRepositories.TrackerEventsRepository.Update(ctx, query)
-
-		// update all visitorIDs w/ ID data
-		query = entity.TrackerEvents{
-			VisitorId:    trackerData.VisitorId,
-			Domain:       domain,
-			LinkedinSlug: linkedinSlug,
-		}
-
-		_, err = services.CommonServices.PostgresRepositories.TrackerEventsRepository.UpdateWhereNoCompanyID(ctx, query)
-
 		// create and publish event
 		eventData := data_fields.WebsiteVisitEvent{
-			ID:       savedRecord.ID,
-			Tenant:   *tenant,
-			Domain:   *domain,
-			Referrer: trackerData.Referrer,
+			ID:          savedRecord.ID,
+			Tenant:      *tenant,
+			IPAddress:   &trackerData.IP,
+			VisitorId:   trackerData.VisitorID,
+			Website:     trackerData.Hostname,
+			PageVisited: trackerData.Pathname,
+			Referrer:    trackerData.Referrer,
+			Params:      parseURLParams(trackerData.Search),
 		}
 
 		webhookEvent := dto.WebhookEvent{
 			DataType: eventData.Type(),
 			Data:     eventData,
-		}
-
-		visitorType, err := newOrRepeatVisitor(ctx, services, tenant, domain)
-		if err != nil {
-			tracing.TraceErr(span, err)
-		}
-		switch visitorType {
-		case VisitorNew:
-			webhookEvent.Name = enum.EventRevealWebsiteVisitNew
-		case VisitorRepeat:
-			webhookEvent.Name = enum.EventRevealWebsiteVisitRepeat
-		case VisitorUnknown:
-			return
-		default:
-			err = errors.New("Invalid visitor type")
-			tracing.TraceErr(span, err)
-			return
 		}
 
 		err = services.CommonServices.RabbitMQService.PublishWebhookEvent(ctx, webhookEvent)
@@ -163,7 +108,7 @@ func RevealWebsiteVisitors(services *service.Services) gin.HandlerFunc {
 
 }
 
-func buildTrackerEventData(c *gin.Context, tenant *string) *entity.TrackerEvents {
+func buildTrackerDbData(c *gin.Context, tenant *string) *entity.TrackerEvents {
 	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Tracking.buildTrackerEventData")
 	defer span.Finish()
 
@@ -198,43 +143,27 @@ func isTrustedIP(ctx context.Context, s *service.Services, ipAddress string) boo
 	return !ipThreats.IsThreat
 }
 
-func identifyIP(ctx context.Context, s *service.Services, ipAddress string) (domain, linkedinSlug *string, err error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "Tracking.identifyIP")
-	defer span.Finish()
+func parseURLParams(queryString string) []data_fields.URLParams {
+	// Remove leading ? if present
+	queryString = strings.TrimPrefix(queryString, "?")
 
-	snitcherData, err := s.CommonServices.EnrichmentService.Snitcher(ctx, ipAddress)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, nil, err
+	// Split the string by & to get individual param-value pairs
+	pairs := strings.Split(queryString, "&")
+
+	// Create slice to hold results
+	params := make([]data_fields.URLParams, 0, len(pairs))
+
+	// Parse each pair into the struct
+	for _, pair := range pairs {
+		// Split pair by = to separate param and value
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) == 2 {
+			params = append(params, data_fields.URLParams{
+				Param: parts[0],
+				Value: parts[1],
+			})
+		}
 	}
 
-	if snitcherData == nil || snitcherData.Data == nil {
-		return nil, nil, nil
-	}
-
-	_, primaryDomain := domaincheck.PrimaryDomainCheck(snitcherData.Data.Domain)
-
-	return &primaryDomain, &snitcherData.Data.Profiles.LinkedIn.Handle, nil
-}
-
-func newOrRepeatVisitor(ctx context.Context, s *service.Services, tenant, domain *string) (NewOrRepeatVisitor, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "Tracking.newOrRepeatVisitor")
-	defer span.Finish()
-
-	query := entity.TrackerEvents{
-		Tenant:    *tenant,
-		Domain:    domain,
-		EventType: string(EventPageExit),
-	}
-
-	results, err := s.CommonServices.PostgresRepositories.TrackerEventsRepository.FindAll(ctx, query, nil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return VisitorUnknown, err
-	}
-
-	if len(*results) == 0 {
-		return VisitorNew, nil
-	}
-	return VisitorRepeat, nil
+	return params
 }

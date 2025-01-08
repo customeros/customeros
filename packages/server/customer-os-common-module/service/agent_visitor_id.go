@@ -1,71 +1,127 @@
-package handlers
+package service
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
-	"go.uber.org/multierr"
 )
 
 const MinHoursBetweenNotifications int = 12 // on same domain for a tenant
 
-func HandleWebsiteVisitorEvent(c context.Context, s *service.Services, sourceEvent commonEnum.FlowListenerEvent, eventData *data_fields.WebsiteVisitEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.HandleWebsiteVisitorEvent")
+func (a *agentService) VisitorIDAgent(ctx context.Context, eventData *data_fields.WebsiteVisitEvent) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.VisitorIDAgent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "eventData", eventData)
 
-	ctx = common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant: eventData.Tenant,
-	})
-
-	// find automations that listen on event
-	query := entity.Automations{
-		Tenant:     eventData.Tenant,
-		IsActive:   true,
-		TriggersOn: eventData.Type(),
-	}
-
-	automations, err := s.PostgresRepositories.AutomationsRepository.FindAll(ctx, query)
+	// try to deanonymize the IP address
+	domain, linkedinSlug, err := a.identifyIP(ctx, *eventData.IPAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return err
-	}
-	if automations == nil {
-		// send to dead events table
+		return
 	}
 
-	var errs error
-	for _, automation := range *automations {
-		switch automation.AgentName {
-		case enum.AgentVisitorID.String():
-			// create automation execution record
-
-			// call VisitorID agent
-
-			// update automation execution record with results
-
-		default:
-			err = fmt.Errorf("automation agent not handled for %s", automation.ID)
-			tracing.TraceErr(span, err)
-			errs = multierr.Append(errs, err)
-		}
+	if domain == nil {
+		return
 	}
 
-	return errs
+	// Create org
+
+	// update tracker table with ID data
+	query := entity.TrackerEvents{
+		IP:           *eventData.IPAddress,
+		Domain:       domain,
+		LinkedinSlug: linkedinSlug,
+	}
+
+	_, err = a.services.PostgresRepositories.TrackerEventsRepository.Update(ctx, query)
+
+	// determine if new org
+	isNewOrg, err := a.isNewCompanyVisit(ctx, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed isNewCompany lookup"))
+	}
+
+	// determine if new person
+	isNewVisitor, err := a.isNewWebsiteVisitor(ctx, services, *tenant, trackerData.VisitorID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed isNewVisitor lookup"))
+	}
+
+	// determine if slack notification is configured
+
+	// handle slack notification
+
 }
 
-func buildWebVisitorSlackNotification(ctx context.Context, s *service.Services, eventData *data_fields.WebsiteVisitEvent) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.buildWebVisitorSlackNotification")
+func (a *agentService) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug *string, err error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.identifyIP")
+	defer span.Finish()
+
+	snitcherData, err := a.services.EnrichmentService.Snitcher(ctx, ipAddress)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, nil, err
+	}
+
+	if snitcherData == nil || snitcherData.Data == nil {
+		return nil, nil, nil
+	}
+
+	_, primaryDomain := domaincheck.PrimaryDomainCheck(snitcherData.Data.Domain)
+
+	return &primaryDomain, &snitcherData.Data.Profiles.LinkedIn.Handle, nil
+}
+
+func (a *agentService) isNewCompanyVisit(ctx context.Context, tenant, domain *string) (bool, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.isNewCompanyVisit")
+	defer span.Finish()
+
+	query := entity.TrackerEvents{
+		Tenant:    *tenant,
+		Domain:    domain,
+		EventType: string(EventPageExit),
+	}
+
+	results, err := a.services.PostgresRepositories.TrackerEventsRepository.FindAll(ctx, query, nil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
+	if len(*results) == 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (a *agentService) isNewWebsiteVisitor(ctx context.Context, tenant, visitorId string) (bool, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.isNewWebsiteVisitor")
+	defer span.Finish()
+
+	query := entity.TrackerEvents{
+		Tenant:    tenant,
+		VisitorID: visitorId,
+		EventType: string(EventPageExit),
+	}
+
+	results, err := a.services.PostgresRepositories.TrackerEventsRepository.FindAll(ctx, query, nil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
+	if len(*results) == 0 {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (a *agentService) buildWebVisitorSlackNotification(ctx context.Context, eventData *data_fields.WebsiteVisitEvent) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.buildWebVisitorSlackNotification")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 

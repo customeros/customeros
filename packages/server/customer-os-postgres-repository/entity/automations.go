@@ -10,9 +10,9 @@ type Automations struct {
 	Tenant         string     `gorm:"column:tenant;type:varchar(255);not null;uniqueIndex:idx_tenant_name" json:"tenant" binding:"required"`
 	Name           string     `gorm:"column:name;type:varchar(255);not null;uniqueIndex:idx_tenant_name" json:"name" binding:"required"`
 	Description    *string    `gorm:"column:description;type:text" json:"description"`
-	IsActive       string     `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
-	ListensFor     string     `gorm:"column:listens_for;type:varchar(255);not null" json:"listensFor" binding:"required"`
-	AgentID        string     `gorm:"column:agent_id;type:varchar(255)" json:"agentId" binding:"required"`
+	IsActive       bool       `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
+	TriggersOn     string     `gorm:"column:triggers_on;type:varchar(255);not null" json:"triggersOn" binding:"required"`
+	AgentName      string     `gorm:"column:agent_name;type:varchar(255)" json:"agentName"`
 	FlowID         string     `gorm:"column:flow_id;type:varchar(255)" json:"flowId" binding:"required"`
 	VisibleInUI    *bool      `gorm:"column:visible_in_ui;type:boolean;default:true" json:"visibleInUI"`
 	CreatedAt      time.Time  `gorm:"column:created_at;autoCreateTime" json:"createdAt"`

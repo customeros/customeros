@@ -69,7 +69,7 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      "/reveal",
-		handler:   public.RevealWebsiteVisitor(s),
+		handler:   public.RevealWebsiteVisitors(s),
 		routeType: RoutePublic,
 	})
 }

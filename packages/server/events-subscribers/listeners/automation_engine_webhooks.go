@@ -18,11 +18,7 @@ import (
 )
 
 var eventDataTypes = map[string]reflect.Type{
-	data_fields.MeetingSummaryEvent{}.Type():    reflect.TypeOf(data_fields.MeetingSummaryEvent{}),
-	data_fields.ContactCreateEvent{}.Type():     reflect.TypeOf(data_fields.ContactCreateEvent{}),
-	data_fields.MarkdownEventFields{}.Type():    reflect.TypeOf(data_fields.MarkdownEventFields{}),
-	data_fields.WebsiteVisitEvent{}.Type():      reflect.TypeOf(data_fields.WebsiteVisitEvent{}),
-	data_fields.SlackNotifyEventFields{}.Type(): reflect.TypeOf(data_fields.SlackNotifyEventFields{}),
+	data_fields.WebsiteVisitEvent{}.Type(): reflect.TypeOf(data_fields.WebsiteVisitEvent{}),
 }
 
 func OnWebhookEventCreated(ctx context.Context, s *service.Services, input any) error {

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -11,8 +12,7 @@ import (
 )
 
 type AgentService interface {
-	EmailAgent(ctx context.Context) error
-	LinkedinAgent(ctx context.Context) error
+	VisitorIDAgent(ctx context.Context, eventData *data_fields.WebsiteVisitEvent)
 	SlackAgent(ctx context.Context, event *dto.FlowAgentEvent) error
 	TimelineAgent(ctx context.Context, event *dto.FlowAgentEvent) error
 	ICPAgent(ctx context.Context, event *dto.FlowAgentEvent) error

@@ -7,9 +7,9 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -104,8 +104,10 @@ func main() {
 	// email
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestValidateEmail{}, listeners.OnRequestedValidateEmail)
 
-	// FlowEngine
+	// Automation Engine
 	commonServices.RabbitMQService.RegisterHandler(dto.WebhookEvent{}, listeners.OnWebhookEventCreated)
+
+	// Flow Engine
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowAgentEvent{}, listeners.OnFlowAgentEventCreated)
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowAgentExecutionResultEvent{}, listeners.OnFlowAgentExecutionResultsEventCreated)
 

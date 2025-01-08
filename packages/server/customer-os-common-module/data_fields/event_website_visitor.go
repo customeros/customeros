@@ -1,16 +1,15 @@
 package data_fields
 
 type WebsiteVisitEvent struct {
-	ID                  string      `json:"id"`
-	Tenant              string      `json:"tenant"`
-	IPAddress           *string     `json:"ipAddress"`
-	OrgnanizationDomain string      `json:"organizationDomain"`
-	OrganizationID      *string     `json:"organizationId"`
-	VisitorId           string      `json:"visitorId"`
-	VisitorEmail        *string     `json:"visitorEmail"`
-	PageVisited         string      `json:"pageVisited"`
-	Referrer            string      `json:"referrer"`
-	Params              []URLParams `json:"params"`
+	ID           string      `json:"id"`
+	Tenant       string      `json:"tenant"`
+	IPAddress    *string     `json:"ipAddress"`
+	VisitorId    string      `json:"visitorId"`
+	VisitorEmail *string     `json:"visitorEmail"`
+	Website      string      `json:"website"`
+	PageVisited  string      `json:"pageVisited"`
+	Referrer     string      `json:"referrer"`
+	Params       []URLParams `json:"params"`
 }
 
 type URLParams struct {

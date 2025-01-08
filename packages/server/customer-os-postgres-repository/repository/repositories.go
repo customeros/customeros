@@ -13,10 +13,16 @@ type Repositories struct {
 	Db      *gorm.DB
 	AsyncDb *gorm.DB
 
+	AgentExecutionRepository                     AgentExecutionRepository
+	AgentRegistryRepository                      AgentRegistryRepository
 	AiLocationMappingRepository                  AiLocationMappingRepository
 	AiPromptLogRepository                        AiPromptLogRepository
 	ApiBillableEventRepository                   ApiBillableEventRepository
 	AppKeyRepository                             AppKeyRepository
+	AutomationDeadEventsRepository               AutomationDeadEventsRepository
+	AutomationEventRegistryRepository            AutomationEventRegistryRepository
+	AutomationsRepository                        AutomationsRepository
+	AutomationWebhooksRepository                 AutomationWebhooksRepository
 	BrowserAutomationRunRepository               BrowserAutomationRunRepository
 	BrowserAutomationRunResultRepository         BrowserAutomationRunResultRepository
 	BrowserConfigRepository                      BrowserConfigRepository
@@ -44,16 +50,13 @@ type Repositories struct {
 	EnrichDetailsTrackingRepository              EnrichDetailsTrackingRepository
 	EventBufferRepository                        EventBufferRepository
 	ExternalAppKeysRepository                    ExternalAppKeysRepository
-	FlowRepository                               FlowRepository
-	FlowAgentExecutionRepository                 FlowAgentExecutionRepository
-	FlowAgentRegistryRepository                  FlowAgentRegistryRepository
-	FlowDeadEventsRepository                     FlowDeadEventsRepository
+	FlowsRepository                              FlowsRepository
 	FlowEdgeRepository                           FlowEdgeRepository
 	FlowExecutionRepository                      FlowExecutionRepository
-	FlowListenerRegistryRepository               FlowListenerRegistryRepository
 	FlowNodeRepository                           FlowNodeRepository
 	FlowTransitionsRegistryRepository            FlowTransitionsRegistryRepository
-	FlowWebhooksRepository                       FlowWebhooksRepository
+	GlobalOrganizationRepository                 GlobalOrganizationRepository
+	GlobalOrganizationWebsiteToProcessRepository GlobalOrganizationWebsiteToProcessRepository
 	GoogleServiceAccountKeyRepository            GoogleServiceAccountKeyRepository
 	IndustryMappingRepository                    IndustryMappingRepository
 	MailStackDomainRepository                    MailStackDomainRepository
@@ -82,8 +85,6 @@ type Repositories struct {
 	TrackingAllowedOriginRepository              TrackingAllowedOriginRepository
 	UserEmailImportPageTokenRepository           UserEmailImportStateRepository
 	UserWorkingScheduleRepository                UserWorkingScheduleRepository
-	GlobalOrganizationRepository                 GlobalOrganizationRepository
-	GlobalOrganizationWebsiteToProcessRepository GlobalOrganizationWebsiteToProcessRepository
 }
 
 func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
@@ -96,10 +97,16 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		GoogleServiceAccountKeyRepository:  NewGoogleServiceAccountKeyRepository(postgresDB.AsyncGormDB),
 		UserEmailImportPageTokenRepository: NewUserEmailImportStateRepository(postgresDB.AsyncGormDB),
 
+		AgentExecutionRepository:                     NewAgentExecutionRepository(postgresDB.GormDB),
+		AgentRegistryRepository:                      NewAgentRegistryRepository(postgresDB.GormDB),
 		AiLocationMappingRepository:                  NewAiLocationMappingRepository(postgresDB.GormDB),
 		AiPromptLogRepository:                        NewAiPromptLogRepository(postgresDB.GormDB),
 		ApiBillableEventRepository:                   NewApiBillableEventRepository(postgresDB.GormDB),
 		AppKeyRepository:                             NewAppKeyRepo(postgresDB.GormDB),
+		AutomationDeadEventsRepository:               NewAutomationDeadEventsRepository(postgresDB.GormDB),
+		AutomationEventRegistryRepository:            NewAutomationEventRegistryRepository(postgresDB.GormDB),
+		AutomationsRepository:                        NewAutomationsRepository(postgresDB.GormDB),
+		AutomationWebhooksRepository:                 NewAutomationWebhooksRepository(postgresDB.GormDB),
 		BrowserAutomationRunRepository:               NewBrowserAutomationRunRepository(postgresDB.GormDB),
 		BrowserAutomationRunResultRepository:         NewBrowserAutomationRunResultRepository(postgresDB.GormDB),
 		BrowserConfigRepository:                      NewBrowserConfigRepository(postgresDB.GormDB),
@@ -127,16 +134,13 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		EnrichDetailsTrackingRepository:              NewEnrichDetailsTrackingRepository(postgresDB.GormDB),
 		EventBufferRepository:                        NewEventBufferRepository(postgresDB.GormDB),
 		ExternalAppKeysRepository:                    NewExternalAppKeysRepository(postgresDB.GormDB),
-		FlowRepository:                               NewFlowRepository(postgresDB.GormDB),
-		FlowAgentExecutionRepository:                 NewFlowAgentExecutionRepository(postgresDB.GormDB),
-		FlowAgentRegistryRepository:                  NewFlowAgentRegistryRepository(postgresDB.GormDB),
-		FlowDeadEventsRepository:                     NewFlowDeadEventsRepository(postgresDB.GormDB),
+		FlowsRepository:                              NewFlowsRepository(postgresDB.GormDB),
 		FlowEdgeRepository:                           NewFlowEdgeRepository(postgresDB.GormDB),
 		FlowExecutionRepository:                      NewFlowExecutionRepository(postgresDB.GormDB),
-		FlowListenerRegistryRepository:               NewFlowListenerRegistryRepository(postgresDB.GormDB),
 		FlowNodeRepository:                           NewFlowNodeRepository(postgresDB.GormDB),
 		FlowTransitionsRegistryRepository:            NewFlowTransitionsRegistryRepository(postgresDB.GormDB),
-		FlowWebhooksRepository:                       NewFlowWebhooksRepository(postgresDB.GormDB),
+		GlobalOrganizationRepository:                 NewGlobalOrganizationRepository(postgresDB.GormDB),
+		GlobalOrganizationWebsiteToProcessRepository: NewGlobalOrganizationWebsiteToProcessRepository(postgresDB.GormDB),
 		IndustryMappingRepository:                    NewIndustryMappingRepository(postgresDB.GormDB),
 		MailStackDomainRepository:                    NewMailStackDomainRepository(postgresDB.GormDB),
 		MailstackBuyRequestRepository:                NewMailstackBuyRequestRepository(postgresDB.GormDB),
@@ -161,8 +165,6 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		TrackerEventsRepository:                      NewTrackerEventsRepository(postgresDB.GormDB),
 		TrackingAllowedOriginRepository:              NewTrackingAllowedOriginRepository(postgresDB.GormDB),
 		UserWorkingScheduleRepository:                NewUserWorkingScheduleRepository(postgresDB.GormDB),
-		GlobalOrganizationRepository:                 NewGlobalOrganizationRepository(postgresDB.GormDB),
-		GlobalOrganizationWebsiteToProcessRepository: NewGlobalOrganizationWebsiteToProcessRepository(postgresDB.GormDB),
 	}
 
 	return repositories
@@ -170,9 +172,14 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 
 func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 	err := postgresDB.GormDB.AutoMigrate(
+		&entity.AgentRegistry{},
+		&entity.AgentExecution{},
 		&entity.AiLocationMapping{},
 		&entity.AiPromptLog{},
 		&entity.ApiBillableEvent{},
+		&entity.AutomationDeadEvents{},
+		&entity.AutomationEventRegistry{},
+		&entity.AutomationWebhooks{},
 		&entity.CacheEmailEnrow{},
 		&entity.CacheEmailScrubby{},
 		&entity.CacheEmailTrueinbox{},
@@ -197,16 +204,13 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.EnrichDetailsTracking{},
 		&entity.EventBuffer{},
 		&entity.ExternalAppKeys{},
-		&entity.Flow{},
-		&entity.FlowAgentRegistry{},
-		&entity.FlowAgentExecution{},
-		&entity.FlowDeadEvents{},
+		&entity.Flows{},
 		&entity.FlowEdge{},
 		&entity.FlowExecution{},
-		&entity.FlowListenerRegistry{},
 		&entity.FlowNode{},
 		&entity.FlowTransitionsRegistry{},
-		&entity.FlowWebhooks{},
+		&entity.GlobalOrganization{},
+		&entity.GlobalOrganizationWebsiteToProcess{},
 		&entity.IndustryMapping{},
 		&entity.MailStackDomain{},
 		&entity.MailstackBuyRequest{},
@@ -233,8 +237,6 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.TrackerEvents{},
 		&entity.TrackingAllowedOrigin{},
 		&entity.UserWorkingSchedule{},
-		&entity.GlobalOrganization{},
-		&entity.GlobalOrganizationWebsiteToProcess{},
 	)
 	if err != nil {
 		panic(err)
@@ -253,12 +255,12 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 }
 
 func (r *Repositories) InitData(ctx context.Context, postgresRepos *Repositories) {
-	err := r.FlowAgentRegistryRepository.Initialize(ctx)
+	err := r.AgentRegistryRepository.Initialize(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	err = r.FlowListenerRegistryRepository.Initialize(ctx)
+	err = r.AutomationEventRegistryRepository.Initialize(ctx)
 	if err != nil {
 		panic(err)
 	}

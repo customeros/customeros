@@ -5,7 +5,7 @@ import "time"
 type TrackerEvents struct {
 	ID        string `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
 	Tenant    string `gorm:"column:tenant;type:varchar(255);" json:"tenant"`
-	VisitorId string `gorm:"column:visitor_id;type:varchar(255);NOT NULL;" json:"visitorId"`
+	VisitorID string `gorm:"column:visitor_id;type:varchar(255);NOT NULL;" json:"visitorId"`
 	IP        string `gorm:"column:ip;type:varchar(255);" json:"ip" `
 	EventType string `gorm:"column:event_type;type:varchar(255);" json:"eventType"`
 	EventData string `gorm:"column:event_data;type:text;" json:"eventData"`
@@ -22,10 +22,11 @@ type TrackerEvents struct {
 	CookiesEnabled   bool   `gorm:"column:cookies_enabled;type:boolean;" json:"cookiesEnabled"`
 	ScreenResolution string `gorm:"column:screen_resolution;type:varchar(255);" json:"screenResolution"`
 
-	Domain        *string   `gorm:"column:domain;type:varchar(255);" json:"Domain"`
-	LinkedinSlug  *string   `gorm:"column:linkedin_slug;type:varchar(255);" json:"linkedinSlug"`
-	ListenerEvent *string   `gorm:"column:listener_event;type:varchar(255);" json:"listenerEvent"`
-	CreatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	Domain              *string   `gorm:"column:domain;type:varchar(255);" json:"Domain"`
+	LinkedinSlug        *string   `gorm:"column:linkedin_slug;type:varchar(255);" json:"linkedinSlug"`
+	Email               *string   `gorm:"column:email;type:varchar(255);" json:"email"`
+	WebsiteVisitEventID *string   `gorm:"column:website_visit_event_id;type:varchar(255);" json:"websiteVisitEventId"`
+	CreatedAt           time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 }
 
 func (TrackerEvents) TableName() string {

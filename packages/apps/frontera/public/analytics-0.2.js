@@ -30,7 +30,7 @@
   function sendData(eventType, eventData) {
     const userAgent = navigator.userAgent;
 
-    fetch('https://user-admin-api.customeros.ai/tracking', {
+    fetch('https://api.customeros.ai/reveal', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
