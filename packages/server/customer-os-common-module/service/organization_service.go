@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
-	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"strings"
 	"time"
 
@@ -363,7 +363,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		}
 
 		if createFlow {
-			_, err = s.services.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, txWithPostCommit.Tx, tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionCreated, "", "", utils.Now(), common.GetAppSourceFromContext(ctx))
+			_, err = s.services.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, txWithPostCommit.Tx, tenant, organizationId, model.ORGANIZATION, enum.ActionCreated, "", "", utils.Now(), common.GetAppSourceFromContext(ctx))
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to merge action"))
 				return nil, err
@@ -817,7 +817,7 @@ func (s *organizationService) UpdateOnboardingStatus(ctx context.Context, txWith
 				"status":   dataFields.Status.String(),
 				"comments": utils.IfNotNilString(dataFields.Comments),
 			}
-			_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+			_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, organizationId, model.ORGANIZATION, enum.ActionOnboardingStatusChanged, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
@@ -1143,7 +1143,7 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 	}
 
 	if lastTouchpointAt == nil {
-		timelineEventNode, err = s.services.Neo4jRepositories.ActionReadRepository.GetLastAction(ctx, tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionCreated)
+		timelineEventNode, err = s.services.Neo4jRepositories.ActionReadRepository.GetLastAction(ctx, tenant, organizationId, model.ORGANIZATION, enum.ActionCreated)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.services.Logger.Errorf("Failed to get created action: %v", err.Error())
@@ -1196,7 +1196,7 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 		timelineEventType = neo4jenum.TouchpointTypeNote.String()
 	case model.NodeLabelInteractionEvent:
 		timelineEventInteractionEvent := timelineEvent.(*neo4jentity.InteractionEventEntity)
-		if timelineEventInteractionEvent.Channel == commonenum.InteractionEventChannelEmail {
+		if timelineEventInteractionEvent.Channel == enum.InteractionEventChannelEmail {
 			interactionEventSentByUser, err := s.services.Neo4jRepositories.InteractionEventReadRepository.InteractionEventSentByUser(ctx, tenant, timelineEventInteractionEvent.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -1207,9 +1207,9 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 			} else {
 				timelineEventType = neo4jenum.TouchpointTypeInteractionEventEmailReceived.String()
 			}
-		} else if timelineEventInteractionEvent.Channel == commonenum.InteractionEventChannelVoice {
+		} else if timelineEventInteractionEvent.Channel == enum.InteractionEventChannelVoice {
 			timelineEventType = neo4jenum.TouchpointTypeInteractionEventPhoneCall.String()
-		} else if timelineEventInteractionEvent.Channel == commonenum.InteractionEventChannelChat {
+		} else if timelineEventInteractionEvent.Channel == enum.InteractionEventChannelChat {
 			timelineEventType = neo4jenum.TouchpointTypeInteractionEventChat.String()
 		} else if timelineEventInteractionEvent.EventType == "meeting" {
 			timelineEventType = neo4jenum.TouchpointTypeMeeting.String()
@@ -1218,7 +1218,7 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 		timelineEventType = neo4jenum.TouchpointTypeMeeting.String()
 	case model.NodeLabelAction:
 		timelineEventAction := timelineEvent.(*neo4jentity.ActionEntity)
-		if timelineEventAction.Type == neo4jenum.ActionCreated {
+		if timelineEventAction.Type == enum.ActionCreated {
 			timelineEventType = neo4jenum.TouchpointTypeActionCreated.String()
 		} else {
 			timelineEventType = neo4jenum.TouchpointTypeAction.String()

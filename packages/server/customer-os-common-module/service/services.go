@@ -24,6 +24,7 @@ type Services struct {
 	RabbitMQService RabbitMQService
 	GrpcClients     *grpc_client.Clients
 
+	ActionService              ActionService
 	AgentService               AgentService
 	AIService                  AIService
 	AttachmentService          AttachmentService
@@ -89,6 +90,7 @@ func InitServices(globalConfig *config.GlobalConfig, postgresDB *config.Postgres
 		services.RabbitMQService = NewRabbitMQService(globalConfig.RabbitMQConfig.Url, services)
 	}
 
+	services.ActionService = NewActionService(log, services)
 	services.AgentService = NewAgentService(services)
 	services.AIService = NewAIService(globalConfig, services)
 	services.AttachmentService = NewAttachmentService(services)

@@ -2,7 +2,8 @@ package graph
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -455,23 +456,23 @@ func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant st
 		InvoiceId:     invoiceEntity.Id,
 	})
 
-	actionType := neo4jenum.ActionNA
+	actionType := enum.ActionNA
 	message := ""
 	switch invoiceEntity.Status {
 	case neo4jenum.InvoiceStatusDue:
 		message = "Invoice N° " + invoiceEntity.Number + " issued with an amount of " + invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceEntity.TotalAmount, 2)
-		actionType = neo4jenum.ActionInvoiceIssued
+		actionType = enum.ActionInvoiceIssued
 	case neo4jenum.InvoiceStatusPaid:
 		message = "Invoice N° " + invoiceEntity.Number + " paid in full: " + invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceEntity.TotalAmount, 2)
-		actionType = neo4jenum.ActionInvoicePaid
+		actionType = enum.ActionInvoicePaid
 	case neo4jenum.InvoiceStatusVoid:
 		message = "Invoice N° " + invoiceEntity.Number + " voided"
-		actionType = neo4jenum.ActionInvoiceVoided
+		actionType = enum.ActionInvoiceVoided
 	case neo4jenum.InvoiceStatusOverdue:
 		message = "Invoice N° " + invoiceEntity.Number + " overdue"
-		actionType = neo4jenum.ActionInvoiceOverdue
+		actionType = enum.ActionInvoiceOverdue
 	}
-	if actionType == neo4jenum.ActionNA {
+	if actionType == enum.ActionNA {
 		span.LogFields(log.String("result", "status not supported"))
 		return
 	}

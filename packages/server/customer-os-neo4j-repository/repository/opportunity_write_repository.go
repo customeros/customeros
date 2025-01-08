@@ -384,8 +384,7 @@ func (r *opportunityWriteRepository) CloseWon(ctx context.Context, tx *neo4j.Man
 	tracing.LogObjectAsJson(span, "params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, cypher, params)
-		return nil, err
+		return tx.Run(ctx, cypher, params)
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)

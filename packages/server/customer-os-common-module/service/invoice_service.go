@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
@@ -71,7 +71,7 @@ type SimulateInvoiceRequestServiceLineData struct {
 	ParentID          string
 	Description       string
 	Comments          string
-	BillingCycle      enum.BilledType
+	BillingCycle      neo4jenum.BilledType
 	Price             float64
 	Quantity          int64
 	ServiceStarted    time.Time
@@ -1124,23 +1124,23 @@ func (s *invoiceService) createInvoiceAction(ctx context.Context, tenant string,
 		InvoiceId:     invoiceEntity.Id,
 	})
 
-	actionType := neo4jenum.ActionNA
+	actionType := enum.ActionNA
 	message := ""
 	switch invoiceEntity.Status {
 	case neo4jenum.InvoiceStatusDue:
 		message = "Invoice N° " + invoiceEntity.Number + " issued with an amount of " + invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceEntity.TotalAmount, 2)
-		actionType = neo4jenum.ActionInvoiceIssued
+		actionType = enum.ActionInvoiceIssued
 	case neo4jenum.InvoiceStatusPaid:
 		message = "Invoice N° " + invoiceEntity.Number + " paid in full: " + invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceEntity.TotalAmount, 2)
-		actionType = neo4jenum.ActionInvoicePaid
+		actionType = enum.ActionInvoicePaid
 	case neo4jenum.InvoiceStatusVoid:
 		message = "Invoice N° " + invoiceEntity.Number + " voided"
-		actionType = neo4jenum.ActionInvoiceVoided
+		actionType = enum.ActionInvoiceVoided
 	case neo4jenum.InvoiceStatusOverdue:
 		message = "Invoice N° " + invoiceEntity.Number + " overdue"
-		actionType = neo4jenum.ActionInvoiceOverdue
+		actionType = enum.ActionInvoiceOverdue
 	}
-	if actionType == neo4jenum.ActionNA {
+	if actionType == enum.ActionNA {
 		span.LogFields(log.String("result", "status not supported"))
 		return
 	}

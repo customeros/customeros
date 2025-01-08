@@ -853,14 +853,13 @@ func MapDbNodeToActionEntity(node *dbtype.Node) *entity.ActionEntity {
 	}
 	props := utils.GetPropsFromNode(*node)
 	action := entity.ActionEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Type:          enum.GetActionType(utils.GetStringPropOrEmpty(props, "type")),
-		Content:       utils.GetStringPropOrEmpty(props, "content"),
-		Metadata:      utils.GetStringPropOrEmpty(props, "metadata"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		Type:      commonenum.GetActionType(utils.GetStringPropOrEmpty(props, "type")),
+		Content:   utils.GetStringPropOrEmpty(props, "content"),
+		Metadata:  utils.GetStringPropOrEmpty(props, "metadata"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:    entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 	}
 	return &action
 }

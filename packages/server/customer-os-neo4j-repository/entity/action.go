@@ -1,21 +1,20 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"time"
 )
 
 type ActionEntity struct {
 	DataLoaderKey
-	Id            string
-	CreatedAt     time.Time
-	Content       string
-	Metadata      string
-	Type          neo4jenum.ActionType
-	Source        DataSource
-	SourceOfTruth DataSource
-	AppSource     string
+	Id        string
+	CreatedAt time.Time
+	Content   string
+	Metadata  string
+	Type      enum.ActionType
+	Source    DataSource
+	AppSource string
 }
 
 type ActionEntities []ActionEntity

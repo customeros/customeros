@@ -197,7 +197,7 @@ type countryBatcher struct {
 	countryService service.CountryService
 }
 type actionBatcher struct {
-	actionService service.ActionService
+	actionService commonservice.ActionService
 }
 type actionItemBatcher struct {
 	actionItemService service.ActionItemService
@@ -307,7 +307,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		countryService: services.CountryService,
 	}
 	actionBatcher := actionBatcher{
-		actionService: services.ActionService,
+		actionService: services.CommonServices.ActionService,
 	}
 	actionItemBatcher := actionItemBatcher{
 		actionItemService: services.ActionItemService,
