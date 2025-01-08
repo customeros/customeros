@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -403,6 +404,28 @@ func (r *mutationResolver) OrganizationRemoveDomain(ctx context.Context, organiz
 
 	return &model.ActionResponse{
 		Accepted: true,
+	}, nil
+}
+
+// OrganizationRemoveDomains is the resolver for the organization_RemoveDomains field.
+func (r *mutationResolver) OrganizationRemoveDomains(ctx context.Context, organizationID string, domains []string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveDomain", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", organizationID), log.Object("request.domains", domains))
+
+	success := true
+	for _, domain := range domains {
+		err := r.Services.CommonServices.OrganizationService.UnlinkDomain(ctx, nil, organizationID, domain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to unlink domain %s from organization %s", domain, organizationID)
+			success = false
+		}
+	}
+
+	return &model.ActionResponse{
+		Accepted: success,
 	}, nil
 }
 
