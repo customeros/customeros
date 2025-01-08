@@ -98,14 +98,6 @@ export const EmailPreviewModal = ({
     defaultValues,
   });
 
-  //will remain here until we figure out if we need it or not
-  // const handleResetEditor = () => {
-  //   const context = remirrorProps.getContext();
-  //   if (context) {
-  //     context.commands.resetContent();
-  //   }
-  // };
-
   const handleEmailSendSuccess = async (response: unknown) => {
     await updateTimelineCache(response, queryKey);
 

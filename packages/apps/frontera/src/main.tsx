@@ -12,7 +12,6 @@ import './styles/globals.scss';
 import './styles/toastify.scss';
 import './styles/normalization.scss';
 import './styles/react-calendar.scss';
-import './styles/remirror-editor.scss';
 import 'react-toastify/dist/ReactToastify.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

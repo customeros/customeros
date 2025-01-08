@@ -7,7 +7,6 @@ import {
   PropsWithChildren,
 } from 'react';
 
-import { useRemirror } from '@remirror/react';
 import { useQueryClient, UseMutationOptions } from '@tanstack/react-query';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -34,15 +33,11 @@ import {
 } from '@organization/graphql/createLogEntry.generated';
 
 import { useTimelineMeta } from '../../../state';
-import { logEntryEditorExtensions } from './extensions';
 
 export const noop = () => undefined;
 
 interface TimelineActionLogEntryContextContextMethods {
   isSaving: boolean;
-  // TODO: type this correctly
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  remirrorProps: any;
   checkCanExitSafely: () => boolean;
   closeConfirmationDialog: () => void;
   showLogEntryConfirmationDialog: boolean;
@@ -63,7 +58,6 @@ const TimelineActionLogEntryContextContext =
     onCreateLogEntry: noop,
     closeConfirmationDialog: noop,
     handleExitEditorAndCleanData: noop,
-    remirrorProps: null,
     isSaving: false,
     showLogEntryConfirmationDialog: false,
   });
@@ -103,19 +97,10 @@ export const TimelineActionLogEntryContextContextProvider = ({
       return next;
     },
   });
-  const remirrorProps = useRemirror({
-    extensions: logEntryEditorExtensions,
-  });
 
   const handleResetEditor = () => {
     reset();
     setDefaultValues(logEntryValues);
-
-    const context = remirrorProps.getContext();
-
-    if (context) {
-      context.commands.resetContent();
-    }
   };
 
   const createLogEntryMutation = useCreateLogEntryMutation(client, {
@@ -210,7 +195,6 @@ export const TimelineActionLogEntryContextContextProvider = ({
         handleExitEditorAndCleanData,
         closeConfirmationDialog: onClose,
         onCreateLogEntry,
-        remirrorProps,
         isSaving: createLogEntryMutation.isPending,
         showLogEntryConfirmationDialog: isOpen,
       }}

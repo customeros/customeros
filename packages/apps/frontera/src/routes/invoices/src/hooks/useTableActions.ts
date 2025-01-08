@@ -1,17 +1,44 @@
 import { useEffect, useCallback } from 'react';
 
-import { useStore } from '@shared/hooks/useStore';
+import { useLocalObservable } from 'mobx-react-lite';
 
-import { useTableActionState } from '../state/TableActionState.atom';
+import { useStore } from '@shared/hooks/useStore';
+import { InvoiceStatus } from '@shared/types/__generated__/graphql.types';
+
+interface TableActionsState {
+  targetId: string;
+  isConfirming: boolean;
+  targetStatus: InvoiceStatus | null;
+  setTableActionState: (
+    state: Omit<TableActionsState, 'setTableActionState'>,
+  ) => void;
+}
 
 export const useTableActions = () => {
-  const [tableActionState, setTableActionState] = useTableActionState();
+  const tableState = useLocalObservable<TableActionsState>(() => ({
+    targetId: '',
+    targetStatus: null,
+    isConfirming: false,
+    setTableActionState({
+      targetId,
+      targetStatus,
+      isConfirming,
+    }: {
+      targetId: string;
+      isConfirming: boolean;
+      targetStatus: InvoiceStatus | null;
+    }) {
+      this.targetId = targetId;
+      this.targetStatus = targetStatus;
+      this.isConfirming = isConfirming;
+    },
+  }));
+
   const store = useStore();
-  const { targetId, targetStatus, isConfirming } = tableActionState;
-  const invoice = store.invoices?.value?.get(targetId);
+  const invoice = store.invoices?.value?.get(tableState.targetId);
 
   const reset = () => {
-    setTableActionState({
+    tableState.setTableActionState({
       targetId: '',
       targetStatus: null,
       isConfirming: false,
@@ -19,24 +46,24 @@ export const useTableActions = () => {
   };
 
   const onConfirm = useCallback(() => {
-    if (targetId && targetStatus) {
+    if (tableState.targetId && tableState.targetStatus) {
       invoice?.update((prev) => ({
         ...prev,
-        status: targetStatus,
+        status: tableState.targetStatus,
       }));
     }
-  }, [targetId, targetStatus]);
+  }, [tableState.targetId, tableState.targetStatus]);
 
   useEffect(() => {
-    if (!isConfirming) {
+    if (!tableState.isConfirming) {
       onConfirm();
     }
-  }, [isConfirming, onConfirm]);
+  }, [tableState.isConfirming, onConfirm]);
 
   return {
     reset,
-    targetId,
+    targetId: tableState.targetId,
     onConfirm,
-    isConfirming,
+    isConfirming: tableState.isConfirming,
   };
 };
