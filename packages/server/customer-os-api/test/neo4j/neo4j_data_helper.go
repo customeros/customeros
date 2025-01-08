@@ -11,7 +11,6 @@ import (
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -850,7 +849,7 @@ func LinkSocialWithEntity(ctx context.Context, driver *neo4j.DriverWithContext, 
 }
 
 // Deprecated
-func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType neo4jenum.ActionType, createdAt time.Time) string {
+func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType enum.ActionType, createdAt time.Time) string {
 	actionId, _ := uuid.NewRandom()
 
 	query := "MATCH (o:Organization {id:$organizationId}) " +
@@ -875,7 +874,7 @@ func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 }
 
 // Deprecated
-func CreateActionForInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionEventId string, actionType neo4jenum.ActionType, createdAt time.Time) string {
+func CreateActionForInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionEventId string, actionType enum.ActionType, createdAt time.Time) string {
 	actionId, _ := uuid.NewRandom()
 
 	query := "MATCH (i:InteractionEvent {id:$interactionEventId}) " +
@@ -900,7 +899,7 @@ func CreateActionForInteractionEvent(ctx context.Context, driver *neo4j.DriverWi
 }
 
 // Deprecated
-func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType neo4jenum.ActionType, createdAt time.Time, extraProperties map[string]string) string {
+func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType enum.ActionType, createdAt time.Time, extraProperties map[string]string) string {
 	actionId, _ := uuid.NewRandom()
 
 	query := `MATCH (o:Organization {id:$organizationId}) 

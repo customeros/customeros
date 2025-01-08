@@ -3,6 +3,7 @@ package graph
 import (
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -339,7 +340,7 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
-	require.Equal(t, neo4jenum.ActionInvoiceIssued, action.Type)
+	require.Equal(t, enum.ActionInvoiceIssued, action.Type)
 	require.Equal(t, "Invoice N° INV-001 issued with an amount of €120", action.Content)
 	require.Equal(t, fmt.Sprintf(`{"status":"DUE","currency":"EUR","amount":120,"number":"INV-001","id":"%s"}`, invoiceId), action.Metadata)
 
@@ -536,7 +537,7 @@ func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
 	require.NotNil(t, action.Id)
 	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), action.Source)
 	require.Equal(t, constants.AppSourceEventProcessingPlatformSubscribers, action.AppSource)
-	require.Equal(t, neo4jenum.ActionInvoiceVoided, action.Type)
+	require.Equal(t, enum.ActionInvoiceVoided, action.Type)
 	require.Equal(t, "Invoice N° INV-001 voided", action.Content)
 	require.Equal(t, fmt.Sprintf(`{"status":"VOID","currency":"USD","amount":55,"number":"INV-001","id":"%s"}`, invoiceId), action.Metadata)
 }

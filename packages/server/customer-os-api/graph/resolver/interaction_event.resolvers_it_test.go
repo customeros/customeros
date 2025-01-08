@@ -8,10 +8,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"log"
@@ -79,7 +79,7 @@ func TestQueryResolver_InteractionEvent(t *testing.T) {
 	neo4jt.InteractionEventPartOfInteractionSession(ctx, driver, interactionEventId1, interactionSession1)
 	neo4jt.InteractionEventRepliesToInteractionEvent(ctx, driver, tenantName, interactionEventId1, interactionEventId4_WithoutSession)
 
-	neo4jt.CreateActionForInteractionEvent(ctx, driver, tenantName, interactionEventId1, neo4jenum.ActionInteractionEventRead, now)
+	neo4jt.CreateActionForInteractionEvent(ctx, driver, tenantName, interactionEventId1, enum.ActionInteractionEventRead, now)
 
 	rawResponse, err := c.RawPost(getQuery("interaction_event/get_interaction_event"),
 		client.Var("eventId", interactionEventId1))

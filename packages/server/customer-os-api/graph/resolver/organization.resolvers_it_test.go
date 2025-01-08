@@ -2,7 +2,7 @@ package resolver
 
 import (
 	"context"
-	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -488,7 +488,7 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	secAgo120 := now.Add(time.Duration(-120) * time.Second)
 	secAgo1000 := now.Add(time.Duration(-1000) * time.Second)
 
-	actionId1 := neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, neo4jenum.ActionCreated, secAgo5)
+	actionId1 := neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, enum.ActionCreated, secAgo5)
 
 	// prepare contact and org interaction events
 	channel := "EMAIL"
@@ -641,14 +641,14 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 
 	now := time.Now().UTC()
 
-	neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, neo4jenum.ActionCreated, now)
+	neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, enum.ActionCreated, now)
 
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId1, "contact note 1", "text/plain", now)
 	neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId2, "contact note 2", "text/plain", now)
 	neo4jt.CreateNoteForOrganization(ctx, driver, tenantName, organizationId, "org note 1", now)
 
 	// prepare contact and org interaction events
-	channel := commonenum.InteractionEventChannelEmail
+	channel := enum.InteractionEventChannelEmail
 	interactionEventId1 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", channel.String(), now)
 	interactionEventId2 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", channel.String(), now)
 	interactionEventId3 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", channel.String(), now)
