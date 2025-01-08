@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
