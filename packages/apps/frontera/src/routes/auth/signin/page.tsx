@@ -6,6 +6,7 @@ import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
+import { validateEmail } from '@utils/email';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Button } from '@ui/form/Button/Button';
 import { Google } from '@ui/media/logos/Google';
@@ -26,6 +27,7 @@ export const SignIn = observer(() => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [hasMagicLinkSent, setHasMagicLinkSent] = useState(false);
+  const [emailValidationError, setEmailValidationError] = useState('');
 
   const handleSignIn = (provider: string) => {
     switch (provider) {
@@ -34,17 +36,33 @@ export const SignIn = observer(() => {
       case 'azure-ad':
         return store.session.authenticate('azure-ad');
 
-      case 'magic-link':
+      case 'magic-link': {
+        if (email.length === 0) {
+          setEmailValidationError('Houston, we have a blank...');
+
+          return;
+        }
+
+        const validationError = validateEmail(email);
+
+        if (validationError) {
+          setEmailValidationError(validationError);
+
+          return;
+        }
+
+        setEmailValidationError('');
+
         return store.session.authenticate(
           'magic-link',
           { email },
           {
             onSuccess: () => {
-              setEmail('');
               setHasMagicLinkSent(true);
             },
           },
         );
+      }
       default:
         break;
     }
@@ -79,17 +97,19 @@ export const SignIn = observer(() => {
                   <h2 className='text-gray-900 leading-9 font-bold text-3xl py-3 mt-[-40px]'>
                     Check your email
                   </h2>
-                  <p className='text-gray-500'>
-                    We've sent you an email with a magic code
+                  <p className='mb-4 text-gray-500 text-center'>
+                    We've sent you an email with a magic code to {email}
                   </p>
                   <Button
                     size='md'
                     variant='outline'
-                    colorScheme='primary'
                     className={cn(`w-full py-[9px] px-4`)}
-                    onClick={() => setHasMagicLinkSent(false)}
+                    onClick={() => {
+                      setEmail('');
+                      setHasMagicLinkSent(false);
+                    }}
                   >
-                    Resend email
+                    Try another way
                   </Button>
                 </div>
               </div>
@@ -166,21 +186,34 @@ export const SignIn = observer(() => {
                 <span className='text-sm text-gray-500 leading-none'>or</span>
               </Divider>
               <div className='flex w-full flex-col gap-4 items-center'>
-                <Input
-                  value={email}
-                  variant='outline'
-                  placeholder='Enter your email'
-                  onChange={(e) => setEmail(e.target.value)}
-                  className='rounded-lg w-full placeholder:text-sm text-sm'
-                />
+                <div className='w-full'>
+                  <Input
+                    value={email}
+                    variant='outline'
+                    placeholder='Enter your email'
+                    invalid={emailValidationError.length > 0}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className='rounded-lg w-full placeholder:text-sm text-sm'
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSignIn('magic-link');
+                      }
+                    }}
+                  />
+                  {emailValidationError.length > 0 && (
+                    <p className='pl-[9px] text-xs text-error-500'>
+                      {emailValidationError}
+                    </p>
+                  )}
+                </div>
                 <Button
                   size='md'
                   variant='outline'
                   colorScheme='primary'
                   className={cn(`w-full py-[9px] px-4`)}
+                  onClick={() => handleSignIn('magic-link')}
                   isLoading={store.session.isLoading === 'magic-link'}
                   isDisabled={hasMagicLinkSent || !!store.session.isLoading}
-                  onClick={() => email.length > 0 && handleSignIn('magic-link')}
                   rightSpinner={
                     <Spinner
                       size='sm'
