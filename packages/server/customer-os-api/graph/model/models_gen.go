@@ -3017,6 +3017,7 @@ type ActionType string
 
 const (
 	ActionTypeCreated                        ActionType = "CREATED"
+	ActionTypeGeneric                        ActionType = "GENERIC"
 	ActionTypeRenewalLikelihoodUpdated       ActionType = "RENEWAL_LIKELIHOOD_UPDATED"
 	ActionTypeRenewalForecastUpdated         ActionType = "RENEWAL_FORECAST_UPDATED"
 	ActionTypeContractStatusUpdated          ActionType = "CONTRACT_STATUS_UPDATED"
@@ -3040,6 +3041,7 @@ const (
 
 var AllActionType = []ActionType{
 	ActionTypeCreated,
+	ActionTypeGeneric,
 	ActionTypeRenewalLikelihoodUpdated,
 	ActionTypeRenewalForecastUpdated,
 	ActionTypeContractStatusUpdated,
@@ -3062,7 +3064,7 @@ var AllActionType = []ActionType{
 
 func (e ActionType) IsValid() bool {
 	switch e {
-	case ActionTypeCreated, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeInteractionEventRead, ActionTypeServiceLineItemBilledTypeUpdated, ActionTypeServiceLineItemBilledTypeRecurringCreated, ActionTypeServiceLineItemBilledTypeOnceCreated, ActionTypeServiceLineItemBilledTypeUsageCreated, ActionTypeContractRenewed, ActionTypeServiceLineItemRemoved, ActionTypeOnboardingStatusChanged, ActionTypeInvoiceIssued, ActionTypeInvoicePaid, ActionTypeInvoiceVoided, ActionTypeInvoiceOverdue, ActionTypeInvoiceSent:
+	case ActionTypeCreated, ActionTypeGeneric, ActionTypeRenewalLikelihoodUpdated, ActionTypeRenewalForecastUpdated, ActionTypeContractStatusUpdated, ActionTypeServiceLineItemPriceUpdated, ActionTypeServiceLineItemQuantityUpdated, ActionTypeInteractionEventRead, ActionTypeServiceLineItemBilledTypeUpdated, ActionTypeServiceLineItemBilledTypeRecurringCreated, ActionTypeServiceLineItemBilledTypeOnceCreated, ActionTypeServiceLineItemBilledTypeUsageCreated, ActionTypeContractRenewed, ActionTypeServiceLineItemRemoved, ActionTypeOnboardingStatusChanged, ActionTypeInvoiceIssued, ActionTypeInvoicePaid, ActionTypeInvoiceVoided, ActionTypeInvoiceOverdue, ActionTypeInvoiceSent:
 		return true
 	}
 	return false

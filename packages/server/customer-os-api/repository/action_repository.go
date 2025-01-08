@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type ActionRepository interface {
-	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType model.EntityType, actionType neo4jenum.ActionType, source neo4jentity.DataSource, appSource string) (*dbtype.Node, error)
+	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType model.EntityType, actionType enum.ActionType, source neo4jentity.DataSource, appSource string) (*dbtype.Node, error)
 }
 
 type actionRepository struct {
@@ -28,7 +28,7 @@ func NewActionRepository(driver *neo4j.DriverWithContext) ActionRepository {
 	}
 }
 
-func (r *actionRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType model.EntityType, actionType neo4jenum.ActionType, source neo4jentity.DataSource, appSource string) (*dbtype.Node, error) {
+func (r *actionRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType model.EntityType, actionType enum.ActionType, source neo4jentity.DataSource, appSource string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionRepository.Create")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

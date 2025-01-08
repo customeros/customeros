@@ -8,6 +8,7 @@ const (
 	ActionContractStatusUpdated          ActionType = "CONTRACT_STATUS_UPDATED"
 	ActionServiceLineItemPriceUpdated    ActionType = "SERVICE_LINE_ITEM_PRICE_UPDATED"
 	ActionServiceLineItemQuantityUpdated ActionType = "SERVICE_LINE_ITEM_QUANTITY_UPDATED"
+	ActionGeneric                        ActionType = "GENERIC"
 	// Deprecated
 	ActionServiceLineItemBilledTypeUpdated          ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_UPDATED"
 	ActionServiceLineItemBilledTypeRecurringCreated ActionType = "SERVICE_LINE_ITEM_BILLED_TYPE_RECURRING_CREATED"
@@ -28,6 +29,7 @@ const (
 
 var AllActionType = []ActionType{
 	ActionCreated,
+	ActionGeneric,
 	ActionContractStatusUpdated,
 	ActionServiceLineItemPriceUpdated,
 	ActionServiceLineItemQuantityUpdated,
@@ -60,4 +62,8 @@ func IsValidActionType(s string) bool {
 		}
 	}
 	return false
+}
+
+func (a ActionType) String() string {
+	return string(a)
 }

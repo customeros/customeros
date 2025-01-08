@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -447,7 +448,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 					extraActionProperties := map[string]interface{}{
 						"comments": utils.IfNotNilString(input.Comments),
 					}
-					_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, commonModel.CONTRACT, neo4jenum.ActionRenewalLikelihoodUpdated, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+					_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, commonModel.CONTRACT, enum.ActionRenewalLikelihoodUpdated, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 					if err != nil {
 						tracing.TraceErr(span, err)
 						s.log.Errorf("error while creating action for opportunity %s: %s", opportunityId, err.Error())
@@ -808,7 +809,7 @@ func (s *opportunityService) RolloutRenewalOpportunity(ctx context.Context, cont
 	})
 	message := contractEntity.Name + " renewed"
 
-	_, err = s.services.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, contractId, commonModel.CONTRACT, neo4jenum.ActionContractRenewed, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx))
+	_, err = s.services.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, contractId, commonModel.CONTRACT, enum.ActionContractRenewed, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed creating renewed action for contract %s: %s", contractId, err.Error())

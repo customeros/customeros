@@ -38,7 +38,6 @@ type Services struct {
 	PageViewService            PageViewService
 	MeetingService             MeetingService
 	ExternalSystemService      ExternalSystemService
-	ActionService              ActionService
 	CountryService             CountryService
 	ActionItemService          ActionItemService
 	BillableService            BillableService
@@ -64,7 +63,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 		LocationService:            NewLocationService(log, repositories),
 		PageViewService:            NewPageViewService(log, repositories),
 		ExternalSystemService:      NewExternalSystemService(log, repositories),
-		ActionService:              NewActionService(log, repositories),
 		CountryService:             NewCountryService(log, repositories),
 		ActionItemService:          NewActionItemService(log, repositories),
 		BillableService:            NewBillableService(log, repositories),
