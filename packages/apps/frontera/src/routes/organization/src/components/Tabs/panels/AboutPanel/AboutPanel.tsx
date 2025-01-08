@@ -27,12 +27,12 @@ import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
-import { Domains } from '@organization/components/Tabs/panels/AboutPanel/components/Domains.tsx';
 import {
   EntityType,
   OrganizationStage,
   OrganizationRelationship,
 } from '@graphql/types';
+import { Domains } from '@organization/components/Tabs/panels/AboutPanel/components/Domains.tsx';
 
 import { Tags } from './components/tags';
 import { SocialIconInput } from '../../shared';
