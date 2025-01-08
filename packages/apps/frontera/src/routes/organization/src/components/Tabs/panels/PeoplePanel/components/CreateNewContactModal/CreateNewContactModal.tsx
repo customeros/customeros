@@ -134,6 +134,7 @@ export const CreateNewContactModal = observer(
                     if (e.key === 'Escape') {
                       onClose();
                     }
+                    e.stopPropagation();
                   }}
                   onChange={(e) => {
                     contactCreate.setInputValue(e.target.value);

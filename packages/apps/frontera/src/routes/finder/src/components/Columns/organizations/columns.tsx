@@ -566,7 +566,7 @@ export const columns: Record<string, Column> = {
     enableSorting: true,
 
     cell: (props) => {
-      const value = props.getValue()?.contacts?.length;
+      const value = props.row.original.value.contactCount;
 
       return (
         <div data-test='organization-contacts-in-all-orgs-table'>{value}</div>
