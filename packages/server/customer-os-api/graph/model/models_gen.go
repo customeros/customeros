@@ -971,6 +971,16 @@ type Domain struct {
 	PrimaryDomain *string `json:"primaryDomain,omitempty"`
 }
 
+type DomainCheckDetails struct {
+	Domain                      string  `json:"domain"`
+	ValidSyntax                 bool    `json:"validSyntax"`
+	Accessible                  bool    `json:"accessible"`
+	Primary                     bool    `json:"primary"`
+	PrimaryDomain               string  `json:"primaryDomain"`
+	DomainOrganizationID        *string `json:"domainOrganizationId,omitempty"`
+	PrimaryDomainOrganizationID *string `json:"primaryDomainOrganizationId,omitempty"`
+}
+
 // Describes an email address associated with a `Contact` in customerOS.
 // **A `return` object.**
 type Email struct {
