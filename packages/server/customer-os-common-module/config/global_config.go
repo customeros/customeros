@@ -24,6 +24,7 @@ type InternalServices struct {
 }
 
 type ExternalServices struct {
+	AnthropicConfig  AnthropicConfig
 	CloudflareConfig CloudflareConfig
 	NamecheapConfig  NamecheapConfig
 	OpenSRSConfig    OpenSRSConfig

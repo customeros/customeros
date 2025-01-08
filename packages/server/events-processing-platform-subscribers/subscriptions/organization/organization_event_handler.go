@@ -3,29 +3,31 @@ package organization
 import (
 	"context"
 	"fmt"
-	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
+	"strings"
+	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 )
 
 const (
@@ -45,17 +47,15 @@ type organizationEventHandler struct {
 	log         logger.Logger
 	cfg         *config.Config
 	caches      caches.Cache
-	aiModel     ai.AiModel
 	grpcClients *grpc_client.Clients
 	services    *service.Services
 }
 
-func NewOrganizationEventHandler(services *service.Services, log logger.Logger, cfg *config.Config, caches caches.Cache, aiModel ai.AiModel, grpcClients *grpc_client.Clients) *organizationEventHandler {
+func NewOrganizationEventHandler(services *service.Services, log logger.Logger, cfg *config.Config, caches caches.Cache, grpcClients *grpc_client.Clients) *organizationEventHandler {
 	return &organizationEventHandler{
 		log:         log,
 		cfg:         cfg,
 		caches:      caches,
-		aiModel:     aiModel,
 		grpcClients: grpcClients,
 		services:    services,
 	}
@@ -70,7 +70,7 @@ func (h *organizationEventHandler) saveOrganizationIndustryAndMarket(ctx context
 		return nil
 	}
 
-	//delay to avoid updating organization before main event
+	// delay to avoid updating organization before main event
 	time.Sleep(250 * time.Millisecond)
 
 	_, err := h.services.CommonServices.OrganizationService.Save(ctx, nil, &organizationId, data_fields.OrganizationFields{
@@ -102,7 +102,7 @@ func (h *organizationEventHandler) mapIndustryToGICS(ctx context.Context, tenant
 		return ""
 	}
 
-	var industry = trimmedInputIndustry
+	industry := trimmedInputIndustry
 	if industryValue, ok := h.caches.GetIndustry(trimmedInputIndustry); ok {
 		span.LogFields(log.Bool("result.industryFoundInCache", true))
 		span.LogFields(log.String("result.cacheMapping", industryValue))
@@ -134,7 +134,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		CreatedAt:      utils.Now(),
 		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.Anthropic,
-		Model:          "claude-2",
+		Model:          enum.AIModelAnthropicHaiku.String(),
 		PromptType:     constants.PromptType_MapIndustry,
 		Tenant:         &tenant,
 		NodeId:         &orgId,
@@ -150,7 +150,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		span.LogFields(log.String("promptStoreLogId1", promptStoreLogId1))
 	}
 
-	firstResult, err := h.aiModel.Inference(ctx, firstPrompt) // ai.InvokeAnthropic(ctx, h.cfg, h.log, firstPrompt)
+	firstResult, err := h.services.CommonServices.AIService.AskAI(ctx, enum.AIModelAnthropicHaiku, &firstPrompt)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to invoke AI for first prompt"))
 		h.log.Errorf("Error invoking AI: %v", err)
@@ -161,14 +161,14 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		}
 		return ""
 	} else {
-		storeErr := h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId1, firstResult)
+		storeErr := h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId1, *firstResult)
 		if storeErr != nil {
 			tracing.TraceErr(span, errors.Wrap(storeErr, "failed to update prompt log with ai response"))
 			h.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
 		}
 	}
-	if firstResult == "" || firstResult == Unknown {
-		return firstResult
+	if firstResult == nil {
+		return ""
 	}
 	secondPrompt := fmt.Sprintf(h.cfg.Services.Anthropic.IndustryLookupPrompt2, firstResult)
 
@@ -176,7 +176,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		CreatedAt:      utils.Now(),
 		AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
 		Provider:       constants.Anthropic,
-		Model:          "claude-2",
+		Model:          enum.AIModelAnthropicHaiku.String(),
 		PromptType:     constants.PromptType_ExtractIndustryValue,
 		Tenant:         &tenant,
 		NodeId:         &orgId,
@@ -189,7 +189,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		tracing.TraceErr(span, errors.Wrap(err, "failed to store prompt log"))
 		h.log.Errorf("Error storing prompt log with error: %v", err)
 	}
-	secondResult, err := h.aiModel.Inference(ctx, secondPrompt) // ai.InvokeAnthropic(ctx, h.cfg, h.log, secondPrompt)
+	secondResult, err := h.services.CommonServices.AIService.AskAI(ctx, enum.AIModelAnthropicHaiku, &secondPrompt)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to invoke AI for second prompt"))
 		h.log.Errorf("Error invoking AI: %v", err)
@@ -199,14 +199,17 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 			h.log.Errorf("Error updating prompt log with error: %v", err)
 		}
 		return ""
-	} else {
-		err = h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId2, secondResult)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to update prompt log with ai response"))
-			h.log.Errorf("Error updating prompt log with ai response: %v", err)
-		}
 	}
-	return secondResult
+	if secondResult == nil {
+		return ""
+	}
+
+	err = h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId2, *secondResult)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to update prompt log with ai response"))
+		h.log.Errorf("Error updating prompt log with ai response: %v", err)
+	}
+	return *secondResult
 }
 
 func (h *organizationEventHandler) OnAdjustIndustry(ctx context.Context, evt eventstore.Event) error {

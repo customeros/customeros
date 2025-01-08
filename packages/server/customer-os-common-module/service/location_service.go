@@ -3,16 +3,8 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
-	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"strings"
+
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -20,7 +12,16 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type LocationService interface {
@@ -35,20 +36,12 @@ type LocationService interface {
 type locationService struct {
 	log      logger.Logger
 	services *Services
-	aiModel  ai.AiModel
 }
 
 func NewLocationService(log logger.Logger, services *Services) LocationService {
 	return &locationService{
 		log:      log,
 		services: services,
-		aiModel: ai.NewAiModel(ai.AnthropicModelType, aiConfig.Config{
-			Anthropic: aiConfig.AiModelConfigAnthropic{
-				ApiPath: services.GlobalConfig.InternalServices.AiApiConfig.Url,
-				ApiKey:  services.GlobalConfig.InternalServices.AiApiConfig.ApiKey,
-				Model:   constants.AnthropicApiModel,
-			},
-		}),
 	}
 }
 
@@ -137,7 +130,7 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 		CreatedAt:      utils.Now(),
 		AppSource:      common.GetAppSourceFromContext(ctx),
 		Provider:       constants.Anthropic,
-		Model:          constants.AnthropicApiModel,
+		Model:          enum.AIModelAnthropicHaiku.String(),
 		PromptType:     constants.PromptTypeExtractLocationValue,
 		Tenant:         &tenant,
 		PromptTemplate: &s.services.GlobalConfig.InternalServices.AiApiConfig.AnthropicPrompts.LocationEnrichmentPrompt,
@@ -149,7 +142,7 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 		s.log.Errorf("Error storing prompt log: %v", err)
 	}
 
-	aiResult, err := s.aiModel.Inference(ctx, prompt)
+	aiResult, err := s.services.AIService.AskAI(ctx, enum.AIModelAnthropicHaiku, &prompt)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get AI response"))
 		s.log.Errorf("Error invoking AI: %s", err.Error())
@@ -159,16 +152,18 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 			s.log.Errorf("Error updating prompt log with error: %v", storeErr)
 		}
 		return nil, err
-	} else {
-		storeErr := s.services.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResult)
-		if storeErr != nil {
-			tracing.TraceErr(span, errors.Wrap(storeErr, "failed to update prompt log with ai response"))
-			s.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
-		}
+	}
+	if aiResult == nil {
+		return nil, nil
+	}
+	storeErr := s.services.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, *aiResult)
+	if storeErr != nil {
+		tracing.TraceErr(span, errors.Wrap(storeErr, "failed to update prompt log with ai response"))
+		s.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
 	}
 
 	var location data_fields.LocationFields
-	err = json.Unmarshal([]byte(aiResult), &location)
+	err = json.Unmarshal([]byte(*aiResult), &location)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal location"))
 		return nil, err
@@ -177,7 +172,7 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 	// Step 3: Store the mapping
 	locationMapping = &postgresEntity.AiLocationMapping{
 		Input:         address,
-		ResponseJson:  aiResult,
+		ResponseJson:  *aiResult,
 		AiPromptLogId: promptStoreLogId,
 	}
 	err = s.services.PostgresRepositories.AiLocationMappingRepository.AddLocationMapping(ctx, *locationMapping)
@@ -248,7 +243,6 @@ func (s *locationService) Create(ctx context.Context, txWithPostCommit *utils.Tx
 	}
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-
 		err = s.services.Neo4jRepositories.LocationWriteRepository.CreateLocation(ctx, txWithPostCommit.Tx, tenant, locationId, locationFields)
 		if err != nil {
 			return "", err

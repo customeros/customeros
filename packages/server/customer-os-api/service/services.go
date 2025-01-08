@@ -2,13 +2,14 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/file_store_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 )
 
 type Services struct {
@@ -54,7 +55,7 @@ type Services struct {
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, cfg *config.Config, commonServices *commonService.Services, grpcClients *grpc_client.Clients) *Services {
-	repositories := repository.InitRepos(driver, cfg.Neo4j.Database, postgresDB)
+	repositories := repository.InitRepos(driver, cfg.Database.Neo4j.Database, postgresDB)
 
 	services := Services{
 		CommonServices:             commonServices,
@@ -89,7 +90,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 	services.BillingProfileService = NewBillingProfileService(log, repositories, grpcClients)
 	services.InvoiceService = NewInvoiceService(log, repositories, grpcClients, &services)
 	services.SlackService = NewSlackService(log, repositories, grpcClients, &services)
-	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.InternalServices.FileStoreApiConfig)
+	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.InternalServices.FileStoreApi)
 	services.EnrichmentService = NewEnrichmentService(log, &services, cfg)
 	services.WebhookService = NewWebhookService(log, repositories, &services)
 

@@ -2,7 +2,7 @@ package mapper
 
 import (
 	"fmt"
-	fs "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
+	fs "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/file_store_client"
 	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 )

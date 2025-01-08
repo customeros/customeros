@@ -8,8 +8,8 @@ import (
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 )
 
@@ -25,6 +25,7 @@ type Services struct {
 	GrpcClients     *grpc_client.Clients
 
 	AgentService               AgentService
+	AIService                  AIService
 	AttachmentService          AttachmentService
 	AzureService               AzureService
 	CloudflareService          CloudflareService
@@ -89,6 +90,7 @@ func InitServices(globalConfig *config.GlobalConfig, postgresDB *config.Postgres
 	}
 
 	services.AgentService = NewAgentService(services)
+	services.AIService = NewAIService(globalConfig, services)
 	services.AttachmentService = NewAttachmentService(services)
 	services.AzureService = NewAzureService(globalConfig.AzureOAuthConfig, services.PostgresRepositories, services)
 	services.CloudflareService = NewCloudflareService(log, services, globalConfig)

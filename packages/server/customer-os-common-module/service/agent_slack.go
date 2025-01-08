@@ -7,13 +7,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 )
 
 type SkipReason string
@@ -79,7 +80,7 @@ func (a *agentService) slackBotNotification(ctx context.Context, event *data_fie
 		executionRecord.Result = &result
 	}
 
-	// write action execution to db
+	// write agent execution to db
 	actionExecutionRecord, saveErr := a.services.PostgresRepositories.FlowAgentExecutionRepository.Create(ctx, executionRecord)
 	if saveErr != nil {
 		tracing.TraceErr(span, saveErr)

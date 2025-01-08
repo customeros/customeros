@@ -15,6 +15,7 @@ type AgentService interface {
 	LinkedinAgent(ctx context.Context) error
 	SlackAgent(ctx context.Context, event *dto.FlowAgentEvent) error
 	TimelineAgent(ctx context.Context, event *dto.FlowAgentEvent) error
+	ICPAgent(ctx context.Context, event *dto.FlowAgentEvent) error
 }
 
 type agentService struct {

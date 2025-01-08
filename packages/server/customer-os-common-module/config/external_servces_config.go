@@ -21,3 +21,8 @@ type PostmarkConfig struct {
 type StripeConfig struct {
 	ApiKey string `env:"STRIPE_API_KEY" envDefault:"N/A"`
 }
+
+type AnthropicConfig struct {
+	ApiPath string `env:"ANTHROPIC_API_PATH,required" envDefault:"https://api.anthropic.com/v1/messages"`
+	ApiKey  string `env:"ANTHROPIC_API_KEY,required" envDefault:""`
+}
