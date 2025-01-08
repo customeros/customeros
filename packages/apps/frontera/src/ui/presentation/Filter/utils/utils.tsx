@@ -67,7 +67,9 @@ export const handleOperatorIcon = (
       ),
     )
     .with(ComparisonOperator.Gte, () => 'greater than or equal to')
-    .with(ComparisonOperator.Contains, () => 'contains')
+    .with(ComparisonOperator.Contains, () => (
+      <CheckCircle className='text-gray-500 group-hover:text-gray-700' />
+    ))
     .with(ComparisonOperator.IsEmpty, () => (
       <CubeOutline className='text-gray-500 group-hover:text-gray-700' />
     ))

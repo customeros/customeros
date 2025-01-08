@@ -48,7 +48,7 @@ export const OnboardingCell = ({
       OnboardingStatus.Done,
       () => 'text-success-500',
     )
-    .with(OnboardingStatus.NotApplicable, () => 'text-gray-400')
+    .with(OnboardingStatus.NotApplicable, () => 'text-gray-700')
     .with(
       OnboardingStatus.Late,
       OnboardingStatus.Stuck,

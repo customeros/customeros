@@ -15,6 +15,7 @@ import { ArrowCircleDownRight } from '@ui/media/icons/ArrowCircleDownRight';
 import { CurrencyDollarCircle } from '@ui/media/icons/CurrencyDollarCircle';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import {
+  EntityType,
   ColumnViewType,
   OnboardingStatus,
   OrganizationStage,
@@ -40,6 +41,8 @@ import { type RootStore } from '@store/root';
 
 import { Globe04 } from '@ui/media/icons/Globe04';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
+
+import { countries, industries } from './filterOptions';
 
 export const getFilterTypes = (store?: RootStore) => {
   const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
@@ -342,14 +345,10 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsNotEmpty,
       ],
       icon: <Building05 />,
-      options: uniqBy(store?.organizations.toArray(), 'industry')
-        .map((v) => v?.value.industry)
-        .filter(Boolean)
-        .sort((a, b) => (a && b ? a?.localeCompare(b) : -1))
-        .map((industry) => ({
-          id: industry,
-          label: industry,
-        })),
+      options: industries.map((industry) => ({
+        id: industry,
+        label: industry,
+      })),
     },
     [ColumnViewType.OrganizationsContactCount]: {
       filterType: 'number',
@@ -378,10 +377,13 @@ export const getFilterTypes = (store?: RootStore) => {
       icon: (
         <Tag01 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
-      options: store?.tags.toArray().map((tag) => ({
-        id: tag.value.metadata.id,
-        label: tag.value.name,
-      })),
+      options: store?.tags
+        .toArray()
+        .filter((t) => t.value.entityType === EntityType.Organization)
+        .map((tag) => ({
+          id: tag.value.metadata.id,
+          label: tag.value.name,
+        })),
     },
 
     [ColumnViewType.OrganizationsCountry]: {
@@ -397,13 +399,10 @@ export const getFilterTypes = (store?: RootStore) => {
       icon: (
         <Globe04 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
-      options: uniqBy(
-        store?.organizations.toArray().map((org) => ({
-          id: org.value.locations?.[0]?.countryCodeA2,
-          label: org.value.locations?.[0]?.country,
-        })),
-        'id',
-      ),
+      options: countries.map((country) => ({
+        id: country.countryCodeA2,
+        label: country.country,
+      })),
     },
 
     [ColumnViewType.OrganizationsIsPublic]: {
