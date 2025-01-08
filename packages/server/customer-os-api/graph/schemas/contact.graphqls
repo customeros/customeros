@@ -1,16 +1,5 @@
 extend type Query {
-    """
-    Fetch a single contact from customerOS by contact ID.
-    """
-    contact(
-
-        """
-        The unique ID associated with the contact in customerOS.
-        **Required.**
-        """
-        id: ID!) :Contact
-
-
+    contact(id: ID!) :Contact
     """
     Fetch paginated list of contacts
     Possible values for sort:
@@ -22,8 +11,8 @@ extend type Query {
     - CREATED_AT
     """
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage!
-    contact_ByEmail(email: String!) :Contact!
     contact_ByPhone(e164: String!) :Contact!
+    contact_ByEmail(email: String!): Contact @hasRole(roles: [ADMIN, USER]) @hasTenant
     contact_ByLinkedIn(linkedInUrl: String!): Contact @hasRole(roles: [ADMIN, USER]) @hasTenant
     contact_ExistsByLinkedIn(linkedInUrl: String!): Boolean! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
