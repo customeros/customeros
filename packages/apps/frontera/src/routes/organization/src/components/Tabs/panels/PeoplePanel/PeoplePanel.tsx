@@ -1,32 +1,18 @@
 import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-<<<<<<< HEAD
-import { SearchSortContact } from '@domain/usecases/people-contact-card/search-sort-contacts.usecase';
-=======
-<<<<<<< Updated upstream
->>>>>>> eb554d103 (contact card issues)
-
-import { Input } from '@ui/form/Input';
-import { Button } from '@ui/form/Button/Button';
-import { Users03 } from '@ui/media/icons/Users03';
-import { useStore } from '@shared/hooks/useStore';
-<<<<<<< HEAD
-import { SearchSm } from '@ui/media/icons/SearchSm';
-=======
-=======
 import { differenceInCalendarMonths } from 'date-fns';
 import { SearchSortContact } from '@domain/usecases/people-contact-card/search-sort-contacts.usecase';
 
 import { Input } from '@ui/form/Input';
 import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
+import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Users02 } from '@ui/media/icons/Users02';
 import { SearchSm } from '@ui/media/icons/SearchSm';
->>>>>>> Stashed changes
->>>>>>> eb554d103 (contact card issues)
 import { UsersPlus } from '@ui/media/icons/UsersPlus';
+import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
@@ -40,9 +26,8 @@ export const PeoplePanel = observer(() => {
   const { open, onOpen, onClose } = useDisclosure();
   const id = useParams()?.id as string;
   const organization = store.organizations.getById(id);
-  const contacts = store.organizations.getById(id)?.contacts;
 
-  if (!contacts) return null;
+  const contacts = store.organizations.getById(id)?.contacts;
 
   const searchSortContact = searchSortContactUseCase;
 
@@ -51,7 +36,7 @@ export const PeoplePanel = observer(() => {
   const sortBy = searchSortContact.getSort();
 
   const filteredContactsState =
-    contacts.filter((v) => {
+    contacts?.filter((v) => {
       if (!search) return true;
 
       return (
@@ -62,6 +47,8 @@ export const PeoplePanel = observer(() => {
           .includes(search.toLowerCase())
       );
     }).length === 0 && search;
+
+  if (!contacts) return null;
 
   return (
     <OrganizationPanel
@@ -75,16 +62,24 @@ export const PeoplePanel = observer(() => {
       }
       actionItem={
         !!contacts.length && (
-          <Button
+          <IconButton
             size='xs'
             variant='outline'
             onClick={() => onOpen()}
             aria-label='Add contact'
-            leftIcon={<UsersPlus />}
+            className='text-gray-500'
             dataTest={'org-people-add-contact'}
+            icon={<UsersPlus className='text-gray-500' />}
+            spinner={
+              <Spinner
+                size='sm'
+                label='adding'
+                className='text-gray-300 fill-gray-400'
+              />
+            }
           >
             Add
-          </Button>
+          </IconButton>
         )
       }
     >
@@ -115,30 +110,6 @@ export const PeoplePanel = observer(() => {
           </div>
         </div>
       )}
-<<<<<<< HEAD
-
-      {contacts.length > 0 && (
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-2'>
-            <SearchSm className='text-gray-500 size-4' />
-            <Input
-              type='text'
-              value={search}
-              variant='unstyled'
-              placeholder='Search name or title...'
-              onChange={(e) => searchSortContact.setSearch(e.target.value)}
-            />
-          </div>
-          <SortOptionsMenu searchSortContact={searchSortContact} />
-        </div>
-=======
-<<<<<<< Updated upstream
-      {contacts.map((contact) => (
-        <div key={contact?.id} className='group/card' style={{ width: '100%' }}>
-          <ContactCard id={contact?.id} />
-        </div>
-      ))}
-=======
 
       {contacts.length > 0 && (
         <div className='flex items-center justify-between'>
@@ -155,7 +126,6 @@ export const PeoplePanel = observer(() => {
           </div>
           <SortOptionsMenu searchSortContact={searchSortContact} />
         </div>
->>>>>>> eb554d103 (contact card issues)
       )}
 
       {/* Filtered contacts */}
@@ -192,14 +162,6 @@ export const PeoplePanel = observer(() => {
           }
 
           if (sortBy === 'Tenure') {
-<<<<<<< HEAD
-            const aTenure =
-              a.primaryOrganizationJobRoleStartDate -
-              a.primaryOrganizationJobRoleEndDate;
-            const bTenure =
-              b.primaryOrganizationJobRoleStartDate -
-              b.primaryOrganizationJobRoleEndDate;
-=======
             const aTenure = Math.abs(
               differenceInCalendarMonths(
                 new Date(a.primaryOrganizationJobRoleStartDate),
@@ -213,7 +175,6 @@ export const PeoplePanel = observer(() => {
                 new Date(),
               ),
             );
->>>>>>> eb554d103 (contact card issues)
 
             if (sortDir === 'asc') {
               return aTenure - bTenure;
@@ -250,10 +211,6 @@ export const PeoplePanel = observer(() => {
           No matches found—looks like a ghost town in here
         </div>
       )}
-<<<<<<< HEAD
-=======
->>>>>>> Stashed changes
->>>>>>> eb554d103 (contact card issues)
 
       <CreateNewContactModal orgId={id} open={open} onClose={onClose} />
     </OrganizationPanel>
