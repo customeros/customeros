@@ -28,7 +28,6 @@ export class RemoveOrganizationDomainCase {
   @action
   submit() {
     if (!this.entity) return;
-    console.log('🏷️ ----- this.isPrimary: ', this.isPrimary);
 
     if (this.isPrimary) {
       this.entity.draft();

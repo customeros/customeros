@@ -1,5 +1,4 @@
 import { action, observable } from 'mobx';
-import { Organization } from '@store/Organizations/Organization.dto.ts';
 import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service.ts';
 
 export class MergeOrganizationsCase {

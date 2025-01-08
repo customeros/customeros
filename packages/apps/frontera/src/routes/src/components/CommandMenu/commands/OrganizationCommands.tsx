@@ -7,7 +7,6 @@ import { Delete } from '@ui/media/icons/Delete';
 import { User03 } from '@ui/media/icons/User03';
 import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
-import { Globe01 } from '@ui/media/icons/Globe01';
 import { Activity } from '@ui/media/icons/Activity';
 import { Columns03 } from '@ui/media/icons/Columns03';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp';
