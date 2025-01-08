@@ -150,20 +150,6 @@ export class OpportunitiesKanbanPage {
     await this.page.locator(this.oppKanbanChooseOrganization).press('Enter');
 
     await Promise.all([responseOpportunityCreate]);
-    // const queryResponsePromise1 = createResponsePromise(
-    //   this.page,
-    //   'opportunity_Save?.metadata?.id',
-    //   undefined,
-    // );
-    // const queryResponsePromise2 = createResponsePromise(
-    //   this.page,
-    //   'opportunity?.metadata?.id',
-    //   undefined,
-    // ); saveOpportunity?.metadata?.id
-
-    // await responseMutationPromise;
-    // await queryResponsePromise1;
-    // await queryResponsePromise2;
     await this.page.waitForTimeout(1500);
   }
 
