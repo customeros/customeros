@@ -10,7 +10,6 @@ import { AnalyticsProvider } from './AnalyticsProvider';
 import { PhoenixSocketProvider } from './SocketProvider';
 import { GrowthbookProvider } from './GrowthbookProvider';
 import { IntegrationsProvider } from './IntegrationsProvider';
-import { NotificationsProvider } from './NotificationsProvider';
 
 interface ProvidersProps {
   isProduction?: boolean;
@@ -39,24 +38,22 @@ export const Providers = ({ children, isProduction }: ProvidersProps) => {
           <RecoilRoot>
             <IntegrationsProvider>
               <GrowthbookProvider>
-                <NotificationsProvider isProduction={isProduction}>
-                  <AnalyticsProvider isProduction={isProduction}>
-                    {children}
-                    <ToastContainer
-                      limit={3}
-                      theme='colored'
-                      autoClose={8000}
-                      closeOnClick={true}
-                      hideProgressBar={true}
-                      position='bottom-right'
-                      transition={cssTransition({
-                        enter: 'animate-slideDownAndFade',
-                        exit: 'animate-fadeOut',
-                        collapse: false,
-                      })}
-                    />
-                  </AnalyticsProvider>
-                </NotificationsProvider>
+                <AnalyticsProvider isProduction={isProduction}>
+                  {children}
+                  <ToastContainer
+                    limit={3}
+                    theme='colored'
+                    autoClose={8000}
+                    closeOnClick={true}
+                    hideProgressBar={true}
+                    position='bottom-right'
+                    transition={cssTransition({
+                      enter: 'animate-slideDownAndFade',
+                      exit: 'animate-fadeOut',
+                      collapse: false,
+                    })}
+                  />
+                </AnalyticsProvider>
               </GrowthbookProvider>
             </IntegrationsProvider>
           </RecoilRoot>

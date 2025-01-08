@@ -1,5 +1,5 @@
+import { to, animated, useTransition } from '@react-spring/web';
 import { PieArcDatum, ProvidedProps } from '@visx/shape/lib/shapes/Pie';
-import { animated, interpolate, useTransition } from '@react-spring/web';
 
 type AnimatedStyles = { opacity: number; endAngle: number; startAngle: number };
 
@@ -51,14 +51,12 @@ export function AnimatedPie<Datum>({
           onClick={() => onClickDatum?.(arc)}
           onTouchStart={() => onClickDatum?.(arc)}
           // compute interpolated path d attribute from intermediate angle values
-          d={interpolate(
-            [props.startAngle, props.endAngle],
-            (startAngle, endAngle) =>
-              path({
-                ...arc,
-                startAngle,
-                endAngle,
-              }),
+          d={to([props.startAngle, props.endAngle], (startAngle, endAngle) =>
+            path({
+              ...arc,
+              startAngle,
+              endAngle,
+            }),
           )}
         />
       </g>

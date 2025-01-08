@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 
-import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 import { useTimelineRefContext } from '@organization/components/Timeline/context/TimelineRefContext';
 import { ComposeEmailContainer } from '@organization/components/Timeline/PastZone/events/email/compose-email/ComposeEmailContainer';
 import { useTimelineActionContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionContext';
@@ -36,9 +35,7 @@ export const EmailTimelineAction = () => {
         isSending={isSending}
         bcc={state.values.bcc}
         onSubmit={onCreateEmail}
-      >
-        <KeymapperClose onClose={handleClose} />
-      </ComposeEmailContainer>
+      ></ComposeEmailContainer>
     </div>
   );
 };
