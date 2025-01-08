@@ -142,6 +142,13 @@ export class TableViewDefStore extends Store<TableViewDefDatum, TableViewDef> {
     return tableViewDefStore ?? null;
   }
 
+  public getActivePreset() {
+    const url = new URLSearchParams(window.location.search);
+    const preset = url.get('preset');
+
+    return preset ?? null;
+  }
+
   public async bootstrap() {
     if (this.isBootstrapped) return;
 

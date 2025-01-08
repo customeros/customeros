@@ -41,7 +41,7 @@ export class ContactsView {
 
         return `${viewDef?.value.filters ?? ''}-${
           viewDef?.value.defaultFilters ?? ''
-        }-${viewDef?.value.sorting}-${columns}`;
+        }-${viewDef?.value.sorting}-${columns}-${this.store.size}`;
       },
       () => this.store.search(this.store.root.tableViewDefs.contactsPreset!),
     );
