@@ -38,11 +38,12 @@ export type FilterType = {
 
 import { uniqBy } from 'lodash';
 import { type RootStore } from '@store/root';
+import { countryMap } from '@assets/countries/countriesMap';
 
 import { Globe04 } from '@ui/media/icons/Globe04';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 
-import { countries, industries } from './filterOptions';
+import { industries } from './filterOptions';
 
 export const getFilterTypes = (store?: RootStore) => {
   const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
@@ -399,9 +400,9 @@ export const getFilterTypes = (store?: RootStore) => {
       icon: (
         <Globe04 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
-      options: countries.map((country) => ({
-        id: country.countryCodeA2,
-        label: country.country,
+      options: Array.from(countryMap).map(([key, value]) => ({
+        id: key.toUpperCase(),
+        label: value,
       })),
     },
 
