@@ -50,17 +50,23 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     return this.totalElements === this.value.size;
   }
 
-  delete = (ids: string[]) => {
-    ids.forEach((id) => {
-      this.delete([id]);
-    });
-  };
-
   archive = (ids: string[]) => {
     ids.forEach((id) => {
       this.softDelete(id);
     });
   };
+
+  public getById(id: string) {
+    if (!this.value || typeof id !== 'string') return null;
+
+    if (!this.value.has(id)) {
+      setTimeout(() => {
+        this.retrieve([id]);
+      }, 0);
+    }
+
+    return this.value.get(id) as Contact;
+  }
 
   @action
   async getAllData() {
@@ -149,6 +155,14 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
 
   @action
   async retrieve(ids: string[]) {
+    ids.forEach((id) => {
+      if (this.value.has(id)) {
+        return;
+      }
+
+      this.value.set(id, new Contact(this, Contact.default({ id })));
+    });
+
     try {
       const { ui_contacts } = await this.service.getContactsByIds({
         ids,
@@ -157,7 +171,10 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       runInAction(() => {
         ui_contacts.forEach((raw) => {
           if (this.value.has(raw.id)) {
-            Object.assign(raw, this.value.get(raw.id)?.value);
+            const record = this.value.get(raw.id);
+
+            if (!record) return;
+            Object.assign(record?.value, raw);
           } else {
             const record = new Contact(this, raw);
 
@@ -170,6 +187,9 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       });
     } catch (err) {
       runInAction(() => {
+        ids.forEach((id) => {
+          this.value.delete(id);
+        });
         this.error = (err as Error)?.message;
       });
     }
@@ -245,8 +265,6 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
   ) {
     let serverId: string | undefined;
 
-    // this.value.set(tempId, newContact);
-
     try {
       const { contact_CreateForOrganization } =
         await this.service.createContactForOrganization({
@@ -264,6 +282,8 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
 
         this.value.set(serverId, newContact);
         this.sync({ action: 'APPEND', ids: [serverId] });
+        this.totalElements++;
+        this.version++;
       });
     } catch (e) {
       runInAction(() => {
@@ -273,7 +293,6 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       serverId && options?.onSuccess?.(serverId);
       await this.root.contacts.invalidate(serverId!);
       await this.root.organizations.invalidate(organizationId);
-      this.root.contacts.value.get(serverId!)?.commit({ syncOnly: true });
     }
   }
 
@@ -557,15 +576,17 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
           );
 
           if (foundIdx && foundIdx > -1) {
+            organization?.draft();
             organization?.value?.contacts.splice(foundIdx, 1);
             organization?.commit({ syncOnly: true });
           }
         }
         this.value.delete(id);
+        // this.version++;
+        this.totalElements--;
       });
 
       await this.service.archiveContact({ contactId: id });
-      this.totalElements--;
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;

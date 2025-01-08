@@ -69,6 +69,8 @@ export class Organization extends Entity<OrganizationDatum> {
 
   @computed
   get contacts() {
+    this.store.root.contacts.retrieve(this.value.contacts);
+
     return this.value.contacts.reduce((acc, id) => {
       const record = this.store.root.contacts.getById(id);
 
