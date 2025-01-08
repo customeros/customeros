@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
+import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 
 interface OrganizationNameCellProps {
   org: string;
@@ -40,30 +40,35 @@ export const OrganizationNameCell = observer(
       <div className='flex items-center gap-2 group'>
         <span className='inline truncate'>
           {org.length ? (
-            <span
+            <Link
+              to={href}
+              ref={linkRef}
               className='inline text-gray-700 no-underline hover:no-underline font-normal cursor-pointer'
-              onClick={() => {
-                store.ui.commandMenu.setType('EditLatestOrgActive');
-                store.ui.commandMenu.setOpen(true);
-              }}
             >
-              {contactStore?.value.primaryOrganizationName}
-            </span>
+              <span
+                onClick={() => {}}
+                className='inline text-gray-700 no-underline hover:no-underline font-normal cursor-pointer'
+              >
+                {contactStore?.value.primaryOrganizationName}
+              </span>
+            </Link>
           ) : (
             <span className='text-gray-400'>None</span>
           )}
         </span>
 
         {contactStore?.value.primaryOrganizationName && (
-          <Link to={href} ref={linkRef}>
-            <IconButton
-              size='xxs'
-              variant='ghost'
-              icon={<LinkExternal02 />}
-              className='opacity-0 group-hover:opacity-100'
-              aria-label={`navigate-to-${contactStore?.value.primaryOrganizationName}`}
-            />
-          </Link>
+          <IconButton
+            size='xxs'
+            variant='ghost'
+            icon={<Edit03 />}
+            className='opacity-0 group-hover:opacity-100 mt-[3px]'
+            aria-label={`navigate-to-${contactStore?.value.primaryOrganizationName}`}
+            onClick={() => {
+              store.ui.commandMenu.setType('EditLatestOrgActive');
+              store.ui.commandMenu.setOpen(true);
+            }}
+          />
         )}
       </div>
     );

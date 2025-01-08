@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"log"
 	"net/http"
 	"strings"
@@ -917,7 +918,7 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 		AppSource: constants.AppSourceUserAdminApi,
 	})
 
-	organizationId, contactId, err := services.RegistrationService.CreateOrganizationAndContact(providerTenantCtx, config.Service.ProviderTenantName, registeredEmail, true, "Tenant Registration")
+	organizationId, contactId, err := createOrganizationAndContact(providerTenantCtx, services, config.Service.ProviderTenantName, registeredEmail, true, "Tenant Registration")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -1050,6 +1051,91 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 	// span.LogFields(tracingLog.Object("email sent: ", mapBody))
 
 	return nil
+}
+
+func createOrganizationAndContact(ctx context.Context, services *service.Services, tenant, email string, allowPersonalEmail bool, leadSource string) (*string, *string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RegistrationService.CreateOrganizationAndContact")
+	defer span.Finish()
+
+	domain := commonUtils.ExtractDomain(email)
+
+	isPersonalEmail := false
+	//check if the user is using a personal email provider
+	for _, personalEmailProvider := range services.Cache.GetPersonalEmailProviders() {
+		if strings.Contains(domain, personalEmailProvider) {
+			isPersonalEmail = true
+			break
+		}
+	}
+
+	organizationId := ""
+	contactId := ""
+
+	if !isPersonalEmail || allowPersonalEmail {
+		organizationByDomain, err := services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, nil, err
+		}
+
+		if organizationByDomain == nil {
+			organizationId, err = services.CommonServices.OrganizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
+				Domains:      []string{domain},
+				Name:         commonUtils.StringPtr(domain),
+				Relationship: commonUtils.ToPtr(enum.OrganizationRelationshipProspect),
+				Stage:        commonUtils.ToPtr(enum.Trial),
+				LeadSource:   commonUtils.StringPtr(leadSource),
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, nil, err
+			}
+			if organizationId == "" {
+				e := errors.New("organization id empty")
+				tracing.TraceErr(span, e)
+				return nil, nil, e
+			}
+		} else {
+			organizationId = neo4jmapper.MapDbNodeToOrganizationEntity(organizationByDomain).ID
+		}
+
+		if organizationId == "" {
+			tracing.TraceErr(span, err)
+			return nil, nil, err
+		}
+		span.LogFields(tracingLog.String("result.organizationId", organizationId))
+
+		contactNode, err := services.CommonServices.Neo4jRepositories.ContactReadRepository.GetContactInOrganizationByEmail(ctx, tenant, organizationId, email)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, nil, err
+		}
+
+		if contactNode == nil {
+			contactId, err = services.CommonServices.ContactService.CreateContactByEmail(ctx, nil, email)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, nil, err
+			}
+
+			err = services.CommonServices.ContactService.LinkContactWithOrganization(ctx, nil, contactId, organizationId, "", "",
+				neo4jentity.DataSourceOpenline.String(), false, nil, nil)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, nil, err
+			}
+		} else {
+			contactId = neo4jmapper.MapDbNodeToContactEntity(contactNode).Id
+		}
+
+		if contactId == "" {
+			tracing.TraceErr(span, errors.New("contact id empty"))
+			return nil, nil, errors.New("contact id empty")
+		}
+		span.LogFields(tracingLog.String("result.contactId", contactId))
+	}
+
+	return &organizationId, &contactId, nil
 }
 
 func saveIP(ctx context.Context, c *gin.Context, s *service.Services, email string) error {

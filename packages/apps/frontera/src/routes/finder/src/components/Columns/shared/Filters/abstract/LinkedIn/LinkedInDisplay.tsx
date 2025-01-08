@@ -1,3 +1,6 @@
+import { useRef } from 'react';
+import { Link } from 'react-router-dom';
+
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
@@ -14,6 +17,8 @@ export const LinkedInDisplay = ({
   link,
   type,
 }: LinkedInDisplayProps) => {
+  const linkRef = useRef<HTMLAnchorElement>(null);
+
   const formattedLink = getFormattedLink(link).replace(
     /^linkedin\.com\/(?:in\/|company\/)?/,
     '/',
@@ -29,7 +34,13 @@ export const LinkedInDisplay = ({
   return (
     <div className='flex items-center group'>
       <Tooltip label={url ?? ''}>
-        <p className='text-gray-700 cursor-default truncate'>{displayLink}</p>
+        <Link
+          to={url}
+          ref={linkRef}
+          className='flex items-center gap-1 no-underline hover:no-underline cursor-pointer'
+        >
+          <p className='text-gray-700 truncate'>{displayLink}</p>
+        </Link>
       </Tooltip>
 
       <IconButton

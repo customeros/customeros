@@ -517,6 +517,16 @@ type ComplexityRoot struct {
 		PrimaryDomain func(childComplexity int) int
 	}
 
+	DomainCheckDetails struct {
+		Accessible                  func(childComplexity int) int
+		Domain                      func(childComplexity int) int
+		DomainOrganizationID        func(childComplexity int) int
+		Primary                     func(childComplexity int) int
+		PrimaryDomain               func(childComplexity int) int
+		PrimaryDomainOrganizationID func(childComplexity int) int
+		ValidSyntax                 func(childComplexity int) int
+	}
+
 	Email struct {
 		AppSource              func(childComplexity int) int
 		Contacts               func(childComplexity int) int
@@ -1437,6 +1447,7 @@ type ComplexityRoot struct {
 		Attachment                         func(childComplexity int, id string) int
 		BankAccounts                       func(childComplexity int) int
 		BillableInfo                       func(childComplexity int) int
+		CheckDomain                        func(childComplexity int, domain string) int
 		Contact                            func(childComplexity int, id string) int
 		ContactByEmail                     func(childComplexity int, email string) int
 		ContactByLinkedIn                  func(childComplexity int, linkedInURL string) int
@@ -2113,6 +2124,7 @@ type QueryResolver interface {
 	DashboardNewCustomers(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardNewCustomers, error)
 	DashboardTimeToOnboard(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardTimeToOnboard, error)
 	DashboardOnboardingCompletion(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardOnboardingCompletion, error)
+	CheckDomain(ctx context.Context, domain string) (*model.DomainCheckDetails, error)
 	Email(ctx context.Context, id string) (*model.Email, error)
 	ExternalSystemInstances(ctx context.Context) ([]*model.ExternalSystemInstance, error)
 	Flow(ctx context.Context, id string) (*model.Flow, error)
@@ -4405,6 +4417,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Domain.PrimaryDomain(childComplexity), true
+
+	case "DomainCheckDetails.accessible":
+		if e.complexity.DomainCheckDetails.Accessible == nil {
+			break
+		}
+
+		return e.complexity.DomainCheckDetails.Accessible(childComplexity), true
+
+	case "DomainCheckDetails.domain":
+		if e.complexity.DomainCheckDetails.Domain == nil {
+			break
+		}
+
+		return e.complexity.DomainCheckDetails.Domain(childComplexity), true
+
+	case "DomainCheckDetails.domainOrganizationId":
+		if e.complexity.DomainCheckDetails.DomainOrganizationID == nil {
+			break
+		}
+
+		return e.complexity.DomainCheckDetails.DomainOrganizationID(childComplexity), true
+
+	case "DomainCheckDetails.primary":
+		if e.complexity.DomainCheckDetails.Primary == nil {
+			break
+		}
+
+		return e.complexity.DomainCheckDetails.Primary(childComplexity), true
+
+	case "DomainCheckDetails.primaryDomain":
+		if e.complexity.DomainCheckDetails.PrimaryDomain == nil {
+			break
+		}
+
+		return e.complexity.DomainCheckDetails.PrimaryDomain(childComplexity), true
+
+	case "DomainCheckDetails.primaryDomainOrganizationId":
+		if e.complexity.DomainCheckDetails.PrimaryDomainOrganizationID == nil {
+			break
+		}
+
+		return e.complexity.DomainCheckDetails.PrimaryDomainOrganizationID(childComplexity), true
+
+	case "DomainCheckDetails.validSyntax":
+		if e.complexity.DomainCheckDetails.ValidSyntax == nil {
+			break
+		}
+
+		return e.complexity.DomainCheckDetails.ValidSyntax(childComplexity), true
 
 	case "Email.appSource":
 		if e.complexity.Email.AppSource == nil {
@@ -10410,6 +10471,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.BillableInfo(childComplexity), true
 
+	case "Query.checkDomain":
+		if e.complexity.Query.CheckDomain == nil {
+			break
+		}
+
+		args, err := ec.field_Query_checkDomain_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.CheckDomain(childComplexity, args["domain"].(string)), true
+
 	case "Query.contact":
 		if e.complexity.Query.Contact == nil {
 			break
@@ -13995,10 +14068,24 @@ enum Role {
 }
 
 directive @hasTenant on FIELD_DEFINITION`, BuiltIn: false},
-	{Name: "../schemas/domain.graphqls", Input: `type Domain {
+	{Name: "../schemas/domain.graphqls", Input: `extend type Query {
+    checkDomain(domain: String!): DomainCheckDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type Domain {
     domain:         String!
     primary:        Boolean
     primaryDomain:  String
+}
+
+type DomainCheckDetails {
+    domain:                         String!
+    validSyntax:                    Boolean!
+    accessible:                     Boolean!
+    primary:                        Boolean!
+    primaryDomain:                  String!
+    domainOrganizationId:           String
+    primaryDomainOrganizationId:    String
 }`, BuiltIn: false},
 	{Name: "../schemas/email.graphqls", Input: `extend type Query {
     email(id: ID!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -23708,6 +23795,34 @@ func (ec *executionContext) field_Query_attachment_argsID(
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
 	if tmp, ok := rawArgs["id"]; ok {
 		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_checkDomain_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_checkDomain_argsDomain(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["domain"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_checkDomain_argsDomain(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["domain"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("domain"))
+	if tmp, ok := rawArgs["domain"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
 	}
 
 	var zeroVal string
@@ -40933,6 +41048,308 @@ func (ec *executionContext) _Domain_primaryDomain(ctx context.Context, field gra
 func (ec *executionContext) fieldContext_Domain_primaryDomain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Domain",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DomainCheckDetails_domain(ctx context.Context, field graphql.CollectedField, obj *model.DomainCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DomainCheckDetails_domain(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Domain, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DomainCheckDetails_domain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DomainCheckDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DomainCheckDetails_validSyntax(ctx context.Context, field graphql.CollectedField, obj *model.DomainCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DomainCheckDetails_validSyntax(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ValidSyntax, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DomainCheckDetails_validSyntax(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DomainCheckDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DomainCheckDetails_accessible(ctx context.Context, field graphql.CollectedField, obj *model.DomainCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DomainCheckDetails_accessible(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Accessible, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DomainCheckDetails_accessible(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DomainCheckDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DomainCheckDetails_primary(ctx context.Context, field graphql.CollectedField, obj *model.DomainCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DomainCheckDetails_primary(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Primary, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DomainCheckDetails_primary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DomainCheckDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DomainCheckDetails_primaryDomain(ctx context.Context, field graphql.CollectedField, obj *model.DomainCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DomainCheckDetails_primaryDomain(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PrimaryDomain, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DomainCheckDetails_primaryDomain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DomainCheckDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DomainCheckDetails_domainOrganizationId(ctx context.Context, field graphql.CollectedField, obj *model.DomainCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DomainCheckDetails_domainOrganizationId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DomainOrganizationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DomainCheckDetails_domainOrganizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DomainCheckDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DomainCheckDetails_primaryDomainOrganizationId(ctx context.Context, field graphql.CollectedField, obj *model.DomainCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DomainCheckDetails_primaryDomainOrganizationId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PrimaryDomainOrganizationID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DomainCheckDetails_primaryDomainOrganizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DomainCheckDetails",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -89879,6 +90296,111 @@ func (ec *executionContext) fieldContext_Query_dashboard_OnboardingCompletion(ct
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_checkDomain(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_checkDomain(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().CheckDomain(rctx, fc.Args["domain"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.DomainCheckDetails
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.DomainCheckDetails
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.DomainCheckDetails
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.DomainCheckDetails); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.DomainCheckDetails`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.DomainCheckDetails)
+	fc.Result = res
+	return ec.marshalNDomainCheckDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDomainCheckDetails(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_checkDomain(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "domain":
+				return ec.fieldContext_DomainCheckDetails_domain(ctx, field)
+			case "validSyntax":
+				return ec.fieldContext_DomainCheckDetails_validSyntax(ctx, field)
+			case "accessible":
+				return ec.fieldContext_DomainCheckDetails_accessible(ctx, field)
+			case "primary":
+				return ec.fieldContext_DomainCheckDetails_primary(ctx, field)
+			case "primaryDomain":
+				return ec.fieldContext_DomainCheckDetails_primaryDomain(ctx, field)
+			case "domainOrganizationId":
+				return ec.fieldContext_DomainCheckDetails_domainOrganizationId(ctx, field)
+			case "primaryDomainOrganizationId":
+				return ec.fieldContext_DomainCheckDetails_primaryDomainOrganizationId(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type DomainCheckDetails", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_checkDomain_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_email(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_email(ctx, field)
 	if err != nil {
@@ -116449,6 +116971,69 @@ func (ec *executionContext) _Domain(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
+var domainCheckDetailsImplementors = []string{"DomainCheckDetails"}
+
+func (ec *executionContext) _DomainCheckDetails(ctx context.Context, sel ast.SelectionSet, obj *model.DomainCheckDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, domainCheckDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DomainCheckDetails")
+		case "domain":
+			out.Values[i] = ec._DomainCheckDetails_domain(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "validSyntax":
+			out.Values[i] = ec._DomainCheckDetails_validSyntax(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "accessible":
+			out.Values[i] = ec._DomainCheckDetails_accessible(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "primary":
+			out.Values[i] = ec._DomainCheckDetails_primary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "primaryDomain":
+			out.Values[i] = ec._DomainCheckDetails_primaryDomain(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "domainOrganizationId":
+			out.Values[i] = ec._DomainCheckDetails_domainOrganizationId(ctx, field, obj)
+		case "primaryDomainOrganizationId":
+			out.Values[i] = ec._DomainCheckDetails_primaryDomainOrganizationId(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var emailImplementors = []string{"Email"}
 
 func (ec *executionContext) _Email(ctx context.Context, sel ast.SelectionSet, obj *model.Email) graphql.Marshaler {
@@ -124750,6 +125335,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "checkDomain":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_checkDomain(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "email":
 			field := field
 
@@ -129438,6 +130045,20 @@ func (ec *executionContext) marshalNDomain2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 		return graphql.Null
 	}
 	return ec._Domain(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNDomainCheckDetails2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDomainCheckDetails(ctx context.Context, sel ast.SelectionSet, v model.DomainCheckDetails) graphql.Marshaler {
+	return ec._DomainCheckDetails(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNDomainCheckDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐDomainCheckDetails(ctx context.Context, sel ast.SelectionSet, v *model.DomainCheckDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DomainCheckDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNEmail2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx context.Context, sel ast.SelectionSet, v model.Email) graphql.Marshaler {

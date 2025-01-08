@@ -435,6 +435,25 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 			}
 		}
 
+		// remove columns that are NOT in defaults
+		removedColumnsFound := false
+		defaultColumnIDs := make(map[int]bool)
+
+		// gather all default column IDs
+		for _, defaultColumn := range defaultColumns.Columns {
+			defaultColumnIDs[defaultColumn.ColumnId] = true
+		}
+
+		var filteredColumns []postgresEntity.ColumnView
+		for _, currentCol := range currentColumns.Columns {
+			if defaultColumnIDs[currentCol.ColumnId] {
+				filteredColumns = append(filteredColumns, currentCol)
+			} else {
+				removedColumnsFound = true
+			}
+		}
+		currentColumns.Columns = filteredColumns
+
 		// check if default columns are present
 		missingColumnsFound := false
 		for _, defaultColumn := range defaultColumns.Columns {
@@ -451,7 +470,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 			}
 		}
 
-		if missingColumnsFound {
+		if removedColumnsFound || missingColumnsFound {
 			columnsJsonData, err := json.Marshal(currentColumns)
 			if err != nil {
 				tracing.TraceErr(span, pkgerrors.Wrapf(err, "Failed to marshal columnsJson for table view definition with ID: %d", def.ID))

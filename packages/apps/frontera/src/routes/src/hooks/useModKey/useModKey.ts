@@ -3,22 +3,26 @@ import { useEffect } from 'react';
 export const useModKey = (
   key: string,
   callback: (e: KeyboardEvent) => void,
-  options: { when?: boolean } = { when: true },
+  options: { when?: boolean; targetRef?: React.RefObject<HTMLElement> } = {
+    when: true,
+  },
 ) => {
   useEffect(() => {
     if (!options.when) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === key && e.metaKey) {
+      if (e.key === key && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         callback(e);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    const target = options.targetRef?.current || document;
+
+    target.addEventListener('keydown', handleKeyDown as EventListener);
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      target.removeEventListener('keydown', handleKeyDown as EventListener);
     };
-  }, [options.when, callback]);
+  }, [options.when, callback, options.targetRef]);
 };

@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 
+import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { CreateContact } from '@domain/usecases/people-contact-card/create-contact.usecase';
 
@@ -8,6 +9,7 @@ import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
+import { useModKey } from '@shared/hooks/useModKey';
 import { Signature } from '@ui/media/icons/Signature';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 import {
@@ -31,6 +33,8 @@ const contactCreate = new CreateContact();
 export const CreateNewContactModal = observer(
   ({ orgId, open, onClose }: CreateNewContactModalProps) => {
     const store = useStore();
+    const modalRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
     const inputPlaceholder =
       contactCreate.getType === 'linkedin'
         ? 'linkedin.com/in/johnlemon'
@@ -47,60 +51,148 @@ export const CreateNewContactModal = observer(
       }
     }, [orgId]);
 
+    useModKey(
+      'Enter',
+      () => {
+        handleSubmit();
+      },
+      { targetRef: modalRef, when: open },
+    );
+    useKey(
+      'Escape',
+      () => {
+        onClose();
+      },
+      { target: modalRef, when: open },
+    );
+
+    const handleSubmit = () => {
+      contactCreate.setOrganizationId(orgId);
+
+      if (contactCreate.getType === 'name') {
+        contactCreate.submit();
+        !contactCreate.invalidName && onClose();
+      }
+
+      if (contactCreate.getType === 'linkedin') {
+        contactCreate.submit();
+        !contactCreate.emptyLinkedInUrl &&
+          !contactCreate.invalidLinkedInUrl &&
+          onClose();
+      }
+    };
+
+    useEffect(() => {
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 100);
+    }, [open, contactCreate.getType]);
+
     return (
-      <Modal open={open}>
+      <Modal open={open} onOpenChange={onClose}>
         <ModalPortal>
           <ModalOverlay />
-          <ModalContent>
+          <ModalContent ref={modalRef}>
             <ModalHeader>
-              <p>Add a contact using their...</p>
+              <p className='font-medium'>Add a contact using their...</p>
               <ModalCloseButton asChild />
             </ModalHeader>
-            <ModalBody className='flex flex-col w-full gap-4'>
-              <ButtonGroup className='flex items-center w-full'>
-                <Button
-                  size='xs'
-                  leftIcon={<LinkedinOutline />}
-                  onClick={() => contactCreate.setType('linkedin')}
-                  data-inactive={contactCreate.getType !== 'linkedin'}
-                  className={cn('w-full', {
-                    selected: contactCreate.getType === 'linkedin',
-                  })}
-                >
-                  LinkedIn
-                </Button>
-                {/* <Button
-                  size='xs'
-                  leftIcon={<Mail01 />}
-                  onClick={() => contactCreate.setType('email')}
-                  data-inactive={contactCreate.getType !== 'email'}
-                  className='w-full data-[inactive=true]:bg-gray-50 focus:bg-white'
-                >
-                  Email
-                </Button> */}
-                <Button
-                  size='xs'
-                  leftIcon={<Signature />}
-                  dataTest='org-people-add-by-name'
-                  onClick={() => contactCreate.setType('name')}
-                  data-inactive={contactCreate.getType !== 'name'}
-                  className={cn('w-full', {
-                    selected: contactCreate.getType === 'name',
-                  })}
-                >
-                  Name
-                </Button>
-              </ButtonGroup>
+            <ModalBody className='flex flex-col w-full'>
+              <div className='flex flex-col gap-4'>
+                <ButtonGroup className='flex items-center w-full'>
+                  <Button
+                    size='xs'
+                    leftIcon={<LinkedinOutline />}
+                    onClick={() => contactCreate.setType('linkedin')}
+                    data-inactive={contactCreate.getType !== 'linkedin'}
+                    className={cn('w-full', {
+                      selected: contactCreate.getType === 'linkedin',
+                    })}
+                  >
+                    LinkedIn
+                  </Button>
+                  <Button
+                    size='xs'
+                    leftIcon={<Signature />}
+                    onClick={() => contactCreate.setType('name')}
+                    data-inactive={contactCreate.getType !== 'name'}
+                    className={cn('w-full', {
+                      selected: contactCreate.getType === 'name',
+                    })}
+                  >
+                    Name
+                  </Button>
+                </ButtonGroup>
 
-              <Input
-                variant='unstyled'
-                placeholder={inputPlaceholder}
-                onChange={(e) => contactCreate.setInputValue(e.target.value)}
-              />
+                <Input
+                  ref={inputRef}
+                  variant='unstyled'
+                  placeholder={inputPlaceholder}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      onClose();
+                    }
+                  }}
+                  onChange={(e) => {
+                    contactCreate.setInputValue(e.target.value);
+
+                    if (contactCreate.inputValue) {
+                      contactCreate.getType === 'name' &&
+                        contactCreate.validateName();
+                    }
+                  }}
+                />
+              </div>
+
+              {contactCreate.getType === 'name' && (
+                <p
+                  className={cn(
+                    'text-error-500 text-[12px] mt-0 opacity-0',
+                    contactCreate.invalidName && 'opacity-100',
+                  )}
+                >
+                  Every hero needs a name
+                </p>
+              )}
+
+              {contactCreate.getType === 'linkedin' && (
+                <>
+                  {!contactCreate.inputValue && (
+                    <p
+                      className={cn(
+                        'text-error-500 text-[12px] mt-0 opacity-0',
+                        contactCreate.emptyLinkedInUrl && 'opacity-100',
+                      )}
+                    >
+                      Huston we have a blank...
+                    </p>
+                  )}
+
+                  {contactCreate.inputValue && (
+                    <p
+                      className={cn(
+                        'text-error-500 text-[12px] mt-0 opacity-0',
+                        contactCreate.invalidLinkedInUrl && 'opacity-100',
+                      )}
+                    >
+                      Invalid LinkedIn URL
+                    </p>
+                  )}
+                </>
+              )}
             </ModalBody>
             <ModalFooter className='w-full flex gap-3'>
               <ModalCloseButton asChild>
-                <Button size='sm' className='w-full' onClick={() => onClose()}>
+                <Button
+                  size='sm'
+                  className='w-full'
+                  onClick={() => {
+                    contactCreate.clearState();
+                    onClose();
+                  }}
+                >
                   Cancel
                 </Button>
               </ModalCloseButton>
@@ -110,9 +202,7 @@ export const CreateNewContactModal = observer(
                 colorScheme='primary'
                 dataTest='org-people-add-contact'
                 onClick={() => {
-                  contactCreate.setOrganizationId(orgId);
-                  contactCreate.submit();
-                  onClose();
+                  handleSubmit();
                 }}
               >
                 {confirmButtonPlaceholder}

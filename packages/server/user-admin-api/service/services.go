@@ -16,8 +16,6 @@ type Services struct {
 	GrpcClients *grpc_client.Clients
 
 	CommonServices *commonService.Services
-
-	RegistrationService RegistrationService
 }
 
 func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, grpcClients *grpc_client.Clients, cache *caches.Cache, appLogger logger.Logger) *Services {
@@ -38,7 +36,6 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresD
 			ValidationApiConfig: cfg.InternalServices.ValidationApi,
 		},
 	}, postgresDB, driver, cfg.Neo4j.Database, grpcClients, appLogger)
-	services.RegistrationService = NewRegistrationService(&services)
 
 	return &services
 }
