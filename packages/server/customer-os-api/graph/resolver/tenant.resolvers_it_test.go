@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -215,7 +216,7 @@ func insertTenantDataWithNodeChecks(ctx context.Context, t *testing.T, tenant, u
 
 	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4jentity.OrganizationEntity{})
 	neo4jtest.CreateReminder(ctx, driver, tenant, testUserId, organizationId, utils.Now(), neo4jentity.ReminderEntity{})
-	neo4jt.CreateActionForOrganization(ctx, driver, tenant, organizationId, neo4jenum.ActionCreated, utils.Now())
+	neo4jt.CreateActionForOrganization(ctx, driver, tenant, organizationId, enum.ActionCreated, utils.Now())
 
 	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenant, organizationId, neo4jentity.ContractEntity{}, neo4jentity.OpportunityEntity{})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4jentity.ServiceLineItemEntity{})
