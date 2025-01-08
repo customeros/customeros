@@ -18,9 +18,12 @@ import type { Organization } from '../Organization.dto';
 import AddTagDocument from './addTag.graphql';
 import AddSocialDocument from './addSocial.graphql';
 import RemoveTagDocument from './removeTag.graphql';
+import CheckDomainDocument from './checkDomain.graphql';
 import UpdateSocialDocument from './updateSocial.graphql';
 import RemoveSocialDocument from './removeSocial.graphql';
 import CheckWebsiteDocument from './checkWebsite.graphql';
+import RemoveDomainDocument from './removeDomain.graphql';
+import RemoveDomainsDocument from './removeDomains.graphql';
 import AddSubsidiaryDocument from './addSubsidiary.graphql';
 import GetOrganizationsDocument from './getOrganizations.graphql';
 import SaveOrganizationDocument from './saveOrganization.graphql';
@@ -40,6 +43,10 @@ import {
   AddSocialMutationVariables,
 } from './addSocial.generated';
 import {
+  CheckDomainQuery,
+  CheckDomainQueryVariables,
+} from './checkDomain.generated.ts';
+import {
   CheckWebsiteQuery,
   CheckWebsiteQueryVariables,
 } from './checkWebsite.generated.ts';
@@ -51,6 +58,10 @@ import {
   RemoveSocialMutation,
   RemoveSocialMutationVariables,
 } from './removeSocial.generated';
+import {
+  RemoveDomainMutation,
+  RemoveDomainMutationVariables,
+} from './removeDomain.generated.ts';
 import {
   GetOrganizationsQuery,
   GetOrganizationsQueryVariables,
@@ -196,6 +207,27 @@ export class OrganizationsService {
       SaveOrganizationMutation,
       SaveOrganizationMutationVariables
     >(SaveOrganizationDocument, payload);
+  }
+
+  async removeDomain(payload: RemoveDomainMutationVariables) {
+    return this.transport.graphql.request<
+      RemoveDomainMutation,
+      RemoveDomainMutationVariables
+    >(RemoveDomainDocument, payload);
+  }
+
+  async removeDomains(payload: RemoveDomainsMutationVariables) {
+    return this.transport.graphql.request<
+      RemoveDomainMutation,
+      RemoveDomainMutationVariables
+    >(RemoveDomainsDocument, payload);
+  }
+
+  async checkDomain(payload: CheckDomainQueryVariables) {
+    return this.transport.graphql.request<
+      CheckDomainQuery,
+      CheckDomainQueryVariables
+    >(CheckDomainDocument, payload);
   }
 
   async hideOrganizations(payload: HideOrganizationsMutationVariables) {
@@ -481,9 +513,19 @@ export class OrganizationsService {
           });
       })
       .with(['updatedAt'], () => undefined)
-      .with(['domains', ...P.array()], async () => {
+      .with(['domainsDetails', ...P.array()], async () => {
+        if (type === 'update') {
+          return await this.removeDomain({
+            organizationId,
+            domain: oldValue,
+          });
+        }
+
         return await this.saveOrganization({
-          input: { id: organizationId, domains: store.value.domains },
+          input: {
+            id: organizationId,
+            domains: store.value.domainsDetails.map((e) => e.domain),
+          },
         });
       })
       .otherwise(async () => {

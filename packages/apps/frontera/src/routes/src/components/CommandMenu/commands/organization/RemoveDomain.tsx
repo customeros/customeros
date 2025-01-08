@@ -1,6 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { RemoveOrganizationDomainCase } from '@domain/usecases/command-menu/remove-organization-domain.usecase';
 
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
@@ -11,61 +12,58 @@ import {
   CommandCancelIconButton,
 } from '@ui/overlay/CommandMenu';
 
-export const DuplicateDomainInformationModal = observer(() => {
-  const { ui } = useStore();
+const removeDomainCase = new RemoveOrganizationDomainCase();
 
+export const RemoveDomain = observer(() => {
+  const { ui, organizations } = useStore();
   const context = ui.commandMenu.context;
-
-  const confirmButtonRef = useRef<HTMLButtonElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-
-  const handleConfirm = () => {
-    if (!context.ids?.length || !context.property) return;
-
-    // todo merge orgs
-
-    ui.commandMenu.setOpen(false);
-  };
+  const organization = organizations.value.get(context.ids?.[0] as string);
 
   useModKey('Enter', () => {
     ui.commandMenu.setOpen(false);
   });
+  useEffect(() => {
+    if (organization) {
+      removeDomainCase.setEntity(organization);
+      removeDomainCase.setIsPrimary(context?.meta?.isPrimary);
+      removeDomainCase.setDomain(context?.meta?.domain);
+    }
+  }, [organization?.id]);
+
+  const handleConfirm = () => {
+    removeDomainCase.submit();
+    ui.commandMenu.setOpen(false);
+  };
 
   const handleClose = () => {
-    ui.commandMenu.toggle('DuplicateDomainInformationModal');
+    ui.commandMenu.toggle('ConfirmSingleFlowEdit');
     ui.commandMenu.clearCallback();
   };
 
-  // todo get domain, associatedOrgName, editedOrgName from context
-  const domain = '';
-  const associatedOrgName = '';
-  const editedOrgName = '';
-
   return (
-    <Command>
+    <Command shouldFilter={false}>
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100 cursor-default'>
         <div className='flex justify-between'>
-          <h1 className='text-base font-semibold'>Domain already exists</h1>
+          <h1 className='text-base font-semibold'>Remove this domain</h1>
           <div>
             <CommandCancelIconButton onClose={handleClose} />
           </div>
         </div>
-        <p className='mt-1 text-sm'>
-          <span className='font-medium mr-1'>{domain},</span>
-          is already associated with another existing organization,
-          <span className='font-medium mx-1'>{associatedOrgName},</span>. Would
-          you like to merge {associatedOrgName} into {editedOrgName}?
-        </p>
+        {context?.meta?.isPrimary && (
+          <p className='mt-1 text-sm'>
+            Removing {context?.meta?.domain}, will also remove any related
+            subdomains
+          </p>
+        )}
 
         <div className='flex justify-between gap-3 mt-6'>
-          <CommandCancelButton ref={closeButtonRef} onClose={handleClose} />
+          <CommandCancelButton onClose={handleClose} />
 
           <Button
             size='sm'
             variant='outline'
             className='w-full'
-            colorScheme='primary'
-            ref={confirmButtonRef}
+            colorScheme='error'
             onClick={handleConfirm}
             dataTest={'add-contact-to-flow-confirmation'}
             data-test='contact-actions-confirm-flow-change'
@@ -75,7 +73,7 @@ export const DuplicateDomainInformationModal = observer(() => {
               }
             }}
           >
-            Merge orgs
+            Remove
           </Button>
         </div>
       </article>

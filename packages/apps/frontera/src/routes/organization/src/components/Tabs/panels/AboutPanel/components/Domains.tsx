@@ -13,8 +13,8 @@ import { getExternalUrl } from '@utils/getExternalLink';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
-import { CornerDownRightDot } from '@ui/media/icons/CornerDownRightDot';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { Subdomain } from '@organization/components/Tabs/panels/AboutPanel/components/Subdomain.tsx';
 
 export const Domains = observer(() => {
   const store = useStore();
@@ -27,17 +27,24 @@ export const Domains = observer(() => {
 
   if (!organization || !organization?.value) return null;
 
+  const domains = organization.value.domainsDetails.filter(
+    (e) => !e.primaryDomain,
+  );
+  const primaryDomain =
+    organization.value.domainsDetails.find((e) => e.primaryDomain) ||
+    domains[0];
+
   return (
-    <div className='flex flex-col mt-1 group'>
-      <div className='flex items-center justify-between w-full  '>
+    <div className='flex flex-col mt-1 '>
+      <div className='flex items-center w-full gap-2  group'>
         <a
           target='_blank'
           rel='noreferrer noopener'
-          href={getExternalUrl(organization.value.domains[0] ?? '/')}
-          className='w-full cursor-pointer text-sm flex items-center no-underline hover:no-underline text-gray-700'
+          href={getExternalUrl(primaryDomain?.domain || '/')}
+          className='w-fit cursor-pointer text-sm flex items-center no-underline hover:no-underline text-gray-700'
         >
-          <Globe06 className='mr-2' />
-          {organization.value.domains[0]}
+          <Globe06 className='mr-2 text-gray-500' />
+          {primaryDomain?.domain}
         </a>
         <div
           className={cn('flex opacity-0 group-hover:opacity-100 gap-1', {
@@ -45,13 +52,15 @@ export const Domains = observer(() => {
           })}
         >
           <div>
-            <IconButton
-              size='xxs'
-              variant='ghost'
-              onClick={() => setIsExpanded(!isExpanded)}
-              aria-label={isExpanded ? 'Collapse' : 'Expand'}
-              icon={isExpanded ? <ChevronCollapse /> : <ChevronExpand />}
-            />
+            {domains?.length > 0 && (
+              <IconButton
+                size='xxs'
+                variant='ghost'
+                onClick={() => setIsExpanded(!isExpanded)}
+                aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                icon={isExpanded ? <ChevronCollapse /> : <ChevronExpand />}
+              />
+            )}
           </div>
 
           <Menu onOpenChange={(data) => setShowMenu(data)}>
@@ -78,7 +87,20 @@ export const Domains = observer(() => {
                 <PlusCircle />
                 Add domain
               </MenuItem>
-              <MenuItem onClick={() => {}}>
+              <MenuItem
+                onClick={() => {
+                  store.ui.commandMenu.setOpen(true);
+                  store.ui.commandMenu.setType('RemoveDomain');
+                  store.ui.commandMenu.setContext({
+                    ...store.ui.commandMenu.context,
+                    ids: [id],
+                    meta: {
+                      domain: primaryDomain?.domain,
+                      isPrimary: true,
+                    },
+                  });
+                }}
+              >
                 <XCircle />
                 Remove domain
               </MenuItem>
@@ -88,17 +110,9 @@ export const Domains = observer(() => {
       </div>
 
       {isExpanded && (
-        <div>
-          {organization.value.domains.slice(1).map((domain) => (
-            <a
-              target='_blank'
-              rel='noreferrer noopener'
-              href={getExternalUrl(domain ?? '/')}
-              className='text-sm cursor-pointer flex items-center no-underline hover:no-underline text-gray-700'
-            >
-              <CornerDownRightDot className='mr-2 size-3' />
-              {domain}
-            </a>
+        <div className='ml-6'>
+          {domains.map(({ domain }) => (
+            <Subdomain key={domain} domain={domain} />
           ))}
         </div>
       )}

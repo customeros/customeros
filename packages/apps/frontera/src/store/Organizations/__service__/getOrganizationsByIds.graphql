@@ -24,6 +24,11 @@ query getOrganizationsByIds($ids: [ID!]) {
     ltv
     hide
     domains
+    domainsDetails {
+      domain
+      primary
+      primaryDomain
+    }
     createdAt
     updatedAt
     churnedAt
