@@ -321,13 +321,19 @@ class ContactService {
 
       return;
     }
+
     match(path)
-      .with(['primaryOrganizationId', ...P.array()], () => {
+      .with(['primaryOrganizationName', ...P.array()], () => {
         this.linkOrganization({
           input: {
             contactId: contactId!,
             organizationId: value,
           },
+        }).finally(() => {
+          store.store.root.ui.toastSuccess(
+            "Contact's organization was changed",
+            'org-linked',
+          );
         });
       })
       .with(['linkedInUrl', ...P.array()], async ([_]) => {
@@ -387,7 +393,7 @@ class ContactService {
             contactId: contactId!,
             input: {
               email: value,
-              primary: store.value.emails[findIndex].primary || false,
+              primary: store.value.emails[findIndex]?.primary || false,
             },
             previousEmail: oldValue as string,
           });

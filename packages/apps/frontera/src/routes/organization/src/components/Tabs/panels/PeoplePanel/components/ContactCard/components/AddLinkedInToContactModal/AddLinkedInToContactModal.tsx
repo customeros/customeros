@@ -1,11 +1,13 @@
-import { useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 
+import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { LinkedIn } from '@domain/usecases/people-contact-card/add-linkedin.usecase';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
+import { useModKey } from '@shared/hooks/useModKey';
 import {
   Modal,
   ModalBody,
@@ -27,6 +29,8 @@ const linkedInUseCase = new LinkedIn();
 export const AddLinkedInToContactModal = observer(
   ({ onClose, open, contactId }: AddLinkedInToContactModalProps) => {
     const store = useStore();
+    const modalRef = useRef<HTMLDivElement>(null);
+
     const contactStore = store.contacts.value.get(contactId);
 
     useEffect(() => {
@@ -35,23 +39,60 @@ export const AddLinkedInToContactModal = observer(
       }
     }, [contactId]);
 
+    useModKey(
+      'Enter',
+      () => {
+        linkedInUseCase.submitLinkedInUrl();
+        !linkedInUseCase.emptyLinkedInUrl && onClose();
+      },
+      {
+        targetRef: modalRef,
+        when: open,
+      },
+    );
+
+    useKey(
+      'Escape',
+      () => {
+        onClose();
+      },
+      { target: modalRef, when: open },
+    );
+
     return (
       <Modal open={open}>
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent ref={modalRef}>
           <ModalHeader>
             <p className='font-medium'>LinkedIn profile URL</p>
             <ModalCloseButton asChild />
           </ModalHeader>
-          <ModalBody className='flex flex-col gap-4'>
-            <p>We'll auto-enrich this contact using their LinkedIn profile</p>
-            <Input
-              variant='unstyled'
-              dataTest='linkedin-url-input'
-              value={linkedInUseCase.inputValue}
-              placeholder='linkedin.com/in/john-lemon'
-              onChange={(e) => linkedInUseCase.setInputValue(e.target.value)}
-            />
+          <ModalBody className='flex flex-col  text-sm'>
+            <div className='flex flex-col gap-4'>
+              <p>We'll auto-enrich this contact using their LinkedIn profile</p>
+              <Input
+                variant='unstyled'
+                value={linkedInUseCase.inputValue}
+                placeholder='linkedin.com/in/john-lemon'
+                onChange={(e) => linkedInUseCase.setInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    onClose();
+                  }
+                }}
+              />
+            </div>
+            {linkedInUseCase.emptyLinkedInUrl && (
+              <p className='text-error-500 text-[12px] mt-0'>
+                Huston we have a blank...
+              </p>
+            )}
+            {linkedInUseCase.invalidLinkedInUrl &&
+              !linkedInUseCase.emptyLinkedInUrl && (
+                <p className='text-error-500 text-[12px] mt-0'>
+                  Invalid linkedin URL
+                </p>
+              )}
           </ModalBody>
           <ModalFooter className='flex w-full gap-4'>
             <Button className='w-full' onClick={() => onClose()}>
@@ -62,8 +103,8 @@ export const AddLinkedInToContactModal = observer(
               colorScheme='primary'
               dataTest='add-linkedin-url'
               onClick={() => {
-                linkedInUseCase.setLinkedInUrl();
-                onClose();
+                linkedInUseCase.submitLinkedInUrl();
+                linkedInUseCase.validateLinkedInUrl() && onClose();
               }}
             >
               Add & enrich

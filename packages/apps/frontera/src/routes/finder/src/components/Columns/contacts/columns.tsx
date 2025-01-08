@@ -319,7 +319,11 @@ const columns: Record<string, Column> = {
             </p>
           );
 
-        return <p>{DateTimeUtils.timeAgo(startedAt)}</p>;
+        return (
+          <p className='first-letter:capitalize'>
+            {DateTimeUtils.timeAgo(startedAt)}
+          </p>
+        );
       },
       header: (props) => (
         <THead<HTMLInputElement>

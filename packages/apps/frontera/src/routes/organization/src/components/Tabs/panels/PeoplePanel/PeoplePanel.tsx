@@ -1,13 +1,31 @@
 import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+<<<<<<< HEAD
 import { SearchSortContact } from '@domain/usecases/people-contact-card/search-sort-contacts.usecase';
+=======
+<<<<<<< Updated upstream
+>>>>>>> eb554d103 (contact card issues)
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { Users03 } from '@ui/media/icons/Users03';
 import { useStore } from '@shared/hooks/useStore';
+<<<<<<< HEAD
 import { SearchSm } from '@ui/media/icons/SearchSm';
+=======
+=======
+import { differenceInCalendarMonths } from 'date-fns';
+import { SearchSortContact } from '@domain/usecases/people-contact-card/search-sort-contacts.usecase';
+
+import { Input } from '@ui/form/Input';
+import { FeaturedIcon } from '@ui/media/Icon';
+import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
+import { Users02 } from '@ui/media/icons/Users02';
+import { SearchSm } from '@ui/media/icons/SearchSm';
+>>>>>>> Stashed changes
+>>>>>>> eb554d103 (contact card issues)
 import { UsersPlus } from '@ui/media/icons/UsersPlus';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
@@ -72,21 +90,22 @@ export const PeoplePanel = observer(() => {
     >
       {!contacts.length && (
         <div className='flex flex-col items-center mt-4'>
-          <div className='border-1 border-gray-200 p-3 rounded-md mb-6'>
-            <Users03 className='text-gray-700 size-6' />
+          <div className='border-1 border-gray-200 p-3 rounded-md mb-6 mt-5'>
+            <FeaturedIcon colorScheme='gray'>
+              <Users02 className='text-gray-700 size-6' />
+            </FeaturedIcon>
           </div>
-          <span className='text-gray-700 font-semibold'>
-            Let’s add some people
-          </span>
-          <span className='text-gray-500 mt-1 mb-6 text-center'>
-            With the right people, you&apos;ll create meaningful interactions
-            and results. Start by adding yourself, your colleagues or anyone
-            from {organization?.value.name}.
+          <span className='text-gray-700 font-medium'>Assemble the team</span>
+          <span className='text-gray-700 mt-1 mb-6 text-center text-sm'>
+            Start by adding people that work at {organization?.value.name}, and
+            keep track of everyone from decision-makers to day-to-day
+            collaborators.
           </span>
           <div>
             <Button
               variant='outline'
               loadingText='Adding'
+              colorScheme={'primary'}
               onClick={() => onOpen()}
               dataTest='org-people-add-someone'
               isDisabled={store.contacts.isLoading}
@@ -96,6 +115,7 @@ export const PeoplePanel = observer(() => {
           </div>
         </div>
       )}
+<<<<<<< HEAD
 
       {contacts.length > 0 && (
         <div className='flex items-center justify-between'>
@@ -111,6 +131,31 @@ export const PeoplePanel = observer(() => {
           </div>
           <SortOptionsMenu searchSortContact={searchSortContact} />
         </div>
+=======
+<<<<<<< Updated upstream
+      {contacts.map((contact) => (
+        <div key={contact?.id} className='group/card' style={{ width: '100%' }}>
+          <ContactCard id={contact?.id} />
+        </div>
+      ))}
+=======
+
+      {contacts.length > 0 && (
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center gap-2'>
+            <SearchSm className='text-gray-500 size-4' />
+            <Input
+              size='xs'
+              type='text'
+              value={search}
+              variant='unstyled'
+              placeholder='Search name or title...'
+              onChange={(e) => searchSortContact.setSearch(e.target.value)}
+            />
+          </div>
+          <SortOptionsMenu searchSortContact={searchSortContact} />
+        </div>
+>>>>>>> eb554d103 (contact card issues)
       )}
 
       {/* Filtered contacts */}
@@ -147,12 +192,28 @@ export const PeoplePanel = observer(() => {
           }
 
           if (sortBy === 'Tenure') {
+<<<<<<< HEAD
             const aTenure =
               a.primaryOrganizationJobRoleStartDate -
               a.primaryOrganizationJobRoleEndDate;
             const bTenure =
               b.primaryOrganizationJobRoleStartDate -
               b.primaryOrganizationJobRoleEndDate;
+=======
+            const aTenure = Math.abs(
+              differenceInCalendarMonths(
+                new Date(a.primaryOrganizationJobRoleStartDate),
+                new Date(),
+              ),
+            );
+
+            const bTenure = Math.abs(
+              differenceInCalendarMonths(
+                new Date(b.primaryOrganizationJobRoleStartDate),
+                new Date(),
+              ),
+            );
+>>>>>>> eb554d103 (contact card issues)
 
             if (sortDir === 'asc') {
               return aTenure - bTenure;
@@ -189,6 +250,10 @@ export const PeoplePanel = observer(() => {
           No matches found—looks like a ghost town in here
         </div>
       )}
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
+>>>>>>> eb554d103 (contact card issues)
 
       <CreateNewContactModal orgId={id} open={open} onClose={onClose} />
     </OrganizationPanel>

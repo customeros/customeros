@@ -36,17 +36,20 @@ export const ContactCardMenu = observer(
             />
           </MenuButton>
           <MenuList>
-            <MenuItem
-              className='group/linkedin'
-              onClick={() =>
-                window.open(linkedInProfile ?? '', '_blank', 'noopener')
-              }
-            >
-              <div>
-                <LinkedinOutline className='mr-2 text-gray-500 group-hover/linkedin:text-gray-700' />
-                <span>Go to LinkedIn profile</span>
-              </div>
-            </MenuItem>
+            {linkedInProfile && (
+              <MenuItem
+                className='group/linkedin'
+                onClick={() =>
+                  window.open(linkedInProfile ?? '', '_blank', 'noopener')
+                }
+              >
+                <div>
+                  <LinkedinOutline className='mr-2 text-gray-500 group-hover/linkedin:text-gray-700' />
+                  <span>Go to LinkedIn profile</span>
+                </div>
+              </MenuItem>
+            )}
+
             <MenuItem className='group/change' onClick={() => onOpen()}>
               <div>
                 <SwitchHorizontal02 className='mr-2 text-gray-500 group-hover/change:text-gray-700' />
