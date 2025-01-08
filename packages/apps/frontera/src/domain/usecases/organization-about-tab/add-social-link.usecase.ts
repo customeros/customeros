@@ -35,7 +35,7 @@ export class AddSocialLinkCase {
 
   @action
   submit() {
-    if (!this.entity) return;
+    if (!this?.entity) return;
 
     this.entity.draft();
     this.entity.value?.socialMedia.push({

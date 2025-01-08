@@ -197,6 +197,7 @@ export const TagsManager = observer(() => {
               className='pl-6 placeholder:text-sm text-sm bg-white'
               onChange={(e) => {
                 setNewTag(e.target.value);
+                e.stopPropagation();
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {

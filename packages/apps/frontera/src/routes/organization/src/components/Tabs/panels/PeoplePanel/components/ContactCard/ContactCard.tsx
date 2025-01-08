@@ -147,6 +147,7 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                         value={contactStore?.name || ''}
                         dataTest='org-people-contact-name'
                         onFocus={(e) => e.target.select()}
+                        onKeyDown={(e) => e.stopPropagation()}
                         className='placeholder:font-medium font-medium min-w-[60px] w-[200px]'
                         onChange={(e) => {
                           contactStore.value.name = e.target.value;
@@ -218,6 +219,7 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                     size='xxs'
                     variant='unstyled'
                     onFocus={(e) => e.target.select()}
+                    onKeyDown={(e) => e.stopPropagation()}
                     placeholder={
                       isEnriching ? 'Getting job title...' : 'Job title'
                     }

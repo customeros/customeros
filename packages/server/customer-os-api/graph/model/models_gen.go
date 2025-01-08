@@ -972,13 +972,15 @@ type Domain struct {
 }
 
 type DomainCheckDetails struct {
-	Domain                      string  `json:"domain"`
-	ValidSyntax                 bool    `json:"validSyntax"`
-	Accessible                  bool    `json:"accessible"`
-	Primary                     bool    `json:"primary"`
-	PrimaryDomain               string  `json:"primaryDomain"`
-	DomainOrganizationID        *string `json:"domainOrganizationId,omitempty"`
-	PrimaryDomainOrganizationID *string `json:"primaryDomainOrganizationId,omitempty"`
+	Domain                        string  `json:"domain"`
+	ValidSyntax                   bool    `json:"validSyntax"`
+	Accessible                    bool    `json:"accessible"`
+	Primary                       bool    `json:"primary"`
+	PrimaryDomain                 string  `json:"primaryDomain"`
+	DomainOrganizationID          *string `json:"domainOrganizationId,omitempty"`
+	DomainOrganizationName        *string `json:"domainOrganizationName,omitempty"`
+	PrimaryDomainOrganizationID   *string `json:"primaryDomainOrganizationId,omitempty"`
+	PrimaryDomainOrganizationName *string `json:"primaryDomainOrganizationName,omitempty"`
 }
 
 // Describes an email address associated with a `Contact` in customerOS.
