@@ -1,5 +1,19 @@
+extend type Query {
+    checkDomain(domain: String!): DomainCheckDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
 type Domain {
     domain:         String!
     primary:        Boolean
     primaryDomain:  String
+}
+
+type DomainCheckDetails {
+    domain:                         String!
+    validSyntax:                    Boolean!
+    accessible:                     Boolean!
+    primary:                        Boolean!
+    primaryDomain:                  String!
+    domainOrganizationId:           String
+    primaryDomainOrganizationId:    String
 }
