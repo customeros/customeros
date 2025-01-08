@@ -94,9 +94,8 @@ export const NumberFilter = ({
       >
         <Input
           size='sm'
-          type='number'
           variant='unstyled'
-          value={inputValue}
+          value={inputValue || ''}
           onChange={handleInputChange}
           placeholder={`${filterName} ${handleOperatorName(
             operatorValue as ComparisonOperator,

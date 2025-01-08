@@ -234,30 +234,33 @@ export const TagsManager = observer(() => {
                           ref={inputRef}
                           variant='unstyled'
                           className='mb-[1px] bg-white'
-                          defaultValue={newTag || tag.value.name}
-                          onBlur={() => {
-                            handleEditTag(
-                              tag.value.metadata.id,
-                              newTag || tag.value.name,
-                            );
-                            setEditingTag(null);
-                          }}
-                          onChange={(e) => {
-                            const trimmedValue = e.target.value.trim();
+                          defaultValue={editingTag?.name}
+                          onFocus={(e) => {
+                            e.target.select();
 
-                            if (trimmedValue.length > 0) {
-                              setNewTag(trimmedValue);
+                            if (!newTag) {
+                              setNewTag(e.target.value);
                             }
-                            e.stopPropagation();
+                          }}
+                          onBlur={(e) => {
+                            const value = e.target.value.trim();
+
+                            if (value && value !== editingTag?.name) {
+                              handleEditTag(editingTag.id, value);
+                            }
+                            setEditingTag(null);
+                            setNewTag('');
                           }}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
-                              handleEditTag(
-                                tag.value.metadata.id,
-                                e.currentTarget.value,
-                              );
+                              const value = e.currentTarget.value.trim();
+
+                              if (value && value !== editingTag?.name) {
+                                handleEditTag(editingTag.id, value);
+                              }
+                              setEditingTag(null);
+                              setNewTag('');
                             }
-                            e.stopPropagation();
                           }}
                         />
                       </div>

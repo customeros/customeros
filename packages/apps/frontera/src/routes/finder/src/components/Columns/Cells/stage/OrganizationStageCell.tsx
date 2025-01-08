@@ -26,12 +26,7 @@ export const OrganizationStageCell = observer(
           store.ui.commandMenu.setOpen(true);
         }}
       >
-        <p
-          className={cn(
-            'text-gray-700',
-            !selectedStageOption?.value && 'text-gray-400',
-          )}
-        >
+        <p className={cn('text-gray-700')}>
           {selectedStageOption?.label ?? 'Not applicable'}
         </p>
       </div>
