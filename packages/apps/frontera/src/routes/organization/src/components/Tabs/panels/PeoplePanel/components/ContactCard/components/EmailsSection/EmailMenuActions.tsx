@@ -1,5 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { EditEmailCase } from '@domain/usecases/command-menu/edit-email.usecase';
+import { EmailVerificationStatus } from '@finder/components/Columns/contacts/filterTypes';
 
 import { Copy01 } from '@ui/media/icons/Copy01';
 import { Star01 } from '@ui/media/icons/Star01';
@@ -14,6 +15,12 @@ import { PlusCircle } from '@ui/media/icons/PlusCircle';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import {
+  EmailDeliverable,
+  EmailValidationDetails,
+} from '@shared/types/__generated__/graphql.types';
+
+import { emailStatuses } from '../../EmailValidationMessage';
 
 interface EmailMenuActionsProps {
   id: string;
@@ -34,6 +41,9 @@ export const EmailMenuActions = observer(
     const contactStore = store.contacts.value.get(contactId);
 
     const isPrimaryEmail = contactStore?.value.emails[idx]?.primary;
+    const emailValidationDetails =
+      contactStore?.value.emails[idx]?.emailValidationDetails;
+    const isNotDeliverable = checkEmailStatus(emailValidationDetails, email);
 
     if (!contactStore) return;
 
@@ -82,15 +92,20 @@ export const EmailMenuActions = observer(
               </div>
             </MenuItem>
           )}
-          <MenuItem
-            className='group/send-email'
-            onClick={() => {
-              dispatchEvent({ email: email, openEditor: 'email' });
-            }}
-          >
-            <Send03 className='text-gray-500 group-hover/send-email:text-gray-700' />
-            Send email to contact
-          </MenuItem>
+          {isNotDeliverable?.value !== EmailVerificationStatus.InvalidMailbox &&
+            isNotDeliverable?.value !== EmailVerificationStatus.MailboxFull &&
+            isNotDeliverable?.value !==
+              EmailVerificationStatus.IncorrectFormat && (
+              <MenuItem
+                className='group/send-email'
+                onClick={() => {
+                  dispatchEvent({ email: email, openEditor: 'email' });
+                }}
+              >
+                <Send03 className='text-gray-500 group-hover/send-email:text-gray-700' />
+                Send email to contact
+              </MenuItem>
+            )}
           <MenuItem
             className='group/add-email'
             onClick={() => {
@@ -119,7 +134,9 @@ export const EmailMenuActions = observer(
             className='group/archive-email'
             onClick={() => {
               contactStore.draft();
-              contactStore?.value.emails.splice(idx, 1);
+              contactStore.value.emails[idx].email = '';
+
+              contactStore.value.emails.splice(idx, 1);
               contactStore?.commit();
             }}
           >
@@ -139,3 +156,44 @@ export const EmailMenuActions = observer(
     );
   },
 );
+
+function isValidEmail(email: string) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  return emailRegex.test(email);
+}
+
+function checkEmailStatus(emailData?: EmailValidationDetails, email?: string) {
+  if (!email) {
+    return null;
+  }
+
+  if (email && !emailData) {
+    const isValidSyntax = isValidEmail(email);
+
+    if (!isValidSyntax) return emailStatuses.INCORRECT_FORMAT;
+  }
+
+  if (emailData?.deliverable === EmailDeliverable.Deliverable) {
+    if (emailData.isFirewalled) return emailStatuses.DELIVERABLE_FIREWALL;
+    if (emailData.isFreeAccount) return emailStatuses.DELIVERABLE_FREE_ACCOUNT;
+
+    return emailStatuses.DELIVERABLE_NO_RISK;
+  }
+
+  if (emailData?.deliverable === EmailDeliverable.Unknown) {
+    return emailData.isCatchAll
+      ? emailStatuses.CATCH_ALL
+      : emailStatuses.UNABLE_TO_VALIDATE;
+  }
+
+  if (emailData?.deliverable === EmailDeliverable.Undeliverable) {
+    if (emailData.isMailboxFull) return emailStatuses.MAILBOX_FULL;
+
+    return emailStatuses.INVALID_MAILBOX;
+  }
+
+  if (emailData?.verified === false) return emailStatuses.NOT_VERIFIED;
+  if (emailData?.verifyingCheckAll)
+    return emailStatuses.VERIFICATION_IN_PROGRESS;
+}

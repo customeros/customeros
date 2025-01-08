@@ -15,7 +15,7 @@ interface Props {
   validationDetails: EmailValidationDetails | undefined;
 }
 
-const emailStatuses = {
+export const emailStatuses = {
   DELIVERABLE_NO_RISK: {
     message: 'Deliverable • No risk',
     icon: (

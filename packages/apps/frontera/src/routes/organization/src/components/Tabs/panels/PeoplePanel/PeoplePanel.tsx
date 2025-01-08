@@ -1,14 +1,18 @@
 import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+import { differenceInCalendarMonths } from 'date-fns';
 import { SearchSortContact } from '@domain/usecases/people-contact-card/search-sort-contacts.usecase';
 
 import { Input } from '@ui/form/Input';
+import { FeaturedIcon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
-import { Users03 } from '@ui/media/icons/Users03';
+import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { Users02 } from '@ui/media/icons/Users02';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { UsersPlus } from '@ui/media/icons/UsersPlus';
+import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
@@ -22,9 +26,8 @@ export const PeoplePanel = observer(() => {
   const { open, onOpen, onClose } = useDisclosure();
   const id = useParams()?.id as string;
   const organization = store.organizations.getById(id);
-  const contacts = store.organizations.getById(id)?.contacts;
 
-  if (!contacts) return null;
+  const contacts = store.organizations.getById(id)?.contacts;
 
   const searchSortContact = searchSortContactUseCase;
 
@@ -33,7 +36,7 @@ export const PeoplePanel = observer(() => {
   const sortBy = searchSortContact.getSort();
 
   const filteredContactsState =
-    contacts.filter((v) => {
+    contacts?.filter((v) => {
       if (!search) return true;
 
       return (
@@ -44,6 +47,8 @@ export const PeoplePanel = observer(() => {
           .includes(search.toLowerCase())
       );
     }).length === 0 && search;
+
+  if (!contacts) return null;
 
   return (
     <OrganizationPanel
@@ -57,36 +62,45 @@ export const PeoplePanel = observer(() => {
       }
       actionItem={
         !!contacts.length && (
-          <Button
+          <IconButton
             size='xs'
             variant='outline'
             onClick={() => onOpen()}
             aria-label='Add contact'
-            leftIcon={<UsersPlus />}
+            className='text-gray-500'
             dataTest={'org-people-add-contact'}
+            icon={<UsersPlus className='text-gray-500' />}
+            spinner={
+              <Spinner
+                size='sm'
+                label='adding'
+                className='text-gray-300 fill-gray-400'
+              />
+            }
           >
             Add
-          </Button>
+          </IconButton>
         )
       }
     >
       {!contacts.length && (
         <div className='flex flex-col items-center mt-4'>
-          <div className='border-1 border-gray-200 p-3 rounded-md mb-6'>
-            <Users03 className='text-gray-700 size-6' />
+          <div className='border-1 border-gray-200 p-3 rounded-md mb-6 mt-5'>
+            <FeaturedIcon colorScheme='gray'>
+              <Users02 className='text-gray-700 size-6' />
+            </FeaturedIcon>
           </div>
-          <span className='text-gray-700 font-semibold'>
-            Let’s add some people
-          </span>
-          <span className='text-gray-500 mt-1 mb-6 text-center'>
-            With the right people, you&apos;ll create meaningful interactions
-            and results. Start by adding yourself, your colleagues or anyone
-            from {organization?.value.name}.
+          <span className='text-gray-700 font-medium'>Assemble the team</span>
+          <span className='text-gray-700 mt-1 mb-6 text-center text-sm'>
+            Start by adding people that work at {organization?.value.name}, and
+            keep track of everyone from decision-makers to day-to-day
+            collaborators.
           </span>
           <div>
             <Button
               variant='outline'
               loadingText='Adding'
+              colorScheme={'primary'}
               onClick={() => onOpen()}
               dataTest='org-people-add-someone'
               isDisabled={store.contacts.isLoading}
@@ -102,6 +116,7 @@ export const PeoplePanel = observer(() => {
           <div className='flex items-center gap-2'>
             <SearchSm className='text-gray-500 size-4' />
             <Input
+              size='xs'
               type='text'
               value={search}
               variant='unstyled'
@@ -147,12 +162,19 @@ export const PeoplePanel = observer(() => {
           }
 
           if (sortBy === 'Tenure') {
-            const aTenure =
-              a.primaryOrganizationJobRoleStartDate -
-              a.primaryOrganizationJobRoleEndDate;
-            const bTenure =
-              b.primaryOrganizationJobRoleStartDate -
-              b.primaryOrganizationJobRoleEndDate;
+            const aTenure = Math.abs(
+              differenceInCalendarMonths(
+                new Date(a.primaryOrganizationJobRoleStartDate),
+                new Date(),
+              ),
+            );
+
+            const bTenure = Math.abs(
+              differenceInCalendarMonths(
+                new Date(b.primaryOrganizationJobRoleStartDate),
+                new Date(),
+              ),
+            );
 
             if (sortDir === 'asc') {
               return aTenure - bTenure;

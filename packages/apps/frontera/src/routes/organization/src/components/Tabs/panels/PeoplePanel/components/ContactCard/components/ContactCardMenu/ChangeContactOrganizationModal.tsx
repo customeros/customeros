@@ -39,9 +39,8 @@ export const ChangeContactOrganizationModal = observer(
           <ModalBody>
             <div>
               <p>
-                Changing this contact’s organization will move them to the
-                “Former employees” section and associate them with the newly
-                selected organization.
+                Changing this contact’s organization will associate them with
+                the newly selected organization.
               </p>
             </div>
 

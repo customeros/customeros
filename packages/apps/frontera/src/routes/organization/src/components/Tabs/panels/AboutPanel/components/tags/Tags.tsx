@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { Plus } from '@ui/media/icons/Plus';
@@ -85,7 +85,13 @@ export const Tags = ({
             }
           }}
           noOptionsMessage={({ inputValue }) => (
-            <div className='text-gray-700 px-3 py-1 mt-0.5 rounded-md bg-grayModern-100 gap-1 flex items-center'>
+            <div
+              className='text-gray-700 px-3 py-1 mt-0.5 rounded-md bg-grayModern-100 gap-1 flex items-center'
+              onClick={() => {
+                onCreate?.(inputValue);
+                setInputValue('');
+              }}
+            >
               <Plus />
               <span>{`Create "${inputValue}"`}</span>
             </div>

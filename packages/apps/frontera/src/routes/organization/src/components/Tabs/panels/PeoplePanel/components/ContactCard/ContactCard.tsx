@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { set } from 'lodash';
 import { observer } from 'mobx-react-lite';
@@ -15,7 +16,9 @@ import { IconButton } from '@ui/form/IconButton';
 import { useEvent } from '@shared/hooks/useEvent';
 import { useStore } from '@shared/hooks/useStore';
 import { Linkedin } from '@ui/media/icons/Linkedin';
+import { getFormattedLink } from '@utils/getExternalLink';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
+import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { LinkedInSolid02 } from '@ui/media/icons/LinkedInSolid02';
 import {
@@ -44,13 +47,14 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
   const { dispatchEvent } = useEvent('openEmailEditor');
   const [isExpanded, setIsExpanded] = useState(false);
   const { onOpen, onClose, open } = useDisclosure();
-  const contactStore = store.contacts.value.get(id);
+  const contactStore = store.contacts.getById(id);
 
   const handleCreateOption = (value: string) => {
     store.tags?.create(
       { name: value },
       {
         onSucces: (id) => {
+          contactStore?.draft();
           contactStore?.value.tags?.push({
             name: value,
             metadata: {
@@ -79,6 +83,10 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
         )} days ago`;
 
   const linkedInProfile = contactStore?.value.linkedInUrl;
+  const formattedLink = getFormattedLink(linkedInProfile || '').replace(
+    /^linkedin\.com\/(?:in\/|company\/)?/,
+    '/',
+  );
 
   const email =
     contactStore?.value.emails.find((e) => e.primary)?.email ??
@@ -86,15 +94,17 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
 
   const jobTitle = contactStore?.value.primaryOrganizationJobRoleTitle;
 
+  const isEnriching = contactStore?.isEnriching;
+
   if (!contactStore) return null;
 
   return (
     <>
       <Card
-        style={{ paddingBottom: !isExpanded ? '0' : '10px' }}
+        style={{ paddingBottom: !isExpanded ? '2px' : '10px' }}
         className={cn(
           isExpanded ? 'bg-white' : 'border-transparent',
-          'px-2 pb-2.5 pt-0.5 group-hover/card:border-gray-200 group-hover/card:bg-white',
+          'px-2 pb-2.5 pt-0.5 group-hover/card:border-gray-200 group-hover/card:bg-white max-w-[400px]',
         )}
       >
         <CardHeader style={{ paddingBottom: !isExpanded ? '0' : '8px' }}>
@@ -103,8 +113,10 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
               <div>
                 <Avatar
                   size='sm'
+                  textSize='sm'
                   variant='outlineCircle'
                   name={contactStore?.value.name ?? ''}
+                  className={cn(isEnriching && 'animate-pulse')}
                   icon={<User03 className='text-gray-700 size-6' />}
                   src={
                     contactStore?.value?.profilePhotoUrl
@@ -120,23 +132,28 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                     {!isExpanded ? (
                       <span
                         className={cn(
-                          'cursor-default font-medium text-sm',
+                          'cursor-default font-medium text-sm truncate max-w-[200px]',
                           !contactStore.name && 'text-gray-400',
                         )}
                       >
-                        {contactStore?.name || 'First & last name'}
+                        {isEnriching
+                          ? 'Getting name...'
+                          : contactStore?.name || 'First & last name'}
                       </span>
                     ) : (
                       <Input
                         size='xxs'
                         variant='unstyled'
-                        placeholder='First & last name'
-                        value={contactStore?.name ?? ''}
+                        value={contactStore?.name || ''}
                         dataTest='org-people-contact-name'
-                        className='placeholder:font-medium font-medium min-w-[60px]'
+                        onFocus={(e) => e.target.select()}
+                        className='placeholder:font-medium font-medium min-w-[60px] w-[200px]'
                         onChange={(e) => {
                           contactStore.value.name = e.target.value;
                         }}
+                        placeholder={
+                          isEnriching ? 'Getting name...' : 'First & last name'
+                        }
                         onBlur={() => {
                           contactStore.draft();
                           contactStore.commit();
@@ -144,14 +161,14 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                       />
                     )}
 
-                    <div className='flex h-full gap-1'>
+                    <div className='flex items-center h-full gap-1'>
                       {email && !isExpanded && (
                         <IconButton
                           size='xxs'
                           variant='ghost'
                           icon={<Mail01 />}
                           aria-label='send-email'
-                          className='group-hover/action-buttons:opacity-100 opacity-0'
+                          className='group-hover/action-buttons:opacity-100 opacity-0 mt-[3px]'
                           onClick={() =>
                             dispatchEvent({ email: email, openEditor: 'email' })
                           }
@@ -163,7 +180,7 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                           variant='ghost'
                           icon={<LinkedInSolid02 />}
                           aria-label='navigate-to-linkedin'
-                          className='group-hover/action-buttons:opacity-100 opacity-0'
+                          className='group-hover/action-buttons:opacity-100 opacity-0 mt-[3px]'
                           onClick={() =>
                             window.open(linkedInProfile, '_blank', 'noopener')
                           }
@@ -171,15 +188,16 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                       )}
                     </div>
                   </div>
-                  <div>
+                  <div className='max-h-5'>
                     <IconButton
                       size='xxs'
                       variant='ghost'
                       aria-label='collapse'
-                      icon={<ChevronCollapse />}
-                      dataTest='org-people-collapse'
                       onClick={() => setIsExpanded(!isExpanded)}
                       className='group-hover/card:opacity-100 opacity-0'
+                      icon={
+                        !isExpanded ? <ChevronExpand /> : <ChevronCollapse />
+                      }
                     />
                     <ContactCardMenu contactId={id} />
                   </div>
@@ -191,14 +209,18 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                       !jobTitle && 'text-gray-400',
                     )}
                   >
-                    {jobTitle || 'Job title'}
+                    {isEnriching
+                      ? 'Getting job title...'
+                      : jobTitle || 'Job title'}
                   </p>
                 ) : (
                   <Input
                     size='xxs'
                     variant='unstyled'
-                    placeholder='Job title'
-                    dataTest='org-people-contact-title'
+                    onFocus={(e) => e.target.select()}
+                    placeholder={
+                      isEnriching ? 'Getting job title...' : 'Job title'
+                    }
                     value={
                       contactStore.value.primaryOrganizationJobRoleTitle || ''
                     }
@@ -207,13 +229,11 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                       contactStore.commit();
                     }}
                     onChange={(e) => {
-                      if (e.target.value !== '') {
-                        set(
-                          contactStore.value,
-                          'primaryOrganizationJobRoleTitle',
-                          e.target.value,
-                        );
-                      }
+                      set(
+                        contactStore.value,
+                        'primaryOrganizationJobRoleTitle',
+                        e.target.value,
+                      );
                     }}
                   />
                 )}
@@ -233,22 +253,32 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
 
             <div className='flex items-center max-h-6'>
               <Linkedin className='text-gray-500 mr-4' />
-              <span
-                data-test={'org-people-linkedin'}
-                className={cn(
-                  'text-sm cursor-pointer',
-                  !linkedInProfile && 'text-gray-400',
-                )}
-                onClick={() => {
-                  if (!linkedInProfile) {
-                    onOpen();
-                  } else {
-                    window.open(linkedInProfile, '_blank', 'noopener');
-                  }
-                }}
-              >
-                {linkedInProfile || 'LinkedIn profile URL'}
-              </span>
+
+              {linkedInProfile ? (
+                <Link
+                  target='_blank'
+                  to={linkedInProfile || ''}
+                  className='cursor-pointer no-underline hover:no-underline'
+                >
+                  <p
+                    className={cn(
+                      'text-sm cursor-pointer w-[300px] truncate no-underline hover:no-underline',
+                    )}
+                  >
+                    {formattedLink ?? 'LinkedIn profile URL'}
+                  </p>
+                </Link>
+              ) : (
+                <p
+                  onClick={() => onOpen()}
+                  className={cn(
+                    'text-sm cursor-pointer w-[300px] truncate no-underline hover:no-underline',
+                    'text-gray-400',
+                  )}
+                >
+                  {'LinkedIn profile URL'}
+                </p>
+              )}
             </div>
 
             <Tags

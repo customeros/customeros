@@ -1,8 +1,10 @@
 import { observer } from 'mobx-react-lite';
 import { SearchSortContact } from '@domain/usecases/people-contact-card/search-sort-contacts.usecase';
 
+import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { SwitchVertical01 } from '@ui/media/icons/SwitchVertical01';
+import { SwitchVertical02 } from '@ui/media/icons/SwitchVertical02';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
 interface SortOptionsMenuProps {
@@ -14,20 +16,30 @@ export const SortOptionsMenu = observer(
     const sortDirection = searchSortContact.getSortDirection();
 
     return (
-      <div className='flex gap-2'>
+      <div className='flex'>
         <IconButton
           size='xs'
           variant='ghost'
           aria-label='sort direction'
-          icon={<SwitchVertical01 />}
           onClick={() => {
             searchSortContact.setSortDirection(
               sortDirection === 'asc' ? 'desc' : 'asc',
             );
           }}
+          icon={
+            searchSortContact.getSortDirection() === 'asc' ? (
+              <SwitchVertical01 />
+            ) : (
+              <SwitchVertical02 />
+            )
+          }
         />
         <Menu>
-          <MenuButton>{searchSortContact.getSort()}</MenuButton>
+          <MenuButton asChild>
+            <Button size='xs' variant='ghost'>
+              {searchSortContact.getSort()}
+            </Button>
+          </MenuButton>
           <MenuList>
             <MenuItem onClick={() => searchSortContact.setSort('First name')}>
               First name
