@@ -29,7 +29,7 @@ export const FlowMoreActionsMenu = observer(
     return (
       <>
         <Menu>
-          <MenuButton data-test='flow-editor-more-menu-button '>
+          <MenuButton data-test='flow-editor-more-menu-button'>
             <IconButton
               size='xs'
               aria-label={''}

@@ -140,27 +140,16 @@ export class OpportunitiesKanbanPage {
     await this.page
       .locator(this.oppKanbanChooseOrganization)
       .pressSequentially(organizationName);
-    await this.page.locator(this.oppKanbanChooseOrganization).press('Enter');
 
-    const responseMutationPromise = createResponsePromise(
-      this.page,
-      'saveOpportunity?.metadata?.id',
-      undefined,
-    );
-    const queryResponsePromise1 = createResponsePromise(
+    const responseOpportunityCreate = createResponsePromise(
       this.page,
       'opportunity_Save?.metadata?.id',
       undefined,
     );
-    // const queryResponsePromise2 = createResponsePromise(
-    //   this.page,
-    //   'opportunity?.metadata?.id',
-    //   undefined,
-    // );
 
-    await responseMutationPromise;
-    await queryResponsePromise1;
-    // await queryResponsePromise2;
+    await this.page.locator(this.oppKanbanChooseOrganization).press('Enter');
+
+    await Promise.all([responseOpportunityCreate]);
     await this.page.waitForTimeout(1500);
   }
 

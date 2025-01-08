@@ -219,7 +219,7 @@ test('Assign contact to flow', async ({ page }, testInfo) => {
   const flowName = await flowsPage.addFlow();
 
   await flowPage.checkNewFlowEntry(flowName);
-  await flowPage.goToFlows();
+  // await flowPage.goToFlows();
   await flowsPage.checkNewFlowEntry(flowName, flow.create);
 
   await organizationsPage.goToAllOrgs();

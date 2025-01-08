@@ -48,7 +48,12 @@ export const ContactFlowCell = observer(
             'flex w-full gap-1 items-center [&_.edit-button]:hover:opacity-100 cursor-pointer',
           )}
         >
-          <div className='text-gray-400'>None</div>
+          <div
+            className='text-gray-400'
+            data-test={`contact-current-flows-in-contacts-table`}
+          >
+            None
+          </div>
         </div>
       );
     }

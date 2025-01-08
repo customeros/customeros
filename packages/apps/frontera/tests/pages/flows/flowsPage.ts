@@ -1,8 +1,8 @@
-import { randomUUID } from 'crypto';
 import { Page, expect } from '@playwright/test';
 
 import { FlowStatuses } from './flowsStatuses';
 import {
+  createTinyUUID,
   createRequestPromise,
   createResponsePromise,
   clickLocatorsThatAreVisible,
@@ -71,7 +71,7 @@ export class FlowsPage {
 
     await clickLocatorsThatAreVisible(this.page, this.createNewFlowName);
 
-    const flowName = randomUUID();
+    const flowName = createTinyUUID();
 
     const requestPromise = createRequestPromise(this.page, 'name', flowName);
 

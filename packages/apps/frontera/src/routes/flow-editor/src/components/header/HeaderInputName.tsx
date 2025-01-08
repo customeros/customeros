@@ -50,7 +50,7 @@ export const HeaderInputName = observer(() => {
         readOnly={showFinder}
         placeholder={'Flow name'}
         onBlur={handleSaveOnBlur}
-        data-test='flows-flow-name-input'
+        dataTest='flows-flow-name'
         value={store.flows.isLoading ? 'Loading flow…' : name}
         onChange={(e) => {
           setName(e.target.value);
