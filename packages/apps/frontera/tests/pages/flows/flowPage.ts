@@ -13,10 +13,11 @@ export class FlowPage {
     this.page = page;
   }
 
-  private flowName = 'span[data-test="flows-flow-name"]';
+  // private flowName = 'div[data-test="flow-name-in-flows-table"]';
+  private flowName = 'input[data-test="flows-flow-name"]';
   private navigateToFlows = 'span[data-test="navigate-to-flows"]';
   private flowContacts = 'button[data-test="flow-contacts"]';
-  private saveFlow = 'button[data-test="save-flow"]';
+  // private saveFlow = 'button[data-test="save-flow"]';
   private startFlow = 'button[data-test="start-flow"]';
   private flowToggleSettings = 'button[data-test="flow-toggle-settings"]';
   private flowTriggerBlock = 'div[data-test="flow-trigger-block"]';
@@ -35,6 +36,8 @@ export class FlowPage {
   private flowAddStepOrTrigger = 'button[data-test="flow-add-step-or-trigger"]';
   private stepsHubInput = 'input[data-test="StepsHub-input"]';
   private flowActionSendEmail = 'div[data-test="flow-action-send-email"]';
+  private emailSettingsPanelDone =
+    'button[data-test="email-settings-panel-done"]';
   private flowActionWait = 'div[data-test="flow-action-wait"]';
   private flowSendLinkedinMessage =
     'span[data-test="flow-send-linkedin-message"]';
@@ -58,12 +61,16 @@ export class FlowPage {
     await Promise.all([
       expect
         .soft(this.page.locator(this.flowName))
-        .toHaveText(expectedFlowName),
+        .toHaveValue(expectedFlowName),
       expect.soft(this.page.locator(this.navigateToFlows)).toHaveText('Flows'),
       expect.soft(this.page.locator(this.flowContacts)).toHaveText('0'),
-      expect.soft(this.page.locator(this.startFlow)).toBeEnabled(),
-      expect.soft(this.page.locator(this.startFlow)).toHaveText('Start flow'),
-      expect.soft(this.page.locator(this.flowToggleSettings)).toBeEnabled(),
+      expect.soft(this.page.locator(this.startFlow).first()).toBeEnabled(),
+      expect
+        .soft(this.page.locator(this.startFlow).first())
+        .toHaveText('Start flow'),
+      expect
+        .soft(this.page.locator(this.flowToggleSettings).first())
+        .toBeEnabled(),
       expect.soft(this.page.locator(this.flowTriggerBlock)).toBeEnabled(),
       expect
         .soft(this.page.locator(this.flowTriggerBlock))
@@ -133,14 +140,18 @@ export class FlowPage {
       expect(this.page.locator(this.flowCreateToDo)).toHaveText('Create to-do'),
     ]);
     await clickLocatorThatIsVisible(this.page, this.flowActionSendEmail);
+    await clickLocatorThatIsVisible(this.page, this.emailSettingsPanelDone);
 
     await clickLocatorThatIsVisible(this.page, this.flowTidyUp);
-    await Promise.all([
-      await expect(this.page.locator(this.saveFlow)).toHaveText(
-        'Publish changes',
-      ),
-      await expect(this.page.locator(this.saveFlow)).toBeEnabled(),
-    ]);
+    // await Promise.all([
+    //   await expect(this.page.locator(this.saveFlow)).toHaveText(
+    //     'Publish changes',
+    //   ),
+    //   await expect(this.page.locator(this.saveFlow)).toBeEnabled(),
+    // ]);
+
+    await clickLocatorThatIsVisible(this.page, this.flowToggleSettings);
+    await expect(this.page.locator(this.flowAddSenders)).toBeEnabled();
 
     const requestPromise = createRequestPromise(
       this.page,
@@ -154,11 +165,9 @@ export class FlowPage {
       undefined,
     );
 
-    await clickLocatorThatIsVisible(this.page, this.saveFlow);
+    // await clickLocatorThatIsVisible(this.page, this.saveFlow);
+    await this.goToFlows();
     await Promise.all([requestPromise, responsePromise]);
-
-    await clickLocatorThatIsVisible(this.page, this.flowToggleSettings);
-    await expect(this.page.locator(this.flowAddSenders)).toBeEnabled();
   }
 
   async goToFlows() {

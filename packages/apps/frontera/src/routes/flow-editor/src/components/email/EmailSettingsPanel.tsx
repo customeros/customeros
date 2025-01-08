@@ -260,6 +260,7 @@ export const EmailSettingsPanel = observer(() => {
                   leftIcon={<Check />}
                   onClick={handleSave}
                   colorScheme='primary'
+                  dataTest='email-settings-panel-done'
                 >
                   Done
                 </Button>
