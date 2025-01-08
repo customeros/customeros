@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/customeros/mailsherpa/emailparser"
@@ -38,6 +39,7 @@ type ContactService interface {
 	GetContactById(ctx context.Context, contactId string) (*neo4jentity.ContactEntity, error)
 	GetContactsByIds(ctx context.Context, contactIds []string) ([]*neo4jentity.ContactEntity, error)
 	SetPrimaryJobRole(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string, primaryOrganizationId *string) error
+	GetFirstContactByEmail(ctx context.Context, email string) (*neo4jentity.ContactEntity, error)
 }
 
 type contactService struct {
@@ -818,4 +820,26 @@ func (s *contactService) SetPrimaryJobRole(ctx context.Context, txWithPostCommit
 	}
 
 	return nil
+}
+
+func (s *contactService) GetFirstContactByEmail(ctx context.Context, email string) (*neo4jentity.ContactEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.GetFirstContactByEmail")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("email", email))
+
+	email = strings.TrimSpace(email)
+	if email == "" {
+		return nil, nil
+	}
+
+	contactDbNodes, err := s.services.Neo4jRepositories.ContactReadRepository.GetContactsWithEmail(ctx, common.GetContext(ctx).Tenant, email)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if len(contactDbNodes) == 0 {
+		return nil, nil
+	}
+	return neo4jmapper.MapDbNodeToContactEntity(contactDbNodes[0]), nil
 }

@@ -1166,22 +1166,6 @@ func (r *queryResolver) Contacts(ctx context.Context, pagination *model.Paginati
 	}, err
 }
 
-// ContactByEmail is the resolver for the contactByEmail field.
-func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*model.Contact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ContactByEmail", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.email", email))
-
-	contactEntity, err := r.Services.ContactService.GetFirstContactByEmail(ctx, email)
-	if err != nil || contactEntity == nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Contact with email %s not identified", email)
-		return nil, err
-	}
-	return mapper.MapEntityToContact(contactEntity), nil
-}
-
 // ContactByPhone is the resolver for the contactByPhone field.
 func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ContactByPhone", graphql.GetOperationContext(ctx))
@@ -1193,6 +1177,22 @@ func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model
 	if err != nil || contactEntity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Contact with phone number %s not identified", e164)
+		return nil, err
+	}
+	return mapper.MapEntityToContact(contactEntity), nil
+}
+
+// ContactByEmail is the resolver for the contactByEmail field.
+func (r *queryResolver) ContactByEmail(ctx context.Context, email string) (*model.Contact, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ContactByEmail", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.email", email))
+
+	contactEntity, err := r.Services.CommonServices.ContactService.GetFirstContactByEmail(ctx, email)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get contact by email %s", email)
 		return nil, err
 	}
 	return mapper.MapEntityToContact(contactEntity), nil

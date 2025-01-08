@@ -141,22 +141,23 @@ func (r *contactReadRepository) GetContactsWithEmail(ctx context.Context, tenant
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
 
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email) 
+			WHERE e.email=$email OR e.rawEmail=$email
+			RETURN DISTINCT c ORDER BY c.createdAt ASC`
+	params := map[string]any{
+		"tenant": tenant,
+		"email":  email,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		if queryResult, err := tx.Run(ctx, `
-			MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email) 
-			WHERE e.email=$email OR e.rawEmail=$email
-			RETURN DISTINCT c`,
-			map[string]interface{}{
-				"email":  email,
-				"tenant": tenant,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
-		}
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
 		return nil, err

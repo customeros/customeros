@@ -58,6 +58,9 @@ func MapCustomerContactInputToEntity(input model.CustomerContactInput) *neo4jent
 }
 
 func MapEntityToContact(contact *neo4jentity.ContactEntity) *model.Contact {
+	if contact == nil {
+		return nil
+	}
 	return &model.Contact{
 		Metadata: &model.Metadata{
 			ID:          contact.Id,

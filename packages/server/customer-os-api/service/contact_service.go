@@ -7,9 +7,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -28,7 +28,6 @@ import (
 type ContactService interface {
 	Create(ctx context.Context, contact *ContactCreateData) (string, error)
 	GetById(ctx context.Context, id string) (*neo4jentity.ContactEntity, error)
-	GetFirstContactByEmail(ctx context.Context, email string) (*neo4jentity.ContactEntity, error)
 	GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*neo4jentity.ContactEntity, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*commonModel.SortBy) (*utils.Pagination, error)
 	PermanentDelete(ctx context.Context, id string) (bool, error)
@@ -198,14 +197,6 @@ func (s *contactService) GetById(ctx context.Context, contactId string) (*neo4je
 	} else {
 		return neo4jmapper.MapDbNodeToContactEntity(contactDbNode), nil
 	}
-}
-
-func (s *contactService) GetFirstContactByEmail(ctx context.Context, email string) (*neo4jentity.ContactEntity, error) {
-	dbNodes, err := s.repositories.Neo4jRepositories.ContactReadRepository.GetContactsWithEmail(ctx, common.GetContext(ctx).Tenant, email)
-	if err != nil || len(dbNodes) == 0 {
-		return nil, err
-	}
-	return neo4jmapper.MapDbNodeToContactEntity(dbNodes[0]), nil
 }
 
 func (s *contactService) GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*neo4jentity.ContactEntity, error) {
