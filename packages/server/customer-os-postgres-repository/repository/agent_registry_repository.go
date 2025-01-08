@@ -12,29 +12,29 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
-type FlowAgentRegistryRepository interface {
+type AgentRegistryRepository interface {
 	Initialize(ctx context.Context) error
-	Create(ctx context.Context, flowAgent entity.FlowAgentRegistry) (*entity.FlowAgentRegistry, error)
-	Find(ctx context.Context, flowAgent entity.FlowAgentRegistry) (*entity.FlowAgentRegistry, error)
-	FindAll(ctx context.Context) (*[]entity.FlowAgentRegistry, error)
+	Create(ctx context.Context, flowAgent entity.AgentRegistry) (*entity.AgentRegistry, error)
+	Find(ctx context.Context, flowAgent entity.AgentRegistry) (*entity.AgentRegistry, error)
+	FindAll(ctx context.Context) (*[]entity.AgentRegistry, error)
 }
 
 type flowAgentRegistryRepository struct {
 	gormDb *gorm.DB
 }
 
-func NewFlowAgentRegistryRepository(gormDb *gorm.DB) FlowAgentRegistryRepository {
+func NewAgentRegistryRepository(gormDb *gorm.DB) AgentRegistryRepository {
 	return &flowAgentRegistryRepository{gormDb: gormDb}
 }
 
-func (r *flowAgentRegistryRepository) FindAll(ctx context.Context) (*[]entity.FlowAgentRegistry, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentRegistryRepository.FindAll")
+func (r *flowAgentRegistryRepository) FindAll(ctx context.Context) (*[]entity.AgentRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var actions []entity.FlowAgentRegistry
+	var actions []entity.AgentRegistry
 	err := r.gormDb.WithContext(ctx).
-		Where("status = ?", enum.FlowNodeEdgeStatusActive.String()).
+		Where("status = ?", enum.NodeEdgeStatusActive.String()).
 		Order("action DESC").
 		Find(&actions).Error
 	if err != nil {
@@ -45,17 +45,17 @@ func (r *flowAgentRegistryRepository) FindAll(ctx context.Context) (*[]entity.Fl
 	return &actions, nil
 }
 
-func (r *flowAgentRegistryRepository) Find(ctx context.Context, flowAgent entity.FlowAgentRegistry) (*entity.FlowAgentRegistry, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentRegistryRepository.Find")
+func (r *flowAgentRegistryRepository) Find(ctx context.Context, flowAgent entity.AgentRegistry) (*entity.AgentRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var action entity.FlowAgentRegistry
+	var action entity.AgentRegistry
 	query := r.gormDb.WithContext(ctx).
-		Where("status = ?", enum.FlowNodeEdgeStatusActive.String())
+		Where("status = ?", enum.NodeEdgeStatusActive.String())
 
 	// Add additional filters based on non-zero fields in flowAgent
-	if flowAgent != (entity.FlowAgentRegistry{}) {
+	if flowAgent != (entity.AgentRegistry{}) {
 		query = query.Where(&flowAgent)
 	}
 
@@ -71,8 +71,8 @@ func (r *flowAgentRegistryRepository) Find(ctx context.Context, flowAgent entity
 	return &action, nil
 }
 
-func (r *flowAgentRegistryRepository) Create(ctx context.Context, flowAgent entity.FlowAgentRegistry) (*entity.FlowAgentRegistry, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentRegistryRepository.Create")
+func (r *flowAgentRegistryRepository) Create(ctx context.Context, flowAgent entity.AgentRegistry) (*entity.AgentRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -86,58 +86,58 @@ func (r *flowAgentRegistryRepository) Create(ctx context.Context, flowAgent enti
 }
 
 func (r *flowAgentRegistryRepository) Initialize(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentRegistryRepository.Initialize")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Initialize")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	requiredAgents := []entity.FlowAgentRegistry{
+	requiredAgents := []entity.AgentRegistry{
 		{
 			Agent:        enum.AgentContactCreate.String(),
 			FriendlyName: "Create a Contact",
 			Description:  "Creates a new Contact",
-			Status:       enum.FlowNodeEdgeStatusActive.String(),
+			Status:       enum.NodeEdgeStatusActive.String(),
 		},
 		{
 			Agent:        enum.AgentEmailSendNew.String(),
 			FriendlyName: "Send an email",
 			Description:  "Begins a new email thread",
-			Status:       enum.FlowNodeEdgeStatusActive.String(),
+			Status:       enum.NodeEdgeStatusActive.String(),
 		},
 		{
 			Agent:        enum.AgentEmailSendReply.String(),
 			FriendlyName: "Reply to an email thread",
 			Description:  "Sends a reply to an existing email thread",
-			Status:       enum.FlowNodeEdgeStatusActive.String(),
+			Status:       enum.NodeEdgeStatusActive.String(),
 		},
 		{
 			Agent:        enum.AgentLinkedinConnect.String(),
 			FriendlyName: "Send Linkedin Connection Request",
 			Description:  "Sends a connection request on LinkedIn",
-			Status:       enum.FlowNodeEdgeStatusActive.String(),
+			Status:       enum.NodeEdgeStatusActive.String(),
 		},
 		{
 			Agent:        enum.AgentLinkedinMessage.String(),
 			FriendlyName: "Send Linkedin Message",
 			Description:  "Sends a direct message to a LinkedIn connection",
-			Status:       enum.FlowNodeEdgeStatusActive.String(),
+			Status:       enum.NodeEdgeStatusActive.String(),
 		},
 		{
 			Agent:        enum.AgentOrganizationCreate.String(),
 			FriendlyName: "Create an Organization",
 			Description:  "Creates a new Organization",
-			Status:       enum.FlowNodeEdgeStatusActive.String(),
+			Status:       enum.NodeEdgeStatusActive.String(),
 		},
 		{
 			Agent:        enum.AgentSlackNotify.String(),
 			FriendlyName: "Notify a Slack Channel",
 			Description:  "Sends a notification to the specified slack channel",
-			Status:       enum.FlowNodeEdgeStatusActive.String(),
+			Status:       enum.NodeEdgeStatusActive.String(),
 		},
 		{
 			Agent:        enum.AgentTimelineEventCreate.String(),
 			FriendlyName: "Add Event to Timeline",
 			Description:  "Adds a new event to the Organization Timeline",
-			Status:       enum.FlowNodeEdgeStatusActive.String(),
+			Status:       enum.NodeEdgeStatusActive.String(),
 		},
 		// ... add more here
 	}

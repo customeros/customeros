@@ -12,28 +12,28 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
-type FlowAgentExecutionRepository interface {
-	Create(ctx context.Context, executionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error)
-	Find(ctx context.Context, executionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error)
-	Update(ctx context.Context, executionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error)
+type AgentExecutionRepository interface {
+	Create(ctx context.Context, executionRecord entity.AgentExecution) (*entity.AgentExecution, error)
+	Find(ctx context.Context, executionRecord entity.AgentExecution) (*entity.AgentExecution, error)
+	Update(ctx context.Context, executionRecord entity.AgentExecution) (*entity.AgentExecution, error)
 }
 
 type flowAgentExecutionRepository struct {
 	gormDb *gorm.DB
 }
 
-func NewFlowAgentExecutionRepository(gormDb *gorm.DB) FlowAgentExecutionRepository {
+func NewAgentExecutionRepository(gormDb *gorm.DB) AgentExecutionRepository {
 	return &flowAgentExecutionRepository{gormDb: gormDb}
 }
 
-func (f *flowAgentExecutionRepository) Create(ctx context.Context, executionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentExecutionRepository.Create")
+func (f *flowAgentExecutionRepository) Create(ctx context.Context, executionRecord entity.AgentExecution) (*entity.AgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	if executionRecord.Agent == "" || executionRecord.FlowExecutionID == "" {
+	if executionRecord.AgentID == "" || executionRecord.AutomationExecutionID == "" {
 		span.LogFields(log.Object("executionRecord", executionRecord))
-		err := errors.New("Agent or FlowExecutionID missing")
+		err := errors.New("Agent or ExecutionID missing")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -47,12 +47,12 @@ func (f *flowAgentExecutionRepository) Create(ctx context.Context, executionReco
 	return &executionRecord, nil
 }
 
-func (f *flowAgentExecutionRepository) Find(ctx context.Context, executionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentExecutionRepository.Find")
+func (f *flowAgentExecutionRepository) Find(ctx context.Context, executionRecord entity.AgentExecution) (*entity.AgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var flowAgentExecution entity.FlowAgentExecution
+	var flowAgentExecution entity.AgentExecution
 	err := f.gormDb.
 		Where(&executionRecord).
 		First(&flowAgentExecution).Error
@@ -66,8 +66,8 @@ func (f *flowAgentExecutionRepository) Find(ctx context.Context, executionRecord
 	return &flowAgentExecution, nil
 }
 
-func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowAgentExecutionRepository.Update")
+func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionRecord entity.AgentExecution) (*entity.AgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -77,7 +77,7 @@ func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionReco
 		return nil, err
 	}
 
-	var updatedRecord entity.FlowAgentExecution
+	var updatedRecord entity.AgentExecution
 	err := f.gormDb.Model(&executionRecord).Updates(&executionRecord).First(&updatedRecord).Error
 	if err != nil {
 		tracing.TraceErr(span, err)

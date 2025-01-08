@@ -13,22 +13,22 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
-type FlowDeadEventsRepository interface {
-	Create(ctx context.Context, deadEvent entity.FlowDeadEvents) (*entity.FlowDeadEvents, error)
-	Find(ctx context.Context, deadEvent entity.FlowDeadEvents) (*entity.FlowDeadEvents, error)
-	Update(ctx context.Context, deadEvent entity.FlowDeadEvents) (*entity.FlowDeadEvents, error)
+type AutomationDeadEventsRepository interface {
+	Create(ctx context.Context, deadEvent entity.AutomationDeadEvents) (*entity.AutomationDeadEvents, error)
+	Find(ctx context.Context, deadEvent entity.AutomationDeadEvents) (*entity.AutomationDeadEvents, error)
+	Update(ctx context.Context, deadEvent entity.AutomationDeadEvents) (*entity.AutomationDeadEvents, error)
 }
 
 type flowDeadEventsRepository struct {
 	gormDb *gorm.DB
 }
 
-func NewFlowDeadEventsRepository(gormDb *gorm.DB) FlowDeadEventsRepository {
+func NewAutomationDeadEventsRepository(gormDb *gorm.DB) AutomationDeadEventsRepository {
 	return &flowDeadEventsRepository{gormDb: gormDb}
 }
 
-func (f *flowDeadEventsRepository) Create(ctx context.Context, deadEvent entity.FlowDeadEvents) (*entity.FlowDeadEvents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowDeadEventsRepository.Create")
+func (f *flowDeadEventsRepository) Create(ctx context.Context, deadEvent entity.AutomationDeadEvents) (*entity.AutomationDeadEvents, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AutomationDeadEventsRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -41,7 +41,7 @@ func (f *flowDeadEventsRepository) Create(ctx context.Context, deadEvent entity.
 		}
 	}
 
-	if deadEvent.Event == "" || deadEvent.EventType == "" {
+	if deadEvent.Event == "" {
 		span.LogFields(log.Object("deadEvent", deadEvent))
 		err := errors.New("event, or event type missing")
 		tracing.TraceErr(span, err)
@@ -57,8 +57,8 @@ func (f *flowDeadEventsRepository) Create(ctx context.Context, deadEvent entity.
 	return &deadEvent, nil
 }
 
-func (f *flowDeadEventsRepository) Find(ctx context.Context, deadEvent entity.FlowDeadEvents) (*entity.FlowDeadEvents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowDeadEventsRepository.Find")
+func (f *flowDeadEventsRepository) Find(ctx context.Context, deadEvent entity.AutomationDeadEvents) (*entity.AutomationDeadEvents, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AutomationDeadEventsRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -71,7 +71,7 @@ func (f *flowDeadEventsRepository) Find(ctx context.Context, deadEvent entity.Fl
 		}
 	}
 
-	var foundDeadEvent entity.FlowDeadEvents
+	var foundDeadEvent entity.AutomationDeadEvents
 	err := f.gormDb.
 		Where(&deadEvent).
 		First(&foundDeadEvent).Error
@@ -86,8 +86,8 @@ func (f *flowDeadEventsRepository) Find(ctx context.Context, deadEvent entity.Fl
 	return &foundDeadEvent, nil
 }
 
-func (f *flowDeadEventsRepository) Update(ctx context.Context, deadEvent entity.FlowDeadEvents) (*entity.FlowDeadEvents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowDeadEventsRepository.Update")
+func (f *flowDeadEventsRepository) Update(ctx context.Context, deadEvent entity.AutomationDeadEvents) (*entity.AutomationDeadEvents, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AutomationDeadEventsRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -106,7 +106,7 @@ func (f *flowDeadEventsRepository) Update(ctx context.Context, deadEvent entity.
 		}
 	}
 
-	var updatedDeadEvent entity.FlowDeadEvents
+	var updatedDeadEvent entity.AutomationDeadEvents
 	err := f.gormDb.Model(&deadEvent).Updates(&deadEvent).First(&updatedDeadEvent).Error
 	if err != nil {
 		tracing.TraceErr(span, err)

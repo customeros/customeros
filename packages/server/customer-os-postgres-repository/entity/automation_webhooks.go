@@ -6,7 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type FlowWebhooks struct {
+type AutomationWebhooks struct {
 	ID            uint64     `gorm:"primaryKey;autoIncrement" json:"id"`
 	Tenant        string     `gorm:"column:tenant;type:varchar(255);not null;index" json:"tenant" binding:"required"`
 	CreatedAt     time.Time  `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
@@ -18,17 +18,17 @@ type FlowWebhooks struct {
 	Enabled       bool       `gorm:"column:enabled;type:boolean;default:true" json:"enabled"`
 }
 
-func (FlowWebhooks) TableName() string {
-	return "flow_webhooks"
+func (AutomationWebhooks) TableName() string {
+	return "automation_webhooks"
 }
 
-func (FlowWebhooks) UniqueIndex() [][]string {
+func (AutomationWebhooks) UniqueIndex() [][]string {
 	return [][]string{
 		{"tenant", "integration"},
 	}
 }
 
-func (fw *FlowWebhooks) Validate() error {
+func (fw *AutomationWebhooks) Validate() error {
 	if fw.Tenant == "" {
 		return errors.New("tenant is required")
 	}
@@ -41,6 +41,6 @@ func (fw *FlowWebhooks) Validate() error {
 	return nil
 }
 
-func (fw *FlowWebhooks) IsActive() bool {
+func (fw *AutomationWebhooks) IsActive() bool {
 	return fw.Enabled && fw.Secret != ""
 }
