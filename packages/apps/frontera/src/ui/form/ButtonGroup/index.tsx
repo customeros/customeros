@@ -27,6 +27,7 @@ const defaultButtonGroup = `
   [&>*.selected]:relative
   [&>*.selected]:z-10
   [&>*.selected]:text-primary-700
+  [&>*.selected *]:text-primary-700
   [&>*.selected]:bg-white
   [&>*.selected]:hover:text-primary-600
   [&>*:not(.selected)]:border-r
