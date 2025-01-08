@@ -1,23 +1,17 @@
-package routes
+package public
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
-	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	tracingLog "github.com/opentracing/opentracing-go/log"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 )
 
 type NewOrRepeatVisitor string
@@ -36,23 +30,24 @@ const (
 	EventClick    RawTrackerEvent = "click"
 )
 
-func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services, config *config.Config) {
-	rg.POST("", func(ginContext *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(context.Background(), "Tracking.track", ginContext.Request.Header)
+func RevealWebsiteVisitors(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "public.RevealWebsiteVisitors", c.Request.Header)
 		defer span.Finish()
+		tracing.TagComponentRest(span)
 
-		origin := ginContext.GetHeader("Origin")
-		referer := ginContext.GetHeader("Referer")
-		userAgent := ginContext.GetHeader("User-Agent")
+		origin := c.GetHeader("Origin")
+		referer := c.GetHeader("Referer")
+		userAgent := c.GetHeader("User-Agent")
 
-		span.LogFields(tracingLog.String("origin", origin))
-		span.LogFields(tracingLog.String("referer", referer))
-		span.LogFields(tracingLog.String("userAgent", userAgent))
+		span.LogKV("origin", origin)
+		span.LogKV("referer", referer)
+		span.LogKV("userAgent", userAgent)
 
 		if origin == "" || referer == "" || userAgent == "" {
 			err := fmt.Errorf("missing required headers")
 			tracing.TraceErr(span, err)
-			ginContext.JSON(http.StatusForbidden, gin.H{})
+			c.JSON(http.StatusForbidden, gin.H{})
 			return
 		}
 
@@ -60,32 +55,32 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services, config *
 		tenant, err := services.CommonServices.PostgresRepositories.TrackingAllowedOriginRepository.GetTenantForOrigin(ctx, origin)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get tenant for origin"))
-			ginContext.JSON(http.StatusForbidden, gin.H{})
+			c.JSON(http.StatusForbidden, gin.H{})
 			return
 		}
 
-		if tenant == nil || *tenant == "" {
+		if tenant == nil {
 			err = fmt.Errorf("tenant not found for origin")
 			tracing.TraceErr(span, err)
-			span.LogFields(tracingLog.String("result.info", "tenant not found for origin"))
-			ginContext.JSON(http.StatusForbidden, gin.H{})
+			span.LogFields(log.String("result.info", "tenant not found for origin"))
+			c.JSON(http.StatusForbidden, gin.H{})
 			return
 		}
 
 		span.SetTag(tracing.SpanTagTenant, *tenant)
 
-		trackerData := buildTrackerEventData(ginContext, tenant)
+		trackerData := buildTrackerEventData(c, tenant)
 		if trackerData == nil {
 			err = fmt.Errorf("unable to build tracking record")
 			tracing.TraceErr(span, err)
-			ginContext.JSON(http.StatusInternalServerError, gin.H{
+			c.JSON(http.StatusInternalServerError, gin.H{
 				"result": fmt.Sprintf("%v", err.Error()),
 			})
 			return
 		}
 
 		// return early, continue processing
-		ginContext.JSON(http.StatusAccepted, gin.H{})
+		c.JSON(http.StatusAccepted, gin.H{})
 
 		// if bot, return
 		if !isTrustedIP(ctx, services, trackerData.IP) {
@@ -164,7 +159,43 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services, config *
 		}
 
 		return
-	})
+	}
+
+}
+
+func buildTrackerEventData(c *gin.Context, tenant *string) *entity.TrackerEvents {
+	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Tracking.buildTrackerEventData")
+	defer span.Finish()
+
+	tracking := entity.TrackerEvents{}
+
+	if err := c.BindJSON(&tracking); err != nil {
+		tracing.TraceErr(span, err)
+		return nil
+	}
+
+	tracking.Tenant = *tenant
+	tracking.UserAgent = utils.SanitizeUTF8(tracking.UserAgent)
+	tracking.Referrer = utils.SanitizeUTF8(tracking.Referrer)
+	tracking.Origin = utils.SanitizeUTF8(tracking.Origin)
+	tracking.Href = utils.SanitizeUTF8(tracking.Href)
+	tracking.Search = utils.SanitizeUTF8(tracking.Search)
+	tracking.Hostname = utils.SanitizeUTF8(tracking.Hostname)
+	tracking.Pathname = utils.SanitizeUTF8(tracking.Pathname)
+	return &tracking
+}
+
+func isTrustedIP(ctx context.Context, s *service.Services, ipAddress string) bool {
+	span, ctx := tracing.StartTracerSpan(ctx, "Tracking.isTrustedIp")
+	defer span.Finish()
+
+	ipThreats, err := s.CommonServices.VerifyService.Threats(ctx, ipAddress)
+	if err != nil || ipThreats == nil {
+		tracing.TraceErr(span, err)
+		return true
+	}
+
+	return !ipThreats.IsThreat
 }
 
 func identifyIP(ctx context.Context, s *service.Services, ipAddress string) (domain, linkedinSlug *string, err error) {
@@ -206,39 +237,4 @@ func newOrRepeatVisitor(ctx context.Context, s *service.Services, tenant, domain
 		return VisitorNew, nil
 	}
 	return VisitorRepeat, nil
-}
-
-func buildTrackerEventData(c *gin.Context, tenant *string) *entity.TrackerEvents {
-	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Tracking.buildTrackerEventData")
-	defer span.Finish()
-
-	tracking := entity.TrackerEvents{}
-
-	if err := c.BindJSON(&tracking); err != nil {
-		tracing.TraceErr(span, err)
-		return nil
-	}
-
-	tracking.Tenant = *tenant
-	tracking.UserAgent = utils.SanitizeUTF8(tracking.UserAgent)
-	tracking.Referrer = utils.SanitizeUTF8(tracking.Referrer)
-	tracking.Origin = utils.SanitizeUTF8(tracking.Origin)
-	tracking.Href = utils.SanitizeUTF8(tracking.Href)
-	tracking.Search = utils.SanitizeUTF8(tracking.Search)
-	tracking.Hostname = utils.SanitizeUTF8(tracking.Hostname)
-	tracking.Pathname = utils.SanitizeUTF8(tracking.Pathname)
-	return &tracking
-}
-
-func isTrustedIP(ctx context.Context, s *service.Services, ipAddress string) bool {
-	span, ctx := tracing.StartTracerSpan(ctx, "Tracking.isTrustedIp")
-	defer span.Finish()
-
-	ipThreats, err := s.CommonServices.VerifyService.Threats(ctx, ipAddress)
-	if err != nil || ipThreats == nil {
-		tracing.TraceErr(span, err)
-		return true
-	}
-
-	return !ipThreats.IsThreat
 }

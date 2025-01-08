@@ -1,12 +1,21 @@
 package data_fields
 
-// Nil fields wil be skipped from update
 type WebsiteVisitEvent struct {
-	ID             string  `json:"id"`
-	Tenant         string  `json:"tenant"`
-	Domain         string  `json:"domain"`
-	Referrer       string  `json:"referrer"`
-	OrganizationID *string `json:"organizationId"`
+	ID                  string      `json:"id"`
+	Tenant              string      `json:"tenant"`
+	IPAddress           *string     `json:"ipAddress"`
+	OrgnanizationDomain string      `json:"organizationDomain"`
+	OrganizationID      *string     `json:"organizationId"`
+	VisitorId           string      `json:"visitorId"`
+	VisitorEmail        *string     `json:"visitorEmail"`
+	PageVisited         string      `json:"pageVisited"`
+	Referrer            string      `json:"referrer"`
+	Params              []URLParams `json:"params"`
+}
+
+type URLParams struct {
+	Param string `json:"param"`
+	Value string `json:"value"`
 }
 
 func (f WebsiteVisitEvent) Type() string {
