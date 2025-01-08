@@ -518,13 +518,15 @@ type ComplexityRoot struct {
 	}
 
 	DomainCheckDetails struct {
-		Accessible                  func(childComplexity int) int
-		Domain                      func(childComplexity int) int
-		DomainOrganizationID        func(childComplexity int) int
-		Primary                     func(childComplexity int) int
-		PrimaryDomain               func(childComplexity int) int
-		PrimaryDomainOrganizationID func(childComplexity int) int
-		ValidSyntax                 func(childComplexity int) int
+		Accessible                    func(childComplexity int) int
+		Domain                        func(childComplexity int) int
+		DomainOrganizationID          func(childComplexity int) int
+		DomainOrganizationName        func(childComplexity int) int
+		Primary                       func(childComplexity int) int
+		PrimaryDomain                 func(childComplexity int) int
+		PrimaryDomainOrganizationID   func(childComplexity int) int
+		PrimaryDomainOrganizationName func(childComplexity int) int
+		ValidSyntax                   func(childComplexity int) int
 	}
 
 	Email struct {
@@ -4441,6 +4443,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.DomainCheckDetails.DomainOrganizationID(childComplexity), true
 
+	case "DomainCheckDetails.domainOrganizationName":
+		if e.complexity.DomainCheckDetails.DomainOrganizationName == nil {
+			break
+		}
+
+		return e.complexity.DomainCheckDetails.DomainOrganizationName(childComplexity), true
+
 	case "DomainCheckDetails.primary":
 		if e.complexity.DomainCheckDetails.Primary == nil {
 			break
@@ -4461,6 +4470,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DomainCheckDetails.PrimaryDomainOrganizationID(childComplexity), true
+
+	case "DomainCheckDetails.primaryDomainOrganizationName":
+		if e.complexity.DomainCheckDetails.PrimaryDomainOrganizationName == nil {
+			break
+		}
+
+		return e.complexity.DomainCheckDetails.PrimaryDomainOrganizationName(childComplexity), true
 
 	case "DomainCheckDetails.validSyntax":
 		if e.complexity.DomainCheckDetails.ValidSyntax == nil {
@@ -14089,7 +14105,9 @@ type DomainCheckDetails {
     primary:                        Boolean!
     primaryDomain:                  String!
     domainOrganizationId:           String
+    domainOrganizationName:         String
     primaryDomainOrganizationId:    String
+    primaryDomainOrganizationName:  String
 }`, BuiltIn: false},
 	{Name: "../schemas/email.graphqls", Input: `extend type Query {
     email(id: ID!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -41375,6 +41393,47 @@ func (ec *executionContext) fieldContext_DomainCheckDetails_domainOrganizationId
 	return fc, nil
 }
 
+func (ec *executionContext) _DomainCheckDetails_domainOrganizationName(ctx context.Context, field graphql.CollectedField, obj *model.DomainCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DomainCheckDetails_domainOrganizationName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DomainOrganizationName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DomainCheckDetails_domainOrganizationName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DomainCheckDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DomainCheckDetails_primaryDomainOrganizationId(ctx context.Context, field graphql.CollectedField, obj *model.DomainCheckDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DomainCheckDetails_primaryDomainOrganizationId(ctx, field)
 	if err != nil {
@@ -41404,6 +41463,47 @@ func (ec *executionContext) _DomainCheckDetails_primaryDomainOrganizationId(ctx 
 }
 
 func (ec *executionContext) fieldContext_DomainCheckDetails_primaryDomainOrganizationId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DomainCheckDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DomainCheckDetails_primaryDomainOrganizationName(ctx context.Context, field graphql.CollectedField, obj *model.DomainCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DomainCheckDetails_primaryDomainOrganizationName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PrimaryDomainOrganizationName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DomainCheckDetails_primaryDomainOrganizationName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DomainCheckDetails",
 		Field:      field,
@@ -90561,8 +90661,12 @@ func (ec *executionContext) fieldContext_Query_checkDomain(ctx context.Context, 
 				return ec.fieldContext_DomainCheckDetails_primaryDomain(ctx, field)
 			case "domainOrganizationId":
 				return ec.fieldContext_DomainCheckDetails_domainOrganizationId(ctx, field)
+			case "domainOrganizationName":
+				return ec.fieldContext_DomainCheckDetails_domainOrganizationName(ctx, field)
 			case "primaryDomainOrganizationId":
 				return ec.fieldContext_DomainCheckDetails_primaryDomainOrganizationId(ctx, field)
+			case "primaryDomainOrganizationName":
+				return ec.fieldContext_DomainCheckDetails_primaryDomainOrganizationName(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DomainCheckDetails", field.Name)
 		},
@@ -117189,8 +117293,12 @@ func (ec *executionContext) _DomainCheckDetails(ctx context.Context, sel ast.Sel
 			}
 		case "domainOrganizationId":
 			out.Values[i] = ec._DomainCheckDetails_domainOrganizationId(ctx, field, obj)
+		case "domainOrganizationName":
+			out.Values[i] = ec._DomainCheckDetails_domainOrganizationName(ctx, field, obj)
 		case "primaryDomainOrganizationId":
 			out.Values[i] = ec._DomainCheckDetails_primaryDomainOrganizationId(ctx, field, obj)
+		case "primaryDomainOrganizationName":
+			out.Values[i] = ec._DomainCheckDetails_primaryDomainOrganizationName(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

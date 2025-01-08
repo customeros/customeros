@@ -15,5 +15,7 @@ type DomainCheckDetails {
     primary:                        Boolean!
     primaryDomain:                  String!
     domainOrganizationId:           String
+    domainOrganizationName:         String
     primaryDomainOrganizationId:    String
+    primaryDomainOrganizationName:  String
 }
