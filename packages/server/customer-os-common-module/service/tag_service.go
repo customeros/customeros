@@ -19,16 +19,16 @@ import (
 )
 
 var defaultColorCodes = []string{
-	"#697586",
-	"#F04438",
-	"#F79009",
-	"#17B26A",
-	"#79716B",
-	"#669F2A",
-	"#0BA5EC",
-	"#6172F3",
-	"#875BF7",
-	"#EE46BC",
+	"grayModern",
+	"error",
+	"warning",
+	"success",
+	"grayWarm",
+	"moss",
+	"blueLight",
+	"indigo",
+	"violet",
+	"pink",
 }
 
 type TagService interface {
