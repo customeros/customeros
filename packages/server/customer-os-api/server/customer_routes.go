@@ -121,7 +121,7 @@ func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
-		path:      fmt.Sprintf("%s/person/organization", EnrichPath),
+		path:      fmt.Sprintf("%s/organization", EnrichPath),
 		handler:   restEnrich.EnrichOrganization(s),
 		routeType: RouteCustomer,
 		services:  s,
