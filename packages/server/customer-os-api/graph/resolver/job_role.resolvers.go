@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -98,6 +99,16 @@ func (r *mutationResolver) JobRoleUpdate(ctx context.Context, contactID string, 
 		return nil, err
 	}
 	return mapper.MapEntityToJobRole(result), nil
+}
+
+// JobRoleSave is the resolver for the jobRole_Save field.
+func (r *mutationResolver) JobRoleSave(ctx context.Context, input *model.JobRoleSaveInput) (*model.JobRole, error) {
+	panic(fmt.Errorf("not implemented: JobRoleSave - jobRole_Save"))
+}
+
+// JobRoles is the resolver for the jobRoles field.
+func (r *queryResolver) JobRoles(ctx context.Context, ids []string) ([]*model.JobRole, error) {
+	panic(fmt.Errorf("not implemented: JobRoles - jobRoles"))
 }
 
 // JobRole returns generated.JobRoleResolver implementation.

@@ -468,6 +468,7 @@ type ContactUIDetails struct {
 	PrimaryOrganizationJobRoleDescription *string     `json:"primaryOrganizationJobRoleDescription,omitempty"`
 	PrimaryOrganizationJobRoleStartDate   *time.Time  `json:"primaryOrganizationJobRoleStartDate,omitempty"`
 	PrimaryOrganizationJobRoleEndDate     *time.Time  `json:"primaryOrganizationJobRoleEndDate,omitempty"`
+	JobRoleIds                            []string    `json:"jobRoleIds"`
 	Emails                                []*Email    `json:"emails"`
 	Phones                                []string    `json:"phones"`
 	Tags                                  []*Tag      `json:"tags"`
@@ -1527,29 +1528,22 @@ type IssueSummaryByStatus struct {
 	Count  int64  `json:"count"`
 }
 
-// Describes the relationship a Contact has with a Organization.
-// **A `return` object**
 type JobRole struct {
-	ID        string    `json:"id"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	// Organization associated with a Contact.
-	// **Required.**
+	ID           string        `json:"id"`
+	CreatedAt    time.Time     `json:"createdAt"`
+	UpdatedAt    time.Time     `json:"updatedAt"`
 	Organization *Organization `json:"organization,omitempty"`
 	Contact      *Contact      `json:"contact,omitempty"`
-	// The Contact's job title.
-	JobTitle    *string    `json:"jobTitle,omitempty"`
-	Primary     bool       `json:"primary"`
-	Description *string    `json:"description,omitempty"`
-	Company     *string    `json:"company,omitempty"`
-	StartedAt   *time.Time `json:"startedAt,omitempty"`
-	EndedAt     *time.Time `json:"endedAt,omitempty"`
-	Source      DataSource `json:"source"`
-	AppSource   string     `json:"appSource"`
+	JobTitle     *string       `json:"jobTitle,omitempty"`
+	Primary      bool          `json:"primary"`
+	Description  *string       `json:"description,omitempty"`
+	Company      *string       `json:"company,omitempty"`
+	StartedAt    *time.Time    `json:"startedAt,omitempty"`
+	EndedAt      *time.Time    `json:"endedAt,omitempty"`
+	Source       DataSource    `json:"source"`
+	AppSource    string        `json:"appSource"`
 }
 
-// Describes the relationship a Contact has with an Organization.
-// **A `create` object**
 type JobRoleInput struct {
 	OrganizationID *string    `json:"organizationId,omitempty"`
 	JobTitle       *string    `json:"jobTitle,omitempty"`
@@ -1568,8 +1562,18 @@ type JobRoleParticipant struct {
 
 func (JobRoleParticipant) IsInteractionEventParticipant() {}
 
-// Describes the relationship a Contact has with an Organization.
-// **A `create` object**
+type JobRoleSaveInput struct {
+	ID             *string    `json:"id,omitempty"`
+	ContactID      *string    `json:"contactId,omitempty"`
+	OrganizationID *string    `json:"organizationId,omitempty"`
+	StartedAt      *time.Time `json:"startedAt,omitempty"`
+	EndedAt        *time.Time `json:"endedAt,omitempty"`
+	JobTitle       *string    `json:"jobTitle,omitempty"`
+	Primary        *bool      `json:"primary,omitempty"`
+	Description    *string    `json:"description,omitempty"`
+	Company        *string    `json:"company,omitempty"`
+}
+
 type JobRoleUpdateInput struct {
 	ID             string     `json:"id"`
 	StartedAt      *time.Time `json:"startedAt,omitempty"`
