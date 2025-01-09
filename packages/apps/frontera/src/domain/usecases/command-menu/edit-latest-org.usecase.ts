@@ -8,6 +8,7 @@ export class EditLatestOrganizationActive {
 
   constructor() {
     this.setSearchTerm = this.setSearchTerm.bind(this);
+    this.executeSearch = this.executeSearch.bind(this);
 
     reaction(() => this.search, this.executeSearch);
   }
