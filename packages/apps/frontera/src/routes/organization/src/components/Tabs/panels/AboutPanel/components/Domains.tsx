@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
+import { Domain } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { XCircle } from '@ui/media/icons/XCircle';
@@ -14,7 +15,8 @@ import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { Subdomain } from '@organization/components/Tabs/panels/AboutPanel/components/Subdomain.tsx';
+
+import { Subdomain } from './Subdomain.tsx';
 
 export const Domains = observer(() => {
   const store = useStore();
@@ -158,10 +160,14 @@ export const Domains = observer(() => {
     </div>
   );
 });
+interface DomainGroup {
+  subdomains: Domain[];
+  primaryDomain: Domain;
+}
 
-function formatDomains(domainsDetails) {
+function formatDomains(domainsDetails: Domain[]): DomainGroup[] {
   const primaryDomainsMap = new Map();
-  const result = [];
+  const result: DomainGroup[] = [];
 
   for (const domain of domainsDetails) {
     if (domain.primary) {
@@ -179,7 +185,7 @@ function formatDomains(domainsDetails) {
     if (!domain.primary) {
       const primaryIndex = primaryDomainsMap.get(domain.primaryDomain);
 
-      if (primaryIndex !== undefined) {
+      if (primaryIndex !== undefined && !!domain) {
         result[primaryIndex].subdomains.push(domain);
       }
     }
