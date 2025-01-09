@@ -72,6 +72,10 @@ func IsValidTLD(input string) bool {
 }
 
 func IsValidDomain(input string) bool {
+	// Quick reject if input looks like a URL with paths or query
+	if strings.ContainsAny(input, "/?&") {
+		return false
+	}
 	_, err := publicsuffix.EffectiveTLDPlusOne(input)
 	return err == nil
 }
