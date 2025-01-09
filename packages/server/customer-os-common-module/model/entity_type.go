@@ -33,6 +33,7 @@ const (
 	REMINDER                 EntityType = "REMINDER"
 	SERVICE_LINE_ITEM        EntityType = "SERVICE_LINE_ITEM"
 	SOCIAL                   EntityType = "SOCIAL"
+	TAG                      EntityType = "TAG"
 	TENANT                   EntityType = "TENANT"
 	TENANT_SETTINGS          EntityType = "TENANT_SETTINGS"
 	USER                     EntityType = "USER"
@@ -104,6 +105,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelMarkdownEvent
 	case LOCATION:
 		return NodeLabelLocation
+	case TAG:
+		return NodeLabelTag
 	}
 	return "Unknown"
 }

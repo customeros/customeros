@@ -84,3 +84,17 @@ func LogAndExecuteWriteQuery(ctx context.Context, driver neo4j.DriverWithContext
 	}
 	return err
 }
+
+func LogAndExecuteWriteQueryInTx(ctx context.Context, tx *neo4j.ManagedTransaction, driver *neo4j.DriverWithContext, database, cypher string, params map[string]any, span opentracing.Span) error {
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, driver, database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}

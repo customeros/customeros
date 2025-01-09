@@ -2674,6 +2674,7 @@ type Tag struct {
 	Metadata   *Metadata   `json:"metadata"`
 	Name       string      `json:"name"`
 	EntityType EntityType  `json:"entityType"`
+	ColorCode  string      `json:"colorCode"`
 	ID         *string     `json:"id,omitempty"`
 	CreatedAt  *time.Time  `json:"createdAt,omitempty"`
 	UpdatedAt  *time.Time  `json:"updatedAt,omitempty"`
@@ -2691,11 +2692,13 @@ type TagInput struct {
 	Name       string      `json:"name"`
 	AppSource  *string     `json:"appSource,omitempty"`
 	EntityType *EntityType `json:"entityType,omitempty"`
+	ColorCode  *string     `json:"colorCode,omitempty"`
 }
 
 type TagUpdateInput struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID        string  `json:"id"`
+	Name      *string `json:"name,omitempty"`
+	ColorCode *string `json:"colorCode,omitempty"`
 }
 
 type Tax struct {

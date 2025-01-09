@@ -15,6 +15,7 @@ const (
 	TagPropertyAppSource  TagProperty = "appSource"
 	TagPropertyCreatedAt  TagProperty = "createdAt"
 	TagPropertyUpdatedAt  TagProperty = "updatedAt"
+	TagPropertyColorCode  TagProperty = "colorCode"
 )
 
 type TagEntity struct {
@@ -27,6 +28,7 @@ type TagEntity struct {
 	AppSource  string
 	TaggedAt   time.Time
 	EntityType commonmodel.EntityType
+	ColorCode  string
 }
 
 type TagEntities []TagEntity

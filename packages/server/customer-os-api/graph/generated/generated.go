@@ -1638,6 +1638,7 @@ type ComplexityRoot struct {
 
 	Tag struct {
 		AppSource  func(childComplexity int) int
+		ColorCode  func(childComplexity int) int
 		CreatedAt  func(childComplexity int) int
 		EntityType func(childComplexity int) int
 		ID         func(childComplexity int) int
@@ -11846,6 +11847,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Tag.AppSource(childComplexity), true
 
+	case "Tag.colorCode":
+		if e.complexity.Tag.ColorCode == nil {
+			break
+		}
+
+		return e.complexity.Tag.ColorCode(childComplexity), true
+
 	case "Tag.createdAt":
 		if e.complexity.Tag.CreatedAt == nil {
 			break
@@ -16408,6 +16416,7 @@ type Tag {
     metadata:   Metadata!
     name:       String!
     entityType: EntityType!
+    colorCode:  String!
 
     id:         ID @deprecated(reason: "Use metadata.id")
     createdAt:  Time @deprecated(reason: "Use metadata.created")
@@ -16420,11 +16429,13 @@ input TagInput {
     name:           String!
     appSource:      String
     entityType:     EntityType = ORGANIZATION
+    colorCode:      String
 }
 
 input TagUpdateInput {
-    id:     ID!
-    name:   String!
+    id:         ID!
+    name:       String
+    colorCode:  String
 }
 
 input TagIdOrNameInput {
@@ -30952,6 +30963,8 @@ func (ec *executionContext) fieldContext_Contact_tags(_ context.Context, field g
 				return ec.fieldContext_Tag_name(ctx, field)
 			case "entityType":
 				return ec.fieldContext_Tag_entityType(ctx, field)
+			case "colorCode":
+				return ec.fieldContext_Tag_colorCode(ctx, field)
 			case "id":
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "createdAt":
@@ -33695,6 +33708,8 @@ func (ec *executionContext) fieldContext_ContactUiDetails_tags(_ context.Context
 				return ec.fieldContext_Tag_name(ctx, field)
 			case "entityType":
 				return ec.fieldContext_Tag_entityType(ctx, field)
+			case "colorCode":
+				return ec.fieldContext_Tag_colorCode(ctx, field)
 			case "id":
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "createdAt":
@@ -53685,6 +53700,8 @@ func (ec *executionContext) fieldContext_Issue_tags(_ context.Context, field gra
 				return ec.fieldContext_Tag_name(ctx, field)
 			case "entityType":
 				return ec.fieldContext_Tag_entityType(ctx, field)
+			case "colorCode":
+				return ec.fieldContext_Tag_colorCode(ctx, field)
 			case "id":
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "createdAt":
@@ -57179,6 +57196,8 @@ func (ec *executionContext) fieldContext_LogEntry_tags(_ context.Context, field 
 				return ec.fieldContext_Tag_name(ctx, field)
 			case "entityType":
 				return ec.fieldContext_Tag_entityType(ctx, field)
+			case "colorCode":
+				return ec.fieldContext_Tag_colorCode(ctx, field)
 			case "id":
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "createdAt":
@@ -75871,6 +75890,8 @@ func (ec *executionContext) fieldContext_Mutation_tag_Create(ctx context.Context
 				return ec.fieldContext_Tag_name(ctx, field)
 			case "entityType":
 				return ec.fieldContext_Tag_entityType(ctx, field)
+			case "colorCode":
+				return ec.fieldContext_Tag_colorCode(ctx, field)
 			case "id":
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "createdAt":
@@ -75941,6 +75962,8 @@ func (ec *executionContext) fieldContext_Mutation_tag_Update(ctx context.Context
 				return ec.fieldContext_Tag_name(ctx, field)
 			case "entityType":
 				return ec.fieldContext_Tag_entityType(ctx, field)
+			case "colorCode":
+				return ec.fieldContext_Tag_colorCode(ctx, field)
 			case "id":
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "createdAt":
@@ -81909,6 +81932,8 @@ func (ec *executionContext) fieldContext_Organization_tags(_ context.Context, fi
 				return ec.fieldContext_Tag_name(ctx, field)
 			case "entityType":
 				return ec.fieldContext_Tag_entityType(ctx, field)
+			case "colorCode":
+				return ec.fieldContext_Tag_colorCode(ctx, field)
 			case "id":
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "createdAt":
@@ -86365,6 +86390,8 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_tags(_ context.Co
 				return ec.fieldContext_Tag_name(ctx, field)
 			case "entityType":
 				return ec.fieldContext_Tag_entityType(ctx, field)
+			case "colorCode":
+				return ec.fieldContext_Tag_colorCode(ctx, field)
 			case "id":
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "createdAt":
@@ -95486,6 +95513,8 @@ func (ec *executionContext) fieldContext_Query_tags(_ context.Context, field gra
 				return ec.fieldContext_Tag_name(ctx, field)
 			case "entityType":
 				return ec.fieldContext_Tag_entityType(ctx, field)
+			case "colorCode":
+				return ec.fieldContext_Tag_colorCode(ctx, field)
 			case "id":
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "createdAt":
@@ -95582,6 +95611,8 @@ func (ec *executionContext) fieldContext_Query_tags_ByEntityType(ctx context.Con
 				return ec.fieldContext_Tag_name(ctx, field)
 			case "entityType":
 				return ec.fieldContext_Tag_entityType(ctx, field)
+			case "colorCode":
+				return ec.fieldContext_Tag_colorCode(ctx, field)
 			case "id":
 				return ec.fieldContext_Tag_id(ctx, field)
 			case "createdAt":
@@ -100797,6 +100828,50 @@ func (ec *executionContext) fieldContext_Tag_entityType(_ context.Context, field
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type EntityType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tag_colorCode(ctx context.Context, field graphql.CollectedField, obj *model.Tag) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tag_colorCode(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ColorCode, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tag_colorCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tag",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -112446,7 +112521,7 @@ func (ec *executionContext) unmarshalInputTagInput(ctx context.Context, obj any)
 		asMap["entityType"] = "ORGANIZATION"
 	}
 
-	fieldsInOrder := [...]string{"name", "appSource", "entityType"}
+	fieldsInOrder := [...]string{"name", "appSource", "entityType", "colorCode"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -112474,6 +112549,13 @@ func (ec *executionContext) unmarshalInputTagInput(ctx context.Context, obj any)
 				return it, err
 			}
 			it.EntityType = data
+		case "colorCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("colorCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ColorCode = data
 		}
 	}
 
@@ -112487,7 +112569,7 @@ func (ec *executionContext) unmarshalInputTagUpdateInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name"}
+	fieldsInOrder := [...]string{"id", "name", "colorCode"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -112503,11 +112585,18 @@ func (ec *executionContext) unmarshalInputTagUpdateInput(ctx context.Context, ob
 			it.ID = data
 		case "name":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Name = data
+		case "colorCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("colorCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ColorCode = data
 		}
 	}
 
@@ -127845,6 +127934,11 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 			}
 		case "entityType":
 			out.Values[i] = ec._Tag_entityType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "colorCode":
+			out.Values[i] = ec._Tag_colorCode(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
