@@ -531,8 +531,6 @@ export class OrganizationsService {
       .with(['updatedAt'], () => undefined)
       .with(['domainsDetails', ...P.array()], async () => {
         if (type === 'update' || type === 'delete') {
-          return;
-
           return await this.removeDomain({
             organizationId,
             domain: oldValue,
