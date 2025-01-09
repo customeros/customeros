@@ -38,6 +38,7 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 			Emails:         make([]*model.Email, 0),
 			Flows:          make([]string, 0),
 			ConnectedUsers: make([]string, 0),
+			JobRoleIds:     make([]string, 0),
 		}
 	}
 
@@ -237,6 +238,25 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 
 		for _, f := range *flowEntities {
 			(*resp)[f.DataloaderKey].Flows = append((*resp)[f.DataloaderKey].Flows, f.Id)
+		}
+	}(&mapResponse)
+
+	wg.Add(1)
+	go func(resp *map[string]*model.ContactUIDetails) {
+		innerSpan, innerCtx := opentracing.StartSpanFromContext(ctx, "QueryResolver.ContactUIDetails.GetJobRoles")
+		defer innerSpan.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(innerCtx, innerSpan)
+
+		jobRoleEntities, err := r.Services.CommonServices.JobRoleService.GetAllForContacts(ctx, ids)
+		if err != nil {
+			tracing.TraceErr(innerSpan, err)
+			setError(err)
+			return
+		}
+
+		for _, j := range *jobRoleEntities {
+			(*resp)[j.DataloaderKey].Flows = append((*resp)[j.DataloaderKey].JobRoleIds, j.Id)
 		}
 	}(&mapResponse)
 
