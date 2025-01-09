@@ -323,21 +323,26 @@ class ContactService {
     }
 
     match(path)
-      .with(['primaryOrganizationName', ...P.array()], () => {
-        this.linkOrganization({
-          input: {
-            contactId: contactId!,
-            organizationId: value,
-          },
-        }).finally(() => {
+      .with(
+        [
+          P.union('primaryOrganizationId', 'primaryOrganizationName'),
+          ...P.array(),
+        ],
+        async () => {
+          await this.linkOrganization({
+            input: {
+              contactId,
+              organizationId: value,
+            },
+          });
           store.store.root.ui.toastSuccess(
             "Contact's organization was changed",
             'org-linked',
           );
-        });
-      })
-      .with(['linkedInUrl', ...P.array()], async ([_]) => {
-        this.addSocial({
+        },
+      )
+      .with(['linkedInUrl', ...P.array()], async () => {
+        await this.addSocial({
           contactId: contactId!,
           input: {
             url: value,
