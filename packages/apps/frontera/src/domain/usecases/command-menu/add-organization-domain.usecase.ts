@@ -12,6 +12,10 @@ export class AddOrganizationDomainCase {
   } | null = null;
 
   @observable accessor isValidating: boolean = false;
+  @observable accessor validationDetails: null | {
+    primary: boolean;
+    primaryDomain: string;
+  } = null;
   @observable accessor entity: Organization | null = null;
   private root = RootStore.getInstance();
   private service = OrganizationsService.getInstance();
@@ -98,6 +102,11 @@ export class AddOrganizationDomainCase {
 
         return;
       }
+
+      this.validationDetails = {
+        primary: checkDomain.primary,
+        primaryDomain: checkDomain.primaryDomain,
+      };
     } catch (e) {
       this.error = `Validation failed`;
     } finally {
@@ -110,6 +119,8 @@ export class AddOrganizationDomainCase {
     this.entity?.draft();
     this.entity?.value.domainsDetails.push({
       domain: this.inputValue,
+      primary: this.validationDetails?.primary || false,
+      primaryDomain: this.validationDetails?.primaryDomain,
     });
     this.entity?.commit();
     this.inputValue = '';

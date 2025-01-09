@@ -18,6 +18,7 @@ import type { Organization } from '../Organization.dto';
 import AddTagDocument from './addTag.graphql';
 import AddSocialDocument from './addSocial.graphql';
 import RemoveTagDocument from './removeTag.graphql';
+import AddDomainDocument from './addDomain.graphql';
 import CheckDomainDocument from './checkDomain.graphql';
 import UpdateSocialDocument from './updateSocial.graphql';
 import RemoveSocialDocument from './removeSocial.graphql';
@@ -46,6 +47,10 @@ import {
   CheckDomainQuery,
   CheckDomainQueryVariables,
 } from './checkDomain.generated';
+import {
+  AddDomainMutation,
+  AddDomainMutationVariables,
+} from './addDomain.generated';
 import {
   CheckWebsiteQuery,
   CheckWebsiteQueryVariables,
@@ -218,6 +223,13 @@ export class OrganizationsService {
       RemoveDomainMutation,
       RemoveDomainMutationVariables
     >(RemoveDomainDocument, payload);
+  }
+
+  async addDomain(payload: AddDomainMutationVariables) {
+    return this.transport.graphql.request<
+      AddDomainMutation,
+      AddDomainMutationVariables
+    >(AddDomainDocument, payload);
   }
 
   async removeDomains(payload: RemoveDomainsMutationVariables) {
@@ -518,7 +530,7 @@ export class OrganizationsService {
       })
       .with(['updatedAt'], () => undefined)
       .with(['domainsDetails', ...P.array()], async () => {
-        if (type === 'update') {
+        if (type === 'update' || type === 'delete') {
           return;
 
           return await this.removeDomain({
@@ -527,11 +539,9 @@ export class OrganizationsService {
           });
         }
 
-        return await this.saveOrganization({
-          input: {
-            id: organizationId,
-            domains: store.value.domainsDetails.map((e) => e.domain),
-          },
+        return await this.addDomain({
+          organizationId,
+          domain: value?.domain,
         });
       })
       .otherwise(async () => {

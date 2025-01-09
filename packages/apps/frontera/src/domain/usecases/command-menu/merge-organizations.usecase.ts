@@ -1,4 +1,5 @@
-import { action, observable } from 'mobx';
+import { RootStore } from '@store/root.ts';
+import { action, observable, runInAction } from 'mobx';
 import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service.ts';
 
 export class MergeOrganizationsCase {
@@ -6,6 +7,7 @@ export class MergeOrganizationsCase {
   @observable accessor secondaryId: string = '';
   @observable accessor error: string = '';
   private service = OrganizationsService.getInstance();
+  private root = RootStore.getInstance();
 
   constructor() {
     this.setIds = this.setIds.bind(this);
@@ -24,8 +26,31 @@ export class MergeOrganizationsCase {
         primaryOrganizationId: this.primaryId,
         mergedOrganizationIds: [this.secondaryId],
       });
-    } catch (e) {
-      this.error = `Merge failed`;
+
+      runInAction(() => {
+        this.root.organizations.sync({
+          action: 'DELETE',
+          ids: [this.secondaryId],
+        });
+        this.root.organizations.sync({
+          action: 'INVALIDATE',
+          ids: [this.primaryId],
+        });
+
+        this.root.ui.toastSuccess(
+          `Successfully merged 2 organizations`,
+          this.primaryId,
+        );
+      });
+      this.root.ui.toastSuccess(`Merged 1 organization`, this.primaryId);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+        this.root.ui.toastSuccess(
+          `Failed merging 1 organization`,
+          this.primaryId,
+        );
+      });
     } finally {
       this.primaryId = '';
       this.secondaryId = '';

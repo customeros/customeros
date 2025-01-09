@@ -32,10 +32,13 @@ export class RemoveOrganizationDomainCase {
     if (this.isPrimary) {
       this.entity.draft();
 
-      this.entity.value.domainsDetails =
-        this.entity.value.domainsDetails.filter(
-          (e) => e.primaryDomain === this.domain,
-        );
+      // Remove all domains except the primary one
+      for (let i = this.entity.value.domainsDetails.length - 1; i >= 0; i--) {
+        if (this.entity.value.domainsDetails[i].primaryDomain === this.domain) {
+          this.entity.value.domainsDetails.splice(i, 1);
+        }
+      }
+
       this.entity?.commit();
     } else {
       this.entity.draft();

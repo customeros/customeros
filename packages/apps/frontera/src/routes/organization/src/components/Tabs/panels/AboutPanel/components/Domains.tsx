@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
@@ -48,17 +49,6 @@ function formatDomains(domainsDetails) {
   return result;
 }
 
-// Test with small dataset
-const smallData = [
-  { domain: 'example.com', primary: true },
-  { domain: 'blog.example.com', primary: false, primaryDomain: 'example.com' },
-  { domain: 'shop.example.com', primary: false, primaryDomain: 'example.com' },
-  { domain: 'another.com', primary: true },
-  { domain: 'sub.another.com', primary: false, primaryDomain: 'another.com' },
-];
-
-const formattedData = formatDomains(smallData);
-
 export const Domains = observer(() => {
   const store = useStore();
   const id = useParams()?.id as string;
@@ -72,6 +62,7 @@ export const Domains = observer(() => {
   const organization = store.organizations.getById(id);
 
   if (!organization || !organization?.value) return null;
+  const formattedData = formatDomains(organization.value.domainsDetails);
 
   const toggleExpanded = (domainKey: string) => {
     setExpandedDomains((prev) => ({

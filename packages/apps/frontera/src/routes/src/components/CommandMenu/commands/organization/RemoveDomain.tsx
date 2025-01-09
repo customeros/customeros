@@ -44,17 +44,19 @@ export const RemoveDomain = observer(() => {
     <Command shouldFilter={false}>
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100 cursor-default'>
         <div className='flex justify-between'>
-          <h1 className='text-base font-semibold'>Remove this domain</h1>
+          <h1 className='text-base font-semibold'>
+            Remove this {removeDomainCase.isPrimary ? 'domain' : 'subdomain'}
+          </h1>
           <div>
             <CommandCancelIconButton onClose={handleClose} />
           </div>
         </div>
-        {context?.meta?.isPrimary && (
-          <p className='mt-1 text-sm'>
-            Removing {context?.meta?.domain}, will also remove any related
-            subdomains
-          </p>
-        )}
+        <p className='mt-2 text-sm'>
+          {context?.meta?.isPrimary
+            ? `Removing ${context?.meta?.domain}, will also remove any related
+            subdomains`
+            : `Removing ${context?.meta?.domain} will not remove its associated primary domain`}
+        </p>
 
         <div className='flex justify-between gap-3 mt-6'>
           <CommandCancelButton onClose={handleClose} />

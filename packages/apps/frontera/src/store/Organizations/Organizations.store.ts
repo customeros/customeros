@@ -458,7 +458,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         this.sync({ action: 'INVALIDATE', ids: [primaryId] });
 
         this.root.ui.toastSuccess(
-          `Successfully merged ${mergeIds.length} ${
+          `Merged ${mergeIds.length} ${
             mergeIds.length > 1 ? 'organizations' : 'organization'
           }`,
           primaryId,
