@@ -108,7 +108,19 @@ func (r *mutationResolver) JobRoleSave(ctx context.Context, input *model.JobRole
 
 // JobRoles is the resolver for the jobRoles field.
 func (r *queryResolver) JobRoles(ctx context.Context, ids []string) ([]*model.JobRole, error) {
-	panic(fmt.Errorf("not implemented: JobRoles - jobRoles"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.JobRoles", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.ids", fmt.Sprintf("%v", ids)))
+
+	jobRoleEntities, err := r.Services.CommonServices.JobRoleService.GetJobRolesByIds(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get job roles")
+		return nil, err
+	}
+
+	return mapper.MapEntitiesToJobRoles(jobRoleEntities), nil
 }
 
 // JobRole returns generated.JobRoleResolver implementation.
