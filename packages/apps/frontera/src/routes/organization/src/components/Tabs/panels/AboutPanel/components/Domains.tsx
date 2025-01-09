@@ -16,38 +16,6 @@ import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { Subdomain } from '@organization/components/Tabs/panels/AboutPanel/components/Subdomain.tsx';
 
-function formatDomains(domainsDetails) {
-  // Create a Map to store primary domains for O(1) lookup
-  const primaryDomainsMap = new Map();
-  const result = [];
-
-  // First pass - O(n) to create primary domains map and initialize result structure
-  for (const domain of domainsDetails) {
-    if (domain.primary) {
-      const resultObj = {
-        primaryDomain: domain,
-        subdomains: [],
-      };
-
-      primaryDomainsMap.set(domain.domain, result.length);
-      result.push(resultObj);
-    }
-  }
-
-  // Second pass - O(n) to assign subdomains
-  for (const domain of domainsDetails) {
-    if (!domain.primary) {
-      const primaryIndex = primaryDomainsMap.get(domain.primaryDomain);
-
-      if (primaryIndex !== undefined) {
-        result[primaryIndex].subdomains.push(domain);
-      }
-    }
-  }
-
-  return result;
-}
-
 export const Domains = observer(() => {
   const store = useStore();
   const id = useParams()?.id as string;
@@ -190,3 +158,32 @@ export const Domains = observer(() => {
     </div>
   );
 });
+
+function formatDomains(domainsDetails) {
+  const primaryDomainsMap = new Map();
+  const result = [];
+
+  for (const domain of domainsDetails) {
+    if (domain.primary) {
+      const resultObj = {
+        primaryDomain: domain,
+        subdomains: [],
+      };
+
+      primaryDomainsMap.set(domain.domain, result.length);
+      result.push(resultObj);
+    }
+  }
+
+  for (const domain of domainsDetails) {
+    if (!domain.primary) {
+      const primaryIndex = primaryDomainsMap.get(domain.primaryDomain);
+
+      if (primaryIndex !== undefined) {
+        result[primaryIndex].subdomains.push(domain);
+      }
+    }
+  }
+
+  return result;
+}
