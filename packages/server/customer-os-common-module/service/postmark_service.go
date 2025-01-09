@@ -65,7 +65,7 @@ type PostmarkEmailAttachment struct {
 
 type PostmarkService interface {
 	SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, tenant string) error
-	CreateServer(ctx context.Context) error
+	CreateServerIfNotExists(ctx context.Context) error
 	DeleteServer(ctx context.Context, tenant string) error
 }
 
@@ -259,8 +259,8 @@ func (s *postmarkService) convertMjmlToHtml(ctx context.Context, filledTemplate 
 	return html, err
 }
 
-func (s *postmarkService) CreateServer(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.CreateServer")
+func (s *postmarkService) CreateServerIfNotExists(ctx context.Context) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.CreateServerIfNotExists")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -287,14 +287,29 @@ func (s *postmarkService) CreateServer(ctx context.Context) error {
 	postmarkServerName := strings.ToLower(tenant)
 	inboundWebhookURL := s.services.GlobalConfig.ExternalServices.PostmarkConfig.DefaultInboundStreamWebhook
 	inboundForwardingDomain := postmarkServerName + ".customeros.ai"
+	span.LogKV("postmarkServerName", postmarkServerName)
+	span.LogKV("inboundWebhookURL", inboundWebhookURL)
+	span.LogKV("inboundForwardingDomain", inboundForwardingDomain)
+
 	apiClient := NewPostmarkAPIClient(s.services.GlobalConfig.ExternalServices.PostmarkConfig.Url, s.services.GlobalConfig.ExternalServices.PostmarkConfig.AccountApiKey)
 
-	serverResponse, err := apiClient.CreateServer(ctx, postmarkServerName, inboundWebhookURL, inboundForwardingDomain)
+	// check if server already exists
+	existingServerDetails, err := apiClient.GetServerByName(ctx, postmarkServerName)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return err
 	}
-	tracing.LogObjectAsJson(span, "serverResponse", serverResponse)
+	if existingServerDetails != nil {
+		tracing.LogObjectAsJson(span, "existingServerDetails", existingServerDetails)
+	}
+
+	if existingServerDetails == nil {
+		serverResponse, err := apiClient.CreateServer(ctx, postmarkServerName, inboundWebhookURL, inboundForwardingDomain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		tracing.LogObjectAsJson(span, "createdServerResponse", serverResponse)
+	}
 
 	return nil
 }
