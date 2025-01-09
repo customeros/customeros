@@ -85,14 +85,11 @@ export class ContactsPage {
     await clickLocatorsThatAreVisible(this.page, this.orgActionsConfirmArchive);
   }
 
-  async updateContactFlow(
-    contact: { contactId: string; contactName: string },
-    flowName: string,
-  ) {
+  async updateContactFlow(contactName: string, flowName: string) {
     await this.page.reload();
     await assertWithRetry(async () => {
       const organizationIsVisible = await this.page
-        .locator(this.getContactFlowEditSelector(contact.contactName))
+        .locator(this.getContactFlowEditSelector(contactName))
         .isVisible();
 
       expect(organizationIsVisible).toBe(true);
@@ -102,14 +99,14 @@ export class ContactsPage {
 
     const contactFlowInContactsTable = await clickLocatorThatIsVisible(
       this.page,
-      this.getContactFlowSelector(contact.contactName),
+      this.getContactFlowSelector(contactName),
     );
 
     await this.page.keyboard.press('Escape');
 
     await clickLocatorThatIsVisible(
       this.page,
-      this.getContactFlowSelector(contact.contactName),
+      this.getContactFlowSelector(contactName),
     );
 
     const specificcCntactsFlowFoundEntry = `${this.contactsFlowFoundEntry}[data-value="${flowName}"]`;
@@ -122,7 +119,7 @@ export class ContactsPage {
 
     await expect(
       contactFlowInContactsTable,
-      `Expected to have flow ${flowName} allocated to contact ${contact.contactName}`,
+      `Expected to have flow ${flowName} allocated to contact ${contactName}`,
     ).toHaveText(flowName);
 
     await this.page.reload();

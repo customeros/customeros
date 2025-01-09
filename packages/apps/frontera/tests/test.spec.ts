@@ -236,11 +236,11 @@ test('Assign contact to flow', async ({ page }, testInfo) => {
   // Go to People page
   await organizationSideNavPage.goToPeople();
 
-  const contact = await organizationPeoplePage.createContactFromEmpty();
+  const contactName = await organizationPeoplePage.createContactFromEmpty();
 
   await organizationSideNavPage.goBack();
   await contactsPage.waitForPageLoad();
-  await contactsPage.updateContactFlow(contact, flowName);
+  await contactsPage.updateContactFlow(contactName, flowName);
   await flowsPage.goToFlows();
   await flowsPage.checkNewFlowEntry(flowName, flow.update);
 });

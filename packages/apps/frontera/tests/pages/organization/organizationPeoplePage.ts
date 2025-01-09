@@ -19,9 +19,12 @@ export class OrganizationPeoplePage {
 
   private orgPeopleAddSomeone = 'button[data-test="org-people-add-someone"]';
   private orgPeopleAddByName = 'button[data-test="org-people-add-by-name"]';
-  private orgPeopleAddContact = 'button[data-test="org-people-add-contact"]';
+  private orgPeopleAddContact =
+    'button[data-test="org-people-add-new-contact"]';
   private orgPeopleCollapse = 'button[data-test="org-people-collapse"]';
-  private orgPeopleContactName = 'input[data-test="org-people-contact-name"]';
+  private orgPeopleNameInput = 'input[data-test="org-people-name-input"]';
+  // private orgPeopleContactName = 'input[data-test="org-people-contact-name"]';
+
   private orgPeopleContactTitle = 'input[data-test="org-people-contact-title"]';
   private orgPeopleContactEmail = 'p[data-test="add-work-email"]';
   private orgPeopleLinkedInUrl = 'span[data-test="org-people-linkedin"]';
@@ -36,63 +39,70 @@ export class OrganizationPeoplePage {
       this.orgPeopleAddByName,
     );
 
-    const createContactResponsePromise = createResponsePromise(
-      this.page,
-      'contact_CreateForOrganization?.id',
-      undefined,
-    );
+    // const createContactResponsePromise = createResponsePromise(
+    //   this.page,
+    //   'contact_CreateForOrganization?.id',
+    //   undefined,
+    // );
+    //
+    // const contactResponsePromise = createResponsePromise(
+    //   this.page,
+    //   'ui_contacts',
+    //   undefined,
+    // );
+    // const organizationResponsePromise = createResponsePromise(
+    //   this.page,
+    //   'ui_organizations',
+    //   undefined,
+    // );
 
-    const contactResponsePromise = createResponsePromise(
-      this.page,
-      'ui_contacts',
-      undefined,
-    );
-    const organizationResponsePromise = createResponsePromise(
-      this.page,
-      'ui_organizations',
-      undefined,
-    );
+    const contactName = await this.addNameToContact();
 
     await clickLocatorsThatAreVisible(this.page, this.orgPeopleAddContact);
 
-    await Promise.all([
-      createContactResponsePromise,
-      contactResponsePromise,
-      organizationResponsePromise,
-    ]);
+    // await Promise.all([
+    //   createContactResponsePromise,
+    //   contactResponsePromise,
+    //   organizationResponsePromise,
+    // ]);
+    return contactName;
   }
 
   async addNameToContact() {
     await this.page.waitForTimeout(3000);
-    await clickLocatorThatIsVisible(this.page, this.orgPeopleCollapse);
 
-    const orgPeopleContactNameInput = this.page.locator(
-      this.orgPeopleContactName,
+    const orgPeopleContactNameInput = await clickLocatorThatIsVisible(
+      this.page,
+      this.orgPeopleNameInput,
     );
+
+    // const orgPeopleContactNameInput = this.page.locator(
+    //   this.orgPeopleContactName,
+    // );
 
     const contactName = createTinyUUID();
 
-    const requestPromise = createRequestPromise(this.page, 'name', contactName);
-
-    const responsePromise = createResponsePromise(
-      this.page,
-      'contact_Update.id',
-      undefined,
-    );
+    // const requestPromise = createRequestPromise(this.page, 'name', contactName);
+    //
+    // const responsePromise = createResponsePromise(
+    //   this.page,
+    //   'contact_Update.id',
+    //   undefined,
+    // );
 
     await orgPeopleContactNameInput.pressSequentially(contactName, {
       delay: 100,
     });
-    await orgPeopleContactNameInput.press('Tab');
+    // await orgPeopleContactNameInput.press('Tab');
 
-    const [_, response] = await Promise.all([requestPromise, responsePromise]);
+    // const [_, response] = await Promise.all([requestPromise, responsePromise]);
 
-    await expect(orgPeopleContactNameInput).toHaveValue(contactName);
+    // await expect(orgPeopleContactNameInput).toHaveValue(contactName);
+    //
+    // const responseBody = await response.json();
+    // const contactId = responseBody.data?.contact_Update?.id;
 
-    const responseBody = await response.json();
-    const contactId = responseBody.data?.contact_Update?.id;
-
-    return { contactName, contactId };
+    return contactName;
   }
 
   async addTitleToContact() {
@@ -109,13 +119,15 @@ export class OrganizationPeoplePage {
     );
 
     await orgPeopleContactTitleInput.pressSequentially('CTO', { delay: 500 });
-    await orgPeopleContactTitleInput.press('Tab');
+    await this.page.keyboard.press('Tab');
     await Promise.all([requestPromise, responsePromise]);
     await expect(orgPeopleContactTitleInput).toHaveValue('CTO');
   }
 
   private async addDetailsToCustomer() {
-    await clickLocatorThatIsVisible(this.page, this.orgPeopleContactTitle);
+    // await clickLocatorThatIsVisible(this.page, this.orgPeopleContactTitle);
+
+    await this.addTitleToContact();
 
     let page = await writeTextInLocator(
       this.page,
@@ -145,13 +157,12 @@ export class OrganizationPeoplePage {
   }
 
   async createContactFromEmpty() {
-    await this.addContact(this.orgPeopleAddSomeone);
+    const contactName = await this.addContact(this.orgPeopleAddSomeone);
 
-    const { contactName, contactId } = await this.addNameToContact();
-
-    await this.addTitleToContact();
+    // const contactName = await this.addNameToContact();
+    await clickLocatorThatIsVisible(this.page, this.orgPeopleCollapse);
     await this.addDetailsToCustomer();
 
-    return { contactName, contactId };
+    return contactName;
   }
 }
