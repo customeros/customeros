@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -17,7 +16,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-func RevealWebsiteVisitors(services *service.Services) gin.HandlerFunc {
+var PageViewSessionTimeout = 30 // mins
+
+func RevealWebsiteEvents(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "public.RevealWebsiteVisitors", c.Request.Header)
 		defer span.Finish()
@@ -74,33 +75,18 @@ func RevealWebsiteVisitors(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		// write event to tracking table
-		savedRecord, err := services.CommonServices.PostgresRepositories.TrackerEventsRepository.Create(ctx, *trackerData)
+		// assign event to session (new or existing)
+		err = assignEventToSession(ctx, services, trackerData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return
 		}
 
-		// create and publish event
-		eventData := data_fields.WebsiteVisitEvent{
-			ID:          savedRecord.ID,
-			Tenant:      *tenant,
-			IPAddress:   &trackerData.IP,
-			VisitorId:   trackerData.VisitorID,
-			Website:     trackerData.Hostname,
-			PageVisited: trackerData.Pathname,
-			Referrer:    trackerData.Referrer,
-			Params:      parseURLParams(trackerData.Search),
-		}
-
-		webhookEvent := dto.WebhookEvent{
-			DataType: eventData.Type(),
-			Data:     eventData,
-		}
-
-		err = services.CommonServices.RabbitMQService.PublishWebhookEvent(ctx, webhookEvent)
+		// write event to tracking table
+		_, err = services.CommonServices.PostgresRepositories.WebTrackerEventsRepository.Create(ctx, *trackerData)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to publish event"))
+			tracing.TraceErr(span, err)
+			return
 		}
 
 		return
@@ -108,11 +94,68 @@ func RevealWebsiteVisitors(services *service.Services) gin.HandlerFunc {
 
 }
 
-func buildTrackerDbData(c *gin.Context, tenant *string) *entity.TrackerEvents {
+func assignEventToSession(ctx context.Context, s *service.Services, trackerData *entity.WebTrackerEvents) error {
+	span, _ := tracing.StartTracerSpan(ctx, "Tracking.assignEventsToSession")
+	defer span.Finish()
+
+	// find active session for visitor within timeout window
+	query := entity.WebSession{
+		Tenant:    trackerData.Tenant,
+		VisitorID: trackerData.VisitorID,
+		IsActive:  true,
+	}
+	session, err := s.Repositories.PostgresRepositories.WebSessionRepository.Find(ctx, query, &PageViewSessionTimeout)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// if no active session found, create one
+	if session == nil {
+		query := entity.WebSession{
+			Tenant:       trackerData.Tenant,
+			VisitorID:    trackerData.VisitorID,
+			IP:           trackerData.IP,
+			StartTime:    utils.Now(),
+			LastActivity: utils.Now(),
+			IsActive:     true,
+		}
+		newSession, err := s.Repositories.PostgresRepositories.WebSessionRepository.Create(ctx, query)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		if newSession == nil {
+			err = errors.New("unable to create new web session")
+			tracing.TraceErr(span, err)
+			return err
+		}
+		trackerData.SessionID = newSession.ID
+		return nil
+	}
+
+	trackerData.SessionID = session.ID
+
+	// update existing session last activity
+	updateQuery := entity.WebSession{
+		ID:           session.ID,
+		LastActivity: utils.Now(),
+	}
+	_, err = s.Repositories.PostgresRepositories.WebSessionRepository.Update(ctx, updateQuery)
+	if err != nil {
+		err = errors.New("unable to update web session")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func buildTrackerDbData(c *gin.Context, tenant *string) *entity.WebTrackerEvents {
 	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Tracking.buildTrackerEventData")
 	defer span.Finish()
 
-	tracking := entity.TrackerEvents{}
+	tracking := entity.WebTrackerEvents{}
 
 	if err := c.BindJSON(&tracking); err != nil {
 		tracing.TraceErr(span, err)

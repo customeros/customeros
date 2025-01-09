@@ -31,7 +31,7 @@ func (f *flowAgentExecutionRepository) Create(ctx context.Context, executionReco
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	if executionRecord.AgentID == "" || executionRecord.AutomationExecutionID == "" {
+	if executionRecord.AgentID == nil {
 		span.LogFields(log.Object("executionRecord", executionRecord))
 		err := errors.New("Agent or ExecutionID missing")
 		tracing.TraceErr(span, err)

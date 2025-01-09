@@ -13,7 +13,7 @@ import (
 
 type FlowNodeRepository interface {
 	Create(ctx context.Context, flowNode entity.FlowNode) (*entity.FlowNode, error)
-	FindAll(ctx context.Context, flowNode entity.FlowNode) (*[]entity.FlowNode, error)
+	FindAll(ctx context.Context, flowNode entity.FlowNode) ([]entity.FlowNode, error)
 	Find(ctx context.Context, flowNode entity.FlowNode) (*entity.FlowNode, error)
 	Update(ctx context.Context, flowNode entity.FlowNode) (*entity.FlowNode, error)
 }
@@ -41,7 +41,7 @@ func (f *flowNodeRepository) Create(ctx context.Context, flowNode entity.FlowNod
 	return &flowNode, nil
 }
 
-func (f *flowNodeRepository) FindAll(ctx context.Context, flowNode entity.FlowNode) (*[]entity.FlowNode, error) {
+func (f *flowNodeRepository) FindAll(ctx context.Context, flowNode entity.FlowNode) ([]entity.FlowNode, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "FlowRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -54,7 +54,7 @@ func (f *flowNodeRepository) FindAll(ctx context.Context, flowNode entity.FlowNo
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return &nodes, nil
+	return nodes, nil
 }
 
 func (f *flowNodeRepository) Find(ctx context.Context, flowNode entity.FlowNode) (*entity.FlowNode, error) {

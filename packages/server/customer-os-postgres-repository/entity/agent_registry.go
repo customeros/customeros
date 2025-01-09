@@ -1,14 +1,13 @@
 package entity
 
 type AgentRegistry struct {
-	ID                string  `gorm:"primaryKey;type:varchar(50)" json:"id"`
-	Name              string  `gorm:"column:name;type:varchar(255);not null;index" json:"name" binding:"required"`
-	Description       string  `gorm:"column:description;type:varchar(255)" json:"description"`
-	WorkDefinition    string  `gorm:"column:work_definition;type:text" json:"workDefinition"`
-	UserContextSchema *string `gorm:"column:user_context_schema;type:text" json:"userContext"`
-	OutputSchema      *string `gorm:"column:output_schema;type:text" json:"output"`
-	ConfigSchema      *string `gorm:"column:config_schema;type:text" json:"config"`
-	IsActive          string  `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
+	ID           string  `gorm:"primaryKey;type:varchar(50)" json:"id"`
+	Name         string  `gorm:"column:name;type:varchar(255);not null;index" json:"name" binding:"required"`
+	Description  string  `gorm:"column:description;type:varchar(255)" json:"description"`
+	Capabilities string  `gorm:"column:capabilities;type:text" json:"capabilities"`
+	ConfigSchema *string `gorm:"column:config_schema;type:text" json:"config"`
+	OutputSchema *string `gorm:"column:output_schema;type:text" json:"output"`
+	IsActive     string  `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
 }
 
 func (AgentRegistry) TableName() string {

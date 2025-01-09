@@ -78,11 +78,12 @@ type Repositories struct {
 	TenantSettingsRepository                     TenantSettingsRepository
 	TenantWebhookApiKeyRepository                TenantWebhookApiKeyRepository
 	TenantWebhookRepository                      TenantWebhookRepository
-	TrackerEventsRepository                      TrackerEventsRepository
 	TrackingAllowedOriginRepository              TrackingAllowedOriginRepository
 	UserEmailImportPageTokenRepository           UserEmailImportStateRepository
 	UserWorkingScheduleRepository                UserWorkingScheduleRepository
 	WebhooksRepository                           WebhooksRepository
+	WebSessionRepository                         WebSessionRepository
+	WebTrackerEventsRepository                   WebTrackerEventsRepository
 }
 
 func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
@@ -157,10 +158,11 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		TenantSettingsRepository:                     NewTenantSettingsRepository(postgresDB.GormDB),
 		TenantWebhookApiKeyRepository:                NewTenantWebhookApiKeyRepository(postgresDB.GormDB),
 		TenantWebhookRepository:                      NewTenantWebhookRepo(postgresDB.GormDB),
-		TrackerEventsRepository:                      NewTrackerEventsRepository(postgresDB.GormDB),
 		TrackingAllowedOriginRepository:              NewTrackingAllowedOriginRepository(postgresDB.GormDB),
 		UserWorkingScheduleRepository:                NewUserWorkingScheduleRepository(postgresDB.GormDB),
 		WebhooksRepository:                           NewWebhooksRepository(postgresDB.GormDB),
+		WebSessionRepository:                         NewWebSessionRepository(postgresDB.GormDB),
+		WebTrackerEventsRepository:                   NewWebTrackerEventsRepository(postgresDB.GormDB),
 	}
 
 	return repositories
@@ -228,10 +230,11 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.TenantSettingsOpportunityStage{},
 		&entity.TenantWebhook{},
 		&entity.TenantWebhookApiKey{},
-		&entity.TrackerEvents{},
 		&entity.TrackingAllowedOrigin{},
 		&entity.UserWorkingSchedule{},
 		&entity.Webhooks{},
+		&entity.WebSession{},
+		&entity.WebTrackerEvents{},
 	)
 	if err != nil {
 		panic(err)

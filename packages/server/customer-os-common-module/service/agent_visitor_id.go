@@ -6,14 +6,16 @@ import (
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
 const MinHoursBetweenNotifications int = 12 // on same domain for a tenant
 
-func (a *agentService) VisitorIDAgent(ctx context.Context, eventData *data_fields.WebsiteVisitEvent) {
+func (a *agentService) VisitorIDAgent(ctx context.Context, eventData *data_fields.WebsiteVisitEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.VisitorIDAgent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -22,14 +24,21 @@ func (a *agentService) VisitorIDAgent(ctx context.Context, eventData *data_field
 	domain, linkedinSlug, err := a.identifyIP(ctx, *eventData.IPAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return
+		return err
 	}
 
 	if domain == nil {
-		return
+		return nil
 	}
 
-	// Create org
+	// Create org if doesn't exist
+	orgID, err := a.services.OrganizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
+		Domains: []string{*domain},
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	// update tracker table with ID data
 	query := entity.TrackerEvents{
@@ -41,13 +50,14 @@ func (a *agentService) VisitorIDAgent(ctx context.Context, eventData *data_field
 	_, err = a.services.PostgresRepositories.TrackerEventsRepository.Update(ctx, query)
 
 	// determine if new org
-	isNewOrg, err := a.isNewCompanyVisit(ctx, tenant, domain)
+	tenant := common.GetTenantFromContext(ctx)
+	isNewOrg, err := a.isNewCompanyVisit(ctx, &tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed isNewCompany lookup"))
 	}
 
 	// determine if new person
-	isNewVisitor, err := a.isNewWebsiteVisitor(ctx, services, *tenant, trackerData.VisitorID)
+	isNewVisitor, err := a.isNewWebsiteVisitor(ctx, tenant, eventData.VisitorId)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed isNewVisitor lookup"))
 	}

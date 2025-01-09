@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"gorm.io/gorm"
@@ -14,7 +15,8 @@ import (
 type AgentsRepository interface {
 	Create(ctx context.Context, automationRecord entity.Agents) (*entity.Agents, error)
 	Find(ctx context.Context, automationRecord entity.Agents) (*entity.Agents, error)
-	FindAll(ctx context.Context, automationRecord entity.Agents) (*[]entity.Agents, error)
+	FindAll(ctx context.Context, automationRecord entity.Agents) ([]entity.Agents, error)
+	FindAllFromAgentsList(ctx context.Context, agents []enum.Agent) ([]entity.Agents, error)
 	Update(ctx context.Context, automationRecord entity.Agents) (*entity.Agents, error)
 }
 
@@ -42,7 +44,7 @@ func (f *agentsRepository) Create(ctx context.Context, automationRecord entity.A
 	return &automationRecord, nil
 }
 
-func (f *agentsRepository) FindAll(ctx context.Context, automationRecord entity.Agents) (*[]entity.Agents, error) {
+func (f *agentsRepository) FindAll(ctx context.Context, automationRecord entity.Agents) ([]entity.Agents, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentsRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -61,7 +63,35 @@ func (f *agentsRepository) FindAll(ctx context.Context, automationRecord entity.
 		return nil, err
 	}
 
-	return &agents, nil
+	return agents, nil
+}
+
+func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []enum.Agent) ([]entity.Agents, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentsRepository.FindAllFromAgentsList")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var records []entity.Agents
+
+	// Convert enum.Agent array to []string
+	agentNames := make([]string, len(agents))
+	for i, agent := range agents {
+		agentNames[i] = agent.String()
+	}
+
+	query := f.gormDb.Where("is_active = ? AND (flow_id = ? OR flow_id IS NULL)", true, "")
+
+	if len(agentNames) > 0 {
+		query = query.Where("name IN (?)", agentNames)
+	}
+
+	err := query.Find(&records).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return records, nil
 }
 
 func (f *agentsRepository) Find(ctx context.Context, automationRecord entity.Agents) (*entity.Agents, error) {

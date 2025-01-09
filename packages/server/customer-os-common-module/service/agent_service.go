@@ -8,7 +8,7 @@ import (
 )
 
 type AgentService interface {
-	VisitorIDAgent(ctx context.Context, eventData *data_fields.WebsiteVisitEvent)
+	VisitorIDAgent(ctx context.Context, eventData *data_fields.WebsiteVisitEvent) error
 	ICPAgent(ctx context.Context, event *dto.FlowAgentEvent) error
 }
 

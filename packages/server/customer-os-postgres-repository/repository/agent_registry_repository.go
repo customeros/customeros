@@ -16,7 +16,7 @@ type AgentRegistryRepository interface {
 	Initialize(ctx context.Context) error
 	Create(ctx context.Context, flowAgent entity.AgentRegistry) (*entity.AgentRegistry, error)
 	Find(ctx context.Context, flowAgent entity.AgentRegistry) (*entity.AgentRegistry, error)
-	FindAll(ctx context.Context) (*[]entity.AgentRegistry, error)
+	FindAll(ctx context.Context) ([]entity.AgentRegistry, error)
 }
 
 type flowAgentRegistryRepository struct {
@@ -27,7 +27,7 @@ func NewAgentRegistryRepository(gormDb *gorm.DB) AgentRegistryRepository {
 	return &flowAgentRegistryRepository{gormDb: gormDb}
 }
 
-func (r *flowAgentRegistryRepository) FindAll(ctx context.Context) (*[]entity.AgentRegistry, error) {
+func (r *flowAgentRegistryRepository) FindAll(ctx context.Context) ([]entity.AgentRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -42,7 +42,7 @@ func (r *flowAgentRegistryRepository) FindAll(ctx context.Context) (*[]entity.Ag
 		return nil, err
 	}
 
-	return &actions, nil
+	return actions, nil
 }
 
 func (r *flowAgentRegistryRepository) Find(ctx context.Context, flowAgent entity.AgentRegistry) (*entity.AgentRegistry, error) {

@@ -13,7 +13,7 @@ import (
 
 type FlowEdgeRepository interface {
 	Create(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error)
-	FindAll(ctx context.Context, flowEdge entity.FlowEdge) (*[]entity.FlowEdge, error)
+	FindAll(ctx context.Context, flowEdge entity.FlowEdge) ([]entity.FlowEdge, error)
 	Find(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error)
 	Update(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error)
 }
@@ -41,7 +41,7 @@ func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge entity.FlowEdg
 	return &flowEdge, nil
 }
 
-func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge entity.FlowEdge) (*[]entity.FlowEdge, error) {
+func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge entity.FlowEdge) ([]entity.FlowEdge, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "FlowEdgeRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -54,7 +54,7 @@ func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge entity.FlowEd
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return &results, nil
+	return results, nil
 }
 
 func (f *flowEdgeRepository) Find(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error) {

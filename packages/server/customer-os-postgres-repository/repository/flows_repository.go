@@ -14,7 +14,7 @@ import (
 type FlowsRepository interface {
 	Create(ctx context.Context, flowRecord entity.Flows) (*entity.Flows, error)
 	Find(ctx context.Context, flowRecord entity.Flows) (*entity.Flows, error)
-	FindAll(ctx context.Context, flowRecord entity.Flows) (*[]entity.Flows, error)
+	FindAll(ctx context.Context, flowRecord entity.Flows) ([]entity.Flows, error)
 	Update(ctx context.Context, flowRecord entity.Flows) (*entity.Flows, error)
 }
 
@@ -42,7 +42,7 @@ func (f *flowRepository) Create(ctx context.Context, flowRecord entity.Flows) (*
 	return &flowRecord, nil
 }
 
-func (f *flowRepository) FindAll(ctx context.Context, flowRecord entity.Flows) (*[]entity.Flows, error) {
+func (f *flowRepository) FindAll(ctx context.Context, flowRecord entity.Flows) ([]entity.Flows, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "FlowsRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -61,7 +61,7 @@ func (f *flowRepository) FindAll(ctx context.Context, flowRecord entity.Flows) (
 		return nil, err
 	}
 
-	return &flows, nil
+	return flows, nil
 }
 
 func (f *flowRepository) Find(ctx context.Context, flowRecord entity.Flows) (*entity.Flows, error) {
