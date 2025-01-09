@@ -194,6 +194,7 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                       size='xxs'
                       variant='ghost'
                       aria-label='collapse'
+                      dataTest='org-people-collapse'
                       onClick={() => setIsExpanded(!isExpanded)}
                       className='group-hover/card:opacity-100 opacity-0'
                       icon={
@@ -219,6 +220,7 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                     size='xxs'
                     variant='unstyled'
                     onFocus={(e) => e.target.select()}
+                    dataTest='org-people-contact-title'
                     onKeyDown={(e) => e.stopPropagation()}
                     placeholder={
                       isEnriching ? 'Getting job title...' : 'Job title'

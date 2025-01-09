@@ -116,6 +116,7 @@ export const CreateNewContactModal = observer(
                   <Button
                     size='xs'
                     leftIcon={<Signature />}
+                    dataTest='org-people-add-by-name'
                     onClick={() => contactCreate.setType('name')}
                     data-inactive={contactCreate.getType !== 'name'}
                     className={cn('w-full', {
@@ -130,6 +131,7 @@ export const CreateNewContactModal = observer(
                   ref={inputRef}
                   variant='unstyled'
                   placeholder={inputPlaceholder}
+                  dataTest='org-people-name-input'
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') {
                       onClose();
@@ -201,7 +203,7 @@ export const CreateNewContactModal = observer(
                 size='sm'
                 className='w-full'
                 colorScheme='primary'
-                dataTest='org-people-add-contact'
+                dataTest='org-people-add-new-contact'
                 onClick={() => {
                   handleSubmit();
                 }}
