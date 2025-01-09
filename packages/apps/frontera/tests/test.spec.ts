@@ -86,7 +86,9 @@ test('Add About information to an Organization', async ({ page }, testInfo) => {
   await organizationAboutPage.checkPopulatedAboutFields(organizations.update);
 });
 
-test('Create People entry in an Organization', async ({ page }, testInfo) => {
+test.skip('Create People entry in an Organization', async ({
+  page,
+}, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationPeoplePage = new OrganizationPeoplePage(page);

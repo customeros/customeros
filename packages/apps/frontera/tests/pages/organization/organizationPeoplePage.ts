@@ -39,32 +39,10 @@ export class OrganizationPeoplePage {
       this.orgPeopleAddByName,
     );
 
-    // const createContactResponsePromise = createResponsePromise(
-    //   this.page,
-    //   'contact_CreateForOrganization?.id',
-    //   undefined,
-    // );
-    //
-    // const contactResponsePromise = createResponsePromise(
-    //   this.page,
-    //   'ui_contacts',
-    //   undefined,
-    // );
-    // const organizationResponsePromise = createResponsePromise(
-    //   this.page,
-    //   'ui_organizations',
-    //   undefined,
-    // );
-
     const contactName = await this.addNameToContact();
 
     await clickLocatorsThatAreVisible(this.page, this.orgPeopleAddContact);
 
-    // await Promise.all([
-    //   createContactResponsePromise,
-    //   contactResponsePromise,
-    //   organizationResponsePromise,
-    // ]);
     return contactName;
   }
 
@@ -76,31 +54,11 @@ export class OrganizationPeoplePage {
       this.orgPeopleNameInput,
     );
 
-    // const orgPeopleContactNameInput = this.page.locator(
-    //   this.orgPeopleContactName,
-    // );
-
     const contactName = createTinyUUID();
-
-    // const requestPromise = createRequestPromise(this.page, 'name', contactName);
-    //
-    // const responsePromise = createResponsePromise(
-    //   this.page,
-    //   'contact_Update.id',
-    //   undefined,
-    // );
 
     await orgPeopleContactNameInput.pressSequentially(contactName, {
       delay: 100,
     });
-    // await orgPeopleContactNameInput.press('Tab');
-
-    // const [_, response] = await Promise.all([requestPromise, responsePromise]);
-
-    // await expect(orgPeopleContactNameInput).toHaveValue(contactName);
-    //
-    // const responseBody = await response.json();
-    // const contactId = responseBody.data?.contact_Update?.id;
 
     return contactName;
   }
@@ -159,7 +117,6 @@ export class OrganizationPeoplePage {
   async createContactFromEmpty() {
     const contactName = await this.addContact(this.orgPeopleAddSomeone);
 
-    // const contactName = await this.addNameToContact();
     await clickLocatorThatIsVisible(this.page, this.orgPeopleCollapse);
     await this.addDetailsToCustomer();
 
