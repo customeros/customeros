@@ -22,6 +22,7 @@ type JobRoleService interface {
 	CreateJobRole(ctx context.Context, contactId string, organizationId *string, entity *neo4jentity.JobRoleEntity) (*neo4jentity.JobRoleEntity, error)
 	UpdateJobRole(ctx context.Context, contactId string, organizationId *string, entity *neo4jentity.JobRoleEntity) (*neo4jentity.JobRoleEntity, error)
 	GetAllForUsers(ctx context.Context, userIds []string) (*neo4jentity.JobRoleEntities, error)
+	GetJobRolesByIds(ctx context.Context, ids []string) (*neo4jentity.JobRoleEntities, error)
 }
 
 type jobRoleService struct {
@@ -247,4 +248,21 @@ func (s *jobRoleService) DeleteJobRole(ctx context.Context, contactId, roleId st
 		return false, err
 	}
 	return true, nil
+}
+
+func (s *jobRoleService) GetJobRolesByIds(ctx context.Context, ids []string) (*neo4jentity.JobRoleEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetJobRolesByIds")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
+	jobRoleDbNodes, err := s.services.Neo4jRepositories.JobRoleReadRepository.GetByIds(ctx, common.GetTenantFromContext(ctx), ids)
+	if err != nil {
+		return nil, err
+	}
+	jobRoleEntities := neo4jentity.JobRoleEntities{}
+	for _, v := range jobRoleDbNodes {
+		jobRoleEntities = append(jobRoleEntities, *neo4jmapper.MapDbNodeToJobRoleEntity(v))
+	}
+	return &jobRoleEntities, nil
 }

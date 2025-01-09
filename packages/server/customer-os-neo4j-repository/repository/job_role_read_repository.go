@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -18,11 +19,16 @@ type JobRoleReadRepository interface {
 	GetAllForUsers(ctx context.Context, tenant string, userIds []string) ([]*utils.DbNodeAndId, error)
 	ExistsForContactAndOrganization(ctx context.Context, tenant, contactId, organizationId string) (bool, error)
 	GetAllForContactWithOrganizationId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string) ([]*utils.DbNodeAndId, error)
+	GetByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 }
 
 type jobRoleReadRepository struct {
 	driver   *neo4j.DriverWithContext
 	database string
+}
+
+func (r *jobRoleReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
+	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
 func NewJobRoleReadRepository(driver *neo4j.DriverWithContext, database string) JobRoleReadRepository {
@@ -241,4 +247,36 @@ func (r *jobRoleReadRepository) GetAllForContactWithOrganizationId(ctx context.C
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
 	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *jobRoleReadRepository) GetByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetByIds")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := fmt.Sprintf(`MATCH (job:JobRole_%s) WHERE job.id IN $ids RETURN job`, tenant)
+	params := map[string]interface{}{
+		"ids": ids,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		span.LogFields(log.Int("result.count", 0))
+		return nil, err
+	}
+	nodes := result.([]*dbtype.Node)
+	span.LogFields(log.Int("result.count", len(nodes)))
+	return nodes, err
 }
