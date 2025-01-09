@@ -511,9 +511,6 @@ func processMailstackReply(ctx context.Context, services *service.Services, tena
 
 		if mailstackEmail != nil && strings.Contains(mailstackEmail.ToString, input.FromFull.Email) && mailstackEmail.ProducerType == commonModel.NodeLabelFlowActionExecution {
 
-			// TODO check that it isn't an automatic reply
-			// header: Subject: Automatic reply: First restaurant killed by DoorDash reviews?
-
 			flowActionExecution, err := services.CommonServices.FlowExecutionService.GetFlowActionExecutionById(ctx, mailstackEmail.ProducerId)
 			if err != nil {
 				tracing.TraceErr(span, err)
