@@ -328,8 +328,8 @@
           "query": "MATCH (t:Tenant)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) WITH t, tag.name as tag_name, tag.entityType as entity_type, count(tag) as size_tags where size_tags > 1 return count(tag_name)"
         },
         {
-          "name": "Tags without entity type",
-          "query": "MATCH (:Tenant)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) WHERE tag.entityType IS NULL OR tag.entityType = '' RETURN count(tag)"
+          "name": "Tags with missing fields",
+          "query": "MATCH (:Tenant)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag) WHERE tag.entityType IS NULL OR tag.entityType = '' OR tag.name IS NULL OR tag.name = '' OR tag.colorCode IS NULL RETURN count(tag)"
         },
         {
           "name": "Tags linked with wrong entities",
