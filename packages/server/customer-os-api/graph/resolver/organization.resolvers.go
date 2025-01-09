@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -392,6 +393,11 @@ func (r *mutationResolver) OrganizationAddDomain(ctx context.Context, organizati
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.domain", domain))
 
+	domain = strings.ToLower(strings.TrimSpace(domain))
+	domain = utils.ExtractDomain(domain)
+
+	_, isPrimary, primaryDomain := r.Services.CommonServices.DomainService.CheckDomainWithMailsherpa(ctx, domain)
+
 	domainLinked, err := r.Services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, organizationID, domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -400,8 +406,19 @@ func (r *mutationResolver) OrganizationAddDomain(ctx context.Context, organizati
 			Accepted: false,
 		}, nil
 	}
-
 	span.LogFields(log.Bool("result.domainLinked", domainLinked))
+
+	if !isPrimary && primaryDomain != domain && primaryDomain != "" {
+		domainLinked, err = r.Services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, organizationID, primaryDomain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to link domain %s with organization %s", domain, organizationID)
+			return &model.ActionResponse{
+				Accepted: false,
+			}, nil
+		}
+		span.LogFields(log.Bool("result.primaryDomainLinked", domainLinked))
+	}
 
 	return &model.ActionResponse{
 		Accepted: domainLinked,

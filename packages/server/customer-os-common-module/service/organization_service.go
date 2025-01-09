@@ -930,7 +930,7 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		_, isPrimary, primaryDomain := s.services.DomainService.CheckDomainWithMailsherpa(ctx, domain)
-		// check if organization other organization is linked with the domain
+		// check if other organization is linked with the domain
 		orgByDomainDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error fetching organization by domain"))
@@ -965,7 +965,9 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 						return nil, nil
 					}
 				}
-				return nil, nil
+				if organizationByDomainEntity.ID != organizationId {
+					return nil, nil
+				}
 			}
 		}
 
