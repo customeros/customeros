@@ -7,5 +7,7 @@ query checkDomain($domain: String!) {
     primaryDomain
     domainOrganizationId
     primaryDomainOrganizationId
+    primaryDomainOrganizationName
+    domainOrganizationName
   }
 }

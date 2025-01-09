@@ -45,11 +45,11 @@ import {
 import {
   CheckDomainQuery,
   CheckDomainQueryVariables,
-} from './checkDomain.generated.ts';
+} from './checkDomain.generated';
 import {
   CheckWebsiteQuery,
   CheckWebsiteQueryVariables,
-} from './checkWebsite.generated.ts';
+} from './checkWebsite.generated';
 import {
   UpdateSocialMutation,
   UpdateSocialMutationVariables,
@@ -61,7 +61,11 @@ import {
 import {
   RemoveDomainMutation,
   RemoveDomainMutationVariables,
-} from './removeDomain.generated.ts';
+} from './removeDomain.generated';
+import {
+  RemoveDomainsMutation,
+  RemoveDomainsMutationVariables,
+} from './removeDomains.generated';
 import {
   GetOrganizationsQuery,
   GetOrganizationsQueryVariables,
@@ -91,13 +95,13 @@ import {
   UpdateOrganizationMutationVariables,
 } from './updateOrganization.generated';
 import {
+  ImportOrganizationMutation,
+  ImportOrganizationMutationVariables,
+} from './importOrganization.generated';
+import {
   GetOrganizationsByIdsQuery,
   GetOrganizationsByIdsQueryVariables,
 } from './getOrganizationsByIds.generated';
-import {
-  ImportOrganizationMutation,
-  ImportOrganizationMutationVariables,
-} from './importOrganization.generated.ts';
 import {
   RemoveTagFromOrganizationMutation,
   RemoveTagFromOrganizationMutationVariables,
@@ -113,7 +117,7 @@ import {
 import {
   SearchGlobalOrganizationsQuery,
   SearchGlobalOrganizationsQueryVariables,
-} from './searchGlobalOrganizations.generated.ts';
+} from './searchGlobalOrganizations.generated';
 import {
   GetArchivedOrganizationsAfterQuery,
   GetArchivedOrganizationsAfterQueryVariables,
@@ -218,8 +222,8 @@ export class OrganizationsService {
 
   async removeDomains(payload: RemoveDomainsMutationVariables) {
     return this.transport.graphql.request<
-      RemoveDomainMutation,
-      RemoveDomainMutationVariables
+      RemoveDomainsMutation,
+      RemoveDomainsMutationVariables
     >(RemoveDomainsDocument, payload);
   }
 
@@ -515,6 +519,8 @@ export class OrganizationsService {
       .with(['updatedAt'], () => undefined)
       .with(['domainsDetails', ...P.array()], async () => {
         if (type === 'update') {
+          return;
+
           return await this.removeDomain({
             organizationId,
             domain: oldValue,

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { MergeOrganizationsCase } from '@domain/usecases/command-menu/merge-organizations.usecase.ts';
@@ -15,14 +15,17 @@ const mergeOrganizationsCase = new MergeOrganizationsCase();
 export const DuplicateDomainInformation = observer(
   ({
     domain,
-    associatedOrgId,
+    associatedOrg,
     onClose,
     isOpen,
   }: {
     domain: string;
     isOpen: boolean;
     onClose: () => void;
-    associatedOrgId: string;
+    associatedOrg: {
+      id: string;
+      name: string;
+    } | null;
   }) => {
     const { ui, organizations } = useStore();
 
@@ -31,13 +34,12 @@ export const DuplicateDomainInformation = observer(
     const confirmButtonRef = useRef<HTMLButtonElement>(null);
     const closeButtonRef = useRef<HTMLButtonElement>(null);
     const editedOrgName = organizations.getById(context.ids[0])?.name;
-    const associatedOrgName = organizations.getById(associatedOrgId)?.name;
 
     useEffect(() => {
-      if (context.ids?.length) {
-        mergeOrganizationsCase.setIds(context.ids[0], associatedOrgId);
+      if (context.ids?.length && associatedOrg?.id) {
+        mergeOrganizationsCase.setIds(context.ids[0], associatedOrg.id);
       }
-    }, []);
+    }, [associatedOrg?.id]);
 
     const handleConfirm = async () => {
       mergeOrganizationsCase.merge();
@@ -71,11 +73,11 @@ export const DuplicateDomainInformation = observer(
         <p className='mt-3 text-sm'>
           <span className='font-medium mr-1 '>{domain},</span>
           is already associated with another existing organization,
-          <span className='font-medium mx-1'>{associatedOrgName}.</span>
+          <span className='font-medium mx-1'>{associatedOrg?.name}.</span>
         </p>
         <p className='mt-3 text-sm'>
           Would you like to merge
-          <span className='font-medium mx-1'>{associatedOrgName}</span>
+          <span className='font-medium mx-1'>{associatedOrg?.name}</span>
           into <span className='font-medium'>{editedOrgName}?</span>
         </p>
         <div className='flex justify-between gap-3 mt-6'>

@@ -6,7 +6,11 @@ import { OrganizationsService } from '@store/Organizations/__service__/Organizat
 export class AddOrganizationDomainCase {
   @observable accessor inputValue: string = '';
   @observable accessor error: string = '';
-  @observable accessor associatedOrgId: string | undefined = '';
+  @observable accessor associatedOrg: {
+    id: string;
+    name: string;
+  } | null = null;
+
   @observable accessor isValidating: boolean = false;
   @observable accessor entity: Organization | null = null;
   private root = RootStore.getInstance();
@@ -35,13 +39,13 @@ export class AddOrganizationDomainCase {
   @action
   reset() {
     this.inputValue = '';
-    this.associatedOrgId = '';
+    this.associatedOrg = null;
     this.error = '';
   }
 
   @action
   resetValidation() {
-    this.associatedOrgId = '';
+    this.associatedOrg = null;
     this.error = '';
   }
 
@@ -77,10 +81,14 @@ export class AddOrganizationDomainCase {
           checkDomain.domainOrganizationId !== this.entity?.id)
       ) {
         this.error = 'Duplicate';
-        this.associatedOrgId =
-          checkDomain.primaryDomainOrganizationId ||
-          checkDomain.domainOrganizationId ||
-          undefined;
+        this.associatedOrg = {
+          name:
+            checkDomain.primaryDomainOrganizationName ||
+            checkDomain.domainOrganizationName ||
+            '',
+          id: (checkDomain.primaryDomainOrganizationId ||
+            checkDomain.domainOrganizationId) as string,
+        };
 
         return;
       }

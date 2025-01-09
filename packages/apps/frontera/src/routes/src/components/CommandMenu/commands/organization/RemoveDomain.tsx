@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { RemoveOrganizationDomainCase } from '@domain/usecases/command-menu/remove-organization-domain.usecase';
@@ -17,7 +17,7 @@ const removeDomainCase = new RemoveOrganizationDomainCase();
 export const RemoveDomain = observer(() => {
   const { ui, organizations } = useStore();
   const context = ui.commandMenu.context;
-  const organization = organizations.value.get(context.ids?.[0] as string);
+  const organization = organizations.getById(context.ids?.[0] as string);
 
   useModKey('Enter', () => {
     ui.commandMenu.setOpen(false);

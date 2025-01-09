@@ -15,5 +15,7 @@ export type CheckDomainQuery = {
     primaryDomain: string;
     domainOrganizationId?: string | null;
     primaryDomainOrganizationId?: string | null;
+    primaryDomainOrganizationName?: string | null;
+    domainOrganizationName?: string | null;
   };
 };

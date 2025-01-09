@@ -1,26 +1,27 @@
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { AddOrganizationDomainCase } from '@domain/usecases/command-menu/add-organization-domain.usecase.ts';
+import { AddOrganizationDomainCase } from '@domain/usecases/command-menu/add-organization-domain.usecase';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
+import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { Button } from '@ui/form/Button/Button.tsx';
 import { useModKey } from '@shared/hooks/useModKey';
 import {
   Command,
   CommandCancelButton,
   CommandCancelIconButton,
 } from '@ui/overlay/CommandMenu';
-import { DuplicateDomainInformation } from '@shared/components/CommandMenu/commands/organization/addDomain/DuplicateDomainInformationModal.tsx';
+
+import { DuplicateDomainInformation } from './DuplicateDomainInformationModal';
 
 const addNewDomainCase = new AddOrganizationDomainCase();
 
 export const AddNewDomain = observer(() => {
   const { ui, organizations } = useStore();
   const context = ui.commandMenu.context;
-  const organization = organizations.value.get(context.ids?.[0] as string);
+  const organization = organizations.getById(context.ids?.[0] as string);
   const [showDuplicateInfo, setShowDuplicateInfo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -31,7 +32,7 @@ export const AddNewDomain = observer(() => {
     await addNewDomainCase.validateDomain();
 
     if (addNewDomainCase.error) {
-      if (addNewDomainCase.associatedOrgId) {
+      if (addNewDomainCase.associatedOrg) {
         setShowDuplicateInfo(true);
       }
 
@@ -105,10 +106,10 @@ export const AddNewDomain = observer(() => {
               }}
               className={cn({
                 'border-error-600 hover:!border-error-600 focus:!border-error-600 active:!border-error-600':
-                  addNewDomainCase.error && !addNewDomainCase.associatedOrgId,
+                  addNewDomainCase.error && !addNewDomainCase.associatedOrg,
               })}
             />
-            {addNewDomainCase.error && !addNewDomainCase.associatedOrgId && (
+            {addNewDomainCase.error && !addNewDomainCase.associatedOrg && (
               <p className='text-xs text-error-600'>
                 {' '}
                 {addNewDomainCase.error}
@@ -145,7 +146,7 @@ export const AddNewDomain = observer(() => {
         onClose={handleClose}
         isOpen={showDuplicateInfo}
         domain={addNewDomainCase.inputValue}
-        associatedOrgId={addNewDomainCase.associatedOrgId || ''}
+        associatedOrg={addNewDomainCase.associatedOrg}
       />
     </Command>
   );

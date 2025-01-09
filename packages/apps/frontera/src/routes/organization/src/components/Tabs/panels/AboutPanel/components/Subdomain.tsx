@@ -30,7 +30,7 @@ export const Subdomain = observer(({ domain }: { domain: string }) => {
         href={getExternalUrl(domain ?? '/')}
         className=' no-underline hover:no-underline'
       >
-        <CornerDownRightDot className='mr-2 size-3' />
+        <CornerDownRightDot className='mr-2 size-3 text-grayModern-400' />
         {domain}
       </a>
       <Menu onOpenChange={(data) => setShowMenu(data)}>
