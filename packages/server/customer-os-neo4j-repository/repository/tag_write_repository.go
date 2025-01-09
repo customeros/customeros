@@ -49,7 +49,7 @@ func (r *tagWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedTransac
 		  tag.updatedAt=datetime(),
 		  tag.source=$source,
 		  tag.appSource=$appSource,
-		  tag.colorCode=$colorCode
+		  tag.colorCode=$colorCode,
 		  tag:Tag_%s
 		 RETURN tag`, tenant)
 	params := map[string]any{
