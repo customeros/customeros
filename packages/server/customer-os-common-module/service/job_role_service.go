@@ -65,6 +65,7 @@ func (s *jobRoleService) GetAllForContacts(ctx context.Context, contactIds []str
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("contactIds", contactIds))
+
 	jobRoles, err := s.services.Neo4jRepositories.JobRoleReadRepository.GetAllForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
 	if err != nil {
 		return nil, err
