@@ -4,10 +4,11 @@ import (
 	"context"
 
 	"github.com/customeros/mailsherpa/domaincheck"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
 const MinHoursBetweenNotifications int = 12 // on same domain for a tenant
@@ -51,10 +52,11 @@ func (a *agentService) VisitorIDAgent(ctx context.Context, eventData *data_field
 		tracing.TraceErr(span, errors.Wrap(err, "failed isNewVisitor lookup"))
 	}
 
+	// log visit on timeline
+
 	// determine if slack notification is configured
 
 	// handle slack notification
-
 }
 
 func (a *agentService) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug *string, err error) {

@@ -28,31 +28,31 @@ func HandleWebsiteVisitorEvent(c context.Context, s *service.Services, sourceEve
 		Tenant: eventData.Tenant,
 	})
 
-	// find automations that listen on event
-	query := entity.Automations{
+	// List of agents that listen on event
+
+	// find all live agent implementations
+	query := entity.Agents{
 		Tenant:     eventData.Tenant,
 		IsActive:   true,
 		TriggersOn: eventData.Type(),
 	}
 
-	automations, err := s.PostgresRepositories.AutomationsRepository.FindAll(ctx, query)
+	agents, err := s.PostgresRepositories.AgentsRepository.FindAll(ctx, query)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
-	if automations == nil {
-		// send to dead events table
+	if agents == nil {
+		return nil
 	}
 
 	var errs error
-	for _, automation := range *automations {
-		switch automation.AgentName {
-		case enum.AgentVisitorID.String():
-			// create automation execution record
+	for _, agent := range *agents {
+        // create automation execution record
 
-			// call VisitorID agent
+        // call agent service
 
-			// update automation execution record with results
+        // update automation execution record with results
 
 		default:
 			err = fmt.Errorf("automation agent not handled for %s", automation.ID)
@@ -64,122 +64,3 @@ func HandleWebsiteVisitorEvent(c context.Context, s *service.Services, sourceEve
 	return errs
 }
 
-func buildWebVisitorSlackNotification(ctx context.Context, s *service.Services, eventData *data_fields.WebsiteVisitEvent) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.buildWebVisitorSlackNotification")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	// get org data from global org table
-	globalOrg, err := s.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, eventData.Domain)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	if globalOrg == nil {
-		err = s.PostgresRepositories.GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess(ctx, eventData.Domain)
-		if err != nil {
-			tracing.TraceErr(span, err)
-		}
-	}
-
-	// Build the text content for the section based on available data
-	var contentLines []string
-	primaryDomain := eventData.Domain
-	if globalOrg != nil {
-		primaryDomain = globalOrg.PrimaryDomain
-	}
-	website := "https://" + primaryDomain
-
-	name := eventData.Domain
-	if globalOrg != nil {
-		name = globalOrg.Name
-	}
-	contentLines = append(contentLines, fmt.Sprintf("<%s|*%s*> ", website, name))
-	if globalOrg != nil && globalOrg.Description != "" {
-		contentLines = append(contentLines, fmt.Sprintf("%s \n", globalOrg.Description))
-	}
-	// Add optional fields only if they're not empty
-	if website != "" {
-		contentLines = append(contentLines, fmt.Sprintf("*Website:* <%s|%s> ", website, primaryDomain))
-	}
-	if globalOrg != nil && globalOrg.LinkedInUrl != "" && globalOrg.LinkedInAlias != "" {
-		contentLines = append(contentLines, fmt.Sprintf("*LinkedIn:* <%s|/%s> ", globalOrg.LinkedInUrl, globalOrg.LinkedInAlias))
-	}
-	// Only add location if both city and country are available
-	if globalOrg != nil && globalOrg.City != "" && globalOrg.CountryA2 != "" {
-		contentLines = append(contentLines, fmt.Sprintf("*Location:* %s, %s ", globalOrg.City, globalOrg.CountryA2))
-	}
-	// Add source/referrer only if it exists
-	if eventData.Referrer != "" {
-		referrer := strings.TrimPrefix(eventData.Referrer, "https://")
-		referrer = strings.TrimPrefix(referrer, "http://")
-		referrer = strings.TrimPrefix(referrer, "www.")
-		referrer = strings.Trim(referrer, "/")
-		contentLines = append(contentLines, fmt.Sprintf("*Source:* <%s|%s> ", eventData.Referrer, referrer))
-	} else {
-		contentLines = append(contentLines, "*Source:* Direct ")
-	}
-	// Join the lines with newlines
-	sectionContent := strings.Join(contentLines, "\n")
-
-	// Create the section block without the accessory first
-	sectionBlock := fmt.Sprintf(`{
-		"type": "section",
-		"text": {
-			"type": "mrkdwn",
-			"text": "%s"
-		}
-	}`, sectionContent)
-
-	// If logo exists, add the accessory field
-	if globalOrg != nil && globalOrg.LogoUrl != "" {
-		sectionBlock = fmt.Sprintf(`{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "%s"
-			},
-			"accessory": {
-				"type": "image",
-				"image_url": "%s",
-				"alt_text": "%s logo"
-			}
-		}`, sectionContent, globalOrg.LogoUrl, name)
-	}
-
-	// Create the final layout using the section block
-	layoutBlocks := fmt.Sprintf(`[
-		{
-			"type": "header",
-			"text": {
-				"type": "plain_text",
-				"text": "A visitor from %s is on your website",
-				"emoji": true
-			}
-		},
-		{
-			"type": "divider"
-		},
-		%s,
-		{
-			"type": "divider"
-		},
-		{
-			"type": "actions",
-			"elements": [
-				{
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"text": "View in CustomerOS"
-					},
-					"url": "https://app.customeros.ai/organization/%s?tab=about",
-					"value": "click_me_123",
-					"action_id": "actionId-0"
-				}
-			]
-		}
-	]`, name, sectionBlock, *eventData.OrganizationID)
-
-	return layoutBlocks, nil
-}
