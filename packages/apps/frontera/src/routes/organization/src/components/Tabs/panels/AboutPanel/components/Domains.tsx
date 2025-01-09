@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
