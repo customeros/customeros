@@ -1,11 +1,8 @@
-import { RootStore } from '@store/root';
-import { reaction, observable } from 'mobx';
+import { action, reaction, computed, observable } from 'mobx';
 import { OrganizationService } from '@domain/services/organization/organizations.service';
 
 export class EditLatestOrganizationActive {
   @observable accessor search: string = '';
-  @observable private accessor searchedIds: string[] = [];
-  private root = RootStore.getInstance();
 
   private service = new OrganizationService();
 
@@ -15,10 +12,12 @@ export class EditLatestOrganizationActive {
     reaction(() => this.search, this.executeSearch);
   }
 
+  @action
   setSearchTerm(searchTerm: string) {
     this.search = searchTerm;
   }
 
+  @computed
   get searchTerm() {
     return this.search;
   }

@@ -111,10 +111,7 @@ export class RootStore {
       },
     );
 
-    when(
-      () => this.isBootstrapped,
-      () => this.transactions.startRunners(),
-    );
+    this.transactions.startRunners();
   }
 
   async bootstrap() {

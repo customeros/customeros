@@ -9,7 +9,7 @@ const usecase = new EditLatestOrganizationActive();
 export const EditLatestOrgActive = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
-  const contact = store.contacts.value.get(context.ids?.[0] as string);
+  const contact = store.contacts.getById(context.ids?.[0] as string);
 
   const label = `Contact - ${contact?.name}`;
 
@@ -19,24 +19,17 @@ export const EditLatestOrgActive = observer(() => {
   };
 
   const organizations = store.organizations.toArray();
-  const contactStore = store.contacts.value.get(context.ids?.[0] as string);
 
-  if (!contactStore) return null;
+  if (!contact) return null;
 
   const handleChangeOrganization = (value: OrganizationDatum) => {
-    contactStore?.draft();
-
-    if (contactStore) {
-      contactStore.value.primaryOrganizationId = value.id;
+    if (contact) {
+      contact?.draft();
+      contact.value.primaryOrganizationName = value.name;
+      contact.value.primaryOrganizationId = value.id;
+      contact?.commit();
     }
 
-    contactStore?.commit();
-
-    if (contactStore) {
-      contactStore?.draft();
-      contactStore.value.primaryOrganizationName = value.name;
-      contactStore?.commit({ syncOnly: true });
-    }
     const orgStore = store.organizations.getById(value.id);
 
     orgStore?.draft();
@@ -62,6 +55,7 @@ export const EditLatestOrgActive = observer(() => {
       <Command.List>
         {organizations.map((option) => (
           <CommandItem
+            key={option.id}
             onSelect={() =>
               handleChangeOrganization(option as unknown as OrganizationDatum)
             }
