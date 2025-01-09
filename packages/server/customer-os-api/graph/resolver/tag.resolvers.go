@@ -49,7 +49,7 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateI
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	err := r.Services.CommonServices.TagService.Update(ctx, input.ID, input.Name)
+	err := r.Services.CommonServices.TagService.Update(ctx, input.ID, input.Name, input.ColorCode)
 	if err != nil {
 		tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to update tag"))
 		r.log.Errorf("failed to update tag: %s", err)

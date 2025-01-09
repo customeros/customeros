@@ -510,6 +510,7 @@ func MapDbNodeToTagEntity(dbNode *dbtype.Node) *entity.TagEntity {
 		Source:     entity.DataSource(utils.GetStringPropOrEmpty(props, string(entity.TagPropertySource))),
 		AppSource:  utils.GetStringPropOrEmpty(props, string(entity.TagPropertyAppSource)),
 		EntityType: model.DecodeEntityType(utils.GetStringPropOrEmpty(props, string(entity.TagPropertyEntityType))),
+		ColorCode:  utils.GetStringPropOrEmpty(props, string(entity.TagPropertyColorCode)),
 	}
 	return &tag
 }

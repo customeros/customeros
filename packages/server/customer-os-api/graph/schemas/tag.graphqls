@@ -13,6 +13,7 @@ type Tag {
     metadata:   Metadata!
     name:       String!
     entityType: EntityType!
+    colorCode:  String!
 
     id:         ID @deprecated(reason: "Use metadata.id")
     createdAt:  Time @deprecated(reason: "Use metadata.created")
@@ -25,11 +26,13 @@ input TagInput {
     name:           String!
     appSource:      String
     entityType:     EntityType = ORGANIZATION
+    colorCode:      String
 }
 
 input TagUpdateInput {
-    id:     ID!
-    name:   String!
+    id:         ID!
+    name:       String
+    colorCode:  String
 }
 
 input TagIdOrNameInput {
