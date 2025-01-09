@@ -13,16 +13,13 @@ type Repositories struct {
 	Db      *gorm.DB
 	AsyncDb *gorm.DB
 
+	AgentsRepository                             AgentsRepository
 	AgentExecutionRepository                     AgentExecutionRepository
 	AgentRegistryRepository                      AgentRegistryRepository
 	AiLocationMappingRepository                  AiLocationMappingRepository
 	AiPromptLogRepository                        AiPromptLogRepository
 	ApiBillableEventRepository                   ApiBillableEventRepository
 	AppKeyRepository                             AppKeyRepository
-	AutomationDeadEventsRepository               AutomationDeadEventsRepository
-	AutomationEventRegistryRepository            AutomationEventRegistryRepository
-	AutomationsRepository                        AutomationsRepository
-	AutomationWebhooksRepository                 AutomationWebhooksRepository
 	BrowserAutomationRunRepository               BrowserAutomationRunRepository
 	BrowserAutomationRunResultRepository         BrowserAutomationRunResultRepository
 	BrowserConfigRepository                      BrowserConfigRepository
@@ -85,6 +82,7 @@ type Repositories struct {
 	TrackingAllowedOriginRepository              TrackingAllowedOriginRepository
 	UserEmailImportPageTokenRepository           UserEmailImportStateRepository
 	UserWorkingScheduleRepository                UserWorkingScheduleRepository
+	WebhooksRepository                           WebhooksRepository
 }
 
 func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
@@ -97,16 +95,13 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		GoogleServiceAccountKeyRepository:  NewGoogleServiceAccountKeyRepository(postgresDB.AsyncGormDB),
 		UserEmailImportPageTokenRepository: NewUserEmailImportStateRepository(postgresDB.AsyncGormDB),
 
+		AgentsRepository:                             NewAgentsRepository(postgresDB.GormDB),
 		AgentExecutionRepository:                     NewAgentExecutionRepository(postgresDB.GormDB),
 		AgentRegistryRepository:                      NewAgentRegistryRepository(postgresDB.GormDB),
 		AiLocationMappingRepository:                  NewAiLocationMappingRepository(postgresDB.GormDB),
 		AiPromptLogRepository:                        NewAiPromptLogRepository(postgresDB.GormDB),
 		ApiBillableEventRepository:                   NewApiBillableEventRepository(postgresDB.GormDB),
 		AppKeyRepository:                             NewAppKeyRepo(postgresDB.GormDB),
-		AutomationDeadEventsRepository:               NewAutomationDeadEventsRepository(postgresDB.GormDB),
-		AutomationEventRegistryRepository:            NewAutomationEventRegistryRepository(postgresDB.GormDB),
-		AutomationsRepository:                        NewAutomationsRepository(postgresDB.GormDB),
-		AutomationWebhooksRepository:                 NewAutomationWebhooksRepository(postgresDB.GormDB),
 		BrowserAutomationRunRepository:               NewBrowserAutomationRunRepository(postgresDB.GormDB),
 		BrowserAutomationRunResultRepository:         NewBrowserAutomationRunResultRepository(postgresDB.GormDB),
 		BrowserConfigRepository:                      NewBrowserConfigRepository(postgresDB.GormDB),
@@ -165,6 +160,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		TrackerEventsRepository:                      NewTrackerEventsRepository(postgresDB.GormDB),
 		TrackingAllowedOriginRepository:              NewTrackingAllowedOriginRepository(postgresDB.GormDB),
 		UserWorkingScheduleRepository:                NewUserWorkingScheduleRepository(postgresDB.GormDB),
+		WebhooksRepository:                           NewWebhooksRepository(postgresDB.GormDB),
 	}
 
 	return repositories
@@ -174,12 +170,10 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 	err := postgresDB.GormDB.AutoMigrate(
 		&entity.AgentRegistry{},
 		&entity.AgentExecution{},
+		&entity.Agents{},
 		&entity.AiLocationMapping{},
 		&entity.AiPromptLog{},
 		&entity.ApiBillableEvent{},
-		&entity.AutomationDeadEvents{},
-		&entity.AutomationEventRegistry{},
-		&entity.AutomationWebhooks{},
 		&entity.CacheEmailEnrow{},
 		&entity.CacheEmailScrubby{},
 		&entity.CacheEmailTrueinbox{},
@@ -237,6 +231,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.TrackerEvents{},
 		&entity.TrackingAllowedOrigin{},
 		&entity.UserWorkingSchedule{},
+		&entity.Webhooks{},
 	)
 	if err != nil {
 		panic(err)
@@ -256,11 +251,6 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 
 func (r *Repositories) InitData(ctx context.Context, postgresRepos *Repositories) {
 	err := r.AgentRegistryRepository.Initialize(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	err = r.AutomationEventRegistryRepository.Initialize(ctx)
 	if err != nil {
 		panic(err)
 	}

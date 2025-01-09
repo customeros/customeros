@@ -12,27 +12,27 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
-type AutomationWebhooksRepository interface {
-	FindAll(ctx context.Context) (*[]entity.AutomationWebhooks, error)
-	Find(ctx context.Context, webhook entity.AutomationWebhooks) (*entity.AutomationWebhooks, error)
-	Update(ctx context.Context, webhook entity.AutomationWebhooks) (*entity.AutomationWebhooks, error)
-	Create(ctx context.Context, webhook entity.AutomationWebhooks) (*entity.AutomationWebhooks, error)
+type WebhooksRepository interface {
+	FindAll(ctx context.Context) (*[]entity.Webhooks, error)
+	Find(ctx context.Context, webhook entity.Webhooks) (*entity.Webhooks, error)
+	Update(ctx context.Context, webhook entity.Webhooks) (*entity.Webhooks, error)
+	Create(ctx context.Context, webhook entity.Webhooks) (*entity.Webhooks, error)
 }
 
-type flowWebhooksRepository struct {
+type webhooksRepository struct {
 	gormDb *gorm.DB
 }
 
-func NewAutomationWebhooksRepository(gormDb *gorm.DB) AutomationWebhooksRepository {
-	return &flowWebhooksRepository{gormDb: gormDb}
+func NewWebhooksRepository(gormDb *gorm.DB) WebhooksRepository {
+	return &webhooksRepository{gormDb: gormDb}
 }
 
-func (r *flowWebhooksRepository) Create(ctx context.Context, webhook entity.AutomationWebhooks) (*entity.AutomationWebhooks, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AutomationWebhooksRepository.Create")
+func (r *webhooksRepository) Create(ctx context.Context, webhook entity.Webhooks) (*entity.Webhooks, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var created entity.AutomationWebhooks
+	var created entity.Webhooks
 	err := r.gormDb.Create(&webhook).Scan(&created).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -42,8 +42,8 @@ func (r *flowWebhooksRepository) Create(ctx context.Context, webhook entity.Auto
 	return &webhook, nil
 }
 
-func (r *flowWebhooksRepository) FindAll(ctx context.Context) (*[]entity.AutomationWebhooks, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AutomationWebhooksRepository.FindAll")
+func (r *webhooksRepository) FindAll(ctx context.Context) (*[]entity.Webhooks, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -54,7 +54,7 @@ func (r *flowWebhooksRepository) FindAll(ctx context.Context) (*[]entity.Automat
 		return nil, err
 	}
 
-	var webhooks []entity.AutomationWebhooks
+	var webhooks []entity.Webhooks
 	err := r.gormDb.
 		Where("enabled = ? AND tenant = ?", true, tenant).
 		Order("created_at DESC").
@@ -67,8 +67,8 @@ func (r *flowWebhooksRepository) FindAll(ctx context.Context) (*[]entity.Automat
 	return &webhooks, nil
 }
 
-func (r *flowWebhooksRepository) Find(ctx context.Context, webhook entity.AutomationWebhooks) (*entity.AutomationWebhooks, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AutomationWebhooksRepository.Find")
+func (r *webhooksRepository) Find(ctx context.Context, webhook entity.Webhooks) (*entity.Webhooks, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -81,11 +81,11 @@ func (r *flowWebhooksRepository) Find(ctx context.Context, webhook entity.Automa
 		}
 	}
 
-	var foundWebhook entity.AutomationWebhooks
+	var foundWebhook entity.Webhooks
 	query := r.gormDb.Where("enabled = ?", true)
 
 	// Add additional filters based on non-zero fields in webhook
-	if webhook != (entity.AutomationWebhooks{}) {
+	if webhook != (entity.Webhooks{}) {
 		query = query.Where(&webhook)
 	}
 
@@ -101,8 +101,8 @@ func (r *flowWebhooksRepository) Find(ctx context.Context, webhook entity.Automa
 	return &foundWebhook, nil
 }
 
-func (r *flowWebhooksRepository) Update(ctx context.Context, webhook entity.AutomationWebhooks) (*entity.AutomationWebhooks, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AutomationWebhooksRepository.Update")
+func (r *webhooksRepository) Update(ctx context.Context, webhook entity.Webhooks) (*entity.Webhooks, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -121,7 +121,7 @@ func (r *flowWebhooksRepository) Update(ctx context.Context, webhook entity.Auto
 		return nil, err
 	}
 
-	var updatedWebhook entity.AutomationWebhooks
+	var updatedWebhook entity.Webhooks
 	err := r.gormDb.Model(&webhook).Updates(&webhook).First(&updatedWebhook).Error
 	if err != nil {
 		tracing.TraceErr(span, err)

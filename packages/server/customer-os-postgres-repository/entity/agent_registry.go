@@ -1,14 +1,14 @@
 package entity
 
 type AgentRegistry struct {
-	ID             string `gorm:"primaryKey;type:varchar(50)" json:"id"`
-	Name           string `gorm:"column:name;type:varchar(255);not null;index" json:"name" binding:"required"`
-	Description    string `gorm:"column:description;type:varchar(255)" json:"description"`
-	WorkDefinition string `gorm:"column:work_definition;type:text" json:"workDefinition"`
-	InputSchema    string `gorm:"column:input_schema;type:text" json:"input"`
-	OutputSchema   string `gorm:"column:output_schema;type:text" json:"output"`
-	ConfigSchema   string `gorm:"column:config_schema;type:text" json:"config"`
-	Status         string `gorm:"column:status;type:varchar(50)" json:"status"`
+	ID                string  `gorm:"primaryKey;type:varchar(50)" json:"id"`
+	Name              string  `gorm:"column:name;type:varchar(255);not null;index" json:"name" binding:"required"`
+	Description       string  `gorm:"column:description;type:varchar(255)" json:"description"`
+	WorkDefinition    string  `gorm:"column:work_definition;type:text" json:"workDefinition"`
+	UserContextSchema *string `gorm:"column:user_context_schema;type:text" json:"userContext"`
+	OutputSchema      *string `gorm:"column:output_schema;type:text" json:"output"`
+	ConfigSchema      *string `gorm:"column:config_schema;type:text" json:"config"`
+	IsActive          string  `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
 }
 
 func (AgentRegistry) TableName() string {
