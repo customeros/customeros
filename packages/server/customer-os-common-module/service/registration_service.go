@@ -42,7 +42,7 @@ type testUserSetup struct {
 }
 
 func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, loggedInUserEmail string) error {
-	span, ctx := s.initializeTracing(ctx, "PrepareDefaultTenantSetup", map[string]interface{}{
+	span, ctx := s.initializeTracing(ctx, "RegistrationService.PrepareDefaultTenantSetup", map[string]interface{}{
 		"loggedInUserEmail": loggedInUserEmail,
 	})
 	defer span.Finish()
@@ -406,7 +406,7 @@ func (s *registrationService) CreatePostmarkServer(ctx context.Context) error {
 		return err
 	}
 
-	if err := s.services.PostmarkService.CreateServer(ctx); err != nil {
+	if err := s.services.PostmarkService.CreateServerIfNotExists(ctx); err != nil {
 		tracing.TraceErr(span, err)
 	}
 

@@ -82,6 +82,7 @@ export const EditContactFlow = observer(() => {
         value={search}
         onValueChange={setSearch}
         placeholder='Add to flow...'
+        dataTest='contacts-flow-search'
         onKeyDownCapture={(e) => {
           if (e.key === ' ') {
             e.stopPropagation();
@@ -96,6 +97,7 @@ export const EditContactFlow = observer(() => {
           return (
             <CommandItem
               key={flowFlow.id}
+              dataTest='contacts-flow-found-entry'
               rightAccessory={isSelected ? <Check /> : undefined}
               onSelect={() => {
                 handleSelect(flowFlow as FlowStore);

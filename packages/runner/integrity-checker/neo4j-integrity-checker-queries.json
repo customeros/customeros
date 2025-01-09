@@ -189,7 +189,7 @@
         },
         {
           "name": "Domains with wrong format",
-          "query": "MATCH (d:Domain) WHERE d.domain STARTS WITH 'www.' OR d.domain STARTS WITH 'http://' OR d.domain STARTS WITH 'https://' OR d.domain ENDS WITH '/' OR NOT d.domain CONTAINS '.' RETURN count(d)"
+          "query": "MATCH (d:Domain) WHERE d.domain STARTS WITH 'www.' OR d.domain STARTS WITH 'http://' OR d.domain STARTS WITH 'https://' OR d.domain CONTAINS '/' OR NOT d.domain CONTAINS '.' RETURN count(d)"
         }
       ]
     },

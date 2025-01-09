@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { Page, expect, Locator, Response } from '@playwright/test';
 
 export async function assertWithRetry(
@@ -299,4 +300,8 @@ export async function doScreenshot(page: Page, screenshotName: string) {
     path: screenshotName + '.png',
     fullPage: true,
   });
+}
+
+export function createTinyUUID() {
+  return randomUUID().slice(0, 8);
 }

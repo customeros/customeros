@@ -905,6 +905,15 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 	tracing.TagEntity(span, organizationId)
 	span.LogKV("domain", domain)
 
+	domain = utils.ExtractDomain(domain)
+	span.LogKV("cleanDomain", domain)
+
+	if domain == "" {
+		err := errors.New("Domain is empty")
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
@@ -920,13 +929,12 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 	domainLinkedSuccessfully := false
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-
 		_, isPrimary, primaryDomain := s.services.DomainService.CheckDomainWithMailsherpa(ctx, domain)
 		// check if organization other organization is linked with the domain
 		orgByDomainDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error fetching organization by domain"))
-			return "", err
+			return nil, err
 		}
 		// organization by domain found
 		if orgByDomainDbNode != nil {
@@ -959,6 +967,12 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 				}
 				return nil, nil
 			}
+		}
+
+		err = s.services.DomainService.MergeDomain(ctx, txWithPostCommit, domain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
 		}
 
 		domainLinkedSuccessfully, err = s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, txWithPostCommit.Tx, tenant, organizationId, domain)

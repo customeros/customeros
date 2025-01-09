@@ -1,4 +1,4 @@
-# Test: Unsuccessful Import Contacts From CSV - Unable to Read Record
+# Test: Unsuccessful Import Contacts From CSV - Unable to Read Record [BUG COS-6379]
 POST {{cos_url}}/customerbase/v1/contacts/import
 Content-Type: multipart/form-data
 X-CUSTOMER-OS-API-KEY: {{api_key}}

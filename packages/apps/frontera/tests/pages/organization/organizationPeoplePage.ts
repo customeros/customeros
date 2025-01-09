@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 import { Page, expect } from '@playwright/test';
 
 import {
+  createTinyUUID,
   writeTextInLocator,
   createRequestPromise,
   createResponsePromise,
@@ -69,7 +70,7 @@ export class OrganizationPeoplePage {
       this.orgPeopleContactName,
     );
 
-    const contactName = randomUUID().slice(0, 8);
+    const contactName = createTinyUUID();
 
     const requestPromise = createRequestPromise(this.page, 'name', contactName);
 

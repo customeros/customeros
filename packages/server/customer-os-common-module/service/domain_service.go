@@ -191,16 +191,18 @@ func (s *domainService) MergeDomain(ctx context.Context, txWithPostCommit *utils
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("domain", domain)
 
-	domain = strings.TrimSpace(domain)
-	domain = strings.ToLower(domain)
+	domain = strings.ToLower(strings.TrimSpace(domain))
 
 	if domain == "" {
-		return nil
+		err := errors.New("Domain is empty")
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	if !utils.IsValidDomain(domain) {
-		tracing.TraceErr(span, errors.New("Invalid domain: "+domain))
-		return nil
+		err := errors.New("Invalid domain: " + domain)
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {

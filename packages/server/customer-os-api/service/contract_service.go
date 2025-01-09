@@ -7,9 +7,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -84,6 +84,9 @@ func (s *contractService) Create(ctx context.Context, contractDetails *ContractC
 		BillingCycleInMonths:   utils.Int64Ptr(1),
 		DueDays:                contractDetails.Input.DueDays,
 		Approved:               contractDetails.Input.Approved,
+	}
+	if contractDataFields.Name == nil && contractDetails.Input.Name != nil {
+		contractDataFields.Name = contractDetails.Input.Name
 	}
 	if common.GetUserIdFromContext(ctx) != "" {
 		contractDataFields.CreatedByUserId = utils.StringPtr(common.GetUserIdFromContext(ctx))
