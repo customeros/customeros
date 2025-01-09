@@ -224,6 +224,7 @@ export class Organization extends Entity<OrganizationDatum> {
         ltv: 0,
         hide: false,
         domains: [],
+        domainsDetails: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         churnedAt: null,
