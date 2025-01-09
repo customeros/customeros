@@ -14,8 +14,8 @@ import (
 
 type WebSessionRepository interface {
 	Create(ctx context.Context, webWebSessionData entity.WebSession) (*entity.WebSession, error)
-	FindAll(ctx context.Context, webWebSessionData entity.WebSession, sessionTimeoutInMins *int) ([]entity.WebSession, error)
-	Find(ctx context.Context, webSessionData entity.WebSession, sessionTimeoutInMins *int) (*entity.WebSession, error)
+	FindAllTimedOutSessions(ctx context.Context, webWebSessionData entity.WebSession, sessionTimeoutInMins *int) ([]entity.WebSession, error)
+	FindSession(ctx context.Context, webSessionData entity.WebSession, lookbackPeriodInMins *int) (*entity.WebSession, error)
 	Update(ctx context.Context, webSessionData entity.WebSession) (*entity.WebSession, error)
 }
 
@@ -42,7 +42,7 @@ func (r *webSessionEventsRepository) Create(ctx context.Context, webSessionData 
 	return &created, nil
 }
 
-func (r *webSessionEventsRepository) FindAll(ctx context.Context, webSessionData entity.WebSession, sessionTimeoutInMins *int) ([]entity.WebSession, error) {
+func (r *webSessionEventsRepository) FindAllTimedOutSessions(ctx context.Context, webSessionData entity.WebSession, sessionTimeoutInMins *int) ([]entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -52,7 +52,7 @@ func (r *webSessionEventsRepository) FindAll(ctx context.Context, webSessionData
 	// Add lookback period if provided
 	if sessionTimeoutInMins != nil {
 		lookbackDate := time.Now().Add(-time.Duration(*sessionTimeoutInMins) * time.Minute)
-		query = query.Where("last_activity > ?", lookbackDate)
+		query = query.Where("last_activity < ?", lookbackDate)
 	}
 
 	var results []entity.WebSession
@@ -65,7 +65,7 @@ func (r *webSessionEventsRepository) FindAll(ctx context.Context, webSessionData
 	return results, nil
 }
 
-func (r *webSessionEventsRepository) Find(ctx context.Context, webSessionData entity.WebSession, sessionTimeoutInMins *int) (*entity.WebSession, error) {
+func (r *webSessionEventsRepository) FindSession(ctx context.Context, webSessionData entity.WebSession, lookbackPeriodInMins *int) (*entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -73,8 +73,8 @@ func (r *webSessionEventsRepository) Find(ctx context.Context, webSessionData en
 	query := r.gormDb.Where(&webSessionData).Order("created_at DESC")
 
 	// Add lookback period if provided
-	if sessionTimeoutInMins != nil {
-		lookbackDate := time.Now().Add(-time.Duration(*sessionTimeoutInMins) * time.Minute)
+	if lookbackPeriodInMins != nil {
+		lookbackDate := time.Now().Add(-time.Duration(*lookbackPeriodInMins) * time.Minute)
 		query = query.Where("last_activity > ?", lookbackDate)
 	}
 

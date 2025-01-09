@@ -9,6 +9,7 @@ type WebSession struct {
 	IP             string     `gorm:"column:ip;type:varchar(255);" json:"ip"`
 	Domain         *string    `gorm:"column:domain;type:varchar(255);" json:"domain"`
 	StartTime      time.Time  `gorm:"column:start_time;type:timestamp;" json:"startTime"`
+	LastEventType  string     `gorm:"column:last_event_type;type:varchar(255);" json:"lastEventType"`
 	LastActivity   time.Time  `gorm:"column:last_activity;type:timestamp;" json:"lastActivity"`
 	EndTime        *time.Time `gorm:"column:end_time;type:timestamp;" json:"endTime"`
 	IsActive       bool       `gorm:"column:is_active;type:boolean;default:true" json:"isActive"`

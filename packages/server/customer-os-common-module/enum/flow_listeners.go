@@ -11,8 +11,7 @@ const (
 	EventFathomMeetingSummaryCreated FlowListenerEvent = "fathom.meeting_summary.created"
 	EventFlowContactAdded            FlowListenerEvent = "flow.contact.added"
 	EventGrainMeetingSummaryCreated  FlowListenerEvent = "grain.meeting_summary.created"
-	EventRevealWebsiteVisitNew       FlowListenerEvent = "reveal.website_visit.new"
-	EventRevealWebsiteVisitRepeat    FlowListenerEvent = "reveal.website_visit.repeat"
+	EventRevealWebsiteVisit          FlowListenerEvent = "reveal.website_visit"
 	NotSet                           FlowListenerEvent = ""
 )
 

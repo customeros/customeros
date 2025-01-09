@@ -16,8 +16,6 @@ import (
 	"go.uber.org/multierr"
 )
 
-const MinHoursBetweenNotifications int = 12 // on same domain for a tenant
-
 // add all subsribed agents for this handler here
 var SubscribedAgents = [1]enum.Agent{
 	enum.AgentVisitorID,

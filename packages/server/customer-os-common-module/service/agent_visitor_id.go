@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -10,10 +12,16 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
 const MinHoursBetweenNotifications int = 12 // on same domain for a tenant
+
+type URLParams struct {
+	Param string `json:"param"`
+	Value string `json:"value"`
+}
 
 func (a *agentService) VisitorIDAgent(ctx context.Context, eventData *data_fields.WebsiteVisitEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.VisitorIDAgent")
@@ -21,7 +29,7 @@ func (a *agentService) VisitorIDAgent(ctx context.Context, eventData *data_field
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
 	// try to deanonymize the IP address
-	domain, linkedinSlug, err := a.identifyIP(ctx, *eventData.IPAddress)
+	domain, linkedinSlug, err := a.identifyIP(ctx, eventData.IPAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -40,14 +48,14 @@ func (a *agentService) VisitorIDAgent(ctx context.Context, eventData *data_field
 		return err
 	}
 
-	// update tracker table with ID data
-	query := entity.TrackerEvents{
-		IP:           *eventData.IPAddress,
-		Domain:       domain,
-		LinkedinSlug: linkedinSlug,
+	// update session table with ID data
+	query := entity.WebSession{
+		ID:     eventData.SessionID,
+		IP:     eventData.IPAddress,
+		Domain: domain,
 	}
 
-	_, err = a.services.PostgresRepositories.TrackerEventsRepository.Update(ctx, query)
+	_, err = a.services.PostgresRepositories.WebSessionRepository.Update(ctx, query)
 
 	// determine if new org
 	tenant := common.GetTenantFromContext(ctx)
@@ -57,16 +65,127 @@ func (a *agentService) VisitorIDAgent(ctx context.Context, eventData *data_field
 	}
 
 	// determine if new person
-	isNewVisitor, err := a.isNewWebsiteVisitor(ctx, tenant, eventData.VisitorId)
+	isNewVisitor, err := a.isNewWebsiteVisitor(ctx, tenant, eventData.VisitorID)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed isNewVisitor lookup"))
 	}
 
 	// log visit on timeline
+	timelineMessage, err := a.buildTimelineMessage(ctx, eventData, isNewOrg, isNewVisitor)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
 
 	// determine if slack notification is configured
 
 	// handle slack notification
+}
+
+func (a *agentService) buildTimelineMessage(ctx context.Context, eventData *data_fields.WebsiteVisitEvent, isNewOrg, isNewVisitor bool) (*string, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.buildTimelineMessage")
+	defer span.Finish()
+
+	query := entity.WebTrackerEvents{
+		Tenant:    eventData.Tenant,
+		SessionID: eventData.SessionID,
+		EventType: enum.WebTrackerPageView.String(),
+	}
+	pageViews, err := a.services.PostgresRepositories.WebTrackerEventsRepository.FindAll(ctx, query, nil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if pageViews == nil {
+		err := errors.New("could not locate any records for session id: " + eventData.SessionID)
+		return nil, err
+	}
+
+	uniquePageViews, err := a.getUniquePageViews(ctx, pageViews)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	sessionDuration, err := a.calculateSessionDuration(ctx, eventData.SessionID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// Build base message
+	var baseMessage string
+	switch {
+	case isNewOrg:
+		baseMessage = fmt.Sprintf("First Visit: %s", sessionDuration)
+	case isNewVisitor:
+		baseMessage = fmt.Sprintf("New Visitor: %s", sessionDuration)
+	case !isNewVisitor:
+		baseMessage = fmt.Sprintf("Repeat Visitor: %s", sessionDuration)
+	default:
+		baseMessage = fmt.Sprintf("Web Visitor: %s", sessionDuration)
+	}
+
+	// Append pages with indentation
+	var fullMessage strings.Builder
+	fullMessage.WriteString(baseMessage)
+	for _, page := range uniquePageViews {
+		fullMessage.WriteString(fmt.Sprintf("\n    • %s", page))
+	}
+
+	timelineMessage := fullMessage.String()
+	return &timelineMessage, nil
+
+}
+
+func (a *agentService) calculateSessionDuration(ctx context.Context, sessionID string) (string, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.calculateSessionDuration")
+	defer span.Finish()
+
+	query := entity.WebSession{
+		ID:       sessionID,
+		IsActive: false,
+	}
+	session, err := a.services.PostgresRepositories.WebSessionRepository.FindSession(ctx, query, nil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	if session == nil {
+		return "", nil
+	}
+
+	duration := session.EndTime.Sub(session.StartTime)
+	minutes := duration.Minutes()
+
+	switch {
+	case minutes < 1:
+		return "<1 minute", nil
+	case minutes == 1:
+		return "1 minute", nil
+	default:
+		return fmt.Sprintf("%.0f minutes", minutes), nil
+	}
+}
+
+func (a *agentService) getUniquePageViews(ctx context.Context, pageViews []entity.WebTrackerEvents) ([]string, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.getUniquePageViews")
+	defer span.Finish()
+
+	// Use map to track unique pages
+	uniquePageMap := make(map[string]struct{})
+	for _, page := range pageViews {
+		if page.Pathname != "" {
+			uniquePageMap[page.Pathname] = struct{}{}
+		}
+	}
+
+	// Convert map keys to slice
+	uniquePages := make([]string, 0, len(uniquePageMap))
+	for pathname := range uniquePageMap {
+		uniquePages = append(uniquePages, pathname)
+	}
+
+	return uniquePages, nil
 }
 
 func (a *agentService) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug *string, err error) {
@@ -92,7 +211,7 @@ func (a *agentService) isNewCompanyVisit(ctx context.Context, tenant, domain *st
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.isNewCompanyVisit")
 	defer span.Finish()
 
-	query := entity.TrackerEvents{
+	query := entity.WebTrackerEvents{
 		Tenant:    *tenant,
 		Domain:    domain,
 		EventType: string(EventPageExit),
@@ -250,4 +369,29 @@ func (a *agentService) buildWebVisitorSlackNotification(ctx context.Context, eve
 	]`, name, sectionBlock, *eventData.OrganizationID)
 
 	return layoutBlocks, nil
+}
+
+func parseURLParams(queryString string) []data_fields.URLParams {
+	// Remove leading ? if present
+	queryString = strings.TrimPrefix(queryString, "?")
+
+	// Split the string by & to get individual param-value pairs
+	pairs := strings.Split(queryString, "&")
+
+	// Create slice to hold results
+	params := make([]data_fields.URLParams, 0, len(pairs))
+
+	// Parse each pair into the struct
+	for _, pair := range pairs {
+		// Split pair by = to separate param and value
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) == 2 {
+			params = append(params, data_fields.URLParams{
+				Param: parts[0],
+				Value: parts[1],
+			})
+		}
+	}
+
+	return params
 }

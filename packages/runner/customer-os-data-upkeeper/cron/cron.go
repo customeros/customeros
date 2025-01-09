@@ -1,394 +1,191 @@
 package cron
 
 import (
-	"sync"
-
-	"github.com/robfig/cron"
-
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/container"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/service"
+	"github.com/robfig/cron"
+	"sync"
 )
 
+// CONSTANTS - Group definitions
 const (
-	organizationGroup               = "organization"
-	globalOrganizationGroup         = "globalOrganization"
-	contractGroup                   = "contract"
-	orphanContactsGroup             = "orphanContactsGroup"
-	invoiceGroup                    = "invoice"
-	refreshLastTouchpointGroup      = "refreshLastTouchpoint"
-	currencyGroup                   = "currency"
-	linkUnthreadIssuesGroup         = "linkUnthreadIssues"
-	contactGroup                    = "contact"
-	contactEnrichGroup              = "contactEnrich"
-	contactBettercontactGroup       = "contactEnrichWithBettercontact"
-	askForLinkedInConnectionsGroup  = "askForLinkedInConnectionsGroup"
-	processLinkedInConnectionsGroup = "processLinkedInConnectionsGroup"
-	emailGroup                      = "email"
-	emailBulkValidationGroup        = "emailBulkValidation"
-	flowExecutionGroup              = "flowExecutionGroup"
-	flowStatisticsGroup             = "flowStatisticsGroup"
-	rampUpMailboxesGroup            = "rampUpMailboxesGroup"
-	sendEmailsGroup                 = "sendEmailsGroup"
-	processSentEmailsGroup          = "processSentEmailsGroup"
-	domainGroup                     = "domainGroup"
-	mailstackGroup                  = "mailstackGroup"
-	reminderGroup                   = "reminderGroup"
+	// Organization related groups
+	GroupOrganization = "organization"
+	GroupGlobalOrg    = "globalOrganization"
+
+	// Contact related groups
+	GroupContact         = "contact"
+	GroupContactEnrich   = "contactEnrich"
+	GroupContactBetter   = "contactEnrichWithBettercontact"
+	GroupLinkedInAsk     = "askForLinkedInConnections"
+	GroupLinkedInProcess = "processLinkedInConnections"
+	GroupOrphanContacts  = "orphanContactsGroup"
+
+	// Financial related groups
+	GroupContract = "contract"
+	GroupInvoice  = "invoice"
+	GroupCurrency = "currency"
+
+	// Email related groups
+	GroupEmail         = "email"
+	GroupEmailBulk     = "emailBulkValidation"
+	GroupMailstack     = "mailstack"
+	GroupSendEmails    = "sendEmails"
+	GroupProcessEmails = "processSentEmails"
+	GroupRampMailboxes = "rampUpMailboxes"
+
+	// Flow related groups
+	GroupFlow      = "flowExecutionGroup"
+	GroupFlowStats = "flowStatisticsGroup"
+
+	// Other groups
+	GroupDomain         = "domain"
+	GroupReminder       = "reminder"
+	GroupWebSession     = "webSession"
+	GroupTouchpoint     = "refreshLastTouchpoint"
+	GroupUnthreadIssues = "linkUnthreadIssues"
 )
 
+// LOCK MANAGEMENT
 var jobLocks = struct {
 	sync.Mutex
 	locks map[string]*sync.Mutex
 }{
 	locks: map[string]*sync.Mutex{
-		organizationGroup:               {},
-		globalOrganizationGroup:         {},
-		contactGroup:                    {},
-		contactBettercontactGroup:       {},
-		askForLinkedInConnectionsGroup:  {},
-		processLinkedInConnectionsGroup: {},
-		contactEnrichGroup:              {},
-		orphanContactsGroup:             {},
-		contractGroup:                   {},
-		invoiceGroup:                    {},
-		refreshLastTouchpointGroup:      {},
-		currencyGroup:                   {},
-		linkUnthreadIssuesGroup:         {},
-		emailGroup:                      {},
-		emailBulkValidationGroup:        {},
-		flowExecutionGroup:              {},
-		flowStatisticsGroup:             {},
-		rampUpMailboxesGroup:            {},
-		sendEmailsGroup:                 {},
-		processSentEmailsGroup:          {},
-		domainGroup:                     {},
-		mailstackGroup:                  {},
-		reminderGroup:                   {},
+		GroupOrganization:    {},
+		GroupGlobalOrg:       {},
+		GroupContact:         {},
+		GroupContactBetter:   {},
+		GroupLinkedInAsk:     {},
+		GroupLinkedInProcess: {},
+		GroupContactEnrich:   {},
+		GroupOrphanContacts:  {},
+		GroupContract:        {},
+		GroupInvoice:         {},
+		GroupTouchpoint:      {},
+		GroupCurrency:        {},
+		GroupUnthreadIssues:  {},
+		GroupEmail:           {},
+		GroupEmailBulk:       {},
+		GroupFlow:            {},
+		GroupFlowStats:       {},
+		GroupRampMailboxes:   {},
+		GroupSendEmails:      {},
+		GroupProcessEmails:   {},
+		GroupDomain:          {},
+		GroupMailstack:       {},
+		GroupReminder:        {},
+		GroupWebSession:      {},
 	},
 }
 
+// CORE FUNCTIONALITY
 func StartCron(cont *container.Container) *cron.Cron {
 	c := cron.New()
-
-	// Add jobs
-	err := c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateContract, func() {
-		lockAndRunJob(cont, contractGroup, updateContractsStatusAndRenewal)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "updateContractsStatusAndRenewal", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateOrganization, func() {
-		lockAndRunJob(cont, organizationGroup, updateOrganizations)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "updateOrganizations", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateInvoice, func() {
-		lockAndRunJob(cont, invoiceGroup, generateCycleInvoices)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "generateCycleInvoices", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateOffCycleInvoice, func() {
-		lockAndRunJob(cont, invoiceGroup, generateOffCycleInvoices)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "generateOffCycleInvoices", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateNextPreviewInvoice, func() {
-		lockAndRunJob(cont, invoiceGroup, generateNextPreviewInvoices)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "generateNextPreviewInvoices", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateInvoicePaymentLink, func() {
-		lockAndRunJob(cont, invoiceGroup, generateInvoicePaymentLinks)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "generateInvoicePaymentLinks", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckInvoiceFinalized, func() {
-		lockAndRunJob(cont, invoiceGroup, sendInvoiceFinalizedEvents)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "autoPayInvoices", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCleanupInvoices, func() {
-		lockAndRunJob(cont, invoiceGroup, cleanupInvoices)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "cleanupInvoices", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleAdjustInvoiceStatus, func() {
-		lockAndRunJob(cont, invoiceGroup, adjustInvoiceStatus)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "adjustInvoiceStatus", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendPayInvoiceNotification, func() {
-		lockAndRunJob(cont, invoiceGroup, sendPayInvoiceNotifications)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "sendPayInvoiceNotifications", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendRemindInvoiceNotification, func() {
-		lockAndRunJob(cont, invoiceGroup, sendRemindInvoiceNotifications)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "sendRemindInvoiceNotifications", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleRefreshLastTouchpoint, func() {
-		lockAndRunJob(cont, refreshLastTouchpointGroup, refreshLastTouchpoint)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "refreshLastTouchpoint", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGetCurrencyRatesECB, func() {
-		lockAndRunJob(cont, currencyGroup, getCurrencyRatesECB)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "getCurrencyRatesECB", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleLinkUnthreadIssues, func() {
-		lockAndRunJob(cont, linkUnthreadIssuesGroup, linkUnthreadIssues)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "linkUnthreadIssues", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleUpkeepContacts, func() {
-		lockAndRunJob(cont, contactGroup, upkeepContacts)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "upkeepContacts", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleAskForWorkEmailOnBetterContact, func() {
-		lockAndRunJob(cont, contactBettercontactGroup, askForWorkEmailOnBetterContactJob)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "askForWorkEmailOnBetterContactJob", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichWithWorkEmailFromBetterContact, func() {
-		lockAndRunJob(cont, contactBettercontactGroup, enrichWithWorkEmailFromBetterContactJob)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichWithWorkEmailFromBetterContactJob", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckBetterContactRequestsWithoutResponse, func() {
-		lockAndRunJob(cont, contactBettercontactGroup, checkBetterContactRequestsWithoutResponseJob)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "checkBetterContactRequestsWithoutResponseJob", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleAskForLinkedInConnections, func() {
-		lockAndRunJob(cont, askForLinkedInConnectionsGroup, askForLinkedInConnections)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "triggerAskLinkedInConnections", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleProcessLinkedInConnections, func() {
-		lockAndRunJob(cont, processLinkedInConnectionsGroup, processLinkedInConnections)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "syncLinkedInConnections", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichContacts, func() {
-		lockAndRunJob(cont, contactEnrichGroup, enrichContacts)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichContacts", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, func() {
-		lockAndRunJob(cont, orphanContactsGroup, linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleValidateEmails, func() {
-		lockAndRunJob(cont, emailGroup, validateEmails)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "validateEmails", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleValidateEmailsFromBulkRequests, func() {
-		lockAndRunJob(cont, emailBulkValidationGroup, validateEmailsFromBulkRequests)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "validateEmailFromBulkRequests", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckScrubbyResult, func() {
-		lockAndRunJob(cont, emailGroup, checkScrubbyResult)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "validateEmails", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckEnrowResults, func() {
-		lockAndRunJob(cont, emailGroup, checkEnrowResult)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCleanEmails, func() {
-		lockAndRunJob(cont, emailGroup, cleanEmails)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleRampUpMailboxes, func() {
-		lockAndRunJob(cont, rampUpMailboxesGroup, rampUpMailboxes)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "rampUpMailboxes", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowStatistics, func() {
-		lockAndRunJob(cont, flowStatisticsGroup, flowStatistics)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "flowStatistics", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowExecution, func() {
-		lockAndRunJob(cont, flowExecutionGroup, flowExecution)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "flowExecution", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendEmails, func() {
-		lockAndRunJob(cont, sendEmailsGroup, sendEmails)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleProcessSentEmails, func() {
-		lockAndRunJob(cont, processSentEmailsGroup, processSentEmails)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "processSentEmails", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckDomains, func() {
-		lockAndRunJob(cont, domainGroup, checkDomains)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "checkDomains", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleMailstackReputation, func() {
-		lockAndRunJob(cont, mailstackGroup, checkMailstackDomainReputation)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "checkMailstackDomainReputation", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSyncDataToGlobalOrgs, func() {
-		lockAndRunJob(cont, globalOrganizationGroup, syncDataToGlobalOrgs)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "syncDataToGlobalOrgs", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleProcessWebsiteForGlobalOrgs, func() {
-		lockAndRunJob(cont, globalOrganizationGroup, processWebsiteForGlobalOrgs)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "processWebsiteForGlobalOrgs", err.Error())
-	}
-
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendOrganizationsReminders, func() {
-		lockAndRunJob(cont, reminderGroup, sendReminders)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "sendReminders ", err.Error())
-	}
-
+	registerJobs(c, cont)
 	c.Start()
-
 	return c
 }
 
-func lockAndRunJob(cont *container.Container, groupName string, job func(cont *container.Container)) {
-	jobLocks.locks[groupName].Lock()
-	defer jobLocks.locks[groupName].Unlock()
-
-	job(cont)
-}
-
 func StopCron(log logger.Logger, cron *cron.Cron) error {
-	// Gracefully stop
 	log.Info("Gracefully stopping cron")
 	cron.Stop()
 	return nil
 }
 
-func updateContractsStatusAndRenewal(cont *container.Container) {
-	service.NewContractService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient, cont.CommonServices).UpkeepContracts()
+// JOB REGISTRATION
+func registerJobs(c *cron.Cron, cont *container.Container) {
+	// Helper function to reduce duplication
+	addJob := func(schedule string, group string, job func(*container.Container), name string) {
+		err := c.AddFunc(schedule, func() {
+			lockAndRunJob(cont, group, job)
+		})
+		if err != nil {
+			cont.Log.Fatalf("Could not add cron job %s: %v", name, err.Error())
+		}
+	}
+
+	// Organization Jobs
+	addJob(cont.Cfg.Cron.CronScheduleUpdateOrganization, GroupOrganization, updateOrganizations, "updateOrganizations")
+	addJob(cont.Cfg.Cron.CronScheduleSyncDataToGlobalOrgs, GroupGlobalOrg, syncDataToGlobalOrgs, "syncDataToGlobalOrgs")
+	addJob(cont.Cfg.Cron.CronScheduleProcessWebsiteForGlobalOrgs, GroupGlobalOrg, processWebsiteForGlobalOrgs, "processWebsiteForGlobalOrgs")
+
+	// Contract Jobs
+	addJob(cont.Cfg.Cron.CronScheduleUpdateContract, GroupContract, updateContractsStatusAndRenewal, "updateContractsStatusAndRenewal")
+
+	// Invoice Jobs
+	addJob(cont.Cfg.Cron.CronScheduleGenerateInvoice, GroupInvoice, generateCycleInvoices, "generateCycleInvoices")
+	addJob(cont.Cfg.Cron.CronScheduleGenerateOffCycleInvoice, GroupInvoice, generateOffCycleInvoices, "generateOffCycleInvoices")
+	addJob(cont.Cfg.Cron.CronScheduleGenerateNextPreviewInvoice, GroupInvoice, generateNextPreviewInvoices, "generateNextPreviewInvoices")
+	addJob(cont.Cfg.Cron.CronScheduleGenerateInvoicePaymentLink, GroupInvoice, generateInvoicePaymentLinks, "generateInvoicePaymentLinks")
+	addJob(cont.Cfg.Cron.CronScheduleCheckInvoiceFinalized, GroupInvoice, sendInvoiceFinalizedEvents, "sendInvoiceFinalizedEvents")
+	addJob(cont.Cfg.Cron.CronScheduleCleanupInvoices, GroupInvoice, cleanupInvoices, "cleanupInvoices")
+	addJob(cont.Cfg.Cron.CronScheduleAdjustInvoiceStatus, GroupInvoice, adjustInvoiceStatus, "adjustInvoiceStatus")
+	addJob(cont.Cfg.Cron.CronScheduleSendPayInvoiceNotification, GroupInvoice, sendPayInvoiceNotifications, "sendPayInvoiceNotifications")
+	addJob(cont.Cfg.Cron.CronScheduleSendRemindInvoiceNotification, GroupInvoice, sendRemindInvoiceNotifications, "sendRemindInvoiceNotifications")
+
+	// Contact Jobs
+	addJob(cont.Cfg.Cron.CronScheduleUpkeepContacts, GroupContact, upkeepContacts, "upkeepContacts")
+	addJob(cont.Cfg.Cron.CronScheduleAskForWorkEmailOnBetterContact, GroupContactBetter, askForWorkEmailOnBetterContactJob, "askForWorkEmailOnBetterContact")
+	addJob(cont.Cfg.Cron.CronScheduleEnrichWithWorkEmailFromBetterContact, GroupContactBetter, enrichWithWorkEmailFromBetterContactJob, "enrichWithWorkEmailFromBetterContact")
+	addJob(cont.Cfg.Cron.CronScheduleCheckBetterContactRequestsWithoutResponse, GroupContactBetter, checkBetterContactRequestsWithoutResponseJob, "checkBetterContactRequestsWithoutResponse")
+	addJob(cont.Cfg.Cron.CronScheduleAskForLinkedInConnections, GroupLinkedInAsk, askForLinkedInConnections, "askForLinkedInConnections")
+	addJob(cont.Cfg.Cron.CronScheduleProcessLinkedInConnections, GroupLinkedInProcess, processLinkedInConnections, "processLinkedInConnections")
+	addJob(cont.Cfg.Cron.CronScheduleEnrichContacts, GroupContactEnrich, enrichContacts, "enrichContacts")
+	addJob(cont.Cfg.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, GroupOrphanContacts, linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, "linkOrphanContacts")
+
+	// Email Jobs
+	addJob(cont.Cfg.Cron.CronScheduleValidateEmails, GroupEmail, validateEmails, "validateEmails")
+	addJob(cont.Cfg.Cron.CronScheduleValidateEmailsFromBulkRequests, GroupEmailBulk, validateEmailsFromBulkRequests, "validateEmailsFromBulkRequests")
+	addJob(cont.Cfg.Cron.CronScheduleCheckScrubbyResult, GroupEmail, checkScrubbyResult, "checkScrubbyResult")
+	addJob(cont.Cfg.Cron.CronScheduleCheckEnrowResults, GroupEmail, checkEnrowResult, "checkEnrowResult")
+	addJob(cont.Cfg.Cron.CronScheduleCleanEmails, GroupEmail, cleanEmails, "cleanEmails")
+	addJob(cont.Cfg.Cron.CronScheduleSendEmails, GroupSendEmails, sendEmails, "sendEmails")
+	addJob(cont.Cfg.Cron.CronScheduleProcessSentEmails, GroupProcessEmails, processSentEmails, "processSentEmails")
+
+	// Flow Jobs
+	addJob(cont.Cfg.Cron.CronScheduleFlowExecution, GroupFlow, flowExecution, "flowExecution")
+	addJob(cont.Cfg.Cron.CronScheduleFlowStatistics, GroupFlowStats, flowStatistics, "flowStatistics")
+	addJob(cont.Cfg.Cron.CronScheduleRampUpMailboxes, GroupRampMailboxes, rampUpMailboxes, "rampUpMailboxes")
+
+	// Other Jobs
+	addJob(cont.Cfg.Cron.CronScheduleRefreshLastTouchpoint, GroupTouchpoint, refreshLastTouchpoint, "refreshLastTouchpoint")
+	addJob(cont.Cfg.Cron.CronScheduleGetCurrencyRatesECB, GroupCurrency, getCurrencyRatesECB, "getCurrencyRatesECB")
+	addJob(cont.Cfg.Cron.CronScheduleLinkUnthreadIssues, GroupUnthreadIssues, linkUnthreadIssues, "linkUnthreadIssues")
+	addJob(cont.Cfg.Cron.CronScheduleCheckDomains, GroupDomain, checkDomains, "checkDomains")
+	addJob(cont.Cfg.Cron.CronScheduleMailstackReputation, GroupMailstack, checkMailstackDomainReputation, "checkMailstackDomainReputation")
+	addJob(cont.Cfg.Cron.CronScheduleSendOrganizationsReminders, GroupReminder, sendReminders, "sendReminders")
+	addJob(cont.Cfg.Cron.CronScheduleProcessWebSessions, GroupWebSession, processWebSessions, "processWebSessions")
 }
 
+// HELPER FUNCTIONS
+func lockAndRunJob(cont *container.Container, groupName string, job func(*container.Container)) {
+	jobLocks.locks[groupName].Lock()
+	defer jobLocks.locks[groupName].Unlock()
+	job(cont)
+}
+
+// JOB IMPLEMENTATIONS
+// Organization Jobs
 func updateOrganizations(cont *container.Container) {
 	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventProcessingServicesClient).UpkeepOrganizations()
 }
 
-func upkeepContacts(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).UpkeepContacts()
+func syncDataToGlobalOrgs(cont *container.Container) {
+	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).SyncDataIntoGlobalOrganizations()
 }
 
-func askForWorkEmailOnBetterContactJob(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).AskForWorkEmailOnBetterContact()
+func processWebsiteForGlobalOrgs(cont *container.Container) {
+	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).ScrapinCompanyByWebsite()
 }
 
-func enrichWithWorkEmailFromBetterContactJob(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).EnrichWithWorkEmailFromBetterContact()
+// Contract Jobs
+func updateContractsStatusAndRenewal(cont *container.Container) {
+	service.NewContractService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient, cont.CommonServices).UpkeepContracts()
 }
 
-func checkBetterContactRequestsWithoutResponseJob(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).CheckBetterContactRequestsWithoutResponse()
-}
-
-func askForLinkedInConnections(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).AskForLinkedInConnections()
-}
-
-func processLinkedInConnections(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).ProcessLinkedInConnections()
-}
-
-func enrichContacts(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).EnrichContacts()
-}
-
-func linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
-}
-
+// Invoice Jobs
 func generateCycleInvoices(cont *container.Container) {
 	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).GenerateCycleInvoices()
 }
@@ -425,18 +222,40 @@ func sendRemindInvoiceNotifications(cont *container.Container) {
 	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).SendRemindNotifications()
 }
 
-func refreshLastTouchpoint(cont *container.Container) {
-	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventProcessingServicesClient).RefreshLastTouchpoint()
+// Contact Jobs
+func upkeepContacts(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).UpkeepContacts()
 }
 
-func getCurrencyRatesECB(cont *container.Container) {
-	service.NewCurrencyService(cont.Cfg, cont.Log, cont.Repositories).GetCurrencyRatesECB()
+func askForWorkEmailOnBetterContactJob(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).AskForWorkEmailOnBetterContact()
 }
 
-func linkUnthreadIssues(cont *container.Container) {
-	service.NewIssueService(cont.Cfg, cont.Log, cont.Repositories).LinkUnthreadIssues()
+func enrichWithWorkEmailFromBetterContactJob(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).EnrichWithWorkEmailFromBetterContact()
 }
 
+func checkBetterContactRequestsWithoutResponseJob(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).CheckBetterContactRequestsWithoutResponse()
+}
+
+func askForLinkedInConnections(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).AskForLinkedInConnections()
+}
+
+func processLinkedInConnections(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).ProcessLinkedInConnections()
+}
+
+func enrichContacts(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).EnrichContacts()
+}
+
+func linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
+}
+
+// Email Jobs
 func validateEmails(cont *container.Container) {
 	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).ValidateEmails()
 }
@@ -457,24 +276,38 @@ func cleanEmails(cont *container.Container) {
 	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).CleanEmails()
 }
 
-func flowExecution(cont *container.Container) {
-	service.NewFlowExecutionService(cont.Cfg, cont.Log, cont.CommonServices).ExecuteScheduledFlowActions()
-}
-
-func rampUpMailboxes(cont *container.Container) {
-	service.NewFlowExecutionService(cont.Cfg, cont.Log, cont.CommonServices).RampUpMailboxes()
-}
-
-func flowStatistics(cont *container.Container) {
-	service.NewFlowExecutionService(cont.Cfg, cont.Log, cont.CommonServices).ComputeFlowStatistics()
-}
-
 func sendEmails(cont *container.Container) {
 	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).SendEmails()
 }
 
 func processSentEmails(cont *container.Container) {
 	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).ProcessSentEmails()
+}
+
+// Flow Jobs
+func flowExecution(cont *container.Container) {
+	service.NewFlowExecutionService(cont.Cfg, cont.Log, cont.CommonServices).ExecuteScheduledFlowActions()
+}
+
+func flowStatistics(cont *container.Container) {
+	service.NewFlowExecutionService(cont.Cfg, cont.Log, cont.CommonServices).ComputeFlowStatistics()
+}
+
+func rampUpMailboxes(cont *container.Container) {
+	service.NewFlowExecutionService(cont.Cfg, cont.Log, cont.CommonServices).RampUpMailboxes()
+}
+
+// Other Jobs
+func refreshLastTouchpoint(cont *container.Container) {
+	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventProcessingServicesClient).RefreshLastTouchpoint()
+}
+
+func getCurrencyRatesECB(cont *container.Container) {
+	service.NewCurrencyService(cont.Cfg, cont.Log, cont.Repositories).GetCurrencyRatesECB()
+}
+
+func linkUnthreadIssues(cont *container.Container) {
+	service.NewIssueService(cont.Cfg, cont.Log, cont.Repositories).LinkUnthreadIssues()
 }
 
 func checkDomains(cont *container.Container) {
@@ -485,14 +318,10 @@ func checkMailstackDomainReputation(cont *container.Container) {
 	service.NewMailstackService(cont.Cfg, cont.Log, cont.CommonServices).CheckMailstackDomainReputation()
 }
 
-func syncDataToGlobalOrgs(cont *container.Container) {
-	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).SyncDataIntoGlobalOrganizations()
-}
-
-func processWebsiteForGlobalOrgs(cont *container.Container) {
-	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).ScrapinCompanyByWebsite()
-}
-
 func sendReminders(cont *container.Container) {
 	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventProcessingServicesClient).SendReminders()
+}
+
+func processWebSessions(cont *container.Container) {
+	service.NewWebSessionService(cont.Cfg, cont.Log, cont.CommonServices).ProcessWebSessions()
 }
