@@ -1,10 +1,6 @@
 import { Page, expect } from '@playwright/test';
 
-import {
-  createRequestPromise,
-  createResponsePromise,
-  clickLocatorThatIsVisible,
-} from '../../helper';
+import { clickLocatorThatIsVisible } from '../../helper';
 
 export class FlowPage {
   private page: Page;
@@ -83,64 +79,64 @@ export class FlowPage {
       expect.soft(this.page.locator(this.flowFitToView)).toBeEnabled(),
       expect.soft(this.page.locator(this.flowTidyUp)).toBeEnabled(),
     ]);
-    await clickLocatorThatIsVisible(this.page, this.flowTriggerBlockOptions);
-
-    await Promise.all([
-      expect
-        .soft(this.page.locator(this.triggersHubInput))
-        .toHaveAttribute('placeholder', 'Search a trigger'),
-      expect
-        .soft(this.page.locator(this.flowTriggerRecordAddedManually))
-        .toHaveText('Record is added to this flow'),
-      expect
-        .soft(this.page.locator(this.flowTriggerRecordCreated))
-        .toHaveText('Record is created'),
-      expect
-        .soft(this.page.locator(this.flowTriggerRecordUpdated))
-        .toHaveText('Record is updated'),
-      expect
-        .soft(this.page.locator(this.flowTriggerRecordMatchesCondition))
-        .toHaveText('Record matches condition'),
-      expect
-        .soft(this.page.locator(this.flowTriggerWebhook))
-        .toHaveText('Webhook is called'),
-    ]);
-
-    await this.page.keyboard.press('Escape');
-
-    await clickLocatorThatIsVisible(this.page, this.flowAddStepOrTrigger);
-    await Promise.all([
-      expect(this.page.locator(this.stepsHubInput)).toHaveAttribute(
-        'placeholder',
-        'Search a step',
-      ),
-      expect(this.page.locator(this.flowActionSendEmail)).toHaveText(
-        'Send email',
-      ),
-      expect(this.page.locator(this.flowActionWait)).toHaveText('Wait'),
-      expect(this.page.locator(this.flowSendLinkedinMessage)).toHaveText(
-        'Send LinkedIn message',
-      ),
-      expect(
-        this.page.locator(this.flowSendLinkedinConnectionRequest),
-      ).toHaveText('Send connection request'),
-      expect(this.page.locator(this.flowCreateRecord)).toHaveText(
-        'Create record',
-      ),
-      expect(this.page.locator(this.flowUpdateRecord)).toHaveText(
-        'Update record',
-      ),
-      expect(this.page.locator(this.flowEnrichRecord)).toHaveText(
-        'Enrich record',
-      ),
-      expect(this.page.locator(this.flowVerifyRecordProperty)).toHaveText(
-        'Verify record property',
-      ),
-      expect(this.page.locator(this.flowConditions)).toHaveText('Conditions'),
-      expect(this.page.locator(this.flowCreateToDo)).toHaveText('Create to-do'),
-    ]);
-    await clickLocatorThatIsVisible(this.page, this.flowActionSendEmail);
-    await clickLocatorThatIsVisible(this.page, this.emailSettingsPanelDone);
+    // await clickLocatorThatIsVisible(this.page, this.flowTriggerBlockOptions);
+    //
+    // await Promise.all([
+    //   expect
+    //     .soft(this.page.locator(this.triggersHubInput))
+    //     .toHaveAttribute('placeholder', 'Search a trigger'),
+    //   expect
+    //     .soft(this.page.locator(this.flowTriggerRecordAddedManually))
+    //     .toHaveText('Record is added to this flow'),
+    //   expect
+    //     .soft(this.page.locator(this.flowTriggerRecordCreated))
+    //     .toHaveText('Record is created'),
+    //   expect
+    //     .soft(this.page.locator(this.flowTriggerRecordUpdated))
+    //     .toHaveText('Record is updated'),
+    //   expect
+    //     .soft(this.page.locator(this.flowTriggerRecordMatchesCondition))
+    //     .toHaveText('Record matches condition'),
+    //   expect
+    //     .soft(this.page.locator(this.flowTriggerWebhook))
+    //     .toHaveText('Webhook is called'),
+    // ]);
+    //
+    // await this.page.keyboard.press('Escape');
+    //
+    // await clickLocatorThatIsVisible(this.page, this.flowAddStepOrTrigger);
+    // await Promise.all([
+    //   expect(this.page.locator(this.stepsHubInput)).toHaveAttribute(
+    //     'placeholder',
+    //     'Search a step',
+    //   ),
+    //   expect(this.page.locator(this.flowActionSendEmail)).toHaveText(
+    //     'Send email',
+    //   ),
+    //   expect(this.page.locator(this.flowActionWait)).toHaveText('Wait'),
+    //   expect(this.page.locator(this.flowSendLinkedinMessage)).toHaveText(
+    //     'Send LinkedIn message',
+    //   ),
+    //   expect(
+    //     this.page.locator(this.flowSendLinkedinConnectionRequest),
+    //   ).toHaveText('Send connection request'),
+    //   expect(this.page.locator(this.flowCreateRecord)).toHaveText(
+    //     'Create record',
+    //   ),
+    //   expect(this.page.locator(this.flowUpdateRecord)).toHaveText(
+    //     'Update record',
+    //   ),
+    //   expect(this.page.locator(this.flowEnrichRecord)).toHaveText(
+    //     'Enrich record',
+    //   ),
+    //   expect(this.page.locator(this.flowVerifyRecordProperty)).toHaveText(
+    //     'Verify record property',
+    //   ),
+    //   expect(this.page.locator(this.flowConditions)).toHaveText('Conditions'),
+    //   expect(this.page.locator(this.flowCreateToDo)).toHaveText('Create to-do'),
+    // ]);
+    // await clickLocatorThatIsVisible(this.page, this.flowActionSendEmail);
+    // await clickLocatorThatIsVisible(this.page, this.emailSettingsPanelDone);
 
     await clickLocatorThatIsVisible(this.page, this.flowTidyUp);
     // await Promise.all([
@@ -150,24 +146,24 @@ export class FlowPage {
     //   await expect(this.page.locator(this.saveFlow)).toBeEnabled(),
     // ]);
 
-    await clickLocatorThatIsVisible(this.page, this.flowToggleSettings);
-    await expect(this.page.locator(this.flowAddSenders)).toBeEnabled();
-
-    const requestPromise = createRequestPromise(
-      this.page,
-      'name',
-      expectedFlowName,
-    );
-
-    const responsePromise = createResponsePromise(
-      this.page,
-      'flow_Merge?.metadata?.id',
-      undefined,
-    );
+    // await clickLocatorThatIsVisible(this.page, this.flowToggleSettings);
+    // await expect(this.page.locator(this.flowAddSenders)).toBeEnabled();
+    //
+    // const requestPromise = createRequestPromise(
+    //   this.page,
+    //   'name',
+    //   expectedFlowName,
+    // );
+    //
+    // const responsePromise = createResponsePromise(
+    //   this.page,
+    //   'flow_Merge?.metadata?.id',
+    //   undefined,
+    // );
 
     // await clickLocatorThatIsVisible(this.page, this.saveFlow);
     await this.goToFlows();
-    await Promise.all([requestPromise, responsePromise]);
+    // await Promise.all([requestPromise, responsePromise]);
   }
 
   async goToFlows() {

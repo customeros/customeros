@@ -9,8 +9,9 @@ import (
 
 func MapTagInputToEntity(input model.TagInput) *neo4jentity.TagEntity {
 	tagEntity := neo4jentity.TagEntity{
-		Name:   input.Name,
-		Source: neo4jentity.DataSourceOpenline,
+		Name:      input.Name,
+		Source:    neo4jentity.DataSourceOpenline,
+		ColorCode: utils.IfNotNilString(input.ColorCode),
 	}
 	if input.EntityType != nil {
 		tagEntity.EntityType = commonmodel.DecodeEntityType(input.EntityType.String())
@@ -31,6 +32,7 @@ func MapEntityToTag(entity *neo4jentity.TagEntity) *model.Tag {
 			Source:      MapDataSourceToModel(entity.Source),
 		},
 		Name:       entity.Name,
+		ColorCode:  entity.ColorCode,
 		EntityType: model.EntityType(entity.EntityType.String()),
 		ID:         utils.StringPtr(entity.Id),
 	}

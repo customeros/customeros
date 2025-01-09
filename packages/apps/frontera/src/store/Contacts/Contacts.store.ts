@@ -174,7 +174,9 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
             const record = this.value.get(raw.id);
 
             if (!record) return;
+            record?.draft();
             Object.assign(record?.value, raw);
+            record?.commit({ syncOnly: true });
           } else {
             const record = new Contact(this, raw);
 

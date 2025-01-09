@@ -42,16 +42,18 @@ func (r *queryResolver) CheckDomain(ctx context.Context, domain string) (*model.
 	if orgByDomainDbNode != nil {
 		organizationByDomainEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgByDomainDbNode)
 		output.DomainOrganizationID = utils.StringPtr(organizationByDomainEntity.ID)
+		output.DomainOrganizationName = utils.StringPtr(organizationByDomainEntity.Name)
 	}
 
 	if domain != primaryDomain && primaryDomain != "" {
-		orgByDomainDbNode, err = r.Services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, common.GetTenantFromContext(ctx), domain)
+		orgByDomainDbNode, err = r.Services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, common.GetTenantFromContext(ctx), primaryDomain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
 		if orgByDomainDbNode != nil {
 			organizationByDomainEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgByDomainDbNode)
 			output.PrimaryDomainOrganizationID = utils.StringPtr(organizationByDomainEntity.ID)
+			output.PrimaryDomainOrganizationName = utils.StringPtr(organizationByDomainEntity.Name)
 		}
 	}
 

@@ -390,11 +390,15 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
   async hide(ids: string[]) {
     ids.forEach((id) => {
       this.getById(id)?.contacts.forEach((c) => {
-        const contact = this.root.contacts.getById(c.id);
+        runInAction(() => {
+          const contact = this.root.contacts.getById(c.id);
 
-        contact?.draft();
-        contact?.removeOrganization();
-        contact?.commit({ syncOnly: true });
+          if (!contact) return;
+
+          contact?.draft();
+          contact?.removeOrganization();
+          contact?.commit({ syncOnly: true });
+        });
       });
 
       this.value.delete(id);

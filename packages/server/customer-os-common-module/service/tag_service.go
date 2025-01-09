@@ -18,11 +18,24 @@ import (
 	"github.com/pkg/errors"
 )
 
+var defaultColorCodes = []string{
+	"grayModern",
+	"error",
+	"warning",
+	"success",
+	"grayWarm",
+	"moss",
+	"blueLight",
+	"indigo",
+	"violet",
+	"pink",
+}
+
 type TagService interface {
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, inputTag *neo4jentity.TagEntity) (*neo4jentity.TagEntity, error)
 	AddTagToEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, tagName string) (string, error)
 	RemoveTagFromEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId string) error
-	Update(ctx context.Context, tagId, name string) error
+	Update(ctx context.Context, tagId string, name, colorCode *string) error
 	UnlinkAndDelete(ctx context.Context, id string) (bool, error)
 	GetAll(ctx context.Context) (*neo4jentity.TagEntities, error)
 	GetById(ctx context.Context, tagId string) (*neo4jentity.TagEntity, error)
@@ -80,6 +93,9 @@ func (s *tagService) Save(ctx context.Context, tx *neo4j.ManagedTransaction, inp
 	if inputTag.AppSource == "" {
 		inputTag.AppSource = common.GetAppSourceFromContext(ctx)
 	}
+	if inputTag.ColorCode == "" {
+		inputTag.ColorCode = utils.GetRandomItem(defaultColorCodes)
+	}
 
 	tagNodePtr, err := s.services.Neo4jRepositories.TagWriteRepository.Merge(ctx, tx, tenant, *inputTag)
 	if err != nil {
@@ -87,7 +103,20 @@ func (s *tagService) Save(ctx context.Context, tx *neo4j.ManagedTransaction, inp
 		return nil, err
 	}
 
-	return neo4jmapper.MapDbNodeToTagEntity(tagNodePtr), nil
+	tagEntity := neo4jmapper.MapDbNodeToTagEntity(tagNodePtr)
+	if tagEntity.Id == "" {
+		err = errors.New("tag not saved")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	err = s.services.RabbitMQService.PublishEvent(ctx, tagEntity.Id, model.TAG, dto.SaveTag{
+		EntityType: utils.StringPtr(tagEntity.EntityType.String()),
+		Name:       utils.StringPtr(tagEntity.Name),
+		ColorCode:  utils.StringPtr(tagEntity.ColorCode),
+	})
+
+	return tagEntity, nil
 }
 
 func (s *tagService) AddTagToEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, tagName string) (string, error) {
@@ -186,23 +215,44 @@ func (s *tagService) RemoveTagFromEntity(ctx context.Context, tx *neo4j.ManagedT
 	return nil
 }
 
-func (s *tagService) Update(ctx context.Context, tagId, name string) error {
+func (s *tagService) Update(ctx context.Context, tagId string, name, colorCode *string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("tagId", tagId), log.String("name", name))
+	tracing.TagEntity(span, tagId)
 
-	if name == "" {
-		err := errors.New("name is required")
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	// validate tag exists
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, tagId, model.NodeLabelTag)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if !exists {
+		err = errors.New("tag not found")
+		tracing.TraceErr(span, err)
+		return err
 	}
 
-	err := s.services.Neo4jRepositories.TagWriteRepository.UpdateName(ctx, common.GetTenantFromContext(ctx), tagId, name)
+	err = s.services.Neo4jRepositories.TagWriteRepository.Update(ctx, common.GetTenantFromContext(ctx), tagId, name, colorCode)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error updating tag name: %s", err.Error())
 		return err
 	}
+
+	err = s.services.RabbitMQService.PublishEvent(ctx, tagId, model.TAG, dto.SaveTag{
+		Name:      name,
+		ColorCode: colorCode,
+	})
+
 	return nil
 }
 

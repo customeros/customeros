@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 )
 
@@ -139,4 +140,11 @@ func StringSlicesEqualIgnoreOrder(slice1, slice2 []string) bool {
 	}
 
 	return true
+}
+
+func GetRandomItem(arr []string) string {
+	if len(arr) == 0 {
+		return "" // Return an empty string if the array is empty
+	}
+	return arr[rand.Intn(len(arr))] // Return a random element
 }

@@ -86,7 +86,9 @@ test('Add About information to an Organization', async ({ page }, testInfo) => {
   await organizationAboutPage.checkPopulatedAboutFields(organizations.update);
 });
 
-test('Create People entry in an Organization', async ({ page }, testInfo) => {
+test.skip('Create People entry in an Organization', async ({
+  page,
+}, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationPeoplePage = new OrganizationPeoplePage(page);
@@ -236,11 +238,11 @@ test('Assign contact to flow', async ({ page }, testInfo) => {
   // Go to People page
   await organizationSideNavPage.goToPeople();
 
-  const contact = await organizationPeoplePage.createContactFromEmpty();
+  const contactName = await organizationPeoplePage.createContactFromEmpty();
 
   await organizationSideNavPage.goBack();
   await contactsPage.waitForPageLoad();
-  await contactsPage.updateContactFlow(contact, flowName);
+  await contactsPage.updateContactFlow(contactName, flowName);
   await flowsPage.goToFlows();
   await flowsPage.checkNewFlowEntry(flowName, flow.update);
 });

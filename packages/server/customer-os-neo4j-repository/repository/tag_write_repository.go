@@ -18,7 +18,7 @@ type TagWriteRepository interface {
 	LinkTagByIdToEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, tagId, linkedEntityId string, entityType model.EntityType) error
 	UnlinkTagByIdFromEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, tagId, entityId string, entityType model.EntityType) error
 	UnlinkAllAndDelete(ctx context.Context, tenant, tagId string) error
-	UpdateName(ctx context.Context, tenant, tagId, name string) error
+	Update(ctx context.Context, tenant, tagId string, name, colorCode *string) error
 }
 
 type tagWriteRepository struct {
@@ -49,6 +49,7 @@ func (r *tagWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedTransac
 		  tag.updatedAt=datetime(),
 		  tag.source=$source,
 		  tag.appSource=$appSource,
+		  tag.colorCode=$colorCode,
 		  tag:Tag_%s
 		 RETURN tag`, tenant)
 	params := map[string]any{
@@ -57,6 +58,7 @@ func (r *tagWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedTransac
 		"source":     tag.Source,
 		"appSource":  tag.AppSource,
 		"entityType": tag.EntityType.String(),
+		"colorCode":  tag.ColorCode,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
@@ -170,19 +172,26 @@ func (r *tagWriteRepository) UnlinkAllAndDelete(ctx context.Context, tenant, tag
 	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
 }
 
-func (r *tagWriteRepository) UpdateName(ctx context.Context, tenant, tagId, name string) error {
+func (r *tagWriteRepository) Update(ctx context.Context, tenant, tagId string, name, colorCode *string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagWriteRepository.UpdateName")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("tagId", tagId), log.String("name", name))
+	tracing.TagEntity(span, tagId)
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$tagId}) 
-				SET tag.name=$name, tag.updatedAt=datetime()`
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$tagId})
+				SET tag.updatedAt=datetime()`
 	params := map[string]any{
 		"tenant": tenant,
 		"tagId":  tagId,
-		"name":   name,
+	}
+	if name != nil {
+		cypher += `, tag.name=$name`
+		params["name"] = *name
+	}
+	if colorCode != nil {
+		cypher += `, tag.colorCode=$colorCode`
+		params["colorCode"] = *colorCode
 	}
 
 	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
