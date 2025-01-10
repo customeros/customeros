@@ -1,9 +1,11 @@
+import { RootStore } from '@store/root';
 import { action, computed, observable } from 'mobx';
 import { Organization } from '@store/Organizations/Organization.dto';
 import { ContactService } from '@store/Contacts/__service__/Contacts.service';
 
 export class CreateContact {
   private service = ContactService.getInstance();
+  private root = RootStore.getInstance();
 
   @observable accessor inputValue: string = '';
   @observable accessor type: 'linkedin' | 'email' | 'name' = 'linkedin';
@@ -169,7 +171,13 @@ export class CreateContact {
       if (this.invalidName) return;
       this.entity?.store.root.contacts.create(
         this.organizationId,
-        {},
+        {
+          onSuccess: () =>
+            this.root.ui.toastSuccess(
+              'Contact created',
+              'contact-email-created',
+            ),
+        },
         { name: this.inputValue },
       );
     }
@@ -185,7 +193,13 @@ export class CreateContact {
 
       this.entity?.store.root.contacts.createWithEmail(
         this.organizationId,
-        {},
+        {
+          onSuccess: () =>
+            this.root.ui.toastSuccess(
+              'Contact created',
+              'contact-email-created',
+            ),
+        },
         { email: { email: this.inputValue, primary: true } },
       );
     }

@@ -71,7 +71,6 @@ export const CreateNewContactModal = observer(
 
       if (contactCreate.getType === 'name') {
         contactCreate.submit();
-        contactCreate.inputValue = '';
 
         !contactCreate.invalidName && onClose();
       }
@@ -79,23 +78,18 @@ export const CreateNewContactModal = observer(
       if (contactCreate.getType === 'linkedin') {
         contactCreate.submit();
 
-        if (
-          !contactCreate.emptyLinkedInUrl &&
-          !contactCreate.invalidLinkedInUrl
-        )
+        if (contactCreate.emptyLinkedInUrl && contactCreate.invalidLinkedInUrl)
           return;
-        if (!contactCreate.errorLinkedIn) return;
+        if (contactCreate.errorLinkedIn) return;
 
-        contactCreate.inputValue = '';
         onClose();
       }
 
       if (contactCreate.getType === 'email') {
         contactCreate.submit();
 
-        if (!contactCreate.emptyEmail && !contactCreate.invalidEmail) return;
-        if (!contactCreate.errorEmail) return;
-        contactCreate.inputValue = '';
+        if (contactCreate.emptyEmail && contactCreate.invalidEmail) return;
+        if (contactCreate.errorEmail) return;
 
         onClose();
       }
