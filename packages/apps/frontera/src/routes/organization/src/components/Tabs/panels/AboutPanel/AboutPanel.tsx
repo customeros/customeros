@@ -99,6 +99,7 @@ export const AboutPanel = observer(() => {
           organization.draft();
           organization?.value?.tags?.push({
             name: value,
+            colorCode: store.tags.getById(id)?.value?.colorCode ?? 'grayModern',
             metadata: {
               id,
             },

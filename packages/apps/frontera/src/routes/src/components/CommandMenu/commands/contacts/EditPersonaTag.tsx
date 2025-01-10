@@ -57,6 +57,8 @@ export const EditPersonaTag = observer(() => {
             metadata: {
               id: value,
             },
+            colorCode:
+              store.tags.getById(value)?.value?.colorCode ?? 'grayModern',
             entityType: EntityType.Contact,
           });
           contact?.commit();

@@ -50,6 +50,10 @@ export class TagStore implements Store<TagDatum> {
     return this.value.name;
   }
 
+  get colorScheme() {
+    return this.value.colorCode;
+  }
+
   get id() {
     return this.value.metadata.id;
   }
@@ -68,6 +72,7 @@ export class TagStore implements Store<TagDatum> {
         input: {
           id: this.value.metadata.id,
           name: this.value.name,
+          colorCode: this.value.colorCode,
         },
       });
     } catch (error) {
@@ -81,17 +86,24 @@ export class TagStore implements Store<TagDatum> {
     const type = diff?.op;
     const path = diff?.path;
 
-    match(path).with(['name', ...P.array()], () => {
-      if (type === 'update') {
-        this.updateTag();
-      }
-    });
+    match(path)
+      .with(['name', ...P.array()], () => {
+        if (type === 'update') {
+          this.updateTag();
+        }
+      })
+      .with(['colorCode', ...P.array()], () => {
+        if (type === 'update') {
+          this.updateTag();
+        }
+      });
   }
 }
 
 const defaultValue: TagDatum = {
   name: '',
   entityType: EntityType.Organization,
+  colorCode: 'grayModern',
   metadata: {
     id: crypto.randomUUID(),
   },

@@ -12,7 +12,6 @@ import { Input } from '@ui/form/Input';
 import { flags } from '@ui/media/flags';
 import { Avatar } from '@ui/media/Avatar';
 import { DateTimeUtils } from '@utils/date';
-import { Tag01 } from '@ui/media/icons/Tag01';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Star06 } from '@ui/media/icons/Star06';
 import { IconButton } from '@ui/form/IconButton';
@@ -218,10 +217,6 @@ export const ContactPreviewCard = observer(() => {
           </div>
 
           <div className='flex justify-between gap-1 w-full mb-4'>
-            <div className='flex items-center gap-2 mr-[75px] text-sm text-gray-500'>
-              <Tag01 className='mt-[1px] text-gray-500' />
-              Tags
-            </div>
             <Tags
               placeholder='No tags yet'
               value={
@@ -272,7 +267,7 @@ export const ContactPreviewCard = observer(() => {
               </div>
             </div>
             <div className='flex gap-1 w-full'>
-              <div className='flex items-center gap-2 mr-[42px] text-sm text-gray-500 '>
+              <div className='flex items-center gap-2 mr-[41px] text-sm text-gray-500 '>
                 <LinkedInSolid02 className='mt-[1px] text-gray-500' />
                 Followers
               </div>
@@ -286,7 +281,7 @@ export const ContactPreviewCard = observer(() => {
               </span>
             </div>
             <div className='flex gap-1 w-full mt-[2px]'>
-              <div className='flex items-center gap-2 mr-[19px] text-sm text-gray-500'>
+              <div className='flex items-center gap-2 mr-[18px] text-sm text-gray-500'>
                 <LinkedInSolid02 className='mt-[1px] text-gray-500' />
                 Connected to
               </div>

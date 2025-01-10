@@ -51,7 +51,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
 
           <span className='text-gray-500'>Emails</span>
           {allEmails!.length === 0 && (
-            <span className='text-gray-400 ml-[57px]'>
+            <span className='text-gray-400 ml-[55px]'>
               {enrichedContact ? 'Finding email' : 'No emails yet'}
             </span>
           )}
