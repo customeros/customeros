@@ -1373,6 +1373,8 @@ type ComplexityRoot struct {
 		ID                              func(childComplexity int) int
 		IconURL                         func(childComplexity int) int
 		Industry                        func(childComplexity int) int
+		IndustryCode                    func(childComplexity int) int
+		IndustryName                    func(childComplexity int) int
 		LastFundingRound                func(childComplexity int) int
 		LastTouchPointAt                func(childComplexity int) int
 		LastTouchPointType              func(childComplexity int) int
@@ -10079,6 +10081,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationUiDetails.Industry(childComplexity), true
 
+	case "OrganizationUiDetails.industryCode":
+		if e.complexity.OrganizationUiDetails.IndustryCode == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.IndustryCode(childComplexity), true
+
+	case "OrganizationUiDetails.industryName":
+		if e.complexity.OrganizationUiDetails.IndustryName == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.IndustryName(childComplexity), true
+
 	case "OrganizationUiDetails.lastFundingRound":
 		if e.complexity.OrganizationUiDetails.LastFundingRound == nil {
 			break
@@ -16029,7 +16045,9 @@ type OrganizationUiDetails {
     name:                   String!
     notes:                  String
     description:            String
-    industry:               String
+    industry:               String @deprecated(reason: "Use industry code")
+    industryCode:           String
+    industryName:           String
     market:                 Market
     website:                String
     logoUrl:                String
@@ -70900,6 +70918,10 @@ func (ec *executionContext) fieldContext_Mutation_organization_SaveByGlobalOrgan
 				return ec.fieldContext_OrganizationUiDetails_description(ctx, field)
 			case "industry":
 				return ec.fieldContext_OrganizationUiDetails_industry(ctx, field)
+			case "industryCode":
+				return ec.fieldContext_OrganizationUiDetails_industryCode(ctx, field)
+			case "industryName":
+				return ec.fieldContext_OrganizationUiDetails_industryName(ctx, field)
 			case "market":
 				return ec.fieldContext_OrganizationUiDetails_market(ctx, field)
 			case "website":
@@ -85163,6 +85185,88 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_industry(_ contex
 	return fc, nil
 }
 
+func (ec *executionContext) _OrganizationUiDetails_industryCode(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_industryCode(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IndustryCode, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_industryCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_industryName(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_industryName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IndustryName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_industryName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrganizationUiDetails_market(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrganizationUiDetails_market(ctx, field)
 	if err != nil {
@@ -95011,6 +95115,10 @@ func (ec *executionContext) fieldContext_Query_ui_organizations(ctx context.Cont
 				return ec.fieldContext_OrganizationUiDetails_description(ctx, field)
 			case "industry":
 				return ec.fieldContext_OrganizationUiDetails_industry(ctx, field)
+			case "industryCode":
+				return ec.fieldContext_OrganizationUiDetails_industryCode(ctx, field)
+			case "industryName":
+				return ec.fieldContext_OrganizationUiDetails_industryName(ctx, field)
 			case "market":
 				return ec.fieldContext_OrganizationUiDetails_market(ctx, field)
 			case "website":
@@ -125273,6 +125381,10 @@ func (ec *executionContext) _OrganizationUiDetails(ctx context.Context, sel ast.
 			out.Values[i] = ec._OrganizationUiDetails_description(ctx, field, obj)
 		case "industry":
 			out.Values[i] = ec._OrganizationUiDetails_industry(ctx, field, obj)
+		case "industryCode":
+			out.Values[i] = ec._OrganizationUiDetails_industryCode(ctx, field, obj)
+		case "industryName":
+			out.Values[i] = ec._OrganizationUiDetails_industryName(ctx, field, obj)
 		case "market":
 			out.Values[i] = ec._OrganizationUiDetails_market(ctx, field, obj)
 		case "website":

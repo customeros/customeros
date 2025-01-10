@@ -2233,6 +2233,8 @@ type OrganizationUIDetails struct {
 	Notes                           *string                       `json:"notes,omitempty"`
 	Description                     *string                       `json:"description,omitempty"`
 	Industry                        *string                       `json:"industry,omitempty"`
+	IndustryCode                    *string                       `json:"industryCode,omitempty"`
+	IndustryName                    *string                       `json:"industryName,omitempty"`
 	Market                          *Market                       `json:"market,omitempty"`
 	Website                         *string                       `json:"website,omitempty"`
 	LogoURL                         *string                       `json:"logoUrl,omitempty"`

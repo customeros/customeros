@@ -27,7 +27,9 @@ type OrganizationUiDetails {
     name:                   String!
     notes:                  String
     description:            String
-    industry:               String
+    industry:               String @deprecated(reason: "Use industry code")
+    industryCode:           String
+    industryName:           String
     market:                 Market
     website:                String
     logoUrl:                String
