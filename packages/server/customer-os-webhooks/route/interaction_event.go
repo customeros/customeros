@@ -203,15 +203,6 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 			return
 		}
 
-		// TODO remove this hack
-		err = processEmailForFlows(ctx, services, tenantByName, username, participants, postmarkEmailWebhookData.Subject, postmarkEmailWebhookData)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			log.Errorf("(SyncInteractionEvent) error processing email for flows: %s", err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-			return
-		}
-
 		span.LogFields(tracingLog.Bool("mailbox.found", true))
 		span.LogFields(tracingLog.String("mailbox.username", username))
 
@@ -397,93 +388,6 @@ func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookD
 		Reference:         references,
 		Headers:           headers,
 	}, nil
-}
-
-// Deprecated
-
-// if the sender is a user in the system, it means that this is outbound communication
-// we mark the contacts that received this email as COMPLETED in the flows that they are in
-// this is a hack for now as we should identify the flow that the contact is in and mark the contact as COMPLETED only in that specific flow
-func processEmailForFlows(ctx context.Context, services *service.Services, tenant, mailboxUsername string, participantsEmailAddresses []string, emailSubject string, input model.PostmarkEmailWebhookData) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.processEmailForFlows")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	mailbox, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailboxUsername)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if mailbox == nil {
-		err := errors.New("mailbox not found")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if mailbox.UserId == "" {
-		err := errors.New("mailbox user id is empty")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	senderUser, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, mailbox.UserId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	outbound := false
-	if senderUser != nil {
-		outbound = true
-	}
-
-	if outbound {
-		for _, p := range participantsEmailAddresses {
-			contactsWithEmailNodes, err := services.CommonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithEmail(ctx, tenant, p)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-
-			for _, contactNode := range contactsWithEmailNodes {
-				contactEntity := mapper.MapDbNodeToContactEntity(contactNode)
-
-				flowsWithContact, err := services.CommonServices.FlowService.FlowsGetListWithParticipant(ctx, []string{contactEntity.Id}, commonModel.CONTACT)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return err
-				}
-
-				for _, flow := range *flowsWithContact {
-					flowContact, err := services.CommonServices.FlowService.FlowParticipantByEntity(ctx, flow.Id, contactEntity.Id, commonModel.CONTACT)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						return err
-					}
-
-					if flowContact == nil || flowContact.Status == neo4jentity.FlowParticipantStatusCompleted || flowContact.Status == neo4jentity.FlowParticipantStatusGoalAchieved {
-						continue
-					}
-
-					if emailSubject == "Welcome to Embedd - Product Tips" {
-						flowContact.Status = neo4jentity.FlowParticipantStatusGoalAchieved
-					} else {
-						flowContact.Status = neo4jentity.FlowParticipantStatusCompleted
-					}
-
-					_, err = services.CommonServices.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, nil, flowContact)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						return err
-					}
-				}
-
-			}
-		}
-	}
-
-	return nil
 }
 
 // check if the email is a reply to an email sent by mailstack

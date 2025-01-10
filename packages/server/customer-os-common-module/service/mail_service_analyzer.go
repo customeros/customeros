@@ -171,6 +171,7 @@ func (a *mailService) mailsherpaChecks(from string) (failedCheck bool, reason st
 func (a *mailService) isBounceSubject(subject string) bool {
 	subject = strings.ToLower(subject)
 	keywords := []string{
+		"mail delivery failure",
 		"undelivered mail returned to sender",
 		"delivery status notification",
 		"undeliverable",
@@ -181,7 +182,7 @@ func (a *mailService) isBounceSubject(subject string) bool {
 		"returned to sender",
 	}
 	for _, phrase := range keywords {
-		if strings.Contains(subject, phrase) {
+		if strings.Contains(strings.ToLower(subject), phrase) {
 			return true
 		}
 	}
