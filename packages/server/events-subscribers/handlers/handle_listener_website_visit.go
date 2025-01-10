@@ -17,7 +17,7 @@ import (
 )
 
 // add all subsribed agents for this handler here
-var SubscribedAgents = [1]enum.Agent{
+var SubscribedAgents = [1]enum.AgentID{
 	enum.AgentVisitorID,
 }
 
@@ -64,7 +64,7 @@ func HandleWebsiteVisitorEvent(c context.Context, s *service.Services, sourceEve
 
 		// call agent service
 		if execution != nil {
-			err = s.AgentService.VisitorIDAgent(ctx, eventData)
+			err = s.AgentVisitorIDService.RunAgent(ctx, &agent, eventData)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				loopErr = multierr.Append(loopErr, err)

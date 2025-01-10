@@ -24,56 +24,57 @@ type Services struct {
 	RabbitMQService RabbitMQService
 	GrpcClients     *grpc_client.Clients
 
-	ActionService              ActionService
-	AgentService               AgentService
-	AIService                  AIService
-	AttachmentService          AttachmentService
-	AzureService               AzureService
-	CloudflareService          CloudflareService
-	ContactService             ContactService
-	ContractService            ContractService
-	CommonService              CommonService
-	CommentService             CommentService
-	CurrencyService            CurrencyService
-	CustomFieldTemplateService CustomFieldTemplateService
-	DomainService              DomainService
-	EmailService               EmailService
-	EmailingService            EmailingService
-	EnrichmentService          EnrichmentService
-	ExternalSystemService      ExternalSystemService
-	FlowExecutionService       FlowExecutionService
-	FlowService                FlowService
-	GoogleService              GoogleService
-	InteractionSessionService  InteractionSessionService
-	InteractionEventService    InteractionEventService
-	IssueService               IssueService
-	InvoiceService             InvoiceService
-	JobRoleService             JobRoleService
-	LocationService            LocationService
-	LogEntryService            LogEntryService
-	MailboxService             MailboxService
-	MailService                MailService
-	MailstackService           MailstackService
-	MarkdownEventService       MarkdownEventService
-	NamecheapService           NamecheapService
-	NovuService                NovuService
-	OpenSrsService             OpenSrsService
-	OpportunityService         OpportunityService
-	OrganizationService        OrganizationService
-	PhoneNumberService         PhoneNumberService
-	PostmarkService            PostmarkService
-	RegistrationService        RegistrationService
-	ReminderService            ReminderService
-	ServiceLineItemService     ServiceLineItemService
-	SlackService               SlackService
-	SocialService              SocialService
-	TagService                 TagService
-	TenantService              TenantService
-	TenantSettingsService      TenantSettingsService
-	UserService                UserService
-	VerifyService              VerifyService
-	WorkflowService            WorkflowService
-	WorkspaceService           WorkspaceService
+	ActionService                ActionService
+	AgentICPQualificationService AgentICPQualificationService
+	AgentVisitorIDService        AgentVisitorIDService
+	AIService                    AIService
+	AttachmentService            AttachmentService
+	AzureService                 AzureService
+	CloudflareService            CloudflareService
+	ContactService               ContactService
+	ContractService              ContractService
+	CommonService                CommonService
+	CommentService               CommentService
+	CurrencyService              CurrencyService
+	CustomFieldTemplateService   CustomFieldTemplateService
+	DomainService                DomainService
+	EmailService                 EmailService
+	EmailingService              EmailingService
+	EnrichmentService            EnrichmentService
+	ExternalSystemService        ExternalSystemService
+	FlowExecutionService         FlowExecutionService
+	FlowService                  FlowService
+	GoogleService                GoogleService
+	InteractionSessionService    InteractionSessionService
+	InteractionEventService      InteractionEventService
+	IssueService                 IssueService
+	InvoiceService               InvoiceService
+	JobRoleService               JobRoleService
+	LocationService              LocationService
+	LogEntryService              LogEntryService
+	MailboxService               MailboxService
+	MailService                  MailService
+	MailstackService             MailstackService
+	MarkdownEventService         MarkdownEventService
+	NamecheapService             NamecheapService
+	NovuService                  NovuService
+	OpenSrsService               OpenSrsService
+	OpportunityService           OpportunityService
+	OrganizationService          OrganizationService
+	PhoneNumberService           PhoneNumberService
+	PostmarkService              PostmarkService
+	RegistrationService          RegistrationService
+	ReminderService              ReminderService
+	ServiceLineItemService       ServiceLineItemService
+	SlackService                 SlackService
+	SocialService                SocialService
+	TagService                   TagService
+	TenantService                TenantService
+	TenantSettingsService        TenantSettingsService
+	UserService                  UserService
+	VerifyService                VerifyService
+	WorkflowService              WorkflowService
+	WorkspaceService             WorkspaceService
 }
 
 func InitServices(globalConfig *config.GlobalConfig, postgresDB *config.PostgresDB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients, log logger.Logger) *Services {
@@ -91,7 +92,8 @@ func InitServices(globalConfig *config.GlobalConfig, postgresDB *config.Postgres
 	}
 
 	services.ActionService = NewActionService(log, services)
-	services.AgentService = NewAgentService(services)
+	services.AgentICPQualificationService = NewAgentICPQualificationService(services)
+	services.AgentVisitorIDService = NewAgentVisitorIDService(services)
 	services.AIService = NewAIService(globalConfig, services)
 	services.AttachmentService = NewAttachmentService(services)
 	services.AzureService = NewAzureService(globalConfig.AzureOAuthConfig, services.PostgresRepositories, services)

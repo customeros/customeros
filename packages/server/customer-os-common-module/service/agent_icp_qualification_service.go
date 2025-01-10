@@ -12,7 +12,20 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
-func (a *agentService) ICPAgent(ctx context.Context, event *dto.FlowAgentEvent) error {
+type AgentICPQualificationService interface {
+}
+
+type agentICPQualificationService struct {
+	services *Services
+}
+
+func NewAgentICPQualificationService(services *Services) AgentICPQualificationService {
+	return &agentICPQualificationService{
+		services: services,
+	}
+}
+
+func (a *agentICPQualificationService) ICPAgent(ctx context.Context, event *dto.FlowAgentEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.ICPAgent")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
@@ -34,7 +47,7 @@ func (a *agentService) ICPAgent(ctx context.Context, event *dto.FlowAgentEvent) 
 	}
 }
 
-func (a *agentService) buildICPQualificationReport(ctx context.Context, eventData *data_fields.OrganizationQualifyEventFields, flowExecutionId string) error {
+func (a *agentICPQualificationService) buildICPQualificationReport(ctx context.Context, eventData *data_fields.OrganizationQualifyEventFields, flowExecutionId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.buildICPQualificationReport")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()

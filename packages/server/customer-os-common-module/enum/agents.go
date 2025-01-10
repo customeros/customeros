@@ -4,23 +4,23 @@ import (
 	"fmt"
 )
 
-type Agent string
+type AgentID string
 
 const (
-	AgentICPQualification Agent = "ICP Qualification Agent"
-	AgentVisitorID        Agent = "Visitor Identity Agent"
+	AgentICPQualification AgentID = "icp-qualification-agent"
+	AgentVisitorID        AgentID = "visitor-identity-agent"
 )
 
-func (t Agent) String() string {
+func (t AgentID) String() string {
 	return string(t)
 }
 
-func GetAgent(s string) (Agent, error) {
-	switch Agent(s) {
+func GetAgent(s string) (AgentID, error) {
+	switch AgentID(s) {
 	case
 		AgentICPQualification,
 		AgentVisitorID:
-		return Agent(s), nil
+		return AgentID(s), nil
 
 	default:
 		return "", fmt.Errorf("invalid Agent: %s", s)

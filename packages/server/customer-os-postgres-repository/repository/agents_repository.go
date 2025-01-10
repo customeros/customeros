@@ -13,11 +13,11 @@ import (
 )
 
 type AgentsRepository interface {
-	Create(ctx context.Context, automationRecord entity.Agents) (*entity.Agents, error)
-	Find(ctx context.Context, automationRecord entity.Agents) (*entity.Agents, error)
-	FindAll(ctx context.Context, automationRecord entity.Agents) ([]entity.Agents, error)
-	FindAllFromAgentsList(ctx context.Context, agents []enum.Agent) ([]entity.Agents, error)
-	Update(ctx context.Context, automationRecord entity.Agents) (*entity.Agents, error)
+	Create(ctx context.Context, agent *entity.Agents) (*entity.Agents, error)
+	Find(ctx context.Context, agent entity.Agents) (*entity.Agents, error)
+	FindAll(ctx context.Context, agent entity.Agents) ([]entity.Agents, error)
+	FindAllFromAgentsList(ctx context.Context, agents []enum.AgentID) ([]entity.Agents, error)
+	Update(ctx context.Context, agent entity.Agents) (*entity.Agents, error)
 }
 
 type agentsRepository struct {
@@ -28,23 +28,24 @@ func NewAgentsRepository(gormDb *gorm.DB) AgentsRepository {
 	return &agentsRepository{gormDb: gormDb}
 }
 
-func (f *agentsRepository) Create(ctx context.Context, automationRecord entity.Agents) (*entity.Agents, error) {
+func (f *agentsRepository) Create(ctx context.Context, agent *entity.Agents) (*entity.Agents, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentsRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	automationRecord.ID = utils.GenerateNanoIdWithPrefix("auto", 16)
+	agent.ID = utils.GenerateNanoIdWithPrefix("agent", 16)
 
 	var created entity.Agents
-	err := f.gormDb.Create(&automationRecord).Scan(&created).Error
+	err := f.gormDb.Create(agent).Scan(&created).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return &automationRecord, nil
+
+	return &created, nil
 }
 
-func (f *agentsRepository) FindAll(ctx context.Context, automationRecord entity.Agents) ([]entity.Agents, error) {
+func (f *agentsRepository) FindAll(ctx context.Context, agent entity.Agents) ([]entity.Agents, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentsRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -52,9 +53,9 @@ func (f *agentsRepository) FindAll(ctx context.Context, automationRecord entity.
 	var agents []entity.Agents
 	query := f.gormDb.Where("is_active = true")
 
-	// Add additional filters based on non-zero fields in automationRecord
-	if automationRecord != (entity.Agents{}) {
-		query = query.Where(&automationRecord)
+	// Add additional filters based on non-zero fields in agent
+	if agent != (entity.Agents{}) {
+		query = query.Where(&agent)
 	}
 
 	err := query.Find(&agents).Error
@@ -66,23 +67,23 @@ func (f *agentsRepository) FindAll(ctx context.Context, automationRecord entity.
 	return agents, nil
 }
 
-func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []enum.Agent) ([]entity.Agents, error) {
+func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []enum.AgentID) ([]entity.Agents, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentsRepository.FindAllFromAgentsList")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	var records []entity.Agents
 
-	// Convert enum.Agent array to []string
-	agentNames := make([]string, len(agents))
+	// Convert enum array to []string
+	agentIds := make([]string, len(agents))
 	for i, agent := range agents {
-		agentNames[i] = agent.String()
+		agentIds[i] = agent.String()
 	}
 
 	query := f.gormDb.Where("is_active = ? AND (flow_id = ? OR flow_id IS NULL)", true, "")
 
-	if len(agentNames) > 0 {
-		query = query.Where("name IN (?)", agentNames)
+	if len(agentIds) > 0 {
+		query = query.Where("registy_id IN (?)", agentIds)
 	}
 
 	err := query.Find(&records).Error
@@ -94,14 +95,14 @@ func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []e
 	return records, nil
 }
 
-func (f *agentsRepository) Find(ctx context.Context, automationRecord entity.Agents) (*entity.Agents, error) {
+func (f *agentsRepository) Find(ctx context.Context, agent entity.Agents) (*entity.Agents, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentsRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	var automation entity.Agents
 	err := f.gormDb.
-		Where(&automationRecord).
+		Where(&agent).
 		Where("is_active = true").
 		First(&automation).Error
 	if err != nil {
@@ -114,12 +115,12 @@ func (f *agentsRepository) Find(ctx context.Context, automationRecord entity.Age
 	return &automation, nil
 }
 
-func (f *agentsRepository) Update(ctx context.Context, automationRecord entity.Agents) (*entity.Agents, error) {
+func (f *agentsRepository) Update(ctx context.Context, agent entity.Agents) (*entity.Agents, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentsRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	if automationRecord.ID == "" {
+	if agent.ID == "" {
 		err := errors.New("automationID is missing")
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -127,8 +128,8 @@ func (f *agentsRepository) Update(ctx context.Context, automationRecord entity.A
 
 	var updatedAgents entity.Agents
 	err := f.gormDb.
-		Model(&automationRecord).
-		Updates(&automationRecord).
+		Model(&agent).
+		Updates(&agent).
 		First(&updatedAgents).Error
 	if err != nil {
 		tracing.TraceErr(span, err)

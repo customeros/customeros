@@ -15,6 +15,7 @@ type AgentExecution struct {
 	UpdatedAt    *time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
 	CompletedAt  *time.Time `gorm:"column:completed_at" json:"completedAt"`
 	ErrorMessage *string    `gorm:"column:error_message;type:text" json:"errorMessage"`
+	GoalAchieved string     `gorm:"column:goalAchieved;type:boolean" json:"goalAchieved"`
 }
 
 func (AgentExecution) TableName() string {
