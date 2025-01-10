@@ -1,16 +1,20 @@
 import type { Contact } from '@store/Contacts/Contact.dto';
 
 import { action, observable } from 'mobx';
+import { ContactService } from '@store/Contacts/__service__/Contacts.service';
 
 export class LinkedIn {
+  private service = ContactService.getInstance();
   @observable accessor linkedInUrl: string = '';
   @observable accessor inputValue: string = '';
   @observable accessor entity: Contact | null = null;
   @observable accessor emptyLinkedInUrl: boolean = false;
   @observable accessor invalidLinkedInUrl: boolean = false;
+  @observable accessor error: string = '';
 
   constructor() {
     this.setInputValue = this.setInputValue.bind(this);
+    this.setErrors = this.setErrors.bind(this);
   }
 
   @action
@@ -35,12 +39,30 @@ export class LinkedIn {
   }
 
   @action
+  setErrors(error: string) {
+    this.error = error;
+  }
+
+  @action
   setLinkedInUrl() {
     if (!this.entity) return;
 
     this.entity.draft();
     this.entity.value.linkedInUrl = this.linkedInUrl;
     this.entity.commit();
+  }
+
+  @action
+  async checkIfLinkedInUrlExists(linkedInUrl: string) {
+    if (!this.entity) return;
+
+    const { contact_ByLinkedIn } = await this.service.contactExistsByLinkedIn({
+      linkedIn: linkedInUrl,
+    });
+
+    if (contact_ByLinkedIn?.metadata.id) {
+      this.setErrors('A contact with this LinkedIn already exists');
+    }
   }
 
   @action
@@ -73,8 +95,11 @@ export class LinkedIn {
   }
 
   @action
-  submitLinkedInUrl() {
+  async submitLinkedInUrl() {
     if (this.validateLinkedInUrl()) return;
+    await this.checkIfLinkedInUrlExists(this.linkedInUrl);
+
+    if (this.error) return;
 
     this.setLinkedInUrl();
     this.clearState();

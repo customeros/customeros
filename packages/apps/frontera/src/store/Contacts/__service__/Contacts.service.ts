@@ -21,9 +21,11 @@ import AddContactSocialDocument from './addContactSocial.graphql';
 import CreateContactMutationDocument from './createContact.graphql';
 import DeleteContactMutationDocument from './deleteContact.graphql';
 import LinkOrganizationDocument from './linkContactWithOrg.graphql';
+import ContactByEmailDocument from './contactExistsByEmail.graphql';
 import ArchiveContactMutationDocument from './archiveContact.graphql';
 import AddTagsToContactMutationDocument from './addTagsToContact.graphql';
 import AddContactPhoneNumberDocument from './addContactPhoneNumber.graphql';
+import ContactExistsByLinkedInDocument from './contactExistsByLinkedIn.graphql';
 import UpdateContactSocialMutationDocument from './updateContactSocial.graphql';
 import CreateContactForOrgMutationDocument from './createContactForOrg.graphql';
 import UpdateContactPhoneNumberDocument from './updateContactPhoneNumber.graphql';
@@ -62,6 +64,10 @@ import {
   GetContactsByIdsQueryVariables,
 } from './getContactsById.generated.ts';
 import {
+  ContactByEmailQuery,
+  ContactByEmailQueryVariables,
+} from './contactExistsByEmail.generated.ts';
+import {
   UpdateContactRoleMutation,
   UpdateContactRoleMutationVariables,
 } from './updateJobRole.generated';
@@ -97,6 +103,10 @@ import {
   AddContactPhoneNumberMutation,
   AddContactPhoneNumberMutationVariables,
 } from './addContactPhoneNumber.generated';
+import {
+  ContactExistsByLinkedInQuery,
+  ContactExistsByLinkedInQueryVariables,
+} from './contactExistsByLinkedIn.generated.ts';
 import {
   RemoveContactPhoneNumberMutation,
   RemoveContactPhoneNumberMutationVariables,
@@ -303,6 +313,22 @@ class ContactService {
     >(CreateContactBulkByLinkedInMutationDocument, payload);
   }
 
+  async contactExistsByEmail(payload: ContactByEmailQueryVariables) {
+    return this.transport.graphql.request<
+      ContactByEmailQuery,
+      ContactByEmailQueryVariables
+    >(ContactByEmailDocument, payload);
+  }
+
+  async contactExistsByLinkedIn(
+    payload: ContactExistsByLinkedInQueryVariables,
+  ) {
+    return this.transport.graphql.request<
+      ContactExistsByLinkedInQuery,
+      ContactExistsByLinkedInQueryVariables
+    >(ContactExistsByLinkedInDocument, payload);
+  }
+
   public async mutateOperation(operation: Operation, store: Contact) {
     const diff = operation.diff?.[0];
     const type = diff?.op;
@@ -321,7 +347,6 @@ class ContactService {
 
       return;
     }
-
     match(path)
       .with(
         [

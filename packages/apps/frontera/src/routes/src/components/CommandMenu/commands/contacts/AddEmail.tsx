@@ -22,6 +22,19 @@ export const AddEmail = observer(() => {
     }
   }, [contact?.id]);
 
+  const error = addNewEmailCase.error;
+
+  const handleSubmit = async () => {
+    await addNewEmailCase.submit();
+
+    const success = !addNewEmailCase.error;
+
+    if (success) {
+      store.ui.commandMenu.setOpen(false);
+      store.ui.commandMenu.setType('ContactCommands');
+    }
+  };
+
   return (
     <Command shouldFilter={false}>
       <CommandInput
@@ -37,18 +50,14 @@ export const AddEmail = observer(() => {
           }
         }}
       />
-      <Command.List>
-        <CommandItem
-          leftAccessory={<Mail02 />}
-          onSelect={() => {
-            addNewEmailCase.submit();
-            store.ui.commandMenu.setOpen(false);
-            store.ui.commandMenu.setType('ContactCommands');
-          }}
-        >
-          {`Add new email ${addNewEmailCase.inputValue}`}
-        </CommandItem>
-      </Command.List>
+      <div className='flex flex-col'>
+        {error && <p className='text-error-500 text-sm pl-6'>{error}</p>}{' '}
+        <Command.List>
+          <CommandItem onSelect={handleSubmit} leftAccessory={<Mail02 />}>
+            {`Add new email ${addNewEmailCase.inputValue}`}
+          </CommandItem>
+        </Command.List>
+      </div>
     </Command>
   );
 });
