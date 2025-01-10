@@ -14,32 +14,30 @@ type slackChannelNotificationRepository struct {
 }
 
 type SlackChannelNotificationRepository interface {
-	GetSlackChannels(c context.Context, tenant, workflow string) ([]*entity.SlackChannelNotification, error)
+	GetSlackChannel(c context.Context, tenant string, workflow entity.SlackChannelNotificationWorkflow) (*entity.SlackChannelNotification, error)
 }
 
 func NewSlackChannelNotificationRepository(db *gorm.DB) SlackChannelNotificationRepository {
 	return &slackChannelNotificationRepository{db: db}
 }
 
-func (r *slackChannelNotificationRepository) GetSlackChannels(c context.Context, tenant, workflow string) ([]*entity.SlackChannelNotification, error) {
+func (r *slackChannelNotificationRepository) GetSlackChannel(c context.Context, tenant string, workflow entity.SlackChannelNotificationWorkflow) (*entity.SlackChannelNotification, error) {
 	span, _ := opentracing.StartSpanFromContext(c, "SlackChannelNotificationRepository.GetSlackChannels")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.LogFields(tracingLog.String("workflow", workflow))
+	span.LogFields(tracingLog.Object("workflow", workflow))
 
-	var entities []*entity.SlackChannelNotification
+	var e *entity.SlackChannelNotification
 	err := r.db.
 		Where("tenant = ?", tenant).
 		Where("workflow = ?", workflow).
-		Find(&entities).Error
+		First(&e).Error
 
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	span.LogFields(tracingLog.Int("result.count", len(entities)))
-
-	return entities, nil
+	return e, nil
 }

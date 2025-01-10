@@ -166,18 +166,16 @@ func buildSlackNotifyEvent(ctx context.Context, s *service.Services, eventData *
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	channelIds, err := s.PostgresRepositories.SlackChannelNotificationRepository.GetSlackChannels(ctx, eventData.Tenant, "REVEAL-AI")
+	slackChannel, err := s.PostgresRepositories.SlackChannelNotificationRepository.GetSlackChannel(ctx, eventData.Tenant, entity.SlackChannelNotificationWorkflowWebsiteVisit)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	if len(channelIds) == 0 {
+	if slackChannel == nil {
 		err = fmt.Errorf("no slack channels found for tenant %s", eventData.Tenant)
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-
-	channelId := channelIds[0]
 
 	ratelimit := MinHoursBetweenNotifications
 
@@ -189,7 +187,7 @@ func buildSlackNotifyEvent(ctx context.Context, s *service.Services, eventData *
 
 	event := data_fields.SlackNotifyEventFields{
 		Tenant:        eventData.Tenant,
-		ChannelID:     channelId.ChannelId,
+		ChannelID:     slackChannel.ChannelId,
 		Message:       message,
 		DomainContext: &domainContext,
 	}
