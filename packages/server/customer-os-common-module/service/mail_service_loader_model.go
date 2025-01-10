@@ -115,6 +115,7 @@ type EmailHeaders struct {
 	ReplyTo            string
 	ReplyToExists      bool
 	Sender             string
+	ForwardedFor       string
 	RawHeaders         map[string]string
 }
 

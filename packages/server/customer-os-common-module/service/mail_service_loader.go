@@ -233,6 +233,9 @@ func (l *mailService) parseHeaders(headers map[string]string) EmailHeaders {
 		if strings.EqualFold(header, "Sender") {
 			eh.Sender = l.extractEmail(value)
 		}
+		if strings.EqualFold(header, "X-Forwarded-For") {
+			eh.ForwardedFor = value
+		}
 	}
 
 	return eh
