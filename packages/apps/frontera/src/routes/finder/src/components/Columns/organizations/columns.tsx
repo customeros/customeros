@@ -19,7 +19,7 @@ import { Social, TableViewDef, ColumnViewType } from '@graphql/types';
 import {
   OwnerCell,
   AvatarCell,
-  WebsiteCell,
+  DomainsCell,
   IndustryCell,
   OnboardingCell,
   OrganizationCell,
@@ -91,7 +91,7 @@ export const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
   }),
   [ColumnViewType.OrganizationsWebsite]: columnHelper.accessor(
-    'value.website',
+    'value.domainsDetails',
     {
       id: ColumnViewType.OrganizationsWebsite,
       minSize: 92,
@@ -102,11 +102,11 @@ export const columns: Record<string, Column> = {
       cell: (props) => {
         const organizationId = props.row.original.value.id;
 
-        return <WebsiteCell organizationId={organizationId} />;
+        return <DomainsCell organizationId={organizationId} />;
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          title='Domain'
+          title='Primary Domains'
           id={ColumnViewType.OrganizationsWebsite}
           {...getTHeadProps<Organization>(props)}
         />

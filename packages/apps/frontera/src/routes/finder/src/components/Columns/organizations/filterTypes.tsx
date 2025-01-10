@@ -63,7 +63,7 @@ export const getFilterTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsWebsite]: {
       filterType: 'text',
-      filterName: 'Domain',
+      filterName: 'Primary Domain',
       filterAccesor: ColumnViewType.OrganizationsWebsite,
       filterOperators: [
         ComparisonOperator.Contains,

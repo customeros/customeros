@@ -17,6 +17,7 @@ const removeDomainCase = new RemoveOrganizationDomainCase();
 export const RemoveDomain = observer(() => {
   const { ui, organizations } = useStore();
   const context = ui.commandMenu.context;
+  const isPrimary = context.meta?.isPrimary;
   const organization = organizations.getById(context.ids?.[0] as string);
 
   useModKey('Enter', () => {
@@ -44,14 +45,14 @@ export const RemoveDomain = observer(() => {
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100 cursor-default'>
         <div className='flex justify-between'>
           <h1 className='text-base font-semibold'>
-            Remove this {removeDomainCase.isPrimary ? 'domain' : 'subdomain'}
+            Remove this {isPrimary ? 'domain' : 'subdomain'}
           </h1>
           <div>
             <CommandCancelIconButton onClose={handleClose} />
           </div>
         </div>
         <p className='mt-2 text-sm'>
-          {context?.meta?.isPrimary
+          {isPrimary
             ? `Removing ${context?.meta?.domain}, will also remove any related
             subdomains`
             : `Removing ${context?.meta?.domain} will not remove its associated primary domain`}

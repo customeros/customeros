@@ -42,7 +42,6 @@ export class MergeOrganizationsCase {
           this.primaryId,
         );
       });
-      this.root.ui.toastSuccess(`Merged 1 organization`, this.primaryId);
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error).message;

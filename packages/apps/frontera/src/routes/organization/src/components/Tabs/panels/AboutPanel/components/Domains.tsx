@@ -8,7 +8,7 @@ import { Domain } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { XCircle } from '@ui/media/icons/XCircle';
-import { Globe06 } from '@ui/media/icons/Globe06';
+import { Globe01 } from '@ui/media/icons/Globe01';
 import { PlusCircle } from '@ui/media/icons/PlusCircle';
 import { getExternalUrl } from '@utils/getExternalLink';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
@@ -16,7 +16,7 @@ import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
-import { Subdomain } from './Subdomain.tsx';
+import { Subdomain } from './Subdomain';
 
 export const Domains = observer(() => {
   const store = useStore();
@@ -47,6 +47,29 @@ export const Domains = observer(() => {
     }));
   };
 
+  if (!formattedData.length) {
+    return (
+      <div className='flex flex-col mt-1'>
+        <div
+          tabIndex={0}
+          role={'button'}
+          className='flex items-center w-full gap-2 group'
+          onClick={() => {
+            store.ui.commandMenu.setOpen(true);
+            store.ui.commandMenu.setType('AddNewDomain');
+            store.ui.commandMenu.setContext({
+              ids: [id],
+              entity: 'Organization',
+            });
+          }}
+        >
+          <Globe01 className='text-gray-500' />
+          <span className='text-sm text-gray-400'>Add domain</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className='flex flex-col mt-1'>
       {formattedData.map((domainGroup, index) => (
@@ -58,7 +81,7 @@ export const Domains = observer(() => {
               href={getExternalUrl(domainGroup.primaryDomain.domain || '/')}
               className='w-fit cursor-pointer text-sm flex items-center no-underline hover:no-underline text-gray-700'
             >
-              {index === 0 && <Globe06 className='mr-2 text-gray-500' />}
+              {index === 0 && <Globe01 className='mr-2 text-gray-500' />}
               <span
                 className={cn({
                   'ml-6': index !== 0,

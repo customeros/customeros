@@ -93,7 +93,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsRelationship]: 'Relationship',
   [ColumnViewType.OrganizationsRenewalLikelihood]: 'Health',
   [ColumnViewType.OrganizationsRenewalDate]: 'Renewal Date',
-  [ColumnViewType.OrganizationsWebsite]: 'Domain',
+  [ColumnViewType.OrganizationsWebsite]: 'Primary Domains',
   [ColumnViewType.OrganizationsLeadSource]: 'Source',
   [ColumnViewType.OrganizationsSocials]: 'LinkedIn',
   [ColumnViewType.OrganizationsCreatedDate]: 'Created Date',

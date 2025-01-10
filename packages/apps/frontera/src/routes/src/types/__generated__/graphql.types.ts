@@ -621,6 +621,7 @@ export type ContactUiDetails = {
   flows: Array<Scalars['ID']['output']>;
   hide: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
+  jobRoleIds: Array<Scalars['ID']['output']>;
   lastName: Scalars['String']['output'];
   linkedInAlias?: Maybe<Scalars['String']['output']>;
   linkedInExternalId?: Maybe<Scalars['String']['output']>;
@@ -2111,10 +2112,6 @@ export type IssueSummaryByStatus = {
   status: Scalars['String']['output'];
 };
 
-/**
- * Describes the relationship a Contact has with a Organization.
- * **A `return` object**
- */
 export type JobRole = {
   __typename?: 'JobRole';
   appSource: Scalars['String']['output'];
@@ -2124,12 +2121,7 @@ export type JobRole = {
   description?: Maybe<Scalars['String']['output']>;
   endedAt?: Maybe<Scalars['Time']['output']>;
   id: Scalars['ID']['output'];
-  /** The Contact's job title. */
   jobTitle?: Maybe<Scalars['String']['output']>;
-  /**
-   * Organization associated with a Contact.
-   * **Required.**
-   */
   organization?: Maybe<Organization>;
   primary: Scalars['Boolean']['output'];
   source: DataSource;
@@ -2137,10 +2129,6 @@ export type JobRole = {
   updatedAt: Scalars['Time']['output'];
 };
 
-/**
- * Describes the relationship a Contact has with an Organization.
- * **A `create` object**
- */
 export type JobRoleInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
   company?: InputMaybe<Scalars['String']['input']>;
@@ -2158,10 +2146,18 @@ export type JobRoleParticipant = {
   type?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * Describes the relationship a Contact has with an Organization.
- * **A `create` object**
- */
+export type JobRoleSaveInput = {
+  company?: InputMaybe<Scalars['String']['input']>;
+  contactId?: InputMaybe<Scalars['ID']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  endedAt?: InputMaybe<Scalars['Time']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  jobTitle?: InputMaybe<Scalars['String']['input']>;
+  organizationId?: InputMaybe<Scalars['ID']['input']>;
+  primary?: InputMaybe<Scalars['Boolean']['input']>;
+  startedAt?: InputMaybe<Scalars['Time']['input']>;
+};
+
 export type JobRoleUpdateInput = {
   company?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
@@ -2524,8 +2520,12 @@ export type Mutation = {
   invoice_Simulate: Array<InvoiceSimulate>;
   invoice_Update: Invoice;
   invoice_Void: Invoice;
+  /** @deprecated No longer supported */
   jobRole_Create: JobRole;
+  /** @deprecated No longer supported */
   jobRole_Delete: Result;
+  jobRole_Save: Scalars['ID']['output'];
+  /** @deprecated No longer supported */
   jobRole_Update: JobRole;
   location_RemoveFromContact: Contact;
   location_RemoveFromOrganization: Organization;
@@ -2973,6 +2973,10 @@ export type MutationJobRole_CreateArgs = {
 export type MutationJobRole_DeleteArgs = {
   contactId: Scalars['ID']['input'];
   roleId: Scalars['ID']['input'];
+};
+
+export type MutationJobRole_SaveArgs = {
+  input?: InputMaybe<JobRoleSaveInput>;
 };
 
 export type MutationJobRole_UpdateArgs = {
@@ -4075,6 +4079,7 @@ export type Query = {
   invoice_ByNumber: Invoice;
   invoices: InvoicesPage;
   issue: Issue;
+  jobRoles: Array<JobRole>;
   logEntry: LogEntry;
   mailstack_CheckUnavailableDomains: Array<Scalars['String']['output']>;
   mailstack_DomainPurchaseSuggestions: Array<Scalars['String']['output']>;
@@ -4253,6 +4258,10 @@ export type QueryInvoicesArgs = {
 
 export type QueryIssueArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryJobRolesArgs = {
+  ids: Array<Scalars['ID']['input']>;
 };
 
 export type QueryLogEntryArgs = {

@@ -54,6 +54,12 @@ export type GetOrganizationsByIdsQuery = {
     contracts: Array<string>;
     contacts: Array<string>;
     subsidiaries: Array<string>;
+    domainsDetails: Array<{
+      __typename?: 'Domain';
+      domain: string;
+      primary?: boolean | null;
+      primaryDomain?: string | null;
+    }>;
     socialMedia: Array<{
       __typename?: 'Social';
       id: string;
