@@ -61,7 +61,7 @@ export const UrlInput = memo(
             onBlur={handleBlur}
             dataTest={dataTest}
             onFocus={handleFocus}
-            className='border border-transparent text-md'
+            className='border border-transparent text-sm'
             {...rest}
           />
           {!isFocused && !!value && (
@@ -72,7 +72,7 @@ export const UrlInput = memo(
             >
               <p
                 onClick={handleFocus}
-                className='text-gray-700 top-0 truncate text-base'
+                className='text-gray-700 top-0 truncate text-sm'
               >
                 {formattedUrl}
               </p>

@@ -242,7 +242,7 @@ export const getContainerClassNames = (
     className: cn(
       'flex items-center cursor-pointer overflow-visible outline-0',
       props?.isReadOnly && 'pointer-events-none',
-      props?.isFocused && 'border-primary-500',
+      'focus-within:border-primary-500 focus-within:hover:border-primary-500',
     ),
   });
 
