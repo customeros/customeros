@@ -2049,7 +2049,6 @@ type Organization struct {
 	ParentCompanies          []*LinkedOrganization         `json:"parentCompanies"`
 	Public                   *bool                         `json:"public,omitempty"`
 	SocialMedia              []*Social                     `json:"socialMedia"`
-	SubIndustry              *string                       `json:"subIndustry,omitempty"`
 	Subsidiaries             []*LinkedOrganization         `json:"subsidiaries"`
 	Tags                     []*Tag                        `json:"tags,omitempty"`
 	TargetAudience           *string                       `json:"targetAudience,omitempty"`
@@ -2107,6 +2106,7 @@ type Organization struct {
 	LastTouchPointTimelineEvent TimelineEvent `json:"lastTouchPointTimelineEvent,omitempty"`
 	// Deprecated
 	SubsidiaryOf []*LinkedOrganization `json:"subsidiaryOf"`
+	SubIndustry  *string               `json:"subIndustry,omitempty"`
 }
 
 func (Organization) IsMetadataInterface()        {}

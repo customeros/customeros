@@ -46,8 +46,6 @@ type OrganizationEntity struct {
 	Description        string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
 	Website            string `neo4jDb:"property:website;lookupName:WEBSITE;supportCaseSensitive:true"`
 	Industry           string `neo4jDb:"property:industry;lookupName:INDUSTRY;supportCaseSensitive:true"`
-	SubIndustry        string
-	IndustryGroup      string
 	TargetAudience     string
 	ValueProposition   string
 	IsPublic           bool

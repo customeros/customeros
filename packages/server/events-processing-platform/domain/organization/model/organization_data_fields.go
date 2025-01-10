@@ -11,8 +11,6 @@ type OrganizationDataFields struct {
 	Description        string
 	Website            string
 	Industry           string
-	SubIndustry        string
-	IndustryGroup      string
 	TargetAudience     string
 	ValueProposition   string
 	IsPublic           bool

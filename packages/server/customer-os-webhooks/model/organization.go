@@ -45,8 +45,6 @@ type OrganizationData struct {
 	Address2           string              `json:"address2,omitempty"`
 	Zip                string              `json:"zip,omitempty"`
 	ParentOrganization *ParentOrganization `json:"parentOrganization,omitempty"`
-	SubIndustry        string              `json:"subIndustry,omitempty"`
-	IndustryGroup      string              `json:"industryGroup,omitempty"`
 	TargetAudience     string              `json:"targetAudience,omitempty"`
 	ValueProposition   string              `json:"valueProposition,omitempty"`
 	Market             string              `json:"market,omitempty"`

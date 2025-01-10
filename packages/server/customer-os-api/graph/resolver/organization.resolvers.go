@@ -501,8 +501,6 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		Description:        input.Description,
 		Website:            input.Website,
 		Industry:           input.Industry,
-		SubIndustry:        input.SubIndustry,
-		IndustryGroup:      input.IndustryGroup,
 		IsPublic:           input.IsPublic,
 		Market:             utils.ToPtr(mapper.MapMarketFromModel(input.Market)),
 		Employees:          input.Employees,

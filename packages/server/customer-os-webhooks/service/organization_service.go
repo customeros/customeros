@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -247,8 +247,6 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			organizationDataFields.IsPublic = utils.BoolPtr(orgInput.IsPublic)
 			organizationDataFields.Employees = utils.Int64Ptr(orgInput.Employees)
 			organizationDataFields.Market = utils.StringPtr(orgInput.Market)
-			organizationDataFields.SubIndustry = utils.StringPtr(orgInput.SubIndustry)
-			organizationDataFields.IndustryGroup = utils.StringPtr(orgInput.IndustryGroup)
 			organizationDataFields.TargetAudience = utils.StringPtr(orgInput.TargetAudience)
 			organizationDataFields.ValueProposition = utils.StringPtr(orgInput.ValueProposition)
 			organizationDataFields.LastFundingRound = utils.StringPtr(orgInput.LastFundingRound)
