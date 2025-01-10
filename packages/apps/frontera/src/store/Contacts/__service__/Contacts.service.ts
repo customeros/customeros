@@ -451,6 +451,26 @@ class ContactService {
           });
         }
 
+        if (
+          operation.diff.length > 1 &&
+          operation.diff[operation.diff.length - 1].op === 'delete'
+        ) {
+          const toBeDeletedName = (
+            operation.diff[0] as rdiffResult & { oldVal: string }
+          )?.oldVal;
+
+          this.removeTagsFromContact({
+            input: {
+              contactId,
+              tag: {
+                name: toBeDeletedName,
+              },
+            },
+          });
+
+          return;
+        }
+
         if (type === 'delete') {
           if (typeof oldValue === 'object') {
             this.removeTagsFromContact({

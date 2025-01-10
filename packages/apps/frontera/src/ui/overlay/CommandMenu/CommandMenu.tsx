@@ -79,15 +79,16 @@ export const CommandInput = ({
   );
 };
 
-interface CommandItemProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CommandItemProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   value?: string;
   dataTest?: string;
   disabled?: boolean;
   keywords?: string[];
-  onSelect?: () => void;
   children: React.ReactNode;
   leftAccessory?: React.ReactNode;
   rightAccessory?: React.ReactNode;
+  onSelect?: (value?: string) => void;
 }
 
 export const CommandItem = forwardRef<HTMLDivElement, CommandItemProps>(
@@ -155,12 +156,24 @@ export const CommandSubItem = ({
   );
 };
 
+interface StaticCommandItemProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
+  value?: string;
+  dataTest?: string;
+  disabled?: boolean;
+  keywords?: string[];
+  onSelect?: () => void;
+  children: React.ReactNode;
+  leftAccessory?: React.ReactNode;
+  rightAccessory?: React.ReactNode;
+}
+
 export const StaticCommandItem = ({
   children,
   leftAccessory,
   rightAccessory,
   ...props
-}: CommandItemProps) => {
+}: StaticCommandItemProps) => {
   return (
     <div data-cmdk-item {...props}>
       {leftAccessory}
