@@ -38,7 +38,6 @@ type Organization struct {
 	Description       string                             `json:"description"`
 	Website           string                             `json:"website"`
 	Industry          string                             `json:"industry"`
-	TargetAudience    string                             `json:"targetAudience"`
 	ValueProposition  string                             `json:"valueProposition"`
 	IsPublic          bool                               `json:"isPublic"`
 	Employees         int64                              `json:"employees"`

@@ -247,7 +247,6 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 			organizationDataFields.IsPublic = utils.BoolPtr(orgInput.IsPublic)
 			organizationDataFields.Employees = utils.Int64Ptr(orgInput.Employees)
 			organizationDataFields.Market = utils.StringPtr(orgInput.Market)
-			organizationDataFields.TargetAudience = utils.StringPtr(orgInput.TargetAudience)
 			organizationDataFields.ValueProposition = utils.StringPtr(orgInput.ValueProposition)
 			organizationDataFields.LastFundingRound = utils.StringPtr(orgInput.LastFundingRound)
 			organizationDataFields.LastFundingAmount = utils.StringPtr(orgInput.LastFundingAmount)

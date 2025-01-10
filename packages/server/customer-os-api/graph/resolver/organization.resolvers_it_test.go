@@ -98,7 +98,6 @@ func TestQueryResolver_Organization(t *testing.T) {
 		Description:        "Organization description",
 		Website:            "Organization_website.com",
 		Industry:           "tech",
-		TargetAudience:     "tech-audience",
 		ValueProposition:   "value-proposition",
 		LastFundingRound:   "Seed",
 		LastFundingAmount:  "10k",
@@ -148,7 +147,6 @@ func TestQueryResolver_Organization(t *testing.T) {
 	require.Equal(t, inputOrganizationEntity.Website, *organizationStruct.Organization.Website)
 	require.Equal(t, inputOrganizationEntity.IsPublic, *organizationStruct.Organization.Public)
 	require.Equal(t, inputOrganizationEntity.Industry, *organizationStruct.Organization.Industry)
-	require.Equal(t, inputOrganizationEntity.TargetAudience, *organizationStruct.Organization.TargetAudience)
 	require.Equal(t, inputOrganizationEntity.ValueProposition, *organizationStruct.Organization.ValueProposition)
 	require.Equal(t, model.FundingRoundSeed, *organizationStruct.Organization.LastFundingRound)
 	require.Equal(t, inputOrganizationEntity.LastFundingAmount, *organizationStruct.Organization.LastFundingAmount)

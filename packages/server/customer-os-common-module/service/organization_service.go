@@ -91,7 +91,6 @@ func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, 
 		LinkedInUrl:      utils.StringPtr(globalOrganization.LinkedInUrl),
 		LinkedInAlias:    utils.StringPtr(globalOrganization.LinkedInAlias),
 		ValueProposition: utils.StringPtr(globalOrganization.ValueProposition),
-		TargetAudience:   utils.StringPtr(globalOrganization.TargetAudience),
 		Domains:          utils.StringToSlice(globalOrganization.OtherDomains),
 	}
 

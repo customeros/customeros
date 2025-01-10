@@ -269,7 +269,6 @@ func (s *organizationService) getOrganizationDetailsAsString(ctx context.Context
     domains
     website 
     industry
-    targetAudience
     valueProposition
     lastFundingRound
     lastFundingAmount

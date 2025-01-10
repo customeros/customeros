@@ -238,7 +238,6 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		Description:        utils.GetStringPropOrEmpty(props, "description"),
 		Website:            utils.GetStringPropOrEmpty(props, "website"),
 		Industry:           utils.GetStringPropOrEmpty(props, string(entity.OrganizationPropertyIndustry)),
-		TargetAudience:     utils.GetStringPropOrEmpty(props, "targetAudience"),
 		ValueProposition:   utils.GetStringPropOrEmpty(props, "valueProposition"),
 		LastFundingRound:   utils.GetStringPropOrEmpty(props, "lastFundingRound"),
 		LastFundingAmount:  utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
