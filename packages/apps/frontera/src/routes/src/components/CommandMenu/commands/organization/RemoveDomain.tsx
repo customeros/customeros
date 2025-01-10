@@ -25,7 +25,6 @@ export const RemoveDomain = observer(() => {
   useEffect(() => {
     if (organization) {
       removeDomainCase.setEntity(organization);
-      removeDomainCase.setIsPrimary(context?.meta?.isPrimary);
       removeDomainCase.setDomain(context?.meta?.domain);
     }
   }, [organization?.id]);

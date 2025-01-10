@@ -116,6 +116,8 @@ export class AddOrganizationDomainCase {
 
   @action
   submit() {
+    if (!this?.entity) return;
+
     this.entity?.draft();
     this.entity?.value.domainsDetails.push({
       domain: this.inputValue,
