@@ -340,7 +340,6 @@ export const FlowBuilder = observer(
           panOnDrag
           snapToGrid
           maxZoom={5}
-          panOnScroll
           nodes={nodes}
           edges={edges}
           minZoom={0.1}
@@ -357,6 +356,7 @@ export const FlowBuilder = observer(
           onEdgeMouseEnter={onEdgeMouseEnter}
           // onConnectEnd={onConnectEnd}
           onNodesChange={onNodesChangeHandler}
+          panOnScroll={!ui.flowCommandMenu.isOpen}
           zoomOnPinch={!ui.flowCommandMenu.isOpen}
           onSelectionDragStart={onSelectionDragStart}
           defaultViewport={{ zoom: 0.4, x: 50, y: 0 }}
