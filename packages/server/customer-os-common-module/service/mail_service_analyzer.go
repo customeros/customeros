@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 
 	"github.com/customeros/mailsherpa/domaincheck"
@@ -32,6 +33,10 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 		if !mailvalidate.ValidateEmailSyntax(emailData.Participants.From.Email).IsValid {
 			analysis.ProcessEmail = false
 			analysis.SkipReason = "INVALID FROM EMAIL ADDRESS FORMAT"
+
+			span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
+			span.LogFields(log.String("reason", analysis.SkipReason))
+
 			return analysis
 		}
 	}
@@ -53,6 +58,9 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 			analysis.BouncedEmails = emailData.Headers.XFailedRecepients
 		}
 
+		span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
+		span.LogFields(log.String("reason", analysis.SkipReason))
+
 		return analysis
 	}
 
@@ -60,6 +68,10 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 	if a.isWarmingEmail(tenant, emailData) {
 		analysis.ProcessEmail = false
 		analysis.SkipReason = "WARMING"
+
+		span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
+		span.LogFields(log.String("reason", analysis.SkipReason))
+
 		return analysis
 	}
 
@@ -69,6 +81,10 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 		analysis.IsAutoResponder = true
 		analysis.ProcessEmail = false
 		analysis.SkipReason = reason
+
+		span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
+		span.LogFields(log.String("reason", analysis.SkipReason))
+
 		return analysis
 	}
 
@@ -79,6 +95,9 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 		analysis.ProcessEmail = false
 		analysis.SkipReason = reason
 	}
+
+	span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
+	span.LogFields(log.String("reason", analysis.SkipReason))
 
 	return analysis
 }
