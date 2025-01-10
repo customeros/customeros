@@ -47,6 +47,8 @@ type Repositories struct {
 	FlowExecutionSettingsWriteRepository     FlowExecutionSettingsWriteRepository
 	FlowActionExecutionReadRepository        FlowActionExecutionReadRepository
 	FlowActionExecutionWriteRepository       FlowActionExecutionWriteRepository
+	IndustryReadRepository                   IndustryReadRepository
+	IndustryWriteRepository                  IndustryWriteRepository
 	InteractionEventReadRepository           InteractionEventReadRepository
 	InteractionEventWriteRepository          InteractionEventWriteRepository
 	InteractionSessionReadRepository         InteractionSessionReadRepository
@@ -136,6 +138,8 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		FlowExecutionSettingsWriteRepository:     NewFlowExecutionSettingsWriteRepository(driver, neo4jDatabase),
 		FlowActionExecutionWriteRepository:       NewFlowActionExecutionWriteRepository(driver, neo4jDatabase),
 		FlowExecutionSettingsReadRepository:      NewFlowExecutionSettingsReadRepository(driver, neo4jDatabase),
+		IndustryReadRepository:                   NewIndustryReadRepository(driver, neo4jDatabase),
+		IndustryWriteRepository:                  NewIndustryWriteRepository(driver, neo4jDatabase),
 		InteractionEventReadRepository:           NewInteractionEventReadRepository(driver, neo4jDatabase),
 		InteractionEventWriteRepository:          NewInteractionEventWriteRepository(driver, neo4jDatabase),
 		InteractionSessionReadRepository:         NewInteractionSessionReadRepository(driver, neo4jDatabase),
