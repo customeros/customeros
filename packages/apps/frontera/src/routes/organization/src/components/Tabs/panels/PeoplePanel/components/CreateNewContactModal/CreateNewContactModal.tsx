@@ -78,7 +78,7 @@ export const CreateNewContactModal = observer(
       if (contactCreate.getType === 'linkedin') {
         contactCreate.submit();
 
-        if (contactCreate.emptyLinkedInUrl && contactCreate.invalidLinkedInUrl)
+        if (contactCreate.emptyLinkedInUrl || contactCreate.invalidLinkedInUrl)
           return;
         if (contactCreate.errorLinkedIn) return;
 
@@ -88,7 +88,7 @@ export const CreateNewContactModal = observer(
       if (contactCreate.getType === 'email') {
         contactCreate.submit();
 
-        if (contactCreate.emptyEmail && contactCreate.invalidEmail) return;
+        if (contactCreate.emptyEmail || contactCreate.invalidEmail) return;
         if (contactCreate.errorEmail) return;
 
         onClose();
