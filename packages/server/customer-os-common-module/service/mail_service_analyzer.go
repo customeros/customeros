@@ -135,8 +135,18 @@ func (a *mailService) isBounce(headers EmailHeaders, subject, from string) (bool
 }
 
 func (a *mailService) isBulkMail(headers EmailHeaders, from string, replyTo []EmailParticipant) (bool, string) {
-	if headers.ForwardedFor != "" {
+	matchReplyTo := false
+	for _, replyToParticipant := range replyTo {
+		if replyToParticipant.Email == from {
+			matchReplyTo = true
+			break
+		}
+	}
+
+	if headers.ForwardedFor == "" {
 		switch {
+		case (headers.ReplyToExists && !matchReplyTo):
+			return true, "BULK | REPLY-TO != FROM"
 		case headers.ReturnPathExists && headers.ReturnPath == "":
 			return true, "BULK | EMPTY RETURN-PATH"
 		case headers.ReturnPathExists && strings.Index(headers.ReturnPath, from) == -1:
