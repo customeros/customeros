@@ -152,7 +152,7 @@ func (a *mailService) isBulkMail(headers EmailHeaders, from string, replyTo []Em
 		return true, "BULK | PRECEDENCE: BULK"
 	case (headers.ReturnPathExists && headers.ReturnPath == ""):
 		return true, "BULK | EMPTY RETURN-PATH"
-	case (headers.ReturnPathExists && headers.ReturnPath != from):
+	case headers.ReturnPathExists && strings.Index(headers.ReturnPath, from) == -1:
 		return true, "BULK | RETURN-PATH != FROM"
 	case (headers.Sender != "" && headers.Sender != from):
 		return true, "BULK | SENDER != FROM"
