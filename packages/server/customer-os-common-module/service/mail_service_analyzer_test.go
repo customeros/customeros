@@ -130,6 +130,7 @@ func TestIsBulkMail(t *testing.T) {
 			name: "Different Reply-To",
 			headers: EmailHeaders{
 				ReplyToExists: true,
+				ForwardedFor:  "",
 			},
 			from: "sender@example.com",
 			replyTo: []EmailParticipant{
@@ -137,6 +138,19 @@ func TestIsBulkMail(t *testing.T) {
 			},
 			wantBool: true,
 			wantMsg:  "BULK | REPLY-TO != FROM",
+		},
+		{
+			name: "Different Reply-To",
+			headers: EmailHeaders{
+				ReplyToExists: true,
+				ForwardedFor:  "xxx",
+			},
+			from: "sender@example.com",
+			replyTo: []EmailParticipant{
+				{Email: "different@example.com"},
+			},
+			wantBool: false,
+			wantMsg:  "",
 		},
 		{
 			name: "Multiple Reply-To with match",
@@ -157,6 +171,7 @@ func TestIsBulkMail(t *testing.T) {
 			name: "Empty Return-Path with flag",
 			headers: EmailHeaders{
 				ReturnPathExists: true,
+				ForwardedFor:     "",
 				ReturnPath:       "",
 			},
 			from: "sender@example.com",
@@ -170,6 +185,7 @@ func TestIsBulkMail(t *testing.T) {
 			name: "Different Return-Path with flag",
 			headers: EmailHeaders{
 				ReturnPathExists: true,
+				ForwardedFor:     "",
 				ReturnPath:       "different@example.com",
 			},
 			from: "sender@example.com",
