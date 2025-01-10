@@ -135,26 +135,22 @@ func (a *mailService) isBounce(headers EmailHeaders, subject, from string) (bool
 }
 
 func (a *mailService) isBulkMail(headers EmailHeaders, from string, replyTo []EmailParticipant) (bool, string) {
-	matchReplyTo := false
-	for _, replyToParticipant := range replyTo {
-		if replyToParticipant.Email == from {
-			matchReplyTo = true
-			break
+	if headers.ForwardedFor != "" {
+		switch {
+		case headers.ReturnPathExists && headers.ReturnPath == "":
+			return true, "BULK | EMPTY RETURN-PATH"
+		case headers.ReturnPathExists && strings.Index(headers.ReturnPath, from) == -1:
+			return true, "BULK | RETURN-PATH != FROM"
+		default:
 		}
 	}
 
 	switch {
-	case (headers.ReplyToExists && !matchReplyTo):
-		return true, "BULK | REPLY-TO != FROM"
 	case headers.ListUnsubscribe:
 		return true, "BULK | UNSUBSCRIBE"
 	case strings.EqualFold(headers.Precedence, "bulk"):
 		return true, "BULK | PRECEDENCE: BULK"
-	case (headers.ReturnPathExists && headers.ReturnPath == ""):
-		return true, "BULK | EMPTY RETURN-PATH"
-	case headers.ReturnPathExists && strings.Index(headers.ReturnPath, from) == -1:
-		return true, "BULK | RETURN-PATH != FROM"
-	case (headers.Sender != "" && headers.Sender != from):
+	case headers.Sender != "" && headers.Sender != from:
 		return true, "BULK | SENDER != FROM"
 	default:
 		return a.mailsherpaChecks(from)
