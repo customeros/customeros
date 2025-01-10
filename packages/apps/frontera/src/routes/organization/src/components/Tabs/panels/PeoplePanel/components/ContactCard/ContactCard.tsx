@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
 import { set } from 'lodash';
 import { observer } from 'mobx-react-lite';
@@ -43,8 +43,9 @@ import { AddLinkedInToContactModal } from './components/AddLinkedInToContactModa
 
 interface ContactCardProps {
   id: string;
+  expandAll: boolean;
 }
-export const ContactCard = observer(({ id }: ContactCardProps) => {
+export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
   const store = useStore();
   const { dispatchEvent } = useEvent('openEmailEditor');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -74,6 +75,14 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
       },
     );
   };
+
+  useEffect(() => {
+    if (expandAll) {
+      setIsExpanded(true);
+    } else {
+      setIsExpanded(false);
+    }
+  }, [expandAll]);
 
   const updatedDaysAgo =
     DateTimeUtils.getDaysSinceDate(contactStore?.value.updatedAt) === 1
@@ -240,7 +249,7 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                   >
                     {isEnriching
                       ? 'Getting job title...'
-                      : jobTitle || 'Job title'}
+                      : jobTitle || 'No job title yet'}
                   </p>
                 ) : (
                   <Input
@@ -249,11 +258,11 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                     onFocus={(e) => e.target.select()}
                     dataTest='org-people-contact-title'
                     onKeyDown={(e) => e.stopPropagation()}
-                    placeholder={
-                      isEnriching ? 'Getting job title...' : 'Job title'
-                    }
                     value={
                       contactStore.value.primaryOrganizationJobRoleTitle || ''
+                    }
+                    placeholder={
+                      isEnriching ? 'Getting job title...' : 'No job title yet'
                     }
                     onBlur={() => {
                       contactStore.draft();
