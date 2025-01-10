@@ -1,29 +1,14 @@
 import { CommandGroup } from 'cmdk';
 import { observer } from 'mobx-react-lite';
-import { TagDatum } from '@store/Tags/Tag.store';
 import { EditPersonaTagUsecase } from '@domain/usecases/command-menu/edit-persona-tag.usecase';
 
 import { Plus } from '@ui/media/icons/Plus';
 import { Check } from '@ui/media/icons/Check';
-import { useStore } from '@shared/hooks/useStore';
-import { useModKey } from '@shared/hooks/useModKey';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 const usecase = new EditPersonaTagUsecase();
 
 export const EditPersonaTag = observer(() => {
-  const store = useStore();
-
-  const handleSelect = (t: TagDatum) => () => {
-    usecase.select(t);
-  };
-
-  useModKey('Enter', (e) => {
-    e.stopPropagation();
-    usecase.reset();
-    store.ui.commandMenu.setOpen(false);
-  });
-
   return (
     <Command shouldFilter={false} label='Change or add tags...'>
       <CommandInput
@@ -32,16 +17,13 @@ export const EditPersonaTag = observer(() => {
         placeholder='Edit persona tag...'
         onValueChange={usecase.setSearchTerm}
         onKeyDownCapture={(e) => {
-          if (e.key === ' ') {
-            e.stopPropagation();
+          if (e.metaKey) {
+            usecase.allowClose();
           }
-
-          if (e.metaKey && e.key === 'Enter') {
-            e.stopPropagation();
-            usecase.reset();
-            store.ui.commandMenu.setOpen(false);
-          } else {
-            // handleSelect(search as unknown as Tag);
+        }}
+        onKeyUpCapture={(e) => {
+          if (e.metaKey) {
+            usecase.preventClose();
           }
         }}
       />
@@ -51,7 +33,8 @@ export const EditPersonaTag = observer(() => {
           {usecase.tagList?.map((tag) => (
             <CommandItem
               key={tag.id}
-              onSelect={handleSelect(tag.value)}
+              onSelect={usecase.select}
+              value={tag.value.metadata.id}
               rightAccessory={
                 usecase.contactTags.has(tag.value.name) ? <Check /> : null
               }
