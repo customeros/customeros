@@ -1223,3 +1223,16 @@ func MapDbNodeToCustomFieldTemplateEntity(node *dbtype.Node) *entity.CustomField
 	}
 	return &customFieldTemplateEntity
 }
+
+func MapDbNodeToIndustryEntity(dbNode *dbtype.Node) *entity.IndustryEntity {
+	if dbNode == nil {
+		return &entity.IndustryEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	industry := entity.IndustryEntity{
+		CreatedAt: utils.GetTimePropOrEpochStart(props, string(entity.IndustryPropertyCreatedAt)),
+		Code:      utils.GetStringPropOrEmpty(props, string(entity.IndustryPropertyCode)),
+		Name:      utils.GetStringPropOrEmpty(props, string(entity.IndustryPropertyName)),
+	}
+	return &industry
+}
