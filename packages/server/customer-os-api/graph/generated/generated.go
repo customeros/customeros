@@ -1969,7 +1969,7 @@ type MutationResolver interface {
 	JobRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error)
 	JobRoleCreate(ctx context.Context, contactID string, input model.JobRoleInput) (*model.JobRole, error)
 	JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error)
-	JobRoleSave(ctx context.Context, input *model.JobRoleSaveInput) (*model.JobRole, error)
+	JobRoleSave(ctx context.Context, input *model.JobRoleSaveInput) (string, error)
 	LocationRemoveFromContact(ctx context.Context, contactID string, locationID string) (*model.Contact, error)
 	LocationRemoveFromOrganization(ctx context.Context, organizationID string, locationID string) (*model.Organization, error)
 	LocationUpdate(ctx context.Context, input model.LocationUpdateInput) (*model.Location, error)
@@ -15025,7 +15025,7 @@ type IssueSummaryByStatus {
     jobRole_Create(contactId : ID!, input: JobRoleInput!): JobRole! @deprecated
     jobRole_Update(contactId : ID!, input: JobRoleUpdateInput!): JobRole! @deprecated
 
-    jobRole_Save(input: JobRoleSaveInput): JobRole! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    jobRole_Save(input: JobRoleSaveInput): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Query {
@@ -67430,18 +67430,18 @@ func (ec *executionContext) _Mutation_jobRole_Save(ctx context.Context, field gr
 		directive1 := func(ctx context.Context) (any, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
-				var zeroVal *model.JobRole
+				var zeroVal string
 				return zeroVal, err
 			}
 			if ec.directives.HasRole == nil {
-				var zeroVal *model.JobRole
+				var zeroVal string
 				return zeroVal, errors.New("directive hasRole is not implemented")
 			}
 			return ec.directives.HasRole(ctx, nil, directive0, roles)
 		}
 		directive2 := func(ctx context.Context) (any, error) {
 			if ec.directives.HasTenant == nil {
-				var zeroVal *model.JobRole
+				var zeroVal string
 				return zeroVal, errors.New("directive hasTenant is not implemented")
 			}
 			return ec.directives.HasTenant(ctx, nil, directive1)
@@ -67454,10 +67454,10 @@ func (ec *executionContext) _Mutation_jobRole_Save(ctx context.Context, field gr
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.JobRole); ok {
+		if data, ok := tmp.(string); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.JobRole`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -67469,9 +67469,9 @@ func (ec *executionContext) _Mutation_jobRole_Save(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.JobRole)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRole(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_jobRole_Save(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -67481,35 +67481,7 @@ func (ec *executionContext) fieldContext_Mutation_jobRole_Save(ctx context.Conte
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_JobRole_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_JobRole_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_JobRole_updatedAt(ctx, field)
-			case "organization":
-				return ec.fieldContext_JobRole_organization(ctx, field)
-			case "contact":
-				return ec.fieldContext_JobRole_contact(ctx, field)
-			case "jobTitle":
-				return ec.fieldContext_JobRole_jobTitle(ctx, field)
-			case "primary":
-				return ec.fieldContext_JobRole_primary(ctx, field)
-			case "description":
-				return ec.fieldContext_JobRole_description(ctx, field)
-			case "company":
-				return ec.fieldContext_JobRole_company(ctx, field)
-			case "startedAt":
-				return ec.fieldContext_JobRole_startedAt(ctx, field)
-			case "endedAt":
-				return ec.fieldContext_JobRole_endedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_JobRole_source(ctx, field)
-			case "appSource":
-				return ec.fieldContext_JobRole_appSource(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type JobRole", field.Name)
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	defer func() {

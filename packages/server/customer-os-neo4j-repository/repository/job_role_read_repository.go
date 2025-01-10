@@ -20,6 +20,9 @@ type JobRoleReadRepository interface {
 	ExistsForContactAndOrganization(ctx context.Context, tenant, contactId, organizationId string) (bool, error)
 	GetAllForContactWithOrganizationId(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string) ([]*utils.DbNodeAndId, error)
 	GetByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
+	GetById(ctx context.Context, tenant string, id string) (*dbtype.Node, error)
+	GetJobRoleForContactAndOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error)
+	GetJobRoleForContactWithoutOrganization(ctx context.Context, tenant, contactId string) (*dbtype.Node, error)
 }
 
 type jobRoleReadRepository struct {
@@ -279,4 +282,98 @@ func (r *jobRoleReadRepository) GetByIds(ctx context.Context, tenant string, ids
 	nodes := result.([]*dbtype.Node)
 	span.LogFields(log.Int("result.count", len(nodes)))
 	return nodes, err
+}
+
+func (r *jobRoleReadRepository) GetJobRoleForContactAndOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetJobRoleForContactAndOrganization")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := `MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+			  	(o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+			  	(c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(o) 
+				RETURN j LIMIT 1`
+	params := map[string]interface{}{
+		"contactId":      contactId,
+		"organizationId": organizationId,
+		"tenant":         tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *jobRoleReadRepository) GetJobRoleForContactWithoutOrganization(ctx context.Context, tenant, contactId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetJobRoleForContactWithoutOrganization")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := `MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+			  	(c)-[:WORKS_AS]->(j:JobRole)
+				WHERE NOT (j)--(:Organization)
+				RETURN j LIMIT 1`
+	params := map[string]interface{}{
+		"contactId": contactId,
+		"tenant":    tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r *jobRoleReadRepository) GetById(ctx context.Context, tenant string, id string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.GetById")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := fmt.Sprintf(`MATCH (job:JobRole_%s) WHERE job.id = $id RETURN job`, tenant)
+	params := map[string]interface{}{
+		"id": id,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return result.(*dbtype.Node), err
 }

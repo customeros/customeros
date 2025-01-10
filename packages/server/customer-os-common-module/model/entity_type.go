@@ -39,6 +39,7 @@ const (
 	USER                     EntityType = "USER"
 	WEBHOOK_EVENT            EntityType = "WEBHOOK"
 	LOCATION                 EntityType = "LOCATION"
+	JOB_ROLE                 EntityType = "JOB_ROLE"
 )
 
 func (entityType EntityType) String() string {
@@ -107,6 +108,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelLocation
 	case TAG:
 		return NodeLabelTag
+	case JOB_ROLE:
+		return NodeLabelJobRole
 	}
 	return "Unknown"
 }

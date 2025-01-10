@@ -3,7 +3,7 @@ extend type Mutation {
     jobRole_Create(contactId : ID!, input: JobRoleInput!): JobRole! @deprecated
     jobRole_Update(contactId : ID!, input: JobRoleUpdateInput!): JobRole! @deprecated
 
-    jobRole_Save(input: JobRoleSaveInput): JobRole! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    jobRole_Save(input: JobRoleSaveInput): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Query {
