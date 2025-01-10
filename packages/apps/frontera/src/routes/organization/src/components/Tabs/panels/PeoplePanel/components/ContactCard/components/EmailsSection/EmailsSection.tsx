@@ -95,6 +95,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                   >
                     {email?.email!.length > 0 ? email.email : 'Not set'}
                   </p>
+
                   {contactStore?.value.emails.length !== 1 && email.primary && (
                     <span className='text-gray-500 text-sm ml-1'>
                       {' '}

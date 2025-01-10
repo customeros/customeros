@@ -1,4 +1,3 @@
-import { RootStore } from '@store/root';
 import { action, observable } from 'mobx';
 import { Contact } from '@store/Contacts/Contact.dto';
 import { ContactService } from '@store/Contacts/__service__/Contacts.service';
@@ -6,7 +5,6 @@ import { ContactService } from '@store/Contacts/__service__/Contacts.service';
 import { Email } from '@shared/types/__generated__/graphql.types';
 
 export class AddEmailCase {
-  private root = RootStore.getInstance();
   private service = ContactService.getInstance();
   @observable accessor inputValue: string = '';
   @observable accessor entity: Contact | null = null;
@@ -34,7 +32,7 @@ export class AddEmailCase {
     });
 
     if ((contact_ByEmail?.emails?.length ?? 0) > 0) {
-      this.setErrors('Email already exists');
+      this.setErrors('A contact with this email already exists');
     }
   }
 

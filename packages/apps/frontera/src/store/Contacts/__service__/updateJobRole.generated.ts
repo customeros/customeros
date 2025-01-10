@@ -5,5 +5,7 @@ export type UpdateContactRoleMutationVariables = Types.Exact<{
   input: Types.JobRoleUpdateInput;
 }>;
 
-
-export type UpdateContactRoleMutation = { __typename?: 'Mutation', jobRole_Update: { __typename?: 'JobRole', id: string } };
+export type UpdateContactRoleMutation = {
+  __typename?: 'Mutation';
+  jobRole_Update: { __typename?: 'JobRole'; id: string };
+};

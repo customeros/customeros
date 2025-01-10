@@ -51,7 +51,7 @@ export const AddEmail = observer(() => {
         }}
       />
       <div className='flex flex-col'>
-        {error && <p className='text-error-500 text-sm pl-6 mt-1'>{error}</p>}{' '}
+        {error && <p className='text-error-500 text-sm pl-6'>{error}</p>}{' '}
         <Command.List>
           <CommandItem onSelect={handleSubmit} leftAccessory={<Mail02 />}>
             {`Add new email ${addNewEmailCase.inputValue}`}

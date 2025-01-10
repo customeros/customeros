@@ -71,14 +71,33 @@ export const CreateNewContactModal = observer(
 
       if (contactCreate.getType === 'name') {
         contactCreate.submit();
+        contactCreate.inputValue = '';
+
         !contactCreate.invalidName && onClose();
       }
 
       if (contactCreate.getType === 'linkedin') {
         contactCreate.submit();
-        !contactCreate.emptyLinkedInUrl &&
-          !contactCreate.invalidLinkedInUrl &&
-          onClose();
+
+        if (
+          !contactCreate.emptyLinkedInUrl &&
+          !contactCreate.invalidLinkedInUrl
+        )
+          return;
+        if (!contactCreate.errorLinkedIn) return;
+
+        contactCreate.inputValue = '';
+        onClose();
+      }
+
+      if (contactCreate.getType === 'email') {
+        contactCreate.submit();
+
+        if (!contactCreate.emptyEmail && !contactCreate.invalidEmail) return;
+        if (!contactCreate.errorEmail) return;
+        contactCreate.inputValue = '';
+
+        onClose();
       }
     };
 
@@ -89,6 +108,13 @@ export const CreateNewContactModal = observer(
         }
       }, 100);
     }, [open, contactCreate.getType]);
+
+    useEffect(() => {
+      if (open) {
+        contactCreate.clearState();
+        contactCreate.inputValue = '';
+      }
+    }, [open]);
 
     return (
       <Modal open={open} onOpenChange={onClose}>
@@ -117,6 +143,17 @@ export const CreateNewContactModal = observer(
                     size='xs'
                     leftIcon={<Signature />}
                     dataTest='org-people-add-by-name'
+                    onClick={() => contactCreate.setType('email')}
+                    data-inactive={contactCreate.getType !== 'email'}
+                    className={cn('w-full', {
+                      selected: contactCreate.getType === 'email',
+                    })}
+                  >
+                    Email
+                  </Button>
+                  <Button
+                    size='xs'
+                    leftIcon={<Signature />}
                     onClick={() => contactCreate.setType('name')}
                     data-inactive={contactCreate.getType !== 'name'}
                     className={cn('w-full', {
@@ -145,6 +182,7 @@ export const CreateNewContactModal = observer(
                       contactCreate.getType === 'name' &&
                         contactCreate.validateName();
                     }
+                    contactCreate.clearState();
                   }}
                 />
               </div>
@@ -162,27 +200,41 @@ export const CreateNewContactModal = observer(
 
               {contactCreate.getType === 'linkedin' && (
                 <>
-                  {!contactCreate.inputValue && (
-                    <p
-                      className={cn(
-                        'text-error-500 text-[12px] mt-0 opacity-0',
-                        contactCreate.emptyLinkedInUrl && 'opacity-100',
-                      )}
-                    >
-                      Huston we have a blank...
-                    </p>
-                  )}
+                  <p
+                    className={cn(
+                      'text-error-500 text-[12px] mt-0 opacity-0',
+                      (contactCreate.emptyLinkedInUrl ||
+                        contactCreate.errorLinkedIn ||
+                        contactCreate.invalidLinkedInUrl) &&
+                        'opacity-100',
+                    )}
+                  >
+                    {contactCreate.inputValue.length === 0
+                      ? 'Huston we have a blank...'
+                      : contactCreate.errorLinkedIn
+                      ? contactCreate.errorLinkedIn
+                      : 'Invalid LinkedIn URL'}
+                  </p>
+                </>
+              )}
 
-                  {contactCreate.inputValue && (
-                    <p
-                      className={cn(
-                        'text-error-500 text-[12px] mt-0 opacity-0',
-                        contactCreate.invalidLinkedInUrl && 'opacity-100',
-                      )}
-                    >
-                      Invalid LinkedIn URL
-                    </p>
-                  )}
+              {contactCreate.getType === 'email' && (
+                <>
+                  <p
+                    className={cn(
+                      'text-error-500 text-[12px] mt-0 opacity-0',
+                      (contactCreate.emptyEmail ||
+                        contactCreate.errorEmail ||
+                        contactCreate.invalidEmail) &&
+                        'opacity-100',
+                    )}
+                  >
+                    {contactCreate.inputValue.length === 0
+                      ? 'Huston we have a blank...'
+                      : contactCreate.errorEmail
+                      ? contactCreate.errorEmail
+                      : 'Invalid email format'}
+                  </p>
                 </>
               )}
             </ModalBody>

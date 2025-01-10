@@ -93,6 +93,11 @@ export const AddLinkedInToContactModal = observer(
                   Invalid linkedin URL
                 </p>
               )}
+            {linkedInUseCase.error && (
+              <p className='text-error-500 text-[12px] mt-0'>
+                {linkedInUseCase.error}
+              </p>
+            )}
           </ModalBody>
           <ModalFooter className='flex w-full gap-4'>
             <Button className='w-full' onClick={() => onClose()}>
