@@ -234,6 +234,7 @@ function makeEmptyLogEntryWithAliases(
       createdAt: '',
       source: DataSource.Na,
       entityType: EntityType.LogEntry,
+      colorCode: 'grayModern',
       updatedAt: '',
       metadata: {
         id: t.value,

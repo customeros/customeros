@@ -80,10 +80,35 @@ export const tag${capitalize(variant)}Variant = cva(${tagCommonClasses}, {
 });
 `;
 
+const closeButton = (color: string) => `
+${color}: [
+  'text-${color}-400',
+  'mr-0',
+  'bg-${color}-100',
+  'rounded-e-md',
+  'px-0.5',
+  'hover:bg-${color}-200',
+  'hover:text-${color}-500'
+],`;
+
+const closeButtonCommonClasses = `[]`;
+const makeCloseButtonVariant = () => `
+export const tagCloseButtonVariant = cva(${closeButtonCommonClasses}, {
+  variants: {
+    colorScheme: {
+      ${colors.map((color) => closeButton(color)).join('')}
+    },
+  },
+  defaultVariants: {
+    colorScheme: 'gray',
+  },
+});
+`;
 const fileContent = `
 import { cva } from 'class-variance-authority';
 
 ${variants.map((variant) => makeColorVariant(variant)).join('\n')}
+${makeCloseButtonVariant()}
 ${sizeVariant}
 `;
 

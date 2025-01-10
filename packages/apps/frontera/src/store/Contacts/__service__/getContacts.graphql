@@ -40,6 +40,7 @@ query contacts($pagination: Pagination!) {
         metadata {
           id
         }
+        colorCode
         name
         entityType
       }

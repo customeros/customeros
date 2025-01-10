@@ -80,7 +80,9 @@ export const ChangeTags = observer(() => {
       { name: value, entityType: EntityType.Organization },
       {
         onSucces: (id) => {
-          setNewTags((prev) => [store.tags.getById(id)!.value, ...prev]);
+          const newTag = store.tags.getById(id)!.value;
+
+          setNewTags((prev) => [newTag, ...prev]);
 
           match(context.entity)
             .with('Organization', () => {
@@ -93,6 +95,7 @@ export const ChangeTags = observer(() => {
                 metadata: {
                   id,
                 },
+                colorCode: newTag.colorCode,
                 entityType: EntityType.Organization,
               });
 
@@ -103,6 +106,7 @@ export const ChangeTags = observer(() => {
                 {
                   name: value,
                   entityType: EntityType.Organization,
+                  colorCode: newTag.colorCode,
                   metadata: {
                     id: value,
                   },

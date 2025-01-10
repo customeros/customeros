@@ -55,6 +55,7 @@ query getContactsByIds($ids: [ID!]) {
         id
       }
       name
+      colorCode
       entityType
     }
     locations {

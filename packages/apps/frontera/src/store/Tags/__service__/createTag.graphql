@@ -2,6 +2,7 @@ mutation createTag($input: TagInput!) {
   tag_Create(input: $input) {
     name
     entityType
+    colorCode
     metadata {
       id
     }

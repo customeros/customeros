@@ -25,9 +25,11 @@ export const iconVariant = cva('', {
       warning: [],
       yellow: [],
       blueDark: [],
+      indigo: [],
       teal: [],
       success: [],
       blue: [],
+      blueLight: [],
       moss: [],
       greenLight: [],
       violet: [],
@@ -35,6 +37,7 @@ export const iconVariant = cva('', {
       orangeDark: [],
       purple: [],
       cyan: [],
+      pink: [],
     },
   },
   compoundVariants: [
@@ -101,6 +104,12 @@ export const iconVariant = cva('', {
     {
       size: 'xxs',
       variant: 'solid',
+      colorScheme: 'indigo',
+      className: ['w-3 h-3', 'text-white'],
+    },
+    {
+      size: 'xxs',
+      variant: 'solid',
       colorScheme: 'teal',
       className: ['w-3 h-3', 'text-white'],
     },
@@ -114,6 +123,12 @@ export const iconVariant = cva('', {
       size: 'xxs',
       variant: 'solid',
       colorScheme: 'blue',
+      className: ['w-3 h-3', 'text-white'],
+    },
+    {
+      size: 'xxs',
+      variant: 'solid',
+      colorScheme: 'blueLight',
       className: ['w-3 h-3', 'text-white'],
     },
     {
@@ -156,6 +171,12 @@ export const iconVariant = cva('', {
       size: 'xxs',
       variant: 'solid',
       colorScheme: 'cyan',
+      className: ['w-3 h-3', 'text-white'],
+    },
+    {
+      size: 'xxs',
+      variant: 'solid',
+      colorScheme: 'pink',
       className: ['w-3 h-3', 'text-white'],
     },
     {
@@ -221,6 +242,12 @@ export const iconVariant = cva('', {
     {
       size: 'xxs',
       variant: 'outline',
+      colorScheme: 'indigo',
+      className: ['w-3 h-3', 'text-indigo-600'],
+    },
+    {
+      size: 'xxs',
+      variant: 'outline',
       colorScheme: 'teal',
       className: ['w-3 h-3', 'text-teal-600'],
     },
@@ -235,6 +262,12 @@ export const iconVariant = cva('', {
       variant: 'outline',
       colorScheme: 'blue',
       className: ['w-3 h-3', 'text-blue-600'],
+    },
+    {
+      size: 'xxs',
+      variant: 'outline',
+      colorScheme: 'blueLight',
+      className: ['w-3 h-3', 'text-blueLight-600'],
     },
     {
       size: 'xxs',
@@ -280,6 +313,12 @@ export const iconVariant = cva('', {
     },
     {
       size: 'xxs',
+      variant: 'outline',
+      colorScheme: 'pink',
+      className: ['w-3 h-3', 'text-pink-600'],
+    },
+    {
+      size: 'xxs',
       variant: 'link',
       colorScheme: 'primary',
       className: ['w-3 h-3', 'text-primary-700'],
@@ -341,6 +380,12 @@ export const iconVariant = cva('', {
     {
       size: 'xxs',
       variant: 'link',
+      colorScheme: 'indigo',
+      className: ['w-3 h-3', 'text-indigo-700'],
+    },
+    {
+      size: 'xxs',
+      variant: 'link',
       colorScheme: 'teal',
       className: ['w-3 h-3', 'text-teal-700'],
     },
@@ -355,6 +400,12 @@ export const iconVariant = cva('', {
       variant: 'link',
       colorScheme: 'blue',
       className: ['w-3 h-3', 'text-blue-700'],
+    },
+    {
+      size: 'xxs',
+      variant: 'link',
+      colorScheme: 'blueLight',
+      className: ['w-3 h-3', 'text-blueLight-700'],
     },
     {
       size: 'xxs',
@@ -397,6 +448,12 @@ export const iconVariant = cva('', {
       variant: 'link',
       colorScheme: 'cyan',
       className: ['w-3 h-3', 'text-cyan-700'],
+    },
+    {
+      size: 'xxs',
+      variant: 'link',
+      colorScheme: 'pink',
+      className: ['w-3 h-3', 'text-pink-700'],
     },
     {
       size: 'xxs',
@@ -461,6 +518,12 @@ export const iconVariant = cva('', {
     {
       size: 'xxs',
       variant: 'ghost',
+      colorScheme: 'indigo',
+      className: ['w-3 h-3', 'text-indigo-700'],
+    },
+    {
+      size: 'xxs',
+      variant: 'ghost',
       colorScheme: 'teal',
       className: ['w-3 h-3', 'text-teal-700'],
     },
@@ -475,6 +538,12 @@ export const iconVariant = cva('', {
       variant: 'ghost',
       colorScheme: 'blue',
       className: ['w-3 h-3', 'text-blue-700'],
+    },
+    {
+      size: 'xxs',
+      variant: 'ghost',
+      colorScheme: 'blueLight',
+      className: ['w-3 h-3', 'text-blueLight-700'],
     },
     {
       size: 'xxs',
@@ -517,6 +586,12 @@ export const iconVariant = cva('', {
       variant: 'ghost',
       colorScheme: 'cyan',
       className: ['w-3 h-3', 'text-cyan-700'],
+    },
+    {
+      size: 'xxs',
+      variant: 'ghost',
+      colorScheme: 'pink',
+      className: ['w-3 h-3', 'text-pink-700'],
     },
     {
       size: 'xs',
@@ -581,6 +656,12 @@ export const iconVariant = cva('', {
     {
       size: 'xs',
       variant: 'solid',
+      colorScheme: 'indigo',
+      className: ['w-4 h-4', 'text-white'],
+    },
+    {
+      size: 'xs',
+      variant: 'solid',
       colorScheme: 'teal',
       className: ['w-4 h-4', 'text-white'],
     },
@@ -594,6 +675,12 @@ export const iconVariant = cva('', {
       size: 'xs',
       variant: 'solid',
       colorScheme: 'blue',
+      className: ['w-4 h-4', 'text-white'],
+    },
+    {
+      size: 'xs',
+      variant: 'solid',
+      colorScheme: 'blueLight',
       className: ['w-4 h-4', 'text-white'],
     },
     {
@@ -636,6 +723,12 @@ export const iconVariant = cva('', {
       size: 'xs',
       variant: 'solid',
       colorScheme: 'cyan',
+      className: ['w-4 h-4', 'text-white'],
+    },
+    {
+      size: 'xs',
+      variant: 'solid',
+      colorScheme: 'pink',
       className: ['w-4 h-4', 'text-white'],
     },
     {
@@ -701,6 +794,12 @@ export const iconVariant = cva('', {
     {
       size: 'xs',
       variant: 'outline',
+      colorScheme: 'indigo',
+      className: ['w-4 h-4', 'text-indigo-600'],
+    },
+    {
+      size: 'xs',
+      variant: 'outline',
       colorScheme: 'teal',
       className: ['w-4 h-4', 'text-teal-600'],
     },
@@ -715,6 +814,12 @@ export const iconVariant = cva('', {
       variant: 'outline',
       colorScheme: 'blue',
       className: ['w-4 h-4', 'text-blue-600'],
+    },
+    {
+      size: 'xs',
+      variant: 'outline',
+      colorScheme: 'blueLight',
+      className: ['w-4 h-4', 'text-blueLight-600'],
     },
     {
       size: 'xs',
@@ -760,6 +865,12 @@ export const iconVariant = cva('', {
     },
     {
       size: 'xs',
+      variant: 'outline',
+      colorScheme: 'pink',
+      className: ['w-4 h-4', 'text-pink-600'],
+    },
+    {
+      size: 'xs',
       variant: 'link',
       colorScheme: 'primary',
       className: ['w-4 h-4', 'text-primary-700'],
@@ -821,6 +932,12 @@ export const iconVariant = cva('', {
     {
       size: 'xs',
       variant: 'link',
+      colorScheme: 'indigo',
+      className: ['w-4 h-4', 'text-indigo-700'],
+    },
+    {
+      size: 'xs',
+      variant: 'link',
       colorScheme: 'teal',
       className: ['w-4 h-4', 'text-teal-700'],
     },
@@ -835,6 +952,12 @@ export const iconVariant = cva('', {
       variant: 'link',
       colorScheme: 'blue',
       className: ['w-4 h-4', 'text-blue-700'],
+    },
+    {
+      size: 'xs',
+      variant: 'link',
+      colorScheme: 'blueLight',
+      className: ['w-4 h-4', 'text-blueLight-700'],
     },
     {
       size: 'xs',
@@ -877,6 +1000,12 @@ export const iconVariant = cva('', {
       variant: 'link',
       colorScheme: 'cyan',
       className: ['w-4 h-4', 'text-cyan-700'],
+    },
+    {
+      size: 'xs',
+      variant: 'link',
+      colorScheme: 'pink',
+      className: ['w-4 h-4', 'text-pink-700'],
     },
     {
       size: 'xs',
@@ -941,6 +1070,12 @@ export const iconVariant = cva('', {
     {
       size: 'xs',
       variant: 'ghost',
+      colorScheme: 'indigo',
+      className: ['w-4 h-4', 'text-indigo-700'],
+    },
+    {
+      size: 'xs',
+      variant: 'ghost',
       colorScheme: 'teal',
       className: ['w-4 h-4', 'text-teal-700'],
     },
@@ -955,6 +1090,12 @@ export const iconVariant = cva('', {
       variant: 'ghost',
       colorScheme: 'blue',
       className: ['w-4 h-4', 'text-blue-700'],
+    },
+    {
+      size: 'xs',
+      variant: 'ghost',
+      colorScheme: 'blueLight',
+      className: ['w-4 h-4', 'text-blueLight-700'],
     },
     {
       size: 'xs',
@@ -997,6 +1138,12 @@ export const iconVariant = cva('', {
       variant: 'ghost',
       colorScheme: 'cyan',
       className: ['w-4 h-4', 'text-cyan-700'],
+    },
+    {
+      size: 'xs',
+      variant: 'ghost',
+      colorScheme: 'pink',
+      className: ['w-4 h-4', 'text-pink-700'],
     },
     {
       size: 'sm',
@@ -1061,6 +1208,12 @@ export const iconVariant = cva('', {
     {
       size: 'sm',
       variant: 'solid',
+      colorScheme: 'indigo',
+      className: ['w-5 h-5', 'text-white'],
+    },
+    {
+      size: 'sm',
+      variant: 'solid',
       colorScheme: 'teal',
       className: ['w-5 h-5', 'text-white'],
     },
@@ -1074,6 +1227,12 @@ export const iconVariant = cva('', {
       size: 'sm',
       variant: 'solid',
       colorScheme: 'blue',
+      className: ['w-5 h-5', 'text-white'],
+    },
+    {
+      size: 'sm',
+      variant: 'solid',
+      colorScheme: 'blueLight',
       className: ['w-5 h-5', 'text-white'],
     },
     {
@@ -1116,6 +1275,12 @@ export const iconVariant = cva('', {
       size: 'sm',
       variant: 'solid',
       colorScheme: 'cyan',
+      className: ['w-5 h-5', 'text-white'],
+    },
+    {
+      size: 'sm',
+      variant: 'solid',
+      colorScheme: 'pink',
       className: ['w-5 h-5', 'text-white'],
     },
     {
@@ -1181,6 +1346,12 @@ export const iconVariant = cva('', {
     {
       size: 'sm',
       variant: 'outline',
+      colorScheme: 'indigo',
+      className: ['w-5 h-5', 'text-indigo-600'],
+    },
+    {
+      size: 'sm',
+      variant: 'outline',
       colorScheme: 'teal',
       className: ['w-5 h-5', 'text-teal-600'],
     },
@@ -1195,6 +1366,12 @@ export const iconVariant = cva('', {
       variant: 'outline',
       colorScheme: 'blue',
       className: ['w-5 h-5', 'text-blue-600'],
+    },
+    {
+      size: 'sm',
+      variant: 'outline',
+      colorScheme: 'blueLight',
+      className: ['w-5 h-5', 'text-blueLight-600'],
     },
     {
       size: 'sm',
@@ -1240,6 +1417,12 @@ export const iconVariant = cva('', {
     },
     {
       size: 'sm',
+      variant: 'outline',
+      colorScheme: 'pink',
+      className: ['w-5 h-5', 'text-pink-600'],
+    },
+    {
+      size: 'sm',
       variant: 'link',
       colorScheme: 'primary',
       className: ['w-5 h-5', 'text-primary-700'],
@@ -1301,6 +1484,12 @@ export const iconVariant = cva('', {
     {
       size: 'sm',
       variant: 'link',
+      colorScheme: 'indigo',
+      className: ['w-5 h-5', 'text-indigo-700'],
+    },
+    {
+      size: 'sm',
+      variant: 'link',
       colorScheme: 'teal',
       className: ['w-5 h-5', 'text-teal-700'],
     },
@@ -1315,6 +1504,12 @@ export const iconVariant = cva('', {
       variant: 'link',
       colorScheme: 'blue',
       className: ['w-5 h-5', 'text-blue-700'],
+    },
+    {
+      size: 'sm',
+      variant: 'link',
+      colorScheme: 'blueLight',
+      className: ['w-5 h-5', 'text-blueLight-700'],
     },
     {
       size: 'sm',
@@ -1357,6 +1552,12 @@ export const iconVariant = cva('', {
       variant: 'link',
       colorScheme: 'cyan',
       className: ['w-5 h-5', 'text-cyan-700'],
+    },
+    {
+      size: 'sm',
+      variant: 'link',
+      colorScheme: 'pink',
+      className: ['w-5 h-5', 'text-pink-700'],
     },
     {
       size: 'sm',
@@ -1421,6 +1622,12 @@ export const iconVariant = cva('', {
     {
       size: 'sm',
       variant: 'ghost',
+      colorScheme: 'indigo',
+      className: ['w-5 h-5', 'text-indigo-700'],
+    },
+    {
+      size: 'sm',
+      variant: 'ghost',
       colorScheme: 'teal',
       className: ['w-5 h-5', 'text-teal-700'],
     },
@@ -1435,6 +1642,12 @@ export const iconVariant = cva('', {
       variant: 'ghost',
       colorScheme: 'blue',
       className: ['w-5 h-5', 'text-blue-700'],
+    },
+    {
+      size: 'sm',
+      variant: 'ghost',
+      colorScheme: 'blueLight',
+      className: ['w-5 h-5', 'text-blueLight-700'],
     },
     {
       size: 'sm',
@@ -1477,6 +1690,12 @@ export const iconVariant = cva('', {
       variant: 'ghost',
       colorScheme: 'cyan',
       className: ['w-5 h-5', 'text-cyan-700'],
+    },
+    {
+      size: 'sm',
+      variant: 'ghost',
+      colorScheme: 'pink',
+      className: ['w-5 h-5', 'text-pink-700'],
     },
     {
       size: 'md',
@@ -1541,6 +1760,12 @@ export const iconVariant = cva('', {
     {
       size: 'md',
       variant: 'solid',
+      colorScheme: 'indigo',
+      className: ['w-5 h-5', 'text-white'],
+    },
+    {
+      size: 'md',
+      variant: 'solid',
       colorScheme: 'teal',
       className: ['w-5 h-5', 'text-white'],
     },
@@ -1554,6 +1779,12 @@ export const iconVariant = cva('', {
       size: 'md',
       variant: 'solid',
       colorScheme: 'blue',
+      className: ['w-5 h-5', 'text-white'],
+    },
+    {
+      size: 'md',
+      variant: 'solid',
+      colorScheme: 'blueLight',
       className: ['w-5 h-5', 'text-white'],
     },
     {
@@ -1596,6 +1827,12 @@ export const iconVariant = cva('', {
       size: 'md',
       variant: 'solid',
       colorScheme: 'cyan',
+      className: ['w-5 h-5', 'text-white'],
+    },
+    {
+      size: 'md',
+      variant: 'solid',
+      colorScheme: 'pink',
       className: ['w-5 h-5', 'text-white'],
     },
     {
@@ -1661,6 +1898,12 @@ export const iconVariant = cva('', {
     {
       size: 'md',
       variant: 'outline',
+      colorScheme: 'indigo',
+      className: ['w-5 h-5', 'text-indigo-600'],
+    },
+    {
+      size: 'md',
+      variant: 'outline',
       colorScheme: 'teal',
       className: ['w-5 h-5', 'text-teal-600'],
     },
@@ -1675,6 +1918,12 @@ export const iconVariant = cva('', {
       variant: 'outline',
       colorScheme: 'blue',
       className: ['w-5 h-5', 'text-blue-600'],
+    },
+    {
+      size: 'md',
+      variant: 'outline',
+      colorScheme: 'blueLight',
+      className: ['w-5 h-5', 'text-blueLight-600'],
     },
     {
       size: 'md',
@@ -1720,6 +1969,12 @@ export const iconVariant = cva('', {
     },
     {
       size: 'md',
+      variant: 'outline',
+      colorScheme: 'pink',
+      className: ['w-5 h-5', 'text-pink-600'],
+    },
+    {
+      size: 'md',
       variant: 'link',
       colorScheme: 'primary',
       className: ['w-5 h-5', 'text-primary-700'],
@@ -1781,6 +2036,12 @@ export const iconVariant = cva('', {
     {
       size: 'md',
       variant: 'link',
+      colorScheme: 'indigo',
+      className: ['w-5 h-5', 'text-indigo-700'],
+    },
+    {
+      size: 'md',
+      variant: 'link',
       colorScheme: 'teal',
       className: ['w-5 h-5', 'text-teal-700'],
     },
@@ -1795,6 +2056,12 @@ export const iconVariant = cva('', {
       variant: 'link',
       colorScheme: 'blue',
       className: ['w-5 h-5', 'text-blue-700'],
+    },
+    {
+      size: 'md',
+      variant: 'link',
+      colorScheme: 'blueLight',
+      className: ['w-5 h-5', 'text-blueLight-700'],
     },
     {
       size: 'md',
@@ -1837,6 +2104,12 @@ export const iconVariant = cva('', {
       variant: 'link',
       colorScheme: 'cyan',
       className: ['w-5 h-5', 'text-cyan-700'],
+    },
+    {
+      size: 'md',
+      variant: 'link',
+      colorScheme: 'pink',
+      className: ['w-5 h-5', 'text-pink-700'],
     },
     {
       size: 'md',
@@ -1901,6 +2174,12 @@ export const iconVariant = cva('', {
     {
       size: 'md',
       variant: 'ghost',
+      colorScheme: 'indigo',
+      className: ['w-5 h-5', 'text-indigo-700'],
+    },
+    {
+      size: 'md',
+      variant: 'ghost',
       colorScheme: 'teal',
       className: ['w-5 h-5', 'text-teal-700'],
     },
@@ -1915,6 +2194,12 @@ export const iconVariant = cva('', {
       variant: 'ghost',
       colorScheme: 'blue',
       className: ['w-5 h-5', 'text-blue-700'],
+    },
+    {
+      size: 'md',
+      variant: 'ghost',
+      colorScheme: 'blueLight',
+      className: ['w-5 h-5', 'text-blueLight-700'],
     },
     {
       size: 'md',
@@ -1957,6 +2242,12 @@ export const iconVariant = cva('', {
       variant: 'ghost',
       colorScheme: 'cyan',
       className: ['w-5 h-5', 'text-cyan-700'],
+    },
+    {
+      size: 'md',
+      variant: 'ghost',
+      colorScheme: 'pink',
+      className: ['w-5 h-5', 'text-pink-700'],
     },
     {
       size: 'lg',
@@ -2021,6 +2312,12 @@ export const iconVariant = cva('', {
     {
       size: 'lg',
       variant: 'solid',
+      colorScheme: 'indigo',
+      className: ['w-6 h-6', 'text-white'],
+    },
+    {
+      size: 'lg',
+      variant: 'solid',
       colorScheme: 'teal',
       className: ['w-6 h-6', 'text-white'],
     },
@@ -2034,6 +2331,12 @@ export const iconVariant = cva('', {
       size: 'lg',
       variant: 'solid',
       colorScheme: 'blue',
+      className: ['w-6 h-6', 'text-white'],
+    },
+    {
+      size: 'lg',
+      variant: 'solid',
+      colorScheme: 'blueLight',
       className: ['w-6 h-6', 'text-white'],
     },
     {
@@ -2076,6 +2379,12 @@ export const iconVariant = cva('', {
       size: 'lg',
       variant: 'solid',
       colorScheme: 'cyan',
+      className: ['w-6 h-6', 'text-white'],
+    },
+    {
+      size: 'lg',
+      variant: 'solid',
+      colorScheme: 'pink',
       className: ['w-6 h-6', 'text-white'],
     },
     {
@@ -2141,6 +2450,12 @@ export const iconVariant = cva('', {
     {
       size: 'lg',
       variant: 'outline',
+      colorScheme: 'indigo',
+      className: ['w-6 h-6', 'text-indigo-600'],
+    },
+    {
+      size: 'lg',
+      variant: 'outline',
       colorScheme: 'teal',
       className: ['w-6 h-6', 'text-teal-600'],
     },
@@ -2155,6 +2470,12 @@ export const iconVariant = cva('', {
       variant: 'outline',
       colorScheme: 'blue',
       className: ['w-6 h-6', 'text-blue-600'],
+    },
+    {
+      size: 'lg',
+      variant: 'outline',
+      colorScheme: 'blueLight',
+      className: ['w-6 h-6', 'text-blueLight-600'],
     },
     {
       size: 'lg',
@@ -2200,6 +2521,12 @@ export const iconVariant = cva('', {
     },
     {
       size: 'lg',
+      variant: 'outline',
+      colorScheme: 'pink',
+      className: ['w-6 h-6', 'text-pink-600'],
+    },
+    {
+      size: 'lg',
       variant: 'link',
       colorScheme: 'primary',
       className: ['w-6 h-6', 'text-primary-700'],
@@ -2261,6 +2588,12 @@ export const iconVariant = cva('', {
     {
       size: 'lg',
       variant: 'link',
+      colorScheme: 'indigo',
+      className: ['w-6 h-6', 'text-indigo-700'],
+    },
+    {
+      size: 'lg',
+      variant: 'link',
       colorScheme: 'teal',
       className: ['w-6 h-6', 'text-teal-700'],
     },
@@ -2275,6 +2608,12 @@ export const iconVariant = cva('', {
       variant: 'link',
       colorScheme: 'blue',
       className: ['w-6 h-6', 'text-blue-700'],
+    },
+    {
+      size: 'lg',
+      variant: 'link',
+      colorScheme: 'blueLight',
+      className: ['w-6 h-6', 'text-blueLight-700'],
     },
     {
       size: 'lg',
@@ -2317,6 +2656,12 @@ export const iconVariant = cva('', {
       variant: 'link',
       colorScheme: 'cyan',
       className: ['w-6 h-6', 'text-cyan-700'],
+    },
+    {
+      size: 'lg',
+      variant: 'link',
+      colorScheme: 'pink',
+      className: ['w-6 h-6', 'text-pink-700'],
     },
     {
       size: 'lg',
@@ -2381,6 +2726,12 @@ export const iconVariant = cva('', {
     {
       size: 'lg',
       variant: 'ghost',
+      colorScheme: 'indigo',
+      className: ['w-6 h-6', 'text-indigo-700'],
+    },
+    {
+      size: 'lg',
+      variant: 'ghost',
       colorScheme: 'teal',
       className: ['w-6 h-6', 'text-teal-700'],
     },
@@ -2395,6 +2746,12 @@ export const iconVariant = cva('', {
       variant: 'ghost',
       colorScheme: 'blue',
       className: ['w-6 h-6', 'text-blue-700'],
+    },
+    {
+      size: 'lg',
+      variant: 'ghost',
+      colorScheme: 'blueLight',
+      className: ['w-6 h-6', 'text-blueLight-700'],
     },
     {
       size: 'lg',
@@ -2437,6 +2794,12 @@ export const iconVariant = cva('', {
       variant: 'ghost',
       colorScheme: 'cyan',
       className: ['w-6 h-6', 'text-cyan-700'],
+    },
+    {
+      size: 'lg',
+      variant: 'ghost',
+      colorScheme: 'pink',
+      className: ['w-6 h-6', 'text-pink-700'],
     },
   ],
 });
@@ -2529,6 +2892,13 @@ export const linkButton = cva(
           'hover:underline',
           'focus:underline',
         ],
+        indigo: [
+          'text-indigo-700',
+          'hover:text-indigo-700',
+          'focus:text-indigo-700',
+          'hover:underline',
+          'focus:underline',
+        ],
         teal: [
           'text-teal-700',
           'hover:text-teal-700',
@@ -2547,6 +2917,13 @@ export const linkButton = cva(
           'text-blue-700',
           'hover:text-blue-700',
           'focus:text-blue-700',
+          'hover:underline',
+          'focus:underline',
+        ],
+        blueLight: [
+          'text-blueLight-700',
+          'hover:text-blueLight-700',
+          'focus:text-blueLight-700',
           'hover:underline',
           'focus:underline',
         ],
@@ -2596,6 +2973,13 @@ export const linkButton = cva(
           'text-cyan-700',
           'hover:text-cyan-700',
           'focus:text-cyan-700',
+          'hover:underline',
+          'focus:underline',
+        ],
+        pink: [
+          'text-pink-700',
+          'hover:text-pink-700',
+          'focus:text-pink-700',
           'hover:underline',
           'focus:underline',
         ],
@@ -2745,6 +3129,18 @@ export const solidButton = cva(
           'focus:shadow-ringPrimary',
           'focus-visible:shadow-ringPrimary',
         ],
+        indigo: [
+          'text-white',
+          'border',
+          'border-solid',
+          'bg-indigo-600',
+          'hover:bg-indigo-700',
+          'focus:bg-indigo-700',
+          'border-indigo-600',
+          'hover:border-indigo-700',
+          'focus:shadow-ringPrimary',
+          'focus-visible:shadow-ringPrimary',
+        ],
         teal: [
           'text-white',
           'border',
@@ -2778,6 +3174,18 @@ export const solidButton = cva(
           'focus:bg-blue-700',
           'border-blue-600',
           'hover:border-blue-700',
+          'focus:shadow-ringPrimary',
+          'focus-visible:shadow-ringPrimary',
+        ],
+        blueLight: [
+          'text-white',
+          'border',
+          'border-solid',
+          'bg-blueLight-600',
+          'hover:bg-blueLight-700',
+          'focus:bg-blueLight-700',
+          'border-blueLight-600',
+          'hover:border-blueLight-700',
           'focus:shadow-ringPrimary',
           'focus-visible:shadow-ringPrimary',
         ],
@@ -2862,6 +3270,18 @@ export const solidButton = cva(
           'focus:bg-cyan-700',
           'border-cyan-600',
           'hover:border-cyan-700',
+          'focus:shadow-ringPrimary',
+          'focus-visible:shadow-ringPrimary',
+        ],
+        pink: [
+          'text-white',
+          'border',
+          'border-solid',
+          'bg-pink-600',
+          'hover:bg-pink-700',
+          'focus:bg-pink-700',
+          'border-pink-600',
+          'hover:border-pink-700',
           'focus:shadow-ringPrimary',
           'focus-visible:shadow-ringPrimary',
         ],
@@ -2981,6 +3401,15 @@ export const ghostButton = cva(
           'hover:bg-blueDark-100',
           'focus:bg-blueDark-100',
         ],
+        indigo: [
+          'bg-transparent',
+          'text-indigo-700',
+          'shadow-none',
+          'hover:text-indigo-700',
+          'focus:text-indigo-700',
+          'hover:bg-indigo-100',
+          'focus:bg-indigo-100',
+        ],
         teal: [
           'bg-transparent',
           'text-teal-700',
@@ -3007,6 +3436,15 @@ export const ghostButton = cva(
           'focus:text-blue-700',
           'hover:bg-blue-100',
           'focus:bg-blue-100',
+        ],
+        blueLight: [
+          'bg-transparent',
+          'text-blueLight-700',
+          'shadow-none',
+          'hover:text-blueLight-700',
+          'focus:text-blueLight-700',
+          'hover:bg-blueLight-100',
+          'focus:bg-blueLight-100',
         ],
         moss: [
           'bg-transparent',
@@ -3070,6 +3508,15 @@ export const ghostButton = cva(
           'focus:text-cyan-700',
           'hover:bg-cyan-100',
           'focus:bg-cyan-100',
+        ],
+        pink: [
+          'bg-transparent',
+          'text-pink-700',
+          'shadow-none',
+          'hover:text-pink-700',
+          'focus:text-pink-700',
+          'hover:bg-pink-100',
+          'focus:bg-pink-100',
         ],
       },
     },
@@ -3196,6 +3643,16 @@ export const outlineButton = cva(
           'hover:text-blueDark-700',
           'focus:bg-blueDark-100',
         ],
+        indigo: [
+          'bg-indigo-50',
+          'text-indigo-700',
+          'border',
+          'border-solid',
+          'border-indigo-300',
+          'hover:bg-indigo-100',
+          'hover:text-indigo-700',
+          'focus:bg-indigo-100',
+        ],
         teal: [
           'bg-teal-50',
           'text-teal-700',
@@ -3225,6 +3682,16 @@ export const outlineButton = cva(
           'hover:bg-blue-100',
           'hover:text-blue-700',
           'focus:bg-blue-100',
+        ],
+        blueLight: [
+          'bg-blueLight-50',
+          'text-blueLight-700',
+          'border',
+          'border-solid',
+          'border-blueLight-300',
+          'hover:bg-blueLight-100',
+          'hover:text-blueLight-700',
+          'focus:bg-blueLight-100',
         ],
         moss: [
           'bg-moss-50',
@@ -3295,6 +3762,16 @@ export const outlineButton = cva(
           'hover:bg-cyan-100',
           'hover:text-cyan-700',
           'focus:bg-cyan-100',
+        ],
+        pink: [
+          'bg-pink-50',
+          'text-pink-700',
+          'border',
+          'border-solid',
+          'border-pink-300',
+          'hover:bg-pink-100',
+          'hover:text-pink-700',
+          'focus:bg-pink-100',
         ],
       },
     },

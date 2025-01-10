@@ -53,6 +53,7 @@ query getOrganizationsByIds($ids: [ID!]) {
     tags {
       name
       entityType
+      colorCode
       metadata {
         id
       }

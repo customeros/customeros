@@ -2,6 +2,7 @@ query getTags {
   tags {
     name
     entityType
+    colorCode
     metadata {
       id
     }

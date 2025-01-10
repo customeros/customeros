@@ -38,6 +38,7 @@ query contact($id: ID!) {
         id
       }
       name
+      colorCode
       entityType
     }
     jobRoles {
