@@ -11,7 +11,6 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -412,19 +411,17 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 			endedAt = nil
 		}
 
-		jobRoleData := neo4jrepository.JobRoleFields{
-			Description: description,
-			JobTitle:    jobTitle,
-			Primary:     primary,
+		jobRoleData := data_fields.JobRoleFields{
+			Description: utils.StringPtr(description),
+			JobTitle:    utils.StringPtr(jobTitle),
+			Primary:     utils.BoolPtr(primary),
 			StartedAt:   startedAt,
 			EndedAt:     endedAt,
-			SourceFields: neo4jmodel.SourceFields{
-				Source:    neo4jmodel.GetSource(source),
-				AppSource: common.GetAppSourceFromContext(ctx),
-			},
+			Source:      utils.StringPtr(neo4jmodel.GetSource(source)),
+			AppSource:   utils.StringPtr(common.GetAppSourceFromContext(ctx)),
 		}
 
-		innerErr = s.services.Neo4jRepositories.JobRoleWriteRepository.LinkContactWithOrganization(ctx, txWithPostCommit.Tx, tenant, contactId, organizationId, jobRoleData)
+		_, innerErr = s.services.JobRoleService.Save(ctx, txWithPostCommit, nil, utils.StringPtr(contactId), utils.StringPtr(organizationId), jobRoleData)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to link contact with organization"))
 			return nil, innerErr

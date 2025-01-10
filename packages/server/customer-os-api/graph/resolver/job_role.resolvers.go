@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -72,38 +73,44 @@ func (r *mutationResolver) JobRoleCreate(ctx context.Context, contactID string, 
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.JobRoleCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-	span.LogFields(log.String("request.contactID", contactID))
 
-	result, err := r.Services.CommonServices.JobRoleService.CreateJobRole(ctx, contactID, input.OrganizationID, mapper.MapJobRoleInputToEntity(&input))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed add job role to contact %s", contactID)
-		return nil, err
-	}
-	return mapper.MapEntityToJobRole(result), nil
+	// TODO deprecated, remove
+
+	return nil, nil
 }
 
 // JobRoleUpdate is the resolver for the jobRole_Update field.
 func (r *mutationResolver) JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.JobRoleUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-	span.LogFields(log.String("request.contactID", contactID))
 
-	result, err := r.Services.CommonServices.JobRoleService.UpdateJobRole(ctx, contactID, input.OrganizationID, mapper.MapJobRoleUpdateInputToEntity(&input))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed update role %s", input.ID)
-		return nil, err
-	}
-	return mapper.MapEntityToJobRole(result), nil
+	// TODO deprecated, remove
+
+	return nil, nil
 }
 
 // JobRoleSave is the resolver for the jobRole_Save field.
-func (r *mutationResolver) JobRoleSave(ctx context.Context, input *model.JobRoleSaveInput) (*model.JobRole, error) {
-	panic(fmt.Errorf("not implemented: JobRoleSave - jobRole_Save"))
+func (r *mutationResolver) JobRoleSave(ctx context.Context, input *model.JobRoleSaveInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.JobRoleSave", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	jobRoleId, err := r.Services.CommonServices.JobRoleService.Save(ctx, nil, input.ID, input.ContactID, input.OrganizationID, data_fields.JobRoleFields{
+		StartedAt:   input.StartedAt,
+		EndedAt:     input.EndedAt,
+		JobTitle:    input.JobTitle,
+		Primary:     input.Primary,
+		Description: input.Description,
+		Company:     input.Company,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to save job role")
+		return "", err
+	}
+
+	return jobRoleId, nil
 }
 
 // JobRoles is the resolver for the jobRoles field.
