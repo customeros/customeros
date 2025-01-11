@@ -8,14 +8,15 @@ import (
 	"time"
 
 	"github.com/customeros/mailsherpa/domaincheck"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
 )
 
 type AgentVisitorIDService interface {
@@ -323,7 +324,9 @@ func (a *agentVisitorIDService) buildTimelineMessage(ctx context.Context, eventD
 		return nil, err
 	}
 
-	sessionDuration, err := a.calculateSessionDuration(ctx, eventData.SessionID)
+	sessionDuration, err := a.calculateSessionDuration(ctx, &entity.WebSession{
+		ID: eventData.SessionID,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -351,24 +354,21 @@ func (a *agentVisitorIDService) buildTimelineMessage(ctx context.Context, eventD
 
 	timelineMessage := fullMessage.String()
 	return &timelineMessage, nil
-
 }
 
-func (a *agentVisitorIDService) calculateSessionDuration(ctx context.Context, sessionID string) (string, error) {
+func (a *agentVisitorIDService) calculateSessionDuration(ctx context.Context, session *entity.WebSession) (string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.calculateSessionDuration")
 	defer span.Finish()
 
-	query := entity.WebSession{
-		ID:       sessionID,
-		IsActive: false,
-	}
-	session, err := a.services.PostgresRepositories.WebSessionRepository.FindSession(ctx, query, nil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	if session == nil {
-		return "", nil
+	if session.EndTime.IsZero() {
+		session, err := a.services.PostgresRepositories.WebSessionRepository.FindSession(ctx, *session, nil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+		if session == nil {
+			return "", nil
+		}
 	}
 
 	duration := session.EndTime.Sub(session.StartTime)
@@ -490,7 +490,6 @@ func (a *agentVisitorIDService) isSlackNotificationEnabled(ctx context.Context, 
 	}
 
 	return agentConfig.SlackEnabled, agentConfig, nil
-
 }
 
 func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Context, session *entity.WebSession, orgID string) (*string, error) {
@@ -504,6 +503,7 @@ func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Con
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+
 	if globalOrg == nil {
 		err = a.services.PostgresRepositories.GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess(ctx, *session.Domain)
 		if err != nil {
@@ -511,104 +511,150 @@ func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Con
 		}
 	}
 
-	// Build the text content for the section based on available data
-	var contentLines []string
+	// Build company info section
+	var companyLines []string
 	primaryDomain := *session.Domain
 	if globalOrg != nil {
 		primaryDomain = globalOrg.PrimaryDomain
 	}
 	website := "https://" + primaryDomain
-
 	name := *session.Domain
 	if globalOrg != nil {
 		name = globalOrg.Name
 	}
-	contentLines = append(contentLines, fmt.Sprintf("<%s|*%s*> ", website, name))
+
+	companyLines = append(companyLines, fmt.Sprintf("<%s|*%s*>", website, name))
+
 	if globalOrg != nil && globalOrg.Description != "" {
-		contentLines = append(contentLines, fmt.Sprintf("%s \n", globalOrg.Description))
+		companyLines = append(companyLines, fmt.Sprintf("%s", globalOrg.Description))
 	}
-	// Add optional fields only if they're not empty
+
 	if website != "" {
-		contentLines = append(contentLines, fmt.Sprintf("*Website:* <%s|%s> ", website, primaryDomain))
+		companyLines = append(companyLines, fmt.Sprintf("*Website:* <%s|%s>", website, primaryDomain))
 	}
+
 	if globalOrg != nil && globalOrg.LinkedInUrl != "" && globalOrg.LinkedInAlias != "" {
-		contentLines = append(contentLines, fmt.Sprintf("*LinkedIn:* <%s|/%s> ", globalOrg.LinkedInUrl, globalOrg.LinkedInAlias))
+		companyLines = append(companyLines, fmt.Sprintf("*LinkedIn:* <%s|/%s>", globalOrg.LinkedInUrl, globalOrg.LinkedInAlias))
 	}
-	// Only add location if both city and country are available
+
 	if globalOrg != nil && globalOrg.City != "" && globalOrg.CountryA2 != "" {
-		contentLines = append(contentLines, fmt.Sprintf("*Location:* %s, %s ", globalOrg.City, globalOrg.CountryA2))
+		companyLines = append(companyLines, fmt.Sprintf("*Location:* %s, %s", globalOrg.City, globalOrg.CountryA2))
 	}
-	// Add source/referrer only if it exists
+
 	if session.Referrer != nil {
 		referrer := strings.TrimPrefix(*session.Referrer, "https://")
 		referrer = strings.TrimPrefix(referrer, "http://")
 		referrer = strings.TrimPrefix(referrer, "www.")
 		referrer = strings.Trim(referrer, "/")
-		contentLines = append(contentLines, fmt.Sprintf("*Source:* <%s|%s> ", session.Referrer, referrer))
+		companyLines = append(companyLines, fmt.Sprintf("*Source:* <%s|%s>", *session.Referrer, referrer))
 	} else {
-		contentLines = append(contentLines, "*Source:* Direct ")
+		companyLines = append(companyLines, "*Source:* Direct")
 	}
-	// Join the lines with newlines
-	sectionContent := strings.Join(contentLines, "\n")
 
-	// Create the section block without the accessory first
-	sectionBlock := fmt.Sprintf(`{
-		"type": "section",
-		"text": {
-			"type": "mrkdwn",
-			"text": "%s"
+	companyContent := strings.Join(companyLines, "\n")
+
+	// Build session info section
+	var sessionLines []string
+
+	if session.EndTime != nil && !session.EndTime.IsZero() {
+		duration, err := a.calculateSessionDuration(ctx, session)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
 		}
-	}`, sectionContent)
 
-	// If logo exists, add the accessory field
+		sessionLines = append(sessionLines, fmt.Sprintf("*Session Duration:* %s minutes", duration))
+	}
+
+	// Get page views
+	query := entity.WebTrackerEvents{
+		SessionID: session.ID,
+		EventType: enum.WebTrackerPageView.String(),
+	}
+	pageViews, err := a.services.PostgresRepositories.WebTrackerEventsRepository.FindAll(ctx, query, nil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	uniquePages, err := a.getUniquePageViews(ctx, pageViews)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	sessionLines = append(sessionLines, fmt.Sprintf("*Pages Viewed:* %d", len(uniquePages)))
+	for _, page := range uniquePages {
+		sessionLines = append(sessionLines, fmt.Sprintf("• <%s%s|%s>", website, page, page))
+	}
+
+	sessionContent := strings.Join(sessionLines, "\n")
+
+	// Handle logo accessory
+	var logoAccessory string
 	if globalOrg != nil && globalOrg.LogoUrl != "" {
-		sectionBlock = fmt.Sprintf(`{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "%s"
-			},
-			"accessory": {
-				"type": "image",
-				"image_url": "%s",
-				"alt_text": "%s logo"
-			}
-		}`, sectionContent, globalOrg.LogoUrl, name)
+		logoAccessory = fmt.Sprintf(`,
+           "accessory": {
+               "type": "image",
+               "image_url": "%s",
+               "alt_text": "%s logo"
+           }`, globalOrg.LogoUrl, name)
 	}
 
-	// Create the final layout using the section block
+	// Build the final layout
 	layoutBlocks := fmt.Sprintf(`[
-		{
-			"type": "header",
-			"text": {
-				"type": "plain_text",
-				"text": "A visitor from %s is on your website",
-				"emoji": true
-			}
-		},
-		{
-			"type": "divider"
-		},
-		%s,
-		{
-			"type": "divider"
-		},
-		{
-			"type": "actions",
-			"elements": [
-				{
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"text": "View in CustomerOS"
-					},
-					"url": "https://app.customeros.ai/organization/%s?tab=about",
-					"value": "click_me_123",
-					"action_id": "actionId-0"
-				}
-			]
-		}
-	]`, name, sectionBlock, orgID)
+       {
+           "type": "header",
+           "text": {
+               "type": "plain_text",
+               "text": "A visitor from %s is on your website",
+               "emoji": true
+           }
+       },
+       {
+           "type": "divider"
+       },
+       {
+           "type": "section",
+           "text": {
+               "type": "mrkdwn",
+               "text": "%s"
+           }%s
+       },
+       {
+           "type": "divider"
+       },
+       {
+           "type": "section",
+           "text": {
+               "type": "mrkdwn",
+               "text": "%s"
+           }
+       },
+       {
+           "type": "divider"
+       },
+       {
+           "type": "actions",
+           "elements": [
+               {
+                   "type": "button",
+                   "text": {
+                       "type": "plain_text",
+                       "text": "View in CustomerOS"
+                   },
+                   "url": "https://app.customeros.ai/organization/%s?tab=about",
+                   "value": "click_me_123",
+                   "action_id": "actionId-0"
+               }
+           ]
+       }
+   ]`,
+		name,
+		companyContent,
+		logoAccessory,
+		sessionContent,
+		orgID)
 
 	return &layoutBlocks, nil
 }
