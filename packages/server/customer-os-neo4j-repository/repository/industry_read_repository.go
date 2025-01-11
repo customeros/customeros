@@ -39,7 +39,7 @@ func (r *industryReadRepository) GetAllForOrganizationIds(ctx context.Context, t
 	span.LogFields(log.String("organizationIds", fmt.Sprintf("%v", organizationIds)))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_INDUSTRY]->(i:Industry) 
-				WHERE i.id in $organizationIds RETURN i, o.id`
+				WHERE o.id in $organizationIds RETURN i, o.id`
 
 	params := map[string]any{
 		"tenant":          tenant,
