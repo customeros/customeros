@@ -353,15 +353,41 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		}
 	}
 
+	// Validate industry code if set
+	if input.IndustryCode != nil {
+		if utils.IfNotNilString(input.IndustryCode) == "" {
+			input.IndustryCode = nil
+		} else {
+			industryEntity, err := s.services.IndustryService.GetByCode(ctx, utils.IfNotNilString(input.IndustryCode))
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to get industry by code"))
+			}
+			if industryEntity == nil {
+				input.IndustryCode = nil
+			} else {
+				input.IndustryName = utils.StringPtr(industryEntity.Name)
+			}
+		}
+	}
+
+	// Prepare enrich details if organization created from global orgs, to prevent re-enriching
+	//if createFlow && input.GlobalOrgId != nil {
+	//	input.EnrichDomain = utils.StringPtr(primaryDomain)
+	//	input.EnrichSource = utils.StringPtr(constants.SourceGlobalOrgs)
+	//}
+
 	newDomains := make([]string, 0)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		// create of update organization
 		err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, txWithPostCommit.Tx, tenant, organizationId, input)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save organization"))
 			return nil, err
 		}
 
+		// post create actions
 		if createFlow {
 			_, err = s.services.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, txWithPostCommit.Tx, tenant, organizationId, model.ORGANIZATION, enum.ActionCreated, "", "", utils.Now(), common.GetAppSourceFromContext(ctx))
 			if err != nil {
@@ -374,6 +400,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			}
 		}
 
+		// link with domains
 		if input.Domains != nil && len(input.Domains) > 0 {
 			for _, domain := range input.Domains {
 				linked, err := s.LinkWithDomain(ctx, txWithPostCommit, organizationId, domain)
@@ -387,6 +414,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			}
 		}
 
+		// link with external system
 		if input.ExternalSystemAvailable() {
 			externalSystemData := neo4jmodel.ExternalSystem{
 				ExternalSystemId: input.ExternalSystem.ExternalSystemId,
@@ -403,11 +431,20 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			}
 		}
 
+		// replace owner if provided
 		if utils.IfNotNilString(input.OwnerId) != "" {
 			err = s.services.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(ctx, txWithPostCommit.Tx, tenant, organizationId, *input.OwnerId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
+			}
+		}
+
+		// replace industry if provided
+		if input.IndustryCode != nil {
+			err = s.services.Neo4jRepositories.IndustryWriteRepository.ReplaceForOrganization(ctx, txWithPostCommit.Tx, tenant, organizationId, *input.IndustryCode)
+			if err != nil {
+				tracing.TraceErr(span, err)
 			}
 		}
 
@@ -510,6 +547,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 
 			return nil
 		})
+
 		return nil, nil
 	})
 	if err != nil {
