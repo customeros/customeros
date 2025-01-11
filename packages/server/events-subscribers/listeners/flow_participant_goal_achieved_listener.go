@@ -7,9 +7,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
@@ -35,6 +36,24 @@ func Handle_FlowParticipantGoalAchieved(ctx context.Context, services *service.S
 	}
 
 	flowParticipant, err := services.FlowService.FlowParticipantByEntity(ctx, flow.Id, event.ParticipantId, event.ParticipantType)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	contact, err := services.ContactService.GetContactById(ctx, flowParticipant.EntityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if contact == nil {
+		err = errors.New("contact not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	contactEmail, err := services.EmailService.GetPrimaryEmailForEntityId(ctx, model.CONTACT, flowParticipant.EntityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -81,15 +100,13 @@ func Handle_FlowParticipantGoalAchieved(ctx context.Context, services *service.S
 			return err
 		}
 
-		primaryEmail, err := services.EmailService.GetPrimaryEmailForEntityId(ctx, model.USER, user.Id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		if primaryEmail == nil {
-			span.LogFields(log.String("msg", "primary email not found"))
-			return nil
+		contactName := ""
+		if utils.StringFirstNonEmpty(contact.Name) != "" {
+			contactName = contact.Name
+		} else if utils.StringFirstNonEmpty(contact.FirstName, contact.LastName) != "" {
+			contactName = utils.JoinNonEmpty(" ", contact.FirstName, contact.LastName)
+		} else if contactEmail != nil && utils.StringFirstNonEmpty(contactEmail.RawEmail) != "" {
+			contactName = contactEmail.RawEmail
 		}
 
 		organizationName := ""
@@ -105,25 +122,50 @@ func Handle_FlowParticipantGoalAchieved(ctx context.Context, services *service.S
 			organizationPublicLink = fmt.Sprintf("%s/organization/%s", services.GlobalConfig.NovuConfig.FronteraUrl, contactWithOrganization.Organization.ID)
 		}
 
-		notification := &service.NovuNotification{
-			WorkflowId: service.WorkflowId_FlowParticipantGoalAchievedEmail,
-			TemplateData: map[string]string{
-				"{{orgLink}}": organizationPublicLink,
-				"{{orgName}}": organizationName,
-			},
-			To: &service.NotifiableUser{
-				FirstName:    user.FirstName,
-				LastName:     user.LastName,
-				Email:        primaryEmail.RawEmail,
-				SubscriberID: user.Id,
-			},
-			Subject: fmt.Sprintf("%s has achieved it’s goal!", flow.Name),
-		}
-
-		err = services.NovuService.SendNotification(ctx, notification)
+		//slack notification
+		slackChannel, err := services.PostgresRepositories.SlackChannelNotificationRepository.GetSlackChannel(ctx, message.Event.Tenant, postgresEntity.SlackChannelNotificationWorkflowMailstackReply)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
+		}
+
+		if slackChannel != nil && slackChannel.ChannelId != "" {
+			slackMessageText := contactName + " has replied to the email. " + organizationName + " has achieved it’s goal!"
+
+			err = services.SlackService.Notify(ctx, message.Event.Tenant, slackChannel.ChannelId, &slackMessageText)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+		}
+
+		primaryEmail, err := services.EmailService.GetPrimaryEmailForEntityId(ctx, model.USER, user.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if primaryEmail != nil {
+			notification := &service.NovuNotification{
+				WorkflowId: service.WorkflowId_FlowParticipantGoalAchievedEmail,
+				TemplateData: map[string]string{
+					"{{orgLink}}": organizationPublicLink,
+					"{{orgName}}": organizationName,
+				},
+				To: &service.NotifiableUser{
+					FirstName:    user.FirstName,
+					LastName:     user.LastName,
+					Email:        primaryEmail.RawEmail,
+					SubscriberID: user.Id,
+				},
+				Subject: fmt.Sprintf("%s has achieved it’s goal!", flow.Name),
+			}
+
+			err = services.NovuService.SendNotification(ctx, notification)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
 		}
 	}
 

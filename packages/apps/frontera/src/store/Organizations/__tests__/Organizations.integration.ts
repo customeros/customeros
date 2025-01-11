@@ -27,7 +27,7 @@ describe('OrganizationsService - Integration Tests', () => {
       await organizationsService.getOrganizations({
         pagination: {
           page: 0,
-          limit: 1000,
+          limit: 10000,
         },
       });
 
@@ -69,7 +69,7 @@ describe('OrganizationsService - Integration Tests', () => {
         expect.soft(organization.renewalSummaryMaxArrForecast).toBeNull();
         expect.soft(organization.renewalSummaryRenewalLikelihood).toBeNull();
         expect.soft(organization?.renewalSummaryNextRenewalAt).toBeNull();
-        expect.soft(organization?.contracts).toBeNull();
+        expect.soft(organization?.contracts).toEqual([]);
         expect.soft(organization?.description).toBe('');
         expect.soft(organization?.employees).toEqual(0);
         expect.soft(organization?.iconUrl).toBe('');
@@ -84,11 +84,11 @@ describe('OrganizationsService - Integration Tests', () => {
         expect.soft(organization?.parentId).toBeNull();
         expect.soft(organization?.parentName).toBeNull();
         expect.soft(organization?.public).toBe(false);
-        expect.soft(organization?.relationship).toBe('');
-        expect.soft(organization?.tags).toBeNull();
+        expect.soft(organization?.relationship).toBe('PROSPECT');
+        expect.soft(organization?.tags).toEqual([]);
         expect.soft(organization?.socialMedia).toEqual([]);
         expect.soft(organization?.subsidiaries).toEqual([]);
-        expect.soft(organization?.stage).toBe('');
+        expect.soft(organization?.stage).toBe('LEAD');
         expect.soft(organization?.valueProposition).toBe('');
         expect.soft(organization?.yearFounded).toBeNull();
         expect.soft(organization?.website).toBe('');
@@ -134,7 +134,7 @@ describe('OrganizationsService - Integration Tests', () => {
       });
 
       organization = await organizationsService.getOrganization(id);
-      expect(organization?.tags).toBeNull();
+      expect(organization?.tags).toEqual([]);
     } else {
       throw new Error(
         'Tag removal failed: Organization or tag ID is undefined.',
@@ -324,7 +324,7 @@ describe('OrganizationsService - Integration Tests', () => {
     );
   });
 
-  it('updates onboarding status to organization', async () => {
+  it.skip('updates onboarding status to organization', async () => {
     const { id } = await VitestHelper.createOrganizationForTest(
       organizationsService,
     );

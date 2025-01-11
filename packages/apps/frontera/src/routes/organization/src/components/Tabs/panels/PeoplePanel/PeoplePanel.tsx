@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
@@ -14,6 +15,8 @@ import { SearchSm } from '@ui/media/icons/SearchSm';
 import { UsersPlus } from '@ui/media/icons/UsersPlus';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
+import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
+import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
 import { SortOptionsMenu } from './components/SortOptionsMenu';
@@ -26,7 +29,7 @@ export const PeoplePanel = observer(() => {
   const { open, onOpen, onClose } = useDisclosure();
   const id = useParams()?.id as string;
   const organization = store.organizations.getById(id);
-
+  const [expandAll, setExpandAll] = useState(false);
   const contacts = store.organizations.getById(id)?.contacts;
 
   const searchSortContact = searchSortContactUseCase;
@@ -124,7 +127,16 @@ export const PeoplePanel = observer(() => {
               onChange={(e) => searchSortContact.setSearch(e.target.value)}
             />
           </div>
-          <SortOptionsMenu searchSortContact={searchSortContact} />
+          <div className='flex items-center'>
+            <SortOptionsMenu searchSortContact={searchSortContact} />
+            <IconButton
+              size='xs'
+              variant='ghost'
+              aria-label='collapse/decollapse'
+              onClick={() => setExpandAll(!expandAll)}
+              icon={!expandAll ? <ChevronExpand /> : <ChevronCollapse />}
+            />
+          </div>
         </div>
       )}
 
@@ -202,7 +214,7 @@ export const PeoplePanel = observer(() => {
             className='group/card'
             style={{ width: '100%' }}
           >
-            <ContactCard id={contact?.id} />
+            <ContactCard id={contact?.id} expandAll={expandAll} />
           </div>
         ))}
 

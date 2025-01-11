@@ -261,6 +261,7 @@ type ComplexityRoot struct {
 		Flows                                 func(childComplexity int) int
 		Hide                                  func(childComplexity int) int
 		ID                                    func(childComplexity int) int
+		JobRoleIds                            func(childComplexity int) int
 		LastName                              func(childComplexity int) int
 		LinkedInAlias                         func(childComplexity int) int
 		LinkedInExternalID                    func(childComplexity int) int
@@ -1104,6 +1105,7 @@ type ComplexityRoot struct {
 		InvoiceVoid                                func(childComplexity int, id string) int
 		JobRoleCreate                              func(childComplexity int, contactID string, input model.JobRoleInput) int
 		JobRoleDelete                              func(childComplexity int, contactID string, roleID string) int
+		JobRoleSave                                func(childComplexity int, input *model.JobRoleSaveInput) int
 		JobRoleUpdate                              func(childComplexity int, contactID string, input model.JobRoleUpdateInput) int
 		LocationRemoveFromContact                  func(childComplexity int, contactID string, locationID string) int
 		LocationRemoveFromOrganization             func(childComplexity int, organizationID string, locationID string) int
@@ -1488,6 +1490,7 @@ type ComplexityRoot struct {
 		InvoiceByNumber                    func(childComplexity int, number string) int
 		Invoices                           func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy, organizationID *string) int
 		Issue                              func(childComplexity int, id string) int
+		JobRoles                           func(childComplexity int, ids []string) int
 		LogEntry                           func(childComplexity int, id string) int
 		MailstackCheckUnavailableDomains   func(childComplexity int, domains []string) int
 		MailstackDomainPurchaseSuggestions func(childComplexity int, domain string) int
@@ -1966,6 +1969,7 @@ type MutationResolver interface {
 	JobRoleDelete(ctx context.Context, contactID string, roleID string) (*model.Result, error)
 	JobRoleCreate(ctx context.Context, contactID string, input model.JobRoleInput) (*model.JobRole, error)
 	JobRoleUpdate(ctx context.Context, contactID string, input model.JobRoleUpdateInput) (*model.JobRole, error)
+	JobRoleSave(ctx context.Context, input *model.JobRoleSaveInput) (string, error)
 	LocationRemoveFromContact(ctx context.Context, contactID string, locationID string) (*model.Contact, error)
 	LocationRemoveFromOrganization(ctx context.Context, organizationID string, locationID string) (*model.Organization, error)
 	LocationUpdate(ctx context.Context, input model.LocationUpdateInput) (*model.Location, error)
@@ -2075,7 +2079,6 @@ type OrganizationResolver interface {
 	ParentCompanies(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error)
 
 	SocialMedia(ctx context.Context, obj *model.Organization) ([]*model.Social, error)
-
 	Subsidiaries(ctx context.Context, obj *model.Organization) ([]*model.LinkedOrganization, error)
 	Tags(ctx context.Context, obj *model.Organization) ([]*model.Tag, error)
 
@@ -2145,6 +2148,7 @@ type QueryResolver interface {
 	Invoices(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy, organizationID *string) (*model.InvoicesPage, error)
 	InvoiceByNumber(ctx context.Context, number string) (*model.Invoice, error)
 	Issue(ctx context.Context, id string) (*model.Issue, error)
+	JobRoles(ctx context.Context, ids []string) ([]*model.JobRole, error)
 	LogEntry(ctx context.Context, id string) (*model.LogEntry, error)
 	MailstackDomainPurchaseSuggestions(ctx context.Context, domain string) ([]string, error)
 	MailstackDomains(ctx context.Context) ([]string, error)
@@ -3234,6 +3238,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ContactUiDetails.ID(childComplexity), true
+
+	case "ContactUiDetails.jobRoleIds":
+		if e.complexity.ContactUiDetails.JobRoleIds == nil {
+			break
+		}
+
+		return e.complexity.ContactUiDetails.JobRoleIds(childComplexity), true
 
 	case "ContactUiDetails.lastName":
 		if e.complexity.ContactUiDetails.LastName == nil {
@@ -8003,6 +8014,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.JobRoleDelete(childComplexity, args["contactId"].(string), args["roleId"].(string)), true
 
+	case "Mutation.jobRole_Save":
+		if e.complexity.Mutation.JobRoleSave == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_jobRole_Save_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.JobRoleSave(childComplexity, args["input"].(*model.JobRoleSaveInput)), true
+
 	case "Mutation.jobRole_Update":
 		if e.complexity.Mutation.JobRoleUpdate == nil {
 			break
@@ -10925,6 +10948,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Issue(childComplexity, args["id"].(string)), true
 
+	case "Query.jobRoles":
+		if e.complexity.Query.JobRoles == nil {
+			break
+		}
+
+		args, err := ec.field_Query_jobRoles_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.JobRoles(childComplexity, args["ids"].([]string)), true
+
 	case "Query.logEntry":
 		if e.complexity.Query.LogEntry == nil {
 			break
@@ -12554,6 +12589,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputInvoiceSimulateServiceLineInput,
 		ec.unmarshalInputInvoiceUpdateInput,
 		ec.unmarshalInputJobRoleInput,
+		ec.unmarshalInputJobRoleSaveInput,
 		ec.unmarshalInputJobRoleUpdateInput,
 		ec.unmarshalInputLinkOrganizationsInput,
 		ec.unmarshalInputLocationUpdateInput,
@@ -13334,6 +13370,7 @@ type ContactUiDetails {
     primaryOrganizationJobRoleStartDate:   Time
     primaryOrganizationJobRoleEndDate:     Time
 
+    jobRoleIds:             [ID!]!
     emails:                 [Email!]!
     phones:                 [String!]! #list of rawPhoneNumber
     tags:                   [Tag!]!
@@ -14983,47 +15020,46 @@ type IssueSummaryByStatus {
 }
 `, BuiltIn: false},
 	{Name: "../schemas/job_role.graphqls", Input: `extend type Mutation {
-    jobRole_Delete(contactId : ID!, roleId: ID!): Result!
-    jobRole_Create(contactId : ID!, input: JobRoleInput!): JobRole!
-    jobRole_Update(contactId : ID!, input: JobRoleUpdateInput!): JobRole!
+    jobRole_Delete(contactId : ID!, roleId: ID!): Result! @deprecated
+    jobRole_Create(contactId : ID!, input: JobRoleInput!): JobRole! @deprecated
+    jobRole_Update(contactId : ID!, input: JobRoleUpdateInput!): JobRole! @deprecated
+
+    jobRole_Save(input: JobRoleSaveInput): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
-"""
-Describes the relationship a Contact has with a Organization.
-**A ` + "`" + `return` + "`" + ` object**
-"""
+extend type Query {
+    jobRoles(ids: [ID!]!): [JobRole!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+input JobRoleSaveInput {
+    id:             ID
+    contactId:      ID
+    organizationId: ID
+    startedAt:      Time
+    endedAt:        Time
+    jobTitle:       String
+    primary:        Boolean
+    description:    String
+    company:        String
+
+}
+
 type JobRole {
     id: ID!
     createdAt: Time!
     updatedAt: Time!
-
-    """
-    Organization associated with a Contact.
-    **Required.**
-    """
     organization: Organization @goField(forceResolver: true)
-
     contact: Contact @goField(forceResolver: true)
-
-    "The Contact's job title."
     jobTitle: String
-
     primary: Boolean!
-
     description: String
     company: String
-
     startedAt: Time
     endedAt: Time
-
     source: DataSource!
     appSource: String!
 }
 
-"""
-Describes the relationship a Contact has with an Organization.
-**A ` + "`" + `create` + "`" + ` object**
-"""
 input JobRoleInput {
     organizationId: ID
     jobTitle: String
@@ -15035,10 +15071,6 @@ input JobRoleInput {
     company: String
 }
 
-"""
-Describes the relationship a Contact has with an Organization.
-**A ` + "`" + `create` + "`" + ` object**
-"""
 input JobRoleUpdateInput {
     id: ID!
     startedAt: Time
@@ -15579,7 +15611,7 @@ type Organization implements MetadataInterface {
     employees:              Int64
     headquarters:           String
     industry:               String
-    industryGroup:          String
+    industryGroup:          String @deprecated
     lastFundingAmount:      String
     lastFundingRound:       FundingRound
     lastTouchpoint:         LastTouchpoint
@@ -15595,7 +15627,6 @@ type Organization implements MetadataInterface {
     parentCompanies:        [LinkedOrganization!]! @goField(forceResolver: true)
     public:                 Boolean
     socialMedia:            [Social!]! @goField(forceResolver: true)
-    subIndustry:            String
     subsidiaries:           [LinkedOrganization!]! @goField(forceResolver: true)
     tags:                   [Tag!] @goField(forceResolver: true)
     targetAudience:         String
@@ -15687,6 +15718,7 @@ type Organization implements MetadataInterface {
     Deprecated
     """
     subsidiaryOf: [LinkedOrganization!]! @goField(forceResolver: true) @deprecated(reason: "Use parentCompany")
+    subIndustry:            String @deprecated
 }
 
 type LastTouchpoint {
@@ -15733,8 +15765,8 @@ input OrganizationSaveInput {
     domains:            [String!]
     website:            String
     industry:           String
-    subIndustry:        String
-    industryGroup:      String
+    subIndustry:        String @deprecated
+    industryGroup:      String @deprecated
     public:             Boolean
     market:             Market
     employees:          Int64
@@ -15768,8 +15800,8 @@ input OrganizationInput {
     domains:       [String!]
     website:       String
     industry:      String
-    subIndustry:   String
-    industryGroup: String
+    subIndustry:   String @deprecated
+    industryGroup: String @deprecated
     public:        Boolean
     customFields:  [CustomFieldInput!]
     market:        Market
@@ -15823,8 +15855,8 @@ input OrganizationUpdateInput {
     notes:              String
     website:            String
     industry:           String
-    subIndustry:        String
-    industryGroup:      String
+    subIndustry:        String @deprecated
+    industryGroup:      String @deprecated
     public:             Boolean
     market:             Market
     employees:          Int64
@@ -20465,6 +20497,34 @@ func (ec *executionContext) field_Mutation_jobRole_Delete_argsRoleID(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_jobRole_Save_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_jobRole_Save_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_jobRole_Save_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*model.JobRoleSaveInput, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal *model.JobRoleSaveInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalOJobRoleSaveInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleSaveInput(ctx, tmp)
+	}
+
+	var zeroVal *model.JobRoleSaveInput
 	return zeroVal, nil
 }
 
@@ -25134,6 +25194,34 @@ func (ec *executionContext) field_Query_issue_argsID(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_jobRoles_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_jobRoles_argsIds(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["ids"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_jobRoles_argsIds(
+	ctx context.Context,
+	rawArgs map[string]any,
+) ([]string, error) {
+	if _, ok := rawArgs["ids"]; !ok {
+		var zeroVal []string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+	if tmp, ok := rawArgs["ids"]; ok {
+		return ec.unmarshalNID2ᚕstringᚄ(ctx, tmp)
+	}
+
+	var zeroVal []string
 	return zeroVal, nil
 }
 
@@ -33545,6 +33633,50 @@ func (ec *executionContext) fieldContext_ContactUiDetails_primaryOrganizationJob
 	return fc, nil
 }
 
+func (ec *executionContext) _ContactUiDetails_jobRoleIds(ctx context.Context, field graphql.CollectedField, obj *model.ContactUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ContactUiDetails_jobRoleIds(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.JobRoleIds, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNID2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ContactUiDetails_jobRoleIds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ContactUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ContactUiDetails_emails(ctx context.Context, field graphql.CollectedField, obj *model.ContactUIDetails) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ContactUiDetails_emails(ctx, field)
 	if err != nil {
@@ -38928,8 +39060,6 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(_ con
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -39012,6 +39142,8 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(_ con
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -42412,8 +42544,6 @@ func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, 
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -42496,6 +42626,8 @@ func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, 
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -49498,8 +49630,6 @@ func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context,
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -49582,6 +49712,8 @@ func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context,
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -54593,8 +54725,6 @@ func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context,
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -54677,6 +54807,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context,
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -55506,8 +55638,6 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ conte
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -55590,6 +55720,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ conte
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -67276,6 +67408,95 @@ func (ec *executionContext) fieldContext_Mutation_jobRole_Update(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_jobRole_Save(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_jobRole_Save(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().JobRoleSave(rctx, fc.Args["input"].(*model.JobRoleSaveInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal string
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal string
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal string
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_jobRole_Save(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_jobRole_Save_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_location_RemoveFromContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_location_RemoveFromContact(ctx, field)
 	if err != nil {
@@ -67566,8 +67787,6 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -67650,6 +67869,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -70249,8 +70470,6 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -70333,6 +70552,8 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -70484,8 +70705,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Save(ctx context.
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -70568,6 +70787,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Save(ctx context.
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -71266,8 +71487,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -71350,6 +71569,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -71501,8 +71722,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -71585,6 +71804,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -71736,8 +71957,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -71820,6 +72039,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -72177,8 +72398,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -72261,6 +72480,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -72412,8 +72633,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -72496,6 +72715,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -72926,8 +73147,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -73010,6 +73229,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -73161,8 +73382,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -73245,6 +73464,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -73396,8 +73617,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -73480,6 +73699,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -79052,8 +79273,6 @@ func (ec *executionContext) fieldContext_Opportunity_organization(_ context.Cont
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -79136,6 +79355,8 @@ func (ec *executionContext) fieldContext_Opportunity_organization(_ context.Cont
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -81799,47 +82020,6 @@ func (ec *executionContext) fieldContext_Organization_socialMedia(_ context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _Organization_subIndustry(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_subIndustry(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SubIndustry, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Organization_subIndustry(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Organization",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Organization_subsidiaries(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_subsidiaries(ctx, field)
 	if err != nil {
@@ -83826,6 +84006,47 @@ func (ec *executionContext) fieldContext_Organization_subsidiaryOf(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_subIndustry(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_subIndustry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SubIndustry, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_subIndustry(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _OrganizationPage_content(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationPage) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrganizationPage_content(ctx, field)
 	if err != nil {
@@ -83925,8 +84146,6 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Cont
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -84009,6 +84228,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Cont
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -84247,8 +84468,6 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -84331,6 +84550,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -86825,8 +87046,6 @@ func (ec *executionContext) fieldContext_OrganizationWithJobRole_organization(_ 
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -86909,6 +87128,8 @@ func (ec *executionContext) fieldContext_OrganizationWithJobRole_organization(_ 
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -88297,8 +88518,6 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Con
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -88381,6 +88600,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Con
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -89584,6 +89805,8 @@ func (ec *executionContext) fieldContext_Query_ui_contacts(ctx context.Context, 
 				return ec.fieldContext_ContactUiDetails_primaryOrganizationJobRoleStartDate(ctx, field)
 			case "primaryOrganizationJobRoleEndDate":
 				return ec.fieldContext_ContactUiDetails_primaryOrganizationJobRoleEndDate(ctx, field)
+			case "jobRoleIds":
+				return ec.fieldContext_ContactUiDetails_jobRoleIds(ctx, field)
 			case "emails":
 				return ec.fieldContext_ContactUiDetails_emails(ctx, field)
 			case "phones":
@@ -92186,6 +92409,123 @@ func (ec *executionContext) fieldContext_Query_issue(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_jobRoles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_jobRoles(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().JobRoles(rctx, fc.Args["ids"].([]string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal []*model.JobRole
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal []*model.JobRole
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal []*model.JobRole
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.JobRole); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model.JobRole`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.JobRole)
+	fc.Result = res
+	return ec.marshalNJobRole2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_jobRoles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_JobRole_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_JobRole_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_JobRole_updatedAt(ctx, field)
+			case "organization":
+				return ec.fieldContext_JobRole_organization(ctx, field)
+			case "contact":
+				return ec.fieldContext_JobRole_contact(ctx, field)
+			case "jobTitle":
+				return ec.fieldContext_JobRole_jobTitle(ctx, field)
+			case "primary":
+				return ec.fieldContext_JobRole_primary(ctx, field)
+			case "description":
+				return ec.fieldContext_JobRole_description(ctx, field)
+			case "company":
+				return ec.fieldContext_JobRole_company(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_JobRole_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_JobRole_endedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_JobRole_source(ctx, field)
+			case "appSource":
+				return ec.fieldContext_JobRole_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type JobRole", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_jobRoles_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_logEntry(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_logEntry(ctx, field)
 	if err != nil {
@@ -93375,8 +93715,6 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -93459,6 +93797,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -93607,8 +93947,6 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -93691,6 +94029,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -93839,8 +94179,6 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -93923,6 +94261,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -94387,8 +94727,6 @@ func (ec *executionContext) fieldContext_Query_organization_ByLinkedIn(ctx conte
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -94471,6 +94809,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByLinkedIn(ctx conte
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -97109,8 +97449,6 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Co
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -97193,6 +97531,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Co
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -98689,8 +99029,6 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Con
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -98773,6 +99111,8 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Con
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -99841,8 +100181,6 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_public(ctx, field)
 			case "socialMedia":
 				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			case "subsidiaries":
 				return ec.fieldContext_Organization_subsidiaries(ctx, field)
 			case "tags":
@@ -99925,6 +100263,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
 			case "subsidiaryOf":
 				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
 		},
@@ -109525,6 +109865,89 @@ func (ec *executionContext) unmarshalInputJobRoleInput(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputJobRoleSaveInput(ctx context.Context, obj any) (model.JobRoleSaveInput, error) {
+	var it model.JobRoleSaveInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "contactId", "organizationId", "startedAt", "endedAt", "jobTitle", "primary", "description", "company"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "contactId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ContactID = data
+		case "organizationId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("organizationId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrganizationID = data
+		case "startedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartedAt = data
+		case "endedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endedAt"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EndedAt = data
+		case "jobTitle":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobTitle"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.JobTitle = data
+		case "primary":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("primary"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Primary = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
+		case "company":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("company"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Company = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputJobRoleUpdateInput(ctx context.Context, obj any) (model.JobRoleUpdateInput, error) {
 	var it model.JobRoleUpdateInput
 	asMap := map[string]any{}
@@ -115526,6 +115949,11 @@ func (ec *executionContext) _ContactUiDetails(ctx context.Context, sel ast.Selec
 			out.Values[i] = ec._ContactUiDetails_primaryOrganizationJobRoleStartDate(ctx, field, obj)
 		case "primaryOrganizationJobRoleEndDate":
 			out.Values[i] = ec._ContactUiDetails_primaryOrganizationJobRoleEndDate(ctx, field, obj)
+		case "jobRoleIds":
+			out.Values[i] = ec._ContactUiDetails_jobRoleIds(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "emails":
 			out.Values[i] = ec._ContactUiDetails_emails(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -122430,6 +122858,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "jobRole_Save":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_jobRole_Save(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "location_RemoveFromContact":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_location_RemoveFromContact(ctx, field)
@@ -123967,8 +124402,6 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "subIndustry":
-			out.Values[i] = ec._Organization_subIndustry(ctx, field, obj)
 		case "subsidiaries":
 			field := field
 
@@ -124619,6 +125052,8 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "subIndustry":
+			out.Values[i] = ec._Organization_subIndustry(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -126178,6 +126613,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_issue(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "jobRoles":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_jobRoles(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -135447,6 +135904,14 @@ func (ec *executionContext) unmarshalOJobRoleInput2ᚕᚖgithubᚗcomᚋopenline
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) unmarshalOJobRoleSaveInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐJobRoleSaveInput(ctx context.Context, v any) (*model.JobRoleSaveInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputJobRoleSaveInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOLastTouchpoint2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐLastTouchpoint(ctx context.Context, sel ast.SelectionSet, v *model.LastTouchpoint) graphql.Marshaler {

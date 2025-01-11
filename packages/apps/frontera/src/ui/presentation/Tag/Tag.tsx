@@ -12,6 +12,7 @@ import {
   tagSolidVariant,
   tagSubtleVariant,
   tagOutlineVariant,
+  tagCloseButtonVariant,
 } from './Tag.variants';
 
 const allVariants = {
@@ -56,7 +57,8 @@ export const Tag = forwardRef<HTMLDivElement, TagProps>(
         {leftIconSlot}
         {labelSlot}
         {rightIconSlot}
-        {closeButtonSlot && cloneElement(closeButtonSlot, { size })}
+        {closeButtonSlot &&
+          cloneElement(closeButtonSlot, { size, colorScheme })}
       </div>
     );
   },
@@ -102,13 +104,16 @@ export const TagLabel = forwardRef<
   });
 });
 
-interface TagCloseButtonProps extends React.HTMLAttributes<HTMLDivElement> {
+interface TagCloseButtonProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof tagCloseButtonVariant> {
   size?: 'sm' | 'md' | 'lg';
 }
 
 export const TagCloseButton = ({
   size = 'md',
   className,
+  colorScheme,
   ...props
 }: TagCloseButtonProps) => {
   const iconStyle = useMemo(
@@ -133,8 +138,9 @@ export const TagCloseButton = ({
     <span
       className={cn(
         wrapperStyle,
-        'flex items-center ml-1 cursor-pointer text-grayModern-400 mr-0 bg-grayModern-100 rounded-e-md px-0.5 hover:bg-grayModern-200 hover:text-grayModern-500 transition ease-in-out',
+        `flex items-center ml-1 cursor-pointer mr-0 rounded-e-md px-0.5 transition ease-in-out`,
         className,
+        tagCloseButtonVariant({ colorScheme }),
       )}
       {...props}
     >

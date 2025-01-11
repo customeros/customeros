@@ -59,7 +59,7 @@ type Organization implements MetadataInterface {
     employees:              Int64
     headquarters:           String
     industry:               String
-    industryGroup:          String
+    industryGroup:          String @deprecated
     lastFundingAmount:      String
     lastFundingRound:       FundingRound
     lastTouchpoint:         LastTouchpoint
@@ -75,7 +75,6 @@ type Organization implements MetadataInterface {
     parentCompanies:        [LinkedOrganization!]! @goField(forceResolver: true)
     public:                 Boolean
     socialMedia:            [Social!]! @goField(forceResolver: true)
-    subIndustry:            String
     subsidiaries:           [LinkedOrganization!]! @goField(forceResolver: true)
     tags:                   [Tag!] @goField(forceResolver: true)
     targetAudience:         String
@@ -167,6 +166,7 @@ type Organization implements MetadataInterface {
     Deprecated
     """
     subsidiaryOf: [LinkedOrganization!]! @goField(forceResolver: true) @deprecated(reason: "Use parentCompany")
+    subIndustry:            String @deprecated
 }
 
 type LastTouchpoint {
@@ -213,8 +213,8 @@ input OrganizationSaveInput {
     domains:            [String!]
     website:            String
     industry:           String
-    subIndustry:        String
-    industryGroup:      String
+    subIndustry:        String @deprecated
+    industryGroup:      String @deprecated
     public:             Boolean
     market:             Market
     employees:          Int64
@@ -248,8 +248,8 @@ input OrganizationInput {
     domains:       [String!]
     website:       String
     industry:      String
-    subIndustry:   String
-    industryGroup: String
+    subIndustry:   String @deprecated
+    industryGroup: String @deprecated
     public:        Boolean
     customFields:  [CustomFieldInput!]
     market:        Market
@@ -303,8 +303,8 @@ input OrganizationUpdateInput {
     notes:              String
     website:            String
     industry:           String
-    subIndustry:        String
-    industryGroup:      String
+    subIndustry:        String @deprecated
+    industryGroup:      String @deprecated
     public:             Boolean
     market:             Market
     employees:          Int64

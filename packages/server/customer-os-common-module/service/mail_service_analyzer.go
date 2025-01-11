@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 
 	"github.com/customeros/mailsherpa/domaincheck"
@@ -32,6 +33,10 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 		if !mailvalidate.ValidateEmailSyntax(emailData.Participants.From.Email).IsValid {
 			analysis.ProcessEmail = false
 			analysis.SkipReason = "INVALID FROM EMAIL ADDRESS FORMAT"
+
+			span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
+			span.LogFields(log.String("reason", analysis.SkipReason))
+
 			return analysis
 		}
 	}
@@ -53,6 +58,9 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 			analysis.BouncedEmails = emailData.Headers.XFailedRecepients
 		}
 
+		span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
+		span.LogFields(log.String("reason", analysis.SkipReason))
+
 		return analysis
 	}
 
@@ -60,6 +68,10 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 	if a.isWarmingEmail(tenant, emailData) {
 		analysis.ProcessEmail = false
 		analysis.SkipReason = "WARMING"
+
+		span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
+		span.LogFields(log.String("reason", analysis.SkipReason))
+
 		return analysis
 	}
 
@@ -69,6 +81,10 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 		analysis.IsAutoResponder = true
 		analysis.ProcessEmail = false
 		analysis.SkipReason = reason
+
+		span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
+		span.LogFields(log.String("reason", analysis.SkipReason))
+
 		return analysis
 	}
 
@@ -79,6 +95,9 @@ func (a *mailService) ProcessEmailCheck(ctx context.Context, tenant string, emai
 		analysis.ProcessEmail = false
 		analysis.SkipReason = reason
 	}
+
+	span.LogFields(log.Bool("process_email", analysis.ProcessEmail))
+	span.LogFields(log.String("reason", analysis.SkipReason))
 
 	return analysis
 }
@@ -124,18 +143,24 @@ func (a *mailService) isBulkMail(headers EmailHeaders, from string, replyTo []Em
 		}
 	}
 
+	if headers.ForwardedFor == "" {
+		switch {
+		case (headers.ReplyToExists && !matchReplyTo):
+			return true, "BULK | REPLY-TO != FROM"
+		case headers.ReturnPathExists && headers.ReturnPath == "":
+			return true, "BULK | EMPTY RETURN-PATH"
+		case headers.ReturnPathExists && strings.Index(headers.ReturnPath, from) == -1:
+			return true, "BULK | RETURN-PATH != FROM"
+		default:
+		}
+	}
+
 	switch {
-	case (headers.ReplyToExists && !matchReplyTo):
-		return true, "BULK | REPLY-TO != FROM"
 	case headers.ListUnsubscribe:
 		return true, "BULK | UNSUBSCRIBE"
 	case strings.EqualFold(headers.Precedence, "bulk"):
 		return true, "BULK | PRECEDENCE: BULK"
-	case (headers.ReturnPathExists && headers.ReturnPath == ""):
-		return true, "BULK | EMPTY RETURN-PATH"
-	case (headers.ReturnPathExists && headers.ReturnPath != from):
-		return true, "BULK | RETURN-PATH != FROM"
-	case (headers.Sender != "" && headers.Sender != from):
+	case headers.Sender != "" && headers.Sender != from:
 		return true, "BULK | SENDER != FROM"
 	default:
 		return a.mailsherpaChecks(from)
@@ -171,6 +196,7 @@ func (a *mailService) mailsherpaChecks(from string) (failedCheck bool, reason st
 func (a *mailService) isBounceSubject(subject string) bool {
 	subject = strings.ToLower(subject)
 	keywords := []string{
+		"mail delivery failure",
 		"undelivered mail returned to sender",
 		"delivery status notification",
 		"undeliverable",
@@ -181,7 +207,7 @@ func (a *mailService) isBounceSubject(subject string) bool {
 		"returned to sender",
 	}
 	for _, phrase := range keywords {
-		if strings.Contains(subject, phrase) {
+		if strings.Contains(strings.ToLower(subject), phrase) {
 			return true
 		}
 	}

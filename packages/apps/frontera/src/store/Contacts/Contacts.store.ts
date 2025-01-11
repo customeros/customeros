@@ -279,7 +279,75 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
 
         const newContact = new Contact(
           this.root.contacts,
-          Contact.default({ name: input?.name || '', id: serverId }),
+          Contact.default({
+            name: input?.name || '',
+            id: serverId,
+          }),
+        );
+
+        this.value.set(serverId, newContact);
+        this.sync({ action: 'APPEND', ids: [serverId] });
+        this.totalElements++;
+        this.version++;
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      serverId && options?.onSuccess?.(serverId);
+      await this.root.contacts.invalidate(serverId!);
+      await this.root.organizations.invalidate(organizationId);
+    }
+  }
+
+  @action
+  async createWithEmail(
+    organizationId: string,
+    options?: { onSuccess?: (serverId: string) => void },
+    input?: ContactInput,
+  ) {
+    let serverId: string | undefined;
+
+    try {
+      const { contact_CreateForOrganization } =
+        await this.service.createContactForOrganization({
+          organizationId,
+          input: input ?? {},
+        });
+
+      runInAction(() => {
+        serverId = contact_CreateForOrganization.id;
+
+        const newContact = new Contact(
+          this.root.contacts,
+          Contact.default({
+            emails: [
+              {
+                email: input?.email?.email || '',
+                primary: true,
+                id: '',
+                emailValidationDetails: {
+                  __typename: undefined,
+                  verified: false,
+                  verifyingCheckAll: false,
+                  isValidSyntax: undefined,
+                  isRisky: undefined,
+                  isFirewalled: undefined,
+                  provider: undefined,
+                  firewall: undefined,
+                  isCatchAll: undefined,
+                  canConnectSmtp: undefined,
+                  deliverable: undefined,
+                  isMailboxFull: undefined,
+                  isRoleAccount: undefined,
+                  isFreeAccount: undefined,
+                  smtpSuccess: undefined,
+                },
+              },
+            ],
+            id: serverId,
+          }),
         );
 
         this.value.set(serverId, newContact);

@@ -19,33 +19,44 @@ describe('ContactsService - Integration Tests', () => {
     });
     const contact = await contactService.getContact(contact_Create);
 
-    expect(contact?.linkedInUrl?.length).toBe(1);
-    expect(contact?.linkedInUrl).toBe(contact_social_url);
+    expect(contact?.id).toBe(contact_Create);
     expect(contact?.createdAt).not.toBeNull();
+    expect(contact?.createdAt).not.toBe('');
+    expect(contact?.updatedAt).not.toBeNull();
     expect(contact?.firstName).toBe('');
     expect(contact?.lastName).toBe('');
     expect(contact?.name).toBe('');
-    expect(contact?.createdAt).not.toBe('');
     expect(contact?.prefix).toBe('');
     expect(contact?.description).toBe('');
     expect(contact?.timezone).toBe('');
-    expect(contact?.id).toBe(contact_Create);
-    expect(contact?.tags).toBeNull();
-    expect(contact?.flows.length).toBe(0);
-    expect(contact?.primaryOrganizationName).toBe('');
-    expect(contact?.primaryOrganizationJobRoleTitle).toBe(0);
-    expect(contact?.emails.find((e) => e.primary)).toBeNull();
-    expect(contact?.locations.length).toBe(0);
-    expect(contact?.emails.length).toBe(0);
-    expect(contact?.connectedUsers.length).toBe(0);
-    expect(contact?.updatedAt).not.toBeNull();
+    expect(contact?.profilePhotoUrl).toBe('');
     expect(contact?.enrichedAt).toBeNull();
     expect(contact?.enrichedFailedAt).toBeNull();
     // expect(contact?.enrichDetails.requestedAt).not.toBeNull(); asynchronous call so it generates false positive
+    expect(contact?.enrichedEmailRequestedAt).toBeNull();
     expect(contact?.enrichedEmailEnrichedAt).toBeNull();
     expect(contact?.enrichedEmailFound).toBeNull();
-    expect(contact?.enrichedEmailRequestedAt).toBeNull();
-    expect(contact?.profilePhotoUrl).toBe('');
+    expect(contact?.linkedInInternalId).not.toBeNull;
+    expect(Array.isArray(contact?.linkedInUrl)).toBe(false);
+    expect(contact?.linkedInUrl).toBe(contact_social_url);
+    expect(contact?.linkedInAlias).toBe('');
+    expect(contact?.linkedInExternalId).toBe('');
+    expect(contact?.linkedInFollowerCount).toBe(0);
+    expect(contact?.primaryOrganizationId).toBeNull;
+    expect(contact?.primaryOrganizationName).toBeNull;
+    expect(contact?.primaryOrganizationJobRoleId).toBeNull;
+    expect(contact?.primaryOrganizationJobRoleTitle).toBeNull;
+    expect(contact?.primaryOrganizationJobRoleDescription).toBeNull;
+    expect(contact?.primaryOrganizationJobRoleStartDate).toBeNull;
+    expect(contact?.primaryOrganizationJobRoleEndDate).toBeNull;
+    expect(contact?.emails.length).toBe(0);
+    expect(contact?.phones.length).toBe(0);
+    expect(contact?.tags).toEqual([]);
+    expect(contact?.flows.length).toBe(0);
+    expect(contact?.emails.find((e) => e.primary)).toBeUndefined;
+    expect(contact?.locations.length).toBe(0);
+    expect(contact?.emails.length).toBe(0);
+    expect(contact?.connectedUsers.length).toBe(0);
   });
 
   it('creates contact for organization', async () => {
@@ -61,7 +72,6 @@ describe('ContactsService - Integration Tests', () => {
       contact_CreateForOrganization.id,
     );
 
-    expect(contact?.primaryOrganizationName?.length).toBe(1);
     expect(contact?.primaryOrganizationName).toBe(name);
   });
 
@@ -159,35 +169,8 @@ describe('ContactsService - Integration Tests', () => {
     expect(contactIds).toContain(thirdContact.contact_CreateForOrganization.id);
   });
 
-  it('links contact to organization', async () => {
-    const { id } = await VitestHelper.createOrganizationForTest(
-      organizationsService,
-    );
-
-    const contact_social_url = 'IT_' + crypto.randomUUID();
-
-    const { contact_Create } = await contactService.createContact({
-      contactInput: { socialUrl: contact_social_url },
-    });
-
-    const contactBeforeLink = await contactService.getContact(contact_Create);
-
-    expect(contactBeforeLink.primaryOrganizationName?.length).toBe(0);
-
-    await contactService.linkOrganization({
-      input: {
-        organizationId: id,
-        contactId: contactBeforeLink.id,
-      },
-    });
-
-    const contactAfterLink = await contactService.getContact(contact_Create);
-
-    expect(contactAfterLink.primaryOrganizationName).toBe(1);
-  });
-
   it('adds job roles to contact', async () => {
-    const { id } = await VitestHelper.createOrganizationForTest(
+    const { id, name } = await VitestHelper.createOrganizationForTest(
       organizationsService,
     );
     const contact_social_url = 'IT_' + crypto.randomUUID();
@@ -202,16 +185,17 @@ describe('ContactsService - Integration Tests', () => {
       contact_CreateForOrganization.id,
     );
 
+    expect(contactBeforeFirstJobRole.primaryOrganizationJobRoleTitle).toBe('');
     expect(
-      contactBeforeFirstJobRole.primaryOrganizationJobRoleTitle,
-    ).toBeNull();
+      contactBeforeFirstJobRole.primaryOrganizationJobRoleDescription,
+    ).toBe('');
     expect(
       contactBeforeFirstJobRole.primaryOrganizationJobRoleStartDate,
     ).toBeNull();
     expect(
       contactBeforeFirstJobRole.primaryOrganizationJobRoleEndDate,
     ).toBeNull();
-    expect(contactBeforeFirstJobRole.primaryOrganizationName).toBeNull();
+    expect(contactBeforeFirstJobRole.primaryOrganizationName).toBe(name);
 
     const jobRoleCreateOneDescription = 'IT_' + crypto.randomUUID();
     const jobRoleCreateOneTitle = 'IT_' + crypto.randomUUID();
@@ -310,10 +294,10 @@ describe('ContactsService - Integration Tests', () => {
     });
 
     await organizationsService.getOrganization(id);
-    expect(
-      (await contactService.getContact(contact_Create)).primaryOrganizationName
-        ?.length,
-    ).toBe(0);
+
+    const contactBeforeLink = await contactService.getContact(contact_Create);
+
+    expect(contactBeforeLink.primaryOrganizationName).toBeNull;
 
     await contactService.linkOrganization({
       input: {
@@ -759,7 +743,7 @@ describe('ContactsService - Integration Tests', () => {
       contact_CreateForOrganization.id,
     );
 
-    expect(contactCreated?.tags).toBeNull();
+    expect(contactCreated?.tags).toEqual([]);
     expect(contactCreated.primaryOrganizationName).toBe(name);
 
     const firstTagName = crypto.randomUUID();

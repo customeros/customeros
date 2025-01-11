@@ -9,6 +9,7 @@ const prettierConfig = JSON.parse(
 
 const buttonTypes = ['Link', 'Solid', 'Ghost', 'Outline'];
 const sizes = ['xxs', 'xs', 'sm', 'md', 'lg'];
+
 const colors = Object.keys(file.colors).filter((color) => color !== 'white');
 const variants = ['solid', 'outline', 'link', 'ghost'];
 

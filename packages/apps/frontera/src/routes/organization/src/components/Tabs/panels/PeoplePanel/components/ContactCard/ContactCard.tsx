@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
 import { set } from 'lodash';
 import { observer } from 'mobx-react-lite';
@@ -10,12 +10,14 @@ import { Input } from '@ui/form/Input';
 import { Avatar } from '@ui/media/Avatar';
 import { DateTimeUtils } from '@utils/date';
 import { Tag01 } from '@ui/media/icons/Tag01';
+import { Spinner } from '@ui/feedback/Spinner';
 import { User03 } from '@ui/media/icons/User03';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { IconButton } from '@ui/form/IconButton';
 import { useEvent } from '@shared/hooks/useEvent';
 import { useStore } from '@shared/hooks/useStore';
 import { Linkedin } from '@ui/media/icons/Linkedin';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { getFormattedLink } from '@utils/getExternalLink';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
@@ -41,8 +43,9 @@ import { AddLinkedInToContactModal } from './components/AddLinkedInToContactModa
 
 interface ContactCardProps {
   id: string;
+  expandAll: boolean;
 }
-export const ContactCard = observer(({ id }: ContactCardProps) => {
+export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
   const store = useStore();
   const { dispatchEvent } = useEvent('openEmailEditor');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -73,6 +76,14 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
     );
   };
 
+  useEffect(() => {
+    if (expandAll) {
+      setIsExpanded(true);
+    } else {
+      setIsExpanded(false);
+    }
+  }, [expandAll]);
+
   const updatedDaysAgo =
     DateTimeUtils.getDaysSinceDate(contactStore?.value.updatedAt) === 1
       ? `Last changed ${DateTimeUtils.getDaysSinceDate(
@@ -102,9 +113,13 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
     <>
       <Card
         style={{ paddingBottom: !isExpanded ? '2px' : '10px' }}
+        onClick={() => {
+          if (!isExpanded) setIsExpanded(true);
+        }}
         className={cn(
           isExpanded ? 'bg-white' : 'border-transparent',
-          'px-2 pb-2.5 pt-0.5 group-hover/card:border-gray-200 group-hover/card:bg-white max-w-[400px]',
+          !isExpanded && 'cursor-pointer',
+          'px-2 pb-2.5 pt-0.5  max-w-[400px]',
         )}
       >
         <CardHeader style={{ paddingBottom: !isExpanded ? '0' : '8px' }}>
@@ -134,6 +149,7 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                         className={cn(
                           'cursor-default font-medium text-sm truncate max-w-[200px]',
                           !contactStore.name && 'text-gray-400',
+                          !isExpanded && 'cursor-pointer',
                         )}
                       >
                         {isEnriching
@@ -169,10 +185,14 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                           variant='ghost'
                           icon={<Mail01 />}
                           aria-label='send-email'
-                          className='group-hover/action-buttons:opacity-100 opacity-0 mt-[3px]'
-                          onClick={() =>
-                            dispatchEvent({ email: email, openEditor: 'email' })
-                          }
+                          className=' opacity-0 mt-[3px]'
+                          onClick={(e) => {
+                            dispatchEvent({
+                              email: email,
+                              openEditor: 'email',
+                            });
+                            e.stopPropagation();
+                          }}
                         />
                       )}
                       {!isExpanded && linkedInProfile && (
@@ -180,16 +200,31 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                           size='xxs'
                           variant='ghost'
                           icon={<LinkedInSolid02 />}
+                          className=' opacity-0 mt-[3px]'
                           aria-label='navigate-to-linkedin'
-                          className='group-hover/action-buttons:opacity-100 opacity-0 mt-[3px]'
-                          onClick={() =>
-                            window.open(linkedInProfile, '_blank', 'noopener')
-                          }
+                          onClick={(e) => {
+                            window.open(linkedInProfile, '_blank', 'noopener');
+                            e.stopPropagation();
+                          }}
                         />
                       )}
                     </div>
                   </div>
-                  <div className='max-h-5'>
+                  <div className='flex items-center'>
+                    {isEnriching && isExpanded && (
+                      <Tooltip
+                        open={true}
+                        defaultOpen
+                        className='z-[9999]'
+                        label={`Finding email at ${contactStore.value.primaryOrganizationName}`}
+                      >
+                        <Spinner
+                          size='sm'
+                          label='finding email'
+                          className='text-gray-400 fill-gray-700 mr-2'
+                        />
+                      </Tooltip>
+                    )}
                     <IconButton
                       size='xxs'
                       variant='ghost'
@@ -209,11 +244,12 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                     className={cn(
                       'text-sm line-clamp-1 cursor-default',
                       !jobTitle && 'text-gray-400',
+                      !isExpanded && 'cursor-pointer',
                     )}
                   >
                     {isEnriching
                       ? 'Getting job title...'
-                      : jobTitle || 'Job title'}
+                      : jobTitle || 'No job title yet'}
                   </p>
                 ) : (
                   <Input
@@ -222,11 +258,11 @@ export const ContactCard = observer(({ id }: ContactCardProps) => {
                     onFocus={(e) => e.target.select()}
                     dataTest='org-people-contact-title'
                     onKeyDown={(e) => e.stopPropagation()}
-                    placeholder={
-                      isEnriching ? 'Getting job title...' : 'Job title'
-                    }
                     value={
                       contactStore.value.primaryOrganizationJobRoleTitle || ''
+                    }
+                    placeholder={
+                      isEnriching ? 'Getting job title...' : 'No job title yet'
                     }
                     onBlur={() => {
                       contactStore.draft();

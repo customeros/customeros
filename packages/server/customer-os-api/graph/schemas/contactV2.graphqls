@@ -37,6 +37,7 @@ type ContactUiDetails {
     primaryOrganizationJobRoleStartDate:   Time
     primaryOrganizationJobRoleEndDate:     Time
 
+    jobRoleIds:             [ID!]!
     emails:                 [Email!]!
     phones:                 [String!]! #list of rawPhoneNumber
     tags:                   [Tag!]!

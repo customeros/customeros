@@ -71,15 +71,17 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                   />
                 </Tooltip>
               ) : (
-                <IconButton
-                  size='xxs'
-                  variant='ghost'
-                  icon={<Star06 />}
-                  className='mt-0.5'
-                  colorScheme='grayModern'
-                  aria-label='enrich-work-email'
-                  onClick={() => contactStore?.findEmail()}
-                />
+                <Tooltip label={`Finding email at ${orgName}`}>
+                  <IconButton
+                    size='xxs'
+                    variant='ghost'
+                    icon={<Star06 />}
+                    className='mt-0.5'
+                    colorScheme='grayModern'
+                    aria-label='enrich-work-email'
+                    onClick={() => contactStore?.findEmail()}
+                  />
+                </Tooltip>
               )}
             </div>
           )}
@@ -95,6 +97,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                   >
                     {email?.email!.length > 0 ? email.email : 'Not set'}
                   </p>
+
                   {contactStore?.value.emails.length !== 1 && email.primary && (
                     <span className='text-gray-500 text-sm ml-1'>
                       {' '}

@@ -12,8 +12,6 @@ query GetOrganization($organizationId: ID!){
     domains
     website
     industry
-    subIndustry
-    industryGroup
     targetAudience
     valueProposition
     lastFundingRound

@@ -105,6 +105,7 @@ export class TagsStore implements GroupStore<TagDatum> {
         input: {
           name: payload?.name || '',
           entityType: payload?.entityType,
+          colorCode: payload?.colorCode,
         },
       });
 

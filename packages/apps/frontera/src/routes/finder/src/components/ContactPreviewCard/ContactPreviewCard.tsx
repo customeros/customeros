@@ -12,15 +12,12 @@ import { Input } from '@ui/form/Input';
 import { flags } from '@ui/media/flags';
 import { Avatar } from '@ui/media/Avatar';
 import { DateTimeUtils } from '@utils/date';
-import { Tag01 } from '@ui/media/icons/Tag01';
-import { Spinner } from '@ui/feedback/Spinner';
-import { Star06 } from '@ui/media/icons/Star06';
 import { IconButton } from '@ui/form/IconButton';
 import { getTimezone } from '@utils/getTimezone';
 import { useStore } from '@shared/hooks/useStore';
 import { Tag, TableViewType } from '@graphql/types';
 import { Tags } from '@organization/components/Tabs';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { getFormattedLink } from '@utils/getExternalLink';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 import { LinkedInSolid02 } from '@ui/media/icons/LinkedInSolid02';
 
@@ -67,10 +64,12 @@ export const ContactPreviewCard = observer(() => {
       })?.timezone
     : null;
 
-  const fromatedUrl = contact?.value.linkedInUrl?.replace('https://www.', '');
-  const href = fromatedUrl?.startsWith('http')
-    ? fromatedUrl
-    : `https://${fromatedUrl}`;
+  const linkedInProfile = contact?.value.linkedInUrl;
+  const fromatedUrl = getFormattedLink(linkedInProfile || '').replace(
+    /^linkedin\.com\/(?:in\/|company\/)?/,
+    '/',
+  );
+  const href = contact?.value.linkedInUrl;
 
   const formatedFollowersCount = contact?.value?.linkedInFollowerCount
     ?.toLocaleString()
@@ -93,11 +92,6 @@ export const ContactPreviewCard = observer(() => {
     },
   );
 
-  const contactEnriched =
-    contact.value.enrichedAt || contact.value.enrichedFailedAt;
-
-  const requestedEnrichment = contact?.value?.enrichedAt;
-
   return (
     <>
       {store.ui.contactPreviewCardOpen && (
@@ -114,25 +108,6 @@ export const ContactPreviewCard = observer(() => {
               src={src || undefined}
             />
             <div className='flex items-center gap-2'>
-              {contactEnriched && (
-                <Tooltip asChild label='Enrich this contact'>
-                  {requestedEnrichment ? (
-                    <IconButton
-                      size='xs'
-                      variant='ghost'
-                      icon={<Star06 />}
-                      onClick={() => setIsOpen(true)}
-                      aria-label='enrich this contact'
-                    />
-                  ) : (
-                    <Spinner
-                      size='sm'
-                      label='enriching'
-                      className='text-gray-400 fill-gray-700'
-                    />
-                  )}
-                </Tooltip>
-              )}
               <IconButton
                 size='xs'
                 icon={<X />}
@@ -218,10 +193,6 @@ export const ContactPreviewCard = observer(() => {
           </div>
 
           <div className='flex justify-between gap-1 w-full mb-4'>
-            <div className='flex items-center gap-2 mr-[75px] text-sm text-gray-500'>
-              <Tag01 className='mt-[1px] text-gray-500' />
-              Tags
-            </div>
             <Tags
               placeholder='No tags yet'
               value={
@@ -249,16 +220,13 @@ export const ContactPreviewCard = observer(() => {
                 onMouseLeave={() => setIsHovered(false)}
                 className='flex items-center gap-1 w-full'
               >
-                <Input
-                  size='xs'
-                  variant='unstyled'
-                  value={fromatedUrl}
-                  className='text-ellipsis'
-                  onFocus={(e) => e.target.select()}
-                  placeholder='LinkedIn profile link'
-                />
+                <Link to={href || ''} target='_blank'>
+                  <span className='text-sm'>
+                    {fromatedUrl || 'LinkedIn profile link'}
+                  </span>
+                </Link>
                 {fromatedUrl && isHovered && (
-                  <Link to={href} target='_blank'>
+                  <Link to={href || ''} target='_blank'>
                     <IconButton
                       size='xxs'
                       variant='ghost'
@@ -272,7 +240,7 @@ export const ContactPreviewCard = observer(() => {
               </div>
             </div>
             <div className='flex gap-1 w-full'>
-              <div className='flex items-center gap-2 mr-[42px] text-sm text-gray-500 '>
+              <div className='flex items-center gap-2 mr-[41px] text-sm text-gray-500 '>
                 <LinkedInSolid02 className='mt-[1px] text-gray-500' />
                 Followers
               </div>
@@ -286,7 +254,7 @@ export const ContactPreviewCard = observer(() => {
               </span>
             </div>
             <div className='flex gap-1 w-full mt-[2px]'>
-              <div className='flex items-center gap-2 mr-[19px] text-sm text-gray-500'>
+              <div className='flex items-center gap-2 mr-[18px] text-sm text-gray-500'>
                 <LinkedInSolid02 className='mt-[1px] text-gray-500' />
                 Connected to
               </div>

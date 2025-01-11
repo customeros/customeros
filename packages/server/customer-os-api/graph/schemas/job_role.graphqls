@@ -1,45 +1,44 @@
 extend type Mutation {
-    jobRole_Delete(contactId : ID!, roleId: ID!): Result!
-    jobRole_Create(contactId : ID!, input: JobRoleInput!): JobRole!
-    jobRole_Update(contactId : ID!, input: JobRoleUpdateInput!): JobRole!
+    jobRole_Delete(contactId : ID!, roleId: ID!): Result! @deprecated
+    jobRole_Create(contactId : ID!, input: JobRoleInput!): JobRole! @deprecated
+    jobRole_Update(contactId : ID!, input: JobRoleUpdateInput!): JobRole! @deprecated
+
+    jobRole_Save(input: JobRoleSaveInput): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
-"""
-Describes the relationship a Contact has with a Organization.
-**A `return` object**
-"""
+extend type Query {
+    jobRoles(ids: [ID!]!): [JobRole!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+input JobRoleSaveInput {
+    id:             ID
+    contactId:      ID
+    organizationId: ID
+    startedAt:      Time
+    endedAt:        Time
+    jobTitle:       String
+    primary:        Boolean
+    description:    String
+    company:        String
+
+}
+
 type JobRole {
     id: ID!
     createdAt: Time!
     updatedAt: Time!
-
-    """
-    Organization associated with a Contact.
-    **Required.**
-    """
     organization: Organization @goField(forceResolver: true)
-
     contact: Contact @goField(forceResolver: true)
-
-    "The Contact's job title."
     jobTitle: String
-
     primary: Boolean!
-
     description: String
     company: String
-
     startedAt: Time
     endedAt: Time
-
     source: DataSource!
     appSource: String!
 }
 
-"""
-Describes the relationship a Contact has with an Organization.
-**A `create` object**
-"""
 input JobRoleInput {
     organizationId: ID
     jobTitle: String
@@ -51,10 +50,6 @@ input JobRoleInput {
     company: String
 }
 
-"""
-Describes the relationship a Contact has with an Organization.
-**A `create` object**
-"""
 input JobRoleUpdateInput {
     id: ID!
     startedAt: Time

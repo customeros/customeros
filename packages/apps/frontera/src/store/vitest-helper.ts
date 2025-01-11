@@ -8,8 +8,11 @@ export class VitestHelper {
     input?: { input: { id?: string; name?: string; ownerId?: string } },
   ) {
     const organization_name = 'IT_' + crypto.randomUUID();
+    const organization_domain = 'www.' + crypto.randomUUID() + '.com';
     const { organization_Save } = await organizationsService.saveOrganization(
-      input || { input: { name: organization_name } },
+      input || {
+        input: { name: organization_name, domains: [organization_domain] },
+      },
     );
     const { metadata } = organization_Save;
 
