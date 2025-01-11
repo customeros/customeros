@@ -15,8 +15,8 @@ const (
 type IndustryEntity struct {
 	DataLoaderKey
 	CreatedAt time.Time
-	Code      string
-	Name      string
+	Code      string // NAICS code, see https://www.naics.com/search/
+	Name      string // NAICS name
 }
 
 type IndustryEntities []IndustryEntity
