@@ -78,7 +78,12 @@ func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionReco
 	}
 
 	var updatedRecord entity.AgentExecution
-	err := f.gormDb.Model(&executionRecord).Updates(&executionRecord).First(&updatedRecord).Error
+	err := f.gormDb.
+		Model(&entity.AgentExecution{}).
+		Where("id = ?", executionRecord.ID).
+		Updates(executionRecord).
+		First(&updatedRecord, "id = ?", executionRecord.ID).
+		Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

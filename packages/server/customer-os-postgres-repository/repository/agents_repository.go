@@ -121,16 +121,18 @@ func (f *agentsRepository) Update(ctx context.Context, agent entity.Agents) (*en
 	tracing.TagComponentPostgresRepository(span)
 
 	if agent.ID == "" {
-		err := errors.New("automationID is missing")
+		err := errors.New("agent ID is missing") // Fixed error message to match the context
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	var updatedAgents entity.Agents
 	err := f.gormDb.
-		Model(&agent).
-		Updates(&agent).
-		First(&updatedAgents).Error
+		Model(&entity.Agents{}).
+		Where("id = ?", agent.ID).
+		Updates(agent).
+		First(&updatedAgents, "id = ?", agent.ID).
+		Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

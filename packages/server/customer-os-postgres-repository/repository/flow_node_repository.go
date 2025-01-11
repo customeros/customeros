@@ -82,22 +82,23 @@ func (f *flowNodeRepository) Update(ctx context.Context, flowNode entity.FlowNod
 	tracing.TagComponentPostgresRepository(span)
 
 	if flowNode.ID == "" {
-		err := errors.New("ID is missing")
+		err := errors.New("flow node ID is missing")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	var updatedNode entity.FlowNode
-	err := f.gormDb.Model(&flowNode).
-		Updates(&flowNode).
-		Where("id = ?", flowNode.ID). // Ensure we get the same record
-		First(&updatedNode).Error
+	err := f.gormDb.
+		Model(&entity.FlowNode{}).
+		Where("id = ?", flowNode.ID).
+		Updates(flowNode).
+		First(&updatedNode, "id = ?", flowNode.ID).
+		Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	tracing.LogObjectAsJson(span, "payload", updatedNode)
-
 	return &updatedNode, nil
 }

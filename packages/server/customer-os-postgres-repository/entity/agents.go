@@ -10,6 +10,7 @@ type Agents struct {
 	Tenant       string     `gorm:"column:tenant;type:varchar(255);not null;uniqueIndex:idx_tenant_name" json:"tenant" binding:"required"`
 	Name         string     `gorm:"column:name;type:varchar(255);not null;uniqueIndex:idx_tenant_name" json:"name" binding:"required"`
 	Capabilities string     `gorm:"column:capabilities;type:text" json:"capabilities"`
+	Goal         string     `gorm:"column:goal;type:text" json:"goal"`
 	Config       *string    `gorm:"column:config;type:text" json:"config"`
 	IsActive     bool       `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
 	FlowID       string     `gorm:"column:flow_id;type:varchar(255)" json:"flowId" binding:"required"`

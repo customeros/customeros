@@ -16,7 +16,7 @@ import (
 type AgentRegistryRepository interface {
 	Initialize(ctx context.Context) error
 	Create(ctx context.Context, agent entity.AgentRegistry) (*entity.AgentRegistry, error)
-	Find(ctx context.Context, agent entity.AgentRegistry) (*entity.AgentRegistry, error)
+	Find(ctx context.Context, agentID enum.AgentID) (*entity.AgentRegistry, error)
 	FindAll(ctx context.Context) ([]entity.AgentRegistry, error)
 }
 
@@ -45,19 +45,15 @@ func (r *agentRegistryRepository) FindAll(ctx context.Context) ([]entity.AgentRe
 	return actions, nil
 }
 
-func (r *agentRegistryRepository) Find(ctx context.Context, agentID string) (*entity.AgentRegistry, error) {
+func (r *agentRegistryRepository) Find(ctx context.Context, agentID enum.AgentID) (*entity.AgentRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	if agentID == "" {
-		return nil, errors.New("empty agentID")
-	}
-
 	var action entity.AgentRegistry
 	query := r.gormDb.WithContext(ctx).
 		Where("is_active = true").
-		Where("id = ?", enum.AgentVisitorID)
+		Where("id = ?", agentID.String())
 
 	err := query.First(&action).Error
 	if err != nil {
@@ -85,6 +81,32 @@ func (r *agentRegistryRepository) Create(ctx context.Context, agent entity.Agent
 	return &agent, nil
 }
 
+func (a *agentRegistryRepository) Update(ctx context.Context, agent entity.AgentRegistry) (*entity.AgentRegistry, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Update")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	if agent.ID == "" {
+		err := errors.New("agent ID is missing")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var updatedAgent entity.AgentRegistry
+	err := a.gormDb.
+		Model(&entity.AgentRegistry{}).
+		Where("id = ?", agent.ID).
+		Updates(&agent).
+		First(&updatedAgent, "id = ?", agent.ID).
+		Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &updatedAgent, nil
+}
+
 func (r *agentRegistryRepository) Initialize(ctx context.Context) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Initialize")
 	defer span.Finish()
@@ -97,10 +119,13 @@ func (r *agentRegistryRepository) Initialize(ctx context.Context) error {
 
 	for _, agent := range requiredAgents {
 		// Look for existing agent by ID
-		existingAgent, err := r.Find(ctx, entity.AgentRegistry{ID: agent.ID})
+		agentID, err := enum.GetAgentID(agent.ID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
+		}
+		existingAgent, err := r.Find(ctx, agentID)
+		if err != nil {
+			tracing.TraceErr(span, err)
 		}
 
 		if existingAgent != nil && existingAgent.ID != "" {
@@ -129,6 +154,7 @@ func (r *agentRegistryRepository) Initialize(ctx context.Context) error {
 func needsUpdate(existing *entity.AgentRegistry, new *entity.AgentRegistry) bool {
 	return existing.Name != new.Name ||
 		existing.Capabilities != new.Capabilities ||
+		existing.Goal != new.Goal ||
 		existing.ConfigSchema != new.ConfigSchema ||
 		existing.IsActive != new.IsActive
 }
@@ -139,6 +165,8 @@ func RegisterVisitorIdentityAgent() entity.AgentRegistry {
 	return entity.AgentRegistry{
 		ID:   "visitor-identity-agent",
 		Name: "Identify website visitors",
+		Goal: enum.AgentGoalIdentifyVisitors.String(),
+		Icon: "",
 		Capabilities: `{
             "capabilities": [
                 {
@@ -206,6 +234,6 @@ func RegisterVisitorIdentityAgent() entity.AgentRegistry {
                 }
             }
         }`),
-		IsActive: "true",
+		IsActive: true,
 	}
 }

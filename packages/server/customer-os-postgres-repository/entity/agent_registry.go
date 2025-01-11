@@ -6,8 +6,8 @@ type AgentRegistry struct {
 	Capabilities string  `gorm:"column:capabilities;type:text" json:"capabilities"`
 	ConfigSchema *string `gorm:"column:config_schema;type:text" json:"config"`
 	Goal         string  `gorm:"column:goal;type:text" json:"goal"`
-	IsActive     string  `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
-	Icom         string  `gorm:"column:icon;type:text" json:"icon"`
+	IsActive     bool    `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
+	Icon         string  `gorm:"column:icon;type:text" json:"icon"`
 }
 
 func (AgentRegistry) TableName() string {

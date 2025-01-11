@@ -49,6 +49,8 @@ type Capability struct {
 	Optional bool   `json:"optional,omitempty"`
 }
 
+const DefaultNotificationCooldownInHours = 12
+
 func (a *agentVisitorIDService) CreateAgent(ctx context.Context) (*entity.Agents, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.CreateAgent")
 	defer span.Finish()
@@ -61,17 +63,33 @@ func (a *agentVisitorIDService) CreateAgent(ctx context.Context) (*entity.Agents
 		return nil, err
 	}
 
+	// get config from registry
+	masterAgent, err := a.services.PostgresRepositories.AgentRegistryRepository.Find(ctx, enum.AgentVisitorID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if masterAgent == nil {
+		err := errors.New("no agent found in agent repository")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// build new agent
 	agent := &entity.Agents{
-		RegistryID:  enum.AgentVisitorID.String(),
-		Tenant:      tenant,
-		Name:        "Identify website visitors",
-		IsActive:    false,
-		VisibleInUI: true,
+		RegistryID:   masterAgent.ID,
+		Tenant:       tenant,
+		Name:         masterAgent.Name,
+		Capabilities: masterAgent.Capabilities,
+		Goal:         masterAgent.Goal,
+		IsActive:     false,
+		VisibleInUI:  true,
+		Color:        "", //assign random
 	}
 
 	config := AgentConfig{
 		SlackEnabled:                false,
-		NotificationCooldownInHours: 12,
+		NotificationCooldownInHours: DefaultNotificationCooldownInHours,
 	}
 
 	savedAgent, err := a.SaveAgentConfig(ctx, agent, config)

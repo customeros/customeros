@@ -83,13 +83,18 @@ func (f *flowEdgeRepository) Update(ctx context.Context, flowEdge entity.FlowEdg
 	tracing.TagComponentPostgresRepository(span)
 
 	if flowEdge.ID == "" {
-		err := errors.New("ID is missing")
+		err := errors.New("flow edge ID is missing")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	var updatedEdge entity.FlowEdge
-	err := f.gormDb.Model(&flowEdge).Updates(&flowEdge).First(&updatedEdge).Error
+	err := f.gormDb.
+		Model(&entity.FlowEdge{}).
+		Where("id = ?", flowEdge.ID).
+		Updates(flowEdge).
+		First(&updatedEdge, "id = ?", flowEdge.ID).
+		Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

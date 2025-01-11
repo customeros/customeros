@@ -90,16 +90,18 @@ func (f *flowRepository) Update(ctx context.Context, flowRecord entity.Flows) (*
 	tracing.TagComponentPostgresRepository(span)
 
 	if flowRecord.ID == "" {
-		err := errors.New("flowID is missing")
+		err := errors.New("flow ID is missing")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	var updatedFlows entity.Flows
 	err := f.gormDb.
-		Model(&flowRecord).
-		Updates(&flowRecord).
-		First(&updatedFlows).Error
+		Model(&entity.Flows{}).
+		Where("id = ?", flowRecord.ID).
+		Updates(flowRecord).
+		First(&updatedFlows, "id = ?", flowRecord.ID).
+		Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

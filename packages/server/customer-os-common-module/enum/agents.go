@@ -15,7 +15,7 @@ func (t AgentID) String() string {
 	return string(t)
 }
 
-func GetAgent(s string) (AgentID, error) {
+func GetAgentID(s string) (AgentID, error) {
 	switch AgentID(s) {
 	case
 		AgentICPQualification,
@@ -25,4 +25,14 @@ func GetAgent(s string) (AgentID, error) {
 	default:
 		return "", fmt.Errorf("invalid Agent: %s", s)
 	}
+}
+
+type AgentGoal string
+
+const (
+	AgentGoalIdentifyVisitors AgentGoal = "Identified visitors"
+)
+
+func (t AgentGoal) String() string {
+	return string(t)
 }
