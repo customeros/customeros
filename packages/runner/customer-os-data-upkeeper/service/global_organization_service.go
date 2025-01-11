@@ -107,8 +107,11 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 		}
 
 		// check if website is accepted
-		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, data.Company.WebsiteUrl) ||
-			!s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
+		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Company.WebsiteUrl) {
+			continue
+		}
+		// check if primary domain is accepted
+		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
 			continue
 		}
 
@@ -132,39 +135,44 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 		}
 
 		// populate global organization entity
-		if data.Company.Name != "" {
-			globalOrganization.Name = data.Company.Name
+		if data.Company.Name != "" && globalOrganization.Name == "" {
+			name := strings.TrimSpace(data.Company.Name)
+			name = utils.SanitizeUTF8(name)
+			globalOrganization.Name = name
 		}
 		if data.Company.Description != "" {
-			globalOrganization.Description = data.Company.Description
+			globalOrganization.SourceDescription1 = data.Company.Description
 		}
 		if data.Company.Tagline != nil {
 			if tagline, ok := data.Company.Tagline.(string); ok {
-				globalOrganization.ValueProposition = tagline
+				globalOrganization.SourceDescription2 = tagline
 			}
 		}
-		if data.Company.GetEmployeeCount() > 0 {
+		if data.Company.GetEmployeeCount() > 0 && globalOrganization.EmployeeCount == 0 {
 			globalOrganization.EmployeeCount = data.Company.GetEmployeeCount()
 		}
-		if data.Company.WebsiteUrl != "" {
+		if data.Company.WebsiteUrl != "" && globalOrganization.Website == "" {
 			globalOrganization.Website = data.Company.WebsiteUrl
 		}
-		if data.Company.FoundedOn.Year > 0 {
+		if data.Company.FoundedOn.Year > 0 && globalOrganization.YearFounded == 0 {
 			globalOrganization.YearFounded = data.Company.FoundedOn.Year
 		}
-		if data.Company.LinkedInUrl != "" {
+		if data.Company.LinkedInUrl != "" && globalOrganization.LinkedInUrl == "" {
 			globalOrganization.LinkedInUrl = data.Company.LinkedInUrl
 		}
-		if data.Company.UniversalName != "" {
+		if data.Company.UniversalName != "" && globalOrganization.LinkedInAlias == "" {
 			globalOrganization.LinkedInAlias = data.Company.UniversalName
 		}
-		if data.Company.Logo != "" {
+		if data.Company.Logo != "" && globalOrganization.LogoUrl == "" {
 			globalOrganization.LogoUrl = data.Company.Logo
 		}
-		if data.Company.Headquarter.City != "" {
+		if data.Company.Headquarter.City != "" && globalOrganization.City == "" {
 			globalOrganization.City = data.Company.Headquarter.City
 		}
-		if data.Company.Headquarter.Country != "" {
+		if data.Company.Headquarter.GeographicArea != "" && globalOrganization.Region == "" {
+			globalOrganization.Region = data.Company.Headquarter.GeographicArea
+		}
+		if data.Company.Headquarter.Country != "" && globalOrganization.CountryA2 == "" {
 			if strings.ToUpper(data.Company.Headquarter.Country) == "OO" {
 				globalOrganization.CountryA2 = ""
 			} else {
@@ -254,8 +262,11 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 		}
 
 		// check if website is accepted
-		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, data.Domain) ||
-			!s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
+		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Domain) {
+			continue
+		}
+
+		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
 			continue
 		}
 
@@ -266,9 +277,15 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 			continue
 		}
 
-		// if global organization already exists, skip processing
-		if globalOrganization != nil {
-			continue
+		createGlobalOrg := false
+		if globalOrganization == nil {
+			createGlobalOrg = true
+			now := utils.Now()
+			globalOrganization = &postgresentity.GlobalOrganization{
+				PrimaryDomain: primaryDomain,
+				CreatedAt:     now,
+				UpdatedAt:     now,
+			}
 		}
 
 		now := utils.Now()
@@ -279,34 +296,39 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 		}
 
 		// populate global organization entity
-		if data.Name != "" {
-			globalOrganization.Name = data.Name
+		if data.Name != "" && globalOrganization.Name == "" {
+			name := strings.TrimSpace(data.Name)
+			name = utils.SanitizeUTF8(name)
+			globalOrganization.Name = name
 		}
 		if data.LongDescription != "" {
-			globalOrganization.Description = data.LongDescription
+			globalOrganization.SourceDescription3 = data.LongDescription
 		}
 		if data.Description != "" {
-			globalOrganization.ValueProposition = data.Description
+			globalOrganization.SourceDescription4 = data.Description
 		}
-		if data.Company.GetEmployees() > 0 {
+		if data.Company.GetEmployees() > 0 && globalOrganization.EmployeeCount == 0 {
 			globalOrganization.EmployeeCount = data.Company.GetEmployees()
 		}
-		if data.Domain != "" {
+		if data.Domain != "" && globalOrganization.Website == "" {
 			globalOrganization.Website = data.Domain
 		}
-		if data.Company.FoundedYear > 0 {
+		if data.Company.FoundedYear > 0 && globalOrganization.YearFounded == 0 {
 			globalOrganization.YearFounded = int(data.Company.FoundedYear)
 		}
-		if len(data.GetLogoUrls()) > 0 {
+		if len(data.GetLogoUrls()) > 0 && globalOrganization.LogoUrl == "" {
 			globalOrganization.LogoUrl = data.GetLogoUrls()[0]
 		}
-		if len(data.GetIconUrls()) > 0 {
+		if len(data.GetIconUrls()) > 0 && globalOrganization.IconUrl == "" {
 			globalOrganization.IconUrl = data.GetIconUrls()[0]
 		}
-		if data.Company.Location.City != "" {
+		if data.Company.Location.City != "" && globalOrganization.City == "" {
 			globalOrganization.City = data.Company.Location.City
 		}
-		if data.Company.Location.CountryCodeA2 != "" {
+		if data.Company.Location.Region != "" && globalOrganization.Region == "" {
+			globalOrganization.Region = data.Company.Location.Region
+		}
+		if data.Company.Location.CountryCodeA2 != "" && globalOrganization.CountryA2 == "" {
 			if strings.ToUpper(data.Company.Location.CountryCodeA2) == "OO" {
 				globalOrganization.CountryA2 = ""
 			} else {
@@ -319,18 +341,27 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 			}
 		}
 		for _, link := range data.Links {
-			if link.Url != "" && strings.Contains(link.Url, "linkedin.com/company") {
+			if link.Url != "" && strings.Contains(link.Url, "linkedin.com/company") && globalOrganization.LinkedInUrl == "" {
 				globalOrganization.LinkedInUrl = link.Url
 				break
 			}
 		}
 
-		// create global organization
-		_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Create(ctx, globalOrganization)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error creating global organization"))
-			s.log.Errorf("Error creating global organization: %s", err.Error())
-			continue
+		if createGlobalOrg {
+			// create global organization
+			_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Create(ctx, globalOrganization)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "error creating global organization"))
+				s.log.Errorf("Error creating global organization: %s", err.Error())
+				continue
+			}
+		} else {
+			_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Update(ctx, globalOrganization)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "error updating global organization"))
+				s.log.Errorf("Error updating global organization: %s", err.Error())
+				continue
+			}
 		}
 	}
 }
