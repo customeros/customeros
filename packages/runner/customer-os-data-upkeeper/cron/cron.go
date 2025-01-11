@@ -158,7 +158,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.Cron.CronScheduleCheckDomains, GroupDomain, checkDomains, "checkDomains")
 	addJob(cont.Cfg.Cron.CronScheduleMailstackReputation, GroupMailstack, checkMailstackDomainReputation, "checkMailstackDomainReputation")
 	addJob(cont.Cfg.Cron.CronScheduleSendOrganizationsReminders, GroupReminder, sendReminders, "sendReminders")
-	addJob(cont.Cfg.Cron.CronScheduleProcessWebSessions, GroupWebSession, processWebSessions, "processWebSessions")
+	addJob("0 */2 * * * *", GroupWebSession, processWebSessions, "processWebSessions")
 }
 
 // HELPER FUNCTIONS
