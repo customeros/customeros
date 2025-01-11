@@ -18,7 +18,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -253,6 +253,26 @@ func (r *queryResolver) UIOrganizations(ctx context.Context, ids []string) ([]*m
 		for _, par := range parents {
 			(*resp)[par.LinkedNodeId].ParentID = utils.StringPtr(utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*par.Node), "id"))
 			(*resp)[par.LinkedNodeId].ParentName = utils.StringPtr(utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*par.Node), string(neo4jentity.OrganizationPropertyName)))
+		}
+	}(&mapResponse)
+
+	wg.Add(1)
+	go func(resp *map[string]*model.OrganizationUIDetails) {
+		span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.UIOrganizations.GetIndustries")
+		defer span.Finish()
+		defer wg.Done()
+		tracing.SetDefaultResolverSpanTags(ctx, span)
+
+		industries, err := r.Services.CommonServices.IndustryService.GetAllForOrganizationIds(ctx, ids)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			setError(err)
+			return
+		}
+
+		for _, industry := range *industries {
+			(*resp)[industry.DataloaderKey].IndustryCode = utils.StringPtr(industry.Code)
+			(*resp)[industry.DataloaderKey].IndustryName = utils.StringPtr(industry.Name)
 		}
 	}(&mapResponse)
 
