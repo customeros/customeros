@@ -370,6 +370,12 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		}
 	}
 
+	// Prepare enrich details if organization created from global orgs, to prevent re-enriching
+	//if createFlow && input.GlobalOrgId != nil {
+	//	input.EnrichDomain = utils.StringPtr(primaryDomain)
+	//	input.EnrichSource = utils.StringPtr(constants.SourceGlobalOrgs)
+	//}
+
 	newDomains := make([]string, 0)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
@@ -541,6 +547,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 
 			return nil
 		})
+
 		return nil, nil
 	})
 	if err != nil {
