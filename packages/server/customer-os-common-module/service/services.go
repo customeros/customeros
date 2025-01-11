@@ -45,6 +45,7 @@ type Services struct {
 	FlowExecutionService         FlowExecutionService
 	FlowService                  FlowService
 	GoogleService                GoogleService
+	IndustryService              IndustryService
 	InteractionSessionService    InteractionSessionService
 	InteractionEventService      InteractionEventService
 	IssueService                 IssueService
