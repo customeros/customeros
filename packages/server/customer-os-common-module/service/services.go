@@ -44,6 +44,7 @@ type Services struct {
 	FlowExecutionService       FlowExecutionService
 	FlowService                FlowService
 	GoogleService              GoogleService
+	IndustryService            IndustryService
 	InteractionSessionService  InteractionSessionService
 	InteractionEventService    InteractionEventService
 	IssueService               IssueService
@@ -110,6 +111,7 @@ func InitServices(globalConfig *config.GlobalConfig, postgresDB *config.Postgres
 	services.FlowExecutionService = NewFlowExecutionService(services)
 	services.FlowService = NewFlowService(services)
 	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
+	services.IndustryService = NewIndustryService(log, services)
 	services.InteractionEventService = NewInteractionEventService(services)
 	services.InteractionSessionService = NewInteractionSessionService(services)
 	services.InvoiceService = NewInvoiceService(services)

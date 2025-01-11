@@ -19,4 +19,4 @@ type IndustryEntity struct {
 	Name      string
 }
 
-type IndustryEntities []DomainEntity
+type IndustryEntities []IndustryEntity
