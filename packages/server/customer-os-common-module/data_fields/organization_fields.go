@@ -20,6 +20,7 @@ type OrganizationFields struct {
 	Hide               *bool                               `json:"hide,omitempty"`
 	Description        *string                             `json:"description,omitempty"`
 	Industry           *string                             `json:"industry,omitempty"`
+	IndustryCode       *string                             `json:"industryCode,omitempty"`
 	TargetAudience     *string                             `json:"targetAudience,omitempty"`
 	ValueProposition   *string                             `json:"valueProposition,omitempty"`
 	LastFundingRound   *string                             `json:"lastFundingRound,omitempty"`

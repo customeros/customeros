@@ -14,6 +14,7 @@ import (
 
 type IndustryService interface {
 	GetAllForOrganizationIds(ctx context.Context, organizationIds []string) (*neo4jentity.IndustryEntities, error)
+	GetByCode(ctx context.Context, code string) (*neo4jentity.IndustryEntity, error)
 }
 
 type industryService struct {
@@ -45,4 +46,23 @@ func (s *industryService) GetAllForOrganizationIds(ctx context.Context, organiza
 		industryEntities = append(industryEntities, *industryEntity)
 	}
 	return &industryEntities, nil
+}
+
+// Returns the industry entity by code, nil if not found
+func (s *industryService) GetByCode(ctx context.Context, code string) (*neo4jentity.IndustryEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryService.GetByCode")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("code", code))
+
+	industryDbNode, err := s.services.Neo4jRepositories.IndustryReadRepository.GetByCode(ctx, code)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if industryDbNode == nil {
+		return nil, nil
+	}
+	industryEntity := neo4jmapper.MapDbNodeToIndustryEntity(industryDbNode)
+	return industryEntity, nil
 }
