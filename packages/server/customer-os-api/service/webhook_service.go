@@ -70,7 +70,7 @@ func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tena
 	span.LogFields(log.String("webhookPath", webhookPath))
 
 	path := strings.Trim(webhookPath, "/")
-	webhook, err := w.services.Repositories.PostgresRepositories.FlowWebhooksRepository.Find(ctx, entity.FlowWebhooks{
+	webhook, err := w.services.Repositories.PostgresRepositories.WebhooksRepository.Find(ctx, entity.Webhooks{
 		Tenant:      tenant,
 		WebhookPath: path,
 	})
@@ -95,7 +95,7 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 	span.LogFields(log.String("tenant", tenant))
 	span.LogFields(log.String("integration", integration.String()))
 
-	var newWebhook entity.FlowWebhooks
+	var newWebhook entity.Webhooks
 
 	tenantHash, err := w.repositories.PostgresRepositories.TenantRepository.GetHashID(ctx, tenant)
 	span.LogFields(log.String("tenantHash", tenantHash))
@@ -106,12 +106,12 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 	}
 
 	// check if webhook already exists for tenant/integration
-	query := entity.FlowWebhooks{
+	query := entity.Webhooks{
 		Tenant:      tenant,
 		Integration: integration.String(),
 	}
 
-	webhook, err := w.repositories.PostgresRepositories.FlowWebhooksRepository.Find(ctx, query)
+	webhook, err := w.repositories.PostgresRepositories.WebhooksRepository.Find(ctx, query)
 	if err != nil {
 		err = fmt.Errorf("Unable to check db for existing webhook: %v", err)
 		tracing.TraceErr(span, err)
@@ -156,7 +156,7 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 		return "", "", err
 	}
 
-	result, err := w.repositories.PostgresRepositories.FlowWebhooksRepository.Create(ctx, newWebhook)
+	result, err := w.repositories.PostgresRepositories.WebhooksRepository.Create(ctx, newWebhook)
 	if err != nil {
 		err = fmt.Errorf("Unable to create webhook: %v", err)
 		tracing.TraceErr(span, err)
@@ -177,14 +177,14 @@ func (w *webhookService) DeactivateWebhook(ctx context.Context, webhookPath stri
 		return err
 	}
 
-	query := entity.FlowWebhooks{
+	query := entity.Webhooks{
 		Tenant:      tenant,
 		WebhookPath: webhookPath,
 		Enabled:     false,
 		UpdatedAt:   utils.NowPtr(),
 	}
 
-	_, err := w.repositories.PostgresRepositories.FlowWebhooksRepository.Update(ctx, query)
+	_, err := w.repositories.PostgresRepositories.WebhooksRepository.Update(ctx, query)
 	if err != nil {
 		err = fmt.Errorf("Unable to deactivate webhook %s: %v", webhookPath, err)
 		tracing.TraceErr(span, err)

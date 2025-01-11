@@ -127,47 +127,5 @@ func (r *flowTransitionsRegistryRepository) Initialize(ctx context.Context) erro
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	required := []entity.FlowTransitionsRegistry{
-		{
-			FromNodeType: enum.NodeFlowListenerEvent.String(),
-			FromNode:     enum.EventFathomMeetingSummaryCreated.String(),
-			ToNodeType:   enum.NodeFlowAgent.String(),
-			ToNode:       enum.AgentTimelineEventCreate.String(),
-			Status:       enum.FlowNodeEdgeStatusActive.String(),
-		},
-		{
-			FromNodeType: enum.NodeFlowListenerEvent.String(),
-			FromNode:     enum.EventGrainMeetingSummaryCreated.String(),
-			ToNodeType:   enum.NodeFlowAgent.String(),
-			ToNode:       enum.AgentTimelineEventCreate.String(),
-			Status:       enum.FlowNodeEdgeStatusActive.String(),
-		},
-		// ... add more here
-	}
-
-	dbTransitions, err := r.GetAll(ctx, nil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	for _, transition := range required {
-		exists := false
-		for _, t := range *dbTransitions {
-			if t.FromNode == transition.FromNode && t.ToNode == transition.ToNode {
-				exists = true
-				break
-			}
-		}
-
-		if !exists {
-			_, createErr := r.Create(ctx, &transition)
-			if createErr != nil {
-				tracing.TraceErr(span, createErr)
-				return createErr
-			}
-		}
-	}
-
 	return nil
 }

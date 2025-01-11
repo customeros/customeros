@@ -42,9 +42,7 @@ func GetFlowListenerEvent(s string) (FlowListenerEvent, error) {
 	case
 		EventFathomMeetingSummaryCreated,
 		EventFlowContactAdded,
-		EventGrainMeetingSummaryCreated,
-		EventRevealWebsiteVisitNew,
-		EventRevealWebsiteVisitRepeat:
+		EventGrainMeetingSummaryCreated:
 
 		return FlowListenerEvent(s), nil
 	default:

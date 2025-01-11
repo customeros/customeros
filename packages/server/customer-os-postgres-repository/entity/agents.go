@@ -19,6 +19,7 @@ type Agents struct {
 	UpdatedAt    *time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
 	ErrorMessage *string    `gorm:"column:error_message;type:varchar(255)" json:"errorMessage"`
 	Color        string     `gorm:"column:color;type:varchar(255)" json:"color"`
+	Icon         string     `gorm:"column:icon;type:varchar(255)" json:"icon"`
 }
 
 func (Agents) TableName() string {

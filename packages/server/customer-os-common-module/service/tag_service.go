@@ -18,19 +18,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-var defaultColorCodes = []string{
-	"grayModern",
-	"error",
-	"warning",
-	"success",
-	"grayWarm",
-	"moss",
-	"blueLight",
-	"indigo",
-	"violet",
-	"pink",
-}
-
 type TagService interface {
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, inputTag *neo4jentity.TagEntity) (*neo4jentity.TagEntity, error)
 	AddTagToEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, tagName string) (string, error)
@@ -94,7 +81,7 @@ func (s *tagService) Save(ctx context.Context, tx *neo4j.ManagedTransaction, inp
 		inputTag.AppSource = common.GetAppSourceFromContext(ctx)
 	}
 	if inputTag.ColorCode == "" {
-		inputTag.ColorCode = utils.GetRandomItem(defaultColorCodes)
+		inputTag.ColorCode = utils.GetRandomColor()
 	}
 
 	tagNodePtr, err := s.services.Neo4jRepositories.TagWriteRepository.Merge(ctx, tx, tenant, *inputTag)

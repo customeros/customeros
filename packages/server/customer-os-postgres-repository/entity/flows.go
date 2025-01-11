@@ -6,7 +6,7 @@ import (
 
 type Flows struct {
 	ID             string     `gorm:"primaryKey;type:varchar(50)" json:"id"`
-	AutomationID   string     `gorm:"primaryKey;type:varchar(50)" json:"automationId"`
+	AgentID        string     `gorm:"primaryKey;type:varchar(50)" json:"agentID"`
 	IsActive       string     `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
 	CreatedAt      time.Time  `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
 	UpdatedAt      *time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`

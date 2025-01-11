@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -95,15 +97,13 @@ func assignEventToSession(ctx context.Context, s *service.Services, trackerData 
 	span, _ := tracing.StartTracerSpan(ctx, "Tracking.assignEventsToSession")
 	defer span.Finish()
 
-	lookback := int(enum.WebSessionTimeoutPageView)
-
-	// find active session for visitor within timeout window
+	// find active session for visitor
 	query := entity.WebSession{
 		Tenant:    trackerData.Tenant,
 		VisitorID: trackerData.VisitorID,
 		IsActive:  true,
 	}
-	session, err := s.Repositories.PostgresRepositories.WebSessionRepository.FindCurrentSessions(ctx, query, &lookback)
+	session, err := s.Repositories.PostgresRepositories.WebSessionRepository.FindSession(ctx, query, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -111,15 +111,30 @@ func assignEventToSession(ctx context.Context, s *service.Services, trackerData 
 
 	// if no active session found, create one if event is page_view
 	if session == nil && trackerData.EventType == enum.WebTrackerPageView.String() {
+
 		query := entity.WebSession{
 			Tenant:        trackerData.Tenant,
 			VisitorID:     trackerData.VisitorID,
 			IP:            trackerData.IP,
+			Referrer:      &trackerData.Referrer,
 			StartTime:     utils.Now(),
 			LastEventType: trackerData.EventType,
 			LastActivity:  utils.Now(),
 			IsActive:      true,
 		}
+
+		params := parseURLParams(trackerData.Search)
+		if params != nil {
+			paramString, err := s.CommonServices.AgentVisitorIDService.SetReferrerQueryParams(ctx, params)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+			if paramString != nil {
+				query.QueryParams = paramString
+			}
+		}
+
 		newSession, err := s.Repositories.PostgresRepositories.WebSessionRepository.Create(ctx, query)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -184,4 +199,29 @@ func isTrustedIP(ctx context.Context, s *service.Services, ipAddress string) boo
 	}
 
 	return !ipThreats.IsThreat
+}
+
+func parseURLParams(queryString string) []commonService.ReferrerQueryParams {
+	// Remove leading ? if present
+	queryString = strings.TrimPrefix(queryString, "?")
+
+	// Split the string by & to get individual param-value pairs
+	pairs := strings.Split(queryString, "&")
+
+	// Create slice to hold results
+	params := make([]commonService.ReferrerQueryParams, 0, len(pairs))
+
+	// Parse each pair into the struct
+	for _, pair := range pairs {
+		// Split pair by = to separate param and value
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) == 2 {
+			params = append(params, commonService.ReferrerQueryParams{
+				Name:  parts[0],
+				Value: parts[1],
+			})
+		}
+	}
+
+	return params
 }

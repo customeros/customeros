@@ -44,7 +44,7 @@ func HandleWebsiteVisitorEvent(c context.Context, s *service.Services, sourceEve
 	var errs error
 	for _, agent := range agents {
 		var loopErr error
-		// create start agent execution record
+		// create agent execution record
 		agentExecutionRecord := entity.AgentExecution{
 			AgentID:      &agent.ID,
 			TriggerEvent: eventData.Type(),
@@ -71,7 +71,7 @@ func HandleWebsiteVisitorEvent(c context.Context, s *service.Services, sourceEve
 			}
 		}
 
-		// update automation execution record with results
+		// update agent execution record with results
 		if loopErr != nil {
 			errorMessage := loopErr.Error()
 			agentExecutionRecord.ErrorMessage = &errorMessage

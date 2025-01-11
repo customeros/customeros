@@ -32,14 +32,15 @@ func HandleAgentExecutionResults(c context.Context, s *service.Services, eventDa
 
 	// update flow execution record based on results
 	switch eventData.Status {
-	case enum.FlowAgentExecutionFail:
+	case "FAIL":
 		flowExecutionRecord.Status = enum.FlowExecutionError.String()
 		flowExecutionRecord.ErrorMessage = eventData.ErrorMessage
 
-	case enum.FlowAgentExecutionPending:
+	case "PENDING":
 		flowExecutionRecord.Status = enum.FlowExecutionRunning.String()
 
-	case enum.FlowAgentExecutionSuccess:
+	case "SUCCESS":
+
 		nextStepData, err := s.WorkflowService.GetNextStepInFlow(ctx, flowExecutionRecord.FlowID, nil)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -49,7 +50,6 @@ func HandleAgentExecutionResults(c context.Context, s *service.Services, eventDa
 		// if next step is END
 		if nextStepData.ToNodeType == enum.NodeFlowEnd {
 			flowExecutionRecord.CompletedAt = utils.NowPtr()
-			flowExecutionRecord.CurrentStep = ""
 			flowExecutionRecord.CurrentStepNodeId = ""
 			flowExecutionRecord.Status = enum.FlowExecutionCompleted.String()
 			_, err := s.WorkflowService.SaveFlowExecutionRecord(ctx, *flowExecutionRecord)
@@ -60,7 +60,6 @@ func HandleAgentExecutionResults(c context.Context, s *service.Services, eventDa
 			return nil
 		}
 
-		flowExecutionRecord.CurrentStep = nextStepData.ToNodeAgent.String()
 		flowExecutionRecord.CurrentStepNodeId = nextStepData.ToNodeID
 		flowExecutionRecord.Status = enum.FlowExecutionRunning.String()
 		// todo - fire next event & handle waits

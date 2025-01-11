@@ -67,7 +67,6 @@ type Repositories struct {
 	RawEmailRepository                           RawEmailRepository
 	SlackChannelNotificationRepository           SlackChannelNotificationRepository
 	SlackChannelRepository                       SlackChannelRepository
-	SlackNotificationEventsRepository            SlackNotificationEventsRepository
 	SlackSettingsRepository                      SlackSettingsRepository
 	StatsApiCallsRepository                      StatsApiCallsRepository
 	TableViewDefinitionRepository                TableViewDefinitionRepository
@@ -147,7 +146,6 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		PostmarkApiKeyRepository:                     NewPostmarkApiKeyRepo(postgresDB.GormDB),
 		SlackChannelNotificationRepository:           NewSlackChannelNotificationRepository(postgresDB.GormDB),
 		SlackChannelRepository:                       NewSlackChannelRepository(postgresDB.GormDB),
-		SlackNotificationEventsRepository:            NewSlackNotificationEventsRepository(postgresDB.GormDB),
 		SlackSettingsRepository:                      NewSlackSettingsRepository(postgresDB.GormDB),
 		StatsApiCallsRepository:                      NewStatsApiCallsRepository(postgresDB.GormDB),
 		TableViewDefinitionRepository:                NewTableViewDefinitionRepository(postgresDB.GormDB),
@@ -219,7 +217,6 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.PostmarkApiKey{},
 		&entity.SlackChannel{},
 		&entity.SlackChannelNotification{},
-		&entity.SlackNotificationEvents{},
 		&entity.SlackSettingsEntity{},
 		&entity.StatsApiCalls{},
 		&entity.TableViewDefinition{},

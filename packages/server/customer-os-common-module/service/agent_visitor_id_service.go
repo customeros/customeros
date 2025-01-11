@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
 
+	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
@@ -19,7 +22,10 @@ type AgentVisitorIDService interface {
 	CreateAgent(ctx context.Context) (*entity.Agents, error)
 	RunAgent(ctx context.Context, agent *entity.Agents, eventData *data_fields.WebsiteVisitEvent) error
 	SaveAgentConfig(ctx context.Context, agent *entity.Agents, agentConfig AgentConfig) (*entity.Agents, error)
-	GetAgentConfig(ctx context.Context, agent entity.Agents) (*AgentConfig, error)
+	AgentConfig(ctx context.Context, agent *entity.Agents) (*AgentConfig, error)
+	AgentCapabilities(ctx context.Context, agent *entity.Agents) (*AgentCapabilities, error)
+	SetReferrerQueryParams(ctx context.Context, queryParams []ReferrerQueryParams) (*string, error)
+	ReferrerQueryParams(ctx context.Context, session *entity.WebSession) ([]ReferrerQueryParams, error)
 }
 
 type agentVisitorIDService struct {
@@ -47,6 +53,11 @@ type Capability struct {
 	Name     string `json:"name"`
 	Action   string `json:"action"`
 	Optional bool   `json:"optional,omitempty"`
+}
+
+type ReferrerQueryParams struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 const DefaultNotificationCooldownInHours = 12
@@ -84,7 +95,8 @@ func (a *agentVisitorIDService) CreateAgent(ctx context.Context) (*entity.Agents
 		Goal:         masterAgent.Goal,
 		IsActive:     false,
 		VisibleInUI:  true,
-		Color:        "", //assign random
+		Icon:         masterAgent.Icon,
+		Color:        utils.GetRandomColor(),
 	}
 
 	config := AgentConfig{
@@ -106,12 +118,22 @@ func (a *agentVisitorIDService) RunAgent(ctx context.Context, agent *entity.Agen
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	// validate agent
 	if agent.RegistryID != enum.AgentVisitorID.String() {
 		return errors.New("agent does not match VisitorID agent")
 	}
 
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		return errors.New("tenant not set on context")
+	}
+
+	if tenant != agent.Tenant {
+		return errors.New("agent does not belong to tenant")
+	}
+
 	// try to deanonymize the IP address
-	domain, linkedinSlug, err := a.identifyIP(ctx, eventData.IPAddress)
+	domain, _, err := a.identifyIP(ctx, eventData.IPAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -137,31 +159,38 @@ func (a *agentVisitorIDService) RunAgent(ctx context.Context, agent *entity.Agen
 		Domain: domain,
 	}
 
-	_, err = a.services.PostgresRepositories.WebSessionRepository.Update(ctx, query)
+	session, err := a.services.PostgresRepositories.WebSessionRepository.Update(ctx, query)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	// determine if new org
-	tenant := common.GetTenantFromContext(ctx)
 	isNewOrg, err := a.isNewCompanyVisit(ctx, &tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed isNewCompany lookup"))
+		return err
 	}
 
 	// determine if new person
 	isNewVisitor, err := a.isNewWebsiteVisitor(ctx, tenant, eventData.VisitorID)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed isNewVisitor lookup"))
+		return err
 	}
 
 	// log visit on timeline
 	timelineMessage, err := a.buildTimelineMessage(ctx, eventData, isNewOrg, isNewVisitor)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
 	if timelineMessage == nil {
 		err := errors.New("unable to build timeline message")
 		tracing.TraceErr(span, err)
+		return err
 	}
-	source := enum.SourceReveal.String()
+	source := enum.SourceAgent.String()
 	actionType := enum.ActionGeneric
 
 	action := data_fields.ActionFields{
@@ -170,27 +199,42 @@ func (a *agentVisitorIDService) RunAgent(ctx context.Context, agent *entity.Agen
 		ActionType: &actionType,
 		Content:    timelineMessage,
 	}
+	_, err = a.services.ActionService.CreateActionForOrganization(ctx, nil, orgID, action)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	// determine if slack notification is configured
-	sendNotificationEnabled, slackChannelID, err := a.isSlackNotificationEnabled(ctx, agent)
+	slackEnabled, agentConfig, err := a.isSlackNotificationEnabled(ctx, agent)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
-	if sendNotificationEnabled == false || (sendNotificationEnabled && slackChannelID == "") {
-		return
+	if slackEnabled == false || agentConfig.SlackChannelID == "" {
+		return nil
+	}
+
+	// determine if notification should be skipped
+	skip, err := a.skipNotification(ctx, agentConfig, session)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	if skip {
+		return nil
 	}
 
 	// handle slack notification
-	message, err := a.buildWebVisitorSlackNotification(ctx, eventData)
+	message, err := a.buildWebVisitorSlackNotification(ctx, session, orgID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
 
-	err = a.services.SlackService.Notify(ctx, tenant, slackChannelID, message)
+	err = a.services.SlackService.Notify(ctx, tenant, agentConfig.SlackChannelID, message)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
 
+	return nil
 }
 
 func (a *agentVisitorIDService) SaveAgentConfig(ctx context.Context, agent *entity.Agents, agentConfig AgentConfig) (*entity.Agents, error) {
@@ -255,7 +299,7 @@ func (a *agentVisitorIDService) AgentCapabilities(ctx context.Context, agent *en
 }
 
 func (a *agentVisitorIDService) buildTimelineMessage(ctx context.Context, eventData *data_fields.WebsiteVisitEvent, isNewOrg, isNewVisitor bool) (*string, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.buildTimelineMessage")
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.buildTimelineMessage")
 	defer span.Finish()
 
 	query := entity.WebTrackerEvents{
@@ -311,7 +355,7 @@ func (a *agentVisitorIDService) buildTimelineMessage(ctx context.Context, eventD
 }
 
 func (a *agentVisitorIDService) calculateSessionDuration(ctx context.Context, sessionID string) (string, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.calculateSessionDuration")
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.calculateSessionDuration")
 	defer span.Finish()
 
 	query := entity.WebSession{
@@ -341,7 +385,7 @@ func (a *agentVisitorIDService) calculateSessionDuration(ctx context.Context, se
 }
 
 func (a *agentVisitorIDService) getUniquePageViews(ctx context.Context, pageViews []entity.WebTrackerEvents) ([]string, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.getUniquePageViews")
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.getUniquePageViews")
 	defer span.Finish()
 
 	// Use map to track unique pages
@@ -362,7 +406,7 @@ func (a *agentVisitorIDService) getUniquePageViews(ctx context.Context, pageView
 }
 
 func (a *agentVisitorIDService) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug *string, err error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.identifyIP")
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.identifyIP")
 	defer span.Finish()
 
 	snitcherData, err := a.services.EnrichmentService.Snitcher(ctx, ipAddress)
@@ -380,63 +424,88 @@ func (a *agentVisitorIDService) identifyIP(ctx context.Context, ipAddress string
 	return &primaryDomain, &snitcherData.Data.Profiles.LinkedIn.Handle, nil
 }
 
-func (a *agentService) isNewCompanyVisit(ctx context.Context, tenant, domain *string) (bool, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.isNewCompanyVisit")
+func (a *agentVisitorIDService) isNewCompanyVisit(ctx context.Context, tenant, domain *string) (bool, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.isNewCompanyVisit")
 	defer span.Finish()
 
-	query := entity.WebSession{
-		Tenant:    *tenant,
-		Domain:    domain,
-		EventType: string(EventPageExit),
+	if tenant == nil || domain == nil {
+		err := errors.New("neither tenant or domain can be nil")
+		tracing.TraceErr(span, err)
+		span.LogKV("tenant", tenant)
+		span.LogKV("domain", domain)
+		return false, err
 	}
 
-	results, err := a.services.PostgresRepositories.TrackerEventsRepository.FindAll(ctx, query, nil)
+	query := entity.WebSession{
+		Tenant: *tenant,
+		Domain: domain,
+	}
+
+	results, err := a.services.PostgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
 	}
 
-	if len(*results) == 0 {
+	if len(results) == 0 {
 		return true, nil
 	}
 	return false, nil
 }
 
 func (a *agentVisitorIDService) isNewWebsiteVisitor(ctx context.Context, tenant, visitorId string) (bool, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.isNewWebsiteVisitor")
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.isNewWebsiteVisitor")
 	defer span.Finish()
 
-	query := entity.TrackerEvents{
+	query := entity.WebSession{
 		Tenant:    tenant,
 		VisitorID: visitorId,
-		EventType: string(EventPageExit),
 	}
 
-	results, err := a.services.PostgresRepositories.TrackerEventsRepository.FindAll(ctx, query, nil)
+	results, err := a.services.PostgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
 	}
 
-	if len(*results) == 0 {
+	if len(results) == 0 {
 		return true, nil
 	}
 	return false, nil
 }
 
-func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Context, eventData *data_fields.WebsiteVisitEvent) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.buildWebVisitorSlackNotification")
+func (a *agentVisitorIDService) isSlackNotificationEnabled(ctx context.Context, agent *entity.Agents) (bool, *AgentConfig, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.isSlackNotificationEnabled")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	agentConfig, err := a.AgentConfig(ctx, agent)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, nil, err
+	}
+
+	if agentConfig == nil {
+		return false, nil, nil
+	}
+
+	return agentConfig.SlackEnabled, agentConfig, nil
+
+}
+
+func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Context, session *entity.WebSession, orgID string) (*string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.buildWebVisitorSlackNotification")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
 	// get org data from global org table
-	globalOrg, err := s.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, eventData.Domain)
+	globalOrg, err := a.services.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, *session.Domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return "", err
+		return nil, err
 	}
 	if globalOrg == nil {
-		err = s.PostgresRepositories.GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess(ctx, eventData.Domain)
+		err = a.services.PostgresRepositories.GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess(ctx, *session.Domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -444,13 +513,13 @@ func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Con
 
 	// Build the text content for the section based on available data
 	var contentLines []string
-	primaryDomain := eventData.Domain
+	primaryDomain := *session.Domain
 	if globalOrg != nil {
 		primaryDomain = globalOrg.PrimaryDomain
 	}
 	website := "https://" + primaryDomain
 
-	name := eventData.Domain
+	name := *session.Domain
 	if globalOrg != nil {
 		name = globalOrg.Name
 	}
@@ -470,12 +539,12 @@ func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Con
 		contentLines = append(contentLines, fmt.Sprintf("*Location:* %s, %s ", globalOrg.City, globalOrg.CountryA2))
 	}
 	// Add source/referrer only if it exists
-	if eventData.Referrer != "" {
-		referrer := strings.TrimPrefix(eventData.Referrer, "https://")
+	if session.Referrer != nil {
+		referrer := strings.TrimPrefix(*session.Referrer, "https://")
 		referrer = strings.TrimPrefix(referrer, "http://")
 		referrer = strings.TrimPrefix(referrer, "www.")
 		referrer = strings.Trim(referrer, "/")
-		contentLines = append(contentLines, fmt.Sprintf("*Source:* <%s|%s> ", eventData.Referrer, referrer))
+		contentLines = append(contentLines, fmt.Sprintf("*Source:* <%s|%s> ", session.Referrer, referrer))
 	} else {
 		contentLines = append(contentLines, "*Source:* Direct ")
 	}
@@ -539,83 +608,54 @@ func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Con
 				}
 			]
 		}
-	]`, name, sectionBlock, *eventData.OrganizationID)
+	]`, name, sectionBlock, orgID)
 
-	return layoutBlocks, nil
+	return &layoutBlocks, nil
 }
 
-func parseURLParams(queryString string) []data_fields.URLParams {
-	// Remove leading ? if present
-	queryString = strings.TrimPrefix(queryString, "?")
-
-	// Split the string by & to get individual param-value pairs
-	pairs := strings.Split(queryString, "&")
-
-	// Create slice to hold results
-	params := make([]data_fields.URLParams, 0, len(pairs))
-
-	// Parse each pair into the struct
-	for _, pair := range pairs {
-		// Split pair by = to separate param and value
-		parts := strings.SplitN(pair, "=", 2)
-		if len(parts) == 2 {
-			params = append(params, data_fields.URLParams{
-				Param: parts[0],
-				Value: parts[1],
-			})
-		}
-	}
-
-	return params
-}
-
-func (a *agentService) skipNotification(ctx context.Context, event *data_fields.WebsiteVisitEvent) (bool, SkipReason) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilitiesService.skipNotifications")
+func (a *agentVisitorIDService) skipNotification(ctx context.Context, agentConfig *AgentConfig, session *entity.WebSession) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.skipNotifications")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
 
-	if event.DomainContext == nil {
-		return true, SkipNoData, nil
+	if session.Domain == nil {
+		return true, nil
 	}
 
 	// don't send if from workspace domain
-	isWorkspaceDomain := a.isWorkspaceDomain(ctx, event.DomainContext.Domain)
+	isWorkspaceDomain := a.isWorkspaceDomain(ctx, *session.Domain)
 	if isWorkspaceDomain {
-		return true, SkipTenantDomain, nil
+		return true, nil
 	}
 
-	if event.DomainContext.DomainRateLimit == true {
-		// determine if notified from this domain
-		query := entity.SlackNotificationEvents{
-			Tenant:    event.Tenant,
-			ChannelID: event.ChannelID,
-			Domain:    event.DomainContext.Domain,
-		}
-
-		priorNotifications, err := a.services.PostgresRepositories.SlackNotificationEventsRepository.Find(ctx, query)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return false, SkipNA, nil
-		}
-
-		if priorNotifications == nil {
-			return false, SkipNA, nil
-		}
-
-		// determine how long since last notification
-		hoursSinceLastNotification := time.Now().Sub(*priorNotifications.LastNotified).Hours()
-		if hoursSinceLastNotification < float64(*event.DomainContext.MinHoursBetweenNotifications) {
-			return true, SkipTooRecent, nil
-		}
-
-		return false, SkipNA, priorNotifications
+	if agentConfig == nil {
+		err := errors.New("agent config not set")
+		tracing.TraceErr(span, err)
+		return true, err
 	}
 
-	return false, SkipNA, nil
+	// determine last notification from this domain
+	lastNotification, err := a.services.PostgresRepositories.WebSessionRepository.FindLastNotification(ctx, session.Tenant, *session.Domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, nil
+	}
+
+	if lastNotification == nil {
+		return false, nil
+	}
+
+	// determine how long since last notification
+	hoursSinceLastNotification := time.Now().Sub(*lastNotification.SentSlackNotification).Hours()
+	if hoursSinceLastNotification < float64(agentConfig.NotificationCooldownInHours) {
+		return true, nil
+	}
+
+	return false, nil
 }
 
-func (a *agentService) isWorkspaceDomain(ctx context.Context, domain string) bool {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilitiesService.isWorkspaceDomain")
+func (a *agentVisitorIDService) isWorkspaceDomain(ctx context.Context, domain string) bool {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.isWorkspaceDomain")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
 
@@ -632,4 +672,29 @@ func (a *agentService) isWorkspaceDomain(ctx context.Context, domain string) boo
 	}
 
 	return false
+}
+
+func (a *agentVisitorIDService) SetReferrerQueryParams(ctx context.Context, queryParams []ReferrerQueryParams) (*string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.SetReferrerQueryParams")
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	defer span.Finish()
+
+	bytes, err := json.Marshal(queryParams)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal QueryParam: %w", err)
+	}
+	results := string(bytes)
+	return &results, nil
+}
+
+func (a *agentVisitorIDService) ReferrerQueryParams(ctx context.Context, session *entity.WebSession) ([]ReferrerQueryParams, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.ReferrerQueryParams")
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	defer span.Finish()
+
+	var param []ReferrerQueryParams
+	if err := json.Unmarshal([]byte(*session.QueryParams), &param); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal QueryParam: %w", err)
+	}
+	return param, nil
 }

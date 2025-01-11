@@ -34,40 +34,16 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 		return err
 	}
 
-	if flows == nil || len(*flows) == 0 {
+	if flows == nil || len(flows) == 0 {
 		return nil
 	}
 
 	var errs error
-	for _, flow := range *flows {
-		// get next action on the flow
-		nextStep, err := s.WorkflowService.GetNextStepInFlow(ctx, flow.ID, &flow.TriggerNodeID)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			errs = multierr.Append(errs, err)
-			continue
-		}
-
-		// send event to agent executioner
-		switch nextStep.ToNodeAgent.Agent() {
-		case "timeline_event":
-			err := publishCreateTimelineEvent(ctx, s, &flow, eventData, sourceEvent)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				errs = multierr.Append(errs, err)
-			}
-
-		default:
-			err = fmt.Errorf("next flow action not handled for flow %s", flow.ID)
-			tracing.TraceErr(span, err)
-			errs = multierr.Append(errs, err)
-		}
-	}
 
 	return errs
 }
 
-func publishCreateTimelineEvent(ctx context.Context, s *service.Services, flow *entity.Flow, eventData *data_fields.MeetingSummaryEvent, sourceEvent commonEnum.FlowListenerEvent) error {
+func publishCreateTimelineEvent(ctx context.Context, s *service.Services, flow *entity.Flows, eventData *data_fields.MeetingSummaryEvent, sourceEvent commonEnum.FlowListenerEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.publishCreateTimelineEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -123,21 +99,12 @@ func publishCreateTimelineEvent(ctx context.Context, s *service.Services, flow *
 	return allErr
 }
 
-func createFlowExecutionRecordForMeetingSummary(ctx context.Context, s *service.Services, flow *entity.Flow, eventData *data_fields.MeetingSummaryEvent) (*entity.FlowExecution, error) {
+func createFlowExecutionRecordForMeetingSummary(ctx context.Context, s *service.Services, flow *entity.Flows, eventData *data_fields.MeetingSummaryEvent) (*entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.createFlowExecutionRecordForMeetingSummary")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	flowExecutionRecord, err := s.WorkflowService.BuildAndSaveFlowExecutionRecord(
-		ctx, flow.Status, flow.ID, flow.TriggerNodeID, eventData.MeetingID, eventData.Type(),
-		commonEnum.AgentTimelineEventCreate.String(), eventData,
-	)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return flowExecutionRecord, nil
+	return nil, nil
 }
 
 func createContactsAndOrganizations(ctx context.Context, s *service.Services, participantEmails *[]string) (*[]string, error) {

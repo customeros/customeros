@@ -167,7 +167,7 @@ require (
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	go.temporal.io/sdk v1.31.0
 	go.uber.org/atomic v1.11.0 // indirect
-	go.uber.org/multierr v1.11.0
+	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect

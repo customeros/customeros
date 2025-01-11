@@ -18,30 +18,31 @@ type FlowListenerEventRecord struct {
 	Description string `json:"description"`
 }
 
-func (w *workflowService) ValidateListener(ctx context.Context, listenerEvent enum.FlowListenerEvent) (bool, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ValidateListener")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-
-	tenant := common.GetTenantFromContext(ctx)
-	if tenant == "" {
-		err := errors.New("tenant not set on context")
-		tracing.TraceErr(span, err)
-		return false, err
-	}
-
-	events, err := w.services.PostgresRepositories.FlowListenerRegistryRepository.FindAll(ctx)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return false, err
-	}
-	for _, event := range *events {
-		if event.ListenerEvent == listenerEvent.String() {
-			return true, nil
-		}
-	}
-	return false, nil
-}
+//
+// func (w *workflowService) ValidateListener(ctx context.Context, listenerEvent enum.FlowListenerEvent) (bool, error) {
+// 	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ValidateListener")
+// 	defer span.Finish()
+// 	tracing.TagComponentService(span)
+//
+// 	tenant := common.GetTenantFromContext(ctx)
+// 	if tenant == "" {
+// 		err := errors.New("tenant not set on context")
+// 		tracing.TraceErr(span, err)
+// 		return false, err
+// 	}
+//
+// 	events, err := w.services.PostgresRepositories.FlowListenerRegistryRepository.FindAll(ctx)
+// 	if err != nil {
+// 		tracing.TraceErr(span, err)
+// 		return false, err
+// 	}
+// 	for _, event := range *events {
+// 		if event.ListenerEvent == listenerEvent.String() {
+// 			return true, nil
+// 		}
+// 	}
+// 	return false, nil
+// }
 
 func (w *workflowService) ValidateFlowBelongsToTenant(ctx context.Context, flowId string) (bool, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ValidateFlowBelongsToTenant")
@@ -55,13 +56,12 @@ func (w *workflowService) ValidateFlowBelongsToTenant(ctx context.Context, flowI
 		return false, err
 	}
 
-	query := entity.Flow{
-		ID:     flowId,
-		Tenant: tenant,
+	query := entity.Flows{
+		ID: flowId,
 	}
 
-	flowRecord, err := w.services.PostgresRepositories.FlowRepository.Find(ctx, query)
-	if err == nil && flowRecord != nil && flowRecord.Status != enum.FlowStatusArchived.String() {
+	flowRecord, err := w.services.PostgresRepositories.FlowsRepository.Find(ctx, query)
+	if err == nil && flowRecord != nil {
 		return true, nil
 	}
 

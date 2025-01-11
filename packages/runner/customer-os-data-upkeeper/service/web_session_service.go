@@ -48,7 +48,7 @@ func (s *webSessionService) ProcessWebSessions() {
 		LastEventType: enum.WebTrackerPageExit.String(),
 		IsActive:      true,
 	}
-	pageExitSessions, err := s.commonServices.PostgresRepositories.WebSessionRepository.FindAllTimedOutSessions(ctx, query, &lookback)
+	pageExitSessions, err := s.commonServices.PostgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, &lookback)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -66,7 +66,7 @@ func (s *webSessionService) ProcessWebSessions() {
 		LastEventType: enum.WebTrackerPageView.String(),
 		IsActive:      true,
 	}
-	pageViewSessions, err := s.commonServices.PostgresRepositories.WebSessionRepository.FindAllTimedOutSessions(ctx, query, &lookback)
+	pageViewSessions, err := s.commonServices.PostgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, &lookback)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -97,7 +97,7 @@ func (s *webSessionService) closeSessions(ctx context.Context, sessions []entity
 		}
 
 		event := dto.WebhookEvent{
-			ExternalSystemId: enum.SourceReveal,
+			ExternalSystemId: enum.SourceAgent,
 			Name:             enum.EventRevealWebsiteVisit,
 			DataType:         eventData.Type(),
 			Data:             &eventData,
@@ -113,7 +113,7 @@ func (s *webSessionService) closeSessions(ctx context.Context, sessions []entity
 		// update websession record
 		session.IsActive = false
 		session.EndTime = utils.NowPtr()
-		session.EventPublished = true
+		session.PublishedEvent = true
 		_, err = s.commonServices.PostgresRepositories.WebSessionRepository.Update(ctx, session)
 		if err != nil {
 			tracing.TraceErr(span, err)

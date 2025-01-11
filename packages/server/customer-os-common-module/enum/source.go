@@ -10,6 +10,7 @@ type Source string
 
 const (
 	SourceUnknown        Source = ""
+	SourceAgent          Source = "agent"
 	SourceAttio          Source = "attio"
 	SourceCalCom         Source = "calcom"
 	SourceClose          Source = "close"
@@ -25,7 +26,6 @@ const (
 	SourceOutlook        Source = "outlook"
 	SourcePipedrive      Source = "pipedrive"
 	SourcePostmark       Source = "postmark"
-	SourceReveal         Source = "reveal"
 	SourceSalesforce     Source = "salesforce"
 	SourceShopify        Source = "shopify"
 	SourceSlack          Source = "slack"
@@ -38,6 +38,7 @@ const (
 
 var AllSources = []Source{
 	SourceUnknown,
+	SourceAgent,
 	SourceAttio,
 	SourceCalCom,
 	SourceClose,
@@ -53,7 +54,6 @@ var AllSources = []Source{
 	SourceOutlook,
 	SourcePipedrive,
 	SourcePostmark,
-	SourceReveal,
 	SourceSalesforce,
 	SourceShopify,
 	SourceSlack,
