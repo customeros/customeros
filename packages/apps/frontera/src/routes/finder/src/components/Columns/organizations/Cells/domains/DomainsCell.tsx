@@ -10,9 +10,7 @@ export const DomainsCell = observer(({ organizationId }: DomainCellProps) => {
   const store = useStore();
   const organization = store.organizations.getById(organizationId);
 
-  const domains = organization?.value?.domainsDetails
-    ?.filter((e) => e?.primary && !!e.primary)
-    .map((e) => e.domain);
+  const domains = organization?.primaryDomains;
 
   return (
     <div className='flex items-center cursor-pointer'>

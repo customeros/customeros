@@ -90,12 +90,12 @@ export const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
   }),
-  [ColumnViewType.OrganizationsWebsite]: columnHelper.accessor(
+  [ColumnViewType.OrganizationsPrimaryDomains]: columnHelper.accessor(
     'value.domainsDetails',
     {
-      id: ColumnViewType.OrganizationsWebsite,
-      minSize: 92,
-      maxSize: 400,
+      id: ColumnViewType.OrganizationsPrimaryDomains,
+      minSize: 152,
+      maxSize: 500,
       enableColumnFilter: false,
       enableResizing: true,
       enableSorting: false,
@@ -107,7 +107,7 @@ export const columns: Record<string, Column> = {
       header: (props) => (
         <THead<HTMLInputElement>
           title='Primary Domains'
-          id={ColumnViewType.OrganizationsWebsite}
+          id={ColumnViewType.OrganizationsPrimaryDomains}
           {...getTHeadProps<Organization>(props)}
         />
       ),

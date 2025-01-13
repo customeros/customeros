@@ -393,6 +393,7 @@ export enum ColumnViewType {
   OrganizationsOnboardingStatus = 'ORGANIZATIONS_ONBOARDING_STATUS',
   OrganizationsOwner = 'ORGANIZATIONS_OWNER',
   OrganizationsParentOrganization = 'ORGANIZATIONS_PARENT_ORGANIZATION',
+  OrganizationsPrimaryDomains = 'ORGANIZATIONS_PRIMARY_DOMAINS',
   OrganizationsRelationship = 'ORGANIZATIONS_RELATIONSHIP',
   OrganizationsRenewalDate = 'ORGANIZATIONS_RENEWAL_DATE',
   OrganizationsRenewalLikelihood = 'ORGANIZATIONS_RENEWAL_LIKELIHOOD',
@@ -3575,6 +3576,7 @@ export type Organization = MetadataInterface & {
   id: Scalars['ID']['output'];
   inboundCommsCount: Scalars['Int64']['output'];
   industry?: Maybe<Scalars['String']['output']>;
+  /** @deprecated No longer supported */
   industryGroup?: Maybe<Scalars['String']['output']>;
   /**
    * Deprecated, use relationship instead
@@ -3649,6 +3651,7 @@ export type Organization = MetadataInterface & {
   sourceOfTruth: DataSource;
   stage?: Maybe<OrganizationStage>;
   stageLastUpdated?: Maybe<Scalars['Time']['output']>;
+  /** @deprecated No longer supported */
   subIndustry?: Maybe<Scalars['String']['output']>;
   subsidiaries: Array<LinkedOrganization>;
   /**
@@ -3826,7 +3829,10 @@ export type OrganizationUiDetails = {
   hide: Scalars['Boolean']['output'];
   iconUrl?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  /** @deprecated Use industryCode */
   industry?: Maybe<Scalars['String']['output']>;
+  industryCode?: Maybe<Scalars['String']['output']>;
+  industryName?: Maybe<Scalars['String']['output']>;
   lastFundingRound?: Maybe<FundingRound>;
   lastTouchPointAt?: Maybe<Scalars['Time']['output']>;
   lastTouchPointType?: Maybe<LastTouchpointType>;

@@ -58,6 +58,14 @@ export class Organization extends Entity<OrganizationDatum> {
     return user ?? null;
   }
 
+  get primaryDomains() {
+    if (!this.value.domainsDetails) return [];
+
+    return this.value.domainsDetails
+      .filter((e) => e.primary)
+      .map((e) => e.domain);
+  }
+
   @computed
   get isEnriching(): boolean {
     return (
