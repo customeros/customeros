@@ -5,23 +5,25 @@ import (
 	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type workflowService struct {
-	services *Services
+	postgres *repository.Repositories
 }
 
-func NewWorkflowService(services *Services) WorkflowService {
+func NewWorkflowService(postgres *repository.Repositories) interfaces.WorkflowService {
 	return &workflowService{
-		services: services,
+		postgres: postgres,
 	}
 }
 
@@ -41,10 +43,10 @@ func (w *workflowService) SaveFlow(ctx context.Context, flowRecord entity.Flow) 
 	}
 
 	if flowRecord.ID == "" {
-		return w.services.PostgresRepositories.FlowRepository.Create(ctx, flowRecord)
+		return w.postgres.FlowRepository.Create(ctx, flowRecord)
 	}
 
-	return w.services.PostgresRepositories.FlowRepository.Update(ctx, flowRecord)
+	return w.postgres.FlowRepository.Update(ctx, flowRecord)
 }
 
 func (w *workflowService) GetFlowsByTrigger(ctx context.Context, listenerEvent enum.FlowListenerEvent) (*[]entity.Flow, error) {
@@ -65,7 +67,7 @@ func (w *workflowService) GetFlowsByTrigger(ctx context.Context, listenerEvent e
 		TriggerOn: listenerEvent.String(),
 	}
 
-	allFlows, err := w.services.PostgresRepositories.FlowRepository.FindAll(ctx, query)
+	allFlows, err := w.postgres.FlowRepository.FindAll(ctx, query)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -74,7 +76,7 @@ func (w *workflowService) GetFlowsByTrigger(ctx context.Context, listenerEvent e
 	return allFlows, nil
 }
 
-func (w *workflowService) GetNextStepInFlow(ctx context.Context, flowId string, fromNodeId *string) (*FlowNextStep, error) {
+func (w *workflowService) GetNextStepInFlow(ctx context.Context, flowId string, fromNodeId *string) (*interfaces.FlowNextStep, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.getNextStepInFlow")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -85,7 +87,7 @@ func (w *workflowService) GetNextStepInFlow(ctx context.Context, flowId string, 
 			Tenant: common.GetTenantFromContext(ctx),
 		}
 
-		flow, err := w.services.PostgresRepositories.FlowRepository.Find(ctx, query)
+		flow, err := w.postgres.FlowRepository.Find(ctx, query)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -139,7 +141,7 @@ func (w *workflowService) GetFlowsForListenerEvent(ctx context.Context, sourceEv
 	return flows, nil
 }
 
-func (w *workflowService) nextStepInFlow(ctx context.Context, flowId, fromNodeId string) (*FlowNextStep, error) {
+func (w *workflowService) nextStepInFlow(ctx context.Context, flowId, fromNodeId string) (*interfaces.FlowNextStep, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.GetNextStepInFlow")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -161,14 +163,14 @@ func (w *workflowService) nextStepInFlow(ctx context.Context, flowId, fromNodeId
 		FromNodeID: fromNodeId,
 	}
 
-	edges, err := w.services.PostgresRepositories.FlowEdgeRepository.FindAll(ctx, query)
+	edges, err := w.postgres.FlowEdgeRepository.FindAll(ctx, query)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	if len(*edges) == 0 { // mark flow as completed
-		return &FlowNextStep{
+		return &interfaces.FlowNextStep{
 			FlowID:     flowId,
 			FromNodeID: fromNodeId,
 			ToNodeType: enum.NodeFlowEnd,
@@ -184,7 +186,7 @@ func (w *workflowService) nextStepInFlow(ctx context.Context, flowId, fromNodeId
 		FlowID: edge.FlowID,
 	}
 
-	nextNodeDetails, err := w.services.PostgresRepositories.FlowNodeRepository.Find(ctx, nextNodeQuery)
+	nextNodeDetails, err := w.postgres.FlowNodeRepository.Find(ctx, nextNodeQuery)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -202,7 +204,7 @@ func (w *workflowService) nextStepInFlow(ctx context.Context, flowId, fromNodeId
 		return nil, err
 	}
 
-	nextStep := FlowNextStep{
+	nextStep := interfaces.FlowNextStep{
 		FlowID:     edge.FlowID,
 		FromNodeID: edge.FromNodeID,
 		ToNodeID:   edge.ToNodeID,
@@ -245,7 +247,7 @@ func (w *workflowService) GetFlowExecutionRecordById(ctx context.Context, id str
 		Tenant: tenant,
 	}
 
-	result, err := w.services.PostgresRepositories.FlowExecutionRepository.Find(ctx, searchParams)
+	result, err := w.postgres.FlowExecutionRepository.Find(ctx, searchParams)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -319,10 +321,10 @@ func (w *workflowService) SaveFlowExecutionRecord(ctx context.Context, flowExecu
 	}
 
 	if flowExecutionRecord.ID == "" {
-		return w.services.PostgresRepositories.FlowExecutionRepository.Create(ctx, flowExecutionRecord)
+		return w.postgres.FlowExecutionRepository.Create(ctx, flowExecutionRecord)
 	}
 
-	return w.services.PostgresRepositories.FlowExecutionRepository.Update(ctx, flowExecutionRecord)
+	return w.postgres.FlowExecutionRepository.Update(ctx, flowExecutionRecord)
 }
 
 // Flow Agent Execution
@@ -346,10 +348,10 @@ func (w *workflowService) SaveFlowAgentExecutionRecord(ctx context.Context, flow
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
-		return w.services.PostgresRepositories.FlowAgentExecutionRepository.Create(ctx, flowAgentExecutionRecord)
+		return w.postgres.FlowAgentExecutionRepository.Create(ctx, flowAgentExecutionRecord)
 	}
 
-	return w.services.PostgresRepositories.FlowAgentExecutionRepository.Update(ctx, flowAgentExecutionRecord)
+	return w.postgres.FlowAgentExecutionRepository.Update(ctx, flowAgentExecutionRecord)
 }
 
 // Dead Flow Events
@@ -364,7 +366,7 @@ func (w *workflowService) SendToDeadEvents(ctx context.Context, sourceEvent enum
 		return err
 	}
 
-	_, err = w.services.PostgresRepositories.FlowDeadEventsRepository.Create(ctx, deadEvent)
+	_, err = w.postgres.FlowDeadEventsRepository.Create(ctx, deadEvent)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

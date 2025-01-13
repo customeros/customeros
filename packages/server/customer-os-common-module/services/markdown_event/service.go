@@ -4,25 +4,32 @@ import (
 	"context"
 
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neoRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type markdownEventService struct {
-	log logger.Logger
+	log    logger.Logger
+	neo4j  *neoRepo.Repositories
+	events *events.EventsService
 }
 
-func NewMarkdownEventService(log logger.Logger) MarkdownEventService {
+func NewMarkdownEventService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService) interfaces.MarkdownEventService {
 	return &markdownEventService{
-		log: log,
+		log:    log,
+		neo4j:  neo4j,
+		events: events,
 	}
 }
 
@@ -65,14 +72,14 @@ func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils
 			return "", err
 		}
 		// validate organization exists
-		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, utils.IfNotNilString(input.OrganizationId), model.NodeLabelOrganization)
+		exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, utils.IfNotNilString(input.OrganizationId), model.NodeLabelOrganization)
 		if err != nil || !exists {
 			err = errors.New("organization not found")
 			tracing.TraceErr(span, err)
 			return "", err
 		}
 
-		markdownEventId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelMarkdownEvent)
+		markdownEventId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelMarkdownEvent)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
@@ -82,9 +89,9 @@ func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils
 	}
 	tracing.TagEntity(span, markdownEventId)
 
-	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		if createFlow {
-			innerErr := s.services.Neo4jRepositories.MarkdownEventWriteRepository.CreateInTx(ctx, txWithPostCommit.Tx, tenant, markdownEventId, input)
+			innerErr := s.neo4j.MarkdownEventWriteRepository.CreateInTx(ctx, txWithPostCommit.Tx, tenant, markdownEventId, input)
 			if innerErr != nil {
 				s.log.Errorf("Error while saving markdown event %s: %s", markdownEventId, err.Error())
 				return nil, innerErr
@@ -92,7 +99,7 @@ func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils
 		}
 
 		if input.ExternalSystemAvailable() {
-			innerErr := s.services.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, txWithPostCommit.Tx, tenant, markdownEventId, model.NodeLabelMarkdownEvent, *input.ExternalSystem)
+			innerErr := s.neo4j.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, txWithPostCommit.Tx, tenant, markdownEventId, model.NodeLabelMarkdownEvent, *input.ExternalSystem)
 			if err != nil {
 				s.log.Errorf("Error while link markdown event %s with external system %s: %s", markdownEventId, input.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, innerErr
@@ -103,13 +110,13 @@ func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils
 			// send events
 			if createFlow {
 				// historify markdown event
-				err = s.services.RabbitMQService.PublishEvent(ctx, markdownEventId, model.MARKDOWN_EVENT, input)
+				err = s.events.Publisher.PublishEvent(ctx, markdownEventId, model.MARKDOWN_EVENT, input)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContact"))
 				}
 
 				// send event completed for organization for refresh
-				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, *input.OrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishEventCompleted(ctx, tenant, *input.OrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			}
 
 			return nil

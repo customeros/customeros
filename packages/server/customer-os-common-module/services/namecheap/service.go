@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
@@ -23,13 +25,13 @@ import (
 
 type namecheapService struct {
 	cfg      *config.GlobalConfig
-	services *Services
+	postgres *repository.Repositories
 }
 
-func NewNamecheapService(cfg *config.GlobalConfig, services *Services) NamecheapService {
+func NewNamecheapService(cfg *config.GlobalConfig, postgres *repository.Repositories) interfaces.NamecheapService {
 	return &namecheapService{
 		cfg:      cfg,
-		services: services,
+		postgres: postgres,
 	}
 }
 
@@ -236,7 +238,7 @@ func (s *namecheapService) PurchaseDomain(ctx context.Context, tenant, domain st
 	)
 
 	// Store domain
-	_, err = s.services.PostgresRepositories.MailStackDomainRepository.RegisterDomain(ctx, tenant, domain)
+	_, err = s.postgres.MailStackDomainRepository.RegisterDomain(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to store mailstack domain in postgres"))
 		return nil
@@ -351,22 +353,22 @@ func (s *namecheapService) GetDomainPrice(ctx context.Context, domain string) (f
 	return 0, coserrors.ErrDomainPriceNotFound
 }
 
-func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain string) (NamecheapDomainInfo, error) {
+func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain string) (interfaces.NamecheapDomainInfo, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NamecheapService.GetDomainInfo")
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
 	span.LogKV("domain", domain)
 
 	// Check if domain belongs to the tenant in PostgreSQL and is active
-	exists, err := s.services.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
+	exists, err := s.postgres.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to check domain ownership in postgres"))
-		return NamecheapDomainInfo{}, err
+		return interfaces.NamecheapDomainInfo{}, err
 	}
 	if !exists {
 		err := fmt.Errorf("domain %s does not belong to tenant %s or is not active", domain, tenant)
 		tracing.TraceErr(span, err)
-		return NamecheapDomainInfo{}, err
+		return interfaces.NamecheapDomainInfo{}, err
 	}
 
 	params := url.Values{}
@@ -381,7 +383,7 @@ func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain str
 	resp, err := http.PostForm(s.cfg.ExternalServices.NamecheapConfig.Url, params)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call Namecheap API for domain info"))
-		return NamecheapDomainInfo{}, err
+		return interfaces.NamecheapDomainInfo{}, err
 	}
 	defer resp.Body.Close()
 
@@ -389,7 +391,7 @@ func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain str
 	span.LogFields(tracingLog.String("responseBody", string(responseBody)))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to read Namecheap response"))
-		return NamecheapDomainInfo{}, err
+		return interfaces.NamecheapDomainInfo{}, err
 	}
 
 	// Define XML response structure for Namecheap domain info
@@ -443,7 +445,7 @@ func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain str
 	var result NamecheapDomainInfoResult
 	if err = xml.Unmarshal(responseBody, &result); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to parse Namecheap XML response"))
-		return NamecheapDomainInfo{}, err
+		return interfaces.NamecheapDomainInfo{}, err
 	}
 
 	// Check if any errors exist
@@ -452,11 +454,11 @@ func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain str
 			errMsg := fmt.Sprintf("Error %s: %s", e.Number, e.Message)
 			tracing.TraceErr(span, fmt.Errorf(errMsg))
 		}
-		return NamecheapDomainInfo{}, fmt.Errorf("Namecheap API returned errors")
+		return interfaces.NamecheapDomainInfo{}, fmt.Errorf("Namecheap API returned errors")
 	}
 
 	// Populate NamecheapDomainInfo
-	domainInfo := NamecheapDomainInfo{
+	domainInfo := interfaces.NamecheapDomainInfo{
 		DomainName:  result.CommandResponse.DomainGetInfoResult.DomainName,
 		CreatedDate: result.CommandResponse.DomainGetInfoResult.DomainDetails.CreatedDate,
 		ExpiredDate: result.CommandResponse.DomainGetInfoResult.DomainDetails.ExpiredDate,
@@ -477,7 +479,7 @@ func (s *namecheapService) UpdateNameservers(ctx context.Context, tenant, domain
 	span.LogKV("domain", domain, "nameservers", nameservers)
 
 	// Check if domain belongs to the tenant in PostgreSQL and is active
-	exists, err := s.services.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
+	exists, err := s.postgres.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to check domain ownership in postgres"))
 		return err

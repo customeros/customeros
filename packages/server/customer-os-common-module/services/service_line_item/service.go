@@ -9,6 +9,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neoRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -17,8 +18,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -39,13 +42,17 @@ type SLIActionMetadata struct {
 
 type serviceLineItemService struct {
 	log      logger.Logger
-	services *Services
+	events   *events.EventsService
+	neo4j    *neoRepo.Repositories
+	contract interfaces.ContractService
 }
 
-func NewServiceLineItemService(log logger.Logger, services *Services) ServiceLineItemService {
+func NewServiceLineItemService(log logger.Logger, events *events.EventsService, neo4j *neoRepo.Repositories, contract interfaces.ContractService) interfaces.ServiceLineItemService {
 	return &serviceLineItemService{
 		log:      log,
-		services: services,
+		events:   events,
+		neo4j:    neo4j,
+		contract: contract,
 	}
 }
 
@@ -110,7 +117,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 		}
 
 		if utils.IfNotNilString(dataFields.ContractId) != "" {
-			exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, *dataFields.ContractId, model.NodeLabelContract)
+			exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, *dataFields.ContractId, model.NodeLabelContract)
 			if err != nil || !exists {
 				err = errors.New("contract not found")
 				tracing.TraceErr(span, err)
@@ -119,7 +126,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 		}
 
 		// generate id
-		sliId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelServiceLineItem)
+		sliId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelServiceLineItem)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
@@ -165,22 +172,22 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 	}
 	tracing.TagEntity(span, sliId)
 
-	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		if createFlow {
-			err := s.services.Neo4jRepositories.ServiceLineItemWriteRepository.CreateForContract(ctx, txWithPostCommit.Tx, tenant, sliId, dataFields)
+			err := s.neo4j.ServiceLineItemWriteRepository.CreateForContract(ctx, txWithPostCommit.Tx, tenant, sliId, dataFields)
 			if err != nil {
 				s.log.Errorf("error creating service line item %s: %s", sliId, err.Error())
 				return nil, err
 			}
 		} else {
-			err := s.services.Neo4jRepositories.ServiceLineItemWriteRepository.Update(ctx, txWithPostCommit.Tx, tenant, sliId, dataFields)
+			err := s.neo4j.ServiceLineItemWriteRepository.Update(ctx, txWithPostCommit.Tx, tenant, sliId, dataFields)
 			if err != nil {
 				s.log.Errorf("error updating service line item %s: %s", sliId, err.Error())
 				return nil, err
 			}
 		}
 
-		err := s.services.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, txWithPostCommit.Tx, tenant, utils.IfNotNilString(dataFields.ParentId))
+		err := s.neo4j.ServiceLineItemWriteRepository.AdjustEndDates(ctx, txWithPostCommit.Tx, tenant, utils.IfNotNilString(dataFields.ParentId))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error while adjusting end dates for service line item %s: %s", sliId, err.Error())
@@ -188,17 +195,17 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, tenant, sliId)
+			contractDbNode, err := s.neo4j.ContractReadRepository.GetContractByServiceLineItemId(ctx, tenant, sliId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
 			contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
-			err = s.services.ContractService.UpdateActiveRenewalOpportunityArr(ctx, *dataFields.ContractId)
+			err = s.contract.UpdateActiveRenewalOpportunityArr(ctx, *dataFields.ContractId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
-			err = s.services.ContractService.RecalculateContractLtv(ctx, *dataFields.ContractId)
+			err = s.contract.RecalculateContractLtv(ctx, *dataFields.ContractId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
@@ -211,7 +218,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					}
 
 					userName := ""
-					userDbNode, err := s.services.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
+					userDbNode, err := s.neo4j.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
 					if err != nil {
 						tracing.TraceErr(span, err)
 					}
@@ -242,7 +249,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					}
 					if dataFields.BilledType.IsRecurrent() {
 						message := userName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(utils.IfNotNilInt64(dataFields.Quantity), 10) + " x " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + "/" + cycle + " starting with " + dataFields.StartedAt.Format("2006-01-02")
-						_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 						if err != nil {
 							tracing.TraceErr(span, err)
 							s.log.Errorf("Failed creating recurring billed type service line item created action for contract %s: %s", contractEntity.Id, err.Error())
@@ -250,7 +257,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					}
 					if *dataFields.BilledType == neo4jenum.BilledTypeOnce {
 						message := userName + " added a one time service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + " starting with " + dataFields.StartedAt.Format("2006-01-02")
-						_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemBilledTypeOnceCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemBilledTypeOnceCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 						if err != nil {
 							tracing.TraceErr(span, err)
 							s.log.Errorf("Failed creating once billed type service line item created action for contract %s: %s", contractEntity.Id, err.Error())
@@ -258,7 +265,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					}
 					if *dataFields.BilledType == neo4jenum.BilledTypeUsage {
 						message := userName + " added a per use service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.4f", utils.IfNotNilFloat64(dataFields.Price)) + " starting with " + dataFields.StartedAt.Format("2006-01-02")
-						_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 						if err != nil {
 							tracing.TraceErr(span, err)
 							s.log.Errorf("Failed creating per use billed type service line item created action for contract %s: %s", contractEntity.Id, err.Error())
@@ -266,17 +273,17 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					}
 				}
 
-				err = s.services.RabbitMQService.PublishEvent(ctx, sliId, model.SERVICE_LINE_ITEM, dto.CreateServiceLineItem{dataFields})
+				err = s.events.Publisher.PublishEvent(ctx, sliId, model.SERVICE_LINE_ITEM, dto.CreateServiceLineItem{dataFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateServiceLineItem for SLI"))
 				}
-				err = s.services.RabbitMQService.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.CreateServiceLineItem{dataFields})
+				err = s.events.Publisher.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.CreateServiceLineItem{dataFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateServiceLineItem for Contract"))
 				}
 
-				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, sliId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithCreate())
-				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishEventCompleted(ctx, tenant, sliId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithCreate())
+				s.events.Publisher.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 			} else {
 				name := "Unnamed service"
 				if utils.IfNotNilString(dataFields.Name) != "" {
@@ -284,7 +291,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				}
 
 				userName := ""
-				userDbNode, err := s.services.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
+				userDbNode, err := s.neo4j.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
 				if err != nil {
 					tracing.TraceErr(span, err)
 				}
@@ -351,7 +358,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					if utils.IfNotNilFloat64(dataFields.Price) < serviceLineItemEntity.Price {
 						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + "/" + cycle
 					}
-					_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+					_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 					if err != nil {
 						tracing.TraceErr(span, err)
 						s.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
@@ -366,7 +373,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					if utils.IfNotNilFloat64(dataFields.Price) < serviceLineItemEntity.Price {
 						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price))
 					}
-					_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+					_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 					if err != nil {
 						tracing.TraceErr(span, err)
 						s.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
@@ -380,7 +387,7 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					if utils.IfNotNilFloat64(dataFields.Price) < serviceLineItemEntity.Price {
 						message = userName + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", utils.IfNotNilFloat64(dataFields.Price))
 					}
-					_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+					_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 					if err != nil {
 						tracing.TraceErr(span, err)
 						s.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
@@ -395,24 +402,24 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					if utils.IfNotNilInt64(dataFields.Quantity) < serviceLineItemEntity.Quantity {
 						message = userName + " retroactively decreased the quantity of " + name + " from " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " to " + strconv.FormatInt(utils.IfNotNilInt64(dataFields.Quantity), 10)
 					}
-					_, err = s.services.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
+					_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 					if err != nil {
 						tracing.TraceErr(span, err)
 						s.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractEntity.Id, err.Error())
 					}
 				}
 
-				err = s.services.RabbitMQService.PublishEvent(ctx, sliId, model.SERVICE_LINE_ITEM, dto.UpdateServiceLineItem{dataFields})
+				err = s.events.Publisher.PublishEvent(ctx, sliId, model.SERVICE_LINE_ITEM, dto.UpdateServiceLineItem{dataFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateServiceLineItem for SLI"))
 				}
-				err = s.services.RabbitMQService.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.UpdateServiceLineItem{dataFields})
+				err = s.events.Publisher.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.UpdateServiceLineItem{dataFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateServiceLineItem for Contract"))
 				}
 
-				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, sliId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithUpdate())
-				s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishEventCompleted(ctx, tenant, sliId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 			}
 			return nil
 		})
@@ -439,7 +446,7 @@ func (s *serviceLineItemService) GetById(ctx context.Context, serviceLineItemId 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
 
-	if sliDbNode, err := s.services.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId); err != nil {
+	if sliDbNode, err := s.neo4j.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, common.GetTenantFromContext(ctx), serviceLineItemId); err != nil {
 		tracing.TraceErr(span, err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("service line item with id {%s} not found", serviceLineItemId))
 		return nil, wrappedErr
@@ -454,7 +461,7 @@ func (s *serviceLineItemService) GetServiceLineItemsByParentId(ctx context.Conte
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("sliParentId", sliParentId))
 
-	serviceLineItems, err := s.services.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsByParentId(ctx, common.GetTenantFromContext(ctx), sliParentId)
+	serviceLineItems, err := s.neo4j.ServiceLineItemReadRepository.GetServiceLineItemsByParentId(ctx, common.GetTenantFromContext(ctx), sliParentId)
 	if err != nil {
 		return nil, err
 	}
@@ -475,7 +482,7 @@ func (s *serviceLineItemService) GetServiceLineItemsForContracts(ctx context.Con
 	defer span.Finish()
 	span.LogFields(log.Object("contractIDs", contractIDs))
 
-	serviceLineItems, err := s.services.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContracts(ctx, common.GetTenantFromContext(ctx), contractIDs)
+	serviceLineItems, err := s.neo4j.ServiceLineItemReadRepository.GetServiceLineItemsForContracts(ctx, common.GetTenantFromContext(ctx), contractIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -493,7 +500,7 @@ func (s *serviceLineItemService) GetServiceLineItemsForInvoiceLines(ctx context.
 	defer span.Finish()
 	span.LogFields(log.Object("invoiceLineIds", invoiceLineIds))
 
-	serviceLineItems, err := s.services.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForInvoiceLines(ctx, common.GetTenantFromContext(ctx), invoiceLineIds)
+	serviceLineItems, err := s.neo4j.ServiceLineItemReadRepository.GetServiceLineItemsForInvoiceLines(ctx, common.GetTenantFromContext(ctx), invoiceLineIds)
 	if err != nil {
 		return nil, err
 	}
@@ -521,7 +528,7 @@ func (s *serviceLineItemService) Pause(ctx context.Context, txWithPostCommit *ut
 	tenant := common.GetTenantFromContext(ctx)
 
 	// validate SLI exists
-	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, serviceLineItemId, model.NodeLabelServiceLineItem)
+	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, serviceLineItemId, model.NodeLabelServiceLineItem)
 	if err != nil || !exists {
 		err = errors.New("service line item not found")
 		tracing.TraceErr(span, err)
@@ -529,30 +536,30 @@ func (s *serviceLineItemService) Pause(ctx context.Context, txWithPostCommit *ut
 	}
 
 	// get contract for service line item
-	contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, tenant, serviceLineItemId)
+	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractByServiceLineItemId(ctx, tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
-	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-		err := s.services.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), true)
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		err := s.neo4j.CommonWriteRepository.UpdateBoolProperty(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), true)
 		if err != nil {
 			return nil, err
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err := s.services.RabbitMQService.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.PauseServiceLineItem{})
+			err := s.events.Publisher.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.PauseServiceLineItem{})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message PauseServiceLineItem"))
 			}
-			err = s.services.RabbitMQService.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.PauseServiceLineItem{ServiceLineItemId: serviceLineItemId})
+			err = s.events.Publisher.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.PauseServiceLineItem{ServiceLineItemId: serviceLineItemId})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message PauseServiceLineItem for contract"))
 			}
 
-			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 
 			return nil
 		})
@@ -581,7 +588,7 @@ func (s *serviceLineItemService) Resume(ctx context.Context, txWithPostCommit *u
 	tenant := common.GetTenantFromContext(ctx)
 
 	// validate SLI exists
-	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, serviceLineItemId, model.NodeLabelServiceLineItem)
+	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, serviceLineItemId, model.NodeLabelServiceLineItem)
 	if err != nil || !exists {
 		err = errors.New("service line item not found")
 		tracing.TraceErr(span, err)
@@ -589,30 +596,30 @@ func (s *serviceLineItemService) Resume(ctx context.Context, txWithPostCommit *u
 	}
 
 	// get contract for service line item
-	contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, tenant, serviceLineItemId)
+	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractByServiceLineItemId(ctx, tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
-	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-		err := s.services.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), false)
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		err := s.neo4j.CommonWriteRepository.UpdateBoolProperty(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), false)
 		if err != nil {
 			return nil, err
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err := s.services.RabbitMQService.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.ResumeServiceLineItem{})
+			err := s.events.Publisher.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.ResumeServiceLineItem{})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message ResumeServiceLineItem"))
 			}
-			err = s.services.RabbitMQService.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.ResumeServiceLineItem{ServiceLineItemId: serviceLineItemId})
+			err = s.events.Publisher.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.ResumeServiceLineItem{ServiceLineItemId: serviceLineItemId})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message ResumeServiceLineItem for contract"))
 			}
 
-			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 
 			return nil
 		})
@@ -654,7 +661,7 @@ func (s *serviceLineItemService) Delete(ctx context.Context, txWithPostCommit *u
 	tenant := common.GetTenantFromContext(ctx)
 
 	// get contract for service line item
-	contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, tenant, serviceLineItemId)
+	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractByServiceLineItemId(ctx, tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -667,13 +674,13 @@ func (s *serviceLineItemService) Delete(ctx context.Context, txWithPostCommit *u
 		return err
 	}
 
-	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-		err := s.services.Neo4jRepositories.ServiceLineItemWriteRepository.Delete(ctx, txWithPostCommit.Tx, tenant, serviceLineItemId)
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		err := s.neo4j.ServiceLineItemWriteRepository.Delete(ctx, txWithPostCommit.Tx, tenant, serviceLineItemId)
 		if err != nil {
 			return nil, err
 		}
 
-		err = s.services.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, txWithPostCommit.Tx, tenant, serviceLineItemEntity.ParentID)
+		err = s.neo4j.ServiceLineItemWriteRepository.AdjustEndDates(ctx, txWithPostCommit.Tx, tenant, serviceLineItemEntity.ParentID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemEntity.ParentID, err.Error())
@@ -681,11 +688,11 @@ func (s *serviceLineItemService) Delete(ctx context.Context, txWithPostCommit *u
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err = s.services.ContractService.UpdateActiveRenewalOpportunityArr(ctx, contractEntity.Id)
+			err = s.contract.UpdateActiveRenewalOpportunityArr(ctx, contractEntity.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
-			err = s.services.ContractService.RecalculateContractLtv(ctx, contractEntity.Id)
+			err = s.contract.RecalculateContractLtv(ctx, contractEntity.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
@@ -695,7 +702,7 @@ func (s *serviceLineItemService) Delete(ctx context.Context, txWithPostCommit *u
 				serviceLineItemName = serviceLineItemEntity.Name
 			}
 			userName := ""
-			userDbNode, err := s.services.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
+			userDbNode, err := s.neo4j.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
@@ -715,7 +722,7 @@ func (s *serviceLineItemService) Delete(ctx context.Context, txWithPostCommit *u
 			})
 			message := userName + " removed " + serviceLineItemName + " from " + contractName
 
-			_, err = s.services.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemRemoved, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx))
+			_, err = s.neo4j.ActionWriteRepository.Create(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemRemoved, message, metadata, utils.Now(), common.GetAppSourceFromContext(ctx))
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Failed remove service line item action for contract %s: %s", contractEntity.Id, err.Error())
@@ -725,17 +732,17 @@ func (s *serviceLineItemService) Delete(ctx context.Context, txWithPostCommit *u
 		})
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err := s.services.RabbitMQService.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.DeleteServiceLineItem{})
+			err := s.events.Publisher.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.DeleteServiceLineItem{})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteServiceLineItem"))
 			}
-			err = s.services.RabbitMQService.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.DeleteServiceLineItem{ServiceLineItemId: serviceLineItemId})
+			err = s.events.Publisher.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.DeleteServiceLineItem{ServiceLineItemId: serviceLineItemId})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteServiceLineItem for contract"))
 			}
 
-			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, serviceLineItemId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithDelete())
-			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishEventCompleted(ctx, tenant, serviceLineItemId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithDelete())
+			s.events.Publisher.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 			return nil
 		})
 
@@ -764,7 +771,7 @@ func (s *serviceLineItemService) Close(ctx context.Context, txWithPostCommit *ut
 	tenant := common.GetTenantFromContext(ctx)
 
 	// get contract for service line item
-	contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, tenant, serviceLineItemId)
+	contractDbNode, err := s.neo4j.ContractReadRepository.GetContractByServiceLineItemId(ctx, tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -781,13 +788,13 @@ func (s *serviceLineItemService) Close(ctx context.Context, txWithPostCommit *ut
 		return s.Delete(ctx, txWithPostCommit, serviceLineItemId)
 	}
 
-	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-		err := s.services.Neo4jRepositories.ServiceLineItemWriteRepository.Close(ctx, txWithPostCommit.Tx, tenant, serviceLineItemId, endedAt, true)
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		err := s.neo4j.ServiceLineItemWriteRepository.Close(ctx, txWithPostCommit.Tx, tenant, serviceLineItemId, endedAt, true)
 		if err != nil {
 			return nil, err
 		}
 
-		err = s.services.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, txWithPostCommit.Tx, tenant, serviceLineItemEntity.ParentID)
+		err = s.neo4j.ServiceLineItemWriteRepository.AdjustEndDates(ctx, txWithPostCommit.Tx, tenant, serviceLineItemEntity.ParentID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemEntity.ParentID, err.Error())
@@ -795,11 +802,11 @@ func (s *serviceLineItemService) Close(ctx context.Context, txWithPostCommit *ut
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err = s.services.ContractService.UpdateActiveRenewalOpportunityArr(ctx, contractEntity.Id)
+			err = s.contract.UpdateActiveRenewalOpportunityArr(ctx, contractEntity.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
-			err = s.services.ContractService.RecalculateContractLtv(ctx, contractEntity.Id)
+			err = s.contract.RecalculateContractLtv(ctx, contractEntity.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
@@ -808,17 +815,17 @@ func (s *serviceLineItemService) Close(ctx context.Context, txWithPostCommit *ut
 		})
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err := s.services.RabbitMQService.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.CloseServiceLineItem{})
+			err := s.events.Publisher.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.CloseServiceLineItem{})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CloseServiceLineItem"))
 			}
-			err = s.services.RabbitMQService.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.CloseServiceLineItem{ServiceLineItemId: serviceLineItemId, EndedAt: endedAt})
+			err = s.events.Publisher.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.CloseServiceLineItem{ServiceLineItemId: serviceLineItemId, EndedAt: endedAt})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CloseServiceLineItem for contract"))
 			}
 
-			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, serviceLineItemId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithUpdate())
-			s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishEventCompleted(ctx, tenant, serviceLineItemId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 
 			return nil
 		})

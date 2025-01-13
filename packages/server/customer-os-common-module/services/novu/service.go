@@ -41,11 +41,6 @@ var REQUIRED_TEMPLATE_VALUES = map[string][]string{
 		"{{orgName}}",
 		"{{orgLink}}",
 	},
-	WorkflowFailedWebhook: {
-		"{{userFirstName}}",
-		"{{webhookName}}",
-		"{{webhookUrl}}",
-	},
 	WorkflowReminderNotificationEmail: {
 		"{{reminderContent}}",
 		"{{reminderCreatedAt}}",
@@ -55,11 +50,10 @@ var REQUIRED_TEMPLATE_VALUES = map[string][]string{
 }
 
 type novuService struct {
-	services   *Services
 	NovuClient *novu.APIClient
 }
 
-func NewNovuService(services *Services) NovuService {
+func NewNovuService() NovuService {
 	apiKey := ""
 
 	if services.GlobalConfig.NovuConfig != nil {

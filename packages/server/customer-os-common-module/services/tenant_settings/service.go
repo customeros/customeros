@@ -6,6 +6,7 @@ import (
 
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neoRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -13,21 +14,25 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type tenantSettingsService struct {
-	log      logger.Logger
-	services *Services
+	log    logger.Logger
+	neo4j  *neoRepo.Repositories
+	events *events.EventsService
 }
 
-func NewTenantSettingsService(log logger.Logger, services *Services) TenantSettingsService {
+func NewTenantSettingsService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService) interfaces.TenantSettingsService {
 	return &tenantSettingsService{
-		log:      log,
-		services: services,
+		log:    log,
+		neo4j:  neo4j,
+		events: events,
 	}
 }
 
@@ -36,7 +41,7 @@ func (s *tenantSettingsService) GetTenantSettings(ctx context.Context) (*neo4jen
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	dbNode, err := s.services.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, common.GetTenantFromContext(ctx))
+	dbNode, err := s.neo4j.TenantReadRepository.GetTenantSettings(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -51,7 +56,7 @@ func (s *tenantSettingsService) GetTenantSettingsForTenant(ctx context.Context, 
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, tenant)
 
-	dbNode, err := s.services.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
+	dbNode, err := s.neo4j.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -80,7 +85,7 @@ func (s *tenantSettingsService) UpdateTenantSettings(ctx context.Context, dataFi
 	}
 
 	// update tenant settings in neo4j
-	err = s.services.Neo4jRepositories.TenantWriteRepository.UpdateTenantSettings(ctx, tenant, dataFields)
+	err = s.neo4j.TenantWriteRepository.UpdateTenantSettings(ctx, tenant, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Error("Unable to update tenant settings", err)
@@ -88,7 +93,7 @@ func (s *tenantSettingsService) UpdateTenantSettings(ctx context.Context, dataFi
 	}
 
 	// send event to RabbitMQ
-	err = s.services.RabbitMQService.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateTenantSettings{dataFields})
+	err = s.events.Publisher.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateTenantSettings{dataFields})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateTenantSettings"))
 	}
@@ -101,7 +106,7 @@ func (s *tenantSettingsService) GetTenantBillingProfiles(ctx context.Context) (*
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	dbNodes, err := s.services.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, common.GetTenantFromContext(ctx))
+	dbNodes, err := s.neo4j.TenantReadRepository.GetTenantBillingProfiles(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("GetTenantBillingProfiles: %w", err)
@@ -121,7 +126,7 @@ func (s *tenantSettingsService) GetTenantBillingProfile(ctx context.Context, id 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("id", id))
 
-	dbNode, err := s.services.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfileById(ctx, common.GetTenantFromContext(ctx), id)
+	dbNode, err := s.neo4j.TenantReadRepository.GetTenantBillingProfileById(ctx, common.GetTenantFromContext(ctx), id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("GetTenantBillingProfile: %w", err)
@@ -162,7 +167,7 @@ func (s *tenantSettingsService) CreateBankAccount(ctx context.Context, dataField
 	tenant := common.GetTenantFromContext(ctx)
 
 	// generate new id
-	bankAccountId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelBankAccount)
+	bankAccountId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelBankAccount)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
@@ -177,7 +182,7 @@ func (s *tenantSettingsService) CreateBankAccount(ctx context.Context, dataField
 		dataFields.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
 	}
 
-	err = s.services.Neo4jRepositories.BankAccountWriteRepository.CreateBankAccount(ctx, tenant, dataFields)
+	err = s.neo4j.BankAccountWriteRepository.CreateBankAccount(ctx, tenant, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Error("Unable to create bank account", err)
@@ -185,7 +190,7 @@ func (s *tenantSettingsService) CreateBankAccount(ctx context.Context, dataField
 	}
 
 	// send event to RabbitMQ
-	err = s.services.RabbitMQService.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.CreateBankAccount{dataFields})
+	err = s.events.Publisher.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.CreateBankAccount{dataFields})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateBankAccount"))
 	}
@@ -213,7 +218,7 @@ func (s *tenantSettingsService) UpdateBankAccount(ctx context.Context, bankAccou
 	}
 
 	// verify if bank account exists
-	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, bankAccountId, model.NodeLabelBankAccount)
+	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, bankAccountId, model.NodeLabelBankAccount)
 	if err != nil || !exists {
 		err = errors.New("bank account not found")
 		tracing.TraceErr(span, err)
@@ -222,7 +227,7 @@ func (s *tenantSettingsService) UpdateBankAccount(ctx context.Context, bankAccou
 	dataFields.ID = bankAccountId
 	tracing.TagEntity(span, bankAccountId)
 
-	err = s.services.Neo4jRepositories.BankAccountWriteRepository.UpdateBankAccount(ctx, tenant, dataFields)
+	err = s.neo4j.BankAccountWriteRepository.UpdateBankAccount(ctx, tenant, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Error("Unable to create bank account", err)
@@ -230,7 +235,7 @@ func (s *tenantSettingsService) UpdateBankAccount(ctx context.Context, bankAccou
 	}
 
 	// send event to RabbitMQ
-	err = s.services.RabbitMQService.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateBankAccount{dataFields})
+	err = s.events.Publisher.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateBankAccount{dataFields})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateBankAccount"))
 	}
@@ -252,7 +257,7 @@ func (s *tenantSettingsService) DeleteBankAccount(ctx context.Context, bankAccou
 	tenant := common.GetTenantFromContext(ctx)
 
 	// verify if bank account exists
-	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, bankAccountId, model.NodeLabelBankAccount)
+	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, bankAccountId, model.NodeLabelBankAccount)
 	if err != nil || !exists {
 		err = errors.New("bank account not found")
 		tracing.TraceErr(span, err)
@@ -260,7 +265,7 @@ func (s *tenantSettingsService) DeleteBankAccount(ctx context.Context, bankAccou
 	}
 	tracing.TagEntity(span, bankAccountId)
 
-	err = s.services.Neo4jRepositories.BankAccountWriteRepository.DeleteBankAccount(ctx, tenant, bankAccountId)
+	err = s.neo4j.BankAccountWriteRepository.DeleteBankAccount(ctx, tenant, bankAccountId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Error("Unable to delete bank account", err)
@@ -268,7 +273,7 @@ func (s *tenantSettingsService) DeleteBankAccount(ctx context.Context, bankAccou
 	}
 
 	// send event to RabbitMQ
-	err = s.services.RabbitMQService.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.DeleteBankAccount{ID: bankAccountId})
+	err = s.events.Publisher.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.DeleteBankAccount{ID: bankAccountId})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteBankAccount"))
 	}
@@ -291,7 +296,7 @@ func (s *tenantSettingsService) CreateTenantBillingProfile(ctx context.Context, 
 	tenant := common.GetTenantFromContext(ctx)
 
 	// generate new id
-	profileId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelTenantBillingProfile)
+	profileId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelTenantBillingProfile)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
@@ -308,7 +313,7 @@ func (s *tenantSettingsService) CreateTenantBillingProfile(ctx context.Context, 
 	}
 
 	// save to db
-	err = s.services.Neo4jRepositories.TenantWriteRepository.CreateTenantBillingProfile(ctx, tenant, dataFields)
+	err = s.neo4j.TenantWriteRepository.CreateTenantBillingProfile(ctx, tenant, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Error("Unable to create bank account", err)
@@ -316,7 +321,7 @@ func (s *tenantSettingsService) CreateTenantBillingProfile(ctx context.Context, 
 	}
 
 	// send event to RabbitMQ
-	err = s.services.RabbitMQService.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.CreateTenantBillingProfile{dataFields})
+	err = s.events.Publisher.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.CreateTenantBillingProfile{dataFields})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateTenantBillingProfile"))
 	}
@@ -344,7 +349,7 @@ func (s *tenantSettingsService) UpdateTenantBillingProfile(ctx context.Context, 
 	}
 
 	// verify if bank account exists
-	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, profileId, model.NodeLabelTenantBillingProfile)
+	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, profileId, model.NodeLabelTenantBillingProfile)
 	if err != nil || !exists {
 		err = errors.New("tenant billing profile not found")
 		tracing.TraceErr(span, err)
@@ -353,7 +358,7 @@ func (s *tenantSettingsService) UpdateTenantBillingProfile(ctx context.Context, 
 	dataFields.ID = profileId
 	tracing.TagEntity(span, profileId)
 
-	err = s.services.Neo4jRepositories.TenantWriteRepository.UpdateTenantBillingProfile(ctx, tenant, dataFields)
+	err = s.neo4j.TenantWriteRepository.UpdateTenantBillingProfile(ctx, tenant, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Error("Unable to create bank account", err)
@@ -361,7 +366,7 @@ func (s *tenantSettingsService) UpdateTenantBillingProfile(ctx context.Context, 
 	}
 
 	// send event to RabbitMQ
-	err = s.services.RabbitMQService.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateTenantBillingProfile{dataFields})
+	err = s.events.Publisher.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateTenantBillingProfile{dataFields})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateTenantBillingProfile"))
 	}

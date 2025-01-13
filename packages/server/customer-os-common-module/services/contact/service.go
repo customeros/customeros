@@ -53,6 +53,22 @@ func NewContactService(log logger.Logger, neo4j *neoRepo.Repositories, events *e
 	}
 }
 
+func (s *contactService) SetEmailService(email interfaces.EmailService) {
+	s.email = email
+}
+
+func (s *contactService) SetOrganizationService(org interfaces.OrganizationService) {
+	s.organization = org
+}
+
+func (s *contactService) SetJobRoleService(jobrole interfaces.JobRoleService) {
+	s.jobrole = jobrole
+}
+
+func (s *contactService) SetSocialService(social interfaces.SocialService) {
+	s.social = social
+}
+
 func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.CreateContactWithOrganizationByEmail")
 	defer span.Finish()

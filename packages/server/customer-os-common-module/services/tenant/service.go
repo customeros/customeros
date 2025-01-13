@@ -8,23 +8,28 @@ import (
 
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neoRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
 type tenantService struct {
 	log      logger.Logger
-	services *Services
+	neo4j    *neoRepo.Repositories
+	postgres *repository.Repositories
 }
 
-func NewTenantService(log logger.Logger, services *Services) TenantService {
+func NewTenantService(log logger.Logger, neo4j *neoRepo.Repositories, postgres *repository.Repositories) interfaces.TenantService {
 	return &tenantService{
 		log:      log,
-		services: services,
+		neo4j:    neo4j,
+		postgres: postgres,
 	}
 }
 
@@ -33,7 +38,7 @@ func (s *tenantService) GetAllTenants(ctx context.Context) ([]*neo4jentity.Tenan
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	nodes, err := s.services.Neo4jRepositories.TenantReadRepository.GetAll(ctx)
+	nodes, err := s.neo4j.TenantReadRepository.GetAll(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -54,7 +59,7 @@ func (s *tenantService) GetTenantForUserEmail(ctx context.Context, email string)
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("email", email))
 
-	tenant, err := s.services.Neo4jRepositories.TenantReadRepository.GetTenantForUserEmail(ctx, email)
+	tenant, err := s.neo4j.TenantReadRepository.GetTenantForUserEmail(ctx, email)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("GetTenantForWorkspace: %w", err)
@@ -77,7 +82,7 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.Tena
 	}
 
 	for i := 0; i < 10; i++ {
-		existNode, err := s.services.Neo4jRepositories.TenantReadRepository.GetTenantByName(ctx, tenantName)
+		existNode, err := s.neo4j.TenantReadRepository.GetTenantByName(ctx, tenantName)
 		if err != nil {
 			return nil, fmt.Errorf("merge: %w", err)
 		}
@@ -89,44 +94,44 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.Tena
 
 	span.LogFields(log.Object("tenantName", tenantName))
 	tenantEntity.Name = tenantName
-	tenant, err := s.services.Neo4jRepositories.TenantWriteRepository.CreateTenantIfNotExistAndReturn(ctx, tenantEntity)
+	tenant, err := s.neo4j.TenantWriteRepository.CreateTenantIfNotExistAndReturn(ctx, tenantEntity)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("merge: %w", err)
 	}
 
 	// save tenant in postgres table
-	_, err = s.services.PostgresRepositories.TenantRepository.Create(ctx, postgresentity.Tenant{
+	_, err = s.postgres.TenantRepository.Create(ctx, postgresentity.Tenant{
 		Name: tenantName,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
 	// create tenant specific api key
-	err = s.services.PostgresRepositories.TenantWebhookApiKeyRepository.CreateApiKey(ctx, tenantName)
+	err = s.postgres.TenantWebhookApiKeyRepository.CreateApiKey(ctx, tenantName)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
 
-	err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "gmail", "gmail")
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("merge: %w", err)
-	}
-
-	err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "slack", "slack")
+	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "gmail", "gmail")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("merge: %w", err)
 	}
 
-	err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "intercom", "intercom")
+	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "slack", "slack")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("merge: %w", err)
 	}
 
-	err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "gcal", "gcal")
+	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "intercom", "intercom")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("merge: %w", err)
+	}
+
+	err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "gcal", "gcal")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("merge: %w", err)
@@ -141,13 +146,13 @@ func (s *tenantService) HardDelete(ctx context.Context, tenant string) error {
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	// Step 1: Permanently delete all tenant data from postgres
-	err := s.services.PostgresRepositories.CommonRepository.PermanentlyDelete(ctx, tenant)
+	err := s.postgres.CommonRepository.PermanentlyDelete(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	err = s.services.PostgresRepositories.TenantRepository.PermanentlyDelete(ctx, tenant)
+	err = s.postgres.TenantRepository.PermanentlyDelete(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -155,7 +160,7 @@ func (s *tenantService) HardDelete(ctx context.Context, tenant string) error {
 
 	// Step 2: Permanently delete all tenant data from neo4j
 	// TODO implement incremental delete to avoid crashing neo4j DB
-	err = s.services.Neo4jRepositories.TenantWriteRepository.HardDeleteTenant(ctx, tenant)
+	err = s.neo4j.TenantWriteRepository.HardDeleteTenant(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

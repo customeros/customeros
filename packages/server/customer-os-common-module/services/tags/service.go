@@ -8,21 +8,33 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neoRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type tagService struct {
-	log      logger.Logger
-	services *Services
+	log    logger.Logger
+	neo4j  *neoRepo.Repositories
+	events *events.EventsService
+}
+
+func NewTagService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService) interfaces.TagService {
+	return &tagService{
+		log:    log,
+		neo4j:  neo4j,
+		events: events,
+	}
 }
 
 func (s *tagService) GetTagByEntityTypeAndName(ctx context.Context, entityType model.EntityType, name string) (*neo4jentity.TagEntity, error) {
@@ -31,19 +43,12 @@ func (s *tagService) GetTagByEntityTypeAndName(ctx context.Context, entityType m
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("entityType", entityType.String()), log.String("name", name))
 
-	tagDbNode, err := s.services.Neo4jRepositories.TagReadRepository.GetByEntityTypeAndName(ctx, common.GetTenantFromContext(ctx), entityType, name)
+	tagDbNode, err := s.neo4j.TagReadRepository.GetByEntityTypeAndName(ctx, common.GetTenantFromContext(ctx), entityType, name)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	return neo4jmapper.MapDbNodeToTagEntity(tagDbNode), nil
-}
-
-func NewTagService(log logger.Logger, services *Services) TagService {
-	return &tagService{
-		log:      log,
-		services: services,
-	}
 }
 
 func (s *tagService) Save(ctx context.Context, tx *neo4j.ManagedTransaction, inputTag *neo4jentity.TagEntity) (*neo4jentity.TagEntity, error) {
@@ -67,10 +72,10 @@ func (s *tagService) Save(ctx context.Context, tx *neo4j.ManagedTransaction, inp
 		inputTag.AppSource = common.GetAppSourceFromContext(ctx)
 	}
 	if inputTag.ColorCode == "" {
-		inputTag.ColorCode = utils.GetRandomItem(defaultColorCodes)
+		inputTag.ColorCode = utils.GetRandomColor()
 	}
 
-	tagNodePtr, err := s.services.Neo4jRepositories.TagWriteRepository.Merge(ctx, tx, tenant, *inputTag)
+	tagNodePtr, err := s.neo4j.TagWriteRepository.Merge(ctx, tx, tenant, *inputTag)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -83,7 +88,7 @@ func (s *tagService) Save(ctx context.Context, tx *neo4j.ManagedTransaction, inp
 		return nil, err
 	}
 
-	err = s.services.RabbitMQService.PublishEvent(ctx, tagEntity.Id, model.TAG, dto.SaveTag{
+	err = s.events.Publisher.PublishEvent(ctx, tagEntity.Id, model.TAG, dto.SaveTag{
 		EntityType: utils.StringPtr(tagEntity.EntityType.String()),
 		Name:       utils.StringPtr(tagEntity.Name),
 		ColorCode:  utils.StringPtr(tagEntity.ColorCode),
@@ -102,7 +107,7 @@ func (s *tagService) AddTagToEntity(ctx context.Context, tx *neo4j.ManagedTransa
 	// check tag exists by id
 	tagByIdExists := false
 	if tagId != "" {
-		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), tagId, model.NodeLabelTag)
+		exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), tagId, model.NodeLabelTag)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
@@ -137,20 +142,20 @@ func (s *tagService) AddTagToEntity(ctx context.Context, tx *neo4j.ManagedTransa
 		return "", err
 	}
 
-	err = s.services.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, tx, tenant, tagId, entityId, entityType)
+	err = s.neo4j.TagWriteRepository.LinkTagByIdToEntity(ctx, tx, tenant, tagId, entityId, entityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
 	// event for tag added
-	err = s.services.RabbitMQService.PublishEvent(ctx, entityId, entityType, dto.NewAddTagEvent(tagId, tagName))
+	err = s.events.Publisher.PublishEvent(ctx, entityId, entityType, dto.NewAddTagEvent(tagId, tagName))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddTagEvent"))
 	}
 
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, entityId, entityType, utils.NewEventCompletedDetails().WithUpdate())
+		s.events.Publisher.PublishEventCompleted(ctx, tenant, entityId, entityType, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	return tagId, nil
@@ -169,20 +174,20 @@ func (s *tagService) RemoveTagFromEntity(ctx context.Context, tx *neo4j.ManagedT
 		return err
 	}
 
-	err = s.services.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, tx, tenant, tagId, entityId, entityType)
+	err = s.neo4j.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, tx, tenant, tagId, entityId, entityType)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to unlink tag from entity"))
 		return err
 	}
 
 	// event for tag removed
-	err = s.services.RabbitMQService.PublishEvent(ctx, entityId, entityType, dto.NewRemoveTagEvent(tagId, tagEntity.Name))
+	err = s.events.Publisher.PublishEvent(ctx, entityId, entityType, dto.NewRemoveTagEvent(tagId, tagEntity.Name))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveTagEvent"))
 	}
 
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-		s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, entityId, entityType, utils.NewEventCompletedDetails().WithUpdate())
+		s.events.Publisher.PublishEventCompleted(ctx, tenant, entityId, entityType, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	return nil
@@ -203,7 +208,7 @@ func (s *tagService) Update(ctx context.Context, tagId string, name, colorCode *
 	tenant := common.GetTenantFromContext(ctx)
 
 	// validate tag exists
-	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, tagId, model.NodeLabelTag)
+	exists, err := s.neo4j.CommonReadRepository.ExistsById(ctx, tenant, tagId, model.NodeLabelTag)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -214,14 +219,14 @@ func (s *tagService) Update(ctx context.Context, tagId string, name, colorCode *
 		return err
 	}
 
-	err = s.services.Neo4jRepositories.TagWriteRepository.Update(ctx, common.GetTenantFromContext(ctx), tagId, name, colorCode)
+	err = s.neo4j.TagWriteRepository.Update(ctx, common.GetTenantFromContext(ctx), tagId, name, colorCode)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error updating tag name: %s", err.Error())
 		return err
 	}
 
-	err = s.services.RabbitMQService.PublishEvent(ctx, tagId, model.TAG, dto.SaveTag{
+	err = s.events.Publisher.PublishEvent(ctx, tagId, model.TAG, dto.SaveTag{
 		Name:      name,
 		ColorCode: colorCode,
 	})
@@ -234,7 +239,7 @@ func (s *tagService) UnlinkAndDelete(ctx context.Context, id string) (bool, erro
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	err := s.services.Neo4jRepositories.TagWriteRepository.UnlinkAllAndDelete(ctx, common.GetTenantFromContext(ctx), id)
+	err := s.neo4j.TagWriteRepository.UnlinkAllAndDelete(ctx, common.GetTenantFromContext(ctx), id)
 	if err != nil {
 		return false, err
 	}
@@ -246,7 +251,7 @@ func (s *tagService) GetAll(ctx context.Context) (*neo4jentity.TagEntities, erro
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	tagDbNodes, err := s.services.Neo4jRepositories.TagReadRepository.GetAll(ctx, common.GetTenantFromContext(ctx))
+	tagDbNodes, err := s.neo4j.TagReadRepository.GetAll(ctx, common.GetTenantFromContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +268,7 @@ func (s *tagService) GetTagsForContacts(ctx context.Context, contactIds []string
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("contactIds", contactIds))
 
-	tags, err := s.services.Neo4jRepositories.TagReadRepository.GetForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	tags, err := s.neo4j.TagReadRepository.GetForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +288,7 @@ func (s *tagService) GetTagsForIssues(ctx context.Context, issueIds []string) (*
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("issueIds", issueIds))
 
-	tags, err := s.services.Neo4jRepositories.TagReadRepository.GetForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
+	tags, err := s.neo4j.TagReadRepository.GetForIssues(ctx, common.GetTenantFromContext(ctx), issueIds)
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +306,7 @@ func (s *tagService) GetTagsForOrganizations(ctx context.Context, organizationID
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetTagsForOrganizations")
 	defer span.Finish()
 
-	tags, err := s.services.Neo4jRepositories.TagReadRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
+	tags, err := s.neo4j.TagReadRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +326,7 @@ func (s *tagService) GetTagsForLogEntries(ctx context.Context, logEntryIds []str
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("logEntryIds", logEntryIds))
 
-	tags, err := s.services.Neo4jRepositories.TagReadRepository.GetForLogEntries(ctx, common.GetTenantFromContext(ctx), logEntryIds)
+	tags, err := s.neo4j.TagReadRepository.GetForLogEntries(ctx, common.GetTenantFromContext(ctx), logEntryIds)
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +346,7 @@ func (s *tagService) GetById(ctx context.Context, tagId string) (*neo4jentity.Ta
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("tagId", tagId))
 
-	tagDbNode, err := s.services.Neo4jRepositories.TagReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), tagId)
+	tagDbNode, err := s.neo4j.TagReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), tagId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -360,7 +365,7 @@ func (s *tagService) GetTagsByEntityType(ctx context.Context, entityType model.E
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("entityType", entityType.String()))
 
-	tagDbNodes, err := s.services.Neo4jRepositories.TagReadRepository.GetAllByEntityType(ctx, common.GetTenantFromContext(ctx), entityType)
+	tagDbNodes, err := s.neo4j.TagReadRepository.GetAllByEntityType(ctx, common.GetTenantFromContext(ctx), entityType)
 	if err != nil {
 		return nil, err
 	}

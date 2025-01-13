@@ -40,6 +40,21 @@ func NewEmailService(neo4j *neoRepo.Repositories, events *events.EventsService, 
 	}
 }
 
+func (s *emailService) SetContactService(contact interfaces.ContactService) {
+	s.contact = contact
+}
+
+func (s *emailService) SetOrganizationService(org interfaces.OrganizationService) {
+	s.org = org
+}
+
+func (s *emailService) isInitialized() bool {
+	if s.neo4j == nil || s.events == nil || s.contact == nil || s.org == nil {
+		return false
+	}
+	return true
+}
+
 func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, emailFields interfaces.EmailFields, linkWith *common_srv.LinkWith) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.Merge")
 	defer span.Finish()

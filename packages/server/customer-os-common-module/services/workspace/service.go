@@ -8,21 +8,23 @@ import (
 	"github.com/customeros/mailsherpa/mailvalidate"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neoRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type workspaceService struct {
-	services *Services
+	neo4j *neoRepo.Repositories
 }
 
-func NewWorkspaceService(services *Services) WorkspaceService {
+func NewWorkspaceService(neo4j *neoRepo.Repositories) interfaces.WorkspaceService {
 	return &workspaceService{
-		services: services,
+		neo4j: neo4j,
 	}
 }
 
@@ -46,11 +48,11 @@ func (s *workspaceService) CheckEmailBelongsToTenant(ctx context.Context, email 
 }
 
 func (s *workspaceService) MergeToTenant(ctx context.Context, workspaceEntity neo4jentity.WorkspaceEntity, tenant string) (bool, error) {
-	_, err := s.services.Neo4jRepositories.WorkspaceWriteRepository.Merge(ctx, workspaceEntity)
+	_, err := s.neo4j.WorkspaceWriteRepository.Merge(ctx, workspaceEntity)
 	if err != nil {
 		return false, fmt.Errorf("MergeToTenant: %w", err)
 	}
-	result, err := s.services.Neo4jRepositories.TenantWriteRepository.LinkWithWorkspace(ctx, tenant, workspaceEntity)
+	result, err := s.neo4j.TenantWriteRepository.LinkWithWorkspace(ctx, tenant, workspaceEntity)
 	return result, err
 }
 
@@ -66,7 +68,7 @@ func (s *workspaceService) GetWorkspaceDomainsForTenant(ctx context.Context) ([]
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	dbNodes, err := s.services.Neo4jRepositories.WorkspaceReadRepository.GetAllForTenant(ctx, tenant)
+	dbNodes, err := s.neo4j.WorkspaceReadRepository.GetAllForTenant(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return []string{}, err

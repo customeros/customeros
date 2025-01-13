@@ -30,7 +30,7 @@ func (w *workflowService) ValidateListener(ctx context.Context, listenerEvent en
 		return false, err
 	}
 
-	events, err := w.services.PostgresRepositories.FlowListenerRegistryRepository.FindAll(ctx)
+	events, err := w.postgres.FlowListenerRegistryRepository.FindAll(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
@@ -60,7 +60,7 @@ func (w *workflowService) ValidateFlowBelongsToTenant(ctx context.Context, flowI
 		Tenant: tenant,
 	}
 
-	flowRecord, err := w.services.PostgresRepositories.FlowRepository.Find(ctx, query)
+	flowRecord, err := w.postgres.FlowRepository.Find(ctx, query)
 	if err == nil && flowRecord != nil && flowRecord.Status != enum.FlowStatusArchived.String() {
 		return true, nil
 	}
@@ -110,7 +110,7 @@ func (w *workflowService) ValidateTransition(ctx context.Context, fromNodeId str
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
-	fromNode, err := w.services.PostgresRepositories.FlowNodeRepository.Find(ctx, entity.FlowNode{
+	fromNode, err := w.postgres.FlowNodeRepository.Find(ctx, entity.FlowNode{
 		ID: fromNodeId,
 	})
 	if err != nil {
@@ -118,7 +118,7 @@ func (w *workflowService) ValidateTransition(ctx context.Context, fromNodeId str
 		return false, err
 	}
 
-	toNode, err := w.services.PostgresRepositories.FlowNodeRepository.Find(ctx, entity.FlowNode{
+	toNode, err := w.postgres.FlowNodeRepository.Find(ctx, entity.FlowNode{
 		ID: toNodeId,
 	})
 	if err != nil {
@@ -126,7 +126,7 @@ func (w *workflowService) ValidateTransition(ctx context.Context, fromNodeId str
 		return false, err
 	}
 
-	results, err := w.services.PostgresRepositories.FlowTransitionsRegistryRepository.Find(ctx, entity.FlowTransitionsRegistry{
+	results, err := w.postgres.FlowTransitionsRegistryRepository.Find(ctx, entity.FlowTransitionsRegistry{
 		FromNodeType: fromNode.Type,
 		ToNodeType:   toNode.Type,
 	})

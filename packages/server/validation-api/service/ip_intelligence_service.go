@@ -4,17 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
 )
 
 var knowIpDataBadResponseMessages = []string{"is a reserved IP address"}
@@ -42,7 +44,7 @@ func (s *ipIntelligenceService) LookupIp(ctx context.Context, ip string) (*postg
 	defer span.Finish()
 	span.LogFields(log.String("ip", ip))
 
-	cacheIpData, err := s.Services.CommonServices.PostgresRepositories.CacheIpDataRepository.Get(ctx, ip)
+	cacheIpData, err := s.Services.Postgres.CacheIpDataRepository.Get(ctx, ip)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
 		return nil, err
@@ -61,7 +63,7 @@ func (s *ipIntelligenceService) LookupIp(ctx context.Context, ip string) (*postg
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal data"))
 			return nil, err
 		}
-		s.Services.CommonServices.PostgresRepositories.CacheIpDataRepository.Save(ctx, postgresentity.CacheIpData{
+		s.Services.Postgres.CacheIpDataRepository.Save(ctx, postgresentity.CacheIpData{
 			Ip:   ip,
 			Data: string(dataAsString),
 		})
@@ -97,7 +99,7 @@ func (s *ipIntelligenceService) askIpData(ctx context.Context, ip string) (*post
 	// Set headers
 	req.Header.Set("Content-Type", "application/json")
 
-	//Perform the request
+	// Perform the request
 	resp, err := client.Do(req)
 	if err != nil {
 		wrappedErr := errors.Wrap(err, "failed to perform GET request for IPData")

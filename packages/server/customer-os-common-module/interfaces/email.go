@@ -12,6 +12,10 @@ import (
 )
 
 type EmailService interface {
+	SetContactService(contact ContactService)
+	SetOrganizationService(org OrganizationService)
+	IsInitialized() bool
+
 	Merge(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, tenant string, emailFields EmailFields, linkWith *common_srv.LinkWith) (*string, error)
 	ReplaceEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, previousEmail string, emailFields EmailFields, linkWith common_srv.LinkWith) (*string, error)
 	UnlinkEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email, appSource string, linkWith common_srv.LinkWith) error

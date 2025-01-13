@@ -5,22 +5,24 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
+	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 )
 
 type ScrubbyIoRequest struct {
@@ -207,7 +209,7 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 	defer span.Finish()
 	span.LogKV("domain", domain, "email", email)
 
-	cacheDomain, err := s.Services.CommonServices.PostgresRepositories.CacheEmailValidationDomainRepository.Get(ctx, domain)
+	cacheDomain, err := s.Services.Postgres.CacheEmailValidationDomainRepository.Get(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
 	}
@@ -222,7 +224,7 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal domain validation data"))
 		}
-		cacheDomain, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationDomainRepository.Save(ctx, postgresentity.CacheEmailValidationDomain{
+		cacheDomain, err = s.Services.Postgres.CacheEmailValidationDomainRepository.Save(ctx, postgresentity.CacheEmailValidationDomain{
 			Domain:              domain,
 			Provider:            domainValidation.Provider,
 			Firewall:            domainValidation.SecureGatewayProvider,
@@ -295,7 +297,7 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 		log.Bool("isPrimaryDomain", isPrimaryDomain),
 		log.String("primaryDomain", primaryDomain))
 
-	cachedEmail, err := s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Get(ctx, email)
+	cachedEmail, err := s.Services.Postgres.CacheEmailValidationRepository.Get(ctx, email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
 	}
@@ -349,10 +351,10 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 			IsSystemGenerated:   syntaxValidation.IsSystemGenerated,
 			AlternateEmail:      emailValidation.AlternateEmail.Email,
 		}
-		cachedEmail, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Save(ctx, cacheEmailValidationEntity)
+		cachedEmail, err = s.Services.Postgres.CacheEmailValidationRepository.Save(ctx, cacheEmailValidationEntity)
 		if err != nil {
 			// retry saving once
-			cachedEmail, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Save(ctx, cacheEmailValidationEntity)
+			cachedEmail, err = s.Services.Postgres.CacheEmailValidationRepository.Save(ctx, cacheEmailValidationEntity)
 		}
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save email data"))
@@ -368,7 +370,7 @@ func (s *emailValidationService) ValidateEmailScrubby(ctx context.Context, email
 	defer span.Finish()
 	span.LogFields(log.String("email", email))
 
-	cachedScrubbyRecord, err := s.Services.CommonServices.PostgresRepositories.CacheEmailScrubbyRepository.GetLatestByEmail(ctx, email)
+	cachedScrubbyRecord, err := s.Services.Postgres.CacheEmailScrubbyRepository.GetLatestByEmail(ctx, email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
 		return "", err
@@ -384,7 +386,7 @@ func (s *emailValidationService) ValidateEmailScrubby(ctx context.Context, email
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to validate email with scrubby"))
 		} else {
-			savedRecord, err := s.Services.CommonServices.PostgresRepositories.CacheEmailScrubbyRepository.Save(ctx, postgresentity.CacheEmailScrubby{
+			savedRecord, err := s.Services.Postgres.CacheEmailScrubbyRepository.Save(ctx, postgresentity.CacheEmailScrubby{
 				ID:        identifier,
 				Email:     email,
 				Status:    strings.ToLower(scrubbyResponse.Status),
@@ -399,7 +401,7 @@ func (s *emailValidationService) ValidateEmailScrubby(ctx context.Context, email
 	}
 
 	if validationStatus == "" || validationStatus == "pending" {
-		allCachedRecords, err := s.Services.CommonServices.PostgresRepositories.CacheEmailScrubbyRepository.GetAllByEmail(ctx, email)
+		allCachedRecords, err := s.Services.Postgres.CacheEmailScrubbyRepository.GetAllByEmail(ctx, email)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get all scrubby records"))
 			return validationStatus, err
@@ -476,7 +478,7 @@ func (s *emailValidationService) ValidateEmailWithTrueinbox(ctx context.Context,
 	defer span.Finish()
 	span.LogFields(log.String("email", email))
 
-	cachedTrueInboxRecord, err := s.Services.CommonServices.PostgresRepositories.CacheEmailTrueinboxRepository.GetLatestByEmail(ctx, email)
+	cachedTrueInboxRecord, err := s.Services.Postgres.CacheEmailTrueinboxRepository.GetLatestByEmail(ctx, email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
 		return nil, err
@@ -496,7 +498,7 @@ func (s *emailValidationService) ValidateEmailWithTrueinbox(ctx context.Context,
 			s.log.Errorf("failed to marshal trueinbox response: %s", err.Error())
 			return nil, err
 		}
-		_, err = s.Services.CommonServices.PostgresRepositories.CacheEmailTrueinboxRepository.Create(ctx, postgresentity.CacheEmailTrueinbox{
+		_, err = s.Services.Postgres.CacheEmailTrueinboxRepository.Create(ctx, postgresentity.CacheEmailTrueinbox{
 			Email:  email,
 			Data:   string(responseJson),
 			Result: trueInboxResponse.Result,
@@ -574,7 +576,7 @@ func (s *emailValidationService) ValidateEmailWithEnrow(ctx context.Context, ema
 	defer span.Finish()
 	span.LogFields(log.String("email", email))
 
-	cachedEnrowRecord, err := s.Services.CommonServices.PostgresRepositories.CacheEmailEnrowRepository.GetLatestByEmail(ctx, email)
+	cachedEnrowRecord, err := s.Services.Postgres.CacheEmailEnrowRepository.GetLatestByEmail(ctx, email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
 		return "", err
@@ -593,7 +595,7 @@ func (s *emailValidationService) ValidateEmailWithEnrow(ctx context.Context, ema
 			s.log.Errorf("enrow request id is empty")
 			return "", err
 		}
-		_, err = s.Services.CommonServices.PostgresRepositories.CacheEmailEnrowRepository.RegisterRequest(ctx, postgresentity.CacheEmailEnrow{
+		_, err = s.Services.Postgres.CacheEmailEnrowRepository.RegisterRequest(ctx, postgresentity.CacheEmailEnrow{
 			Email:     email,
 			RequestID: enrowRequestId,
 		})
@@ -611,7 +613,7 @@ func (s *emailValidationService) ValidateEmailWithEnrow(ctx context.Context, ema
 	}
 
 	for i := 0; i < waitingTimeSec; i++ {
-		cachedEnrowRecord, err = s.Services.CommonServices.PostgresRepositories.CacheEmailEnrowRepository.GetLatestByEmail(ctx, email)
+		cachedEnrowRecord, err = s.Services.Postgres.CacheEmailEnrowRepository.GetLatestByEmail(ctx, email)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
 			return "", err

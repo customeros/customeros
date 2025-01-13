@@ -18,10 +18,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/coserrors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	service "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/contact"
+	common_srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -31,10 +31,10 @@ type socialService struct {
 	log     logger.Logger
 	neo4j   *neoRepo.Repositories
 	events  *events.EventsService
-	contact contact.ContactService
+	contact interfaces.ContactService
 }
 
-func NewSocialService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService, contact contact.ContactService) SocialService {
+func NewSocialService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService, contact interfaces.ContactService) interfaces.SocialService {
 	return &socialService{
 		log:     log,
 		neo4j:   neo4j,
@@ -193,7 +193,7 @@ func (s *socialService) PermanentlyDelete(ctx context.Context, tenant string, so
 	return err
 }
 
-func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith service.LinkWith, socialEntity neo4jentity.SocialEntity) (string, error) {
+func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith common_srv.LinkWith, socialEntity neo4jentity.SocialEntity) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.AddSocialToEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -368,7 +368,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 	return socialId, err
 }
 
-func (s *socialService) RemoveSocialFromEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith service.LinkWith, socialId string) error {
+func (s *socialService) RemoveSocialFromEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith common_srv.LinkWith, socialId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.RemoveSocialFromEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

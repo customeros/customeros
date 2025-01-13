@@ -3,28 +3,29 @@ package routes
 import (
 	"bytes"
 	"context"
-	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
-	tracingLog "github.com/opentracing/opentracing-go/log"
 	"image"
 	"image/color"
 	"image/png"
 	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	tracingLog "github.com/opentracing/opentracing-go/log"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 )
 
 func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.Services) {
-
-	//Preload 1px transparent image
+	// Preload 1px transparent image
 	px := image.NewRGBA(image.Rect(0, 0, 1, 1))
 	px.Set(0, 0, color.Transparent)
 
@@ -33,11 +34,11 @@ func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.S
 	if err != nil {
 		log.Printf("unable to encode image: %v", err)
 	}
-	var spyPixelBytes = spyPixel.Bytes()
+	spyPixelBytes := spyPixel.Bytes()
 
 	rg.POST("/mail/send",
-		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.USER_ADMIN_API, security.WithCache(services.CommonServices.Cache)),
+		security.TenantUserContextEnhancer(security.USERNAME, services.Neo4j),
+		security.ApiKeyCheckerHTTP(services.Postgres.TenantWebhookApiKeyRepository, services.Postgres.AppKeyRepository, security.USER_ADMIN_API, security.WithCache(services.Cache)),
 		func(c *gin.Context) {
 			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "mail/send", c.Request.Header)
 			defer span.Finish()
@@ -82,7 +83,6 @@ func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.S
 			}
 
 			c.JSON(http.StatusOK, gin.H{})
-
 		})
 
 	rg.GET("/mail/:customerOSInternalIdentifier/track", func(c *gin.Context) {
@@ -98,7 +98,7 @@ func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.S
 
 		span.LogFields(tracingLog.String("customerOSInternalIdentifier", customerOSInternalIdentifier))
 
-		//log all headers
+		// log all headers
 		for name, values := range c.Request.Header {
 			for _, value := range values {
 				span.LogFields(tracingLog.String("Header: "+name, value))
@@ -135,7 +135,6 @@ func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.S
 			"User-Agent":       c.GetHeader("User-Agent"),
 			"Cf-Connecting-Ip": c.GetHeader("Cf-Connecting-Ip"),
 		})
-
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "error while converting metadata to json"})

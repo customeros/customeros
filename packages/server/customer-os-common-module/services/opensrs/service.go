@@ -15,10 +15,13 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
@@ -31,7 +34,16 @@ type OpenSRSResponse struct {
 
 type openSRSService struct {
 	log      logger.Logger
-	services *Services
+	cfg      *config.OpenSRSConfig
+	postgres *repository.Repositories
+}
+
+func NewOpenSRSService(log logger.Logger, cfg *config.OpenSRSConfig, postgres *repository.Repositories) interfaces.OpenSrsService {
+	return &openSRSService{
+		log:      log,
+		cfg:      cfg,
+		postgres: postgres,
+	}
 }
 
 func (s *openSRSService) SendEmail(ctx context.Context, request *entity.EmailMessage) error {
@@ -42,7 +54,7 @@ func (s *openSRSService) SendEmail(ctx context.Context, request *entity.EmailMes
 	smtpHost := "mail.hostedemail.com"
 	smtpPort := "587"
 
-	mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, request.From)
+	mailbox, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, request.From)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -216,13 +228,6 @@ func generateMessageID(fromEmail string) string {
 	return messageID
 }
 
-func NewOpenSRSService(log logger.Logger, services *Services) OpenSrsService {
-	return &openSRSService{
-		log:      log,
-		services: services,
-	}
-}
-
 func (s *openSRSService) SetupDomain(ctx context.Context, tenant, domain string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.SetupDomain")
 	defer span.Finish()
@@ -231,7 +236,7 @@ func (s *openSRSService) SetupDomain(ctx context.Context, tenant, domain string)
 	span.LogKV("domain", domain)
 
 	// step 1: get domain record from the database
-	domainRecord, err := s.services.PostgresRepositories.MailStackDomainRepository.GetDomain(ctx, tenant, domain)
+	domainRecord, err := s.postgres.MailStackDomainRepository.GetDomain(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get domain record"))
 		s.log.Error("failed to get domain record", err)
@@ -260,13 +265,13 @@ func (s *openSRSService) setEmailDomainInOpenSRS(ctx context.Context, domain, dk
 	span.LogKV("domain", domain)
 
 	// Define the API endpoint (replace with your environment's URL)
-	apiURL := s.services.GlobalConfig.ExternalServices.OpenSRSConfig.Url + "/api/change_domain"
+	apiURL := s.cfg.Url + "/api/change_domain"
 
 	// Prepare the request body
 	requestBody := map[string]interface{}{
 		"credentials": map[string]string{
-			"user":     s.services.GlobalConfig.ExternalServices.OpenSRSConfig.Username,
-			"password": s.services.GlobalConfig.ExternalServices.OpenSRSConfig.ApiKey,
+			"user":     s.cfg.Username,
+			"password": s.cfg.ApiKey,
 		},
 		"domain": domain,
 		"attributes": map[string]interface{}{
@@ -343,9 +348,9 @@ func (s *openSRSService) SetupMailbox(ctx context.Context, tenant, username, pas
 	span.LogFields(log.Bool("webmailEnabled", webmailEnabled), log.Object("forwardingTo", forwardingTo))
 
 	// Define the API endpoint for adding a mailbox (replace with your environment's URL)
-	apiURL := s.services.GlobalConfig.ExternalServices.OpenSRSConfig.Url + "/api/change_user"
+	apiURL := s.cfg.Url + "/api/change_user"
 
-	if s.services.GlobalConfig.ExternalServices.OpenSRSConfig.Username == "" || s.services.GlobalConfig.ExternalServices.OpenSRSConfig.ApiKey == "" {
+	if s.cfg.Username == "" || s.cfg.ApiKey == "" {
 		tracing.TraceErr(span, errors.New("OpenSRS credentials not set"))
 		s.log.Error("OpenSRS credentials not set")
 		return errors.New("OpenSRS credentials not set")
@@ -372,8 +377,8 @@ func (s *openSRSService) SetupMailbox(ctx context.Context, tenant, username, pas
 	// Create the requestBody with the extracted attributes
 	requestBody := map[string]interface{}{
 		"credentials": map[string]string{
-			"user":     s.services.GlobalConfig.ExternalServices.OpenSRSConfig.Username,
-			"password": s.services.GlobalConfig.ExternalServices.OpenSRSConfig.ApiKey,
+			"user":     s.cfg.Username,
+			"password": s.cfg.ApiKey,
 		},
 		"user":       username,
 		"attributes": attributes,
@@ -444,20 +449,20 @@ func (s *openSRSService) SetupMailbox(ctx context.Context, tenant, username, pas
 	return nil
 }
 
-func (s *openSRSService) GetMailboxDetails(ctx context.Context, email string) (MailboxDetails, error) {
+func (s *openSRSService) GetMailboxDetails(ctx context.Context, email string) (interfaces.MailboxDetails, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.GetMailboxDetails")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("email", email)
 
 	// Define the API endpoint for getting mailbox information
-	apiURL := s.services.GlobalConfig.ExternalServices.OpenSRSConfig.Url + "/api/get_user"
+	apiURL := s.cfg.Url + "/api/get_user"
 
 	// Create the request body
 	requestBody := map[string]interface{}{
 		"credentials": map[string]string{
-			"user":     s.services.GlobalConfig.ExternalServices.OpenSRSConfig.Username,
-			"password": s.services.GlobalConfig.ExternalServices.OpenSRSConfig.ApiKey,
+			"user":     s.cfg.Username,
+			"password": s.cfg.ApiKey,
 		},
 		"user": email,
 	}
@@ -467,7 +472,7 @@ func (s *openSRSService) GetMailboxDetails(ctx context.Context, email string) (M
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request body"))
 		s.log.Error("failed to marshal request body", err)
-		return MailboxDetails{}, fmt.Errorf("failed to marshal request body: %s", err.Error())
+		return interfaces.MailboxDetails{}, fmt.Errorf("failed to marshal request body: %s", err.Error())
 	}
 
 	// Create a new HTTP request with context
@@ -475,7 +480,7 @@ func (s *openSRSService) GetMailboxDetails(ctx context.Context, email string) (M
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create HTTP request"))
 		s.log.Error("failed to create HTTP request", err)
-		return MailboxDetails{}, fmt.Errorf("failed to create HTTP request: %s", err.Error())
+		return interfaces.MailboxDetails{}, fmt.Errorf("failed to create HTTP request: %s", err.Error())
 	}
 
 	// Set necessary headers
@@ -489,14 +494,14 @@ func (s *openSRSService) GetMailboxDetails(ctx context.Context, email string) (M
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to make API request"))
 		s.log.Error("failed to make API request", err)
-		return MailboxDetails{}, fmt.Errorf("failed to make API request: %s", err.Error())
+		return interfaces.MailboxDetails{}, fmt.Errorf("failed to make API request: %s", err.Error())
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		tracing.TraceErr(span, errors.New("API request failed"))
 		s.log.Error("API request failed")
-		return MailboxDetails{}, fmt.Errorf("API request failed")
+		return interfaces.MailboxDetails{}, fmt.Errorf("API request failed")
 	}
 
 	// Parse the response
@@ -504,7 +509,7 @@ func (s *openSRSService) GetMailboxDetails(ctx context.Context, email string) (M
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
 		s.log.Error("failed to read response body", err)
-		return MailboxDetails{}, err
+		return interfaces.MailboxDetails{}, err
 	}
 	span.LogKV("responseBody", string(body))
 
@@ -514,7 +519,7 @@ func (s *openSRSService) GetMailboxDetails(ctx context.Context, email string) (M
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response"))
 		s.log.Error("failed to unmarshal response", err)
-		return MailboxDetails{}, err
+		return interfaces.MailboxDetails{}, err
 	}
 
 	// Check if the response indicates success
@@ -522,12 +527,12 @@ func (s *openSRSService) GetMailboxDetails(ctx context.Context, email string) (M
 		errMessage := response["error"].(string)
 		tracing.TraceErr(span, errors.New(errMessage))
 		s.log.Error("API request failed", errMessage)
-		return MailboxDetails{}, fmt.Errorf("API request failed: %s", errMessage)
+		return interfaces.MailboxDetails{}, fmt.Errorf("API request failed: %s", errMessage)
 	}
 
 	// Extract the mailbox details: creation date and attributes
 	attributes := response["attributes"].(map[string]interface{})
-	mailboxDetails := MailboxDetails{
+	mailboxDetails := interfaces.MailboxDetails{
 		Email:             email,
 		ForwardingEnabled: attributes["delivery_forward"].(bool),
 	}

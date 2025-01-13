@@ -10,24 +10,29 @@ import (
 	"time"
 
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type slackService struct {
-	services *Services
+	log      logger.Logger
 	cfg      *config.GlobalConfig
+	postgres *repository.Repositories
 }
 
-func NewSlackService(services *Services, config *config.GlobalConfig) SlackService {
+func NewSlackService(log logger.Logger, config *config.GlobalConfig, postgres *repository.Repositories) interfaces.SlackService {
 	return &slackService{
-		services: services,
+		log:      log,
 		cfg:      config,
+		postgres: postgres,
 	}
 }
 
@@ -37,7 +42,7 @@ func (s *slackService) GetSlackChannels(ctx context.Context, tenant string) ([]*
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, "service")
 
-	nodes, err := s.services.PostgresRepositories.SlackChannelRepository.GetSlackChannels(ctx, tenant)
+	nodes, err := s.postgres.SlackChannelRepository.GetSlackChannels(ctx, tenant)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +56,7 @@ func (s *slackService) GetPaginatedSlackChannels(ctx context.Context, tenant str
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, "service")
 
-	channels, totalCount, err := s.services.PostgresRepositories.SlackChannelRepository.GetPaginatedSlackChannels(ctx, tenant, page, limit)
+	channels, totalCount, err := s.postgres.SlackChannelRepository.GetPaginatedSlackChannels(ctx, tenant, page, limit)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -68,7 +73,7 @@ func (s *slackService) StoreSlackChannel(ctx context.Context, tenant, source, ch
 	span.LogFields(log.String("channelName", channelName))
 	span.LogFields(log.String("organizationId", utils.IfNotNilString(organizationId)))
 
-	existing, err := s.services.PostgresRepositories.SlackChannelRepository.GetSlackChannel(ctx, tenant, channelId)
+	existing, err := s.postgres.SlackChannelRepository.GetSlackChannel(ctx, tenant, channelId)
 	if err != nil {
 		return err
 	}
@@ -84,13 +89,13 @@ func (s *slackService) StoreSlackChannel(ctx context.Context, tenant, source, ch
 			OrganizationId: organizationId,
 			Source:         source,
 		}
-		return s.services.PostgresRepositories.SlackChannelRepository.CreateSlackChannel(ctx, &slackChannel)
+		return s.postgres.SlackChannelRepository.CreateSlackChannel(ctx, &slackChannel)
 	}
 	if existing != nil {
 		if organizationId != nil {
-			return s.services.PostgresRepositories.SlackChannelRepository.UpdateSlackChannelOrganization(ctx, existing.ID, *organizationId)
+			return s.postgres.SlackChannelRepository.UpdateSlackChannelOrganization(ctx, existing.ID, *organizationId)
 		} else if channelName != "" {
-			return s.services.PostgresRepositories.SlackChannelRepository.UpdateSlackChannelName(ctx, existing.ID, channelName)
+			return s.postgres.SlackChannelRepository.UpdateSlackChannelName(ctx, existing.ID, channelName)
 		}
 	}
 
@@ -144,13 +149,13 @@ func (s *slackService) sendSlackMessage(ctx context.Context, tenant, channel, bl
 
 	botApiKey := ""
 	// prepare bot key
-	slackSettings, err := s.services.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant)
+	slackSettings, err := s.postgres.SlackSettingsRepository.Get(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get slack settings"))
 	}
 	if slackSettings == nil {
 		span.LogFields(log.String("skip", "slack settings not found"))
-		s.services.Logger.Warnf("slack settings not found for tenant %s", tenant)
+		s.log.Warnf("slack settings not found for tenant %s", tenant)
 		return nil
 	} else {
 		botApiKey = slackSettings.AccessToken

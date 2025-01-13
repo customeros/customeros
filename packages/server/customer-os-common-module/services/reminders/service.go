@@ -13,18 +13,22 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/novu"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type reminderService struct {
-	services *Services
+	neo4j *neo4jrepo.Repositories
+	novu  interfaces.NovuService
 }
 
-func NewReminderService(services *Services) ReminderService {
+func NewReminderService(neo4j *neo4jrepo.Repositories, novu interfaces.NovuService) interfaces.ReminderService {
 	return &reminderService{
-		services: services,
+		neo4j: neo4j,
+		novu:  novu,
 	}
 }
 
@@ -36,13 +40,13 @@ func (s *reminderService) CreateReminder(ctx context.Context, tenant, userId, or
 
 	tenant = common.GetTenantFromContext(ctx)
 
-	reminderId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelReminder)
+	reminderId, err := s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelReminder)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
-	err = s.services.Neo4jRepositories.ReminderWriteRepository.CreateReminder(ctx, tenant, reminderId, userId, organizationId, content, utils.Now(), dueDate)
+	err = s.neo4j.ReminderWriteRepository.CreateReminder(ctx, tenant, reminderId, userId, organizationId, content, utils.Now(), dueDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
@@ -82,7 +86,7 @@ func (s *reminderService) UpdateReminder(ctx context.Context, tenant, reminderId
 		updateData.UpdateSent = true
 	}
 
-	err := s.services.Neo4jRepositories.ReminderWriteRepository.UpdateReminder(ctx, tenant, reminderId, updateData)
+	err := s.neo4j.ReminderWriteRepository.UpdateReminder(ctx, tenant, reminderId, updateData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -97,7 +101,7 @@ func (s *reminderService) GetReminderById(ctx context.Context, id string) (*neo4
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
-	if reminderDbNode, err := s.services.Neo4jRepositories.ReminderReadRepository.GetReminderById(ctx, id); err != nil {
+	if reminderDbNode, err := s.neo4j.ReminderReadRepository.GetReminderById(ctx, id); err != nil {
 		tracing.TraceErr(span, err)
 		wrappedErr := errors.Wrap(err, fmt.Sprintf("Reminder with id {%s} not found", id))
 		return nil, wrappedErr
@@ -112,7 +116,7 @@ func (s *reminderService) RemindersForOrganization(ctx context.Context, organiza
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, organizationID)
 
-	reminderDbNodes, err := s.services.Neo4jRepositories.ReminderReadRepository.GetRemindersOrderByDueDateAsc(ctx, organizationID, dismissed)
+	reminderDbNodes, err := s.neo4j.ReminderReadRepository.GetRemindersOrderByDueDateAsc(ctx, organizationID, dismissed)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -143,7 +147,7 @@ func (s *reminderService) SendNotification(ctx context.Context, reminderId, fron
 		return err
 	}
 
-	err = s.notificationProviderSendEmail(ctx, span, fronteraPublicPath, WorkflowReminderNotificationEmail, reminder.UserId, reminder.Content, reminder.OrganizationId, tenant, reminder.CreatedAt)
+	err = s.notificationProviderSendEmail(ctx, span, fronteraPublicPath, novu.WorkflowReminderNotificationEmail, reminder.UserId, reminder.Content, reminder.OrganizationId, tenant, reminder.CreatedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -176,7 +180,7 @@ func (s *reminderService) notificationProviderSendEmail(
 	createdAt time.Time,
 ) error {
 	// target user email
-	emailDbNode, err := s.services.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
+	emailDbNode, err := s.neo4j.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.EmailRepository.GetEmailForUser")
@@ -190,7 +194,7 @@ func (s *reminderService) notificationProviderSendEmail(
 	}
 	email = *neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 	// target user
-	userDbNode, err := s.services.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
+	userDbNode, err := s.neo4j.UserReadRepository.GetUserById(ctx, tenant, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
@@ -200,7 +204,7 @@ func (s *reminderService) notificationProviderSendEmail(
 		user = *neo4jmapper.MapDbNodeToUserEntity(userDbNode)
 	}
 	// Organization
-	orgDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
+	orgDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.OrganizationRepository.GetOrganization")
@@ -216,7 +220,7 @@ func (s *reminderService) notificationProviderSendEmail(
 	if orgName == "" {
 		orgName = "Unnamed"
 	}
-	subject := fmt.Sprintf(WorkflowReminderNotificationSubject, orgName)
+	subject := fmt.Sprintf(novu.WorkflowReminderNotificationSubject, orgName)
 	payload := map[string]interface{}{
 		"subject": subject,
 		"email":   email.Email,
@@ -224,7 +228,7 @@ func (s *reminderService) notificationProviderSendEmail(
 		"orgLink": fmt.Sprintf("%s/organization/%s", fronteraPublicPath, organizationId),
 	}
 
-	notification := &NovuNotification{
+	notification := &interfaces.NovuNotification{
 		WorkflowId: workflowId,
 		TemplateData: map[string]string{
 			"{{reminderContent}}":   content,
@@ -232,7 +236,7 @@ func (s *reminderService) notificationProviderSendEmail(
 			"{{orgName}}":           orgName,
 			"{{orgLink}}":           fmt.Sprintf("%s/organization/%s", fronteraPublicPath, organizationId),
 		},
-		To: &NotifiableUser{
+		To: &interfaces.NotifiableUser{
 			FirstName:    user.FirstName,
 			LastName:     user.LastName,
 			Email:        email.Email,
@@ -243,7 +247,7 @@ func (s *reminderService) notificationProviderSendEmail(
 	}
 
 	// call notification service
-	err = s.services.NovuService.SendNotification(ctx, notification)
+	err = s.novu.SendNotification(ctx, notification)
 
 	return err
 }
@@ -261,7 +265,7 @@ func (h *reminderService) notificationProviderSendInAppNotification(
 	tenant string,
 ) error {
 	// target user email
-	emailDbNode, err := h.services.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
+	emailDbNode, err := h.neo4j.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.EmailRepository.GetEmailForUser")
@@ -275,7 +279,7 @@ func (h *reminderService) notificationProviderSendInAppNotification(
 	}
 	email = *neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 	// target user
-	userDbNode, err := h.services.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
+	userDbNode, err := h.neo4j.UserReadRepository.GetUserById(ctx, tenant, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
@@ -285,7 +289,7 @@ func (h *reminderService) notificationProviderSendInAppNotification(
 		user = *neo4jmapper.MapDbNodeToUserEntity(userDbNode)
 	}
 	// Organization
-	orgDbNode, err := h.services.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
+	orgDbNode, err := h.neo4j.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.OrganizationRepository.GetOrganization")
@@ -301,16 +305,16 @@ func (h *reminderService) notificationProviderSendInAppNotification(
 	if orgName == "" {
 		orgName = "Unnamed"
 	}
-	subject := fmt.Sprintf(WorkflowReminderNotificationSubject, orgName)
+	subject := fmt.Sprintf(novu.WorkflowReminderNotificationSubject, orgName)
 	payload := map[string]interface{}{
 		"notificationText": fmt.Sprintf("%s: %s", subject, content),
 		"orgId":            organizationId,
 	}
 
-	notification := &NovuNotification{
+	notification := &interfaces.NovuNotification{
 		WorkflowId:   workflowId,
 		TemplateData: map[string]string{},
-		To: &NotifiableUser{
+		To: &interfaces.NotifiableUser{
 			FirstName:    user.FirstName,
 			LastName:     user.LastName,
 			Email:        email.Email,
@@ -321,7 +325,7 @@ func (h *reminderService) notificationProviderSendInAppNotification(
 	}
 
 	// call notification service
-	err = h.services.NovuService.SendNotification(ctx, notification)
+	err = h.novu.SendNotification(ctx, notification)
 
 	return err
 }

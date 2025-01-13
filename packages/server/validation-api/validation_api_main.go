@@ -2,21 +2,23 @@ package main
 
 import (
 	"context"
-	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/route"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/service"
-	"github.com/opentracing/opentracing-go"
-	"github.com/sirupsen/logrus"
 	"io"
+	"log"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
-	"log"
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/route"
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/service"
 )
 
 func main() {
@@ -58,7 +60,7 @@ func main() {
 	corsConfig.AllowOrigins = []string{"*"}
 	r.Use(cors.New(corsConfig))
 
-	services := service.InitServices(cfg, postgresDb, &neo4jDriver, appLogger)
+	services := service.InitServices(caches.NewCommonCache(), cfg, postgresDb, &neo4jDriver, appLogger)
 
 	route.RegisterRoutes(ctx, r, services, cfg, appLogger)
 

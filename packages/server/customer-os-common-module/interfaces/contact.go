@@ -12,6 +12,11 @@ import (
 )
 
 type ContactService interface {
+	SetEmailService(email EmailService)
+	SetOrganizationService(org OrganizationService)
+	SetJobRoleService(jobrole JobRoleService)
+	SetSocialService(social SocialService)
+
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, contactFields data_fields.ContactFields, updateOnlyIfEmpty bool, options ...common_srv.ServiceOptions) (string, error)
 	CreateContactByLinkedIn(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkedInUrl string, options ...common_srv.ServiceOptions) (string, error)
 	CreateContactWithOrganizationByEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email string) (string, error)

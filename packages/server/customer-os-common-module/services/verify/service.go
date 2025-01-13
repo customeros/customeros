@@ -7,24 +7,28 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
 type verifyService struct {
-	cfg      *config.GlobalConfig
-	services *Services
+	cfg        *config.GlobalConfig
+	postgres   *repository.Repositories
+	enrichment interfaces.EnrichmentService
 }
 
-func NewVerifyService(services *Services, cfg *config.GlobalConfig) VerifyService {
+func NewVerifyService(cfg *config.GlobalConfig, postgres *repository.Repositories, enrichment interfaces.EnrichmentService) interfaces.VerifyService {
 	return &verifyService{
-		services: services,
-		cfg:      cfg,
+		cfg:        cfg,
+		postgres:   postgres,
+		enrichment: enrichment,
 	}
 }
 
@@ -34,7 +38,7 @@ func (s *verifyService) IdentifyCompanyDomain(ctx context.Context, ipAddress str
 	defer span.Finish()
 
 	// lookup company in enrich details tracking table
-	data, err := s.services.PostgresRepositories.EnrichDetailsTrackingRepository.GetByIP(ctx, ipAddress)
+	data, err := s.postgres.EnrichDetailsTrackingRepository.GetByIP(ctx, ipAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +48,7 @@ func (s *verifyService) IdentifyCompanyDomain(ctx context.Context, ipAddress str
 	}
 
 	// call snitcher if domain not known
-	snitcherData, err := s.services.EnrichmentService.Snitcher(ctx, ipAddress)
+	snitcherData, err := s.enrichment.Snitcher(ctx, ipAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +60,7 @@ func (s *verifyService) IdentifyCompanyDomain(ctx context.Context, ipAddress str
 	return &snitcherData.Data.Domain, nil
 }
 
-func (s *verifyService) Threats(ctx context.Context, ipAddress string) (*IpThreats, error) {
+func (s *verifyService) Threats(ctx context.Context, ipAddress string) (*interfaces.IpThreats, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "VerifyService.IsBot")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
@@ -68,7 +72,7 @@ func (s *verifyService) Threats(ctx context.Context, ipAddress string) (*IpThrea
 		return nil, err
 	}
 
-	results := IpThreats{
+	results := interfaces.IpThreats{
 		IsAnonymous:   ipData.IpData.Threat.IsAnonymous,
 		IsBogon:       ipData.IpData.Threat.IsBogon,
 		IsDatacenter:  ipData.IpData.Threat.IsDatacenter,

@@ -7,8 +7,8 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
@@ -65,7 +65,7 @@ func main() {
 	services := service.InitServices(cfg, &neo4jDriver, postgresDb, grpcContainer, appCache, appLogger)
 
 	// init app cache
-	personalEmailProviderEntities, err := services.CommonServices.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+	personalEmailProviderEntities, err := services.Postgres.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 	if err != nil {
 		appLogger.Fatalf("Error getting personal email providers: %s", err.Error())
 	}

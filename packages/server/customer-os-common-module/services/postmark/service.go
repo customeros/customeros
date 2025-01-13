@@ -11,12 +11,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/mrz1836/postmark"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
@@ -46,12 +49,14 @@ const (
 )
 
 type postmarkService struct {
-	services *Services
+	cfg      *config.PostmarkConfig
+	postgres *repository.Repositories
 }
 
-func NewPostmarkService(services *Services) PostmarkService {
+func NewPostmarkService(cfg *config.PostmarkConfig, postgres *repository.Repositories) interfaces.PostmarkService {
 	return &postmarkService{
-		services: services,
+		cfg:      cfg,
+		postgres: postgres,
 	}
 }
 
@@ -59,7 +64,7 @@ func (s *postmarkService) getPostmarkClient(ctx context.Context, tenant string) 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.getPostmarkClient")
 	defer span.Finish()
 
-	p := s.services.PostgresRepositories.PostmarkApiKeyRepository.GetPostmarkApiKey(ctx, tenant)
+	p := s.postgres.PostmarkApiKeyRepository.GetPostmarkApiKey(ctx, tenant)
 	if p.Error != nil {
 		tracing.TraceErr(span, p.Error)
 		return nil, p.Error
@@ -71,12 +76,12 @@ func (s *postmarkService) getPostmarkClient(ctx context.Context, tenant string) 
 		return nil, err
 	}
 
-	serverToken := p.Result.(*postgresEntity.PostmarkApiKey).Key
+	serverToken := p.Result.(*entity.PostmarkApiKey).Key
 
 	return postmark.NewClient(serverToken, ""), nil
 }
 
-func (s *postmarkService) SendNotification(ctx context.Context, postmarkEmail PostmarkEmail, tenant string) error {
+func (s *postmarkService) SendNotification(ctx context.Context, postmarkEmail interfaces.PostmarkEmail, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkService.SendNotification")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -248,25 +253,25 @@ func (s *postmarkService) CreateServerIfNotExists(ctx context.Context) error {
 	tenant := common.GetTenantFromContext(ctx)
 
 	// check postmark url and api key
-	if s.services.GlobalConfig.ExternalServices.PostmarkConfig.Url == "" {
+	if s.cfg.Url == "" {
 		err := errors.New("postmark url not configured")
 		tracing.TraceErr(span, err)
 		return err
 	}
-	if s.services.GlobalConfig.ExternalServices.PostmarkConfig.AccountApiKey == "" {
+	if s.cfg.AccountApiKey == "" {
 		err := errors.New("postmark api key not configured")
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	postmarkServerName := strings.ToLower(tenant)
-	inboundWebhookURL := s.services.GlobalConfig.ExternalServices.PostmarkConfig.DefaultInboundStreamWebhook
+	inboundWebhookURL := s.cfg.DefaultInboundStreamWebhook
 	inboundForwardingDomain := postmarkServerName + ".customeros.ai"
 	span.LogKV("postmarkServerName", postmarkServerName)
 	span.LogKV("inboundWebhookURL", inboundWebhookURL)
 	span.LogKV("inboundForwardingDomain", inboundForwardingDomain)
 
-	apiClient := NewPostmarkAPIClient(s.services.GlobalConfig.ExternalServices.PostmarkConfig.Url, s.services.GlobalConfig.ExternalServices.PostmarkConfig.AccountApiKey)
+	apiClient := NewPostmarkAPIClient(s.cfg.Url, s.cfg.AccountApiKey)
 
 	// check if server already exists
 	existingServerDetails, err := apiClient.GetServerByName(ctx, postmarkServerName)

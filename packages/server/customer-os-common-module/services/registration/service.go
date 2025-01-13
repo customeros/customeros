@@ -7,6 +7,8 @@ import (
 
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neoRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -14,18 +16,39 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	common_srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/events"
+	mailbov_srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/mailbox"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type registrationService struct {
-	services *Services
+	events   *events.EventsService
+	postgres *repository.Repositories
+	neo4j    *neoRepo.Repositories
+	contact  interfaces.ContactService
+	email    interfaces.EmailService
+	flow     interfaces.FlowService
+	mailbox  interfaces.MailboxService
+	org      interfaces.OrganizationService
+	postmark interfaces.PostmarkService
+	user     interfaces.UserService
 }
 
-func NewRegistrationService(services *Services) RegistrationService {
+func NewRegistrationService(events *events.EventsService, postgres *repository.Repositories, neo4j *neoRepo.Repositories, contact interfaces.ContactService, email interfaces.EmailService, flow interfaces.FlowService, mailbox interfaces.MailboxService, org interfaces.OrganizationService, postmark interfaces.PostmarkService, user interfaces.UserService) interfaces.RegistrationService {
 	return &registrationService{
-		services: services,
+		events:   events,
+		postgres: postgres,
+		neo4j:    neo4j,
+		contact:  contact,
+		email:    email,
+		flow:     flow,
+		mailbox:  mailbox,
+		org:      org,
+		postmark: postmark,
 	}
 }
 
@@ -56,7 +79,7 @@ func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, log
 	return nil
 }
 
-func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, testUser *testUserSetup) error {
+func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, testUser *interfaces.TestUserSetup) error {
 	span, ctx := s.initializeTracing(ctx, "RegistrationService.ConfigureDefaultFlowData", nil)
 	defer span.Finish()
 
@@ -65,7 +88,7 @@ func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, test
 		return err
 	}
 
-	flowList, err := s.services.FlowService.FlowGetList(ctx)
+	flowList, err := s.flow.FlowGetList(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -85,7 +108,7 @@ func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, test
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	organizationId, err := s.services.OrganizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
+	organizationId, err := s.org.Save(ctx, nil, nil, data_fields.OrganizationFields{
 		Name:      utils.StringPtr("Example Inc."),
 		Industry:  utils.StringPtr("Software"),
 		Employees: utils.Int64Ptr(int64(100)),
@@ -95,7 +118,7 @@ func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, test
 		return err
 	}
 
-	contactId, err := s.services.ContactService.Save(ctx, nil, nil, data_fields.ContactFields{
+	contactId, err := s.contact.Save(ctx, nil, nil, data_fields.ContactFields{
 		FirstName: utils.StringPtr("Justin"),
 		LastName:  utils.StringPtr("Example"),
 	}, false)
@@ -104,10 +127,10 @@ func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, test
 		return err
 	}
 
-	_, err = s.services.EmailService.Merge(ctx, nil, tenant, EmailFields{
-		Email: fmt.Sprintf("%s@%s", tenant, TEST_MAILBOX_DOMAIN),
+	_, err = s.email.Merge(ctx, nil, tenant, interfaces.EmailFields{
+		Email: fmt.Sprintf("%s@%s", tenant, mailbov_srv.TEST_MAILBOX_DOMAIN),
 	},
-		&LinkWith{
+		&common_srv.LinkWith{
 			Id:   contactId,
 			Type: model.CONTACT,
 		})
@@ -116,13 +139,13 @@ func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, test
 		return err
 	}
 
-	err = s.services.ContactService.LinkContactWithOrganization(ctx, nil, contactId, organizationId, "Chief Testing Officer", "", constants.AppSourceUserAdminApi, true, utils.TimePtr(utils.Now()), nil)
+	err = s.contact.LinkContactWithOrganization(ctx, nil, contactId, organizationId, "Chief Testing Officer", "", constants.AppSourceUserAdminApi, true, utils.TimePtr(utils.Now()), nil)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error linking contact with organization during tenant onboarding"))
 		return err
 	}
 
-	flow, err := s.services.FlowService.FlowMerge(ctx, nil, &neo4jentity.FlowEntity{
+	flow, err := s.flow.FlowMerge(ctx, nil, &neo4jentity.FlowEntity{
 		Name:        "Cold Outbound Example",
 		DefaultName: "Cold Outbound Example",
 		Nodes: `
@@ -351,8 +374,8 @@ func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, test
 		return err
 	}
 
-	_, err = s.services.FlowService.FlowSenderMerge(ctx, flow.Id, &neo4jentity.FlowSenderEntity{
-		UserId: &testUser.userId,
+	_, err = s.flow.FlowSenderMerge(ctx, flow.Id, &neo4jentity.FlowSenderEntity{
+		UserId: &testUser.UserId,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -362,7 +385,7 @@ func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, test
 	return nil
 }
 
-func (s *registrationService) ConfigureTestMailbox(ctx context.Context) (*testUserSetup, error) {
+func (s *registrationService) ConfigureTestMailbox(ctx context.Context) (*interfaces.TestUserSetup, error) {
 	span, ctx := s.initializeTracing(ctx, "ConfigureTestMailbox", nil)
 	defer span.Finish()
 
@@ -381,7 +404,7 @@ func (s *registrationService) ConfigureTestMailbox(ctx context.Context) (*testUs
 		return nil, err
 	}
 
-	span.LogKV("result.mailboxAddress", testUser.mailboxAddress)
+	span.LogKV("result.mailboxAddress", testUser.MailboxAddress)
 	return testUser, nil
 }
 
@@ -394,7 +417,7 @@ func (s *registrationService) CreatePostmarkServer(ctx context.Context) error {
 		return err
 	}
 
-	if err := s.services.PostmarkService.CreateServerIfNotExists(ctx); err != nil {
+	if err := s.postmark.CreateServerIfNotExists(ctx); err != nil {
 		tracing.TraceErr(span, err)
 	}
 
@@ -412,8 +435,8 @@ func (s *registrationService) initializeTracing(ctx context.Context, operation s
 	return span, ctx
 }
 
-func (s *registrationService) setupTestUser(ctx context.Context, span opentracing.Span) (*testUserSetup, error) {
-	existingTestUser, err := s.services.Neo4jRepositories.UserReadRepository.FindTestUser(ctx)
+func (s *registrationService) setupTestUser(ctx context.Context, span opentracing.Span) (*interfaces.TestUserSetup, error) {
+	existingTestUser, err := s.neo4j.UserReadRepository.FindTestUser(ctx)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "cannot find test user"))
 		return nil, err
@@ -421,7 +444,7 @@ func (s *registrationService) setupTestUser(ctx context.Context, span opentracin
 
 	var testUserId string
 	if existingTestUser == nil {
-		testUserId, err = s.services.UserService.Save(ctx, nil, nil, data_fields.UserFields{
+		testUserId, err = s.user.Save(ctx, nil, nil, data_fields.UserFields{
 			FirstName: utils.StringPtr("Test"),
 			LastName:  utils.StringPtr("Sender"),
 			Test:      utils.BoolPtr(true),
@@ -435,18 +458,18 @@ func (s *registrationService) setupTestUser(ctx context.Context, span opentracin
 	}
 
 	span.LogKV("result.testUserId", testUserId)
-	return &testUserSetup{userId: testUserId}, nil
+	return &interfaces.TestUserSetup{UserId: testUserId}, nil
 }
 
-func (s *registrationService) setupTestMailbox(ctx context.Context, span opentracing.Span, tenant string, testUser *testUserSetup) error {
-	mailboxAddress := strings.ToLower(fmt.Sprintf("%s@%s", tenant, TEST_MAILBOX_DOMAIN))
-	testUser.mailboxAddress = mailboxAddress
+func (s *registrationService) setupTestMailbox(ctx context.Context, span opentracing.Span, tenant string, testUser *interfaces.TestUserSetup) error {
+	mailboxAddress := strings.ToLower(fmt.Sprintf("%s@%s", tenant, mailbov_srv.TEST_MAILBOX_DOMAIN))
+	testUser.MailboxAddress = mailboxAddress
 
-	testEmailId, err := s.services.EmailService.Merge(ctx, nil, tenant, EmailFields{
+	testEmailId, err := s.email.Merge(ctx, nil, tenant, interfaces.EmailFields{
 		Email: mailboxAddress,
-	}, &LinkWith{
+	}, &common_srv.LinkWith{
 		Type: model.USER,
-		Id:   testUser.userId,
+		Id:   testUser.UserId,
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to setup test mailbox"))
@@ -458,15 +481,15 @@ func (s *registrationService) setupTestMailbox(ctx context.Context, span opentra
 }
 
 func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span opentracing.Span, tenant, mailboxAddress string) error {
-	mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailboxAddress)
+	mailbox, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, mailboxAddress)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get by mailbox"))
 		return err
 	}
 
 	if mailbox == nil {
-		if err := s.services.MailboxService.CreateMailbox(ctx, nil, CreateMailboxRequest{
-			Domain:          TEST_MAILBOX_DOMAIN,
+		if err := s.mailbox.CreateMailbox(ctx, nil, interfaces.CreateMailboxRequest{
+			Domain:          mailbov_srv.TEST_MAILBOX_DOMAIN,
 			Username:        strings.ToLower(tenant),
 			Password:        utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false),
 			LinkedUserEmail: mailboxAddress,
@@ -477,13 +500,13 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 			return err
 		}
 
-		mailboxEntity, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, strings.ToLower(tenant)+"@"+TEST_MAILBOX_DOMAIN)
+		mailboxEntity, err := s.postgres.TenantSettingsMailboxRepository.GetByMailbox(ctx, strings.ToLower(tenant)+"@"+mailbov_srv.TEST_MAILBOX_DOMAIN)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get by mailbox"))
 			return err
 		}
 
-		err = s.services.RabbitMQService.PublishEvent(ctx, mailboxEntity.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
+		err = s.events.Publisher.PublishEvent(ctx, mailboxEntity.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

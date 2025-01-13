@@ -15,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -27,7 +28,7 @@ type userService struct {
 	events   *events.EventsService
 }
 
-func NewUserService(neo4j *neoRepo.Repositories, postgres *repository.Repositories, events *events.EventsService) UserService {
+func NewUserService(neo4j *neoRepo.Repositories, postgres *repository.Repositories, events *events.EventsService) interfaces.UserService {
 	return &userService{
 		neo4j:    neo4j,
 		postgres: postgres,

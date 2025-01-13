@@ -23,14 +23,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	service "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/domain"
+	common_srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/industry"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/social"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/user"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
@@ -40,13 +37,13 @@ type organizationService struct {
 	postgres *repository.Repositories
 	neo4j    *neoRepo.Repositories
 	events   *events.EventsService
-	domain   domain.DomainService
-	industry industry.IndustryService
-	social   social.SocialService
-	user     user.UserService
+	domain   interfaces.DomainService
+	industry interfaces.IndustryService
+	social   interfaces.SocialService
+	user     interfaces.UserService
 }
 
-func NewOrganizationService(log logger.Logger, postgres *repository.Repositories, neo4j *neoRepo.Repositories, events *events.EventsService, domain domain.DomainService, industry industry.IndustryService, social social.SocialService, user user.UserService) OrganizationService {
+func NewOrganizationService(log logger.Logger, postgres *repository.Repositories, neo4j *neoRepo.Repositories, events *events.EventsService, domain interfaces.DomainService, industry interfaces.IndustryService, social interfaces.SocialService, user interfaces.UserService) interfaces.OrganizationService {
 	return &organizationService{
 		log:      log,
 		postgres: postgres,
@@ -449,7 +446,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			linkedInUrl := utils.IfNotNilString(input.LinkedInUrl)
 			if (neo4jentity.SocialEntity{Url: linkedInUrl}).IsLinkedin() {
 				_, err := s.social.AddSocialToEntity(ctx, txWithPostCommit,
-					service.LinkWith{
+					common_srv.LinkWith{
 						Id:   organizationId,
 						Type: model.ORGANIZATION,
 					},
