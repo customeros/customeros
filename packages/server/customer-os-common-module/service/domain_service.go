@@ -194,9 +194,7 @@ func (s *domainService) MergeDomain(ctx context.Context, txWithPostCommit *utils
 	domain = strings.ToLower(strings.TrimSpace(domain))
 
 	if domain == "" {
-		err := errors.New("Domain is empty")
-		tracing.TraceErr(span, err)
-		return err
+		return nil
 	}
 
 	if !utils.IsValidDomain(domain) {
