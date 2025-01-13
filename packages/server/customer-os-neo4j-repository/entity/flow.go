@@ -131,7 +131,6 @@ const (
 	FlowParticipantStatusInProgress   FlowParticipantStatus = "IN_PROGRESS"
 	FlowParticipantStatusCompleted    FlowParticipantStatus = "COMPLETED"
 	FlowParticipantStatusGoalAchieved FlowParticipantStatus = "GOAL_ACHIEVED"
-	FlowParticipantStatusGoalArchived FlowParticipantStatus = "ARCHIVED"
 	FlowParticipantStatusError        FlowParticipantStatus = "ERROR"
 )
 
