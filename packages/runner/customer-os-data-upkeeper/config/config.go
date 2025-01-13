@@ -4,8 +4,8 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	cronconf "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/cron/config"
-	commconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/file_store_client"
+	commconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"log"
@@ -52,6 +52,7 @@ type Config struct {
 	ProcessConfig      ProcessConfig
 	EventNotifications EventNotifications
 	Limits             Limits
+	ExternalServices   ExternalServicesConfig
 }
 
 type ProcessConfig struct {
@@ -76,6 +77,10 @@ type EventNotifications struct {
 		GeneratePaymentLinkUrl string `env:"INVOICE_GENERATE_PAYMENT_LINK_URL" envDefault:"" required:"true"`
 		InvoiceFinalizedUrl    string `env:"INVOICE_READY_URL" envDefault:"" required:"true"`
 	}
+}
+
+type ExternalServicesConfig struct {
+	Anthropic commconf.AnthropicConfig
 }
 
 func Load() *Config {
