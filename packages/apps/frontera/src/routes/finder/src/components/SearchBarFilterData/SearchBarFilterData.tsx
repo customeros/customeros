@@ -35,7 +35,8 @@ export const SearchBarFilterData = observer(
       totalResults === 1 ? singleResultPlaceholder : multiResultPlaceholder;
 
     const hideSearch =
-      tableView?.value?.tableType === TableViewType.Organizations;
+      tableView?.value?.tableType === TableViewType.Organizations ||
+      tableView?.value?.tableType === TableViewType.Contacts;
 
     return (
       <div className='flex flex-row items-center gap-1'>

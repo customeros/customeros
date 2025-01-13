@@ -10,6 +10,7 @@ import { CreateSequenceButton } from '@finder/components/Search/CreateSequenceBu
 import { TableViewsToggleNavigation } from '@finder/components/TableViewsToggleNavigation';
 import { SearchBarFilterData } from '@finder/components/SearchBarFilterData/SearchBarFilterData';
 
+import { cn } from '@ui/utils/cn.ts';
 import { Input } from '@ui/form/Input/Input';
 import { useStore } from '@shared/hooks/useStore';
 import { Button } from '@ui/form/Button/Button.tsx';
@@ -111,7 +112,7 @@ export const Search = observer(() => {
 
   const placeholder = match(tableType)
     .with(TableViewType.Flow, () => 'by flow name...')
-    .with(TableViewType.Contacts, () => 'by name, organization or email...')
+    .with(TableViewType.Contacts, () => '')
     .with(TableViewType.Contracts, () => 'by contract name...')
     .with(TableViewType.Organizations, () => '/ to search')
     .with(TableViewType.Invoices, () => 'by contract name...')
@@ -194,7 +195,13 @@ export const Search = observer(() => {
           onChange={handleChange}
           placeholder={placeholder}
           defaultValue={searchParams.get('search') ?? ''}
-          readOnly={tableType === TableViewType.Organizations}
+          className={cn({
+            'cursor-default': tableType === TableViewType.Contacts,
+          })}
+          readOnly={
+            tableType === TableViewType.Organizations ||
+            tableType === TableViewType.Contacts
+          }
           onBlur={() => {
             store.ui.setIsSearching(null);
             wrapperRef.current?.removeAttribute('data-focused');
@@ -232,6 +239,7 @@ export const Search = observer(() => {
             e.stopPropagation();
           }}
         />
+
         <RightElement>
           {allowCreation && (
             <div
