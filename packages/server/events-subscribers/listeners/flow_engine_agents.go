@@ -32,19 +32,7 @@ func OnFlowAgentEventCreated(ctx context.Context, s *service.Services, input any
 	}
 
 	// determine event handler
-	switch flowAgentEvent.Name.Agent() {
-
-	case "slack":
-		return s.AgentService.SlackAgent(ctx, flowAgentEvent)
-
-	case "timeline_event":
-		return s.AgentService.TimelineAgent(ctx, flowAgentEvent)
-
-	default:
-		err := fmt.Errorf("Unsupported flow action event %s", flowAgentEvent.Name)
-		tracing.TraceErr(span, err)
-		return err
-	}
+	return nil
 }
 
 func getFlowAgentEvent(input any) (*dto.FlowAgentEvent, error) {

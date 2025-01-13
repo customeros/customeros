@@ -43,19 +43,5 @@ func getRouter(config *config.Config, services *service.Services) *gin.Engine {
 
 	addHealthRoutes(route)
 
-	// tracking configuration
-	// all all sources and filter down by tenant information in database
-	trackingRoute := router.Group("/tracking")
-
-	trackingCorsConfig := cors.DefaultConfig()
-	trackingCorsConfig.AllowOrigins = []string{"*"}
-	trackingCorsConfig.AllowHeaders = []string{"Host", "Content-Type", "Content-Length", "Accept", "Origin", "Referer", "User-Agent"}
-	trackingCorsConfig.AllowCredentials = false
-	trackingCorsConfig.AddAllowMethods("OPTIONS", "POST")
-
-	trackingRoute.Use(cors.New(trackingCorsConfig))
-
-	addTrackingRoutes(trackingRoute, services, config)
-
 	return router
 }

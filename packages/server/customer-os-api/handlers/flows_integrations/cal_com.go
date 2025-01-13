@@ -64,7 +64,7 @@ func CalDotCom(c *gin.Context, s *service.Services) {
 	})
 
 	// lookup secret
-	webhook, err := s.Repositories.PostgresRepositories.FlowWebhooksRepository.Find(ctx, entity.FlowWebhooks{WebhookPath: c.Request.URL.Path})
+	webhook, err := s.Repositories.PostgresRepositories.WebhooksRepository.Find(ctx, entity.Webhooks{WebhookPath: c.Request.URL.Path})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrNotFound)

@@ -65,4 +65,11 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 		handler:   public.TrackUnsubscribeRequest(s),
 		routeType: RoutePublic,
 	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      "/reveal",
+		handler:   public.RevealWebsiteEvents(s),
+		routeType: RoutePublic,
+	})
 }

@@ -47,6 +47,7 @@ type Config struct {
 	// Issues
 	// Defaults to each 2 minutes
 	CronScheduleLinkUnthreadIssues string `env:"CRON_LINK_UNTHREAD_ISSUES" envDefault:"0 */2 * * * *"`
+	CronScheduleProcessWebSessions string `env:"CRON_PROCESS_WEB_SESSIONS" envDefault:"0 */2 * * * *"`
 
 	CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn string `env:"CRON_SCHEDULE_LINK_ORPHAN_CONTACTS_TO_ORGANIZATION" envDefault:"0 */30 * * * *"`
 

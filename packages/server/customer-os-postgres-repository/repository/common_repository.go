@@ -124,9 +124,10 @@ func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string)
 		entity.TenantSettingsEmailExclusion{}.TableName(),
 		entity.TenantSettingsMailbox{}.TableName(),
 		entity.TenantSettingsOpportunityStage{}.TableName(),
-		entity.TrackerEvents{}.TableName(),
 		entity.TrackingAllowedOrigin{}.TableName(),
 		entity.UserWorkingSchedule{}.TableName(),
+		entity.WebSession{}.TableName(),
+		entity.WebTrackerEvents{}.TableName(),
 	}
 
 	for _, tableName := range asyncTablesWithTenantNameColumn {
