@@ -2,9 +2,11 @@ package mapper
 
 import (
 	"fmt"
-	entityDashboard "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity/dashboard"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+
+	entityDashboard "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity/dashboard"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
 )
 
 func MapDashboardNewCustomersData(newCustomersData *entityDashboard.DashboardNewCustomersData) *model.DashboardNewCustomers {
@@ -17,6 +19,7 @@ func MapDashboardNewCustomersData(newCustomersData *entityDashboard.DashboardNew
 		PerMonth:                    MapDashboardNewCustomersMonthData(newCustomersData.Months),
 	}
 }
+
 func MapDashboardNewCustomersMonthData(months []*entityDashboard.DashboardNewCustomerMonthData) []*model.DashboardNewCustomersPerMonth {
 	var result []*model.DashboardNewCustomersPerMonth
 	for _, month := range months {
@@ -104,6 +107,7 @@ func MapDashboardGrossRevenueRetentionData(grossRevenueRetentionData *entityDash
 		PerMonth:                MapDashboardGrossRevenueRetentionPerMonthData(grossRevenueRetentionData.Months),
 	}
 }
+
 func MapDashboardGrossRevenueRetentionPerMonthData(months []*entityDashboard.DashboardGrossRevenueRetentionPerMonthData) []*model.DashboardGrossRevenueRetentionPerMonth {
 	var result []*model.DashboardGrossRevenueRetentionPerMonth
 	for _, month := range months {
@@ -126,6 +130,7 @@ func MapDashboardMRRPerCustomerData(grossRevenueRetentionData *entityDashboard.D
 		PerMonth:           MapDashboardMRRPerCustomerPerMonthData(grossRevenueRetentionData.Months),
 	}
 }
+
 func MapDashboardMRRPerCustomerPerMonthData(months []*entityDashboard.DashboardDashboardMRRPerCustomerPerMonthData) []*model.DashboardMRRPerCustomerPerMonth {
 	var result []*model.DashboardMRRPerCustomerPerMonth
 	for _, month := range months {
@@ -145,6 +150,7 @@ func MapDashboardCustomerMapDataList(grossRevenueRetentionData []*entityDashboar
 	}
 	return result
 }
+
 func MapDashboardCustomerMapData(dashboardCustomerMapData *entityDashboard.DashboardCustomerMapData) *model.DashboardCustomerMap {
 	if dashboardCustomerMapData == nil {
 		return nil
@@ -156,6 +162,7 @@ func MapDashboardCustomerMapData(dashboardCustomerMapData *entityDashboard.Dashb
 		ContractSignedDate: dashboardCustomerMapData.ContractSignedDate,
 	}
 }
+
 func MapDashboardCustomerMapState(state entityDashboard.DashboardCustomerMapState) model.DashboardCustomerMapState {
 	switch state {
 	case entityDashboard.DashboardCustomerMapStateOk:

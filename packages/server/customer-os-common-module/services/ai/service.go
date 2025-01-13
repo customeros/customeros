@@ -13,10 +13,10 @@ import (
 )
 
 type aiService struct {
-	config *config.GlobalConfig
+	config *config.AnthropicConfig
 }
 
-func NewAIService(config *config.GlobalConfig) interfaces.AIService {
+func NewAIService(config *config.AnthropicConfig) interfaces.AIService {
 	return &aiService{
 		config: config,
 	}

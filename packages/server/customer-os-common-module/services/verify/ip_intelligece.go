@@ -31,7 +31,7 @@ func (s *verifyService) LookupIp(ctx context.Context, ip string) (*postgresentit
 	}
 	var data *postgresentity.IPDataResponseBody
 	// if cached data is missing or last time fetched > 90 days ago
-	if cacheIpData == nil || cacheIpData.UpdatedAt.AddDate(0, 0, s.cfg.IpDataConfig.IpDataCacheTtlDays).Before(utils.Now()) {
+	if cacheIpData == nil || cacheIpData.UpdatedAt.AddDate(0, 0, s.cfg.ExternalServices.IpDataConfig.IpDataCacheTtlDays).Before(utils.Now()) {
 		// get data from IPData
 		if data, err = s.askIpData(ctx, ip); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get IPData"))
@@ -70,7 +70,7 @@ func (s *verifyService) askIpData(ctx context.Context, ip string) (*postgresenti
 	client := &http.Client{}
 
 	// Create IPData request
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s?api-key=%s", s.cfg.IpDataConfig.ApiUrl, ip, s.cfg.IpDataConfig.ApiKey), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s?api-key=%s", s.cfg.ExternalServices.IpDataConfig.ApiUrl, ip, s.cfg.ExternalServices.IpDataConfig.ApiKey), nil)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create GET request for IPData"))
 		return nil, err

@@ -59,6 +59,18 @@ func NewOpportunityService(log logger.Logger, grpc *grpc_client.Clients, neo4j *
 	}
 }
 
+func (s *opportunityService) SetContractService(contract interfaces.ContractService) {
+	s.contract = contract
+}
+
+func (s *opportunityService) SetOrganizationService(org interfaces.OrganizationService) {
+	s.org = org
+}
+
+func (s *opportunityService) IsInitialized() bool {
+	return utils.IsInitialized(s)
+}
+
 func (s *opportunityService) GetById(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) (*neo4jentity.OpportunityEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetById")
 	defer span.Finish()

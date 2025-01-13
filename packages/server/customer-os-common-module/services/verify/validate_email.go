@@ -104,8 +104,8 @@ func (s *verifyService) ValidateEmailWithMailSherpa(ctx context.Context, email s
 	}
 
 	var providersToSkip []string
-	if s.cfg.EmailConfig.EmailValidationSkipProvidersCommaSeparated != "" {
-		providersToSkip = strings.Split(s.cfg.EmailConfig.EmailValidationSkipProvidersCommaSeparated, ",")
+	if s.cfg.InternalServices.EmailConfig.EmailValidationSkipProvidersCommaSeparated != "" {
+		providersToSkip = strings.Split(s.cfg.InternalServices.EmailConfig.EmailValidationSkipProvidersCommaSeparated, ",")
 		// remove spaces
 		for i, provider := range providersToSkip {
 			providersToSkip[i] = strings.TrimSpace(provider)
@@ -191,11 +191,11 @@ func (s *verifyService) getDomainValidation(ctx context.Context, domain, email s
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
 	}
 
-	if cacheDomain == nil || cacheDomain.IsPrimaryDomain == nil || cacheDomain.UpdatedAt.AddDate(0, 0, s.cfg.EmailConfig.EmailDomainValidationCacheTtlDays).Before(utils.Now()) {
+	if cacheDomain == nil || cacheDomain.IsPrimaryDomain == nil || cacheDomain.UpdatedAt.AddDate(0, 0, s.cfg.InternalServices.EmailConfig.EmailDomainValidationCacheTtlDays).Before(utils.Now()) {
 		// get domain data with mailsherpa
 		domainValidation := mailsherpa.ValidateDomain(mailsherpa.EmailValidationRequest{
 			Email:      email,
-			FromDomain: s.cfg.EmailConfig.EmailValidationFromDomain,
+			FromDomain: s.cfg.InternalServices.EmailConfig.EmailValidationFromDomain,
 		})
 		jsonData, err := json.Marshal(domainValidation)
 		if err != nil {
@@ -282,11 +282,11 @@ func (s *verifyService) getEmailValidation(ctx context.Context, email string, sy
 	// if no cached data found, or last time fetched > 90 days ago, or is retry validation
 	if cachedEmail == nil ||
 		cachedEmail.RetryValidation ||
-		cachedEmail.UpdatedAt.AddDate(0, 0, s.cfg.EmailConfig.EmailValidationCacheTtlDays).Before(utils.Now()) {
+		cachedEmail.UpdatedAt.AddDate(0, 0, s.cfg.InternalServices.EmailConfig.EmailValidationCacheTtlDays).Before(utils.Now()) {
 		// get email data with mailsherpa
 		emailValidationRequest := mailsherpa.EmailValidationRequest{
 			Email:      email,
-			FromDomain: s.cfg.EmailConfig.EmailValidationFromDomain,
+			FromDomain: s.cfg.InternalServices.EmailConfig.EmailValidationFromDomain,
 			DomainValidationParams: &mailsherpa.DomainValidationParams{
 				IsPrimaryDomain: isPrimaryDomain,
 				PrimaryDomain:   primaryDomain,
@@ -357,7 +357,7 @@ func (s *verifyService) ValidateEmailScrubby(ctx context.Context, email string) 
 
 	if cachedScrubbyRecord == nil ||
 		cachedScrubbyRecord.Status == "" ||
-		cachedScrubbyRecord.CheckedAt.AddDate(0, 0, s.cfg.ScrubbyIoConfig.CacheTtlDays).Before(utils.Now()) {
+		cachedScrubbyRecord.CheckedAt.AddDate(0, 0, s.cfg.ExternalServices.ScrubbyIoConfig.CacheTtlDays).Before(utils.Now()) {
 		identifier := uuid.New().String()
 		scrubbyResponse, err := s.callScrubbyIo(ctx, identifier, email)
 		if err != nil {
@@ -406,7 +406,7 @@ func (s *verifyService) callScrubbyIo(ctx context.Context, identifier, email str
 	requestJSON, err := json.Marshal(ScrubbyIoRequest{
 		Email:       email,
 		Identifier:  identifier,
-		CallbackUrl: s.cfg.ScrubbyIoConfig.CallbackUrl,
+		CallbackUrl: s.cfg.ExternalServices.ScrubbyIoConfig.CallbackUrl,
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
@@ -414,14 +414,14 @@ func (s *verifyService) callScrubbyIo(ctx context.Context, identifier, email str
 	}
 
 	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("POST", s.cfg.ScrubbyIoConfig.ApiUrl+"/add_email", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", s.cfg.ExternalServices.ScrubbyIoConfig.ApiUrl+"/add_email", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		return ScrubbyIoResponse{}, err
 	}
 
 	// Set the request headers
-	req.Header.Set("x-api-key", s.cfg.ScrubbyIoConfig.ApiKey)
+	req.Header.Set("x-api-key", s.cfg.ExternalServices.ScrubbyIoConfig.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Make the HTTP request
@@ -462,7 +462,7 @@ func (s *verifyService) ValidateEmailWithTrueinbox(ctx context.Context, email st
 	}
 
 	var data *postgresentity.TrueInboxResponseBody
-	if cachedTrueInboxRecord == nil || cachedTrueInboxRecord.CreatedAt.AddDate(0, 0, s.cfg.TrueinboxConfig.CacheTtlDays).Before(utils.Now()) {
+	if cachedTrueInboxRecord == nil || cachedTrueInboxRecord.CreatedAt.AddDate(0, 0, s.cfg.ExternalServices.TrueInboxConfig.CacheTtlDays).Before(utils.Now()) {
 		trueInboxResponse, err := s.callTrueinboxToValidateEmail(ctx, email)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to validate email with trueinbox"))
@@ -504,7 +504,7 @@ func (s *verifyService) callTrueinboxToValidateEmail(ctx context.Context, email 
 	span.LogFields(log.String("email", email))
 
 	// Construct the URL with the email as a query parameter
-	requestUrl := fmt.Sprintf("%s/v1/api/verify-single-email?email=%s", s.cfg.TrueinboxConfig.ApiUrl, url.QueryEscape(email))
+	requestUrl := fmt.Sprintf("%s/v1/api/verify-single-email?email=%s", s.cfg.ExternalServices.TrueInboxConfig.ApiUrl, url.QueryEscape(email))
 
 	// Create a new request
 	req, err := http.NewRequestWithContext(ctx, "GET", requestUrl, nil)
@@ -514,7 +514,7 @@ func (s *verifyService) callTrueinboxToValidateEmail(ctx context.Context, email 
 	}
 
 	// Set the request headers
-	req.Header.Set("Authorization", "Bearer "+s.cfg.TrueinboxConfig.ApiKey)
+	req.Header.Set("Authorization", "Bearer "+s.cfg.ExternalServices.TrueInboxConfig.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Make the HTTP request
@@ -559,7 +559,7 @@ func (s *verifyService) ValidateEmailWithEnrow(ctx context.Context, email string
 		return "", err
 	}
 
-	if cachedEnrowRecord == nil || cachedEnrowRecord.CreatedAt.AddDate(0, 0, s.cfg.EnrowConfig.CacheTtlDays).Before(utils.Now()) {
+	if cachedEnrowRecord == nil || cachedEnrowRecord.CreatedAt.AddDate(0, 0, s.cfg.ExternalServices.EnrowConfig.CacheTtlDays).Before(utils.Now()) {
 		enrowRequestId, err := s.callEnrowToValidateEmail(ctx, email)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to call enrow"))
@@ -584,7 +584,7 @@ func (s *verifyService) ValidateEmailWithEnrow(ctx context.Context, email string
 	}
 
 	result := ""
-	waitingTimeSec := s.cfg.EnrowConfig.MaxWaitResultsSeconds
+	waitingTimeSec := s.cfg.ExternalServices.EnrowConfig.MaxWaitResultsSeconds
 	if extendedWaitingTimeForResponse {
 		waitingTimeSec = waitingTimeSec * 3
 	}
@@ -611,14 +611,14 @@ func (s *verifyService) callEnrowToValidateEmail(ctx context.Context, email stri
 	span.LogFields(log.String("email", email))
 
 	// Construct the URL with the email as a query parameter
-	requestUrl := fmt.Sprintf("%s/email/verify/single", s.cfg.EnrowConfig.ApiUrl)
+	requestUrl := fmt.Sprintf("%s/email/verify/single", s.cfg.ExternalServices.EnrowConfig.ApiUrl)
 
 	request := EnrowRequest{
 		Email: email,
 		Settings: struct {
 			Webhook string `json:"webhook"`
 		}{
-			Webhook: s.cfg.EnrowConfig.CallbackUrl,
+			Webhook: s.cfg.ExternalServices.EnrowConfig.CallbackUrl,
 		},
 	}
 	payload, err := json.Marshal(request)
@@ -635,7 +635,7 @@ func (s *verifyService) callEnrowToValidateEmail(ctx context.Context, email stri
 	}
 
 	// Set the request headers
-	req.Header.Set("x-api-key", s.cfg.EnrowConfig.ApiKey)
+	req.Header.Set("x-api-key", s.cfg.ExternalServices.EnrowConfig.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 

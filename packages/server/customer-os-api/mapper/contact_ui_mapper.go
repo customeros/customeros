@@ -1,10 +1,12 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
 )
 
 func MapEntityToContactUIDetails(entity *neo4jentity.ContactEntity, output *model.ContactUIDetails) {

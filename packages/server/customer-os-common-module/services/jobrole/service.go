@@ -41,10 +41,7 @@ func (s *jobRoleService) SetOrganizationService(org interfaces.OrganizationServi
 }
 
 func (s *jobRoleService) IsInitialized() bool {
-	if s.neo4j == nil || s.events == nil || s.org == nil {
-		return false
-	}
-	return true
+	return utils.IsInitialized(s)
 }
 
 func (s *jobRoleService) getDriver() neo4j.DriverWithContext {

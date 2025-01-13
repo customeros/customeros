@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type mailService struct {
@@ -59,12 +60,7 @@ func (p *mailService) SetOrganizationService(org interfaces.OrganizationService)
 }
 
 func (p *mailService) IsInitialized() bool {
-	if p.cache == nil || p.postgres == nil || p.neo4j == nil || p.azure == nil ||
-		p.google == nil || p.interactionSession == nil || p.opensrs == nil || p.contact == nil ||
-		p.email == nil || p.interactionEvent == nil || p.org == nil {
-		return false
-	}
-	return true
+	return utils.IsInitialized(p)
 }
 
 func (p *mailService) initializeTracing(ctx context.Context, operationName string) (opentracing.Span, context.Context) {

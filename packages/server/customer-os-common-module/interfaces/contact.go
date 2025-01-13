@@ -16,6 +16,7 @@ type ContactService interface {
 	SetOrganizationService(org OrganizationService)
 	SetJobRoleService(jobrole JobRoleService)
 	SetSocialService(social SocialService)
+	SetFlowService(flow FlowService)
 	IsInitialized() bool
 
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, contactFields data_fields.ContactFields, updateOnlyIfEmpty bool, options ...common_srv.ServiceOptions) (string, error)

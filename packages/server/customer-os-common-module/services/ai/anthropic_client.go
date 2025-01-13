@@ -43,10 +43,10 @@ type AnthropicClient struct {
 	client *http.Client
 }
 
-func NewAnthropicClient(cfg *config.GlobalConfig, model enum.AIModel) *AnthropicClient {
+func NewAnthropicClient(cfg *config.AnthropicConfig, model enum.AIModel) *AnthropicClient {
 	return &AnthropicClient{
-		apiKey: cfg.ExternalServices.AnthropicConfig.ApiKey,
-		apiUrl: cfg.ExternalServices.AnthropicConfig.ApiPath,
+		apiKey: cfg.ApiKey,
+		apiUrl: cfg.ApiPath,
 		model:  model.String(),
 		client: &http.Client{
 			Timeout: DefaultTimeoutSeconds * time.Second,

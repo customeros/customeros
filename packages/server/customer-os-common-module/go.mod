@@ -13,7 +13,9 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 require (
 	github.com/PuerkitoBio/goquery v1.10.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
+	github.com/biter777/countries v1.7.5
 	github.com/cenkalti/backoff/v4 v4.3.0
+	github.com/cloudflare/cloudflare-go v0.114.0
 	github.com/coocood/freecache v1.2.4
 	github.com/customeros/mailsherpa v0.3.8
 	github.com/customeros/mailwatcher v0.1.6
@@ -32,11 +34,11 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c
-	github.com/openline-ai/openline-customer-os/packages/server/validation-api v0.0.0-20241227133740-5fd01d93a97a
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/sirupsen/logrus v1.9.3
+	github.com/smartystreets/smartystreets-go-sdk v1.21.1
 	github.com/stretchr/testify v1.10.0
 	github.com/stripe/stripe-go/v81 v81.2.0
 	github.com/testcontainers/testcontainers-go v0.35.0
@@ -81,6 +83,7 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.0 // indirect
@@ -115,7 +118,6 @@ require (
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.12 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
-	github.com/smartystreets/smartystreets-go-sdk v1.21.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/tetratelabs/wazero v1.8.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
@@ -130,7 +132,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.temporal.io/api v1.43.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/time v0.8.0 // indirect
+	golang.org/x/time v0.9.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241113202542-65e8d215514f // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gorm.io/driver/mysql v1.5.6 // indirect
@@ -168,7 +170,7 @@ require (
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	go.temporal.io/sdk v1.31.0
 	go.uber.org/atomic v1.11.0 // indirect
-	go.uber.org/multierr v1.11.0 // indirect
+	go.uber.org/multierr v1.11.0
 	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect

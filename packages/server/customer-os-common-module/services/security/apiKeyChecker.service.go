@@ -17,7 +17,6 @@ type App string
 const (
 	CUSTOMER_OS_API      App = "customer-os-api"
 	CUSTOMER_OS_WEBHOOKS App = "customer-os-webhooks"
-	FILE_STORE_API       App = "file-store-api"
 	SETTINGS_API         App = "settings-api"
 	VALIDATION_API       App = "validation-api"
 	AI_API               App = "ai-api"

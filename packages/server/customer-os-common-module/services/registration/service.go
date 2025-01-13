@@ -49,7 +49,32 @@ func NewRegistrationService(events *events.EventsService, postgres *repository.R
 		mailbox:  mailbox,
 		org:      org,
 		postmark: postmark,
+		user:     user,
 	}
+}
+
+func (s *registrationService) SetContactService(contact interfaces.ContactService) {
+	s.contact = contact
+}
+
+func (s *registrationService) SetEmailService(email interfaces.EmailService) {
+	s.email = email
+}
+
+func (s *registrationService) SetFlowService(flow interfaces.FlowService) {
+	s.flow = flow
+}
+
+func (s *registrationService) SetMailboxService(mailbox interfaces.MailboxService) {
+	s.mailbox = mailbox
+}
+
+func (s *registrationService) SetOrganizationService(org interfaces.OrganizationService) {
+	s.org = org
+}
+
+func (s *registrationService) IsInitialized() bool {
+	return utils.IsInitialized(s)
 }
 
 func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, loggedInUserEmail string) error {

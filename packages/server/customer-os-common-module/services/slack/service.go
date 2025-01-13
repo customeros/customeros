@@ -15,7 +15,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -24,14 +23,12 @@ import (
 
 type slackService struct {
 	log      logger.Logger
-	cfg      *config.GlobalConfig
 	postgres *repository.Repositories
 }
 
-func NewSlackService(log logger.Logger, config *config.GlobalConfig, postgres *repository.Repositories) interfaces.SlackService {
+func NewSlackService(log logger.Logger, postgres *repository.Repositories) interfaces.SlackService {
 	return &slackService{
 		log:      log,
-		cfg:      config,
 		postgres: postgres,
 	}
 }

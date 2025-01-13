@@ -1,9 +1,10 @@
 package enummapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
 )
 
 var currencyByModel = map[model.Currency]neo4jenum.Currency{

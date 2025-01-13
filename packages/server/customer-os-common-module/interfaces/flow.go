@@ -10,6 +10,9 @@ import (
 )
 
 type FlowService interface {
+	SetFlowExecutionService(fe FlowExecutionService)
+	IsInitialized() bool
+
 	FlowGetList(ctx context.Context) (*neo4jentity.FlowEntities, error)
 	FlowGetById(ctx context.Context, id string) (*neo4jentity.FlowEntity, error)
 	FlowGetByActionId(ctx context.Context, flowActionId string) (*neo4jentity.FlowEntity, error)

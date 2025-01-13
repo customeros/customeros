@@ -175,10 +175,10 @@ func (r *RabbitMQPublisher) publishMessageOnExchange(ctx context.Context, messag
 
 // PublishEventCompleted publishes an event completion notification
 func (r *RabbitMQPublisher) PublishEventCompleted(ctx context.Context, tenant string, entityId string, entityType model.EntityType, details *utils.EventCompletedDetails) {
-	r.publishEventCompletedBulk(ctx, tenant, []string{entityId}, entityType, details)
+	r.PublishEventCompletedBulk(ctx, tenant, []string{entityId}, entityType, details)
 }
 
-func (r *RabbitMQPublisher) publishEventCompletedBulk(ctx context.Context, tenant string, entityIds []string, entityType model.EntityType, details *utils.EventCompletedDetails) {
+func (r *RabbitMQPublisher) PublishEventCompletedBulk(ctx context.Context, tenant string, entityIds []string, entityType model.EntityType, details *utils.EventCompletedDetails) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQPublisher.PublishEventCompletedBulk")
 	defer span.Finish()
 	span.LogKV("tenant", tenant, "entityType", entityType, "entityIds", entityIds)

@@ -34,10 +34,10 @@ func (w *workflowService) SaveFlow(ctx context.Context, flowRecord entity.Flows)
 	tracing.TagComponentPostgresRepository(span)
 
 	if flowRecord.ID == "" {
-		return w.postgres.FlowRepository.Create(ctx, flowRecord)
+		return w.postgres.FlowsRepository.Create(ctx, flowRecord)
 	}
 
-	return w.postgres.FlowRepository.Update(ctx, flowRecord)
+	return w.postgres.FlowsRepository.Update(ctx, flowRecord)
 }
 
 func (w *workflowService) GetFlowsByTrigger(ctx context.Context, listenerEvent enum.FlowListenerEvent) ([]entity.Flows, error) {
@@ -162,7 +162,7 @@ func (w *workflowService) nextStepInFlow(ctx context.Context, flowId, fromNodeId
 		return nil, err
 	}
 
-	if len(*edges) == 0 { // mark flow as completed
+	if len(edges) == 0 { // mark flow as completed
 		return &interfaces.FlowNextStep{
 			FlowID:     flowId,
 			FromNodeID: fromNodeId,
@@ -325,8 +325,8 @@ func (w *workflowService) SaveFlowAgentExecutionRecord(ctx context.Context, flow
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
-		return w.postgres.FlowAgentExecutionRepository.Create(ctx, flowAgentExecutionRecord)
+		return w.postgres.AgentExecutionRepository.Create(ctx, flowAgentExecutionRecord)
 	}
 
-	return w.postgres.FlowAgentExecutionRepository.Update(ctx, flowAgentExecutionRecord)
+	return w.postgres.AgentExecutionRepository.Update(ctx, flowAgentExecutionRecord)
 }

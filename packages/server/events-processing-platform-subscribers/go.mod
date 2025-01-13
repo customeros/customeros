@@ -16,10 +16,6 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
-replace github.com/openline-ai/openline-customer-os/packages/server/enrichment-api => ../enrichment-api
-
-replace github.com/openline-ai/openline-customer-os/packages/server/validation-api => ../validation-api
-
 require (
 	github.com/EventStore/EventStore-Client-Go/v3 v3.3.0
 	github.com/caarlos0/env/v6 v6.10.1
@@ -57,8 +53,10 @@ require (
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/aws/aws-sdk-go v1.55.3 // indirect
+	github.com/biter777/countries v1.7.5 // indirect
 	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
+	github.com/cloudflare/cloudflare-go v0.114.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/containerd/platforms v0.2.1 // indirect
@@ -78,6 +76,7 @@ require (
 	github.com/goccy/go-json v0.10.4 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.0 // indirect
@@ -103,7 +102,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mrz1836/postmark v1.6.7 // indirect
 	github.com/nexus-rpc/sdk-go v0.1.0 // indirect
-	github.com/openline-ai/openline-customer-os/packages/server/validation-api v0.0.0-20241227133740-5fd01d93a97a // indirect
+	github.com/nyaruka/phonenumbers v1.4.4 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
@@ -125,7 +124,7 @@ require (
 	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/exp v0.0.0-20241204233417-43b7b7cde48d // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
-	golang.org/x/time v0.8.0 // indirect
+	golang.org/x/time v0.9.0 // indirect
 	google.golang.org/api v0.210.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241113202542-65e8d215514f // indirect
 	google.golang.org/protobuf v1.36.2 // indirect

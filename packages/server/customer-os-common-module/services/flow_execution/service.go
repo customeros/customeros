@@ -28,27 +28,45 @@ import (
 )
 
 type flowExecutionService struct {
-	neo4j         *neoRepo.Repositories
-	postgres      *repository.Repositories
-	events        *events.EventsService
-	email         interfaces.EmailService
-	flow          interfaces.FlowService
-	flowExecution interfaces.FlowExecutionService
-	org           interfaces.OrganizationService
-	social        interfaces.SocialService
+	neo4j    *neoRepo.Repositories
+	postgres *repository.Repositories
+	events   *events.EventsService
+	email    interfaces.EmailService
+	flow     interfaces.FlowService
+	org      interfaces.OrganizationService
+	social   interfaces.SocialService
 }
 
-func NewFlowExecutionService(neo4j *neoRepo.Repositories, postgres *repository.Repositories, events *events.EventsService, email interfaces.EmailService, flow interfaces.FlowService, flowExecution interfaces.FlowExecutionService, org interfaces.OrganizationService, social interfaces.SocialService) interfaces.FlowExecutionService {
+func NewFlowExecutionService(neo4j *neoRepo.Repositories, postgres *repository.Repositories, events *events.EventsService, email interfaces.EmailService, flow interfaces.FlowService, org interfaces.OrganizationService, social interfaces.SocialService) interfaces.FlowExecutionService {
 	return &flowExecutionService{
-		neo4j:         neo4j,
-		postgres:      postgres,
-		events:        events,
-		email:         email,
-		flow:          flow,
-		flowExecution: flowExecution,
-		org:           org,
-		social:        social,
+		neo4j:    neo4j,
+		postgres: postgres,
+		events:   events,
+		email:    email,
+		flow:     flow,
+		org:      org,
+		social:   social,
 	}
+}
+
+func (s *flowExecutionService) SetEmailService(email interfaces.EmailService) {
+	s.email = email
+}
+
+func (s *flowExecutionService) SetFlowService(flow interfaces.FlowService) {
+	s.flow = flow
+}
+
+func (s *flowExecutionService) SetOrganizationService(org interfaces.OrganizationService) {
+	s.org = org
+}
+
+func (s *flowExecutionService) SetSocialService(social interfaces.SocialService) {
+	s.social = social
+}
+
+func (s *flowExecutionService) IsInitialized() bool {
+	return utils.IsInitialized(s)
 }
 
 func (s *flowExecutionService) GetFlowActionExecutionById(ctx context.Context, flowActionExecution string) (*entity.FlowActionExecutionEntity, error) {
@@ -273,7 +291,7 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, txWithPostCommi
 		}
 
 		// check if the participant meets flow requirements
-		flowRequirements, err := s.flowExecution.GetFlowRequirements(ctx, flowId)
+		flowRequirements, err := s.GetFlowRequirements(ctx, flowId)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get flow requirements")
 		}
@@ -1044,7 +1062,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 		}
 
 		// check if the participant meets flow requirements
-		flowRequirements, err := s.flowExecution.GetFlowRequirements(ctx, scheduledActionExecution.FlowId)
+		flowRequirements, err := s.GetFlowRequirements(ctx, scheduledActionExecution.FlowId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -1298,7 +1316,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			return nil, errors.Wrap(err, "failed to merge flow action execution")
 		}
 
-		err = s.flowExecution.ScheduleFlow(ctx, txWithPostCommit, scheduledActionExecution.FlowId, participant)
+		err = s.ScheduleFlow(ctx, txWithPostCommit, scheduledActionExecution.FlowId, participant)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, errors.Wrap(err, "failed to schedule flow")

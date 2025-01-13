@@ -11,6 +11,9 @@ import (
 )
 
 type ServiceLineItemService interface {
+	SetContractService(contract ContractService)
+	IsInitialized() bool
+
 	GetById(ctx context.Context, id string) (*neo4jentity.ServiceLineItemEntity, error)
 	GetServiceLineItemsByParentId(ctx context.Context, sliParentId string) (*neo4jentity.ServiceLineItemEntities, error)
 	GetServiceLineItemsForContract(ctx context.Context, contractId string) (*neo4jentity.ServiceLineItemEntities, error)

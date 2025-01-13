@@ -26,7 +26,7 @@ import (
 )
 
 type mailstackService struct {
-	cfg        *config.GlobalConfig
+	cfg        *config.StripeConfig
 	events     *events.EventsService
 	postgres   *repository.Repositories
 	cloudflare interfaces.CloudflareService
@@ -35,7 +35,7 @@ type mailstackService struct {
 	opensrs    interfaces.OpenSrsService
 }
 
-func NewMailstackService(cfg *config.GlobalConfig, events *events.EventsService, postgres *repository.Repositories, cloudflare interfaces.CloudflareService, namecheap interfaces.NamecheapService, mailbox interfaces.MailboxService, opensrs interfaces.OpenSrsService) interfaces.MailstackService {
+func NewMailstackService(cfg *config.StripeConfig, events *events.EventsService, postgres *repository.Repositories, cloudflare interfaces.CloudflareService, namecheap interfaces.NamecheapService, mailbox interfaces.MailboxService, opensrs interfaces.OpenSrsService) interfaces.MailstackService {
 	return &mailstackService{
 		cfg:        cfg,
 		events:     events,
@@ -58,7 +58,7 @@ func (s *mailstackService) GetPaymentIntent(ctx context.Context, domains []strin
 	tenant := common.GetTenantFromContext(ctx)
 	email := common.GetUserEmailFromContext(ctx)
 
-	if s.cfg.ExternalServices.StripeConfig.ApiKey == "" {
+	if s.cfg.ApiKey == "" {
 		err := errors.New("Stripe API key not set")
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		return "", err
@@ -98,7 +98,7 @@ func (s *mailstackService) GetPaymentIntent(ctx context.Context, domains []strin
 	}
 
 	// Create a PaymentIntent
-	stripe.Key = s.cfg.ExternalServices.StripeConfig.ApiKey
+	stripe.Key = s.cfg.ApiKey
 	pi, err := paymentintent.New(params)
 	if err != nil {
 		log.Fatalf("Failed to create payment intent: %v", err)
@@ -118,14 +118,14 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	if s.cfg.ExternalServices.StripeConfig.ApiKey == "" {
+	if s.cfg.ApiKey == "" {
 		err := errors.New("Stripe API key not set")
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		return err
 	}
 
 	// call stripe and check if payment is successful
-	stripe.Key = s.cfg.ExternalServices.StripeConfig.ApiKey
+	stripe.Key = s.cfg.ApiKey
 	stripePaymentIntent, err := paymentintent.Get(paymentIntentId, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)

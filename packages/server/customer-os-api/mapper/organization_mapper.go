@@ -1,14 +1,16 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Organization {

@@ -35,13 +35,13 @@ type locationService struct {
 	neo4j    *neoRepo.Repositories
 	postgres *repository.Repositories
 	events   *events.EventsService
-	cfg      *config.AiAPIConfig
+	cfg      *config.AnthropicPrompts
 	ai       interfaces.AIService
 	contact  interfaces.ContactService
 	org      interfaces.OrganizationService
 }
 
-func NewLocationService(log logger.Logger, neo4j *neoRepo.Repositories, postgres *repository.Repositories, events *events.EventsService, cfg *config.AiAPIConfig, ai interfaces.AIService, contact interfaces.ContactService, org interfaces.OrganizationService) interfaces.LocationService {
+func NewLocationService(log logger.Logger, neo4j *neoRepo.Repositories, postgres *repository.Repositories, events *events.EventsService, cfg *config.AnthropicPrompts, ai interfaces.AIService, contact interfaces.ContactService, org interfaces.OrganizationService) interfaces.LocationService {
 	return &locationService{
 		log:      log,
 		neo4j:    neo4j,
@@ -52,6 +52,18 @@ func NewLocationService(log logger.Logger, neo4j *neoRepo.Repositories, postgres
 		contact:  contact,
 		org:      org,
 	}
+}
+
+func (s *locationService) SetContactService(contact interfaces.ContactService) {
+	s.contact = contact
+}
+
+func (s *locationService) SetOrganizationService(org interfaces.OrganizationService) {
+	s.org = org
+}
+
+func (s *locationService) IsInitialized() bool {
+	return utils.IsInitialized(s)
 }
 
 func (s *locationService) GetAllForContact(ctx context.Context, contactId string) (*neo4jentity.LocationEntities, error) {
@@ -134,7 +146,7 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 	}
 
 	// Step 2: Use AI to enrich the location
-	prompt := fmt.Sprintf(s.cfg.AnthropicPrompts.LocationEnrichmentPrompt, address)
+	prompt := fmt.Sprintf(s.cfg.LocationEnrichmentPrompt, address)
 	promptLog := postgresEntity.AiPromptLog{
 		CreatedAt:      utils.Now(),
 		AppSource:      common.GetAppSourceFromContext(ctx),
@@ -142,7 +154,7 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 		Model:          enum.AIModelAnthropicHaiku.String(),
 		PromptType:     constants.PromptTypeExtractLocationValue,
 		Tenant:         &tenant,
-		PromptTemplate: &s.cfg.AnthropicPrompts.LocationEnrichmentPrompt,
+		PromptTemplate: &s.cfg.LocationEnrichmentPrompt,
 		Prompt:         prompt,
 	}
 	promptStoreLogId, err := s.postgres.AiPromptLogRepository.Store(promptLog)

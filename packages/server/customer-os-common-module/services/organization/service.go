@@ -61,11 +61,7 @@ func (s *organizationService) SetSocialService(social interfaces.SocialService) 
 }
 
 func (s *organizationService) IsInitialized() bool {
-	if s.postgres == nil || s.neo4j == nil || s.events == nil || s.domain == nil ||
-		s.industry == nil || s.user == nil || s.social == nil {
-		return false
-	}
-	return true
+	return utils.IsInitialized(s)
 }
 
 func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64) (string, error) {

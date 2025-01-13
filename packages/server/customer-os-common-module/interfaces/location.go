@@ -11,6 +11,10 @@ import (
 )
 
 type LocationService interface {
+	SetContactService(contact ContactService)
+	SetOrganizationService(org OrganizationService)
+	IsInitialized() bool
+
 	GetAllForContact(ctx context.Context, contactId string) (*neo4jentity.LocationEntities, error)
 	GetAllForContacts(ctx context.Context, contactIds []string) (*neo4jentity.LocationEntities, error)
 	GetAllForOrganization(ctx context.Context, organizationId string) (*neo4jentity.LocationEntities, error)

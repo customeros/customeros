@@ -40,7 +40,7 @@ func main() {
 	go startServer(ctx, cfg, appLogger, &waitGroup)
 
 	// Run Temporal worker
-	if cfg.Temporal.RunWorker {
+	if cfg.CommonServices.ExternalServices.TemporalConfig.RunWorker {
 		go runTemporalWorker(cfg, appLogger, &waitGroup)
 	}
 
@@ -92,7 +92,8 @@ func handleSignals(cancel context.CancelFunc, appLogger *logger.ExtendedLogger) 
 func runTemporalWorker(cfg *config.Config, logger *logger.ExtendedLogger, waitGroup *sync.WaitGroup) {
 	// Start it in the background
 	go func() {
-		if err := worker.RunWebhookWorker(cfg.Temporal.HostPort, cfg.Temporal.Namespace); err != nil {
+		if err := worker.RunWebhookWorker(cfg.CommonServices.ExternalServices.TemporalConfig.HostPort, cfg.CommonServices.ExternalServices.TemporalConfig.Namespace); err != nil {
+
 			logger.Error(err)
 		}
 		waitGroup.Done()

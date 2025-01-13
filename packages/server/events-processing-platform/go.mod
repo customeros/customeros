@@ -57,13 +57,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.6 // indirect
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/Boostport/mjml-go v0.15.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
-	github.com/PuerkitoBio/goquery v1.10.1 // indirect
-	github.com/andybalholm/brotli v1.1.0 // indirect
-	github.com/andybalholm/cascadia v1.3.3 // indirect
-	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
-	github.com/aws/aws-sdk-go v1.55.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
@@ -74,9 +68,7 @@ require (
 	github.com/containerd/continuity v0.4.2 // indirect
 	github.com/coocood/freecache v1.2.4 // indirect
 	github.com/customeros/mailsherpa v0.3.8 // indirect
-	github.com/customeros/mailwatcher v0.1.6 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/emersion/go-message v0.18.1 // indirect
 	github.com/forPelevin/gomoji v1.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.7 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
@@ -96,14 +88,10 @@ require (
 	github.com/jackc/pgx/v5 v5.5.5 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/likexian/gokit v0.25.15 // indirect
-	github.com/likexian/whois v1.15.5 // indirect
-	github.com/likexian/whois-parser v1.24.20 // indirect
 	github.com/lucasepe/codename v0.2.0 // indirect
 	github.com/machinebox/graphql v0.2.2 // indirect
 	github.com/matoous/go-nanoid/v2 v2.1.0 // indirect
@@ -111,10 +99,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/mrz1836/postmark v1.6.7 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/novuhq/go-novu v0.1.2 // indirect
-	github.com/openline-ai/openline-customer-os/packages/server/validation-api v0.0.0-20241227133740-5fd01d93a97a // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.20.5 // indirect
@@ -125,8 +110,6 @@ require (
 	github.com/rdegges/go-ipify v0.0.0-20150526035502-2d94a6a86c40 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/smartystreets/smartystreets-go-sdk v1.21.1 // indirect
-	github.com/stripe/stripe-go/v81 v81.2.0 // indirect
-	github.com/tetratelabs/wazero v1.8.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect

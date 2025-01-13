@@ -2,18 +2,19 @@ package service
 
 import (
 	"database/sql"
+	"os"
+	"testing"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	test "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/test"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/rabbitmq/amqp091-go"
 	"github.com/testcontainers/testcontainers-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
-	"os"
-	"testing"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	test "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/test"
 )
 
 var (
@@ -26,8 +27,6 @@ var (
 
 	rabbitMqContainer testcontainers.Container
 	rabbitMqConn      *amqp091.Connection
-
-	CommonServices *Services
 )
 
 const tenantName = "openline"
@@ -59,20 +58,9 @@ func prepareClient() {
 		DevMode: true,
 	})
 	appLogger.InitLogger()
-
-	postgresDB := &config.PostgresDB{
-		GormDB:      postgresGormDB,
-		AsyncGormDB: postgresGormDB,
-	}
-
-	CommonServices = InitServices(&config.GlobalConfig{
-		//RabbitMQConfig: &config.RabbitMQConfig{
-		//	Url: "amqp://127.0.0.1:5672/",
-		//},
-	}, postgresDB, driver, "neo4j", nil, appLogger)
 }
 
-func initContext() context.Context {
+func InitContext() context.Context {
 	ctx := context.Background()
 
 	customCtx := &common.CustomContext{}

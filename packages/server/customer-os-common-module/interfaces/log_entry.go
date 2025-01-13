@@ -7,5 +7,8 @@ import (
 )
 
 type LogEntryService interface {
+	SetOrganizationService(org OrganizationService)
+	IsInitialized() bool
+
 	Save(ctx context.Context, id *string, logEntryFields data_fields.LogEntryFields) (string, error)
 }

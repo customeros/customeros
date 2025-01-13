@@ -1,9 +1,10 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
 )
 
 func MapStateToGCliItem(stateEntity neo4jentity.StateEntity) model.GCliItem {
@@ -36,6 +37,7 @@ func MapContactToGCliItem(contactEntity neo4jentity.ContactEntity) model.GCliIte
 
 	return resultItem
 }
+
 func MapOrganizationToGCliItem(contactEntity neo4jentity.OrganizationEntity) model.GCliItem {
 	resultItem := model.GCliItem{}
 
@@ -45,6 +47,7 @@ func MapOrganizationToGCliItem(contactEntity neo4jentity.OrganizationEntity) mod
 
 	return resultItem
 }
+
 func MapEmailToGCliItem(emailEntity neo4jentity.EmailEntity) model.GCliItem {
 	resultItem := model.GCliItem{}
 

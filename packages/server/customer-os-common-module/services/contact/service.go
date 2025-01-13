@@ -8,7 +8,6 @@ import (
 
 	"github.com/customeros/mailsherpa/emailparser"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -39,9 +38,10 @@ type contactService struct {
 	organization interfaces.OrganizationService
 	jobrole      interfaces.JobRoleService
 	social       interfaces.SocialService
+	flow         interfaces.FlowService
 }
 
-func NewContactService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService, domain interfaces.DomainService, email interfaces.EmailService, organization interfaces.OrganizationService, jobrole interfaces.JobRoleService, social interfaces.SocialService) interfaces.ContactService {
+func NewContactService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService, domain interfaces.DomainService, email interfaces.EmailService, organization interfaces.OrganizationService, jobrole interfaces.JobRoleService, social interfaces.SocialService, flow interfaces.FlowService) interfaces.ContactService {
 	return &contactService{
 		log:          log,
 		neo4j:        neo4j,
@@ -51,6 +51,7 @@ func NewContactService(log logger.Logger, neo4j *neoRepo.Repositories, events *e
 		organization: organization,
 		jobrole:      jobrole,
 		social:       social,
+		flow:         flow,
 	}
 }
 
@@ -70,12 +71,12 @@ func (s *contactService) SetSocialService(social interfaces.SocialService) {
 	s.social = social
 }
 
+func (s *contactService) SetFlowService(flow interfaces.FlowService) {
+	s.flow = flow
+}
+
 func (s *contactService) IsInitialized() bool {
-	if s.neo4j == nil || s.events == nil || s.domain == nil || s.email == nil ||
-		s.organization == nil || s.jobrole == nil || s.social == nil {
-		return false
-	}
-	return true
+	return utils.IsInitialized(s)
 }
 
 func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email string) (string, error) {
@@ -270,7 +271,7 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 			tracing.TraceErr(span, errors.Wrap(err, "unable to refresh contact count by contact id"))
 		}
 
-		flowsWithContact, err := s.services.FlowService.FlowsGetListWithParticipant(ctx, []string{contactId}, model.CONTACT)
+		flowsWithContact, err := s.flow.FlowsGetListWithParticipant(ctx, []string{contactId}, model.CONTACT)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -278,13 +279,13 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 
 		if flowsWithContact != nil && len(*flowsWithContact) > 0 {
 			for _, v := range *flowsWithContact {
-				flowParticipant, err := s.services.FlowService.FlowParticipantByEntity(ctx, v.Id, contactId, model.CONTACT)
+				flowParticipant, err := s.flow.FlowParticipantByEntity(ctx, v.Id, contactId, model.CONTACT)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err
 				}
 
-				err = s.services.FlowService.FlowParticipantDelete(ctx, flowParticipant.Id)
+				err = s.flow.FlowParticipantDelete(ctx, flowParticipant.Id)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err

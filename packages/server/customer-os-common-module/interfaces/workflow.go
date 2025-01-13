@@ -10,10 +10,10 @@ import (
 
 type WorkflowService interface {
 	// Flow
-	SaveFlow(ctx context.Context, flowRecord entity.Flow) (*entity.Flow, error)
-	GetFlowsByTrigger(ctx context.Context, listenerEvent enum.FlowListenerEvent) (*[]entity.Flow, error)
+	SaveFlow(ctx context.Context, flowRecord entity.Flows) (*entity.Flows, error)
+	GetFlowsByTrigger(ctx context.Context, listenerEvent enum.FlowListenerEvent) ([]entity.Flows, error)
 	GetNextStepInFlow(ctx context.Context, flowId string, fromNodeId *string) (*FlowNextStep, error)
-	GetFlowsForListenerEvent(ctx context.Context, sourceEvent enum.FlowListenerEvent, eventType string, eventData any) (*[]entity.Flow, error)
+	GetFlowsForListenerEvent(ctx context.Context, sourceEvent enum.FlowListenerEvent, eventType string, eventData any) ([]entity.Flows, error)
 
 	// Flow Execution
 	BuildAndSaveFlowExecutionRecord(ctx context.Context, flowStatus, flowId, flowNodeId, entityId, entityType, currentStep string, eventData any) (*entity.FlowExecution, error)
@@ -21,10 +21,10 @@ type WorkflowService interface {
 	GetFlowExecutionRecordById(ctx context.Context, id string) (*entity.FlowExecution, error)
 
 	// FlowAgent Execution
-	SaveFlowAgentExecutionRecord(ctx context.Context, flowAgentExecutionRecord entity.FlowAgentExecution) (*entity.FlowAgentExecution, error)
+	SaveFlowAgentExecutionRecord(ctx context.Context, flowAgentExecutionRecord entity.AgentExecution) (*entity.AgentExecution, error)
 
 	// Dead Flow Events
-	SendToDeadEvents(ctx context.Context, sourceEvent enum.FlowListenerEvent, eventType string, eventData any) error
+	// SendToDeadEvents(ctx context.Context, sourceEvent enum.FlowListenerEvent, eventType string, eventData any) error
 
 	// Validation
 	ValidateEventType(ctx context.Context, nodeType enum.FlowNodeType, event string) bool

@@ -1,0 +1,185 @@
+package api_webhook
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+
+	cosapi_interfaces "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/interfaces"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+)
+
+type webhookService struct {
+	log          logger.Logger
+	repositories *repository.Repositories
+}
+
+func NewWebhookService(log logger.Logger, repositories *repository.Repositories) cosapi_interfaces.WebhookService {
+	return &webhookService{
+		log:          log,
+		repositories: repositories,
+	}
+}
+
+func (w *webhookService) GetIntegration(s string) (enum.Source, error) {
+	integration := enum.DecodeSource(s)
+	if integration == "" {
+		return "", fmt.Errorf("Invalid integration %s", s)
+	}
+	return integration, nil
+}
+
+func (w *webhookService) ValidateTenantId(ctx context.Context, tenant, tenantId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.ValidateTenantId")
+	defer span.Finish()
+	span.LogFields(log.String("tenant", tenant))
+	span.LogFields(log.String("tenantId", tenantId))
+
+	tenantFromDb, err := w.repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, tenantId)
+	if err != nil {
+		err = fmt.Errorf("Unable to lookup tenant hashId for %s: %v", tenant, err)
+		tracing.TraceErr(span, err)
+	}
+
+	return tenantFromDb == tenant, nil
+}
+
+func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tenant, webhookPath string) (enum.Source, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.GetIntegrationFromWebhookPath")
+	defer span.Finish()
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("webhookPath", webhookPath))
+
+	path := strings.Trim(webhookPath, "/")
+	webhook, err := w.repositories.PostgresRepositories.WebhooksRepository.Find(ctx, entity.Webhooks{
+		Tenant:      tenant,
+		WebhookPath: path,
+	})
+	if err != nil {
+		err = fmt.Errorf("Unable to lookup webhook path: %v", err)
+		tracing.TraceErr(span, err)
+		return enum.SourceUnknown, err
+	}
+
+	if !webhook.Enabled {
+		err = fmt.Errorf("Webhook is disabled: %v", err)
+		tracing.TraceErr(span, err)
+		return enum.SourceUnknown, err
+	}
+
+	return enum.DecodeSource(webhook.Integration), nil
+}
+
+func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant string, integration enum.Source) (string, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.CreateIntegrationWebhook")
+	defer span.Finish()
+	span.LogFields(log.String("tenant", tenant))
+	span.LogFields(log.String("integration", integration.String()))
+
+	var newWebhook entity.Webhooks
+
+	tenantHash, err := w.repositories.PostgresRepositories.TenantRepository.GetHashID(ctx, tenant)
+	span.LogFields(log.String("tenantHash", tenantHash))
+	if err != nil {
+		err = fmt.Errorf("Unable to get HashID for tenant %s: %v", tenant, err)
+		tracing.TraceErr(span, err)
+		return "", "", err
+	}
+
+	// check if webhook already exists for tenant/integration
+	query := entity.Webhooks{
+		Tenant:      tenant,
+		Integration: integration.String(),
+	}
+
+	webhook, err := w.repositories.PostgresRepositories.WebhooksRepository.Find(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("Unable to check db for existing webhook: %v", err)
+		tracing.TraceErr(span, err)
+		return "", "", err
+	}
+
+	rotationCount := 0
+	if webhook != nil {
+		rotationCount = webhook.RotationCount
+	}
+
+	integrationHash := integration.IntegrationID(rotationCount + 1)
+	span.LogFields(log.String("integrationHash", integrationHash))
+	secret, err := utils.GenerateSecret()
+	span.LogFields(log.String("secret", secret))
+	if err != nil {
+		err = fmt.Errorf("Unable to generate webhook secret: %v", err)
+		tracing.TraceErr(span, err)
+	}
+
+	newWebhook.Tenant = tenant
+	newWebhook.WebhookPath = fmt.Sprintf("%s/i/%s", tenantHash, integrationHash)
+	newWebhook.Integration = integration.String()
+	newWebhook.Secret = secret
+	newWebhook.RotationCount = 1
+
+	// disable existing webhook for tenant/integration if exists
+	if rotationCount != 0 {
+		err = w.DeactivateWebhook(ctx, webhook.WebhookPath)
+		if err != nil {
+			err = fmt.Errorf("Unable to deactivate existing webhook for %s and %s: %v", tenant, integration.String(), err)
+			tracing.TraceErr(span, err)
+			return "", "", err
+		}
+
+		newWebhook.RotationCount = webhook.RotationCount + 1
+	}
+
+	validationErr := newWebhook.Validate()
+	if validationErr != nil {
+		tracing.TraceErr(span, validationErr)
+		return "", "", err
+	}
+
+	result, err := w.repositories.PostgresRepositories.WebhooksRepository.Create(ctx, newWebhook)
+	if err != nil {
+		err = fmt.Errorf("Unable to create webhook: %v", err)
+		tracing.TraceErr(span, err)
+	}
+
+	return result.WebhookPath, result.Secret, nil
+}
+
+func (w *webhookService) DeactivateWebhook(ctx context.Context, webhookPath string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhookService.Deactivate")
+	defer span.Finish()
+	span.LogFields(log.String("webhookPath", webhookPath))
+
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("tenant not set in context")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	query := entity.Webhooks{
+		Tenant:      tenant,
+		WebhookPath: webhookPath,
+		Enabled:     false,
+		UpdatedAt:   utils.NowPtr(),
+	}
+
+	_, err := w.repositories.PostgresRepositories.WebhooksRepository.Update(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("Unable to deactivate webhook %s: %v", webhookPath, err)
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return nil
+}

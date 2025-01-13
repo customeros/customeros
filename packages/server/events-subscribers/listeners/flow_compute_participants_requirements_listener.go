@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"

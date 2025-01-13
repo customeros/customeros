@@ -1,11 +1,5 @@
 package flow
 
-import (
-	"testing"
-
-	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-)
-
 const (
 	ONE_EMAIL_FLOW = `
 [
@@ -59,39 +53,3 @@ const (
 [{"id":"etn-1-WAIT-502d8197-c9be-46f6-82c7-1407253db77c","source":"tn-1","target":"WAIT-502d8197-c9be-46f6-82c7-1407253db77c","type":"baseEdge","markerEnd":{"type":"arrow","width":20,"height":20}},{"id":"eEMAIL_NEW-7b208629-7562-45cb-a78a-9b8b3073122c-WAIT-7b225580-8376-423f-8dd4-ae4c4431adb4","source":"EMAIL_NEW-7b208629-7562-45cb-a78a-9b8b3073122c","target":"WAIT-7b225580-8376-423f-8dd4-ae4c4431adb4","type":"baseEdge","markerEnd":{"type":"arrow","width":20,"height":20},"data":{"isHovered":false}},{"id":"eWAIT-7b225580-8376-423f-8dd4-ae4c4431adb4-EMAIL_NEW-d03ae5f7-416e-433d-9990-c9d746424d74","source":"WAIT-7b225580-8376-423f-8dd4-ae4c4431adb4","target":"EMAIL_NEW-d03ae5f7-416e-433d-9990-c9d746424d74","type":"baseEdge","markerEnd":{"type":"arrow","width":20,"height":20},"data":{"isHovered":false}},{"id":"eEMAIL_NEW-d03ae5f7-416e-433d-9990-c9d746424d74-tn-2","source":"EMAIL_NEW-d03ae5f7-416e-433d-9990-c9d746424d74","target":"tn-2","type":"baseEdge","markerEnd":{"type":"arrow","width":20,"height":20},"data":{"isHovered":false}},{"id":"eWAIT-502d8197-c9be-46f6-82c7-1407253db77c-WAIT-0838708e-7a9a-4616-b2d7-872ece9fe673","source":"WAIT-502d8197-c9be-46f6-82c7-1407253db77c","target":"WAIT-0838708e-7a9a-4616-b2d7-872ece9fe673","type":"baseEdge","markerEnd":{"type":"arrow","width":20,"height":20}},{"id":"eWAIT-0838708e-7a9a-4616-b2d7-872ece9fe673-EMAIL_NEW-015d2eb3-84c4-444c-bb47-f988811bbda2","source":"WAIT-0838708e-7a9a-4616-b2d7-872ece9fe673","target":"EMAIL_NEW-015d2eb3-84c4-444c-bb47-f988811bbda2","type":"baseEdge","markerEnd":{"type":"arrow","width":20,"height":20}},{"id":"eWAIT-13935715-164d-429e-8bfb-817d0e12a488-EMAIL_NEW-64c2984a-3ba1-44f4-8209-af07d8a6475d","source":"WAIT-13935715-164d-429e-8bfb-817d0e12a488","target":"EMAIL_NEW-64c2984a-3ba1-44f4-8209-af07d8a6475d","type":"baseEdge","markerEnd":{"type":"arrow","width":20,"height":20},"data":{"isHovered":false}},{"id":"eEMAIL_NEW-64c2984a-3ba1-44f4-8209-af07d8a6475d-WAIT-8fbdad46-4557-4635-93a9-43da7710d232","source":"EMAIL_NEW-64c2984a-3ba1-44f4-8209-af07d8a6475d","target":"WAIT-8fbdad46-4557-4635-93a9-43da7710d232","type":"baseEdge","markerEnd":{"type":"arrow","width":20,"height":20}},{"id":"eWAIT-8fbdad46-4557-4635-93a9-43da7710d232-EMAIL_NEW-2c3d61c3-2b9f-41ee-a5a9-e0ffeb09bb5a","source":"WAIT-8fbdad46-4557-4635-93a9-43da7710d232","target":"EMAIL_NEW-2c3d61c3-2b9f-41ee-a5a9-e0ffeb09bb5a","type":"baseEdge","markerEnd":{"type":"arrow","width":20,"height":20},"data":{"isHovered":false}},{"id":"eEMAIL_NEW-2c3d61c3-2b9f-41ee-a5a9-e0ffeb09bb5a-WAIT-02bac3cf-de50-41dc-85ca-2ca1e03b76f9","source":"EMAIL_NEW-2c3d61c3-2b9f-41ee-a5a9-e0ffeb09bb5a","target":"WAIT-02bac3cf-de50-41dc-85ca-2ca1e03b76f9","type":"baseEdge","markerEnd":{"type":"arrow","width":20,"height":20}},{"id":"eWAIT-02bac3cf-de50-41dc-85ca-2ca1e03b76f9-EMAIL_NEW-7b208629-7562-45cb-a78a-9b8b3073122c","source":"WAIT-02bac3cf-de50-41dc-85ca-2ca1e03b76f9","target":"EMAIL_NEW-7b208629-7562-45cb-a78a-9b8b3073122c","type":"baseEdge","markerEnd":{"type":"arrow","width":20,"height":20}},{"id":"EMAIL_NEW-015d2eb3-84c4-444c-bb47-f988811bbda2->WAIT-13935715-164d-429e-8bfb-817d0e12a488","source":"EMAIL_NEW-015d2eb3-84c4-444c-bb47-f988811bbda2","target":"WAIT-13935715-164d-429e-8bfb-817d0e12a488","type":"baseEdge","markerEnd":{"type":"arrow","width":20,"height":20}}]
 `
 )
-
-func TestFlowService_FlowMerge1(t *testing.T) {
-	ctx := initContext()
-	defer tearDownTestCase(ctx)(t)
-
-	//neo4jtest.CreateTenant(ctx, driver, tenantName)
-	//
-	//_, err := CommonServices.FlowService.FlowMerge(ctx, nil, &neo4jentity.FlowEntity{
-	//	Name:  "flow1",
-	//	Nodes: ONE_EMAIL_FLOW,
-	//	Edges: ONE_EMAIL_FLOW_EDGES,
-	//})
-	//require.NoError(t, err)
-	//
-	//require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, model.NodeLabelTenant))
-	//require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, model.NodeLabelFlowAction))
-	//require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, model.NEXT.String()))
-}
-
-func TestFlowService_FlowMerge2(t *testing.T) {
-	ctx := initContext()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	//_, err := CommonServices.FlowService.FlowMerge(ctx, nil, &neo4jentity.FlowEntity{
-	//	Name:  "flow1",
-	//	Nodes: TWO_NEW_EMAILS_FLOW,
-	//	Edges: TWO_NEW_EMAILS_FLOW_EDGES,
-	//})
-	//require.NoError(t, err)
-	//
-	//require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, model.NodeLabelTenant))
-	//require.Equal(t, 7, neo4jtest.GetCountOfNodes(ctx, driver, model.NodeLabelFlowAction))
-	//require.Equal(t, 6, neo4jtest.GetCountOfRelationships(ctx, driver, model.NEXT.String()))
-}

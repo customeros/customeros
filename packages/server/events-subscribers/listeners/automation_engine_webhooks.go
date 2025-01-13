@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -21,7 +20,7 @@ var eventDataTypes = map[string]reflect.Type{
 	data_fields.WebsiteVisitEvent{}.Type(): reflect.TypeOf(data_fields.WebsiteVisitEvent{}),
 }
 
-func OnWebhookEventCreated(ctx context.Context, s *service.Services, input any) error {
+func OnWebhookEventCreated(ctx context.Context, input any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnWebhookEventCreated")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)

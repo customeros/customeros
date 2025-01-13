@@ -2,28 +2,28 @@ package server
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstoredb"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
-	"google.golang.org/grpc"
-
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore/store"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstoredb"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore/store"
-	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
 )
 
 const (
@@ -44,7 +44,8 @@ type Server struct {
 }
 
 func NewServer(cfg *config.Config, log logger.Logger) *Server {
-	return &Server{Config: cfg,
+	return &Server{
+		Config: cfg,
 		Log:    log,
 		doneCh: make(chan struct{}),
 	}
@@ -59,27 +60,27 @@ func (server *Server) Start(parentCtx context.Context) error {
 	}
 
 	// Setting up tracing
-	tracer, closer, err := tracing.NewJaegerTracer(&server.Config.Jaeger, server.Log)
+	tracer, closer, err := tracing.NewJaegerTracer(server.Config.Jaeger, server.Log)
 	if err != nil {
 		server.Log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 	}
 	defer closer.Close()
 	opentracing.SetGlobalTracer(tracer)
 
-	//Server.metrics = metrics.NewESMicroserviceMetrics(Server.cfg)
-	//Server.interceptorManager = interceptors.NewInterceptorManager(Server.log, Server.getGrpcMetricsCb())
-	//Server.mw = middlewares.NewMiddlewareManager(Server.log, Server.cfg, Server.getHttpMetricsCb())
+	// Server.metrics = metrics.NewESMicroserviceMetrics(Server.cfg)
+	// Server.interceptorManager = interceptors.NewInterceptorManager(Server.log, Server.getGrpcMetricsCb())
+	// Server.mw = middlewares.NewMiddlewareManager(Server.log, Server.cfg, Server.getHttpMetricsCb())
 
-	esdb, err := eventstoredb.NewEventStoreDB(server.Config.EventStoreConfig, server.Log)
+	esdb, err := eventstoredb.NewEventStoreDB(*server.Config.EventStoreConfig, server.Log)
 	if err != nil {
 		return err
 	}
 	defer esdb.Close() // nolint: errcheck
 
 	// Initialize postgres db
-	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
-		PostgresConfig:      &server.Config.PostgresConfig,
-		PostgresAsyncConfig: &server.Config.PostgresAsyncConfig,
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.CommonConfig{
+		PostgresConfig:      server.Config.CommonServices.PostgresConfig,
+		PostgresAsyncConfig: server.Config.CommonServices.PostgresAsyncConfig,
 	})
 	if err != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
@@ -89,22 +90,20 @@ func (server *Server) Start(parentCtx context.Context) error {
 	repository.Migration(postgresDb.GormDB)
 
 	// Setting up Neo4j
-	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.Config.Neo4j)
+	neo4jDriver, err := commonConfig.NewNeo4jDriver(*server.Config.CommonServices.Neo4jConfig)
 	if err != nil {
-		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.Config.Neo4j.Target, err.Error())
+		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.Config.CommonServices.Neo4jConfig.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
-	server.Repositories = repository.InitRepos(&neo4jDriver, server.Config.Neo4j.Database, postgresDb)
+	server.Repositories = repository.InitRepos(&neo4jDriver, server.Config.CommonServices.Neo4jConfig.Database, postgresDb)
 
 	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
 
 	bufferService := eventbuffer.NewEventBufferStoreService(server.Repositories.PostgresRepositories.EventBufferRepository, server.Log)
 	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore, bufferService)
 
-	//Server.runMetrics(cancel)
-	//Server.runHealthCheck(ctx)
-
-	server.Services = service.InitServices(server.Config, server.Repositories, server.AggregateStore, server.CommandHandlers, server.Log, bufferService)
+	// Server.runMetrics(cancel)
+	// Server.runHealthCheck(ctx)
 
 	closeGrpcServer, grpcServer, err := server.NewEventProcessorGrpcServer()
 	if err != nil {
@@ -113,6 +112,14 @@ func (server *Server) Start(parentCtx context.Context) error {
 	}
 	defer closeGrpcServer()
 	server.GrpcServer = grpcServer
+
+	server.Services = service.InitServices(
+		server.Config,
+		server.Repositories,
+		server.AggregateStore,
+		server.CommandHandlers,
+		server.Log,
+	)
 
 	<-ctx.Done()
 	server.waitShootDown(waitShotDownDuration)

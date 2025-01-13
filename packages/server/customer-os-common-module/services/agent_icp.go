@@ -12,7 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
-func (a *agentService) ICPAgent(ctx context.Context, event *dto.FlowAgentEvent) error {
+func ICPAgent(ctx context.Context, event *dto.FlowAgentEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.ICPAgent")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
@@ -27,14 +27,14 @@ func (a *agentService) ICPAgent(ctx context.Context, event *dto.FlowAgentEvent) 
 			return fmt.Errorf("OrganizationQualifyEventFields is nil")
 		}
 
-		return a.buildICPQualificationReport(ctx, eventData, event.FlowExecutionId)
+		return buildICPQualificationReport(ctx, eventData, event.FlowExecutionId)
 
 	default:
 		return errors.New("Unsupported event")
 	}
 }
 
-func (a *agentService) buildICPQualificationReport(ctx context.Context, eventData *data_fields.OrganizationQualifyEventFields, flowExecutionId string) error {
+func buildICPQualificationReport(ctx context.Context, eventData *data_fields.OrganizationQualifyEventFields, flowExecutionId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.buildICPQualificationReport")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()

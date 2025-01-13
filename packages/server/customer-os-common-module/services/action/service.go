@@ -37,6 +37,14 @@ func NewActionService(log logger.Logger, neo4j *neo4jRepository.Repositories, ev
 	}
 }
 
+func (s *actionService) SetOrganizationService(org interfaces.OrganizationService) {
+	s.org = org
+}
+
+func (s *actionService) IsInitialized() bool {
+	return utils.IsInitialized(s)
+}
+
 func (s *actionService) GetActionsForNodes(ctx context.Context, entityType model.EntityType, ids []string) (*entity.ActionEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionService.GetActionsForNodes")
 	defer span.Finish()

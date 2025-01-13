@@ -14,10 +14,6 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events => ../events
 
-replace github.com/openline-ai/openline-customer-os/packages/server/validation-api => ../validation-api
-
-replace github.com/openline-ai/openline-customer-os/packages/server/enrichment-api => ../enrichment-api
-
 require (
 	github.com/99designs/gqlgen v0.17.63
 	github.com/caarlos0/env/v6 v6.10.1
@@ -32,7 +28,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20250115192652-18b4af902e63
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
 	github.com/openline-ai/openline-customer-os/packages/server/enrichment-api v0.0.0-20250104110723-0d16bf7e7931
@@ -71,10 +67,12 @@ require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/aws/aws-sdk-go v1.55.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/biter777/countries v1.7.5 // indirect
 	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/cloudflare/cloudflare-go v0.114.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
@@ -107,7 +105,9 @@ require (
 	github.com/goccy/go-json v0.10.4 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.4 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.0 // indirect
@@ -149,6 +149,7 @@ require (
 	github.com/mrz1836/postmark v1.6.7 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
+	github.com/nyaruka/phonenumbers v1.4.4 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
@@ -190,6 +191,7 @@ require (
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/time v0.9.0 // indirect
 	golang.org/x/tools v0.28.0 // indirect
 	google.golang.org/api v0.210.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241118233622-e639e219e697 // indirect

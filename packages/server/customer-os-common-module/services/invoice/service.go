@@ -56,6 +56,18 @@ type InvoiceActionMetadata struct {
 	InvoiceId     string  `json:"id"`
 }
 
+func (s *invoiceService) SetContractService(contract interfaces.ContractService) {
+	s.contract = contract
+}
+
+func (s *invoiceService) SetServiceLineItemService(sli interfaces.ServiceLineItemService) {
+	s.sli = sli
+}
+
+func (s *invoiceService) IsInitialized() bool {
+	return utils.IsInitialized(s)
+}
+
 func (s *invoiceService) GenerateNewRandomInvoiceNumber() string {
 	digits := "0123456789"
 	consonants := "BCDFGHJKLMNPQRSTVWXYZ"

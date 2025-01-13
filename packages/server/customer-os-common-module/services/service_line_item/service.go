@@ -56,6 +56,14 @@ func NewServiceLineItemService(log logger.Logger, events *events.EventsService, 
 	}
 }
 
+func (s *serviceLineItemService) SetContractService(contract interfaces.ContractService) {
+	s.contract = contract
+}
+
+func (s *serviceLineItemService) IsInitialized() bool {
+	return utils.IsInitialized(s)
+}
+
 func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.SLIFields) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemService.Save")
 	defer span.Finish()

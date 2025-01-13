@@ -11,6 +11,10 @@ import (
 )
 
 type InvoiceService interface {
+	SetContractService(contract ContractService)
+	SetServiceLineItemService(sli ServiceLineItemService)
+	IsInitialized() bool
+
 	GenerateNewRandomInvoiceNumber() string
 
 	GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error)

@@ -2,15 +2,17 @@ package service
 
 import (
 	"context"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 )
 
 type RequestHandler interface {
@@ -20,10 +22,10 @@ type RequestHandler interface {
 type requestHandler struct {
 	log logger.Logger
 	es  eventstore.AggregateStore
-	cfg config.Utils
+	cfg *config.Utils
 }
 
-func NewRequestHandler(log logger.Logger, es eventstore.AggregateStore, cfg config.Utils) *requestHandler {
+func NewRequestHandler(log logger.Logger, es eventstore.AggregateStore, cfg *config.Utils) *requestHandler {
 	return &requestHandler{log: log, es: es, cfg: cfg}
 }
 

@@ -11,6 +11,12 @@ import (
 )
 
 type FlowExecutionService interface {
+	SetEmailService(email EmailService)
+	SetFlowService(flow FlowService)
+	SetOrganizationService(org OrganizationService)
+	SetSocialService(social SocialService)
+	IsInitialized() bool
+
 	GetFlowActionExecutionById(ctx context.Context, flowActionExecution string) (*entity.FlowActionExecutionEntity, error)
 	GetFlowExecutionSettingsForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) (*entity.FlowExecutionSettingsEntity, error)
 	GetFlowRequirements(ctx context.Context, flowId string) (*FlowComputeParticipantsRequirementsInput, error)

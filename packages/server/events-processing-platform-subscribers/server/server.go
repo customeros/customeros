@@ -2,31 +2,33 @@ package server
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventbuffer"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstoredb"
-	"github.com/opentracing/opentracing-go"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore/store"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstoredb"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventbuffer"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph"
 	invoice_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/invoice"
 	notifications_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/notifications"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore/store"
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -45,7 +47,8 @@ type Server struct {
 }
 
 func NewServer(cfg *config.Config, log logger.Logger) *Server {
-	return &Server{Config: cfg,
+	return &Server{
+		Config: cfg,
 		Log:    log,
 		doneCh: make(chan struct{}),
 	}
@@ -67,9 +70,9 @@ func (server *Server) Start(parentCtx context.Context) error {
 	defer closer.Close()
 	opentracing.SetGlobalTracer(tracer)
 
-	//Server.metrics = metrics.NewESMicroserviceMetrics(Server.cfg)
-	//Server.interceptorManager = interceptors.NewInterceptorManager(Server.log, Server.getGrpcMetricsCb())
-	//Server.mw = middlewares.NewMiddlewareManager(Server.log, Server.cfg, Server.getHttpMetricsCb())
+	// Server.metrics = metrics.NewESMicroserviceMetrics(Server.cfg)
+	// Server.interceptorManager = interceptors.NewInterceptorManager(Server.log, Server.getGrpcMetricsCb())
+	// Server.mw = middlewares.NewMiddlewareManager(Server.log, Server.cfg, Server.getHttpMetricsCb())
 
 	esdb, err := eventstoredb.NewEventStoreDB(server.Config.EventStoreConfig, server.Log)
 	if err != nil {
@@ -85,9 +88,9 @@ func (server *Server) Start(parentCtx context.Context) error {
 	}
 
 	// Initialize postgres db
-	postgresDb, err := commonconf.InitPostgres(&commonconf.GlobalConfig{
-		PostgresConfig:      &server.Config.PostgresConfig,
-		PostgresAsyncConfig: &server.Config.PostgresAsyncConfig,
+	postgresDb, err := commonconf.InitPostgres(&commonconf.CommonConfig{
+		PostgresConfig:      server.Config.CommonServices.PostgresConfig,
+		PostgresAsyncConfig: server.Config.CommonServices.PostgresAsyncConfig,
 	})
 	if err != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
@@ -95,9 +98,9 @@ func (server *Server) Start(parentCtx context.Context) error {
 	defer postgresDb.Close()
 
 	// Setting up Neo4j
-	neo4jDriver, err := commonconf.NewNeo4jDriver(server.Config.Neo4j)
+	neo4jDriver, err := commonconf.NewNeo4jDriver(*server.Config.CommonServices.Neo4jConfig)
 	if err != nil {
-		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.Config.Neo4j.Target, err.Error())
+		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.Config.CommonServices.Neo4jConfig.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
 
@@ -112,13 +115,23 @@ func (server *Server) Start(parentCtx context.Context) error {
 	defer df.Close(gRPCconn)
 	grpcClients := grpc_client.InitClients(gRPCconn)
 
-	server.Services = service.InitServices(server.Config, server.AggregateStore, server.Log, grpcClients, postgresDb, &neo4jDriver)
+	// setting up services
+	repositories := repository.InitRepos(&neo4jDriver, server.Config.CommonServices.Neo4jConfig.Database, postgresDb)
+
+	server.Services = service.InitServices(
+		server.Log,
+		repositories.Neo4jRepositories,
+		repositories.PostgresRepositories,
+		server.Config.CommonServices,
+		grpcClients,
+		server.AggregateStore,
+	)
 
 	// Setting up cache
-	industryMap, _ := server.Services.CommonServices.PostgresRepositories.IndustryMappingRepository.GetAllIndustryMappingsAsMap(ctx)
+	industryMap, _ := server.Services.PostgresRepositories.IndustryMappingRepository.GetAllIndustryMappingsAsMap(ctx)
 	server.caches = caches.InitCaches(industryMap)
 
-	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Services.CommonServices.PostgresRepositories.EventBufferRepository, server.Log, server.AggregateStore)
+	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Services.PostgresRepositories.EventBufferRepository, server.Log, server.AggregateStore)
 	eventBufferWatcher.Start(ctx)
 	defer eventBufferWatcher.Stop()
 

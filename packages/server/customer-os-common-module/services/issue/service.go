@@ -37,6 +37,14 @@ func NewIssueService(log logger.Logger, neo4j *neoRepo.Repositories, events *eve
 	}
 }
 
+func (s *issueService) SetOrganizationService(org interfaces.OrganizationService) {
+	s.org = org
+}
+
+func (s *issueService) IsInitialized() bool {
+	return utils.IsInitialized(s)
+}
+
 func (s *issueService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, issueFields data_fields.IssueFields) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueService.Save")
 	defer span.Finish()

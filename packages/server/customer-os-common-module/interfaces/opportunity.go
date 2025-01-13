@@ -11,6 +11,10 @@ import (
 )
 
 type OpportunityService interface {
+	SetContractService(contract ContractService)
+	SetOrganizationService(org OrganizationService)
+	IsInitialized() bool
+
 	GetById(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) (*neo4jentity.OpportunityEntity, error)
 	GetOpportunitiesForContracts(ctx context.Context, tenant string, contractIds []string) (*neo4jentity.OpportunityEntities, error)
 	GetOpportunitiesForOrganizations(ctx context.Context, tenant string, organizationIds []string) (*neo4jentity.OpportunityEntities, error)

@@ -38,6 +38,14 @@ func NewLogEntryService(log logger.Logger, neo4j *neoRepo.Repositories, events *
 	}
 }
 
+func (s *logEntryService) SetOrganizationService(org interfaces.OrganizationService) {
+	s.org = org
+}
+
+func (s *logEntryService) IsInitialized() bool {
+	return utils.IsInitialized(s)
+}
+
 func (s *logEntryService) Save(ctx context.Context, id *string, logEntryFields data_fields.LogEntryFields) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryService.Save")
 	defer span.Finish()

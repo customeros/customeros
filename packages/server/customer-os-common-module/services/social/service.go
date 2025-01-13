@@ -48,10 +48,7 @@ func (s *socialService) SetContactService(contact interfaces.ContactService) {
 }
 
 func (s *socialService) IsInitialized() bool {
-	if s.neo4j == nil || s.events == nil || s.contact == nil {
-		return false
-	}
-	return true
+	return utils.IsInitialized(s)
 }
 
 func (s *socialService) GetAllForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error) {

@@ -37,6 +37,14 @@ func NewFlowService(neo4j *neoRepo.Repositories, events *events.EventsService, f
 	}
 }
 
+func (s *flowService) SetFlowExecutionService(fe interfaces.FlowExecutionService) {
+	s.flowExecution = fe
+}
+
+func (s *flowService) IsInitialized() bool {
+	return utils.IsInitialized(s)
+}
+
 func (s *flowService) FlowGetList(ctx context.Context) (*neo4jentity.FlowEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowGetList")
 	defer span.Finish()
@@ -1007,7 +1015,7 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 	}
 
 	_, err = utils.ExecuteWriteInTransaction(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
-		flowActionExecutions, err := s.flowExecution.GetFlowActionExecutionsForParticipant(ctx, &tx, flow.Id, flowparticipant.EntityId, flowparticipant.EntityType)
+		flowActionExecutions, err := s.flowExecution.GetFlowActionExecutionsForParticipant(ctx, &tx, flow.Id, flowParticipant.EntityId, flowParticipant.EntityType)
 		if err != nil {
 			return nil, err
 		}
@@ -1033,7 +1041,7 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 		}
 
 		err = s.neo4j.CommonWriteRepository.Unlink(ctx, &tx, tenant, repository.LinkDetails{
-			FromEntityId:   flowparticipant.Id,
+			FromEntityId:   flowParticipant.Id,
 			FromEntityType: model.FLOW_PARTICIPANT,
 			Relationship:   model.HAS,
 			ToEntityId:     flowParticipant.EntityId,
@@ -1043,7 +1051,7 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 			return nil, err
 		}
 
-		err = s.neo4j.FlowParticipantWriteRepository.Delete(ctx, &tx, flowparticipant.Id)
+		err = s.neo4j.FlowParticipantWriteRepository.Delete(ctx, &tx, flowParticipant.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -1055,7 +1063,7 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 		return err
 	}
 
-	s.events.Publisher.PublishEventCompleted(ctx, tenant, flowparticipant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithDelete())
+	s.events.Publisher.PublishEventCompleted(ctx, tenant, flowParticipant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }

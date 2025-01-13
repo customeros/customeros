@@ -15,14 +15,7 @@ type Config struct {
 	RabbitMQ            config.RabbitMQConfig
 	NovuConfig          config.NovuConfig
 	GrpcClientConfig    config.GrpcClientConfig
-	InternalServices    InternalServices
 	CloudflareConfig    config.CloudflareConfig
 	NamecheapConfig     config.NamecheapConfig
 	OpenSRSConfig       config.OpenSRSConfig
-}
-
-type InternalServices struct {
-	EnrichmentApi config.EnrichmentAPIConfig
-	AiApi         config.AiAPIConfig
-	ValidationApi config.ValidationAPIConfig
 }

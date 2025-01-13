@@ -3,17 +3,19 @@ package repository
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"strings"
+	"sync"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"reflect"
-	"strings"
-	"sync"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
 )
 
 type DashboardV2Repository interface {
@@ -47,8 +49,8 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	domainFilterCypher, domainFilterParams := "", make(map[string]interface{})
 	parentOrganizationFilterCypher, parentOrganizationFilterParams := "", make(map[string]interface{})
 
-	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
-	//region organization filters
+	// ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
+	// region organization filters
 	if where != nil {
 		organizationFilter := new(utils.CypherFilter)
 		organizationFilter.Negate = false
@@ -224,7 +226,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		}
 	}
 
-	//endregion
+	// endregion
 
 	params := map[string]any{
 		"tenant": tenant,
@@ -239,7 +241,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	utils.MergeMapToMap(domainFilterParams, params)
 	utils.MergeMapToMap(parentOrganizationFilterParams, params)
 
-	//region count selectQuery
+	// region count selectQuery
 	countQuery := ""
 	{
 		countQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s) `, tenant)
@@ -293,10 +295,10 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 
 		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(o))`)
 	}
-	//end count region
+	// end count region
 
 	selectQuery := ""
-	//region selectQuery to fetch data
+	// region selectQuery to fetch data
 	{
 		selectQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s) `, tenant)
 		if userFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeOrganizationsOwner.String())) {
@@ -347,7 +349,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		}
 		selectQuery = selectQuery + strings.Join(queryParts, " AND ")
 	}
-	//endregion
+	// endregion
 
 	// sort region
 	sortingCypher := ""
@@ -586,7 +588,6 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, countQueryResult, err)
 			}
 		})
-
 		if err != nil {
 			tracing.TraceErr(span, err)
 			setError(err)
@@ -617,7 +618,6 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
 			}
 		})
-
 		if err != nil {
 			tracing.TraceErr(span, err)
 			setError(err)
@@ -775,20 +775,20 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 
 		for _, filter := range where.And {
 			// TODO
-			//ColumnViewTypeContactsEmails                     ColumnViewType = "CONTACTS_EMAILS"
-			//ColumnViewTypeContactsPersonalEmails             ColumnViewType = "CONTACTS_PERSONAL_EMAILS"
-			//ColumnViewTypeContactsPhoneNumbers               ColumnViewType = "CONTACTS_PHONE_NUMBERS"
-			//ColumnViewTypeContactsPersona                    ColumnViewType = "CONTACTS_PERSONA"
-			//ColumnViewTypeContactsLastInteraction            ColumnViewType = "CONTACTS_LAST_INTERACTION"
-			//ColumnViewTypeContactsSkills                     ColumnViewType = "CONTACTS_SKILLS"
-			//ColumnViewTypeContactsSchools                    ColumnViewType = "CONTACTS_SCHOOLS"
-			//ColumnViewTypeContactsLanguages                  ColumnViewType = "CONTACTS_LANGUAGES"
-			//ColumnViewTypeContactsTimeInCurrentRole          ColumnViewType = "CONTACTS_TIME_IN_CURRENT_ROLE"
-			//ColumnViewTypeContactsExperience                 ColumnViewType = "CONTACTS_EXPERIENCE"
-			//ColumnViewTypeContactsConnections                ColumnViewType = "CONTACTS_CONNECTIONS"
-			//ColumnViewTypeContactsFlows                      ColumnViewType = "CONTACTS_FLOWS"
-			//ColumnViewTypeContactsFlowStatus                 ColumnViewType = "CONTACTS_FLOW_STATUS"
-			//ColumnViewTypeContactsFlowNextAction             ColumnViewType = "CONTACTS_FLOW_NEXT_ACTION"
+			// ColumnViewTypeContactsEmails                     ColumnViewType = "CONTACTS_EMAILS"
+			// ColumnViewTypeContactsPersonalEmails             ColumnViewType = "CONTACTS_PERSONAL_EMAILS"
+			// ColumnViewTypeContactsPhoneNumbers               ColumnViewType = "CONTACTS_PHONE_NUMBERS"
+			// ColumnViewTypeContactsPersona                    ColumnViewType = "CONTACTS_PERSONA"
+			// ColumnViewTypeContactsLastInteraction            ColumnViewType = "CONTACTS_LAST_INTERACTION"
+			// ColumnViewTypeContactsSkills                     ColumnViewType = "CONTACTS_SKILLS"
+			// ColumnViewTypeContactsSchools                    ColumnViewType = "CONTACTS_SCHOOLS"
+			// ColumnViewTypeContactsLanguages                  ColumnViewType = "CONTACTS_LANGUAGES"
+			// ColumnViewTypeContactsTimeInCurrentRole          ColumnViewType = "CONTACTS_TIME_IN_CURRENT_ROLE"
+			// ColumnViewTypeContactsExperience                 ColumnViewType = "CONTACTS_EXPERIENCE"
+			// ColumnViewTypeContactsConnections                ColumnViewType = "CONTACTS_CONNECTIONS"
+			// ColumnViewTypeContactsFlows                      ColumnViewType = "CONTACTS_FLOWS"
+			// ColumnViewTypeContactsFlowStatus                 ColumnViewType = "CONTACTS_FLOW_STATUS"
+			// ColumnViewTypeContactsFlowNextAction             ColumnViewType = "CONTACTS_FLOW_NEXT_ACTION"
 			if filter.Filter.Property == model.ColumnViewTypeContactsName.String() {
 				logicalOperator := utils.AND
 				if filter.Filter.Operation == commonmodel.ComparisonOperatorContains || filter.Filter.Operation == commonmodel.ComparisonOperatorIsNotEmpty {
@@ -936,7 +936,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		}
 	}
 
-	//endregion
+	// endregion
 
 	params := map[string]any{
 		"tenant": tenant,
@@ -951,7 +951,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	utils.MergeMapToMap(primaryOrganizationFilterParams, params)
 	utils.MergeMapToMap(primaryJobRoleFilterParams, params)
 
-	//region count selectQuery
+	// region count selectQuery
 	countQuery := ""
 	{
 		countQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact_%s) `, tenant)
@@ -1002,10 +1002,10 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 
 		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(c))`)
 	}
-	//end count region
+	// end count region
 
 	selectQuery := ""
-	//region selectQuery to fetch data
+	// region selectQuery to fetch data
 	{
 		selectQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact_%s) `, tenant)
 		if linkedInFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsLinkedin.String() || sort.By == model.ColumnViewTypeContactsLinkedinFollowerCount.String())) {
@@ -1053,7 +1053,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		}
 		selectQuery = selectQuery + strings.Join(queryParts, " AND ")
 	}
-	//endregion
+	// endregion
 
 	// sort region
 	aliases := ""
@@ -1120,7 +1120,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		} else {
 			aliases += `CASE WHEN sl.followersCount IS NULL THEN -999999999 ELSE sl.followersCount END as SORT_BY `
 		}
-
 	}
 	if sort != nil && sort.By == model.ColumnViewTypeContactsOrganization.String() {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
@@ -1190,7 +1189,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 				return utils.ExtractSingleRecordFirstValueAsType[int64](ctx, countQueryResult, err)
 			}
 		})
-
 		if err != nil {
 			tracing.TraceErr(innerSpan, err)
 			setError(err)
@@ -1221,7 +1219,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 				return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
 			}
 		})
-
 		if err != nil {
 			tracing.TraceErr(innerSpan, err)
 			setError(err)

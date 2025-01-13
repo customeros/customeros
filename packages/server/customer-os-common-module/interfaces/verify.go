@@ -12,6 +12,7 @@ type VerifyService interface {
 	Threats(ctx context.Context, ipAddress string) (*IpThreats, error)
 	IdentifyCompanyDomain(ctx context.Context, ipAddress string) (*string, error)
 	ValidatePhoneNumber(ctx context.Context, countryCodeA2 string, phoneNumber string) (*string, *string, error)
+	ValidateEmail(ctx context.Context, email string) (*ValidateEmailMailSherpaData, error)
 	ValidateEmailWithMailSherpa(ctx context.Context, email string) (*ValidateEmailMailSherpaData, error)
 	ValidateEmailScrubby(ctx context.Context, email string) (string, error)
 	ValidateEmailWithTrueinbox(ctx context.Context, email string) (*entity.TrueInboxResponseBody, error)

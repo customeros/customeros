@@ -9,6 +9,10 @@ import (
 )
 
 type ContractService interface {
+	SetOpportunityService(opportunity OpportunityService)
+	SetOrganizationService(org OrganizationService)
+	IsInitialized() bool
+
 	GetById(ctx context.Context, contactId string) (*entity.ContractEntity, error)
 	Save(ctx context.Context, contactId *string, dataFields data_fields.ContractSaveFields) (string, error)
 	SoftDelete(ctx context.Context, contractId string) error

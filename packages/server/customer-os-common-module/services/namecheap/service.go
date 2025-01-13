@@ -24,11 +24,11 @@ import (
 // Namecheap supported commands: https://www.namecheap.com/support/api/methods/
 
 type namecheapService struct {
-	cfg      *config.GlobalConfig
+	cfg      *config.NamecheapConfig
 	postgres *repository.Repositories
 }
 
-func NewNamecheapService(cfg *config.GlobalConfig, postgres *repository.Repositories) interfaces.NamecheapService {
+func NewNamecheapService(cfg *config.NamecheapConfig, postgres *repository.Repositories) interfaces.NamecheapService {
 	return &namecheapService{
 		cfg:      cfg,
 		postgres: postgres,
@@ -42,14 +42,14 @@ func (s *namecheapService) CheckDomainAvailability(ctx context.Context, domain s
 	span.LogKV("domain", domain)
 
 	params := url.Values{}
-	params.Add("ApiKey", s.cfg.ExternalServices.NamecheapConfig.ApiKey)
-	params.Add("ApiUser", s.cfg.ExternalServices.NamecheapConfig.ApiUser)
-	params.Add("UserName", s.cfg.ExternalServices.NamecheapConfig.ApiUsername)
-	params.Add("ClientIp", s.cfg.ExternalServices.NamecheapConfig.ApiClientIp)
+	params.Add("ApiKey", s.cfg.ApiKey)
+	params.Add("ApiUser", s.cfg.ApiUser)
+	params.Add("UserName", s.cfg.ApiUsername)
+	params.Add("ClientIp", s.cfg.ApiClientIp)
 	params.Add("Command", "namecheap.domains.check")
 	params.Add("DomainList", domain)
 
-	resp, err := http.PostForm(s.cfg.ExternalServices.NamecheapConfig.Url, params)
+	resp, err := http.PostForm(s.cfg.Url, params)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call Namecheap API"))
 		return false, false, err
@@ -115,65 +115,65 @@ func (s *namecheapService) PurchaseDomain(ctx context.Context, tenant, domain st
 	span.LogKV("domain", domain)
 
 	params := url.Values{}
-	params.Add("ApiKey", s.cfg.ExternalServices.NamecheapConfig.ApiKey)
-	params.Add("ApiUser", s.cfg.ExternalServices.NamecheapConfig.ApiUser)
-	params.Add("UserName", s.cfg.ExternalServices.NamecheapConfig.ApiUsername)
-	params.Add("ClientIp", s.cfg.ExternalServices.NamecheapConfig.ApiClientIp)
+	params.Add("ApiKey", s.cfg.ApiKey)
+	params.Add("ApiUser", s.cfg.ApiUser)
+	params.Add("UserName", s.cfg.ApiUsername)
+	params.Add("ClientIp", s.cfg.ApiClientIp)
 	params.Add("Command", "namecheap.domains.create")
 	params.Add("DomainName", domain)
-	params.Add("Years", strconv.Itoa(s.cfg.ExternalServices.NamecheapConfig.Years))
+	params.Add("Years", strconv.Itoa(s.cfg.Years))
 	params.Add("AddFreeWhoisguard", "yes")
 
-	params.Add("RegistrantFirstName", s.cfg.ExternalServices.NamecheapConfig.RegistrantFirstName)
-	params.Add("RegistrantLastName", s.cfg.ExternalServices.NamecheapConfig.RegistrantLastName)
-	params.Add("RegistrantJobTitle", s.cfg.ExternalServices.NamecheapConfig.RegistrantJobTitle)
-	params.Add("RegistrantAddress1", s.cfg.ExternalServices.NamecheapConfig.RegistrantAddress1)
-	params.Add("RegistrantOrganizationName", s.cfg.ExternalServices.NamecheapConfig.RegistrantCompanyName)
-	params.Add("RegistrantCity", s.cfg.ExternalServices.NamecheapConfig.RegistrantCity)
-	params.Add("RegistrantStateProvince", s.cfg.ExternalServices.NamecheapConfig.RegistrantState)
-	params.Add("RegistrantPostalCode", s.cfg.ExternalServices.NamecheapConfig.RegistrantZIP)
-	params.Add("RegistrantCountry", s.cfg.ExternalServices.NamecheapConfig.RegistrantCountry)
-	params.Add("RegistrantPhone", s.cfg.ExternalServices.NamecheapConfig.RegistrantPhoneNumber)
-	params.Add("RegistrantEmailAddress", s.cfg.ExternalServices.NamecheapConfig.RegistrantEmail)
+	params.Add("RegistrantFirstName", s.cfg.RegistrantFirstName)
+	params.Add("RegistrantLastName", s.cfg.RegistrantLastName)
+	params.Add("RegistrantJobTitle", s.cfg.RegistrantJobTitle)
+	params.Add("RegistrantAddress1", s.cfg.RegistrantAddress1)
+	params.Add("RegistrantOrganizationName", s.cfg.RegistrantCompanyName)
+	params.Add("RegistrantCity", s.cfg.RegistrantCity)
+	params.Add("RegistrantStateProvince", s.cfg.RegistrantState)
+	params.Add("RegistrantPostalCode", s.cfg.RegistrantZIP)
+	params.Add("RegistrantCountry", s.cfg.RegistrantCountry)
+	params.Add("RegistrantPhone", s.cfg.RegistrantPhoneNumber)
+	params.Add("RegistrantEmailAddress", s.cfg.RegistrantEmail)
 
-	params.Add("TechFirstName", s.cfg.ExternalServices.NamecheapConfig.RegistrantFirstName)
-	params.Add("TechLastName", s.cfg.ExternalServices.NamecheapConfig.RegistrantLastName)
-	params.Add("TechJobTitle", s.cfg.ExternalServices.NamecheapConfig.RegistrantJobTitle)
-	params.Add("TechAddress1", s.cfg.ExternalServices.NamecheapConfig.RegistrantAddress1)
-	params.Add("TechOrganizationName", s.cfg.ExternalServices.NamecheapConfig.RegistrantCompanyName)
-	params.Add("TechCity", s.cfg.ExternalServices.NamecheapConfig.RegistrantCity)
-	params.Add("TechStateProvince", s.cfg.ExternalServices.NamecheapConfig.RegistrantState)
-	params.Add("TechPostalCode", s.cfg.ExternalServices.NamecheapConfig.RegistrantZIP)
-	params.Add("TechCountry", s.cfg.ExternalServices.NamecheapConfig.RegistrantCountry)
-	params.Add("TechPhone", s.cfg.ExternalServices.NamecheapConfig.RegistrantPhoneNumber)
-	params.Add("TechEmailAddress", s.cfg.ExternalServices.NamecheapConfig.RegistrantEmail)
+	params.Add("TechFirstName", s.cfg.RegistrantFirstName)
+	params.Add("TechLastName", s.cfg.RegistrantLastName)
+	params.Add("TechJobTitle", s.cfg.RegistrantJobTitle)
+	params.Add("TechAddress1", s.cfg.RegistrantAddress1)
+	params.Add("TechOrganizationName", s.cfg.RegistrantCompanyName)
+	params.Add("TechCity", s.cfg.RegistrantCity)
+	params.Add("TechStateProvince", s.cfg.RegistrantState)
+	params.Add("TechPostalCode", s.cfg.RegistrantZIP)
+	params.Add("TechCountry", s.cfg.RegistrantCountry)
+	params.Add("TechPhone", s.cfg.RegistrantPhoneNumber)
+	params.Add("TechEmailAddress", s.cfg.RegistrantEmail)
 
-	params.Add("AdminFirstName", s.cfg.ExternalServices.NamecheapConfig.RegistrantFirstName)
-	params.Add("AdminLastName", s.cfg.ExternalServices.NamecheapConfig.RegistrantLastName)
-	params.Add("AdminJobTitle", s.cfg.ExternalServices.NamecheapConfig.RegistrantJobTitle)
-	params.Add("AdminAddress1", s.cfg.ExternalServices.NamecheapConfig.RegistrantAddress1)
-	params.Add("AdminOrganizationName", s.cfg.ExternalServices.NamecheapConfig.RegistrantCompanyName)
-	params.Add("AdminCity", s.cfg.ExternalServices.NamecheapConfig.RegistrantCity)
-	params.Add("AdminStateProvince", s.cfg.ExternalServices.NamecheapConfig.RegistrantState)
-	params.Add("AdminPostalCode", s.cfg.ExternalServices.NamecheapConfig.RegistrantZIP)
-	params.Add("AdminCountry", s.cfg.ExternalServices.NamecheapConfig.RegistrantCountry)
-	params.Add("AdminPhone", s.cfg.ExternalServices.NamecheapConfig.RegistrantPhoneNumber)
-	params.Add("AdminEmailAddress", s.cfg.ExternalServices.NamecheapConfig.RegistrantEmail)
+	params.Add("AdminFirstName", s.cfg.RegistrantFirstName)
+	params.Add("AdminLastName", s.cfg.RegistrantLastName)
+	params.Add("AdminJobTitle", s.cfg.RegistrantJobTitle)
+	params.Add("AdminAddress1", s.cfg.RegistrantAddress1)
+	params.Add("AdminOrganizationName", s.cfg.RegistrantCompanyName)
+	params.Add("AdminCity", s.cfg.RegistrantCity)
+	params.Add("AdminStateProvince", s.cfg.RegistrantState)
+	params.Add("AdminPostalCode", s.cfg.RegistrantZIP)
+	params.Add("AdminCountry", s.cfg.RegistrantCountry)
+	params.Add("AdminPhone", s.cfg.RegistrantPhoneNumber)
+	params.Add("AdminEmailAddress", s.cfg.RegistrantEmail)
 
-	params.Add("AuxBillingFirstName", s.cfg.ExternalServices.NamecheapConfig.RegistrantFirstName)
-	params.Add("AuxBillingLastName", s.cfg.ExternalServices.NamecheapConfig.RegistrantLastName)
-	params.Add("AuxBillingJobTitle", s.cfg.ExternalServices.NamecheapConfig.RegistrantJobTitle)
-	params.Add("AuxBillingAddress1", s.cfg.ExternalServices.NamecheapConfig.RegistrantAddress1)
-	params.Add("AuxBillingOrganizationName", s.cfg.ExternalServices.NamecheapConfig.RegistrantCompanyName)
-	params.Add("AuxBillingCity", s.cfg.ExternalServices.NamecheapConfig.RegistrantCity)
-	params.Add("AuxBillingStateProvince", s.cfg.ExternalServices.NamecheapConfig.RegistrantState)
-	params.Add("AuxBillingPostalCode", s.cfg.ExternalServices.NamecheapConfig.RegistrantZIP)
-	params.Add("AuxBillingCountry", s.cfg.ExternalServices.NamecheapConfig.RegistrantCountry)
-	params.Add("AuxBillingPhone", s.cfg.ExternalServices.NamecheapConfig.RegistrantPhoneNumber)
-	params.Add("AuxBillingEmailAddress", s.cfg.ExternalServices.NamecheapConfig.RegistrantEmail)
+	params.Add("AuxBillingFirstName", s.cfg.RegistrantFirstName)
+	params.Add("AuxBillingLastName", s.cfg.RegistrantLastName)
+	params.Add("AuxBillingJobTitle", s.cfg.RegistrantJobTitle)
+	params.Add("AuxBillingAddress1", s.cfg.RegistrantAddress1)
+	params.Add("AuxBillingOrganizationName", s.cfg.RegistrantCompanyName)
+	params.Add("AuxBillingCity", s.cfg.RegistrantCity)
+	params.Add("AuxBillingStateProvince", s.cfg.RegistrantState)
+	params.Add("AuxBillingPostalCode", s.cfg.RegistrantZIP)
+	params.Add("AuxBillingCountry", s.cfg.RegistrantCountry)
+	params.Add("AuxBillingPhone", s.cfg.RegistrantPhoneNumber)
+	params.Add("AuxBillingEmailAddress", s.cfg.RegistrantEmail)
 
 	// Execute the request
-	resp, err := http.PostForm(s.cfg.ExternalServices.NamecheapConfig.Url, params)
+	resp, err := http.PostForm(s.cfg.Url, params)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call Namecheap API for domain purchase"))
 		return err
@@ -257,16 +257,16 @@ func (s *namecheapService) GetDomainPrice(ctx context.Context, domain string) (f
 	tld := strings.Split(domain, ".")[1]
 
 	params := url.Values{}
-	params.Add("ApiKey", s.cfg.ExternalServices.NamecheapConfig.ApiKey)
-	params.Add("ApiUser", s.cfg.ExternalServices.NamecheapConfig.ApiUser)
-	params.Add("UserName", s.cfg.ExternalServices.NamecheapConfig.ApiUsername)
-	params.Add("ClientIp", s.cfg.ExternalServices.NamecheapConfig.ApiClientIp)
+	params.Add("ApiKey", s.cfg.ApiKey)
+	params.Add("ApiUser", s.cfg.ApiUser)
+	params.Add("UserName", s.cfg.ApiUsername)
+	params.Add("ClientIp", s.cfg.ApiClientIp)
 	params.Add("Command", "namecheap.users.getPricing")
 	params.Add("ProductType", "DOMAIN")
 	params.Add("ProductCategory", "REGISTER")
 	params.Add("ProductName", tld)
 
-	resp, err := http.PostForm(s.cfg.ExternalServices.NamecheapConfig.Url, params)
+	resp, err := http.PostForm(s.cfg.Url, params)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call Namecheap API for domain pricing"))
 		return 0, err
@@ -372,15 +372,15 @@ func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain str
 	}
 
 	params := url.Values{}
-	params.Add("ApiKey", s.cfg.ExternalServices.NamecheapConfig.ApiKey)
-	params.Add("ApiUser", s.cfg.ExternalServices.NamecheapConfig.ApiUser)
-	params.Add("UserName", s.cfg.ExternalServices.NamecheapConfig.ApiUsername)
-	params.Add("ClientIp", s.cfg.ExternalServices.NamecheapConfig.ApiClientIp)
+	params.Add("ApiKey", s.cfg.ApiKey)
+	params.Add("ApiUser", s.cfg.ApiUser)
+	params.Add("UserName", s.cfg.ApiUsername)
+	params.Add("ClientIp", s.cfg.ApiClientIp)
 	params.Add("Command", "namecheap.domains.getInfo")
 	params.Add("DomainName", domain)
 
 	// Execute the request
-	resp, err := http.PostForm(s.cfg.ExternalServices.NamecheapConfig.Url, params)
+	resp, err := http.PostForm(s.cfg.Url, params)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call Namecheap API for domain info"))
 		return interfaces.NamecheapDomainInfo{}, err
@@ -495,17 +495,17 @@ func (s *namecheapService) UpdateNameservers(ctx context.Context, tenant, domain
 
 	// Prepare the parameters for the Namecheap API call
 	params := url.Values{}
-	params.Add("ApiKey", s.cfg.ExternalServices.NamecheapConfig.ApiKey)
-	params.Add("ApiUser", s.cfg.ExternalServices.NamecheapConfig.ApiUser)
-	params.Add("UserName", s.cfg.ExternalServices.NamecheapConfig.ApiUsername)
-	params.Add("ClientIp", s.cfg.ExternalServices.NamecheapConfig.ApiClientIp)
+	params.Add("ApiKey", s.cfg.ApiKey)
+	params.Add("ApiUser", s.cfg.ApiUser)
+	params.Add("UserName", s.cfg.ApiUsername)
+	params.Add("ClientIp", s.cfg.ApiClientIp)
 	params.Add("Command", "namecheap.domains.dns.setCustom")
 	params.Add("SLD", sld)
 	params.Add("TLD", tld)
 	params.Add("Nameservers", strings.Join(nameservers, ","))
 
 	// Execute the request
-	resp, err := http.PostForm(s.cfg.ExternalServices.NamecheapConfig.Url, params)
+	resp, err := http.PostForm(s.cfg.Url, params)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call Namecheap API for setting custom nameservers"))
 		return err
