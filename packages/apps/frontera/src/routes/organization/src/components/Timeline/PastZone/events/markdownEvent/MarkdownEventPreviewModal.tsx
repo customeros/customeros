@@ -29,7 +29,7 @@ export const MarkdownEventPreviewModal = () => {
               </div>
             </h2>
           </div>
-          <div className='flex justify-end items-center'>
+          <div className='flex justify-end items-baseline'>
             <Tooltip side='bottom' label='Copy link to this thread'>
               <div>
                 <IconButton

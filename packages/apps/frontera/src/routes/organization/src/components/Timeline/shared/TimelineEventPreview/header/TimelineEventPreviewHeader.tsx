@@ -45,7 +45,7 @@ export const TimelineEventPreviewHeader = ({
             {parse !== 'slack' ? name : null}
           </span>
 
-          <div className='flex justify-end items-center'>
+          <div className='flex justify-end items-baseline'>
             {children}
             <Tooltip side='bottom' asChild={false} label={copyLabel}>
               <div>
@@ -56,7 +56,7 @@ export const TimelineEventPreviewHeader = ({
                   colorScheme='gray'
                   aria-label={copyLabel}
                   onClick={() => copy(window.location.href)}
-                  icon={<Link01 height='18px' color='gray.500' />}
+                  icon={<Link01 className='text-gray-500' />}
                 />
               </div>
             </Tooltip>
@@ -68,7 +68,7 @@ export const TimelineEventPreviewHeader = ({
                   onClick={onClose}
                   colorScheme='gray'
                   aria-label='Close preview'
-                  icon={<XClose height='24px' color='gray.500' />}
+                  icon={<XClose className='text-gray-500' />}
                 />
               </div>
             </Tooltip>
