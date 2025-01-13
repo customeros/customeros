@@ -256,7 +256,7 @@ func (r *queryResolver) UIContacts(ctx context.Context, ids []string) ([]*model.
 		}
 
 		for _, j := range *jobRoleEntities {
-			(*resp)[j.DataloaderKey].Flows = append((*resp)[j.DataloaderKey].JobRoleIds, j.Id)
+			(*resp)[j.DataloaderKey].JobRoleIds = append((*resp)[j.DataloaderKey].JobRoleIds, j.Id)
 		}
 	}(&mapResponse)
 
