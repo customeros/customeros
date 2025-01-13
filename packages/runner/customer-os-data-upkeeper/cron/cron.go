@@ -330,6 +330,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "sendReminders ", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichIndustry, func() {
+		lockAndRunJob(cont, globalOrganizationGroup, enrichWithIndustry)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichWithIndustry", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -491,6 +498,10 @@ func syncDataToGlobalOrgs(cont *container.Container) {
 
 func processWebsiteForGlobalOrgs(cont *container.Container) {
 	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).ScrapinCompanyByWebsite()
+}
+
+func enrichWithIndustry(cont *container.Container) {
+	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).EnrichWithIndustry()
 }
 
 func sendReminders(cont *container.Container) {

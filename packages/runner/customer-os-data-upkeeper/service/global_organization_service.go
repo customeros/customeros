@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/biter777/countries"
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -24,6 +26,7 @@ import (
 type GlobalOrganizationService interface {
 	SyncDataIntoGlobalOrganizations()
 	ScrapinCompanyByWebsite()
+	EnrichWithIndustry()
 }
 
 type globalOrganizationService struct {
@@ -461,4 +464,113 @@ func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Conte
 	}
 
 	return nil
+}
+
+func (s *globalOrganizationService) EnrichWithIndustry() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.EnrichWithIndustry")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 10
+	hoursFromPreviousAttempt := 24
+	maxAttempts := 3
+
+	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToEnrichIndustry(ctx, hoursFromPreviousAttempt, maxAttempts, limit)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting records to process"))
+		s.log.Errorf("Error getting records to process: %s", err.Error())
+		return
+	}
+
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	//process records
+	for _, record := range records {
+		span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichWithIndustry.Record")
+		defer span.Finish()
+		span.LogFields(log.Uint64("record.id", record.ID))
+
+		// mark record as processed initially to not process same record again, even if error occurs
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkIndustryEnrichRequested(ctx, record.ID)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error marking record as processed"))
+			s.log.Errorf("Error marking record as processed: %s", err.Error())
+			continue
+		}
+
+		// prepare Anthropic prompt
+		var descLines []string
+		descriptions := []string{record.Description, record.SourceDescription1, record.SourceDescription2, record.SourceDescription3, record.SourceDescription4, record.SourceDescription5}
+		for i, d := range descriptions {
+			if strings.TrimSpace(d) != "" {
+				descLines = append(descLines, fmt.Sprintf("Description Line %d: %s", i+1, d))
+			}
+		}
+
+		// Construct the prompt
+		prompt := fmt.Sprintf(`
+You are a world-class data classification and industry expert.
+Your task is to read information about a company and return its most likely NAICS industry code.
+
+You will be provided:
+1. The primary domain of the company.
+2. The company name.
+3. Optional description fields about the company from LinkedIn or its website.
+
+You must:
+- Determine the single most appropriate NAICS code for the organization based on the inputs.
+- Return only the NAICS code, with no additional commentary or text. The NAICS code should be digits only, e.g. "541511".
+
+Important details:
+- If multiple NAICS codes might apply, choose the best match (the most specific, relevant code).
+- Do not output any text besides the NAICS code itself.
+
+Below is the user’s input. Use the data to derive the NAICS code.
+---
+Primary Domain: %s
+Company Name: %s
+%s
+---
+`, record.PrimaryDomain, record.Name, strings.Join(descLines, "\n"))
+
+		// ask AI for NAICS code
+		aiOutput, err := s.commonServices.AIService.AskAI(ctx, enum.AIModelAnthropicHaiku, &prompt)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
+			continue
+		}
+		code := utils.IfNotNilString(aiOutput)
+		span.LogFields(log.String("result.code", code))
+
+		if code == "" {
+			continue
+		}
+
+		// get industry for organization
+		industryEntity, err := s.commonServices.IndustryService.GetClosestByCode(ctx, code)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error getting industry by code"))
+			s.log.Errorf("Error getting industry by code: %s", err.Error())
+			continue
+		}
+
+		if industryEntity == nil {
+			span.LogFields(log.Bool("result.industryFound", false))
+			continue
+		}
+
+		span.LogFields(log.Bool("result.industryFound", true))
+
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIndustry(ctx, record.ID, industryEntity.Code, industryEntity.Name)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error setting industry"))
+			continue
+		}
+	}
 }
