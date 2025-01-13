@@ -2,27 +2,41 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"io"
 	"log"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/listeners"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/logger"
 )
 
 const (
-	AppName = "events-subscribers"
+	AppName                                = "events-subscribers"
+	EventsQueueName                        = "events"
+	EventsFlowParticipantScheduleQueueName = "events-flow-participant-schedule"
 )
+
+// HandleDependencies contains all dependencies that might be needed by event handlers
+type HandleDependencies struct {
+	Logger         logger.Logger
+	PostgresDB     *sql.DB
+	Neo4jDriver    neo4j.DriverWithContext
+	CommonServices *commonService.Services
+	GRPCClients    *grpc_client.Clients
+}
 
 func main() {
 	ctx := context.Background()
@@ -82,36 +96,156 @@ func main() {
 		},
 	}, postgresDb, &neo4jDriver, cfg.Neo4j.Database, eventsProcessingGrpcClient, appLogger)
 
-	// Register listeners
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowOn{}, listeners.Handle_FlowOn)
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowParticipantSchedule{}, listeners.Handle_FlowParticipantSchedule)
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowComputeParticipantsRequirements{}, listeners.Handle_FlowComputeParticipantsRequirements)
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowParticipantGoalAchieved{}, listeners.Handle_FlowParticipantGoalAchieved)
+	// Create dependencies for event handlers
+	dependencies := &HandleDependencies{
+		Logger:         appLogger,
+		PostgresDB:     postgresDb,
+		Neo4jDriver:    *neo4jDriver,
+		CommonServices: commonServices,
+		GRPCClients:    eventsProcessingGrpcClient,
+	}
 
-	// mailstack
-	commonServices.RabbitMQService.RegisterHandler(dto.MailstackProvisionBuyRequest{}, listeners.Handle_MailstackProvisionBuyRequest)
-	commonServices.RabbitMQService.RegisterHandler(dto.MailstackProvisionMailbox{}, listeners.Handle_MailstackProvisionMailbox)
+	// Create Events Service
+	eventsService, err := events.NewEventsService(
+		events.Config{
+			URL: cfg.RabbitMQ.Url,
+		},
+		appLogger,
+	)
+	if err != nil {
+		appLogger.Fatalf("Failed to create events service: %v", err)
+	}
+	defer eventsService.Close()
 
-	// contact
-	commonServices.RabbitMQService.RegisterHandler(dto.AddSocialToContact{}, listeners.OnSocialAddedToContact)
-	commonServices.RabbitMQService.RegisterHandler(dto.RequestEnrichContact{}, listeners.OnRequestedEnrichContact)
-	commonServices.RabbitMQService.RegisterHandler(dto.HideContact{}, listeners.OnContactHidden)
+	// Register Flow handlers
+	eventsService.RegisterHandler(dto.FlowOn{},
+		events.NewHandler(dto.FlowOn{},
+			func(ctx context.Context, event dto.FlowOn) error {
+				return listeners.Handle_FlowOn(ctx, dependencies, event)
+			},
+		),
+	)
+	eventsService.RegisterHandler(dto.FlowParticipantSchedule{},
+		events.NewHandler(dto.FlowParticipantSchedule{},
+			func(ctx context.Context, event dto.FlowParticipantSchedule) error {
+				return listeners.Handle_FlowParticipantSchedule(ctx, dependencies, event)
+			},
+		),
+	)
+	eventsService.RegisterHandler(dto.FlowComputeParticipantsRequirements{},
+		events.NewHandler(dto.FlowComputeParticipantsRequirements{},
+			func(ctx context.Context, event dto.FlowComputeParticipantsRequirements) error {
+				return listeners.Handle_FlowComputeParticipantsRequirements(ctx, dependencies, event)
+			},
+		),
+	)
+	eventsService.RegisterHandler(dto.FlowParticipantGoalAchieved{},
+		events.NewHandler(dto.FlowParticipantGoalAchieved{},
+			func(ctx context.Context, event dto.FlowParticipantGoalAchieved) error {
+				return listeners.Handle_FlowParticipantGoalAchieved(ctx, dependencies, event)
+			},
+		),
+	)
 
-	// organization
-	commonServices.RabbitMQService.RegisterHandler(dto.RequestRefreshLastTouchpoint{}, listeners.OnRequestLastTouchpointRefresh)
-	commonServices.RabbitMQService.RegisterHandler(dto.RequestEnrichOrganization{}, listeners.OnRequestedEnrichOrganization)
+	// Mailstack handlers
+	eventsService.RegisterHandler(dto.MailstackProvisionBuyRequest{},
+		events.NewHandler(dto.MailstackProvisionBuyRequest{},
+			func(ctx context.Context, event dto.MailstackProvisionBuyRequest) error {
+				return listeners.Handle_MailstackProvisionBuyRequest(ctx, dependencies, event)
+			},
+		),
+	)
+	eventsService.RegisterHandler(dto.MailstackProvisionMailbox{},
+		events.NewHandler(dto.MailstackProvisionMailbox{},
+			func(ctx context.Context, event dto.MailstackProvisionMailbox) error {
+				return listeners.Handle_MailstackProvisionMailbox(ctx, dependencies, event)
+			},
+		),
+	)
 
-	// email
-	commonServices.RabbitMQService.RegisterHandler(dto.RequestValidateEmail{}, listeners.OnRequestedValidateEmail)
+	// Contact handlers
+	eventsService.RegisterHandler(dto.AddSocialToContact{},
+		events.NewHandler(dto.AddSocialToContact{},
+			func(ctx context.Context, event dto.AddSocialToContact) error {
+				return listeners.OnSocialAddedToContact(ctx, dependencies, event)
+			},
+		),
+	)
+	eventsService.RegisterHandler(dto.RequestEnrichContact{},
+		events.NewHandler(dto.RequestEnrichContact{},
+			func(ctx context.Context, event dto.RequestEnrichContact) error {
+				return listeners.OnRequestedEnrichContact(ctx, dependencies, event)
+			},
+		),
+	)
+	eventsService.RegisterHandler(dto.HideContact{},
+		events.NewHandler(dto.HideContact{},
+			func(ctx context.Context, event dto.HideContact) error {
+				return listeners.OnContactHidden(ctx, dependencies, event)
+			},
+		),
+	)
 
-	// FlowEngine
-	commonServices.RabbitMQService.RegisterHandler(dto.WebhookEvent{}, listeners.OnWebhookEventCreated)
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowAgentEvent{}, listeners.OnFlowAgentEventCreated)
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowAgentExecutionResultEvent{}, listeners.OnFlowAgentExecutionResultsEventCreated)
+	// Organization handlers
+	eventsService.RegisterHandler(dto.RequestRefreshLastTouchpoint{},
+		events.NewHandler(dto.RequestRefreshLastTouchpoint{},
+			func(ctx context.Context, event dto.RequestRefreshLastTouchpoint) error {
+				return listeners.OnRequestLastTouchpointRefresh(ctx, dependencies, event)
+			},
+		),
+	)
+	eventsService.RegisterHandler(dto.RequestEnrichOrganization{},
+		events.NewHandler(dto.RequestEnrichOrganization{},
+			func(ctx context.Context, event dto.RequestEnrichOrganization) error {
+				return listeners.OnRequestedEnrichOrganization(ctx, dependencies, event)
+			},
+		),
+	)
 
-	// Listen for messages
-	commonServices.RabbitMQService.ListenQueue(commonService.EventsQueueName)
-	commonServices.RabbitMQService.ListenQueueExclusive(commonService.EventsFlowParticipantScheduleQueueName)
+	// Email handlers
+	eventsService.RegisterHandler(dto.RequestValidateEmail{},
+		events.NewHandler(dto.RequestValidateEmail{},
+			func(ctx context.Context, event dto.RequestValidateEmail) error {
+				return listeners.OnRequestedValidateEmail(ctx, dependencies, event)
+			},
+		),
+	)
+
+	// Flow Engine handlers
+	eventsService.RegisterHandler(dto.WebhookEvent{},
+		events.NewHandler(dto.WebhookEvent{},
+			func(ctx context.Context, event dto.WebhookEvent) error {
+				return listeners.OnWebhookEventCreated(ctx, dependencies, event)
+			},
+		),
+	)
+	eventsService.RegisterHandler(dto.FlowAgentEvent{},
+		events.NewHandler(dto.FlowAgentEvent{},
+			func(ctx context.Context, event dto.FlowAgentEvent) error {
+				return listeners.OnFlowAgentEventCreated(ctx, dependencies, event)
+			},
+		),
+	)
+	eventsService.RegisterHandler(dto.FlowAgentExecutionResultEvent{},
+		events.NewHandler(dto.FlowAgentExecutionResultEvent{},
+			func(ctx context.Context, event dto.FlowAgentExecutionResultEvent) error {
+				return listeners.OnFlowAgentExecutionResultsEventCreated(ctx, dependencies, event)
+			},
+		),
+	)
+
+	// Set up queue listeners
+	go func() {
+		if err := eventsService.Subscriber.ListenQueue(EventsQueueName); err != nil {
+			appLogger.Fatalf("Failed to listen to queue %s: %v", EventsQueueName, err)
+		}
+	}()
+
+	go func() {
+		if err := eventsService.Subscriber.ListenQueueExclusive(EventsFlowParticipantScheduleQueueName); err != nil {
+			appLogger.Fatalf("Failed to listen to exclusive queue %s: %v", EventsFlowParticipantScheduleQueueName, err)
+		}
+	}()
 
 	// Block the main thread from exiting
 	forever := make(chan bool)

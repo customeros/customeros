@@ -4,14 +4,12 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/config"
 )
 
 type Services struct {
 	Logger               logger.Logger
-	CommonServices       *commonservice.Services
 	BettercontactService BettercontactService
 	BrandfetchService    BrandfetchService
 	ScrapeInService      ScrapinService
