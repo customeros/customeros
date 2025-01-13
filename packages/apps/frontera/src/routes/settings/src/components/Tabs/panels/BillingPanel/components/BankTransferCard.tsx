@@ -1,11 +1,10 @@
-import { useState } from 'react';
-
 import { Store } from '@store/store.ts';
 import { observer } from 'mobx-react-lite';
 import { BankNameInput } from '@settings/components/Tabs/panels/BillingPanel/components/BankNameInput';
 import { useBankTransferSelectionContext } from '@settings/components/Tabs/panels/BillingPanel/context/BankTransferSelectionContext';
 
 import { Input } from '@ui/form/Input';
+import { useStore } from '@shared/hooks/useStore';
 import { Currency, BankAccount } from '@graphql/types';
 import { Textarea } from '@ui/form/Textarea/Textarea.tsx';
 import { MaskedInput } from '@ui/form/Input/MaskedInput.tsx';
@@ -22,9 +21,10 @@ export const BankTransferCard = observer(
     account: Store<BankAccount>;
     existingCurrencies: Array<string>;
   }) => {
-    const [bankAccount, setBankAccount] = useState('');
-    const [value, setValue] = useState(account.value.iban ?? '');
-    const [sortCode, setSortCode] = useState('');
+    const store = useStore();
+    const bankAccount = store.settings.bankAccounts.value.get(
+      account.value.metadata.id,
+    );
     const { setFocusAccount, setHoverAccount } =
       useBankTransferSelectionContext();
 
@@ -53,14 +53,12 @@ export const BankTransferCard = observer(
               account?.value?.currency !== 'GBP' && (
                 <>
                   <MaskedInput
-                    value={value}
                     variant='unstyled'
                     placeholder='Enter IBAN'
                     prepare={(str) => str.toUpperCase()}
+                    value={bankAccount?.value?.iban ?? ''}
                     mask='SS00 AAAA 0000 0000 0000 9999 9999 9999 99'
                     onAccept={(val) => {
-                      setValue(val.toUpperCase());
-
                       account.update((acc) => {
                         acc.iban = val.toUpperCase();
 
@@ -88,8 +86,8 @@ export const BankTransferCard = observer(
                     variant='unstyled'
                     aria-label='BIC/Swift'
                     placeholder='BIC/Swift'
-                    value={account.value.bic ?? ''}
                     onBlur={() => setFocusAccount(null)}
+                    value={bankAccount?.value?.bic ?? ''}
                     onFocus={() => setFocusAccount(account.value?.metadata?.id)}
                     onChange={(e) => {
                       account.update((acc) => {
@@ -109,14 +107,13 @@ export const BankTransferCard = observer(
                     variant='unstyled'
                     placeholderChar='_'
                     className='w-[110px]'
-                    value={sortCode ?? ''}
                     placeholder='Enter sort code'
+                    value={bankAccount?.value?.sortCode ?? ''}
                     mask={[{ mask: '00-00-00' }, { mask: /^[0-9]{0,6}$/ }]}
                     definitions={{
                       '0': /[0-9]/,
                     }}
                     onAccept={(val) => {
-                      setSortCode(val);
                       account.update((acc) => {
                         acc.sortCode = val;
 
@@ -127,19 +124,18 @@ export const BankTransferCard = observer(
                   <MaskedInput
                     autoComplete='off'
                     variant='unstyled'
-                    value={bankAccount}
                     name='accountNumber'
                     aria-label='Account number'
                     placeholder='Bank account #'
                     onBlur={() => setFocusAccount(null)}
                     mask='[XX] 00 0000 0000 0000 0000 0000 0000'
+                    value={bankAccount?.value.accountNumber ?? ''}
                     onFocus={() => setFocusAccount(account.value?.metadata?.id)}
                     definitions={{
                       X: /[A-Za-z]/,
                       '0': /[0-9]/,
                     }}
                     onAccept={(val) => {
-                      setBankAccount(val);
                       account.update((acc) => {
                         acc.accountNumber = val;
 
@@ -160,24 +156,31 @@ export const BankTransferCard = observer(
                   aria-label='Routing number'
                   placeholder='Routing number'
                   onBlur={() => setFocusAccount(null)}
+                  value={bankAccount?.value?.routingNumber ?? ''}
                   onFocus={() => setFocusAccount(account.value?.metadata?.id)}
+                  onChange={(e) => {
+                    account.update((acc) => {
+                      acc.routingNumber = e.target.value;
+
+                      return acc;
+                    });
+                  }}
                 />
                 <MaskedInput
                   autoComplete='off'
                   variant='unstyled'
-                  value={bankAccount}
                   name='accountNumber'
                   aria-label='Account number'
                   placeholder='Bank account #'
                   onBlur={() => setFocusAccount(null)}
                   mask='[XX] 00 0000 0000 0000 0000 0000 0000'
+                  value={bankAccount?.value?.accountNumber ?? ''}
                   onFocus={() => setFocusAccount(account.value?.metadata?.id)}
                   definitions={{
                     X: /[A-Za-z]/,
                     '0': /[0-9]/,
                   }}
                   onAccept={(val) => {
-                    setBankAccount(val);
                     account.update((acc) => {
                       acc.accountNumber = val;
 
@@ -196,8 +199,8 @@ export const BankTransferCard = observer(
                   variant='unstyled'
                   aria-label='BIC/Swift'
                   placeholder='BIC/Swift'
-                  value={account.value.bic ?? ''}
                   onBlur={() => setFocusAccount(null)}
+                  value={bankAccount?.value?.bic ?? ''}
                   onFocus={() => setFocusAccount(account.value?.metadata?.id)}
                   onChange={(e) => {
                     account.update((acc) => {
@@ -220,7 +223,7 @@ export const BankTransferCard = observer(
                 aria-label='Other details'
                 placeholder='Other details'
                 onBlur={() => setFocusAccount(null)}
-                value={account.value.otherDetails ?? ''}
+                value={bankAccount?.value?.otherDetails ?? ''}
                 onFocus={() => setFocusAccount(account.value?.metadata?.id)}
                 onChange={(e) => {
                   account.update((acc) => {

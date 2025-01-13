@@ -11,8 +11,7 @@ const (
 	EventFathomMeetingSummaryCreated FlowListenerEvent = "fathom.meeting_summary.created"
 	EventFlowContactAdded            FlowListenerEvent = "flow.contact.added"
 	EventGrainMeetingSummaryCreated  FlowListenerEvent = "grain.meeting_summary.created"
-	EventRevealWebsiteVisitNew       FlowListenerEvent = "reveal.website_visit.new"
-	EventRevealWebsiteVisitRepeat    FlowListenerEvent = "reveal.website_visit.repeat"
+	EventRevealWebsiteVisit          FlowListenerEvent = "reveal.website_visit"
 	NotSet                           FlowListenerEvent = ""
 )
 
@@ -43,9 +42,7 @@ func GetFlowListenerEvent(s string) (FlowListenerEvent, error) {
 	case
 		EventFathomMeetingSummaryCreated,
 		EventFlowContactAdded,
-		EventGrainMeetingSummaryCreated,
-		EventRevealWebsiteVisitNew,
-		EventRevealWebsiteVisitRepeat:
+		EventGrainMeetingSummaryCreated:
 
 		return FlowListenerEvent(s), nil
 	default:

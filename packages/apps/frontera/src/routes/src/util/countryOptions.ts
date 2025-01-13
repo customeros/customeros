@@ -239,7 +239,7 @@ export const countryOptions: SelectOption[] = [
     label: 'United Kingdom',
     value: 'GB',
   },
-  { label: 'United States of America', value: 'US' },
+  { label: 'United States', value: 'US' },
   { label: 'United States Minor Outlying Islands', value: 'UM' },
   { label: 'Uruguay', value: 'UY' },
   { label: 'Uzbekistan', value: 'UZ' },

@@ -14,8 +14,8 @@ import (
 
 type FlowTransitionsRegistryRepository interface {
 	Initialize(ctx context.Context) error
-	GetAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error)
-	GetAllActive(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error)
+	GetAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) ([]entity.FlowTransitionsRegistry, error)
+	GetAllActive(ctx context.Context, transition *entity.FlowTransitionsRegistry) ([]entity.FlowTransitionsRegistry, error)
 	Find(ctx context.Context, transition entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error)
 	Create(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error)
 }
@@ -47,7 +47,7 @@ func (r *flowTransitionsRegistryRepository) Create(ctx context.Context, transiti
 	return transition, nil
 }
 
-func (r *flowTransitionsRegistryRepository) GetAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error) {
+func (r *flowTransitionsRegistryRepository) GetAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) ([]entity.FlowTransitionsRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.GetAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -68,10 +68,10 @@ func (r *flowTransitionsRegistryRepository) GetAll(ctx context.Context, transiti
 		return nil, err
 	}
 
-	return &transitions, nil
+	return transitions, nil
 }
 
-func (r *flowTransitionsRegistryRepository) GetAllActive(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*[]entity.FlowTransitionsRegistry, error) {
+func (r *flowTransitionsRegistryRepository) GetAllActive(ctx context.Context, transition *entity.FlowTransitionsRegistry) ([]entity.FlowTransitionsRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.GetAllActive")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -93,7 +93,7 @@ func (r *flowTransitionsRegistryRepository) GetAllActive(ctx context.Context, tr
 		return nil, err
 	}
 
-	return &transitions, nil
+	return transitions, nil
 }
 
 func (r *flowTransitionsRegistryRepository) Find(ctx context.Context, transition entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error) {
@@ -126,48 +126,6 @@ func (r *flowTransitionsRegistryRepository) Initialize(ctx context.Context) erro
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.Initialize")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
-
-	required := []entity.FlowTransitionsRegistry{
-		{
-			FromNodeType: enum.NodeFlowListenerEvent.String(),
-			FromNode:     enum.EventFathomMeetingSummaryCreated.String(),
-			ToNodeType:   enum.NodeFlowAgent.String(),
-			ToNode:       enum.AgentTimelineEventCreate.String(),
-			Status:       enum.FlowNodeEdgeStatusActive.String(),
-		},
-		{
-			FromNodeType: enum.NodeFlowListenerEvent.String(),
-			FromNode:     enum.EventGrainMeetingSummaryCreated.String(),
-			ToNodeType:   enum.NodeFlowAgent.String(),
-			ToNode:       enum.AgentTimelineEventCreate.String(),
-			Status:       enum.FlowNodeEdgeStatusActive.String(),
-		},
-		// ... add more here
-	}
-
-	dbTransitions, err := r.GetAll(ctx, nil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	for _, transition := range required {
-		exists := false
-		for _, t := range *dbTransitions {
-			if t.FromNode == transition.FromNode && t.ToNode == transition.ToNode {
-				exists = true
-				break
-			}
-		}
-
-		if !exists {
-			_, createErr := r.Create(ctx, &transition)
-			if createErr != nil {
-				tracing.TraceErr(span, createErr)
-				return createErr
-			}
-		}
-	}
 
 	return nil
 }

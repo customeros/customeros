@@ -201,6 +201,12 @@ func main() {
 			},
 		),
 	)
+	// Automation Engine
+	commonServices.RabbitMQService.RegisterHandler(dto.WebhookEvent{}, listeners.OnWebhookEventCreated)
+
+	// Flow Engine
+	commonServices.RabbitMQService.RegisterHandler(dto.FlowAgentEvent{}, listeners.OnFlowAgentEventCreated)
+	commonServices.RabbitMQService.RegisterHandler(dto.FlowAgentExecutionResultEvent{}, listeners.OnFlowAgentExecutionResultsEventCreated)
 
 	// Email handlers
 	eventsService.RegisterHandler(dto.RequestValidateEmail{},

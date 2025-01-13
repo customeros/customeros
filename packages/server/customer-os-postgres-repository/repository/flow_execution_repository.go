@@ -78,12 +78,19 @@ func (f *flowExecutionRepository) Update(ctx context.Context, executionRecord en
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var updatedRecord entity.FlowExecution
+	if executionRecord.ID == "" {
+		err := errors.New("flow execution ID is missing")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
 
-	err := f.gormDb.Model(&entity.FlowExecution{}).
+	var updatedRecord entity.FlowExecution
+	err := f.gormDb.
+		Model(&entity.FlowExecution{}).
 		Where("id = ?", executionRecord.ID).
 		Updates(executionRecord).
-		First(&updatedRecord).Error
+		First(&updatedRecord, "id = ?", executionRecord.ID).
+		Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

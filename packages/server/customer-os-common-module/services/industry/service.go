@@ -65,3 +65,29 @@ func (s *industryService) GetByCode(ctx context.Context, code string) (*neo4jent
 	industryEntity := neo4jmapper.MapDbNodeToIndustryEntity(industryDbNode)
 	return industryEntity, nil
 }
+
+func (s *industryService) GetClosestByCode(ctx context.Context, code string) (*neo4jentity.IndustryEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryService.GetClosestByCode")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("code", code))
+
+	queryCode := code
+	// If the code is not found, strip the last character and try again until found or empty
+	for {
+		if len(queryCode) == 0 {
+			break
+		}
+		industryEntity, err := s.GetByCode(ctx, queryCode)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		if industryEntity != nil {
+			return industryEntity, nil
+		}
+		queryCode = queryCode[:len(queryCode)-1]
+	}
+
+	return nil, nil
+}

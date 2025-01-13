@@ -97,7 +97,6 @@ func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, 
 		LinkedInUrl:      utils.StringPtr(globalOrganization.LinkedInUrl),
 		LinkedInAlias:    utils.StringPtr(globalOrganization.LinkedInAlias),
 		ValueProposition: utils.StringPtr(globalOrganization.ValueProposition),
-		TargetAudience:   utils.StringPtr(globalOrganization.TargetAudience),
 		Domains:          utils.StringToSlice(globalOrganization.OtherDomains),
 	}
 
@@ -160,9 +159,11 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	}
 
 	// prepare domains in advance
-	err = s.domain.MergeDomain(ctx, nil, primaryDomain)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
+	if primaryDomain != "" {
+		err = s.domain.MergeDomain(ctx, nil, primaryDomain)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
+		}
 	}
 	for _, domain := range input.Domains {
 		err = s.domain.MergeDomain(ctx, nil, domain)

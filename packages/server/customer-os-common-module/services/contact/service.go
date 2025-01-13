@@ -270,6 +270,28 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 			tracing.TraceErr(span, errors.Wrap(err, "unable to refresh contact count by contact id"))
 		}
 
+		flowsWithContact, err := s.services.FlowService.FlowsGetListWithParticipant(ctx, []string{contactId}, model.CONTACT)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		if flowsWithContact != nil && len(*flowsWithContact) > 0 {
+			for _, v := range *flowsWithContact {
+				flowParticipant, err := s.services.FlowService.FlowParticipantByEntity(ctx, v.Id, contactId, model.CONTACT)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+
+				err = s.services.FlowService.FlowParticipantDelete(ctx, flowParticipant.Id)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+			}
+		}
+
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			err = s.events.Publisher.PublishEvent(ctx, contactId, model.CONTACT, dto.HideContact{})
 			if err != nil {

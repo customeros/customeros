@@ -18,7 +18,7 @@ type FlowAgentExecutionResultEvent struct {
 	FlowExecutionID      string
 	FlowAgentExecutionID string
 	Tenant               string
-	Status               enum.FlowAgentExecutionStatus
+	Status               string
 	ErrorMessage         *string
 	Data                 any
 	DataType             string

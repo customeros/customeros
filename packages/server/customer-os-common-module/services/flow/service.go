@@ -985,18 +985,18 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	flowparticipant, err := s.FlowParticipantById(ctx, flowParticipantId)
+	flowParticipant, err := s.FlowParticipantById(ctx, flowParticipantId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if flowparticipant == nil {
+	if flowParticipant == nil {
 		tracing.TraceErr(span, errors.New("flow participant not found"))
 		return errors.New("flow participant not found")
 	}
 
-	flow, err := s.FlowGetByParticipantId(ctx, nil, flowparticipant.Id)
+	flow, err := s.FlowGetByParticipantId(ctx, nil, flowParticipant.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -1025,7 +1025,7 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 			FromEntityId:   flow.Id,
 			FromEntityType: model.FLOW,
 			Relationship:   model.HAS,
-			ToEntityId:     flowparticipant.Id,
+			ToEntityId:     flowParticipant.Id,
 			ToEntityType:   model.FLOW_PARTICIPANT,
 		})
 		if err != nil {
@@ -1036,8 +1036,8 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 			FromEntityId:   flowparticipant.Id,
 			FromEntityType: model.FLOW_PARTICIPANT,
 			Relationship:   model.HAS,
-			ToEntityId:     flowparticipant.EntityId,
-			ToEntityType:   flowparticipant.EntityType,
+			ToEntityId:     flowParticipant.EntityId,
+			ToEntityType:   flowParticipant.EntityType,
 		})
 		if err != nil {
 			return nil, err

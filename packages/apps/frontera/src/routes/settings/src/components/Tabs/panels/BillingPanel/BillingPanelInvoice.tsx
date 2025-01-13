@@ -57,7 +57,7 @@ export const BillingPanelInvoice = observer(
           locality: 'San Francisco',
           region: 'CA',
           zip: '89302',
-          country: 'United States of America',
+          country: 'United States',
           email: 'invoices@acme.com',
           name: 'Acme Corp.',
         },

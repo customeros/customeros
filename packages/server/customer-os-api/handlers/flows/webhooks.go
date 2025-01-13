@@ -109,7 +109,7 @@ func GetActiveWebhooks(s *service.Services, baseURL, flowsPath string) gin.Handl
 			return
 		}
 
-		webhooks, err := s.CommonServices.PostgresRepositories.FlowWebhooksRepository.FindAll(ctx)
+		webhooks, err := s.CommonServices.PostgresRepositories.WebhooksRepository.FindAll(ctx)
 		if err != nil {
 			err = fmt.Errorf("Unable to lookup active webhooks for %s: %v", tenant, err)
 			tracing.TraceErr(span, err)

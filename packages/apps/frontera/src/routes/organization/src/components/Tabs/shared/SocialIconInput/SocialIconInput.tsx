@@ -1,14 +1,10 @@
+import { useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import React, { useRef, useMemo, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { AddSocialLinkCase } from '@domain/usecases/organization-about-tab/add-social-link.usecase.ts';
 
-import { Input } from '@ui/form/Input';
 import { useStore } from '@shared/hooks/useStore';
-import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
 
-import { SocialIcon } from './SocialIcons';
 import { SocialInput } from './SocialInput';
 
 interface SocialIconInputProps {
@@ -19,7 +15,6 @@ interface SocialIconInputProps {
   leftElement?: React.ReactNode;
   value?: { label: string; value: string }[];
 }
-const addSocialLinkUseCase = new AddSocialLinkCase();
 
 export const SocialIconInput = observer(
   ({
@@ -36,12 +31,6 @@ export const SocialIconInput = observer(
 
     const _leftElement = useMemo(() => leftElement, [leftElement]);
     const newInputRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-      if (organization) {
-        addSocialLinkUseCase.setEntity(organization);
-      }
-    }, [organization?.id]);
 
     if (!organization || !organization?.value) return null;
 
@@ -122,36 +111,6 @@ export const SocialIconInput = observer(
             {...rest}
           />
         ))}
-
-        {!isReadOnly && (
-          <InputGroup>
-            {leftElement && (
-              <LeftElement>
-                <SocialIcon url={addSocialLinkUseCase.url}>
-                  {leftElement}
-                </SocialIcon>
-              </LeftElement>
-            )}
-            <Input
-              name={name}
-              ref={newInputRef}
-              dataTest={dataTest}
-              onBlur={addSocialLinkUseCase.submit}
-              onChange={(e) => {
-                addSocialLinkUseCase.setInputValue(e.target.value);
-              }}
-              onKeyDown={(e) => {
-                e.stopPropagation();
-
-                if (e.key === 'Enter') {
-                  addSocialLinkUseCase.submit();
-                }
-              }}
-              className='border-b border-transparent hover:border-transparent hover:border-b-none text-md focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
-              {...rest}
-            />
-          </InputGroup>
-        )}
       </>
     );
   },

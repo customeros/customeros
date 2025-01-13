@@ -5,8 +5,6 @@ cd ../customer-os-common-module
 go mod tidy
 cd ../events-subscribers
 go mod tidy
-cd ../ai-api
-go mod tidy
 cd ../customer-os-api
 go mod tidy
 cd ../customer-os-neo4j-repository

@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/biter777/countries"
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -24,6 +26,7 @@ import (
 type GlobalOrganizationService interface {
 	SyncDataIntoGlobalOrganizations()
 	ScrapinCompanyByWebsite()
+	EnrichWithIndustry()
 }
 
 type globalOrganizationService struct {
@@ -107,8 +110,11 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 		}
 
 		// check if website is accepted
-		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, data.Company.WebsiteUrl) ||
-			!s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
+		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Company.WebsiteUrl) {
+			continue
+		}
+		// check if primary domain is accepted
+		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
 			continue
 		}
 
@@ -132,39 +138,44 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 		}
 
 		// populate global organization entity
-		if data.Company.Name != "" {
-			globalOrganization.Name = data.Company.Name
+		if data.Company.Name != "" && globalOrganization.Name == "" {
+			name := strings.TrimSpace(data.Company.Name)
+			name = utils.SanitizeUTF8(name)
+			globalOrganization.Name = name
 		}
 		if data.Company.Description != "" {
-			globalOrganization.Description = data.Company.Description
+			globalOrganization.SourceDescription1 = data.Company.Description
 		}
 		if data.Company.Tagline != nil {
 			if tagline, ok := data.Company.Tagline.(string); ok {
-				globalOrganization.ValueProposition = tagline
+				globalOrganization.SourceDescription2 = tagline
 			}
 		}
-		if data.Company.GetEmployeeCount() > 0 {
+		if data.Company.GetEmployeeCount() > 0 && globalOrganization.EmployeeCount == 0 {
 			globalOrganization.EmployeeCount = data.Company.GetEmployeeCount()
 		}
-		if data.Company.WebsiteUrl != "" {
+		if data.Company.WebsiteUrl != "" && globalOrganization.Website == "" {
 			globalOrganization.Website = data.Company.WebsiteUrl
 		}
-		if data.Company.FoundedOn.Year > 0 {
+		if data.Company.FoundedOn.Year > 0 && globalOrganization.YearFounded == 0 {
 			globalOrganization.YearFounded = data.Company.FoundedOn.Year
 		}
-		if data.Company.LinkedInUrl != "" {
+		if data.Company.LinkedInUrl != "" && globalOrganization.LinkedInUrl == "" {
 			globalOrganization.LinkedInUrl = data.Company.LinkedInUrl
 		}
-		if data.Company.UniversalName != "" {
+		if data.Company.UniversalName != "" && globalOrganization.LinkedInAlias == "" {
 			globalOrganization.LinkedInAlias = data.Company.UniversalName
 		}
-		if data.Company.Logo != "" {
+		if data.Company.Logo != "" && globalOrganization.LogoUrl == "" {
 			globalOrganization.LogoUrl = data.Company.Logo
 		}
-		if data.Company.Headquarter.City != "" {
+		if data.Company.Headquarter.City != "" && globalOrganization.City == "" {
 			globalOrganization.City = data.Company.Headquarter.City
 		}
-		if data.Company.Headquarter.Country != "" {
+		if data.Company.Headquarter.GeographicArea != "" && globalOrganization.Region == "" {
+			globalOrganization.Region = data.Company.Headquarter.GeographicArea
+		}
+		if data.Company.Headquarter.Country != "" && globalOrganization.CountryA2 == "" {
 			if strings.ToUpper(data.Company.Headquarter.Country) == "OO" {
 				globalOrganization.CountryA2 = ""
 			} else {
@@ -254,8 +265,11 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 		}
 
 		// check if website is accepted
-		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, data.Domain) ||
-			!s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
+		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Domain) {
+			continue
+		}
+
+		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
 			continue
 		}
 
@@ -266,47 +280,51 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 			continue
 		}
 
-		// if global organization already exists, skip processing
-		if globalOrganization != nil {
-			continue
-		}
-
-		now := utils.Now()
-		globalOrganization = &postgresentity.GlobalOrganization{
-			PrimaryDomain: primaryDomain,
-			CreatedAt:     now,
-			UpdatedAt:     now,
+		createGlobalOrg := false
+		if globalOrganization == nil {
+			createGlobalOrg = true
+			now := utils.Now()
+			globalOrganization = &postgresentity.GlobalOrganization{
+				PrimaryDomain: primaryDomain,
+				CreatedAt:     now,
+				UpdatedAt:     now,
+			}
 		}
 
 		// populate global organization entity
-		if data.Name != "" {
-			globalOrganization.Name = data.Name
+		if data.Name != "" && globalOrganization.Name == "" {
+			name := strings.TrimSpace(data.Name)
+			name = utils.SanitizeUTF8(name)
+			globalOrganization.Name = name
 		}
 		if data.LongDescription != "" {
-			globalOrganization.Description = data.LongDescription
+			globalOrganization.SourceDescription3 = data.LongDescription
 		}
 		if data.Description != "" {
-			globalOrganization.ValueProposition = data.Description
+			globalOrganization.SourceDescription4 = data.Description
 		}
-		if data.Company.GetEmployees() > 0 {
+		if data.Company.GetEmployees() > 0 && globalOrganization.EmployeeCount == 0 {
 			globalOrganization.EmployeeCount = data.Company.GetEmployees()
 		}
-		if data.Domain != "" {
+		if data.Domain != "" && globalOrganization.Website == "" {
 			globalOrganization.Website = data.Domain
 		}
-		if data.Company.FoundedYear > 0 {
+		if data.Company.FoundedYear > 0 && globalOrganization.YearFounded == 0 {
 			globalOrganization.YearFounded = int(data.Company.FoundedYear)
 		}
-		if len(data.GetLogoUrls()) > 0 {
+		if len(data.GetLogoUrls()) > 0 && globalOrganization.LogoUrl == "" {
 			globalOrganization.LogoUrl = data.GetLogoUrls()[0]
 		}
-		if len(data.GetIconUrls()) > 0 {
+		if len(data.GetIconUrls()) > 0 && globalOrganization.IconUrl == "" {
 			globalOrganization.IconUrl = data.GetIconUrls()[0]
 		}
-		if data.Company.Location.City != "" {
+		if data.Company.Location.City != "" && globalOrganization.City == "" {
 			globalOrganization.City = data.Company.Location.City
 		}
-		if data.Company.Location.CountryCodeA2 != "" {
+		if data.Company.Location.Region != "" && globalOrganization.Region == "" {
+			globalOrganization.Region = data.Company.Location.Region
+		}
+		if data.Company.Location.CountryCodeA2 != "" && globalOrganization.CountryA2 == "" {
 			if strings.ToUpper(data.Company.Location.CountryCodeA2) == "OO" {
 				globalOrganization.CountryA2 = ""
 			} else {
@@ -319,18 +337,27 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 			}
 		}
 		for _, link := range data.Links {
-			if link.Url != "" && strings.Contains(link.Url, "linkedin.com/company") {
+			if link.Url != "" && strings.Contains(link.Url, "linkedin.com/company") && globalOrganization.LinkedInUrl == "" {
 				globalOrganization.LinkedInUrl = link.Url
 				break
 			}
 		}
 
-		// create global organization
-		_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Create(ctx, globalOrganization)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error creating global organization"))
-			s.log.Errorf("Error creating global organization: %s", err.Error())
-			continue
+		if createGlobalOrg {
+			// create global organization
+			_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Create(ctx, globalOrganization)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "error creating global organization"))
+				s.log.Errorf("Error creating global organization: %s", err.Error())
+				continue
+			}
+		} else {
+			_, err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.Update(ctx, globalOrganization)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "error updating global organization"))
+				s.log.Errorf("Error updating global organization: %s", err.Error())
+				continue
+			}
 		}
 	}
 }
@@ -430,4 +457,113 @@ func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Conte
 	}
 
 	return nil
+}
+
+func (s *globalOrganizationService) EnrichWithIndustry() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.EnrichWithIndustry")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 10
+	hoursFromPreviousAttempt := 24
+	maxAttempts := 3
+
+	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToEnrichIndustry(ctx, hoursFromPreviousAttempt, maxAttempts, limit)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting records to process"))
+		s.log.Errorf("Error getting records to process: %s", err.Error())
+		return
+	}
+
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	//process records
+	for _, record := range records {
+		span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichWithIndustry.Record")
+		defer span.Finish()
+		span.LogFields(log.Uint64("record.id", record.ID))
+
+		// mark record as processed initially to not process same record again, even if error occurs
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkIndustryEnrichRequested(ctx, record.ID)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error marking record as processed"))
+			s.log.Errorf("Error marking record as processed: %s", err.Error())
+			continue
+		}
+
+		// prepare Anthropic prompt
+		var descLines []string
+		descriptions := []string{record.Description, record.SourceDescription1, record.SourceDescription2, record.SourceDescription3, record.SourceDescription4, record.SourceDescription5}
+		for i, d := range descriptions {
+			if strings.TrimSpace(d) != "" {
+				descLines = append(descLines, fmt.Sprintf("Description Line %d: %s", i+1, d))
+			}
+		}
+
+		// Construct the prompt
+		prompt := fmt.Sprintf(`
+You are a world-class data classification and industry expert.
+Your task is to read information about a company and return its most likely NAICS industry code.
+
+You will be provided:
+1. The primary domain of the company.
+2. The company name.
+3. Optional description fields about the company from LinkedIn or its website.
+
+You must:
+- Determine the single most appropriate NAICS code for the organization based on the inputs.
+- Return only the NAICS code, with no additional commentary or text. The NAICS code should be digits only, e.g. "541511".
+
+Important details:
+- If multiple NAICS codes might apply, choose the best match (the most specific, relevant code).
+- Do not output any text besides the NAICS code itself.
+
+Below is the user’s input. Use the data to derive the NAICS code.
+---
+Primary Domain: %s
+Company Name: %s
+%s
+---
+`, record.PrimaryDomain, record.Name, strings.Join(descLines, "\n"))
+
+		// ask AI for NAICS code
+		aiOutput, err := s.commonServices.AIService.AskAI(ctx, enum.AIModelAnthropicHaiku, &prompt)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
+			continue
+		}
+		code := utils.IfNotNilString(aiOutput)
+		span.LogFields(log.String("result.code", code))
+
+		if code == "" {
+			continue
+		}
+
+		// get industry for organization
+		industryEntity, err := s.commonServices.IndustryService.GetClosestByCode(ctx, code)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error getting industry by code"))
+			s.log.Errorf("Error getting industry by code: %s", err.Error())
+			continue
+		}
+
+		if industryEntity == nil {
+			span.LogFields(log.Bool("result.industryFound", false))
+			continue
+		}
+
+		span.LogFields(log.Bool("result.industryFound", true))
+
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIndustry(ctx, record.ID, industryEntity.Code, industryEntity.Name)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error setting industry"))
+			continue
+		}
+	}
 }

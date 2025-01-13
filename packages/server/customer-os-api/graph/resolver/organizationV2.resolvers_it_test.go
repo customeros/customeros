@@ -63,6 +63,41 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByWebsite(t *testing.T) {
 	assertSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorNotContains, 5, 2)
 }
 
+func TestQueryResolver_UIOrganizationsSearch_FilterByPrimaryDomain(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org1"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org2"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org3"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org4"})
+
+	neo4jtest.LinkDomainToOrganization(ctx, driver, "org1", neo4jentity.DomainEntity{Domain: "domain1", IsPrimary: utils.BoolPtr(true)})
+	neo4jtest.LinkDomainToOrganization(ctx, driver, "org1", neo4jentity.DomainEntity{Domain: "domain1secondary1"})
+	neo4jtest.LinkDomainToOrganization(ctx, driver, "org1", neo4jentity.DomainEntity{Domain: "domain1secondary2"})
+	neo4jtest.LinkDomainToOrganization(ctx, driver, "org2", neo4jentity.DomainEntity{Domain: "domain2", IsPrimary: utils.BoolPtr(true)})
+	neo4jtest.LinkDomainToOrganization(ctx, driver, "org3", neo4jentity.DomainEntity{Domain: "domain3", IsPrimary: utils.BoolPtr(true)})
+
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Domain"))
+	require.Equal(t, 5, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS_DOMAIN"))
+
+	searchBy := model.ColumnViewTypeOrganizationsPrimaryDomains
+
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 1)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 4, 3)
+	assertSearch(t, searchBy, "domain", commonModel.ComparisonOperatorContains, 4, 3)
+	assertSearch(t, searchBy, "domain1", commonModel.ComparisonOperatorContains, 4, 1)
+	assertSearch(t, searchBy, "domain2", commonModel.ComparisonOperatorContains, 4, 1)
+	assertSearch(t, searchBy, "domain3", commonModel.ComparisonOperatorContains, 4, 1)
+	assertSearch(t, searchBy, "domain4", commonModel.ComparisonOperatorContains, 4, 0)
+	assertSearch(t, searchBy, "domain", commonModel.ComparisonOperatorNotContains, 4, 0)
+	assertSearch(t, searchBy, "domain1", commonModel.ComparisonOperatorNotContains, 4, 2)
+	assertSearch(t, searchBy, "domain4", commonModel.ComparisonOperatorNotContains, 4, 3)
+}
+
 func TestQueryResolver_UIOrganizationsSearch_FilterByRelationship(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
@@ -833,6 +868,34 @@ func TestQueryResolver_UIOrganizationsSearch_SortByWebsite(t *testing.T) {
 
 	verifySortOrder(t, model.ColumnViewTypeOrganizationsWebsite, commonModel.SortingDirectionAsc, expectedAsc)
 	verifySortOrder(t, model.ColumnViewTypeOrganizationsWebsite, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIOrganizationsSearch_SortByPrimaryDomain(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org1"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org2"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org3"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "org4"})
+
+	neo4jtest.LinkDomainToOrganization(ctx, driver, "org1", neo4jentity.DomainEntity{Domain: "domain1", IsPrimary: utils.BoolPtr(true)})
+	neo4jtest.LinkDomainToOrganization(ctx, driver, "org1", neo4jentity.DomainEntity{Domain: "domain1secondary1"})
+	neo4jtest.LinkDomainToOrganization(ctx, driver, "org1", neo4jentity.DomainEntity{Domain: "domain1secondary2"})
+	neo4jtest.LinkDomainToOrganization(ctx, driver, "org2", neo4jentity.DomainEntity{Domain: "domain2", IsPrimary: utils.BoolPtr(true)})
+	neo4jtest.LinkDomainToOrganization(ctx, driver, "org3", neo4jentity.DomainEntity{Domain: "domain3", IsPrimary: utils.BoolPtr(true)})
+
+	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Domain"))
+	require.Equal(t, 5, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS_DOMAIN"))
+
+	expectedAsc := []string{"org1", "org2", "org3", "org4"}
+	expectedDesc := []string{"org3", "org2", "org1", "org4"}
+
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsPrimaryDomains, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, model.ColumnViewTypeOrganizationsPrimaryDomains, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByRelationship(t *testing.T) {

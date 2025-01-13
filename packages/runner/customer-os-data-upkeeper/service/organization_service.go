@@ -5,11 +5,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -128,7 +127,6 @@ func (s *organizationService) UpkeepOrganizations() {
 	s.enrichOrganization(ctx)
 	s.removeEmptySocials(ctx)
 	s.removeDuplicatedSocials(ctx, now)
-	s.adjustIndustries(ctx)
 	s.checkOrganizations(ctx)
 }
 
@@ -398,66 +396,6 @@ func (s *organizationService) removeDuplicatedSocials(ctx context.Context, now t
 
 	}
 
-}
-
-func (s *organizationService) adjustIndustries(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.adjustIndustries")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	limit := 500
-
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		minutesSinceLastCheck := 60 * 12 // 12 hours
-		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForAdjustIndustry(ctx, minutesSinceLastCheck, limit, data.GICSIndustryValues)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting organizations: %v", err)
-			return
-		}
-
-		// no record
-		if len(records) == 0 {
-			return
-		}
-
-		//process organizations
-		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return s.eventsProcessingClient.OrganizationClient.AdjustIndustry(ctx, &organizationpb.OrganizationIdGrpcRequest{
-					Tenant:         record.Tenant,
-					OrganizationId: record.OrganizationId,
-					AppSource:      constants.AppSourceDataUpkeeper,
-				})
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error adjusting industry for organization {%s}: %s", record.OrganizationId, err.Error())
-			}
-
-			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyIndustryCheckedAt), utils.NowPtr())
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error updating industry checked at: %s", err.Error())
-			}
-		}
-
-		// if less than limit records are returned, we are done
-		if len(records) < limit {
-			return
-		}
-
-		// force exit after single iteration
-		return
-	}
 }
 
 func (s *organizationService) checkOrganizations(ctx context.Context) {

@@ -41,7 +41,7 @@ export const ParentOrgInput = observer(
     return (
       <Popover open={isReadOnly ? false : undefined}>
         <PopoverTrigger asChild className='cursor-pointer'>
-          <div className='flex items-center min-h-10'>
+          <div className='flex items-center min-h-10 text-sm'>
             <ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />
             {hasParent ? (
               <span>{selection?.label}</span>

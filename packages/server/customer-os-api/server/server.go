@@ -124,6 +124,7 @@ func (server *server) Run(parentCtx context.Context) error {
 			NamecheapConfig:  server.cfg.ExternalServices.Namecheap,
 			PostmarkConfig:   server.cfg.ExternalServices.Postmark,
 			CloudflareConfig: server.cfg.ExternalServices.Cloudflare,
+			AnthropicConfig:  server.cfg.ExternalServices.Anthropic,
 		},
 	}, postgresDb, &neo4jDriver, server.cfg.Database.Neo4j.Database, grpcContainer, server.log)
 
