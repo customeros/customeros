@@ -25,8 +25,21 @@ export const ContactNameCell = observer(
     return (
       <div ref={ref} className='flex'>
         {!contactName && (
-          <p className='text-gray-400'>
-            {isEnriching ? 'Enriching...' : 'Unknown'}
+          <p
+            className='text-gray-700 font-medium no-underline hover:no-underline cursor-pointer'
+            onClick={() => {
+              if (
+                store.ui.contactPreviewCardOpen === true &&
+                store.ui.focusRow === contactId
+              ) {
+                store.ui.setContactPreviewCardOpen(false);
+              } else {
+                store.ui.setFocusRow(contactId);
+                store.ui.setContactPreviewCardOpen(true);
+              }
+            }}
+          >
+            {isEnriching ? 'Enriching...' : 'Unnamed'}
           </p>
         )}
         {contactName && (
