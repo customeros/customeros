@@ -347,6 +347,7 @@ class ContactService {
 
       return;
     }
+
     match(path)
       .with(
         [
