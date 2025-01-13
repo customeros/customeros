@@ -33,7 +33,6 @@ type OrganizationGrpcServiceClient interface {
 	UnlinkEmailFromBillingProfile(ctx context.Context, in *UnlinkEmailFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	LinkLocationToBillingProfile(ctx context.Context, in *LinkLocationToBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	UnlinkLocationFromBillingProfile(ctx context.Context, in *UnlinkLocationFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
-	AdjustIndustry(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 }
 
 type organizationGrpcServiceClient struct {
@@ -143,15 +142,6 @@ func (c *organizationGrpcServiceClient) UnlinkLocationFromBillingProfile(ctx con
 	return out, nil
 }
 
-func (c *organizationGrpcServiceClient) AdjustIndustry(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/AdjustIndustry", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // OrganizationGrpcServiceServer is the server API for OrganizationGrpcService service.
 // All implementations should embed UnimplementedOrganizationGrpcServiceServer
 // for forward compatibility
@@ -167,7 +157,6 @@ type OrganizationGrpcServiceServer interface {
 	UnlinkEmailFromBillingProfile(context.Context, *UnlinkEmailFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	LinkLocationToBillingProfile(context.Context, *LinkLocationToBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	UnlinkLocationFromBillingProfile(context.Context, *UnlinkLocationFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
-	AdjustIndustry(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 }
 
 // UnimplementedOrganizationGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -206,9 +195,6 @@ func (UnimplementedOrganizationGrpcServiceServer) LinkLocationToBillingProfile(c
 }
 func (UnimplementedOrganizationGrpcServiceServer) UnlinkLocationFromBillingProfile(context.Context, *UnlinkLocationFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnlinkLocationFromBillingProfile not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) AdjustIndustry(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AdjustIndustry not implemented")
 }
 
 // UnsafeOrganizationGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -420,24 +406,6 @@ func _OrganizationGrpcService_UnlinkLocationFromBillingProfile_Handler(srv inter
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrganizationGrpcService_AdjustIndustry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrganizationIdGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).AdjustIndustry(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/AdjustIndustry",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).AdjustIndustry(ctx, req.(*OrganizationIdGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // OrganizationGrpcService_ServiceDesc is the grpc.ServiceDesc for OrganizationGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -488,10 +456,6 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnlinkLocationFromBillingProfile",
 			Handler:    _OrganizationGrpcService_UnlinkLocationFromBillingProfile_Handler,
-		},
-		{
-			MethodName: "AdjustIndustry",
-			Handler:    _OrganizationGrpcService_AdjustIndustry_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
