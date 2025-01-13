@@ -42,21 +42,6 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
-	organizationSubscriptionSettings := esdb.SubscriptionSettingsDefault()
-	organizationSubscriptionSettings.MessageTimeout = s.cfg.Subscriptions.OrganizationSubscription.MessageTimeoutSec * 1000
-	organizationSubscriptionSettings.CheckpointLowerBound = s.cfg.Subscriptions.OrganizationSubscription.CheckpointLowerBound
-	organizationSubscriptionSettings.ExtraStatistics = true
-	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.OrganizationSubscription.GroupName,
-		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.OrganizationSubscription.Prefix}},
-		&organizationSubscriptionSettings,
-		false,
-		false,
-		esdb.End{},
-	); err != nil {
-		return err
-	}
-
 	notificationEventSubscriptionSettings := esdb.SubscriptionSettingsDefault()
 	notificationEventSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,

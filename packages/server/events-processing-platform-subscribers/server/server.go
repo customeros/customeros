@@ -23,7 +23,6 @@ import (
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph"
 	invoice_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/invoice"
 	notifications_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/notifications"
-	organization_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore/store"
 	"github.com/pkg/errors"
@@ -148,17 +147,6 @@ func (server *Server) InitSubscribers(ctx context.Context, grpcClients *grpc_cli
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {
 				server.Log.Errorf("(graphSubscriber.Connect) err: {%s}", err.Error())
-				cancel()
-			}
-		}()
-	}
-
-	if server.Config.Subscriptions.OrganizationSubscription.Enabled {
-		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.Log, esdb, server.Config, server.Services, server.caches, grpcClients)
-		go func() {
-			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
-			if err != nil {
-				server.Log.Errorf("(organizationSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()
