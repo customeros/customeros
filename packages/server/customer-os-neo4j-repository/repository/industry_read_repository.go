@@ -95,5 +95,5 @@ func (r *industryReadRepository) GetByCode(ctx context.Context, code string) (*d
 	if len(result.([]*dbtype.Node)) == 0 {
 		return nil, nil
 	}
-	return result.(*dbtype.Node), nil
+	return result.([]*dbtype.Node)[0], nil
 }

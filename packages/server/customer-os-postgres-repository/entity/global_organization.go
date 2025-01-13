@@ -28,7 +28,7 @@ type GlobalOrganization struct {
 	City                   string    `gorm:"column:city;type:varchar(255)" json:"city"`
 	Region                 string    `gorm:"column:region;type:varchar(255)" json:"region"`
 	CountryA2              string    `gorm:"column:country_a2;type:varchar(255)" json:"countryA2"`
-	SyncedToNeoAt          time.Time `gorm:"column:created_at;type:timestamp" json:"syncedToNeo"`
+	SyncedToNeoAt          time.Time `gorm:"column:synced_to_neo_at;type:timestamp" json:"syncedToNeoAt"`
 	DescriptionSetAt       time.Time `gorm:"column:description_set_at;type:timestamp" json:"descriptionSetAt"`
 	DescriptionRequestedAt time.Time `gorm:"column:description_requested_at;type:timestamp" json:"descriptionRequestedAt"`
 	SourceDescription1     string    `gorm:"column:source_description_1;type:text" json:"sourceDescription1"`
