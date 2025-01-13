@@ -1,4 +1,4 @@
-import { toJS, computed, intercept, observable } from 'mobx';
+import { toJS, computed, observable } from 'mobx';
 
 import type { Store } from './_store';
 
@@ -8,13 +8,6 @@ export class Entity<T extends object> {
 
   constructor(public store: Store<T, Entity<T>>, data: T) {
     this.value = data;
-
-    // obs: this only has effect on first level own properties
-    intercept(this.value, (change) => {
-      this.draft();
-
-      return change;
-    });
   }
 
   @computed
