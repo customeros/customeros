@@ -248,7 +248,8 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 
 			processEmailCheck := services.CommonServices.MailService.ProcessEmailCheck(ctx, tenantByName, &loadedEmail)
 
-			if processEmailCheck.ProcessEmail {
+			if processEmailCheck.ProcessEmail ||
+				processEmailCheck.SkipReason == "BULK | FROM NON-PRIMARY DOMAIN" { //allow personal emails to be processed
 				err = processMailstackReply(ctx, services, tenantByName, postmarkEmailWebhookData, cfg.Slack.NotifyFlowGoalAchieved)
 				if err != nil {
 					tracing.TraceErr(span, err)
