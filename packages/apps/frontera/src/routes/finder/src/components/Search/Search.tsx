@@ -10,7 +10,7 @@ import { CreateSequenceButton } from '@finder/components/Search/CreateSequenceBu
 import { TableViewsToggleNavigation } from '@finder/components/TableViewsToggleNavigation';
 import { SearchBarFilterData } from '@finder/components/SearchBarFilterData/SearchBarFilterData';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input/Input';
 import { useStore } from '@shared/hooks/useStore';
 import { Button } from '@ui/form/Button/Button.tsx';
@@ -197,6 +197,7 @@ export const Search = observer(() => {
           defaultValue={searchParams.get('search') ?? ''}
           className={cn({
             'cursor-default': tableType === TableViewType.Contacts,
+            'cursor-pointer': tableType === TableViewType.Organizations,
           })}
           readOnly={
             tableType === TableViewType.Organizations ||
@@ -205,6 +206,11 @@ export const Search = observer(() => {
           onBlur={() => {
             store.ui.setIsSearching(null);
             wrapperRef.current?.removeAttribute('data-focused');
+          }}
+          onClick={() => {
+            if (tableType === TableViewType.Organizations) {
+              store.ui.commandMenu.toggle('AddNewOrganization');
+            }
           }}
           onFocus={() => {
             if (tableType === TableViewType.Organizations) return;
