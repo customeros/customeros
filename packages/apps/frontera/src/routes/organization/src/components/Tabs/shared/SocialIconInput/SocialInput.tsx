@@ -60,7 +60,7 @@ export const SocialInput = memo(
             <InputGroup
               className={cn(
                 isHovered
-                  ? 'border-b border-transparent hover:border-transparent hover:border-b-none text-md focus-whithin:hover:border-b focus-whithin:hover:border-transparent focus-whithin:border-b focus-whithin:border-transparent'
+                  ? 'border-b border-transparent hover:border-transparent hover:border-b-none text-sm focus-whithin:hover:border-b focus-whithin:hover:border-transparent focus-whithin:border-b focus-whithin:border-transparent'
                   : '',
               )}
             >
@@ -81,7 +81,7 @@ export const SocialInput = memo(
                 placeholder={isFocused ? rest.placeholder : ''}
                 onKeyDown={(e) => e.key === 'Enter' && onKeyDown?.(e)}
                 className={
-                  'border-b border-transparent hover:border-transparent hover:border-b-none text-md focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
+                  'border-b border-transparent hover:border-transparent hover:border-b-none text-sm focus:hover:border-b focus:hover:border-transparent focus:border-b focus:border-transparent'
                 }
               />
             </InputGroup>
@@ -90,13 +90,13 @@ export const SocialInput = memo(
               <div className='h-full '>
                 <div
                   className={
-                    'items-center absolute w-[stretch] h-full top-[6px] left-7 hover:outline-none border-b border-transparent whitespace-nowrap'
+                    'items-center text-sm absolute w-[stretch] h-full top-[8px] left-7 hover:outline-none border-b border-transparent whitespace-nowrap'
                   }
                 >
                   <p
                     data-test={dataTest}
                     onClick={handleFocus}
-                    className='top-0 text-base cursor-auto overflow-hidden overflow-ellipsis'
+                    className='top-0 text-sm cursor-auto overflow-hidden overflow-ellipsis'
                   >
                     {formattedUrl}
                   </p>

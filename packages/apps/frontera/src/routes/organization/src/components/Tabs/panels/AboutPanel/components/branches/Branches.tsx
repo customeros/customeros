@@ -26,7 +26,7 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
   return (
     <Card className='w-full mt-2 p-4 bg-white rounded-md border-1 shadow-lg'>
       <CardHeader className='flex mb-4 items-center justify-between'>
-        <h2 className='text-base'>Branches</h2>
+        <h2 className='text-sm'>Branches</h2>
         {!isReadOnly && (
           <IconButton
             size='xs'
@@ -55,7 +55,7 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
             <Link
               key={organization.id}
               to={`/organization/${organization.id}?tab=about`}
-              className='line-clamp-1 break-keep text-gray-700 hover:text-primary-600 no-underline hover:underline'
+              className='line-clamp-1 text-sm break-keep text-gray-700 hover:text-primary-600 no-underline hover:underline'
             >
               {organization.name}
             </Link>

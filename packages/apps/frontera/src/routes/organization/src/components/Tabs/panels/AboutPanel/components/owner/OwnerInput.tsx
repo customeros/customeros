@@ -44,6 +44,7 @@ export const OwnerInput = observer(({ id, owner, dataTest }: OwnerProps) => {
 
   return (
     <Select
+      size={'sm'}
       isClearable
       value={value}
       isLoading={false}

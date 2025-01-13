@@ -26,7 +26,6 @@ import { Briefcase02 } from '@ui/media/icons/Briefcase02';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { HorizontalBarChart03 } from '@ui/media/icons/HorizontalBarChart03';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import {
@@ -46,7 +45,6 @@ import {
   employeesOptions,
   businessTypeOptions,
   relationshipOptions,
-  lastFundingRoundOptions,
 } from './util';
 
 const placeholders = {
@@ -184,7 +182,7 @@ export const AboutPanel = observer(() => {
           }}
         />
         <Textarea
-          size='md'
+          size='sm'
           spellCheck={false}
           className='mb-6 mt-2'
           name='valueProposition'
@@ -200,8 +198,8 @@ export const AboutPanel = observer(() => {
           }}
         />
         <Tags
+          className=' py-2'
           dataTest='org-about-tags'
-          className='min-h-10 py-2'
           inputPlaceholder='Search...'
           onCreate={handleCreateOption}
           placeholder='Organization tags'
@@ -237,7 +235,7 @@ export const AboutPanel = observer(() => {
             <Menu>
               <MenuButton
                 data-test='org-about-relationship'
-                className='min-h-[40px] outline-none focus:outline-none items-center'
+                className='min-h-[40px] text-md outline-none focus:outline-none items-center'
               >
                 {
                   iconMap[
@@ -248,7 +246,7 @@ export const AboutPanel = observer(() => {
                 {''}
                 <span
                   className={cn(
-                    'ml-3',
+                    'ml-3 text-sm',
                     !selectedRelationshipOption?.label && 'text-gray-400',
                   )}
                 >
@@ -296,7 +294,7 @@ export const AboutPanel = observer(() => {
               <Menu>
                 <MenuButton className='min-h-[40px] outline-none focus:outline-none'>
                   <Target05 className='text-gray-500 mb-0.5' />
-                  <span className='ml-3'>
+                  <span className='ml-3 text-sm'>
                     {selectedStageOption?.label || 'Stage'}
                   </span>
                 </MenuButton>
@@ -321,6 +319,7 @@ export const AboutPanel = observer(() => {
         <div className='flex flex-col w-full flex-1 items-start justify-start gap-0'>
           <Select
             isClearable
+            size={'sm'}
             name='industry'
             placeholder='Industry'
             options={industryOptions}
@@ -342,6 +341,7 @@ export const AboutPanel = observer(() => {
           />
 
           <Select
+            size={'sm'}
             isClearable
             name='businessType'
             placeholder='Business type'
@@ -357,32 +357,9 @@ export const AboutPanel = observer(() => {
             }}
           />
 
-          <div className='flex items-center justify-center w-full'>
-            <div className='flex-1'>
-              <Select
-                isClearable
-                name='lastFundingRound'
-                placeholder='Last funding round'
-                options={lastFundingRoundOptions}
-                dataTest='org-about-last-funding-round'
-                leftElement={
-                  <HorizontalBarChart03 className='text-gray-500 mr-3' />
-                }
-                onChange={(option) => {
-                  organization.value!.lastFundingRound = option?.value;
-                  organization.commit();
-                }}
-                value={lastFundingRoundOptions.map((option) =>
-                  option.value === organization.value!.lastFundingRound
-                    ? option
-                    : null,
-                )}
-              />
-            </div>
-          </div>
-
           <Select
             isClearable
+            size={'sm'}
             name='employees'
             options={employeesOptions}
             placeholder='Number of employees'
@@ -421,7 +398,7 @@ export const AboutPanel = observer(() => {
         {organization?.value.customerOsId && (
           <Tooltip label='Copy ID'>
             <span
-              className='py-3 w-fit text-gray-400 cursor-pointer'
+              className='py-3 w-fit text-gray-400 cursor-pointer text-sm'
               onClick={() =>
                 copyToClipboard(
                   organization.value?.customerOsId ?? '',
