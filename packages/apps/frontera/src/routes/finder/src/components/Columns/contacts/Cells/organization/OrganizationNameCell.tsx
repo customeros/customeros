@@ -57,19 +57,17 @@ export const OrganizationNameCell = observer(
           )}
         </span>
 
-        {contactStore?.value.primaryOrganizationName && (
-          <IconButton
-            size='xxs'
-            variant='ghost'
-            icon={<Edit03 />}
-            className='opacity-0 group-hover:opacity-100 mt-[3px]'
-            aria-label={`navigate-to-${contactStore?.value.primaryOrganizationName}`}
-            onClick={() => {
-              store.ui.commandMenu.setType('EditLatestOrgActive');
-              store.ui.commandMenu.setOpen(true);
-            }}
-          />
-        )}
+        <IconButton
+          size='xxs'
+          variant='ghost'
+          icon={<Edit03 />}
+          className='opacity-0 group-hover:opacity-100 mt-[3px]'
+          aria-label={`navigate-to-${contactStore?.value.primaryOrganizationName}`}
+          onClick={() => {
+            store.ui.commandMenu.setType('EditLatestOrgActive');
+            store.ui.commandMenu.setOpen(true);
+          }}
+        />
       </div>
     );
   },
