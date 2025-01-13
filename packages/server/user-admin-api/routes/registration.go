@@ -4,29 +4,34 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 
+	"customeros/customeros/packages/server/customer-os-common-module/common"
+	commonenum "customeros/customeros/packages/server/customer-os-common-module/enum"
+	commonModel "customeros/customeros/packages/server/customer-os-common-module/model"
+	"customeros/customeros/packages/server/customer-os-common-module/services/security"
+	"customeros/customeros/packages/server/customer-os-common-module/tracing"
+	commonUtils "customeros/customeros/packages/server/customer-os-common-module/utils"
+	neoEntity "customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
+	"customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgresEntity "customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
+	common_srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/postmark"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/utils"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -34,10 +39,8 @@ import (
 	"golang.org/x/oauth2/google"
 	googleOauth "google.golang.org/api/oauth2/v2"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/utils"
+	"customeros/customeros/packages/server/user-admin-api/config"
+	"customeros/customeros/packages/server/user-admin-api/service"
 )
 
 func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
@@ -132,10 +135,10 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 				Url:   link,
 			})
 
-			err = services.CommonServices.PostmarkService.SendNotification(ctx, commonservice.PostmarkEmail{
-				MessageStream: commonservice.PostmarkMessageStreamMagicLink,
-				WorkflowId:    commonservice.WorkflowMagicLink,
-				Subject:       commonservice.WorkflowMagicLinkSubject,
+			err = services.PostmarkService.SendNotification(ctx, interfaces.PostmarkEmail{
+				MessageStream: postmark.PostmarkMessageStreamMagicLink,
+				WorkflowId:    postmark.WorkflowMagicLink,
+				Subject:       postmark.WorkflowMagicLinkSubject,
 				From:          "notification@app.customeros.ai",
 				To:            request.Email,
 				TemplateData: map[string]string{
@@ -577,7 +580,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 			tenant := neo4jmapper.MapDbNodeToTenantEntity(tenantNode)
 			span.LogFields(tracingLog.String("tenantIdentifiedDifferentWorkspace", tenant.Name))
 
-			_, err := services.CommonServices.WorkspaceService.MergeToTenant(ctx, neo4jentity.WorkspaceEntity{
+			_, err := services.CommonServices.WorkspaceService.MergeToTenant(ctx, neoEntity.WorkspaceEntity{
 				Name:     domain,
 				Provider: signInRequest.Provider,
 			}, tenant.Name)
@@ -599,7 +602,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 
 	span.LogFields(tracingLog.String("newTenantCreationWith", tenantStr))
 
-	tenantEntity, err := services.CommonServices.TenantService.Merge(ctx, neo4jentity.TenantEntity{
+	tenantEntity, err := services.CommonServices.TenantService.Merge(ctx, neoEntity.TenantEntity{
 		Name: tenantStr,
 	})
 	if err != nil {
@@ -608,7 +611,7 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 	}
 
 	if !isPersonalEmail {
-		_, err := services.CommonServices.WorkspaceService.MergeToTenant(ctx, neo4jentity.WorkspaceEntity{
+		_, err := services.CommonServices.WorkspaceService.MergeToTenant(ctx, neoEntity.WorkspaceEntity{
 			Name:      domain,
 			Provider:  signInRequest.Provider,
 			AppSource: constants.AppSourceUserAdminApi,
@@ -760,12 +763,12 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 			Roles:     commonUtils.ToPtr([]string{"USER", "OWNER"}),
 		})
 
-		_, err = services.CommonServices.EmailService.Merge(innerCtx, nil, tenant, commonservice.EmailFields{
+		_, err = services.CommonServices.EmailService.Merge(innerCtx, nil, tenant, interfaces.EmailFields{
 			Primary:   true,
 			Email:     email,
-			Source:    neo4jentity.DataSourceOpenline,
+			Source:    neoEntity.DataSourceOpenline,
 			AppSource: constants.AppSourceUserAdminApi,
-		}, &commonservice.LinkWith{
+		}, &common_srv.LinkWith{
 			Type: commonModel.USER,
 			Id:   userId,
 		})
@@ -802,7 +805,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 	}
 
 	if playerId == "" {
-		err := services.CommonServices.Neo4jRepositories.PlayerWriteRepository.Merge(ctx, userId, neo4jentity.PlayerEntity{
+		err := services.CommonServices.Neo4jRepositories.PlayerWriteRepository.Merge(ctx, userId, neoEntity.PlayerEntity{
 			AuthId:     email,
 			Provider:   provider,
 			IdentityId: providerAccountId,
@@ -1119,7 +1122,7 @@ func createOrganizationAndContact(ctx context.Context, services *service.Service
 			}
 
 			err = services.CommonServices.ContactService.LinkContactWithOrganization(ctx, nil, contactId, organizationId, "", "",
-				neo4jentity.DataSourceOpenline.String(), false, nil, nil)
+				neoEntity.DataSourceOpenline.String(), false, nil, nil)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, nil, err

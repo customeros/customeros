@@ -7,8 +7,8 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
+	"customeros/customeros/packages/server/user-admin-api/config"
+	"customeros/customeros/packages/server/user-admin-api/service"
 )
 
 // Run will start the server

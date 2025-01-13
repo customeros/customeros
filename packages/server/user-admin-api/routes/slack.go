@@ -9,12 +9,12 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"customeros/customeros/packages/server/customer-os-common-module/service/security"
+	postgresEntity "customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
+	"customeros/customeros/packages/server/user-admin-api/config"
+	"customeros/customeros/packages/server/user-admin-api/service"
 )
 
 func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {

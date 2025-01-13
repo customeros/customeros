@@ -7,13 +7,13 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/routes"
@@ -61,7 +61,7 @@ func main() {
 	defer df.Close(gRPCconn)
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 
-	appCache := caches.NewCache()
+	appCache := caches.NewCommonCache()
 	services := service.InitServices(cfg, &neo4jDriver, postgresDb, grpcContainer, appCache, appLogger)
 
 	// init app cache
@@ -102,3 +102,4 @@ func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
 	}
 	return nil
 }
+

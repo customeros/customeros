@@ -10,18 +10,18 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"customeros/customeros/packages/server/customer-os-common-module/common"
+	"customeros/customeros/packages/server/customer-os-common-module/enum"
+	"customeros/customeros/packages/server/customer-os-common-module/model"
+	"customeros/customeros/packages/server/customer-os-common-module/services/security"
+	"customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jmapper "customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
+	"customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
+	"customeros/customeros/packages/server/user-admin-api/config"
+	"customeros/customeros/packages/server/user-admin-api/service"
 )
 
 func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.Services) {

@@ -7,17 +7,17 @@ import (
 
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"customeros/customeros/packages/server/customer-os-common-module/dto"
+	"customeros/customeros/packages/server/customer-os-common-module/enum"
+	"customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"customeros/customeros/packages/server/customer-os-common-module/utils"
+	"customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
+	"customeros/customeros/packages/server/user-admin-api/config"
+	"customeros/customeros/packages/server/user-admin-api/service"
 )
 
 type NewOrRepeatVisitor string

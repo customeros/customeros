@@ -21,6 +21,7 @@ type Config struct {
 	RabbitMQ         config.RabbitMQConfig
 	OpenSRS          config.OpenSRSConfig
 	Postmark         config.PostmarkConfig
+	Azure            config.AzureOAuthConfig
 	InternalServices InternalServices
 }
 

@@ -22,23 +22,24 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/mail"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/opensrs"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/organization"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/postmark"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/social"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/user"
 	neoRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 )
 
 type Services struct {
-	Log         logger.Logger
-	Cache       *caches.Cache
-	GrpcClients *grpc_client.Clients
-	Config      *config.Config
-	Events      *events.EventsService
-	Postgres    *repository.Repositories
-	Neo4j       *neoRepo.Repositories
-	MailService interfaces.MailService
+	Log             logger.Logger
+	Cache           *caches.Cache
+	GrpcClients     *grpc_client.Clients
+	Config          *config.Config
+	Events          *events.EventsService
+	Postgres        *repository.Repositories
+	Neo4j           *neoRepo.Repositories
+	MailService     interfaces.MailService
+	PostmarkService interfaces.PostmarkService
 }
 
 func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, grpcClients *grpc_client.Clients, cache *caches.Cache, appLogger logger.Logger) *Services {
@@ -48,7 +49,7 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresD
 		GrpcClients: grpcClients,
 		Config:      cfg,
 	}
-	events, err := events.NewEventsService(cfg.RabbitMQ.Url, services.Log)
+	events, err := events.NewEventsService(cfg.RabbitMQ.Url, appLogger)
 	if err != nil {
 		log.Fatalf("cannot start rabbitMQ")
 	}
@@ -60,8 +61,14 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresD
 		services.Neo4j,
 	)
 
+	postmark := postmark.NewPostmarkService(
+		&cfg.Postmark,
+		services.Postgres,
+	)
+	services.PostmarkService = postmark
+
 	azure := azure.NewAzureService(
-		cfg,
+		&cfg.Azure,
 		services.Postgres,
 		services.Neo4j,
 	)
@@ -135,8 +142,8 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresD
 		services.Events,
 		domain,
 		industry,
-		nil, // social
 		user,
+		nil, // social
 	)
 
 	interactionEvent := interaction_event.NewInteractionEventService(
@@ -149,27 +156,68 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresD
 		services.Postgres,
 		services.Neo4j,
 		azure,
-		nil, // contact
-		nil, // email
 		google,
-		nil, // interactionEvent
 		interactionSession,
 		opensrs,
+		nil, // contact
+		nil, // email
+		nil, // interactionEvent
 		nil, // org
 	)
 
 	email.SetContactService(contact)
 	email.SetOrganizationService(org)
 
+	jobrole.SetOrganizationService(org)
+
+	social.SetContactService(contact)
+
 	contact.SetEmailService(email)
 	contact.SetOrganizationService(org)
 	contact.SetJobRoleService(jobrole)
 	contact.SetSocialService(social)
 
+	org.SetSocialService(social)
+
+	interactionEvent.SetEmailService(email)
+
+	mail.SetContactService(contact)
+	mail.SetEmailService(email)
+	mail.SetInteractionEventService(interactionEvent)
+	mail.SetOrganizationService(org)
+
 	// validate init
 	if !email.IsInitialized() {
-		log.Fatalf("Email service not fully initialized")
+		logInitializationErr("Email")
+	}
+
+	if !jobrole.IsInitialized() {
+		logInitializationErr("JobRole")
+	}
+
+	if !social.IsInitialized() {
+		logInitializationErr("Social")
+	}
+
+	if !contact.IsInitialized() {
+		logInitializationErr("Contact")
+	}
+
+	if !org.IsInitialized() {
+		logInitializationErr("Organization")
+	}
+
+	if !interactionEvent.IsInitialized() {
+		logInitializationErr("InteractionEvent")
+	}
+
+	if !mail.IsInitialized() {
+		logInitializationErr("Mail")
 	}
 
 	return &services
+}
+
+func logInitializationErr(s string) {
+	log.Fatalf(s, "service not fully initialized")
 }
