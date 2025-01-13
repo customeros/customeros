@@ -81,7 +81,8 @@ enum ColumnViewType {
 
     ORGANIZATIONS_AVATAR # no search, no sort
     ORGANIZATIONS_NAME #search, sort done
-    ORGANIZATIONS_WEBSITE #search, sort done
+    ORGANIZATIONS_WEBSITE #search, sort done #deprecated
+    ORGANIZATIONS_PRIMARY_DOMAINS
     ORGANIZATIONS_RELATIONSHIP #search, sort done
     ORGANIZATIONS_ONBOARDING_STATUS #search, sort done
     ORGANIZATIONS_RENEWAL_LIKELIHOOD #search, sort done
