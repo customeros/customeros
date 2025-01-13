@@ -155,13 +155,13 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
 
   @action
   async retrieve(ids: string[]) {
-    ids.forEach((id) => {
-      if (this.value.has(id)) {
-        return;
-      }
+    // ids.forEach((id) => {
+    //   if (this.value.has(id)) {
+    //     return;
+    //   }
 
-      this.value.set(id, new Contact(this, Contact.default({ id })));
-    });
+    //   this.value.set(id, new Contact(this, Contact.default({ id })));
+    // });
 
     try {
       const { ui_contacts } = await this.service.getContactsByIds({

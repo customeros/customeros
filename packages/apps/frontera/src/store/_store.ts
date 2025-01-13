@@ -41,7 +41,7 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
   persister?: PersisterInstance;
 
   private snapshots: Map<string, T> = new Map();
-  @observable private accessor views: Map<string, E[]> = new Map();
+  @observable public accessor views: Map<string, E[]> = new Map();
   @observable private accessor searchTerms: Map<string, string> = new Map();
 
   constructor(

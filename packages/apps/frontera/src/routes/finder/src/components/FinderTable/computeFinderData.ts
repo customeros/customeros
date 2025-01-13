@@ -7,7 +7,7 @@ import { inPlaceSort } from 'fast-sort';
 import { SortingState } from '@tanstack/table-core';
 import { TableViewDef } from '@store/TableViewDefs/TableViewDef.dto';
 
-import { TableViewType } from '@graphql/types';
+import { TableIdType, TableViewType } from '@graphql/types';
 
 import { getFlowsFilterFns, getFlowsColumnSortFn } from '../Columns/flows';
 import {
@@ -43,12 +43,19 @@ export const computeFinderData = (
   const preset = tableViewDef.value.id;
   const tableType =
     tableViewDef?.value.tableType || TableViewType.Organizations;
+  const tableId = tableViewDef?.value.tableId;
 
   return match(tableType)
     .with(TableViewType.Organizations, () => {
       return store.organizations.getViewById(preset ?? '');
     })
     .with(TableViewType.Contacts, () => {
+      if (tableId === TableIdType.FlowContacts) {
+        const flowId = window.location.pathname.split('/').pop();
+
+        return store.contacts.getViewById(flowId ?? '');
+      }
+
       return store.contacts.getViewById(preset ?? '');
     })
     .with(TableViewType.Contracts, () =>

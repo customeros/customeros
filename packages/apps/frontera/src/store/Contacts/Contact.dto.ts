@@ -87,12 +87,8 @@ export class Contact extends Entity<ContactDatum> {
   }
 
   @computed
-  get flowsIds(): string[] | undefined {
-    if (!this.flows?.length) return undefined;
-
-    return this.flows.map((flow) => {
-      return flow?.id;
-    });
+  get flowsIds(): string[] {
+    return this.value.flows ?? [];
   }
 
   @computed
