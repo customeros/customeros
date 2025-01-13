@@ -8,6 +8,9 @@ import (
 )
 
 type InteractionEventService interface {
+	SetEmailService(EmailService)
+	IsInitialized() bool
+
 	GetById(ctx context.Context, id string) (*neo4jentity.InteractionEventEntity, error)
 	GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string, loadContent bool) (*neo4jentity.InteractionEventEntities, error)
 	GetInteractionEventsForMeetings(ctx context.Context, ids []string, loadContent bool) (*neo4jentity.InteractionEventEntities, error)

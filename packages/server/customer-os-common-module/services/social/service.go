@@ -43,6 +43,17 @@ func NewSocialService(log logger.Logger, neo4j *neoRepo.Repositories, events *ev
 	}
 }
 
+func (s *socialService) SetContactService(contact interfaces.ContactService) {
+	s.contact = contact
+}
+
+func (s *socialService) IsInitialized() bool {
+	if s.neo4j == nil || s.events == nil || s.contact == nil {
+		return false
+	}
+	return true
+}
+
 func (s *socialService) GetAllForEntities(ctx context.Context, tenant string, linkedEntityType model.EntityType, linkedEntityIds []string) (*neo4jentity.SocialEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialService.GetAllForEntities")
 	defer span.Finish()

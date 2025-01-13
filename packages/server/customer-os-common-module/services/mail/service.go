@@ -17,29 +17,54 @@ type mailService struct {
 	postgres           *repository.Repositories
 	neo4j              *neoRepo.Repositories
 	azure              interfaces.AzureService
-	contact            interfaces.ContactService
-	email              interfaces.EmailService
 	google             interfaces.GoogleService
-	interactionEvent   interfaces.InteractionEventService
 	interactionSession interfaces.InteractionSessionService
 	opensrs            interfaces.OpenSrsService
+	contact            interfaces.ContactService
+	email              interfaces.EmailService
+	interactionEvent   interfaces.InteractionEventService
 	org                interfaces.OrganizationService
 }
 
-func NewMailService(cache *caches.Cache, postgres *repository.Repositories, neo4j *neoRepo.Repositories, azure interfaces.AzureService, contact interfaces.ContactService, email interfaces.EmailService, google interfaces.GoogleService, interactionEvent interfaces.InteractionEventService, interactionSession interfaces.InteractionSessionService, opensrs interfaces.OpenSrsService, org interfaces.OrganizationService) MailService {
+func NewMailService(cache *caches.Cache, postgres *repository.Repositories, neo4j *neoRepo.Repositories, azure interfaces.AzureService, contact interfaces.ContactService, email interfaces.EmailService, google interfaces.GoogleService, interactionEvent interfaces.InteractionEventService, interactionSession interfaces.InteractionSessionService, opensrs interfaces.OpenSrsService, org interfaces.OrganizationService) interfaces.MailService {
 	return &mailService{
 		cache:              cache,
 		postgres:           postgres,
 		neo4j:              neo4j,
 		azure:              azure,
-		contact:            contact,
-		email:              email,
 		google:             google,
-		interactionEvent:   interactionEvent,
 		interactionSession: interactionSession,
 		opensrs:            opensrs,
+		contact:            contact,
+		email:              email,
+		interactionEvent:   interactionEvent,
 		org:                org,
 	}
+}
+
+func (p *mailService) SetContactService(contact interfaces.ContactService) {
+	p.contact = contact
+}
+
+func (p *mailService) SetEmailService(email interfaces.EmailService) {
+	p.email = email
+}
+
+func (p *mailService) SetInteractionEventService(interactionEvent interfaces.InteractionEventService) {
+	p.interactionEvent = interactionEvent
+}
+
+func (p *mailService) SetOrganizationService(org interfaces.OrganizationService) {
+	p.org = org
+}
+
+func (p *mailService) IsInitialized() bool {
+	if p.cache == nil || p.postgres == nil || p.neo4j == nil || p.azure == nil ||
+		p.google == nil || p.interactionSession == nil || p.opensrs == nil || p.contact == nil ||
+		p.email == nil || p.interactionEvent == nil || p.org == nil {
+		return false
+	}
+	return true
 }
 
 func (p *mailService) initializeTracing(ctx context.Context, operationName string) (opentracing.Span, context.Context) {

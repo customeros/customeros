@@ -11,6 +11,9 @@ import (
 )
 
 type OrganizationService interface {
+	SetSocialService(social SocialService)
+	IsInitialized() bool
+
 	GetById(ctx context.Context, tenant, organizationId string) (*entity.OrganizationEntity, error)
 
 	CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64) (string, error)

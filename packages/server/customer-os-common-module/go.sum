@@ -274,6 +274,8 @@ github.com/nexus-rpc/sdk-go v0.1.0 h1:PUL/0vEY1//WnqyEHT5ao4LBRQ6MeNUihmnNGn0xMW
 github.com/nexus-rpc/sdk-go v0.1.0/go.mod h1:TpfkM2Cw0Rlk9drGkoiSMpFqflKTiQLWUNyKJjF8mKQ=
 github.com/novuhq/go-novu v0.1.2 h1:hYVrVjZBUgByVwLE+W4DNXRRCBlHoNNOBLkDI7/enU8=
 github.com/novuhq/go-novu v0.1.2/go.mod h1:O8+kHDKSfDncLZ8olp5FL00tn1aSTMOvZI1IRZZqmUg=
+github.com/nyaruka/phonenumbers v1.4.4 h1:9yo9jLvXD7J4exe7GJATApgTlB+05snF0joMDL1p7nQ=
+github.com/nyaruka/phonenumbers v1.4.4/go.mod h1:gv+CtldaFz+G3vHHnasBSirAi3O2XLqZzVWz4V1pl2E=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.0 h1:8SG7/vwALn54lVB/0yZ/MMwhFrPYtpEHQb2IpWsCzug=

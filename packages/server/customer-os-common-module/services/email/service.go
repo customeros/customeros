@@ -48,7 +48,7 @@ func (s *emailService) SetOrganizationService(org interfaces.OrganizationService
 	s.org = org
 }
 
-func (s *emailService) isInitialized() bool {
+func (s *emailService) IsInitialized() bool {
 	if s.neo4j == nil || s.events == nil || s.contact == nil || s.org == nil {
 		return false
 	}

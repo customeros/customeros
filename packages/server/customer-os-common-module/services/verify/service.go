@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/nyaruka/phonenumbers"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go"
@@ -14,18 +16,21 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
 type verifyService struct {
-	cfg        *config.GlobalConfig
+	log        logger.Logger
+	cfg        *config.VerifyServiceConfig
 	postgres   *repository.Repositories
 	enrichment interfaces.EnrichmentService
 }
 
-func NewVerifyService(cfg *config.GlobalConfig, postgres *repository.Repositories, enrichment interfaces.EnrichmentService) interfaces.VerifyService {
+func NewVerifyService(log logger.Logger, cfg *config.VerifyServiceConfig, postgres *repository.Repositories, enrichment interfaces.EnrichmentService) interfaces.VerifyService {
 	return &verifyService{
+		log:        log,
 		cfg:        cfg,
 		postgres:   postgres,
 		enrichment: enrichment,
@@ -95,6 +100,20 @@ func (s *verifyService) Threats(ctx context.Context, ipAddress string) (*interfa
 	}
 
 	return &results, nil
+}
+
+func (s *verifyService) ValidatePhoneNumber(ctx context.Context, countryCodeA2 string, phoneNumber string) (*string, *string, error) {
+	num, err := phonenumbers.Parse(phoneNumber, countryCodeA2)
+	if err != nil {
+		return nil, nil, err
+	}
+	if !phonenumbers.IsValidNumber(num) {
+		return nil, nil, nil
+	} else {
+		e164 := phonenumbers.Format(num, phonenumbers.E164)
+		extractedCountryCodeA2 := phonenumbers.GetRegionCodeForNumber(num)
+		return &e164, &extractedCountryCodeA2, nil
+	}
 }
 
 func (s *verifyService) callVerifyAPIForIpData(ctx context.Context, ipAddress string) (*validationmodel.IpLookupResponse, error) {

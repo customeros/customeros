@@ -14,6 +14,7 @@ import (
 	novu "github.com/novuhq/go-novu/lib"
 	"github.com/opentracing/opentracing-go"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
@@ -53,19 +54,13 @@ type novuService struct {
 	NovuClient *novu.APIClient
 }
 
-func NewNovuService() NovuService {
-	apiKey := ""
-
-	if services.GlobalConfig.NovuConfig != nil {
-		apiKey = services.GlobalConfig.NovuConfig.ApiKey
-	}
-
+func NewNovuService(apiKey string) interfaces.NovuService {
 	return &novuService{
 		NovuClient: novu.NewAPIClient(apiKey, &novu.Config{}),
 	}
 }
 
-func (np *novuService) SendNotification(ctx context.Context, notification *NovuNotification) error {
+func (np *novuService) SendNotification(ctx context.Context, notification *interfaces.NovuNotification) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NovuService.SendNotification")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -153,8 +148,6 @@ func (np *novuService) GetFileName(workflowId, fileExtension string) string {
 		fileName = "novu-flow-participant-goal-achieved-email." + fileExtension
 	case WorkflowIdOrgOwnerUpdateEmail:
 		fileName = "ownership.single." + fileExtension
-	case WorkflowFailedWebhook:
-		fileName = "webhook.failed." + fileExtension
 	case WorkflowReminderNotificationEmail:
 		fileName = "reminder." + fileExtension
 	}

@@ -16,6 +16,7 @@ type ContactService interface {
 	SetOrganizationService(org OrganizationService)
 	SetJobRoleService(jobrole JobRoleService)
 	SetSocialService(social SocialService)
+	IsInitialized() bool
 
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, contactFields data_fields.ContactFields, updateOnlyIfEmpty bool, options ...common_srv.ServiceOptions) (string, error)
 	CreateContactByLinkedIn(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkedInUrl string, options ...common_srv.ServiceOptions) (string, error)

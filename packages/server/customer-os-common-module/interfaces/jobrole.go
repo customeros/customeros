@@ -10,6 +10,9 @@ import (
 )
 
 type JobRoleService interface {
+	SetOrganizationService(org OrganizationService)
+	IsInitialized() bool
+
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, jobRoleId, contactId, organizationId *string, dataFields data_fields.JobRoleFields) (string, error)
 	GetAllForContact(ctx context.Context, contactId string) (*entity.JobRoleEntities, error)
 	GetAllForContacts(ctx context.Context, contactIds []string) (*entity.JobRoleEntities, error)

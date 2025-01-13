@@ -34,6 +34,17 @@ func NewInteractionEventService(neo4j *neoRepo.Repositories, email interfaces.Em
 	}
 }
 
+func (s *interactionEventService) SetEmailService(email interfaces.EmailService) {
+	s.email = email
+}
+
+func (s *interactionEventService) IsInitialized() bool {
+	if s.neo4j == nil || s.email == nil {
+		return false
+	}
+	return true
+}
+
 func (s *interactionEventService) GetById(ctx context.Context, id string) (*neo4jentity.InteractionEventEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetById")
 	defer span.Finish()

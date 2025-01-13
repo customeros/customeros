@@ -39,8 +39,8 @@ type organizationService struct {
 	events   *events.EventsService
 	domain   interfaces.DomainService
 	industry interfaces.IndustryService
-	social   interfaces.SocialService
 	user     interfaces.UserService
+	social   interfaces.SocialService
 }
 
 func NewOrganizationService(log logger.Logger, postgres *repository.Repositories, neo4j *neoRepo.Repositories, events *events.EventsService, domain interfaces.DomainService, industry interfaces.IndustryService, social interfaces.SocialService, user interfaces.UserService) interfaces.OrganizationService {
@@ -51,9 +51,21 @@ func NewOrganizationService(log logger.Logger, postgres *repository.Repositories
 		events:   events,
 		domain:   domain,
 		industry: industry,
-		social:   social,
 		user:     user,
+		social:   social,
 	}
+}
+
+func (s *organizationService) SetSocialService(social interfaces.SocialService) {
+	s.social = social
+}
+
+func (s *organizationService) IsInitialized() bool {
+	if s.postgres == nil || s.neo4j == nil || s.events == nil || s.domain == nil ||
+		s.industry == nil || s.user == nil || s.social == nil {
+		return false
+	}
+	return true
 }
 
 func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64) (string, error) {

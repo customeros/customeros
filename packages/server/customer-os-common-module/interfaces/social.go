@@ -11,6 +11,9 @@ import (
 )
 
 type SocialService interface {
+	SetContactService(contact ContactService)
+	IsInitialized() bool
+
 	GetById(ctx context.Context, socialId string) (*entity.SocialEntity, error)
 	AddSocialToEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith common_srv.LinkWith, socialEntity entity.SocialEntity) (string, error)
 	RemoveSocialFromEntity(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, linkWith common_srv.LinkWith, socialId string) error

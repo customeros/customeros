@@ -28,6 +28,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mrz1836/postmark v1.6.7
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
+	github.com/nyaruka/phonenumbers v1.4.4
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c
@@ -167,7 +168,7 @@ require (
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	go.temporal.io/sdk v1.31.0
 	go.uber.org/atomic v1.11.0 // indirect
-	go.uber.org/multierr v1.11.0
+	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect

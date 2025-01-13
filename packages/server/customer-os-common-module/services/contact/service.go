@@ -8,6 +8,7 @@ import (
 
 	"github.com/customeros/mailsherpa/emailparser"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -67,6 +68,14 @@ func (s *contactService) SetJobRoleService(jobrole interfaces.JobRoleService) {
 
 func (s *contactService) SetSocialService(social interfaces.SocialService) {
 	s.social = social
+}
+
+func (s *contactService) IsInitialized() bool {
+	if s.neo4j == nil || s.events == nil || s.domain == nil || s.email == nil ||
+		s.organization == nil || s.jobrole == nil || s.social == nil {
+		return false
+	}
+	return true
 }
 
 func (s *contactService) CreateContactWithOrganizationByEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email string) (string, error) {

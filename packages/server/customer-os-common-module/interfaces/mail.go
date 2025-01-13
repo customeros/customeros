@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
@@ -11,6 +12,12 @@ import (
 )
 
 type MailService interface {
+	SetContactService(ContactService)
+	SetEmailService(EmailService)
+	SetInteractionEventService(InteractionEventService)
+	SetOrganizationService(OrganizationService)
+	IsInitialized() bool
+
 	ExtractEmails(s string) []string
 	GetEmailsForProcessingForUser(ctx context.Context, tenant, userEmailAddress string)
 	LoadEmail(ctx context.Context, rawEmail *entity.RawEmail) (EmailMessageData, error)
