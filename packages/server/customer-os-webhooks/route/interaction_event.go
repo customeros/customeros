@@ -256,23 +256,23 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 					c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 					return
 				}
-			}
 
-			if cfg.Slack.NotifyPostmarkEmail != "" {
-				slackMessageText := "*From:* " + postmarkEmailWebhookData.FromFull.Email + " - " + postmarkEmailWebhookData.FromFull.Name + "\n"
-				for _, t := range postmarkEmailWebhookData.ToFull {
-					slackMessageText += "*To:* " + t.Email + " - " + t.Name + "\n"
-				}
-				for _, t := range postmarkEmailWebhookData.CcFull {
-					slackMessageText += "*CC:* " + t.Email + " - " + t.Name + "\n"
-				}
-				for _, t := range postmarkEmailWebhookData.BccFull {
-					slackMessageText += "*BCC:* " + t.Email + " - " + t.Name + "\n"
-				}
-				slackMessageText += "*Subject:* " + postmarkEmailWebhookData.Subject + "\n"
-				slackMessageText += "*Body:* " + postmarkEmailWebhookData.HtmlBody
+				if cfg.Slack.NotifyPostmarkEmail != "" {
+					slackMessageText := "*From:* " + postmarkEmailWebhookData.FromFull.Email + " - " + postmarkEmailWebhookData.FromFull.Name + "\n"
+					for _, t := range postmarkEmailWebhookData.ToFull {
+						slackMessageText += "*To:* " + t.Email + " - " + t.Name + "\n"
+					}
+					for _, t := range postmarkEmailWebhookData.CcFull {
+						slackMessageText += "*CC:* " + t.Email + " - " + t.Name + "\n"
+					}
+					for _, t := range postmarkEmailWebhookData.BccFull {
+						slackMessageText += "*BCC:* " + t.Email + " - " + t.Name + "\n"
+					}
+					slackMessageText += "*Subject:* " + postmarkEmailWebhookData.Subject + "\n"
+					slackMessageText += "*Body:* " + postmarkEmailWebhookData.HtmlBody
 
-				utils.SendSlackMessage(ctx, cfg.Slack.NotifyPostmarkEmail, slackMessageText)
+					utils.SendSlackMessage(ctx, cfg.Slack.NotifyPostmarkEmail, slackMessageText)
+				}
 			}
 		}
 		c.JSON(http.StatusOK, gin.H{})
