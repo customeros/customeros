@@ -1,23 +1,18 @@
 package verify
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"net"
-	"net/http"
 
 	"github.com/nyaruka/phonenumbers"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
+	international_street "github.com/smartystreets/smartystreets-go-sdk/international-street-api"
+	extract "github.com/smartystreets/smartystreets-go-sdk/us-extract-api"
+	"github.com/smartystreets/smartystreets-go-sdk/wireup"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
@@ -26,6 +21,8 @@ type verifyService struct {
 	cfg        *config.VerifyServiceConfig
 	postgres   *repository.Repositories
 	enrichment interfaces.EnrichmentService
+	USClient   *extract.Client
+	IntlClient *international_street.Client
 }
 
 func NewVerifyService(log logger.Logger, cfg *config.VerifyServiceConfig, postgres *repository.Repositories, enrichment interfaces.EnrichmentService) interfaces.VerifyService {
@@ -34,6 +31,8 @@ func NewVerifyService(log logger.Logger, cfg *config.VerifyServiceConfig, postgr
 		cfg:        cfg,
 		postgres:   postgres,
 		enrichment: enrichment,
+		USClient:   wireup.BuildUSExtractAPIClient(wireup.SecretKeyCredential(cfg.SmartyConfig.AuthId, cfg.SmartyConfig.AuthToken)),
+		IntlClient: wireup.BuildInternationalStreetAPIClient(wireup.SecretKeyCredential(cfg.SmartyConfig.AuthId, cfg.SmartyConfig.AuthToken)),
 	}
 }
 
@@ -71,21 +70,21 @@ func (s *verifyService) Threats(ctx context.Context, ipAddress string) (*interfa
 	defer span.Finish()
 	span.LogKV("ipAddress", ipAddress)
 
-	ipData, err := s.callVerifyAPIForIpData(ctx, ipAddress)
+	ipData, err := s.LookupIp(ctx, ipAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	results := interfaces.IpThreats{
-		IsAnonymous:   ipData.IpData.Threat.IsAnonymous,
-		IsBogon:       ipData.IpData.Threat.IsBogon,
-		IsDatacenter:  ipData.IpData.Threat.IsDatacenter,
-		IsICloudRelay: ipData.IpData.Threat.IsIcloudRelay,
-		IsKnownAbuser: ipData.IpData.Threat.IsKnownAbuser,
-		IsProxy:       ipData.IpData.Threat.IsProxy,
-		IsTor:         ipData.IpData.Threat.IsTor,
-		IsVpn:         ipData.IpData.Threat.IsVpn,
+		IsAnonymous:   ipData.Threat.IsAnonymous,
+		IsBogon:       ipData.Threat.IsBogon,
+		IsDatacenter:  ipData.Threat.IsDatacenter,
+		IsICloudRelay: ipData.Threat.IsIcloudRelay,
+		IsKnownAbuser: ipData.Threat.IsKnownAbuser,
+		IsProxy:       ipData.Threat.IsProxy,
+		IsTor:         ipData.Threat.IsTor,
+		IsVpn:         ipData.Threat.IsVpn,
 	}
 
 	if results.IsAnonymous ||
@@ -114,54 +113,4 @@ func (s *verifyService) ValidatePhoneNumber(ctx context.Context, countryCodeA2 s
 		extractedCountryCodeA2 := phonenumbers.GetRegionCodeForNumber(num)
 		return &e164, &extractedCountryCodeA2, nil
 	}
-}
-
-func (s *verifyService) callVerifyAPIForIpData(ctx context.Context, ipAddress string) (*validationmodel.IpLookupResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "VerifyService.callVerifyAPIForIpData")
-	defer span.Finish()
-	span.LogKV("ipAddress", ipAddress)
-
-	if net.ParseIP(ipAddress) == nil {
-		err := errors.New("invalid IP address")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	requestJSON, err := json.Marshal(validationmodel.IpLookupRequest{
-		Ip: ipAddress,
-	})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
-		return nil, err
-	}
-	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("POST", s.cfg.InternalServices.ValidationApiConfig.Url+"/ipLookup", bytes.NewBuffer(requestBody))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
-		return nil, err
-	}
-	// Inject span context into the HTTP request
-	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
-
-	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, s.cfg.InternalServices.ValidationApiConfig.ApiKey)
-	req.Header.Set(security.TenantHeader, "")
-
-	// Make the HTTP request
-	client := &http.Client{}
-	response, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
-		return nil, err
-	}
-	defer response.Body.Close()
-
-	var result validationmodel.IpLookupResponse
-	err = json.NewDecoder(response.Body).Decode(&result)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
-		return nil, err
-	}
-
-	return &result, nil
 }

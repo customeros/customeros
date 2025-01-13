@@ -2,6 +2,7 @@ package verify
 
 import (
 	"context"
+
 	"github.com/sirupsen/logrus"
 	international_street "github.com/smartystreets/smartystreets-go-sdk/international-street-api"
 	extract "github.com/smartystreets/smartystreets-go-sdk/us-extract-api"
