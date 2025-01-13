@@ -1,7 +1,5 @@
 import { FC } from 'react';
 
-import countries from '@assets/countries/countries.json';
-
 import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
@@ -35,7 +33,7 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
   title,
   onClick,
 }) => {
-  const isUSA = country === 'United States of America';
+  const isUSA = country.trim() === 'United States';
   const borderRightPosition = title === 'From' ? 'border-r-0' : 'border-r';
   const filterDynamicClass = isBlurred ? 'blur-[2px]' : 'filter-none';
   const oppacity = isFocused
@@ -106,11 +104,7 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
               </span>
             )}
 
-            <span className='text-sm leading-4 text-gray-500'>
-              {countries
-                .find((c) => c.name === country)
-                ?.alpha3.toLocaleUpperCase()}
-            </span>
+            <span className='text-sm leading-4 text-gray-500'>{country}</span>
             {email && (
               <span className='text-sm leading-4 text-gray-500 break-words'>
                 {email}
