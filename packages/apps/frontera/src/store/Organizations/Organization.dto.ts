@@ -58,6 +58,7 @@ export class Organization extends Entity<OrganizationDatum> {
     return user ?? null;
   }
 
+  @computed
   get primaryDomains() {
     if (!this.value.domainsDetails) return [];
 
