@@ -14,7 +14,6 @@ import { Hourglass02 } from '@ui/media/icons/Hourglass02';
 import { RefreshCw01 } from '@ui/media/icons/RefreshCw01';
 import { ArrowIfPath } from '@ui/media/icons/ArrowIfPath';
 import { ClipboardCheck } from '@ui/media/icons/ClipboardCheck';
-import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 
 import { keywords } from './keywords';
 import { useUndoRedo } from '../../hooks';
@@ -347,31 +346,32 @@ export const StepsHub = observer(() => {
         Wait
       </FlowCommandItem>
 
-      <FlowCommandItem
-        leftAccessory={<LinkedinOutline />}
-        keywords={keywords.send_connection_request}
-        onSelect={() =>
-          updateSelectedNode(FlowActionType.LINKEDIN_CONNECTION_REQUEST)
-        }
-      >
-        <span
-          className='text-gray-700'
-          data-test='flow-send-linkedin-connection-request'
-        >
-          Send connection request
-        </span>
-      </FlowCommandItem>
+      {/* uncomment when functionality is ready*/}
+      {/*<FlowCommandItem*/}
+      {/*  leftAccessory={<LinkedinOutline />}*/}
+      {/*  keywords={keywords.send_connection_request}*/}
+      {/*  onSelect={() =>*/}
+      {/*    updateSelectedNode(FlowActionType.LINKEDIN_CONNECTION_REQUEST)*/}
+      {/*  }*/}
+      {/*>*/}
+      {/*  <span*/}
+      {/*    className='text-gray-700'*/}
+      {/*    data-test='flow-send-linkedin-connection-request'*/}
+      {/*  >*/}
+      {/*    Send connection request*/}
+      {/*  </span>*/}
+      {/*</FlowCommandItem>*/}
 
-      <FlowCommandItem
-        disabled
-        leftAccessory={<LinkedinOutline />}
-        keywords={keywords.send_linkedin_message}
-      >
-        <span className='text-gray-700' data-test='flow-send-linkedin-message'>
-          Send LinkedIn message
-        </span>
-        <span className='text-gray-500'>(Coming soon)</span>
-      </FlowCommandItem>
+      {/*<FlowCommandItem*/}
+      {/*  disabled*/}
+      {/*  leftAccessory={<LinkedinOutline />}*/}
+      {/*  keywords={keywords.send_linkedin_message}*/}
+      {/*>*/}
+      {/*  <span className='text-gray-700' data-test='flow-send-linkedin-message'>*/}
+      {/*    Send LinkedIn message*/}
+      {/*  </span>*/}
+      {/*  <span className='text-gray-500'>(Coming soon)</span>*/}
+      {/*</FlowCommandItem>*/}
 
       <FlowCommandItem
         disabled

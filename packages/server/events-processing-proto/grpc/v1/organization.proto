@@ -178,5 +178,4 @@ service organizationGrpcService {
   rpc UnlinkEmailFromBillingProfile(UnlinkEmailFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc LinkLocationToBillingProfile(LinkLocationToBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc UnlinkLocationFromBillingProfile(UnlinkLocationFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
-  rpc AdjustIndustry(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
 }

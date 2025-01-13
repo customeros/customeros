@@ -26,7 +26,6 @@ const (
 	OrganizationLocationLinkToBillingProfileV1     = "V1_ORGANIZATION_LOCATION_LINK_TO_BILLING_PROFILE"
 	OrganizationLocationUnlinkFromBillingProfileV1 = "V1_ORGANIZATION_LOCATION_UNLINK_FROM_BILLING_PROFILE"
 	OrganizationRefreshDerivedDataV1               = "V1_ORGANIZATION_REFRESH_DERIVED_DATA"
-	OrganizationAdjustIndustryV1                   = "V1_ORGANIZATION_ADJUST_INDUSTRY"
 )
 
 type OrganizationLinkPhoneNumberEvent struct {

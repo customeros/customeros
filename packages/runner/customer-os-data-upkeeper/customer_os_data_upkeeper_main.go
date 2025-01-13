@@ -8,8 +8,8 @@ import (
 	localcron "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/cron"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
@@ -82,6 +82,9 @@ func main() {
 		CommonServices: commonService.InitServices(&commonConfig.GlobalConfig{
 			RabbitMQConfig: &cfg.RabbitMQConfig,
 			NovuConfig:     &cfg.NovuConfig,
+			ExternalServices: commonConfig.ExternalServices{
+				AnthropicConfig: cfg.ExternalServices.Anthropic,
+			},
 		}, postgresDb, &neo4jDriver, cfg.Neo4j.Database, epClient, appLogger),
 		EventProcessingServicesClient: epClient,
 		EventBufferStoreService:       eventBufferStoreService,

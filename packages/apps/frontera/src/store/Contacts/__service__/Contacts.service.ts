@@ -455,9 +455,15 @@ class ContactService {
           operation.diff.length > 1 &&
           operation.diff[operation.diff.length - 1].op === 'delete'
         ) {
-          const toBeDeletedName = (
-            operation.diff[0] as rdiffResult & { oldVal: string }
-          )?.oldVal;
+          const pathIsId = match(operation.diff[0]?.path)
+            .with([...P.array(), 'id'], () => true)
+            .otherwise(() => false);
+
+          const toBeDeletedName = !pathIsId
+            ? (operation.diff[0] as rdiffResult & { oldVal: string })?.oldVal
+            : store.store.root.tags.getById(
+                (operation.diff[0] as rdiffResult & { oldVal: string })?.oldVal,
+              )?.tagName;
 
           this.removeTagsFromContact({
             input: {

@@ -148,7 +148,7 @@ export const ContactPreviewCard = observer(() => {
                   </p>
                 </div>
               ) : (
-                <span className='mt-2'>(No org yet)</span>
+                <span className='mt-2 ml-0.5'> (No org yet)</span>
               )}
             </div>
           )}

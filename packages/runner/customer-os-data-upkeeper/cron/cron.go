@@ -112,6 +112,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.Cron.CronScheduleUpdateOrganization, GroupOrganization, updateOrganizations, "updateOrganizations")
 	addJob(cont.Cfg.Cron.CronScheduleSyncDataToGlobalOrgs, GroupGlobalOrg, syncDataToGlobalOrgs, "syncDataToGlobalOrgs")
 	addJob(cont.Cfg.Cron.CronScheduleProcessWebsiteForGlobalOrgs, GroupGlobalOrg, processWebsiteForGlobalOrgs, "processWebsiteForGlobalOrgs")
+	addJob(cont.Cfg.Cron.CronScheduleEnrichIndustry, GroupGlobalOrg, enrichWithIndustry, "enrichWithIndustry")
 
 	// Contract Jobs
 	addJob(cont.Cfg.Cron.CronScheduleUpdateContract, GroupContract, updateContractsStatusAndRenewal, "updateContractsStatusAndRenewal")
@@ -318,6 +319,10 @@ func checkDomains(cont *container.Container) {
 
 func checkMailstackDomainReputation(cont *container.Container) {
 	service.NewMailstackService(cont.Cfg, cont.Log, cont.CommonServices).CheckMailstackDomainReputation()
+}
+
+func enrichWithIndustry(cont *container.Container) {
+	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).EnrichWithIndustry()
 }
 
 func sendReminders(cont *container.Container) {
