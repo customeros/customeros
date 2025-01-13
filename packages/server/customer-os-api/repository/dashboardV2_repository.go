@@ -44,6 +44,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	tagFilterCypher, tagFilterParams := "", make(map[string]interface{})
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
 	userFilterCypher, userFilterParams := "", make(map[string]interface{})
+	domainFilterCypher, domainFilterParams := "", make(map[string]interface{})
 	parentOrganizationFilterCypher, parentOrganizationFilterParams := "", make(map[string]interface{})
 
 	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
@@ -84,12 +85,20 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		userFilter.LogicalOperator = utils.AND
 		userFilter.Filters = make([]*utils.CypherFilter, 0)
 
+		domainFilter := new(utils.CypherFilter)
+		domainFilter.Negate = false
+		domainFilter.LogicalOperator = utils.AND
+		domainFilter.Filters = make([]*utils.CypherFilter, 0)
+
 		for _, filter := range where.And {
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsName.String() {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsWebsite.String() {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("website", filter.Filter.Value.Str, filter.Filter.Operation))
+			}
+			if filter.Filter.Property == model.ColumnViewTypeOrganizationsPrimaryDomains.String() {
+				domainFilter.Filters = append(domainFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.DomainPropertyDomain), filter.Filter.Value.Str, filter.Filter.Operation))
 			}
 			if filter.Filter.Property == model.ColumnViewTypeOrganizationsRelationship.String() {
 				createInOrEmptyStringFilter(filter, organizationFilter, "relationship")
@@ -207,6 +216,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if len(userFilter.Filters) > 0 {
 			userFilterCypher, userFilterParams = userFilter.BuildCypherFilterFragmentWithParamName("u", "u_param_")
 		}
+		if len(domainFilter.Filters) > 0 {
+			domainFilterCypher, domainFilterParams = domainFilter.BuildCypherFilterFragmentWithParamName("d", "d_param_")
+		}
 		if len(parentOrganizationFilter.Filters) > 0 {
 			parentOrganizationFilterCypher, parentOrganizationFilterParams = parentOrganizationFilter.BuildCypherFilterFragmentWithParamName("po", "po_param_")
 		}
@@ -224,12 +236,16 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	utils.MergeMapToMap(tagFilterParams, params)
 	utils.MergeMapToMap(locationFilterParams, params)
 	utils.MergeMapToMap(userFilterParams, params)
+	utils.MergeMapToMap(domainFilterParams, params)
 	utils.MergeMapToMap(parentOrganizationFilterParams, params)
 
 	//region count selectQuery
 	countQuery := ""
 	{
 		countQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s) `, tenant)
+		if domainFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain{primary: true}) WITH *`
+		}
 		if userFilterCypher != "" {
 			countQuery += ` OPTIONAL MATCH (o)<-[:OWNS]-(u:User) WITH *`
 		}
@@ -248,13 +264,16 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 
 		countQuery += ` WHERE (o.hide = false OR o.hide IS NULL) `
 
-		if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || parentOrganizationFilterCypher != "" || userFilterCypher != "" {
+		if organizationFilterCypher != "" || domainFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || parentOrganizationFilterCypher != "" || userFilterCypher != "" {
 			countQuery += " AND "
 		}
 
 		countQueryParts := []string{}
 		if organizationFilterCypher != "" {
 			countQueryParts = append(countQueryParts, organizationFilterCypher)
+		}
+		if domainFilterCypher != "" {
+			countQueryParts = append(countQueryParts, domainFilterCypher)
 		}
 		if userFilterCypher != "" {
 			countQueryParts = append(countQueryParts, userFilterCypher)
@@ -283,6 +302,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if userFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeOrganizationsOwner.String())) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(u:User) WITH *`)
 		}
+		if domainFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeOrganizationsPrimaryDomains.String())) {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain{primary: true}) WITH *`)
+		}
 		if socialFilterCypher != "" {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS]->(s:Social_%s) WITH *`, tenant)
 		}
@@ -297,13 +319,16 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		}
 		selectQuery += ` WHERE (o.hide = false OR o.hide IS NULL) `
 
-		if organizationFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || parentOrganizationFilterCypher != "" || locationFilterCypher != "" || userFilterCypher != "" {
+		if organizationFilterCypher != "" || domainFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || parentOrganizationFilterCypher != "" || locationFilterCypher != "" || userFilterCypher != "" {
 			selectQuery += " AND "
 		}
 
 		queryParts := []string{}
 		if organizationFilterCypher != "" {
 			queryParts = append(queryParts, organizationFilterCypher)
+		}
+		if domainFilterCypher != "" {
+			queryParts = append(queryParts, domainFilterCypher)
 		}
 		if userFilterCypher != "" {
 			queryParts = append(queryParts, userFilterCypher)
@@ -340,6 +365,13 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 			aliases += "CASE WHEN o.website <> \"\" and not o.website is null THEN toLower(o.website) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.website <> \"\" and not o.website is null THEN toLower(o.website) ELSE '' END as SORT_BY "
+		}
+	}
+	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsPrimaryDomains.String() {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += "CASE WHEN d.domain <> \"\" and not d.domain is null THEN toLower(d.domain) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+		} else {
+			aliases += "CASE WHEN d.domain <> \"\" and not d.domain is null THEN toLower(d.domain) ELSE '' END as SORT_BY "
 		}
 	}
 	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsRelationship.String() {

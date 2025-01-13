@@ -1220,10 +1220,12 @@ func UserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, 
 	})
 }
 
-func LinkDomainToOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, domain string) {
+func LinkDomainToOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId string, domain entity.DomainEntity) {
 	query := ` MERGE (d:Domain {domain:$domain})
 			ON CREATE SET
 				d.id=randomUUID(),
+				d.primary=$primary,
+				d.primaryDomain=$primaryDomain,
 				d.source="test",
 				d.appSource="test",
 				d.createdAt=$now,
@@ -1233,7 +1235,9 @@ func LinkDomainToOrganization(ctx context.Context, driver *neo4j.DriverWithConte
 			MERGE (o)-[:HAS_DOMAIN]->(d)`
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"organizationId": organizationId,
-		"domain":         domain,
+		"domain":         domain.Domain,
+		"primary":        domain.IsPrimary,
+		"primaryDomain":  domain.PrimaryDomain,
 		"now":            utils.Now(),
 	})
 }
