@@ -90,7 +90,7 @@ export const LogEntryPreviewModal = ({
           <div className='flex items-center'>
             <h2 className='text-lg font-semibold'>Log entry</h2>
           </div>
-          <div className='flex justify-end items-center'>
+          <div className='flex justify-end items-baseline'>
             <Tooltip side='bottom' asChild={false} label='Copy link'>
               <div>
                 <IconButton
