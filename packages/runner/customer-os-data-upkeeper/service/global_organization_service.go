@@ -291,13 +291,6 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 			}
 		}
 
-		now := utils.Now()
-		globalOrganization = &postgresentity.GlobalOrganization{
-			PrimaryDomain: primaryDomain,
-			CreatedAt:     now,
-			UpdatedAt:     now,
-		}
-
 		// populate global organization entity
 		if data.Name != "" && globalOrganization.Name == "" {
 			name := strings.TrimSpace(data.Name)
