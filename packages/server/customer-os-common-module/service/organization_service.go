@@ -92,8 +92,8 @@ func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, 
 		LinkedInAlias:    utils.StringPtr(globalOrganization.LinkedInAlias),
 		ValueProposition: utils.StringPtr(globalOrganization.ValueProposition),
 		Domains:          utils.StringToSlice(globalOrganization.OtherDomains),
+		IndustryCode:     utils.StringPtrNillable(globalOrganization.IndustryNaicsCode),
 	}
-
 	if globalOrganization.YearFounded > 0 {
 		dataFields.YearFounded = utils.Int64Ptr(int64(globalOrganization.YearFounded))
 	}

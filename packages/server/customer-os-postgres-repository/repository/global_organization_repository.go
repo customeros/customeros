@@ -22,10 +22,16 @@ type GlobalOrganizationRepository interface {
 	GetOrganizationsToEnrichIndustry(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*entity.GlobalOrganization, error)
 	MarkIndustryEnrichRequested(ctx context.Context, id uint64) error
 	SetIndustry(ctx context.Context, id uint64, industryNaicsCode, industryNaicsName string) error
+	GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx context.Context, daysFromPreviousSync, limit int) ([]*entity.GlobalOrganization, error)
 }
 
 type globalOrganizationRepository struct {
 	db *gorm.DB
+}
+
+func (r *globalOrganizationRepository) GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx context.Context, daysFromPreviousSync, limit int) ([]*entity.GlobalOrganization, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewGlobalOrganizationRepository(gormDb *gorm.DB) GlobalOrganizationRepository {
@@ -167,8 +173,8 @@ func (r *globalOrganizationRepository) MarkIndustryEnrichRequested(ctx context.C
 
 	result := r.db.WithContext(ctx).Model(&entity.GlobalOrganization{}).
 		Where("id = ?", id).
-		Update("industry_requested_at", utils.Now()).
-		UpdateColumn("industry_request_count", gorm.Expr("COALESCE(industry_request_count, 0) + 1"))
+		UpdateColumn("industry_request_count", gorm.Expr("COALESCE(industry_request_count, 0) + 1")).
+		UpdateColumn("industry_requested_at", utils.Now())
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
 		return result.Error
