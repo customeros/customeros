@@ -93,7 +93,7 @@ func (r *webSessionEventsRepository) FindSession(ctx context.Context, webSession
 }
 
 func (r *webSessionEventsRepository) FindLastNotification(ctx context.Context, tenant, domain string) (*entity.WebSession, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionRepository.FindLastNotification")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindLastNotification")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -117,7 +117,7 @@ func (r *webSessionEventsRepository) FindLastNotification(ctx context.Context, t
 }
 
 func (r *webSessionEventsRepository) Update(ctx context.Context, webSessionData entity.WebSession) (*entity.WebSession, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionRepository.Update")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 

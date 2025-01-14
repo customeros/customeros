@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -27,7 +28,7 @@ func NewFlowsRepository(gormDb *gorm.DB) FlowsRepository {
 }
 
 func (f *flowRepository) Create(ctx context.Context, flowRecord entity.Flows) (*entity.Flows, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "FlowsRepository.Create")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowsRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -43,7 +44,7 @@ func (f *flowRepository) Create(ctx context.Context, flowRecord entity.Flows) (*
 }
 
 func (f *flowRepository) FindAll(ctx context.Context, flowRecord entity.Flows) ([]entity.Flows, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "FlowsRepository.FindAll")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowsRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -65,7 +66,7 @@ func (f *flowRepository) FindAll(ctx context.Context, flowRecord entity.Flows) (
 }
 
 func (f *flowRepository) Find(ctx context.Context, flowRecord entity.Flows) (*entity.Flows, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "FlowsRepository.Find")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowsRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -85,7 +86,7 @@ func (f *flowRepository) Find(ctx context.Context, flowRecord entity.Flows) (*en
 }
 
 func (f *flowRepository) Update(ctx context.Context, flowRecord entity.Flows) (*entity.Flows, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "FlowsRepository.Update")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowsRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
