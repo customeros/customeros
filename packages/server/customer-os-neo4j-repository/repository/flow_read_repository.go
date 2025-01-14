@@ -35,7 +35,7 @@ func (r flowReadRepositoryImpl) GetList(ctx context.Context) ([]*dbtype.Node, er
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s) RETURN f`, common.GetTenantFromContext(ctx))
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s) where f.status != 'ARCHIVED' RETURN f`, common.GetTenantFromContext(ctx))
 	params := map[string]any{
 		"tenant": common.GetTenantFromContext(ctx),
 	}
