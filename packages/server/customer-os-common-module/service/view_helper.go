@@ -410,7 +410,7 @@ func DefaultTableViewDefinitionFlowContactsV2(span opentracing.Span, flowId stri
 		Order:          0,
 		Icon:           "Users01",
 		Filters:        ``,
-		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"FLOW_ID","value":["%s"],"active":true}}}]}`, flowId),
+		DefaultFilters: fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"FLOW_ID","value":["%s"],"active":true}}]}`, flowId),
 		Sorting:        `{"id": "CONTACTS_UPDATED_AT", "desc": true}`,
 		IsPreset:       true,
 		IsShared:       true,

@@ -541,6 +541,62 @@ func TestQueryResolver_UIContactsSearch_SortByJobTitle(t *testing.T) {
 	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsJobTitle, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
+func TestQueryResolver_UIContactsSearch_FilterByPhoneNumber(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{Id: "1", RawPhoneNumber: "1"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "1", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{Id: "2", RawPhoneNumber: "2"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "2", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
+	neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{Id: "3", RawPhoneNumber: "11"})
+	neo4jtest.LinkNodes(ctx, driver, "3", "3", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "5"})
+
+	searchBy := postgresEntity.ColumnViewTypeContactsPhoneNumbers
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 2)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 3)
+	assertContactSearch(t, searchBy, "1", commonModel.ComparisonOperatorContains, 5, 2)
+	assertContactSearch(t, searchBy, "11", commonModel.ComparisonOperatorContains, 5, 1)
+	assertContactSearch(t, searchBy, "2", commonModel.ComparisonOperatorContains, 5, 1)
+
+	assertContactSearch(t, searchBy, "1", commonModel.ComparisonOperatorNotContains, 5, 3)
+	assertContactSearch(t, searchBy, "11", commonModel.ComparisonOperatorNotContains, 5, 4)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByPhoneNumber(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{Id: "1", RawPhoneNumber: "1"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "1", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{Id: "2", RawPhoneNumber: "2"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "2", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty"})
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsPhoneNumbers, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsPhoneNumbers, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
 func TestQueryResolver_UIContactsSearch_SortByLinkedInFollowerCount(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
