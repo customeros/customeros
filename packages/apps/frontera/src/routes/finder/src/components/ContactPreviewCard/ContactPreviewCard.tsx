@@ -214,11 +214,11 @@ export const ContactPreviewCard = observer(() => {
                 <LinkedInSolid02 className='mt-[1px] text-gray-500 ' />
                 LinkedIn
               </div>
-              <div className='flex items-center gap-1 w-full group'>
+              <div className='flex items-center gap-1 group  '>
                 <Link to={href || ''} target='_blank'>
-                  <span className='text-sm'>
+                  <p className='text-sm truncate w-[180px]'>
                     {fromatedUrl || 'LinkedIn profile link'}
-                  </span>
+                  </p>
                 </Link>
                 {fromatedUrl && (
                   <Link to={href || ''} target='_blank'>
