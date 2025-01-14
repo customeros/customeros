@@ -405,6 +405,7 @@ const getDefaultValue = (): Flow => ({
   name: '',
   status: FlowStatus.Off,
   description: '',
+  tableViewDefId: '',
   metadata: {
     source: DataSource.Openline,
     appSource: DataSource.Openline,

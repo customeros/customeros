@@ -8,7 +8,6 @@ import { getOrganizationSortFn } from './sortFns';
 import { getOrganizationFilterFns } from './filterFns';
 import { OrganizationsStore } from '../Organizations.store';
 
-// TODO: Cache filtered and sorted results for faster subsequent access
 export class TeamViews {
   private cachedCombos = new Map<string, string>();
   private cachedSearchCombos = new Map<string, string>();

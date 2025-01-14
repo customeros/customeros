@@ -8,116 +8,60 @@ import { getContactSortFn } from './sortFns';
 import { getContactFilterFns } from './filterFns';
 import { ContactsStore } from '../Contacts.store';
 
-// TODO: Cache filtered and sorted results for faster subsequent access
 export class FlowContactsView {
   private cachedCombos = new Map<string, string>();
+  private cachedSearchCombos = new Map<string, string>();
 
   constructor(private store: ContactsStore) {
-    // autorun(() => {
-    //   const flows = Array.from(this.store.root.flows.value);
-    //   const preset = this.store.root.tableViewDefs.flowContactsPreset;
-
-    //   if (!preset) return;
-
-    //   flows.forEach(([id]) => {
-    //     const viewDef = this.store.root.tableViewDefs.getById(preset);
-    //     const combo = [
-    //       id,
-    //       viewDef?.value.defaultFilters,
-    //       viewDef?.value.filters,
-    //       viewDef?.value.sorting,
-    //       JSON.stringify(viewDef?.value.columns),
-    //     ].join('-');
-
-    //     if (this.cachedCombos.get(id) === combo) return;
-
-    //     this.cachedCombos.set(id, combo);
-
-    //     this.store.search(preset);
-    //   });
-    // });
-
     autorun(() => {
-      const flows = Array.from(this.store.root.flows.value);
-      const preset = this.store.root.tableViewDefs.flowContactsPreset;
+      if (!this.store.root.flowParticipants?.value) return;
 
-      if (!preset) return;
+      const flowParticipantIds = Array.from(
+        this.store.root.flowParticipants?.value.values(),
+      ).reduce((acc, curr) => {
+        if (!this.store.value.has(curr?.value?.entityId)) {
+          acc.push(curr?.value?.entityId);
+        }
 
-      // const dataSize = this.store.size;
-      const dataVersion = this.store.version;
+        return acc;
+      }, [] as string[]);
 
-      flows.forEach(([id]) => {
-        const viewDef = this.store.root.tableViewDefs.getById(preset);
-        const combo = [
-          id,
-          viewDef?.value.defaultFilters,
-          viewDef?.value.filters,
-          viewDef?.value.sorting,
-          JSON.stringify(viewDef?.value.columns),
-          dataVersion,
-          // dataSize,
-        ].join('-');
-
-        if (this.cachedCombos.get(id) === combo) return;
-
-        this.cachedCombos.set(id, combo);
-
-        this.update(id);
-      });
+      if (flowParticipantIds.length) {
+        this.store.retrieve(flowParticipantIds);
+      }
     });
 
-    // reaction(() => {
-    //   const preset = this.store.root.tableViewDefs.flowContactsPreset;
+    autorun(() => {
+      const flowContactsViewDefs =
+        this.store.root.tableViewDefs.flowContactsPresets;
 
-    //   return preset ? this.store.getSearchTermByView(preset) : '';
-    // }, this.update);
-    // reaction(() => {
-    //   const preset = this.store.root.tableViewDefs.flowContactsPreset;
+      const dataSize = this.store.value.size;
+      const dataVersion = this.store.version;
 
-    //   return preset ? this.store.availableCounts.get(preset) : 0;
-    // }, this.update);
-    // reaction(() => this.store.value.size, this.update);
-    // reaction(() => this.store.version, this.update);
-    // reaction(() => {
-    //   const preset = this.store.root.tableViewDefs.flowContactsPreset;
+      flowContactsViewDefs.forEach((viewDef) => {
+        const preset = viewDef?.value.id;
+        const searchTerm = this.store.getSearchTermByView(preset);
+        const combo = [
+          viewDef.value?.defaultFilters,
+          viewDef.value?.filters,
+          viewDef.value?.sorting,
+          searchTerm,
+          JSON.stringify(viewDef.value.columns),
+          dataSize,
+          dataVersion,
+        ].join('-');
 
-    //   return this.store.cursors.get(preset!);
-    // }, this.update);
-    // reaction(
-    //   () => {
-    //     const preset = this.store.root.tableViewDefs.flowContactsPreset;
+        if (this.cachedCombos.get(preset) === combo) return;
 
-    //     if (!preset) return '';
+        this.cachedCombos.set(preset, combo);
 
-    //     const viewDef = this.store.root.tableViewDefs.getById(preset);
-
-    //     const columns = JSON.stringify(viewDef?.value.columns);
-
-    //     return `${viewDef?.value.filters ?? ''}-${
-    //       viewDef?.value.defaultFilters ?? ''
-    //     }-${viewDef?.value.sorting}-${columns}-${this.store.size}`;
-    //   },
-    //   () =>
-    //     this.store.search(this.store.root.tableViewDefs.flowContactsPreset!),
-    // );
-    // reaction(() => {
-    //   const preset = this.store.root.tableViewDefs.flowContactsPreset;
-
-    //   if (!preset) return '';
-
-    //   const viewDef = this.store.root.tableViewDefs.getById(preset);
-    //   const columns = JSON.stringify(viewDef?.value.columns);
-
-    //   return `${viewDef?.value.filters ?? ''}-${
-    //     viewDef?.value.defaultFilters ?? ''
-    //   }-${viewDef?.value.sorting}-${columns}`;
-    // }, this.update);
+        this.update(preset, searchTerm);
+      });
+    });
   }
 
   @action
-  public update = (flowId: string) => {
-    const preset = this.store.root.tableViewDefs.flowContactsPreset;
-
+  public update = (preset: string, searchTerm?: string) => {
     if (!preset) return;
 
     const viewDef = this.store.root.tableViewDefs.getById(preset);
@@ -125,17 +69,16 @@ export class FlowContactsView {
     if (!viewDef) return;
 
     const defaultFilters = getContactFilterFns(viewDef.getDefaultFilters());
-    const activeFilters = getContactFilterFns(viewDef.getFilters(), flowId);
+    const activeFilters = getContactFilterFns(viewDef.getFilters());
     const sorting = JSON.parse(viewDef.value.sorting);
 
-    this.store.setView(flowId, (data) => {
+    this.store.setView(preset, (data) => {
       const columnId = sorting?.id as string;
       const isDesc = sorting?.desc as boolean;
 
       const filteredIdsWithSortValues = (data as Contact[]).reduce(
         (acc, curr) => {
-          if (!curr || !flowId) return acc;
-          if (!curr.flowsIds?.includes(flowId)) return acc;
+          if (!curr) return acc;
 
           if (
             defaultFilters.every((fn) => fn(curr)) &&
@@ -164,8 +107,6 @@ export class FlowContactsView {
       let sorted = inPlaceSort(filteredIdsWithSortValues)
         [isDesc ? 'desc' : 'asc']((entry) => entry.sortValue)
         .map((entry) => entry.record);
-
-      const searchTerm = this.store.getSearchTermByView(preset);
 
       if (searchTerm) {
         sorted = indexAndSearch(sorted, searchTerm);

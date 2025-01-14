@@ -8,6 +8,7 @@ query getFlows {
     edges
     nodes
     status
+    tableViewDefId
     senders {
         metadata {
             id
