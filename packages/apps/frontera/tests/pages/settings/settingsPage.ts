@@ -54,19 +54,15 @@ export class SettingsPage {
     await this.page.keyboard.press('Enter');
     await ensureLocatorIsVisible(this.page, this.settingsMailboxesDomainsList);
 
-    // Get initial domains
     const initialDomains = await this.getMailboxDomains();
 
-    // Click suggest new
     await clickLocatorThatIsVisible(
       this.page,
       this.settingsMailboxesDomainsSuggestNew,
     );
 
-    // Get updated domains
     const updatedDomains = await this.getMailboxDomains();
 
-    // Verify that none of the updated domains exist in the initial list
     const hasOverlap = updatedDomains.some((domain) =>
       initialDomains.includes(domain),
     );
@@ -76,7 +72,6 @@ export class SettingsPage {
       'Updated domains should be completely different from initial domains',
     ).toBe(false);
 
-    // Also verify we still have the same number of suggestions
     expect(
       updatedDomains.length,
       'Should maintain the same number of domain suggestions',
@@ -98,11 +93,9 @@ export class SettingsPage {
   }
 
   async addDomainsToCart(numberOfDomains: number = 5) {
-    // Wait for the domain list to be visible
     await ensureLocatorIsVisible(this.page, this.settingsMailboxesDomainsList);
 
     for (let i = 0; i < numberOfDomains; i++) {
-      // First hover over the parent group item element to make the button visible
       const groupItem = this.page.locator('.group\\/item').first();
 
       await groupItem.hover();
@@ -111,7 +104,6 @@ export class SettingsPage {
         this.settingsmMailboxesDomainAddToCart,
       );
 
-      // Add a small delay to allow for the animation/transition
       await this.page.waitForTimeout(500);
     }
   }
@@ -154,7 +146,6 @@ export class SettingsPage {
   }
 
   async fillInPaymentForm() {
-    // Fill in card details
     const stripeIframe = this.page.frameLocator(
       'iframe[title="Secure payment input frame"]',
     );
@@ -163,10 +154,8 @@ export class SettingsPage {
     await stripeIframe.locator('[name="expiry"]').fill('1234');
     await stripeIframe.locator('[name="cvc"]').fill('123');
 
-    // Click the Pay button
     await this.page.locator('button[typeof="submit"]').click();
 
-    // Wait specifically for POST request to customer-os-api
     const response = await this.page.waitForResponse(
       (response) =>
         response.url().includes('/customer-os-api') &&
