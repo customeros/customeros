@@ -45,7 +45,8 @@ export const Header = observer(
 
     const contactsStore = store.contacts;
     const showFinder = searchParams.get('show') === 'finder';
-    const flowContactsPreset = store.tableViewDefs.flowContactsPreset;
+    const viewDefPreset = flow?.value?.tableViewDefId;
+
     const canSave = hasChanges && flow.value.status === FlowStatus.Off;
     const [showPublishChangesButton, setShowPublishChangesButton] =
       useState(false);
@@ -173,7 +174,7 @@ export const Header = observer(
                     dataTest='flow-contacts'
                     isLoading={store.flows.isLoading}
                     onClick={() => {
-                      navigate(`?show=finder&preset=${flowContactsPreset}`);
+                      navigate(`?show=finder&preset=${viewDefPreset}`);
                     }}
                     leftSpinner={
                       <Spinner

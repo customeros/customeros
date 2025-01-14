@@ -1621,6 +1621,7 @@ export type Flow = MetadataInterface & {
   senders: Array<FlowSender>;
   statistics: FlowStatistics;
   status: FlowStatus;
+  tableViewDefId: Scalars['String']['output'];
 };
 
 export type FlowAction = {
@@ -1843,6 +1844,12 @@ export type GlobalOrganization = {
   organizationId?: Maybe<Scalars['ID']['output']>;
   primaryDomain: Scalars['String']['output'];
   website: Scalars['String']['output'];
+};
+
+export type Industry = {
+  __typename?: 'Industry';
+  code: Scalars['String']['output'];
+  name: Scalars['String']['output'];
 };
 
 export type InteractionEvent = Node & {
@@ -4080,6 +4087,7 @@ export type Query = {
   gcli_Search: Array<GCliItem>;
   globalOrganizations_Search: Array<GlobalOrganization>;
   global_Cache: GlobalCache;
+  industries_InUse: Array<Industry>;
   interactionEvent: InteractionEvent;
   invoice: Invoice;
   invoice_ByNumber: Invoice;
