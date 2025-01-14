@@ -29,6 +29,9 @@ extend type Mutation {
 #Flow
 type Flow implements MetadataInterface {
     metadata:           Metadata!
+
+    tableViewDefId:     String!
+
     name:               String!
     description:        String!
 

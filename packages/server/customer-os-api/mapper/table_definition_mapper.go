@@ -23,7 +23,7 @@ func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition, sp
 	for _, column := range columnsStruct.Columns {
 		columns = append(columns, &model.ColumnView{
 			ColumnID:   column.ColumnId,
-			ColumnType: model.ColumnViewType(column.ColumnType),
+			ColumnType: postgresEntity.ColumnViewType(column.ColumnType),
 			Width:      column.Width,
 			Visible:    column.Visible,
 			Name:       column.Name,
@@ -33,8 +33,8 @@ func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition, sp
 	return &model.TableViewDef{
 		ID:             strconv.Itoa(int(entity.ID)),
 		Name:           entity.Name,
-		TableType:      model.TableViewType(entity.TableType),
-		TableID:        model.TableIDType(entity.TableId),
+		TableType:      postgresEntity.TableViewType(entity.TableType),
+		TableID:        postgresEntity.TableIdType(entity.TableId),
 		Icon:           entity.Icon,
 		Order:          entity.Order,
 		Filters:        entity.Filters,

@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
@@ -91,79 +92,79 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		domainFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		for _, filter := range where.And {
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsName.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsName) {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsWebsite.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsWebsite) {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("website", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsPrimaryDomains.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsPrimaryDomains) {
 				domainFilter.Filters = append(domainFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.DomainPropertyDomain), filter.Filter.Value.Str, filter.Filter.Operation))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsRelationship.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsRelationship) {
 				createInOrEmptyStringFilter(filter, organizationFilter, "relationship")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsOnboardingStatus.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsOnboardingStatus) {
 				createInOrEmptyStringFilter(filter, organizationFilter, "onboardingStatus")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsRenewalLikelihood.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsRenewalLikelihood) {
 				createInOrEmptyStringFilter(filter, organizationFilter, "derivedRenewalLikelihood")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsRenewalDate.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsRenewalDate) {
 				createTimeFilter(filter, organizationFilter, "derivedNextRenewalAt")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsForecastArr.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsForecastArr) {
 				createNumberCypherFilter(filter, organizationFilter, "renewalForecastArr")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsOwner.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsOwner) {
 				createInOrEmptyStringFilter(filter, userFilter, "id")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLastTouchpoint.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsLastTouchpoint) {
 				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyLastTouchpointType))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLastTouchpointDate.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsLastTouchpointDate) {
 				createTimeFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyLastTouchpointAt))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsStage.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsStage) {
 				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyStage))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsSocials.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsSocials) {
 				socialFilter.Filters = append(socialFilter.Filters, utils.CreateStringCypherFilter("url", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLeadSource.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsLeadSource) {
 				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyLeadSource))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsCreatedDate.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsCreatedDate) {
 				createTimeFilter(filter, organizationFilter, "createdAt")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsEmployeeCount.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsEmployeeCount) {
 				createNumberCypherFilter(filter, organizationFilter, "employees")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsContactCount.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsContactCount) {
 				createNumberCypherFilter(filter, organizationFilter, "derivedContactCount")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsYearFounded.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsYearFounded) {
 				createNumberCypherFilter(filter, organizationFilter, "yearFounded")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsIndustry.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsIndustry) {
 				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyIndustry))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsChurnDate.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsChurnDate) {
 				createTimeFilter(filter, organizationFilter, "derivedChurnedAt")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsLtv.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsLtv) {
 				createNumberCypherFilter(filter, organizationFilter, "derivedLtv")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsCountry.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsCountry) {
 				createInOrEmptyStringFilter(filter, locationFilter, "countryCodeA2")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsCity.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsCity) {
 				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter("locality", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsIsPublic.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsIsPublic) {
 				createBooleanFilter(filter, organizationFilter, "isPublic")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsTags.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsTags) {
 				// special case for not in tags
 				if filter.Filter.Operation == commonmodel.ComparisonOperatorNotIn && filter.Filter.Value.ArrayStr != nil {
 					rawCypher := ""
@@ -178,13 +179,13 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 					createInOrEmptyStringFilter(filter, tagFilter, string(neo4jentity.TagPropertyName))
 				}
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsHeadquarters.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsHeadquarters) {
 				organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("headquarters", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsParentOrganization.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsParentOrganization) {
 				parentOrganizationFilter.Filters = append(parentOrganizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeOrganizationsUpdatedDate.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsUpdatedDate) {
 				createTimeFilter(filter, organizationFilter, "updatedAt")
 			}
 		}
@@ -192,10 +193,10 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if len(where.And) == 0 {
 			for _, filter := range where.Or {
 				organizationFilter.LogicalOperator = utils.OR
-				if filter.Filter.Property == model.ColumnViewTypeOrganizationsName.String() {
+				if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsName) {
 					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("name", filter.Filter.Value.Str, filter.Filter.Operation))
 				}
-				if filter.Filter.Property == model.ColumnViewTypeOrganizationsWebsite.String() {
+				if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsWebsite) {
 					organizationFilter.Filters = append(organizationFilter.Filters, utils.CreateStringCypherFilter("website", filter.Filter.Value.Str, filter.Filter.Operation))
 				}
 			}
@@ -299,10 +300,10 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	//region selectQuery to fetch data
 	{
 		selectQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s) `, tenant)
-		if userFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeOrganizationsOwner.String())) {
+		if userFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeOrganizationsOwner))) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(u:User) WITH *`)
 		}
-		if domainFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeOrganizationsPrimaryDomains.String())) {
+		if domainFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeOrganizationsPrimaryDomains))) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:HAS_DOMAIN]->(d:Domain{primary: true}) WITH *`)
 		}
 		if socialFilterCypher != "" {
@@ -311,10 +312,10 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if tagFilterCypher != "" {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:TAGGED]->(t:Tag_%s) WITH *`, tenant)
 		}
-		if locationFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeOrganizationsCountry.String() || sort.By == model.ColumnViewTypeOrganizationsCity.String())) {
+		if locationFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCountry) || sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCity))) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		}
-		if parentOrganizationFilterCypher != "" || sort != nil && sort.By == model.ColumnViewTypeOrganizationsParentOrganization.String() {
+		if parentOrganizationFilterCypher != "" || sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsParentOrganization) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:SUBSIDIARY_OF]->(po:Organization_%s) WITH *`, tenant)
 		}
 		selectQuery += ` WHERE (o.hide = false OR o.hide IS NULL) `
@@ -353,175 +354,175 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	sortingCypher := ""
 	aliases := ""
 
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsName.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsName) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.name <> \"\" and not o.name is null THEN toLower(o.name) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.name <> \"\" and not o.name is null THEN toLower(o.name) ELSE '' END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsWebsite.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsWebsite) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.website <> \"\" and not o.website is null THEN toLower(o.website) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.website <> \"\" and not o.website is null THEN toLower(o.website) ELSE '' END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsPrimaryDomains.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsPrimaryDomains) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN d.domain <> \"\" and not d.domain is null THEN toLower(d.domain) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN d.domain <> \"\" and not d.domain is null THEN toLower(d.domain) ELSE '' END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsRelationship.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsRelationship) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.relationship <> \"\" and not o.relationship is null THEN toLower(o.relationship) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.relationship <> \"\" and not o.relationship is null THEN toLower(o.relationship) ELSE '' END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsOnboardingStatus.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsOnboardingStatus) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.onboardingStatusOrder <> \"\" and not o.onboardingStatusOrder is null THEN o.onboardingStatusOrder ELSE 9999 END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.onboardingStatusOrder <> \"\" and not o.onboardingStatusOrder is null THEN o.onboardingStatusOrder ELSE -1 END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsRenewalLikelihood.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsRenewalLikelihood) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.derivedRenewalLikelihoodOrder <> \"\" and not o.derivedRenewalLikelihoodOrder is null THEN o.derivedRenewalLikelihoodOrder ELSE 9999 END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.derivedRenewalLikelihoodOrder <> \"\" and not o.derivedRenewalLikelihoodOrder is null THEN o.derivedRenewalLikelihoodOrder ELSE -1 END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsRenewalDate.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsRenewalDate) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.derivedNextRenewalAt <> \"\" and not o.derivedNextRenewalAt is null THEN o.derivedNextRenewalAt ELSE datetime({year:2100}) END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.derivedNextRenewalAt <> \"\" and not o.derivedNextRenewalAt is null THEN o.derivedNextRenewalAt ELSE datetime({year:1900}) END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsForecastArr.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsForecastArr) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.renewalForecastArr <> \"\" and not o.renewalForecastArr is null THEN o.renewalForecastArr ELSE 9999 END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.renewalForecastArr <> \"\" and not o.renewalForecastArr is null THEN o.renewalForecastArr ELSE -1 END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsOwner.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsOwner) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN (COALESCE(u.name, '') + COALESCE(u.firstName, '') + COALESCE(u.lastName, '')) <> '' THEN toLower(COALESCE(u.name, '') + COALESCE(u.firstName, '') + COALESCE(u.lastName, '')) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN (COALESCE(u.name, '') + COALESCE(u.firstName, '') + COALESCE(u.lastName, '')) <> '' THEN toLower(COALESCE(u.name, '') + COALESCE(u.firstName, '') + COALESCE(u.lastName, '')) ELSE '' END as SORT_BY `
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLastTouchpoint.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsLastTouchpoint) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:2100}) END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:1900}) END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLastTouchpointDate.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsLastTouchpointDate) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:2100}) END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.lastTouchpointAt <> \"\" and not o.lastTouchpointAt is null THEN o.lastTouchpointAt ELSE datetime({year:1900}) END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsStage.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsStage) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.stage <> \"\" and not o.stage is null THEN toLower(o.stage) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.stage <> \"\" and not o.stage is null THEN toLower(o.stage) ELSE '' END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLeadSource.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsLeadSource) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.leadSource <> \"\" and not o.leadSource is null THEN toLower(o.leadSource) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.leadSource <> \"\" and not o.leadSource is null THEN toLower(o.leadSource) ELSE '' END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsCreatedDate.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCreatedDate) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN o.createdAt IS NOT NULL THEN o.createdAt ELSE datetime({year:2100}) END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN o.createdAt IS NOT NULL THEN o.createdAt ELSE datetime({year:1900}) END as SORT_BY `
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsEmployeeCount.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsEmployeeCount) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.employees <> \"\" and not o.employees is null THEN o.employees ELSE 999999999 END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.employees <> \"\" and not o.employees is null THEN o.employees ELSE -1 END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsContactCount.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsContactCount) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN o.derivedContactCount IS NOT NULL THEN o.derivedContactCount ELSE 999999999 END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN o.derivedContactCount IS NOT NULL THEN o.derivedContactCount ELSE -1 END as SORT_BY `
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsYearFounded.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsYearFounded) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.yearFounded <> \"\" and not o.yearFounded is null THEN o.yearFounded ELSE 999999999 END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.yearFounded <> \"\" and not o.yearFounded is null THEN o.yearFounded ELSE -1 END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsIndustry.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsIndustry) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.industry <> \"\" and not o.industry is null THEN toLower(o.industry) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.industry <> \"\" and not o.industry is null THEN toLower(o.industry) ELSE '' END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsChurnDate.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsChurnDate) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.derivedChurnedAt <> \"\" and not o.derivedChurnedAt is null THEN o.derivedChurnedAt ELSE datetime({year:2100}) END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.derivedChurnedAt <> \"\" and not o.derivedChurnedAt is null THEN o.derivedChurnedAt ELSE datetime({year:1900}) END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsLtv.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsLtv) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.derivedLtv <> \"\" and not o.derivedLtv is null THEN o.derivedLtv ELSE 9999999999999999 END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.derivedLtv <> \"\" and not o.derivedLtv is null THEN o.derivedLtv ELSE -9999999999999999 END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsCountry.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCountry) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN l.country <> \"\" and not l.country is null THEN toLower(l.country) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN l.country <> \"\" and not l.country is null THEN toLower(l.country) ELSE '' END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsCity.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCity) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN l.locality <> \"\" and not l.locality is null THEN toLower(l.locality) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN l.locality <> \"\" and not l.locality is null THEN toLower(l.locality) ELSE '' END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsIsPublic.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsIsPublic) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.isPublic = true THEN 0 ELSE CASE WHEN o.isPublic = false THEN 1 ELSE 2 END END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN o.isPublic = false THEN 2 ELSE CASE WHEN o.isPublic = true THEN 1 ELSE 0 END END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsParentOrganization.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsParentOrganization) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN po.name <> \"\" and not po.name is null THEN toLower(po.name) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
 		} else {
 			aliases += "CASE WHEN po.name <> \"\" and not po.name is null THEN toLower(po.name) ELSE '' END as SORT_BY "
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeOrganizationsUpdatedDate.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsUpdatedDate) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += "CASE WHEN o.updatedAt <> \"\" and not o.updatedAt is null THEN o.updatedAt ELSE datetime({year:2100}) END as SORT_BY "
 		} else {
@@ -789,7 +790,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			//ColumnViewTypeContactsFlows                      ColumnViewType = "CONTACTS_FLOWS"
 			//ColumnViewTypeContactsFlowStatus                 ColumnViewType = "CONTACTS_FLOW_STATUS"
 			//ColumnViewTypeContactsFlowNextAction             ColumnViewType = "CONTACTS_FLOW_NEXT_ACTION"
-			if filter.Filter.Property == model.ColumnViewTypeContactsName.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsName) {
 				logicalOperator := utils.AND
 				if filter.Filter.Operation == commonmodel.ComparisonOperatorContains || filter.Filter.Operation == commonmodel.ComparisonOperatorIsNotEmpty {
 					logicalOperator = utils.OR
@@ -807,7 +808,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 				innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.ContactPropertyName), filter.Filter.Value.Str, filter.Filter.Operation))
 				contactFilter.Filters = append(contactFilter.Filters, innerGroupFilter)
 			}
-			if filter.Filter.Property == model.ColumnViewTypeContactsPrimaryEmail.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsPrimaryEmail) {
 				logicalOperator := utils.AND
 				if filter.Filter.Operation == commonmodel.ComparisonOperatorContains || filter.Filter.Operation == commonmodel.ComparisonOperatorIsNotEmpty {
 					logicalOperator = utils.OR
@@ -824,16 +825,16 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 				innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.EmailPropertyEmail), filter.Filter.Value.Str, filter.Filter.Operation))
 				primaryEmailFilter.Filters = append(contactFilter.Filters, innerGroupFilter)
 			}
-			if filter.Filter.Property == model.ColumnViewTypeContactsCountry.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsCountry) {
 				createInOrEmptyStringFilter(filter, locationFilter, "countryCodeA2")
 			}
-			if filter.Filter.Property == model.ColumnViewTypeContactsCity.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsCity) {
 				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyLocality), filter.Filter.Value.Str, filter.Filter.Operation))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeContactsRegion.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsRegion) {
 				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyRegion), filter.Filter.Value.Str, filter.Filter.Operation))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeContactsTags.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsTags) {
 				// special case for not in tags
 				if filter.Filter.Operation == commonmodel.ComparisonOperatorNotIn && filter.Filter.Value.ArrayStr != nil {
 					rawCypher := ""
@@ -848,7 +849,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 					createInOrEmptyStringFilter(filter, tagFilter, string(neo4jentity.TagPropertyName))
 				}
 			}
-			if filter.Filter.Property == model.ColumnViewTypeContactsLinkedin.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsLinkedin) {
 				logicalOperator := utils.AND
 				if filter.Filter.Operation == commonmodel.ComparisonOperatorContains || filter.Filter.Operation == commonmodel.ComparisonOperatorIsNotEmpty {
 					logicalOperator = utils.OR
@@ -882,10 +883,10 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 
 				linkedInFilter.Filters = append(linkedInFilter.Filters, parentInnerGroupFilter)
 			}
-			if filter.Filter.Property == model.ColumnViewTypeContactsLinkedinFollowerCount.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsLinkedinFollowerCount) {
 				createNumberCypherFilter(filter, linkedInFilter, string(neo4jentity.SocialPropertyFollowersCount))
 			}
-			if filter.Filter.Property == model.ColumnViewTypeContactsOrganization.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsOrganization) {
 				if filter.Filter.Operation == commonmodel.ComparisonOperatorNotContains {
 					innerGroupFilter := new(utils.CypherFilter)
 					innerGroupFilter.Negate = false
@@ -898,7 +899,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 					primaryOrganizationFilter.Filters = append(primaryOrganizationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.OrganizationPropertyName), filter.Filter.Value.Str, filter.Filter.Operation))
 				}
 			}
-			if filter.Filter.Property == model.ColumnViewTypeContactsJobTitle.String() {
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsJobTitle) {
 				if filter.Filter.Operation == commonmodel.ComparisonOperatorNotContains {
 					innerGroupFilter := new(utils.CypherFilter)
 					innerGroupFilter.Negate = false
@@ -1008,19 +1009,19 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	//region selectQuery to fetch data
 	{
 		selectQuery += fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact_%s) `, tenant)
-		if linkedInFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsLinkedin.String() || sort.By == model.ColumnViewTypeContactsLinkedinFollowerCount.String())) {
+		if linkedInFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeContactsLinkedin) || sort.By == string(postgresEntity.ColumnViewTypeContactsLinkedinFollowerCount))) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:HAS]->(sl:Social_%s) WHERE sl.url CONTAINS 'linkedin.com/in'  WITH *`, tenant)
 		}
 		if tagFilterCypher != "" {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:TAGGED]->(t:Tag_%s) WITH *`, tenant)
 		}
-		if locationFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsCountry.String() || sort.By == model.ColumnViewTypeContactsCity.String() || sort.By == model.ColumnViewTypeContactsRegion.String())) {
+		if locationFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeContactsCountry) || sort.By == string(postgresEntity.ColumnViewTypeContactsCity) || sort.By == string(postgresEntity.ColumnViewTypeContactsRegion))) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		}
-		if primaryEmailFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsPrimaryEmail.String())) {
+		if primaryEmailFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeContactsPrimaryEmail))) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:HAS {primary:true}]->(pe:Email_%s) WITH *`, tenant)
 		}
-		if primaryOrganizationFilterCypher != "" || primaryJobRoleFilterCypher != "" || (sort != nil && (sort.By == model.ColumnViewTypeContactsOrganization.String() || sort.By == model.ColumnViewTypeContactsJobTitle.String())) {
+		if primaryOrganizationFilterCypher != "" || primaryJobRoleFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeContactsOrganization) || sort.By == string(postgresEntity.ColumnViewTypeContactsJobTitle))) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)--(pj:JobRole_%s {primary:true})--(po:Organization_%s {hide:false}) WITH *`, tenant, tenant)
 		}
 		selectQuery += ` WHERE (c.hide = false OR c.hide IS NULL) `
@@ -1058,63 +1059,63 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	// sort region
 	aliases := ""
 
-	if sort != nil && sort.By == model.ColumnViewTypeContactsName.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsName) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN (COALESCE(c.name, '') + COALESCE(c.firstName, '') + COALESCE(c.lastName, '')) <> '' THEN toLower(COALESCE(c.name, '') + COALESCE(c.firstName, '') + COALESCE(c.lastName, '')) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN (COALESCE(c.name, '') + COALESCE(c.firstName, '') + COALESCE(c.lastName, '')) <> '' THEN toLower(COALESCE(c.name, '') + COALESCE(c.firstName, '') + COALESCE(c.lastName, '')) ELSE '' END as SORT_BY `
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeContactsPrimaryEmail.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsPrimaryEmail) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN (COALESCE(pe.email, '') + COALESCE(pe.rawEmail, '')) <> '' THEN toLower(COALESCE(pe.email, '') + COALESCE(pe.rawEmail, '')) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN (COALESCE(pe.email, '') + COALESCE(pe.rawEmail, '')) <> '' THEN toLower(COALESCE(pe.email, '') + COALESCE(pe.rawEmail, '')) ELSE '' END as SORT_BY `
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeContactsCountry.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsCountry) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN l.country <> '' AND NOT l.country IS NULL THEN toLower(l.country) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN l.country <> '' AND NOT l.country IS NULL THEN toLower(l.country) ELSE '' END AS SORT_BY `
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeContactsRegion.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsRegion) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN l.region <> '' AND NOT l.region IS NULL THEN toLower(l.region) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN l.region <> '' AND NOT l.region IS NULL THEN toLower(l.region) ELSE '' END AS SORT_BY `
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeContactsCity.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsCity) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN l.locality <> '' AND NOT l.locality IS NULL THEN toLower(l.locality) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN l.locality <> '' AND NOT l.locality IS NULL THEN toLower(l.locality) ELSE '' END AS SORT_BY `
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeContactsCreatedAt.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsCreatedAt) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN c.createdAt IS NOT NULL THEN c.createdAt ELSE datetime({year:2100}) END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN c.createdAt IS NOT NULL THEN c.createdAt ELSE datetime({year:1900}) END as SORT_BY `
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeContactsUpdatedAt.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsUpdatedAt) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN c.updatedAt IS NOT NULL THEN c.updatedAt ELSE datetime({year:2100}) END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN c.updatedAt IS NOT NULL THEN c.updatedAt ELSE datetime({year:1900}) END as SORT_BY `
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeContactsLinkedin.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsLinkedin) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN (COALESCE(sl.alias, '') + COALESCE(sl.url, '')) <> '' THEN toLower(COALESCE(sl.alias, '') + COALESCE(sl.url, '')) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN (COALESCE(sl.alias, '') + COALESCE(sl.url, '')) <> '' THEN toLower(COALESCE(sl.alias, '') + COALESCE(sl.url, '')) ELSE '' END as SORT_BY `
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeContactsLinkedinFollowerCount.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsLinkedinFollowerCount) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN sl.followersCount IS NULL THEN 999999999 ELSE sl.followersCount END as SORT_BY `
 		} else {
@@ -1122,14 +1123,14 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		}
 
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeContactsOrganization.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsOrganization) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN po.name <> '' AND NOT po.name IS NULL THEN toLower(po.name) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN po.name <> '' AND NOT po.name IS NULL THEN toLower(po.name) ELSE '' END AS SORT_BY `
 		}
 	}
-	if sort != nil && sort.By == model.ColumnViewTypeContactsJobTitle.String() {
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsJobTitle) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
 			aliases += `CASE WHEN pj.jobTitle <> '' AND NOT pj.jobTitle IS NULL THEN toLower(pj.jobTitle) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
