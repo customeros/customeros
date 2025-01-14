@@ -1295,6 +1295,11 @@ type GlobalOrganization struct {
 	OrganizationID *string  `json:"organizationId,omitempty"`
 }
 
+type Industry struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
 type InteractionEvent struct {
 	ID                           string                        `json:"id"`
 	CreatedAt                    time.Time                     `json:"createdAt"`
