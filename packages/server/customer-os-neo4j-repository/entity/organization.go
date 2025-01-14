@@ -44,7 +44,7 @@ type OrganizationEntity struct {
 	Name               string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
 	Description        string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
 	Website            string `neo4jDb:"property:website;lookupName:WEBSITE;supportCaseSensitive:true"`
-	Industry           string `neo4jDb:"property:industry;lookupName:INDUSTRY;supportCaseSensitive:true"`
+	Industry           string // Free text industry, replaced with link to industry node. Use industry as temporary field for sync from other systems
 	TargetAudience     string
 	ValueProposition   string
 	IsPublic           bool

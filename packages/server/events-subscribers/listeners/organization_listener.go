@@ -276,11 +276,6 @@ func (l *organizationListenerImpl) updateOrganizationWithEnrichData(ctx context.
 		orgFields.IconUrl = utils.StringPtr(data.Icons[0])
 	}
 
-	// set industry
-	if organizationEntity.Industry == "" && data.Industry != "" {
-		orgFields.Industry = utils.StringPtr(data.Industry)
-	}
-
 	_, err := l.services.OrganizationService.Save(ctx, nil, &organizationEntity.ID, orgFields)
 	if err != nil {
 		tracing.TraceErr(span, err)

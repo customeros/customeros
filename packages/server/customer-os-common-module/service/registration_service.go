@@ -98,9 +98,9 @@ func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, test
 	tenant := common.GetTenantFromContext(ctx)
 
 	organizationId, err := s.services.OrganizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
-		Name:      utils.StringPtr("Example Inc."),
-		Industry:  utils.StringPtr("Software"),
-		Employees: utils.Int64Ptr(int64(100)),
+		Name:         utils.StringPtr("Example Inc."),
+		IndustryCode: utils.StringPtr("513210"),
+		Employees:    utils.Int64Ptr(int64(100)),
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error saving organization during tenant onboarding"))
