@@ -1270,7 +1270,7 @@ func (r *organizationReadRepository) GetOrganizationsToCheck(ctx context.Context
 		output = append(output,
 			TenantAndOrganization{
 				Tenant:       v.Values[0].(string),
-				Organization: v.Values[1].(*dbtype.Node),
+				Organization: utils.ToPtr(v.Values[1].(dbtype.Node)),
 			})
 	}
 	span.LogFields(log.Int("result.count", len(output)))
