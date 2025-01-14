@@ -12,7 +12,7 @@ import (
 )
 
 type TrackingAllowedOriginRepository interface {
-	GetTenantForOrigin(ctx context.Context, origin string) (*string, error)
+	GetTenantForOrigin(ctx context.Context, origin string) (string, error)
 	Create(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error)
 	Update(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error)
 	FindAll(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*[]entity.TrackingAllowedOrigin, error)
@@ -91,7 +91,7 @@ func (repo *trackingAllowedOriginRepositoryImpl) Update(ctx context.Context, whi
 	return &updated, nil
 }
 
-func (repo *trackingAllowedOriginRepositoryImpl) GetTenantForOrigin(ctx context.Context, origin string) (*string, error) {
+func (repo *trackingAllowedOriginRepositoryImpl) GetTenantForOrigin(ctx context.Context, origin string) (string, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingAllowedOriginRepository.GetTenantForOrigin")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -104,14 +104,11 @@ func (repo *trackingAllowedOriginRepositoryImpl) GetTenantForOrigin(ctx context.
 		First(&result).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return "", nil
 		}
 		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	if result.Tenant == "" {
-		return nil, nil
+		return "", err
 	}
 
-	return &result.Tenant, nil
+	return result.Tenant, nil
 }

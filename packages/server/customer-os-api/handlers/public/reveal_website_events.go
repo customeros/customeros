@@ -2,7 +2,9 @@ package public
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/opentracing/opentracing-go"
 	"net/http"
 	"strings"
 
@@ -46,7 +48,7 @@ func RevealWebsiteEvents(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		if tenant == nil {
+		if tenant == "" {
 			err = fmt.Errorf("tenant not found for origin")
 			tracing.TraceErr(span, err)
 			span.LogFields(log.String("result.info", "tenant not found for origin"))
@@ -54,7 +56,7 @@ func RevealWebsiteEvents(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		span.SetTag(tracing.SpanTagTenant, *tenant)
+		span.SetTag(tracing.SpanTagTenant, tenant)
 
 		trackerData := buildTrackerDbData(c, tenant)
 		if trackerData == nil {
@@ -166,18 +168,34 @@ func assignEventToSession(ctx context.Context, s *service.Services, trackerData 
 	return nil
 }
 
-func buildTrackerDbData(c *gin.Context, tenant *string) *entity.WebTrackerEvents {
-	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Tracking.buildTrackerEventData")
+func buildTrackerDbData(c *gin.Context, tenant string) *entity.WebTrackerEvents {
+	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Tracking.buildTrackerEventData")
 	defer span.Finish()
+	tracing.TagTenant(span, tenant)
 
 	tracking := entity.WebTrackerEvents{}
 
-	if err := c.BindJSON(&tracking); err != nil {
+	// 1 Get the raw request body
+	rawJSON, err := c.GetRawData()
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get raw data"))
+		return nil
+	}
+	span.LogFields(log.String("rawJSON", string(rawJSON)))
+
+	// 2 Unmarshal into a map
+	var inputMap map[string]any
+	if err := json.Unmarshal(rawJSON, &inputMap); err != nil {
 		tracing.TraceErr(span, err)
 		return nil
 	}
 
-	tracking.Tenant = *tenant
+	// 3 Decode using mapstructure-based decode function
+	if err := utils.Decode(inputMap, &tracking); err != nil {
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	tracking.Tenant = tenant
 	tracking.UserAgent = utils.SanitizeUTF8(tracking.UserAgent)
 	tracking.Referrer = utils.SanitizeUTF8(tracking.Referrer)
 	tracking.Origin = utils.SanitizeUTF8(tracking.Origin)
@@ -189,7 +207,7 @@ func buildTrackerDbData(c *gin.Context, tenant *string) *entity.WebTrackerEvents
 }
 
 func isTrustedIP(ctx context.Context, s *service.Services, ipAddress string) bool {
-	span, ctx := tracing.StartTracerSpan(ctx, "Tracking.isTrustedIp")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Tracking.isTrustedIp")
 	defer span.Finish()
 
 	ipThreats, err := s.CommonServices.VerifyService.Threats(ctx, ipAddress)
