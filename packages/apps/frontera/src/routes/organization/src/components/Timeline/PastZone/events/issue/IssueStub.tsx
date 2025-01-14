@@ -1,5 +1,7 @@
 import { FC } from 'react';
 
+import markdownToTxt from 'markdown-to-txt';
+
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { IssueBgPattern } from '@ui/media/logos/IssueBgPattern';
 import { IssueWithAliases } from '@organization/components/Timeline/types';
@@ -17,6 +19,8 @@ function getStatusColor(status: string) {
 export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
   const { openModal } = useTimelineEventPreviewMethodsContext();
   const statusColorScheme = getStatusColor(data.issueStatus);
+
+  const subject = data?.subject ? markdownToTxt(data.subject) : '[No subject]';
 
   return (
     <div className='flex cursor-pointer !imortant hover:transition-all hover:filter hover:drop-shadow-[0_2px_2px_rgba(16,24,40,0.09)] w-[510px] h-[110px] relative hover:duration-200 hover:ease-oute'>
@@ -36,9 +40,7 @@ export const IssueStub: FC<{ data: IssueWithAliases }> = ({ data }) => {
         }}
       >
         <div className='shadow-xs pr-2 p-3 flex-col flex-1 flex'>
-          <div className='font-semibold p-0 line-clamp-1'>
-            {data?.subject ?? '[No subject]'}
-          </div>
+          <div className='font-semibold p-0 line-clamp-1'>{subject}</div>
           <div className='p-0 max-w-[calc(476px-77px)]'>
             {data?.description ? (
               <MarkdownContentRenderer
