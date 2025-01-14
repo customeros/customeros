@@ -1062,6 +1062,7 @@ func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
 		Id:             utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		TableViewDefId: utils.GetStringPropOrEmpty(props, "tableViewDefId"),
 		DefaultName:    utils.GetStringPropOrEmpty(props, "defaultName"),
 		Name:           utils.GetStringPropOrEmpty(props, "name"),
 		Nodes:          utils.GetStringPropOrEmpty(props, "nodes"),
