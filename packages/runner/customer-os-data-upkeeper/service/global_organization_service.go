@@ -8,7 +8,10 @@ import (
 	"github.com/biter777/countries"
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -27,6 +30,7 @@ type GlobalOrganizationService interface {
 	SyncDataIntoGlobalOrganizations()
 	ScrapinCompanyByWebsite()
 	EnrichWithIndustry()
+	SyncGlobalOrgsToTenantOrganizations()
 }
 
 type globalOrganizationService struct {
@@ -564,6 +568,76 @@ Company Name: %s
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "error setting industry"))
 			continue
+		}
+	}
+}
+
+func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 20
+	daysFromPreviousSync := 30
+
+	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx, daysFromPreviousSync, limit)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting records to process"))
+		s.log.Errorf("Error getting records to process: %s", err.Error())
+		return
+	}
+
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	//process records
+	for _, record := range records {
+		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichWithIndustry.Record")
+		defer recordSpan.Finish()
+		recordSpan.LogFields(log.Uint64("record.id", record.ID), log.String("record.primaryDomain", record.PrimaryDomain))
+
+		// mark record as processed initially to not process same record again, even if error occurs
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo(recordCtx, record.ID)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error marking record as processed"))
+			s.log.Errorf("Error marking record as processed: %s", err.Error())
+			continue
+		}
+
+		// Find organizations by domain across all tenants
+		tenantWithOrgId, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants(ctx, record.PrimaryDomain)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error getting organizations by domain"))
+			s.log.Errorf("Error getting organizations by domain: %s", err.Error())
+			continue
+		}
+
+		for _, tenantOrgs := range tenantWithOrgId {
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    tenantOrgs.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+
+			// TODO only industry is synced. once adding other fields, refactor this
+			if record.IndustryNaicsCode == "" {
+				continue
+			}
+
+			// sync organization
+			dataFields := data_fields.OrganizationFields{
+				IndustryCode: utils.StringPtr(record.IndustryNaicsCode),
+			}
+			_, err = s.commonServices.OrganizationService.Save(innerCtx, nil, utils.StringPtr(tenantOrgs.OrganizationId), dataFields)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "error syncing organization"))
+				s.log.Errorf("Error syncing organization: %s", err.Error())
+				continue
+			}
 		}
 	}
 }

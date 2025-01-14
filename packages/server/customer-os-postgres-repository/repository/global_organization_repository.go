@@ -23,15 +23,11 @@ type GlobalOrganizationRepository interface {
 	MarkIndustryEnrichRequested(ctx context.Context, id uint64) error
 	SetIndustry(ctx context.Context, id uint64, industryNaicsCode, industryNaicsName string) error
 	GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx context.Context, daysFromPreviousSync, limit int) ([]*entity.GlobalOrganization, error)
+	MarkGlobalOrganizationSyncedToNeo(ctx context.Context, id uint64) error
 }
 
 type globalOrganizationRepository struct {
 	db *gorm.DB
-}
-
-func (r *globalOrganizationRepository) GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx context.Context, daysFromPreviousSync, limit int) ([]*entity.GlobalOrganization, error) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func NewGlobalOrganizationRepository(gormDb *gorm.DB) GlobalOrganizationRepository {
@@ -195,6 +191,44 @@ func (r *globalOrganizationRepository) SetIndustry(ctx context.Context, id uint6
 			"industry_naics_name": industryNaicsName,
 			"industry_set_at":     utils.Now(),
 		})
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return result.Error
+	}
+	return nil
+}
+
+func (r *globalOrganizationRepository) GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx context.Context, daysFromPreviousSync, limit int) ([]*entity.GlobalOrganization, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetGlobalOrganizationsToSyncIntoTenantOrganizations")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.Int("daysFromPreviousSync", daysFromPreviousSync), tracingLog.Int("limit", limit))
+
+	organizations := make([]*entity.GlobalOrganization, 0)
+	result := r.db.WithContext(ctx).
+		Where("industry_naics_code IS NOT NULL").
+		Where("industry_naics_code <> ''").
+		Where("synced_to_neo_at IS NULL OR synced_to_neo_at < ?", utils.Now().Add(-24*time.Hour*time.Duration(daysFromPreviousSync))).
+		Order("CASE WHEN synced_to_neo_at IS NULL THEN 0 ELSE 1 END, synced_to_neo_at").
+		Limit(limit).
+		Find(&organizations)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	span.LogFields(tracingLog.Int("found", len(organizations)))
+	return organizations, nil
+}
+
+func (r *globalOrganizationRepository) MarkGlobalOrganizationSyncedToNeo(ctx context.Context, id uint64) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.Uint64("id", id))
+
+	result := r.db.WithContext(ctx).Model(&entity.GlobalOrganization{}).
+		Where("id = ?", id).
+		UpdateColumn("synced_to_neo_at", utils.Now())
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
 		return result.Error

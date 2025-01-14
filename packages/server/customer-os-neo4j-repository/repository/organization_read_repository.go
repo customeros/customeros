@@ -66,6 +66,7 @@ type OrganizationReadRepository interface {
 	GetActiveOrganizationIdsByDomain(ctx context.Context, tenant string, domains []string) (map[string]string, error)
 	GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
+	GetOrganizationsByDomainAcrossAllTenants(ctx context.Context, domain string) ([]TenantAndOrganizationId, error)
 }
 
 type organizationReadRepository struct {
@@ -1378,4 +1379,43 @@ func (r *organizationReadRepository) GetLinkedParentOrganizations(ctx context.Co
 		return nil, err
 	}
 	return result.([]*utils.DbNodeWithRelationAndId), err
+}
+
+func (r *organizationReadRepository) GetOrganizationsByDomainAcrossAllTenants(ctx context.Context, domain string) ([]TenantAndOrganizationId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+
+	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain {domain:$domain})
+				RETURN t.name, org.id`
+
+	params := map[string]any{
+		"domain": domain,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndOrganizationId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndOrganizationId{
+				Tenant:         v.Values[0].(string),
+				OrganizationId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
 }
