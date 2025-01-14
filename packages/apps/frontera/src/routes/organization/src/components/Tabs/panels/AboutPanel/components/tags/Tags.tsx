@@ -82,7 +82,7 @@ export const Tags = observer(
                 );
               })
             ) : (
-              <span className='text-gray-400'>{placeholder}</span>
+              <span className='text-gray-400 text-sm'>{placeholder}</span>
             )}
           </div>
         </PopoverTrigger>

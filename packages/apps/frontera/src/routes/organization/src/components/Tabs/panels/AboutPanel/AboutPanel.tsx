@@ -12,12 +12,10 @@ import { Select } from '@ui/form/Select';
 import { Tag01 } from '@ui/media/icons/Tag01';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Users03 } from '@ui/media/icons/Users03';
-import { Share07 } from '@ui/media/icons/Share07';
 import { useStore } from '@shared/hooks/useStore';
 import { Seeding } from '@ui/media/icons/Seeding';
 import { Target05 } from '@ui/media/icons/Target05';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { Textarea } from '@ui/form/Textarea/Textarea';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
@@ -35,21 +33,16 @@ import {
 
 import { Tags } from './components/tags';
 import { Domains } from './components/Domains';
-import { SocialIconInput } from '../../shared';
+import { SocialMediaList } from '../../shared';
 import { OwnerInput } from './components/owner';
-import { Branches, ParentOrgInput } from './components/branches';
+import { Branches } from './components/branches';
 import {
   stageOptions,
   industryOptions,
   getStageOptions,
-  employeesOptions,
   businessTypeOptions,
   relationshipOptions,
 } from './util';
-
-const placeholders = {
-  valueProposition: `What is this organization about - what they do, who they serve, and what makes them unique?`,
-};
 
 const iconMap = {
   Customer: <ActivityHeart className='text-gray-500' />,
@@ -170,24 +163,14 @@ export const AboutPanel = observer(() => {
 
         <Domains />
 
-        <Textarea
-          size='sm'
-          spellCheck={false}
-          className='mb-6 mt-2'
-          name='valueProposition'
-          data-test='org-about-description'
-          placeholder={placeholders.valueProposition}
-          value={organization.value?.valueProposition || ''}
-          onBlur={() => {
-            organization.draft();
-            organization.commit();
-          }}
-          onChange={(e) => {
-            organization.value!.valueProposition = e.target.value;
-          }}
-        />
+        {!!organization?.value?.valueProposition && (
+          <p className='text-sm pt-3 pb-1'>
+            {organization.value.valueProposition}
+          </p>
+        )}
+
         <Tags
-          className=' py-2'
+          className='py-2'
           dataTest='org-about-tags'
           inputPlaceholder='Search...'
           onCreate={handleCreateOption}
@@ -215,16 +198,12 @@ export const AboutPanel = observer(() => {
             organization.commit();
           }}
         />
-
-        {showParentRelationshipSelector && (
-          <ParentOrgInput id={id} isReadOnly={parentRelationshipReadOnly} />
-        )}
-        <div className='flex items-center justify-center w-full'>
+        <div className='flex items-center justify-center w-full pb-1'>
           <div className='flex-2' data-test='org-about-relationship'>
             <Menu>
               <MenuButton
                 data-test='org-about-relationship'
-                className='min-h-[40px] text-md outline-none focus:outline-none items-center'
+                className='min-h-[28px] text-md outline-none focus:outline-none items-center'
               >
                 {
                   iconMap[
@@ -281,7 +260,7 @@ export const AboutPanel = observer(() => {
             OrganizationRelationship.Customer && (
             <div className='flex-1' data-test='org-about-stage'>
               <Menu>
-                <MenuButton className='min-h-[40px] outline-none focus:outline-none'>
+                <MenuButton className='min-h-[28px] outline-none focus:outline-none'>
                   <Target05 className='text-gray-500 mb-0.5' />
                   <span className='ml-3 text-sm'>
                     {selectedStageOption?.label || 'Stage'}
@@ -346,33 +325,20 @@ export const AboutPanel = observer(() => {
             }}
           />
 
-          <Select
-            isClearable
-            size={'sm'}
-            name='employees'
-            options={employeesOptions}
-            placeholder='Number of employees'
-            dataTest='org-about-number-of-employees'
-            leftElement={<Users03 className='text-gray-500 mr-3' />}
-            value={employeesOptions.map((option) =>
-              option.value === organization.value?.employees ? option : null,
-            )}
-            onChange={(option) => {
-              organization.value!.employees = option.value;
-              organization.commit();
-            }}
-          />
+          {organization.value!.employees && (
+            <p className='text-sm py-2'>
+              <Users03 className='text-gray-500 mr-3' />
+              {organization.value!.employees} employees
+            </p>
+          )}
 
           <OwnerInput
             id={id}
             dataTest='org-about-org-owner'
             owner={organization?.value.owner}
           />
-          <SocialIconInput
-            name='socials'
-            placeholder='Social link'
+          <SocialMediaList
             dataTest='org-about-social-link'
-            leftElement={<Share07 className='text-gray-500' />}
             value={organization?.value.socialMedia.map((s) => ({
               value: s.id,
               label: s.url,
