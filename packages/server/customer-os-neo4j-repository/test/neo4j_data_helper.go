@@ -321,6 +321,29 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 	return orgId
 }
 
+func LinkIndustryToOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, industryCode, industryName string) {
+	CreateIndustry(ctx, driver, industryCode, industryName)
+
+	query := `MATCH (o:Organization {id: $organizationId})
+				MATCH (i:Industry {code: $industryCode})
+				MERGE (o)-[:HAS_INDUSTRY]->(i)`
+
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"organizationId": organizationId,
+		"industryCode":   industryCode,
+	})
+}
+
+func CreateIndustry(ctx context.Context, driver *neo4j.DriverWithContext, code, name string) string {
+	query := `MERGE (i:Industry {code:$code})
+				ON CREATE SET i.name=$name, i.createdAt=datetime()`
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"code": code,
+		"name": name,
+	})
+	return code
+}
+
 func CreateLogEntry(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, logEntry entity.LogEntryEntity) string {
 	logEntryId := utils.NewUUIDIfEmpty(logEntry.Id)
 	query := fmt.Sprintf(`

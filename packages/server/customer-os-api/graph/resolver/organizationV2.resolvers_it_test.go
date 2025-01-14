@@ -499,19 +499,25 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByIndustry(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Industry: ""})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Industry: "A"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Industry: "B"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{Industry: "AB"})
+	org2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	org3 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	org4 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+	org5 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+
+	neo4jtest.LinkIndustryToOrganization(ctx, driver, org2, "11", "Industry_11")
+	neo4jtest.LinkIndustryToOrganization(ctx, driver, org3, "111", "Industry_111")
+	neo4jtest.LinkIndustryToOrganization(ctx, driver, org4, "1110", "Industry_1110")
+	neo4jtest.LinkIndustryToOrganization(ctx, driver, org5, "1110", "Industry_1110")
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Industry"))
 
 	searchBy := postgresEntity.ColumnViewTypeOrganizationsIndustry
 
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 2)
-	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 3)
-	assertSearch(t, searchBy, []string{"A", "B"}, commonModel.ComparisonOperatorIn, 5, 2)
-	assertSearch(t, searchBy, []string{"A"}, commonModel.ComparisonOperatorNotIn, 5, 4)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 1)
+	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 4)
+	assertSearch(t, searchBy, []string{"11", "1110"}, commonModel.ComparisonOperatorIn, 5, 3)
+	assertSearch(t, searchBy, []string{"1110"}, commonModel.ComparisonOperatorNotIn, 5, 3)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterByChurnedAt(t *testing.T) {
@@ -1197,11 +1203,15 @@ func TestQueryResolver_UIOrganizationsSearch_SortByIndustry(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty", Industry: ""})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a", Industry: "a"})
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b", Industry: "b"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "empty"})
+	org2 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "a"})
+	org3 := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "b"})
 
-	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+	neo4jtest.LinkIndustryToOrganization(ctx, driver, org2, "1", "A")
+	neo4jtest.LinkIndustryToOrganization(ctx, driver, org3, "2", "B")
+
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelOrganization))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelIndustry))
 
 	expectedAsc := []string{"a", "b", "empty"}
 	expectedDesc := []string{"b", "a", "empty"}
