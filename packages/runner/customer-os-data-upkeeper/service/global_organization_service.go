@@ -105,18 +105,21 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 			continue
 		}
 
+		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Company.WebsiteUrl) {
+			continue
+		}
+
 		// identify primary domain
-		_, primaryDomain := domaincheck.PrimaryDomainCheck(data.Company.WebsiteUrl)
+		accessible, _, primaryDomain := s.commonServices.DomainService.CheckDomainWithMailsherpa(ctx, data.Company.WebsiteUrl)
+		if !accessible {
+			continue
+		}
 
 		// if primary domain is empty, skip processing
 		if primaryDomain == "" {
 			continue
 		}
 
-		// check if website is accepted
-		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Company.WebsiteUrl) {
-			continue
-		}
 		// check if primary domain is accepted
 		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
 			continue
@@ -262,16 +265,19 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 			continue
 		}
 
-		// identify primary domain
-		_, primaryDomain := domaincheck.PrimaryDomainCheck(data.Domain)
-
-		// if primary domain is empty, skip processing
-		if primaryDomain == "" {
+		// check if website is accepted
+		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Domain) {
 			continue
 		}
 
-		// check if website is accepted
-		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Domain) {
+		// identify primary domain
+		accessible, _, primaryDomain := s.commonServices.DomainService.CheckDomainWithMailsherpa(ctx, data.Domain)
+		if !accessible {
+			continue
+		}
+
+		// if primary domain is empty, skip processing
+		if primaryDomain == "" {
 			continue
 		}
 

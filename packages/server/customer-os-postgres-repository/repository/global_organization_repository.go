@@ -150,7 +150,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichIndustry(ctx cont
 		Where("industry_naics_code IS NULL OR industry_naics_code = ''").
 		Where("industry_request_count IS NULL OR industry_request_count < ?", maxAttempts).
 		Where("industry_requested_at IS NULL OR industry_requested_at < ?", utils.Now().Add(-1*time.Hour*time.Duration(hoursFromPreviousAttempt))).
-		Order("CASE WHEN industry_requested_at IS NULL THEN 0 ELSE 1 END, industry_requested_at").
+		Order("CASE WHEN industry_requested_at IS NULL THEN 0 ELSE 1 END, CASE WHEN industry_requested_at IS NULL THEN updated_at DESC ELSE industry_requested_at ASC END").
 		Limit(limit).
 		Find(&organizations)
 	if result.Error != nil {
