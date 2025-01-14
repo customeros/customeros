@@ -43,8 +43,6 @@ import { countryMap } from '@assets/countries/countriesMap';
 import { Globe04 } from '@ui/media/icons/Globe04';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 
-import { industries } from './filterOptions';
-
 export const getFilterTypes = (store?: RootStore) => {
   const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     [ColumnViewType.OrganizationsName]: {
@@ -346,9 +344,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsNotEmpty,
       ],
       icon: <Building05 />,
-      options: industries.map((industry) => ({
-        id: industry,
-        label: industry,
+      options: store?.industries?.toArray().map((industry) => ({
+        id: industry.value.code,
+        label: industry.value.name,
       })),
     },
     [ColumnViewType.OrganizationsContactCount]: {

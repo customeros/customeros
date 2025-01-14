@@ -14,7 +14,8 @@ export type GetOrganizationsByIdsQuery = {
     name: string;
     notes?: string | null;
     description?: string | null;
-    industry?: string | null;
+    industryName?: string | null;
+    industryCode?: string | null;
     market?: Types.Market | null;
     website?: string | null;
     logoUrl?: string | null;

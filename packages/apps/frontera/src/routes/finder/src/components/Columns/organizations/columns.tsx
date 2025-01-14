@@ -535,7 +535,7 @@ export const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
   [ColumnViewType.OrganizationsIndustry]: columnHelper.accessor(
-    'value.industry',
+    'value.industryName',
     {
       id: ColumnViewType.OrganizationsIndustry,
       minSize: 95,

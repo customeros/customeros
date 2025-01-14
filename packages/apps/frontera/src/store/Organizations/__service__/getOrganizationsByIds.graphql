@@ -4,7 +4,8 @@ query getOrganizationsByIds($ids: [ID!]) {
     name
     notes
     description
-    industry
+    industryName
+    industryCode
     market
     website
     logoUrl

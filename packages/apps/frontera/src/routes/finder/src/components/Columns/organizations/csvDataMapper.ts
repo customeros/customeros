@@ -60,7 +60,7 @@ export const csvDataMapper = {
       : 'Unknown',
   [ColumnViewType.OrganizationsLtv]: (d: Organization) => d?.value?.ltv,
   [ColumnViewType.OrganizationsIndustry]: (d: Organization) =>
-    d.value?.industry ?? 'Unknown',
+    d.value?.industryName ?? 'Unknown',
   [ColumnViewType.OrganizationsContactCount]: (d: Organization) =>
     d?.contacts?.length,
   [ColumnViewType.OrganizationsLinkedinFollowerCount]: (d: Organization) =>

@@ -275,9 +275,14 @@ export const AboutPanel = observer(() => {
               </div>
             )}
           </div>
+
           <p className='text-sm'>
             <Building07 className='text-gray-500 mr-3' />
-            {organization?.value?.industry}
+            {organization?.value?.industryName ? (
+              organization.value.industryName
+            ) : (
+              <span className={'text-gray-400'}>Industry not found yet</span>
+            )}
           </p>
 
           <BusinessTypeInput id={id} />

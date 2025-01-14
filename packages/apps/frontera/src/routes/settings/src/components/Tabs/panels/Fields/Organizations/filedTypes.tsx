@@ -235,8 +235,8 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
       fieldName: 'Industry',
       columnAccesor: ColumnViewType.OrganizationsIndustry,
       icon: <RadioButton />,
-      options: uniqBy(store?.organizations.toArray(), 'value.industry')
-        .map((v) => v.value.industry)
+      options: uniqBy(store?.organizations.toArray(), 'value.industryName')
+        .map((v) => v.value.industryName)
         .filter(Boolean)
         .sort((a, b) => (a && b ? a?.localeCompare(b) : -1))
         .map((industry) => ({
