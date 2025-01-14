@@ -1,0 +1,6 @@
+query getTenantIndustries {
+  industries_InUse  {
+    code
+    name
+  }
+}
