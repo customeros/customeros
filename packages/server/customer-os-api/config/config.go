@@ -5,8 +5,8 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/file_store_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
@@ -67,12 +67,10 @@ type MailstackConfig struct {
 }
 
 type InternalServicesConfig struct {
-	CustomerOsApiUrl string `env:"CUSTOMER_OS_API_URL" envDefault:"https://api.customeros.ai" validate:"required"`
-	ValidationApi    string `env:"VALIDATION_API" validate:"required"`
-	ValidationApiKey string `env:"VALIDATION_API_KEY" validate:"required"`
-	EnrichmentApiUrl string `env:"ENRICHMENT_API_URL" validate:"required"`
-	EnrichmentApiKey string `env:"ENRICHMENT_API_KEY" validate:"required"`
-	FileStoreApi     fsc.FileStoreApiConfig
+	ValidationApiConfig config.ValidationAPIConfig
+	EnrichmentApiConfig config.EnrichmentAPIConfig
+	CustomerOsApiUrl    string `env:"CUSTOMER_OS_API_URL" envDefault:"https://api.customeros.ai" validate:"required"`
+	FileStoreApi        fsc.FileStoreApiConfig
 }
 
 type IntegrationAppConfig struct {

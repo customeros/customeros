@@ -642,7 +642,7 @@ func CallApiValidateEmail(ctx context.Context, services *service.Services, email
 		return nil, err
 	}
 	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("POST", services.Cfg.InternalServices.ValidationApi+"/validateEmailV2", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", services.Cfg.InternalServices.ValidationApiConfig.Url+"/validateEmailV2", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		return nil, err
@@ -651,7 +651,7 @@ func CallApiValidateEmail(ctx context.Context, services *service.Services, email
 	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, services.Cfg.InternalServices.ValidationApiKey)
+	req.Header.Set(security.ApiKeyHeader, services.Cfg.InternalServices.ValidationApiConfig.ApiKey)
 	req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
 
 	// Make the HTTP request

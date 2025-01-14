@@ -671,7 +671,7 @@ func callApiEnrichPerson(ctx context.Context, services *service.Services, span o
 		return nil, err
 	}
 	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("GET", services.Cfg.InternalServices.EnrichmentApiUrl+"/enrichPerson", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("GET", services.Cfg.InternalServices.EnrichmentApiConfig.Url+"/enrichPerson", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		return nil, err
@@ -680,7 +680,7 @@ func callApiEnrichPerson(ctx context.Context, services *service.Services, span o
 	req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, services.Cfg.InternalServices.EnrichmentApiKey)
+	req.Header.Set(security.ApiKeyHeader, services.Cfg.InternalServices.EnrichmentApiConfig.ApiKey)
 	req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
 
 	// Make the HTTP request

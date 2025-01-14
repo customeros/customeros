@@ -127,6 +127,10 @@ func (server *server) Run(parentCtx context.Context) error {
 			CloudflareConfig: server.cfg.ExternalServices.Cloudflare,
 			AnthropicConfig:  server.cfg.ExternalServices.Anthropic,
 		},
+		InternalServices: commonConfig.InternalServices{
+			ValidationApiConfig: server.cfg.InternalServices.ValidationApiConfig,
+			EnrichmentApiConfig: server.cfg.InternalServices.EnrichmentApiConfig,
+		},
 	}, postgresDb, &neo4jDriver, server.cfg.Database.Neo4j.Database, grpcContainer, server.log)
 
 	// Setting up Gin
