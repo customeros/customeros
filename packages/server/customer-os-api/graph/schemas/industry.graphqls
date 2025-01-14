@@ -1,0 +1,8 @@
+extend type Query {
+    industries_InUse: [Industry!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type Industry {
+    code: String!
+    name: String!
+}

@@ -14,6 +14,7 @@ import (
 
 type IndustryService interface {
 	GetAllForOrganizationIds(ctx context.Context, organizationIds []string) (*neo4jentity.IndustryEntities, error)
+	GetInUseIndustries(ctx context.Context) (*neo4jentity.IndustryEntities, error)
 	GetByCode(ctx context.Context, code string) (*neo4jentity.IndustryEntity, error)
 	GetClosestByCode(ctx context.Context, code string) (*neo4jentity.IndustryEntity, error)
 }
@@ -44,6 +45,23 @@ func (s *industryService) GetAllForOrganizationIds(ctx context.Context, organiza
 	for _, v := range industryDbNodes {
 		industryEntity := neo4jmapper.MapDbNodeToIndustryEntity(v.Node)
 		industryEntity.DataloaderKey = v.LinkedNodeId
+		industryEntities = append(industryEntities, *industryEntity)
+	}
+	return &industryEntities, nil
+}
+
+func (s *industryService) GetInUseIndustries(ctx context.Context) (*neo4jentity.IndustryEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryService.GetInUseIndustries")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	industryDbNodes, err := s.services.Neo4jRepositories.IndustryReadRepository.GetInUseIndustries(ctx, common.GetTenantFromContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+	industryEntities := make(neo4jentity.IndustryEntities, 0)
+	for _, v := range industryDbNodes {
+		industryEntity := neo4jmapper.MapDbNodeToIndustryEntity(v)
 		industryEntities = append(industryEntities, *industryEntity)
 	}
 	return &industryEntities, nil

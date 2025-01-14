@@ -1,6 +1,7 @@
 package repository
 
 import (
+	context2 "context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
@@ -13,6 +14,7 @@ import (
 
 type IndustryReadRepository interface {
 	GetAllForOrganizationIds(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
+	GetInUseIndustries(ctx context2.Context, tenant string) ([]*dbtype.Node, error)
 	GetByCode(ctx context.Context, code string) (*dbtype.Node, error)
 }
 
@@ -62,6 +64,36 @@ func (r *industryReadRepository) GetAllForOrganizationIds(ctx context.Context, t
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
 	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *industryReadRepository) GetInUseIndustries(ctx context2.Context, tenant string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryReadRepository.GetInUseIndustries")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide:false})-[:HAS_INDUSTRY]->(i:Industry) 
+				RETURN DISTINCT i, ORDER BY i.code`
+
+	params := map[string]any{
+		"tenant": tenant,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	return result.([]*dbtype.Node), err
 }
 
 func (r *industryReadRepository) GetByCode(ctx context.Context, code string) (*dbtype.Node, error) {
