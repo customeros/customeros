@@ -61,10 +61,10 @@ export const getFilterTypes = (store?: RootStore) => {
         <Building07 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
     },
-    [ColumnViewType.OrganizationsWebsite]: {
+    [ColumnViewType.OrganizationsPrimaryDomains]: {
       filterType: 'text',
-      filterName: 'Website',
-      filterAccesor: ColumnViewType.OrganizationsWebsite,
+      filterName: 'Primary Domain',
+      filterAccesor: ColumnViewType.OrganizationsPrimaryDomains,
       filterOperators: [
         ComparisonOperator.Contains,
         ComparisonOperator.NotContains,

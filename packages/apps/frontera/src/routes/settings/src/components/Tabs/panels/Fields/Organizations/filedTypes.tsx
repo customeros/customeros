@@ -25,6 +25,7 @@ import { uniqBy } from 'lodash';
 import { type RootStore } from '@store/root';
 
 import { Type01 } from '@ui/media/icons/Type01';
+import { Globe01 } from '@ui/media/icons/Globe01';
 import { RadioButton } from '@ui/media/icons/RadioButton';
 import { ListBulleted } from '@ui/media/icons/ListBulleted';
 
@@ -37,12 +38,12 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
       columnAccesor: ColumnViewType.OrganizationsName,
       icon: <Type01 className='mb-0.5' />,
     },
-    [ColumnViewType.OrganizationsWebsite]: {
+    [ColumnViewType.OrganizationsPrimaryDomains]: {
       fieldType: CustomFieldTemplateType.FreeText,
       fieldTypeName: 'Text',
-      fieldName: 'Website',
-      columnAccesor: ColumnViewType.OrganizationsWebsite,
-      icon: <Type01 className='mb-0.5' />,
+      fieldName: 'Primary Domains',
+      columnAccesor: ColumnViewType.OrganizationsPrimaryDomains,
+      icon: <Globe01 className='mb-0.5' />,
     },
     [ColumnViewType.OrganizationsRelationship]: {
       fieldType: CustomFieldTemplateType.SingleSelect,

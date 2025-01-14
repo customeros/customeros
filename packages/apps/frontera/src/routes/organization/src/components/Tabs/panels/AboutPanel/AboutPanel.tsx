@@ -9,9 +9,8 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
 import { Select } from '@ui/form/Select';
-import { UrlInput } from '@ui/form/UrlInput';
+import { Tag01 } from '@ui/media/icons/Tag01';
 import { Spinner } from '@ui/feedback/Spinner';
-import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { Users03 } from '@ui/media/icons/Users03';
 import { Share07 } from '@ui/media/icons/Share07';
 import { useStore } from '@shared/hooks/useStore';
@@ -35,6 +34,7 @@ import {
 } from '@graphql/types';
 
 import { Tags } from './components/tags';
+import { Domains } from './components/Domains';
 import { SocialIconInput } from '../../shared';
 import { OwnerInput } from './components/owner';
 import { Branches, ParentOrgInput } from './components/branches';
@@ -167,20 +167,9 @@ export const AboutPanel = observer(() => {
             </div>
           )}
         </div>
-        <UrlInput
-          name='website'
-          autoComplete='off'
-          placeholder='www.'
-          dataTest='org-about-www'
-          value={organization.value?.website || ''}
-          onChange={(e) => {
-            organization.value!.website = e.target.value;
-          }}
-          onBlur={() => {
-            organization.draft();
-            organization.commit();
-          }}
-        />
+
+        <Domains />
+
         <Textarea
           size='sm'
           spellCheck={false}
