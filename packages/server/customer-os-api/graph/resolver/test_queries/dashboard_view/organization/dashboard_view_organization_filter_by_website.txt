@@ -19,7 +19,6 @@ query dashboardView_Organizations($page: Int!, $limit: Int!, $searchTerm: Any!, 
         name
         description
         source
-        industry
         locations {
             id
             name

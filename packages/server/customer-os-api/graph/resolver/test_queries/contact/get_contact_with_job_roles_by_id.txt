@@ -12,7 +12,6 @@ query GetContactById($contactId: ID!){
             website
             domains
             isPublic
-            industry
         }
     }
   }

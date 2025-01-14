@@ -58,7 +58,7 @@ type Organization implements MetadataInterface {
     employeeGrowthRate:     String
     employees:              Int64
     headquarters:           String
-    industry:               String
+    industry:               String @deprecated
     industryGroup:          String @deprecated
     lastFundingAmount:      String
     lastFundingRound:       FundingRound
@@ -212,7 +212,7 @@ input OrganizationSaveInput {
     notes:              String
     domains:            [String!]
     website:            String
-    industry:           String
+    industry:           String @deprecated
     subIndustry:        String @deprecated
     industryGroup:      String @deprecated
     public:             Boolean
@@ -247,7 +247,7 @@ input OrganizationInput {
     notes:         String
     domains:       [String!]
     website:       String
-    industry:      String
+    industry:      String @deprecated
     subIndustry:   String @deprecated
     industryGroup: String @deprecated
     public:        Boolean
@@ -302,7 +302,7 @@ input OrganizationUpdateInput {
     description:        String
     notes:              String
     website:            String
-    industry:           String
+    industry:           String @deprecated
     subIndustry:        String @deprecated
     industryGroup:      String @deprecated
     public:             Boolean

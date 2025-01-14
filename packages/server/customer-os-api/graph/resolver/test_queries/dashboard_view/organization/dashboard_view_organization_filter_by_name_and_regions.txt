@@ -32,7 +32,6 @@ query dashboardView_Organizations($page: Int!, $limit: Int!, $region1: Any!, $re
         name
         description
         source
-        industry
         locations {
             id
             name

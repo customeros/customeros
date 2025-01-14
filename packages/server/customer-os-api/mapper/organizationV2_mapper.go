@@ -23,7 +23,6 @@ func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, ou
 	output.Name = entity.Name
 	output.Description = utils.StringPtr(entity.Description)
 	output.Website = utils.StringPtr(entity.Website)
-	output.Industry = utils.StringPtr(entity.Industry)
 	output.ValueProposition = utils.StringPtr(entity.ValueProposition)
 	output.Public = utils.BoolPtr(entity.IsPublic)
 	output.Employees = utils.Int64Ptr(entity.Employees)

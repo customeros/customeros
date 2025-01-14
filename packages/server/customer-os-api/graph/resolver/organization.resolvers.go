@@ -500,7 +500,6 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		ReferenceId:        input.ReferenceID,
 		Description:        input.Description,
 		Website:            input.Website,
-		Industry:           input.Industry,
 		IsPublic:           input.IsPublic,
 		Market:             utils.ToPtr(mapper.MapMarketFromModel(input.Market)),
 		Employees:          input.Employees,
