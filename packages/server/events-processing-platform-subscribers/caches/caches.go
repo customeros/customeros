@@ -3,10 +3,7 @@ package caches
 import (
 	"encoding/json"
 	"github.com/coocood/freecache"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -20,53 +17,22 @@ const (
 )
 
 type Cache interface {
-	SetIndustry(key, value string)
-	GetIndustry(key string) (string, bool)
 	SetPersonalEmailProviders(domains []string)
 	GetPersonalEmailProviders() []string
 }
 
 type cache struct {
 	mu                         sync.RWMutex
-	permanentIndustryMapping   map[string]string
-	industryCache              *freecache.Cache
 	personalEmailProviderCache *freecache.Cache
 	marketCache                *freecache.Cache
 }
 
-func InitCaches(industryMapping map[string]string) Cache {
+func InitCaches() Cache {
 	result := cache{
-		industryCache:              freecache.NewCache(cache5MB),
 		marketCache:                freecache.NewCache(cache10KB),
 		personalEmailProviderCache: freecache.NewCache(cache5MB),
 	}
-	result.permanentIndustryMapping = data.IndustryValuesUpperCaseMap()
-
-	// add postgres industry mapping
-	industryMappingUpperCase := make(map[string]string)
-	for key, value := range industryMapping {
-		industryMappingUpperCase[strings.ToUpper(key)] = value
-	}
-	result.permanentIndustryMapping = utils.MergeMaps(result.permanentIndustryMapping, industryMappingUpperCase)
-
 	return &result
-}
-
-// Industry cache
-func (c *cache) SetIndustry(key, value string) {
-	// Convert strings to []byte
-	keyBytes := []byte(strings.ToUpper(key))
-	valueBytes := []byte(value)
-
-	_ = c.industryCache.Set(keyBytes, valueBytes, expire1Hour)
-}
-
-func (c *cache) GetIndustry(key string) (string, bool) {
-	upperKey := strings.ToUpper(key)
-	if val, ok := c.permanentIndustryMapping[upperKey]; ok {
-		return val, true
-	}
-	return c.get(c.industryCache, upperKey)
 }
 
 func (c *cache) get(cache *freecache.Cache, key string) (string, bool) {
