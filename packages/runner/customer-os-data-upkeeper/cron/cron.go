@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"sync"
 
 	"github.com/robfig/cron"
@@ -166,6 +167,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 func lockAndRunJob(cont *container.Container, groupName string, job func(*container.Container)) {
 	jobLocks.locks[groupName].Lock()
 	defer jobLocks.locks[groupName].Unlock()
+	defer tracing.RecoverAndLogToJaeger(cont.Log)
 	job(cont)
 }
 

@@ -188,6 +188,7 @@ func (r emailValidationRecordRepository) GetEmailRecordsInChunks(ctx context.Con
 		Limit(chunkSize).
 		Offset(offset).
 		Find(&records).Error; err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
