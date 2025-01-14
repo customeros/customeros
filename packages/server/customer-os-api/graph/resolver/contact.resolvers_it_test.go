@@ -74,7 +74,6 @@ func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
 		Name:        "name1",
 		Description: "description1",
 		Website:     "website1",
-		Industry:    "industry1",
 		IsPublic:    true,
 	})
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId1, "domain1")
@@ -82,7 +81,6 @@ func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
 		Name:        "name2",
 		Description: "description2",
 		Website:     "website2",
-		Industry:    "industry2",
 		IsPublic:    false,
 	})
 	neo4jt.AddDomainToOrg(ctx, driver, organizationId2, "domain2")
@@ -120,7 +118,6 @@ func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
 	require.Equal(t, "description1", *cto.Organization.Description)
 	require.Equal(t, []string{"domain1"}, cto.Organization.Domains)
 	require.Equal(t, "website1", *cto.Organization.Website)
-	require.Equal(t, "industry1", *cto.Organization.Industry)
 	require.Equal(t, true, *cto.Organization.IsPublic)
 	require.NotNil(t, cto.Organization.CreatedAt)
 
@@ -132,7 +129,6 @@ func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
 	require.Equal(t, "description2", *ceo.Organization.Description)
 	require.Equal(t, []string{"domain2"}, ceo.Organization.Domains)
 	require.Equal(t, "website2", *ceo.Organization.Website)
-	require.Equal(t, "industry2", *ceo.Organization.Industry)
 	require.Equal(t, false, *ceo.Organization.IsPublic)
 	require.NotNil(t, ceo.Organization.CreatedAt)
 }
