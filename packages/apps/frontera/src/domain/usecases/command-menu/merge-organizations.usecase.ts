@@ -22,7 +22,7 @@ export class MergeOrganizationsCase {
   @action
   async merge() {
     try {
-      await this.service.mergeOrganizations({
+      const { organization_Merge } = await this.service.mergeOrganizations({
         primaryOrganizationId: this.primaryId,
         mergedOrganizationIds: [this.secondaryId],
       });
@@ -37,15 +37,17 @@ export class MergeOrganizationsCase {
           ids: [this.primaryId],
         });
 
-        this.root.ui.toastSuccess(
-          `Successfully merged 2 organizations`,
-          this.primaryId,
-        );
+        if (organization_Merge.id) {
+          this.root.ui.toastSuccess(
+            `Successfully merged 2 organizations`,
+            this.primaryId,
+          );
+        }
       });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error).message;
-        this.root.ui.toastSuccess(
+        this.root.ui.toastError(
           `Failed merging 1 organization`,
           this.primaryId,
         );

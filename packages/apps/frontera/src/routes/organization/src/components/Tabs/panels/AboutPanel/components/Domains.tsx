@@ -31,6 +31,7 @@ export const Domains = observer(() => {
   const organization = store.organizations.getById(id);
 
   if (!organization || !organization?.value) return null;
+
   const formattedData = formatDomains(organization.value.domainsDetails);
 
   const toggleExpanded = (domainKey: string) => {
