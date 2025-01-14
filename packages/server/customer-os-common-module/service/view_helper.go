@@ -48,7 +48,7 @@ func DefaultTableViewDefinitions(hasSharedPresets bool, span opentracing.Span) [
 		return []postgresEntity.TableViewDefinition{}
 	}
 
-	targetOrganizationContactsTableViewDefinition, err := DefaultTableViewDefinitionTargetOrganizationsContacts(span)
+	contactsForTargetOrganizations, err := DefaultTableViewDefinitionTargetOrganizationsContacts(span)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgresEntity.TableViewDefinition{}
@@ -89,10 +89,10 @@ func DefaultTableViewDefinitions(hasSharedPresets bool, span opentracing.Span) [
 		pastInvoicesTableViewDefinition,
 		organizationsTableViewDefinition,
 		customersTableViewDefinition,
-		contactsTableViewDefinition,
-		targetOrganizationContactsTableViewDefinition,
-		contractsTableViewDefinition,
 		targetsTableViewDefinition,
+		contactsTableViewDefinition,
+		contactsForTargetOrganizations,
+		contractsTableViewDefinition,
 		opportunitiesRecordsTableViewDefinition,
 		flowsTableViewDefinition,
 		flowContactsTableViewDefinition,
