@@ -301,7 +301,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsIndustry },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const value = row?.value.industryName;
+        const value = row?.value?.industryCode;
 
         if (!value)
           return (
