@@ -28,7 +28,7 @@ func NewTrackingAllowedOriginRepository(gormDb *gorm.DB) TrackingAllowedOriginRe
 }
 
 func (repo *trackingAllowedOriginRepositoryImpl) Create(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingAllowedOriginRepository.Create")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackingAllowedOriginRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -42,7 +42,7 @@ func (repo *trackingAllowedOriginRepositoryImpl) Create(ctx context.Context, whi
 }
 
 func (repo *trackingAllowedOriginRepositoryImpl) FindAll(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*[]entity.TrackingAllowedOrigin, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingAllowedOriginRepository.FindAll")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackingAllowedOriginRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -58,7 +58,7 @@ func (repo *trackingAllowedOriginRepositoryImpl) FindAll(ctx context.Context, wh
 }
 
 func (repo *trackingAllowedOriginRepositoryImpl) Find(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingAllowedOriginRepository.Find")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackingAllowedOriginRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -75,7 +75,7 @@ func (repo *trackingAllowedOriginRepositoryImpl) Find(ctx context.Context, white
 }
 
 func (repo *trackingAllowedOriginRepositoryImpl) Update(ctx context.Context, whitelist entity.TrackingAllowedOrigin) (*entity.TrackingAllowedOrigin, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "TrackingAllowedOriginRepository.Update")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackingAllowedOriginRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
