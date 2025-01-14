@@ -47,7 +47,7 @@ require (
 	github.com/coocood/freecache v1.2.4 // indirect
 	github.com/customeros/mailsherpa v0.3.8 // indirect
 	github.com/customeros/mailwatcher v0.1.6 // indirect
-	github.com/emersion/go-message v0.18.1 // indirect
+	github.com/emersion/go-message v0.18.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/forPelevin/gomoji v1.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
