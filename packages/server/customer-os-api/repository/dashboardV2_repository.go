@@ -595,7 +595,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		defer wg.Done()
 		tracing.SetDefaultServiceSpanTags(ctx, span)
 
-		span.LogFields(log.Object("params", params))
+		tracing.LogObjectAsJson(span, "params", params)
 		span.LogFields(log.String("countQuery", countQuery))
 
 		session := utils.NewNeo4jReadSession(ctx, *r.driver)
@@ -626,7 +626,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		defer wg.Done()
 		tracing.SetDefaultServiceSpanTags(ctx, span)
 
-		span.LogFields(log.Object("params", params))
+		tracing.LogObjectAsJson(span, "params", params)
 		span.LogFields(log.String("selectQuery", selectQuery))
 
 		session := utils.NewNeo4jReadSession(ctx, *r.driver)
@@ -1241,7 +1241,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		defer wg.Done()
 		tracing.SetDefaultServiceSpanTags(ctx, innerSpan)
 
-		innerSpan.LogFields(log.Object("params", params))
+		tracing.LogObjectAsJson(innerSpan, "params", params)
 		innerSpan.LogFields(log.String("countQuery", countQuery))
 
 		session := utils.NewNeo4jReadSession(ctx, *r.driver)
@@ -1272,7 +1272,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		defer wg.Done()
 		tracing.SetDefaultServiceSpanTags(ctx, innerSpan)
 
-		innerSpan.LogFields(log.Object("params", params))
+		tracing.LogObjectAsJson(innerSpan, "params", params)
 		innerSpan.LogFields(log.String("selectQuery", selectQuery))
 
 		session := utils.NewNeo4jReadSession(ctx, *r.driver)
