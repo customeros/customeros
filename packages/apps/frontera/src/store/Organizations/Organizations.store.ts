@@ -412,7 +412,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         this.sync({ action: 'DELETE', ids });
 
         this.root.ui.toastSuccess(
-          `Successfully archived ${ids.length} ${
+          `Archived ${ids.length} ${
             ids.length > 1 ? 'organizations' : 'organization'
           }`,
           crypto.randomUUID(),
