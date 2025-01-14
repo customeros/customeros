@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -28,7 +29,7 @@ func TestQueryResolver_UIContactsSearch_FilterByName(t *testing.T) {
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelContact))
 
-	searchBy := model.ColumnViewTypeContactsName
+	searchBy := postgresEntity.ColumnViewTypeContactsName
 	searchTerm := "Aa"
 
 	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsEmpty, 5, 1)
@@ -54,8 +55,8 @@ func TestQueryResolver_UIContactsSearch_SortByName(t *testing.T) {
 	expectedAsc := []string{"A1", "A2", "B1-AB1", "B1-AB2", "empty"}
 	expectedDesc := []string{"B1-AB2", "B1-AB1", "A2", "A1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsName, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsName, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsName, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsName, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByPrimaryEmail(t *testing.T) {
@@ -80,7 +81,7 @@ func TestQueryResolver_UIContactsSearch_FilterByPrimaryEmail(t *testing.T) {
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelContact))
 	require.Equal(t, 6, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelEmail))
 
-	searchBy := model.ColumnViewTypeContactsPrimaryEmail
+	searchBy := postgresEntity.ColumnViewTypeContactsPrimaryEmail
 	searchTerm := "aa"
 
 	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsEmpty, 5, 2)
@@ -106,8 +107,8 @@ func TestQueryResolver_UIContactsSearch_SortByPrimaryEmail(t *testing.T) {
 	expectedAsc := []string{contact3, contact1, contact2}
 	expectedDesc := []string{contact1, contact3, contact2}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_SortByPrimaryEmail_WithNoPrimaryEmail(t *testing.T) {
@@ -126,8 +127,8 @@ func TestQueryResolver_UIContactsSearch_SortByPrimaryEmail_WithNoPrimaryEmail(t 
 	expectedAsc := []string{contact1, contact2, contact3}
 	expectedDesc := []string{contact2, contact1, contact3}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByCountry(t *testing.T) {
@@ -150,7 +151,7 @@ func TestQueryResolver_UIContactsSearch_FilterByCountry(t *testing.T) {
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
 
-	searchBy := model.ColumnViewTypeContactsCountry
+	searchBy := postgresEntity.ColumnViewTypeContactsCountry
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 2)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 4, 2)
@@ -182,8 +183,8 @@ func TestQueryResolver_UIContactsSearch_SortByCountry(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsCountry, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsCountry, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsCountry, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsCountry, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByRegion(t *testing.T) {
@@ -202,7 +203,7 @@ func TestQueryResolver_UIContactsSearch_FilterByRegion(t *testing.T) {
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
 
-	searchBy := model.ColumnViewTypeContactsRegion
+	searchBy := postgresEntity.ColumnViewTypeContactsRegion
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
@@ -236,8 +237,8 @@ func TestQueryResolver_UIContactsSearch_SortByRegion(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsRegion, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsRegion, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsRegion, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsRegion, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByCity(t *testing.T) {
@@ -256,7 +257,7 @@ func TestQueryResolver_UIContactsSearch_FilterByCity(t *testing.T) {
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
 
-	searchBy := model.ColumnViewTypeContactsCity
+	searchBy := postgresEntity.ColumnViewTypeContactsCity
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
@@ -290,8 +291,8 @@ func TestQueryResolver_UIContactsSearch_SortByCity(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsCity, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsCity, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsCity, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsCity, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_SortByCreatedDate(t *testing.T) {
@@ -311,8 +312,8 @@ func TestQueryResolver_UIContactsSearch_SortByCreatedDate(t *testing.T) {
 	expectedAsc := []string{"1", "2"}
 	expectedDesc := []string{"2", "1"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsCreatedAt, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsCreatedAt, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsCreatedAt, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsCreatedAt, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_SortByUpdatedDate(t *testing.T) {
@@ -332,8 +333,8 @@ func TestQueryResolver_UIContactsSearch_SortByUpdatedDate(t *testing.T) {
 	expectedAsc := []string{"1", "2"}
 	expectedDesc := []string{"2", "1"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsUpdatedAt, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsUpdatedAt, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsUpdatedAt, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsUpdatedAt, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByTags(t *testing.T) {
@@ -360,7 +361,7 @@ func TestQueryResolver_UIContactsSearch_FilterByTags(t *testing.T) {
 	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelTag))
 	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "TAGGED"))
 
-	searchBy := model.ColumnViewTypeContactsTags
+	searchBy := postgresEntity.ColumnViewTypeContactsTags
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
@@ -392,7 +393,7 @@ func TestQueryResolver_UIContactsSearch_FilterByLinkedIn(t *testing.T) {
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
 
-	searchBy := model.ColumnViewTypeContactsLinkedin
+	searchBy := postgresEntity.ColumnViewTypeContactsLinkedin
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 2)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 4, 2)
@@ -424,8 +425,8 @@ func TestQueryResolver_UIContactsSearch_SortByLinkedIn(t *testing.T) {
 	expectedAsc := []string{"1", "2", "3"}
 	expectedDesc := []string{"2", "1", "3"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsLinkedin, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsLinkedin, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsLinkedin, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsLinkedin, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByOrganization(t *testing.T) {
@@ -452,7 +453,7 @@ func TestQueryResolver_UIContactsSearch_FilterByOrganization(t *testing.T) {
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "5"})
 
-	searchBy := model.ColumnViewTypeContactsOrganization
+	searchBy := postgresEntity.ColumnViewTypeContactsOrganization
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 3)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 2)
@@ -482,8 +483,8 @@ func TestQueryResolver_UIContactsSearch_SortByOrganization(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsOrganization, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsOrganization, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsOrganization, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsOrganization, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByJobTitle(t *testing.T) {
@@ -507,7 +508,7 @@ func TestQueryResolver_UIContactsSearch_FilterByJobTitle(t *testing.T) {
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "5"})
 
-	searchBy := model.ColumnViewTypeContactsJobTitle
+	searchBy := postgresEntity.ColumnViewTypeContactsJobTitle
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 3)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 2)
@@ -536,8 +537,8 @@ func TestQueryResolver_UIContactsSearch_SortByJobTitle(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsJobTitle, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsJobTitle, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsJobTitle, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsJobTitle, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_SortByLinkedInFollowerCount(t *testing.T) {
@@ -559,11 +560,11 @@ func TestQueryResolver_UIContactsSearch_SortByLinkedInFollowerCount(t *testing.T
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsLinkedinFollowerCount, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsLinkedinFollowerCount, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsLinkedinFollowerCount, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsLinkedinFollowerCount, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
-func assertContactSearch(t *testing.T, filterName model.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
+func assertContactSearch(t *testing.T, filterName postgresEntity.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
 	rawResponse, err := c.RawPost(getQuery("contact/ui_contacts_search"),
 		client.Var("limit", 10),
 		client.Var("filterName", filterName),
@@ -586,7 +587,7 @@ func assertContactSearch(t *testing.T, filterName model.ColumnViewType, searchVa
 	require.Equal(t, int(totalElements), len(searchResult.Ids))
 }
 
-func verifyContactSortOrder(t *testing.T, sortBy model.ColumnViewType, direction commonModel.SortingDirection, expectedOrder []string) {
+func verifyContactSortOrder(t *testing.T, sortBy postgresEntity.ColumnViewType, direction commonModel.SortingDirection, expectedOrder []string) {
 	sortedResult := assertContactSort(t, sortBy, direction)
 	assert.Equal(t, len(expectedOrder), len(sortedResult), "Mismatch in result length")
 	for i, expected := range expectedOrder {
@@ -594,10 +595,10 @@ func verifyContactSortOrder(t *testing.T, sortBy model.ColumnViewType, direction
 	}
 }
 
-func assertContactSort(t *testing.T, sortBy model.ColumnViewType, sortDirection commonModel.SortingDirection) []string {
+func assertContactSort(t *testing.T, sortBy postgresEntity.ColumnViewType, sortDirection commonModel.SortingDirection) []string {
 	rawResponse, err := c.RawPost(getQuery("contact/ui_contacts_sort"),
 		client.Var("limit", 10),
-		client.Var("sortByField", sortBy.String()),
+		client.Var("sortByField", string(sortBy)),
 		client.Var("sortByDirection", sortDirection),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)

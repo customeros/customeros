@@ -13,6 +13,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -249,7 +250,10 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 
 		toStore := &neo4jentity.FlowEntity{}
 
+		isNew := false
+
 		if input.Id == "" {
+			isNew = true
 			toStore.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlow)
 			if err != nil {
 				return nil, err
@@ -279,6 +283,25 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 		_, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, &tx, toStore)
 		if err != nil {
 			return nil, err
+		}
+
+		if isNew {
+			tvDef, err := DefaultTableViewDefinitionFlowContactsV2(span, toStore.Id)
+			if err == nil {
+				tvDef.Tenant = tenant
+				result := s.services.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+				if result.Error != nil {
+					return nil, result.Error
+				}
+				viewDefinition, _ := result.Result.(postgresEntity.TableViewDefinition)
+
+				toStore.TableViewDefId = fmt.Sprint(viewDefinition.ID)
+
+				err := s.services.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, &tx, tenant, model.NodeLabelFlow, toStore.Id, "tableViewDefId", toStore.TableViewDefId)
+				if err != nil {
+					return nil, err
+				}
+			}
 		}
 
 		//TODO this is not supporting live updates after scheduling

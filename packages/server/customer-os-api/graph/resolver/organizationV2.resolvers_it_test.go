@@ -10,6 +10,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -31,7 +32,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByName(t *testing.T) {
 
 	require.Equal(t, 6, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsName
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsName
 	searchTerm := "open"
 
 	assertSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsEmpty, 6, 1)
@@ -54,7 +55,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByWebsite(t *testing.T) {
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsWebsite
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsWebsite
 	searchTerm := "customeros"
 
 	assertSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsEmpty, 5, 1)
@@ -84,7 +85,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByPrimaryDomain(t *testing.T)
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Domain"))
 	require.Equal(t, 5, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS_DOMAIN"))
 
-	searchBy := model.ColumnViewTypeOrganizationsPrimaryDomains
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsPrimaryDomains
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 1)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 4, 3)
@@ -111,7 +112,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByRelationship(t *testing.T) 
 
 	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsRelationship
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsRelationship
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 2)
 	assertSearch(t, searchBy, []string{enum.OrganizationRelationshipCustomer.String()}, commonModel.ComparisonOperatorIn, 4, 1)
@@ -132,7 +133,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByOnboardingStatus(t *testing
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsOnboardingStatus
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsOnboardingStatus
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, []string{string(enum.OnboardingStatusNotApplicable)}, commonModel.ComparisonOperatorIn, 3, 1)
@@ -151,7 +152,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByRenewalLikelihood(t *testin
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsRenewalLikelihood
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsRenewalLikelihood
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, []string{string(enum.RenewalLikelihoodZero)}, commonModel.ComparisonOperatorIn, 3, 1)
@@ -177,7 +178,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByRenewalDate(t *testing.T) {
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsRenewalDate
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsRenewalDate
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, []time.Time{firstOfDecember, midOfJanuary}, commonModel.ComparisonOperatorBetween, 3, 1)
@@ -200,7 +201,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByForecastArr(t *testing.T) {
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsForecastArr
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsForecastArr
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
@@ -238,7 +239,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByOwner(t *testing.T) {
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsOwner
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsOwner
 
 	assertSearch(t, searchBy, []string{"owner1"}, commonModel.ComparisonOperatorIn, 3, 1)
 	assertSearch(t, searchBy, []string{"owner2"}, commonModel.ComparisonOperatorIn, 3, 1)
@@ -260,7 +261,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByLastTouchpoint(t *testing.T
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsLastTouchpoint
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsLastTouchpoint
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
@@ -288,7 +289,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByLastTouchpointAt(t *testing
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsLastTouchpointDate
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsLastTouchpointDate
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, []time.Time{firstOfDecember, midOfJanuary}, commonModel.ComparisonOperatorBetween, 3, 1)
@@ -312,7 +313,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByStage(t *testing.T) {
 
 	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsStage
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsStage
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 1)
 	assertSearch(t, searchBy, []string{enum.Trial.String()}, commonModel.ComparisonOperatorIn, 4, 1)
@@ -342,7 +343,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterBySocials(t *testing.T) {
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Social"))
 	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
 
-	searchBy := model.ColumnViewTypeOrganizationsSocials
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsSocials
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
@@ -371,7 +372,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByLeadSource(t *testing.T) {
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsLeadSource
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsLeadSource
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 2)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 3)
@@ -397,7 +398,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByCreatedAt(t *testing.T) {
 
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsCreatedDate
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsCreatedDate
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 2, 0)
 	assertSearch(t, searchBy, []time.Time{firstOfDecember, midOfJanuary}, commonModel.ComparisonOperatorBetween, 2, 1)
@@ -420,7 +421,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByEmployeeCount(t *testing.T)
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsEmployeeCount
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsEmployeeCount
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 0)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 3)
@@ -447,7 +448,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByContactCount(t *testing.T) 
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsContactCount
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsContactCount
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 0)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 3)
@@ -477,7 +478,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByYearFounded(t *testing.T) {
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsYearFounded
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsYearFounded
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
@@ -505,7 +506,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByIndustry(t *testing.T) {
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsIndustry
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsIndustry
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 2)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 3)
@@ -532,7 +533,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByChurnedAt(t *testing.T) {
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsChurnDate
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsChurnDate
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, []time.Time{firstOfDecember, midOfJanuary}, commonModel.ComparisonOperatorBetween, 3, 1)
@@ -558,7 +559,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByLtv(t *testing.T) {
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsLtv
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsLtv
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 0)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 3)
@@ -598,7 +599,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByCountry(t *testing.T) {
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
 	require.Equal(t, 3, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
 
-	searchBy := model.ColumnViewTypeOrganizationsCountry
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsCountry
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 2)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 4, 2)
@@ -631,7 +632,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByCity(t *testing.T) {
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
 	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ASSOCIATED_WITH"))
 
-	searchBy := model.ColumnViewTypeOrganizationsCity
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsCity
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
@@ -660,7 +661,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByHeadquarters(t *testing.T) 
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsHeadquarters
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsHeadquarters
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 1)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 4)
@@ -681,7 +682,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByIsPublic(t *testing.T) {
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsIsPublic
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsIsPublic
 
 	assertSearch(t, searchBy, true, commonModel.ComparisonOperatorEquals, 3, 1)
 	assertSearch(t, searchBy, false, commonModel.ComparisonOperatorEquals, 3, 2)
@@ -713,7 +714,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByTags(t *testing.T) {
 	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))
 	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "TAGGED"))
 
-	searchBy := model.ColumnViewTypeOrganizationsTags
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsTags
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
@@ -744,7 +745,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByParentOrganization(t *testi
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
 
-	searchBy := model.ColumnViewTypeOrganizationsParentOrganization
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsParentOrganization
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 3)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 2)
@@ -778,7 +779,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByUpdatedAt(t *testing.T) {
 
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	searchBy := model.ColumnViewTypeOrganizationsUpdatedDate
+	searchBy := postgresEntity.ColumnViewTypeOrganizationsUpdatedDate
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 0)
 	assertSearch(t, searchBy, []time.Time{firstOfDecember, midOfJanuary}, commonModel.ComparisonOperatorBetween, 3, 1)
@@ -797,7 +798,7 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByUpdatedAt(t *testing.T) {
 	assertSearch(t, searchBy, firstOfFebruary, commonModel.ComparisonOperatorLte, 3, 2)
 }
 
-func assertSearch(t *testing.T, filterName model.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
+func assertSearch(t *testing.T, filterName postgresEntity.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
 	rawResponse, err := c.RawPost(getQuery("organization/ui_organizations_search"),
 		client.Var("limit", 10),
 		client.Var("filterName", filterName),
@@ -841,8 +842,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByName(t *testing.T) {
 	expectedAsc := []string{"a", "aa", "ab", "abc", "b", "ba", "c", "z", "empty"}
 	expectedDesc := []string{"z", "c", "ba", "b", "abc", "ab", "aa", "a", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsName, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsName, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsName, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsName, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByWebsite(t *testing.T) {
@@ -866,8 +867,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByWebsite(t *testing.T) {
 	expectedAsc := []string{"a", "aa", "ab", "abc", "b", "ba", "c", "z", "empty"}
 	expectedDesc := []string{"z", "c", "ba", "b", "abc", "ab", "aa", "a", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsWebsite, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsWebsite, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsWebsite, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsWebsite, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByPrimaryDomain(t *testing.T) {
@@ -894,8 +895,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByPrimaryDomain(t *testing.T) {
 	expectedAsc := []string{"org1", "org2", "org3", "org4"}
 	expectedDesc := []string{"org3", "org2", "org1", "org4"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsPrimaryDomains, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsPrimaryDomains, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsPrimaryDomains, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsPrimaryDomains, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByRelationship(t *testing.T) {
@@ -919,8 +920,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByRelationship(t *testing.T) {
 	expectedAsc := []string{"a", "aa", "ab", "abc", "b", "ba", "c", "z", "empty"}
 	expectedDesc := []string{"z", "c", "ba", "b", "abc", "ab", "aa", "a", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsRelationship, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsRelationship, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsRelationship, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsRelationship, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByOnboardingStatus(t *testing.T) {
@@ -938,8 +939,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByOnboardingStatus(t *testing.T
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsOnboardingStatus, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsOnboardingStatus, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsOnboardingStatus, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsOnboardingStatus, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByRenewalLikelihood(t *testing.T) {
@@ -957,8 +958,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByRenewalLikelihood(t *testing.
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsRenewalLikelihood, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsRenewalLikelihood, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsRenewalLikelihood, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsRenewalLikelihood, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByRenewalDate(t *testing.T) {
@@ -979,8 +980,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByRenewalDate(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsRenewalDate, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsRenewalDate, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsRenewalDate, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsRenewalDate, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByForecastArr(t *testing.T) {
@@ -998,8 +999,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByForecastArr(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsForecastArr, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsForecastArr, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsForecastArr, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsForecastArr, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByOwner(t *testing.T) {
@@ -1028,8 +1029,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByOwner(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsOwner, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsOwner, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsOwner, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsOwner, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByLastTouchpoint(t *testing.T) {
@@ -1050,8 +1051,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByLastTouchpoint(t *testing.T) 
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsLastTouchpoint, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsLastTouchpoint, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsLastTouchpoint, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsLastTouchpoint, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByLastTouchpointDate(t *testing.T) {
@@ -1072,8 +1073,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByLastTouchpointDate(t *testing
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsLastTouchpointDate, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsLastTouchpointDate, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsLastTouchpointDate, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsLastTouchpointDate, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByStage(t *testing.T) {
@@ -1091,8 +1092,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByStage(t *testing.T) {
 	expectedAsc := []string{"a", "b", "empty"}
 	expectedDesc := []string{"b", "a", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsStage, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsStage, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsStage, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsStage, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByLeadsource(t *testing.T) {
@@ -1110,8 +1111,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByLeadsource(t *testing.T) {
 	expectedAsc := []string{"a", "b", "empty"}
 	expectedDesc := []string{"b", "a", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsLeadSource, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsLeadSource, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsLeadSource, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsLeadSource, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByCreatedDate(t *testing.T) {
@@ -1131,8 +1132,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByCreatedDate(t *testing.T) {
 	expectedAsc := []string{"1", "2"}
 	expectedDesc := []string{"2", "1"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsCreatedDate, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsCreatedDate, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsCreatedDate, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsCreatedDate, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByEmployeeCount(t *testing.T) {
@@ -1149,8 +1150,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByEmployeeCount(t *testing.T) {
 	expectedAsc := []string{"1", "2"}
 	expectedDesc := []string{"2", "1"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsEmployeeCount, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsEmployeeCount, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsEmployeeCount, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsEmployeeCount, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByContactCount(t *testing.T) {
@@ -1167,8 +1168,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByContactCount(t *testing.T) {
 	expectedAsc := []string{"1", "2"}
 	expectedDesc := []string{"2", "1"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsContactCount, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsContactCount, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsContactCount, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsContactCount, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByYearFounded(t *testing.T) {
@@ -1186,8 +1187,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByYearFounded(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsYearFounded, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsYearFounded, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsYearFounded, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsYearFounded, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByIndustry(t *testing.T) {
@@ -1205,8 +1206,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByIndustry(t *testing.T) {
 	expectedAsc := []string{"a", "b", "empty"}
 	expectedDesc := []string{"b", "a", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsIndustry, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsIndustry, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsIndustry, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsIndustry, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByChurnDate(t *testing.T) {
@@ -1227,8 +1228,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByChurnDate(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsChurnDate, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsChurnDate, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsChurnDate, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsChurnDate, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortLtv(t *testing.T) {
@@ -1245,8 +1246,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortLtv(t *testing.T) {
 	expectedAsc := []string{"a", "b"}
 	expectedDesc := []string{"b", "a"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsLtv, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsLtv, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsLtv, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsLtv, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByCountry(t *testing.T) {
@@ -1274,8 +1275,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByCountry(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsCountry, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsCountry, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsCountry, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsCountry, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByCity(t *testing.T) {
@@ -1303,8 +1304,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByCity(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsCity, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsCity, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsCity, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsCity, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByIsPublic(t *testing.T) {
@@ -1322,8 +1323,8 @@ func TestQueryResolver_UIOrganizationsSearch_SortByIsPublic(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "empty", "1"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsIsPublic, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsIsPublic, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsIsPublic, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsIsPublic, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_SortByParentOrganization(t *testing.T) {
@@ -1344,11 +1345,11 @@ func TestQueryResolver_UIOrganizationsSearch_SortByParentOrganization(t *testing
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 
-	sortAsc := assertSort(t, model.ColumnViewTypeOrganizationsParentOrganization, commonModel.SortingDirectionAsc)
+	sortAsc := assertSort(t, postgresEntity.ColumnViewTypeOrganizationsParentOrganization, commonModel.SortingDirectionAsc)
 	assert.Equal(t, "subsidiary1", sortAsc[0])
 	assert.Equal(t, "subsidiary2", sortAsc[1])
 
-	sortDesc := assertSort(t, model.ColumnViewTypeOrganizationsParentOrganization, commonModel.SortingDirectionDesc)
+	sortDesc := assertSort(t, postgresEntity.ColumnViewTypeOrganizationsParentOrganization, commonModel.SortingDirectionDesc)
 	assert.Equal(t, "subsidiary2", sortDesc[0])
 	assert.Equal(t, "subsidiary1", sortDesc[1])
 }
@@ -1371,11 +1372,11 @@ func TestQueryResolver_UIOrganizationsSearch_SortByUpdatedDate(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"empty", "2", "1"}
 
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsUpdatedDate, commonModel.SortingDirectionAsc, expectedAsc)
-	verifySortOrder(t, model.ColumnViewTypeOrganizationsUpdatedDate, commonModel.SortingDirectionDesc, expectedDesc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsUpdatedDate, commonModel.SortingDirectionAsc, expectedAsc)
+	verifySortOrder(t, postgresEntity.ColumnViewTypeOrganizationsUpdatedDate, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
-func verifySortOrder(t *testing.T, sortBy model.ColumnViewType, direction commonModel.SortingDirection, expectedOrder []string) {
+func verifySortOrder(t *testing.T, sortBy postgresEntity.ColumnViewType, direction commonModel.SortingDirection, expectedOrder []string) {
 	sortedResult := assertSort(t, sortBy, direction)
 	assert.Equal(t, len(expectedOrder), len(sortedResult), "Mismatch in result length")
 	for i, expected := range expectedOrder {
@@ -1383,10 +1384,10 @@ func verifySortOrder(t *testing.T, sortBy model.ColumnViewType, direction common
 	}
 }
 
-func assertSort(t *testing.T, sortBy model.ColumnViewType, sortDirection commonModel.SortingDirection) []string {
+func assertSort(t *testing.T, sortBy postgresEntity.ColumnViewType, sortDirection commonModel.SortingDirection) []string {
 	rawResponse, err := c.RawPost(getQuery("organization/ui_organizations_sort"),
 		client.Var("limit", 10),
-		client.Var("sortByField", sortBy.String()),
+		client.Var("sortByField", string(sortBy)),
 		client.Var("sortByDirection", sortDirection),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)

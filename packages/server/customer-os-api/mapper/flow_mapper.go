@@ -19,6 +19,7 @@ func MapEntityToFlow(entity *neo4jentity.FlowEntity) *model.Flow {
 			SourceOfTruth: model.DataSourceOpenline,
 			AppSource:     "",
 		},
+		TableViewDefID: entity.TableViewDefId,
 		Name:           entity.Name,
 		Nodes:          entity.Nodes,
 		Edges:          entity.Edges,

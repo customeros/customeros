@@ -16,7 +16,8 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	model1 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	entity1 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -619,6 +620,7 @@ type ComplexityRoot struct {
 		Senders        func(childComplexity int) int
 		Statistics     func(childComplexity int) int
 		Status         func(childComplexity int) int
+		TableViewDefID func(childComplexity int) int
 	}
 
 	FlowAction struct {
@@ -4948,6 +4950,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Flow.Status(childComplexity), true
+
+	case "Flow.tableViewDefId":
+		if e.complexity.Flow.TableViewDefID == nil {
+			break
+		}
+
+		return e.complexity.Flow.TableViewDefID(childComplexity), true
 
 	case "FlowAction.action":
 		if e.complexity.FlowAction.Action == nil {
@@ -14511,6 +14520,9 @@ extend type Mutation {
 #Flow
 type Flow implements MetadataInterface {
     metadata:           Metadata!
+
+    tableViewDefId:     String!
+
     name:               String!
     description:        String!
 
@@ -29615,9 +29627,9 @@ func (ec *executionContext) _ColumnView_columnType(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ColumnViewType)
+	res := resTmp.(entity.ColumnViewType)
 	fc.Result = res
-	return ec.marshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnViewType(ctx, field.Selections, res)
+	return ec.marshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐColumnViewType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ColumnView_columnType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31946,6 +31958,8 @@ func (ec *executionContext) fieldContext_Contact_flows(_ context.Context, field 
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_Flow_metadata(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "name":
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
@@ -44412,6 +44426,50 @@ func (ec *executionContext) fieldContext_Flow_metadata(_ context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Flow_tableViewDefId(ctx context.Context, field graphql.CollectedField, obj *model.Flow) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Flow_tableViewDefId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TableViewDefID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Flow_tableViewDefId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Flow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Flow_name(ctx context.Context, field graphql.CollectedField, obj *model.Flow) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Flow_name(ctx, field)
 	if err != nil {
@@ -44655,7 +44713,7 @@ func (ec *executionContext) _Flow_status(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(entity.FlowStatus)
+	res := resTmp.(entity1.FlowStatus)
 	fc.Result = res
 	return ec.marshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx, field.Selections, res)
 }
@@ -44929,7 +44987,7 @@ func (ec *executionContext) _FlowAction_action(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(entity.FlowActionType)
+	res := resTmp.(entity1.FlowActionType)
 	fc.Result = res
 	return ec.marshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx, field.Selections, res)
 }
@@ -45083,7 +45141,7 @@ func (ec *executionContext) _FlowActionExecution_status(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(entity.FlowActionExecutionStatus)
+	res := resTmp.(entity1.FlowActionExecutionStatus)
 	fc.Result = res
 	return ec.marshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx, field.Selections, res)
 }
@@ -45422,7 +45480,7 @@ func (ec *executionContext) _FlowContact_status(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(entity.FlowParticipantStatus)
+	res := resTmp.(entity1.FlowParticipantStatus)
 	fc.Result = res
 	return ec.marshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx, field.Selections, res)
 }
@@ -45696,7 +45754,7 @@ func (ec *executionContext) _FlowParticipant_status(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(entity.FlowParticipantStatus)
+	res := resTmp.(entity1.FlowParticipantStatus)
 	fc.Result = res
 	return ec.marshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx, field.Selections, res)
 }
@@ -45740,7 +45798,7 @@ func (ec *executionContext) _FlowParticipant_requirementsUnmeet(ctx context.Cont
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]entity.FlowParticipantRequirementsUnmeet)
+	res := resTmp.([]entity1.FlowParticipantRequirementsUnmeet)
 	fc.Result = res
 	return ec.marshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx, field.Selections, res)
 }
@@ -45914,6 +45972,8 @@ func (ec *executionContext) fieldContext_FlowSender_flow(_ context.Context, fiel
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_Flow_metadata(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "name":
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
@@ -65258,6 +65318,8 @@ func (ec *executionContext) fieldContext_Mutation_flow_ChangeName(ctx context.Co
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_Flow_metadata(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "name":
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
@@ -65369,6 +65431,8 @@ func (ec *executionContext) fieldContext_Mutation_flow_Merge(ctx context.Context
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_Flow_metadata(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "name":
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
@@ -65480,6 +65544,8 @@ func (ec *executionContext) fieldContext_Mutation_flow_On(ctx context.Context, f
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_Flow_metadata(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "name":
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
@@ -65591,6 +65657,8 @@ func (ec *executionContext) fieldContext_Mutation_flow_Off(ctx context.Context, 
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_Flow_metadata(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "name":
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
@@ -91477,6 +91545,8 @@ func (ec *executionContext) fieldContext_Query_flow(ctx context.Context, field g
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_Flow_metadata(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "name":
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
@@ -91588,6 +91658,8 @@ func (ec *executionContext) fieldContext_Query_flows(_ context.Context, field gr
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_Flow_metadata(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "name":
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
@@ -100618,9 +100690,9 @@ func (ec *executionContext) _TableViewDef_tableType(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.TableViewType)
+	res := resTmp.(entity.TableViewType)
 	fc.Result = res
-	return ec.marshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewType(ctx, field.Selections, res)
+	return ec.marshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableViewType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_tableType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -100662,9 +100734,9 @@ func (ec *executionContext) _TableViewDef_tableId(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.TableIDType)
+	res := resTmp.(entity.TableIdType)
 	fc.Result = res
-	return ec.marshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableIDType(ctx, field.Selections, res)
+	return ec.marshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableIdType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_tableId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -107996,7 +108068,7 @@ func (ec *executionContext) unmarshalInputColumnViewInput(ctx context.Context, o
 			it.ColumnID = data
 		case "columnType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("columnType"))
-			data, err := ec.unmarshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnViewType(ctx, v)
+			data, err := ec.unmarshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐColumnViewType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112844,14 +112916,14 @@ func (ec *executionContext) unmarshalInputTableViewDefCreateInput(ctx context.Co
 		switch k {
 		case "tableType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tableType"))
-			data, err := ec.unmarshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewType(ctx, v)
+			data, err := ec.unmarshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableViewType(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.TableType = data
 		case "tableId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tableId"))
-			data, err := ec.unmarshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableIDType(ctx, v)
+			data, err := ec.unmarshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableIdType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -118647,6 +118719,11 @@ func (ec *executionContext) _Flow(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = graphql.MarshalString("Flow")
 		case "metadata":
 			out.Values[i] = ec._Flow_metadata(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "tableViewDefId":
+			out.Values[i] = ec._Flow_tableViewDefId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
@@ -130211,14 +130288,20 @@ func (ec *executionContext) unmarshalNColumnViewInput2ᚖgithubᚗcomᚋopenline
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnViewType(ctx context.Context, v any) (model.ColumnViewType, error) {
-	var res model.ColumnViewType
-	err := res.UnmarshalGQL(v)
+func (ec *executionContext) unmarshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐColumnViewType(ctx context.Context, v any) (entity.ColumnViewType, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := entity.ColumnViewType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐColumnViewType(ctx context.Context, sel ast.SelectionSet, v model.ColumnViewType) graphql.Marshaler {
-	return v
+func (ec *executionContext) marshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐColumnViewType(ctx context.Context, sel ast.SelectionSet, v entity.ColumnViewType) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNComment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐCommentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Comment) graphql.Marshaler {
@@ -131685,13 +131768,13 @@ func (ec *executionContext) marshalNFlowActionExecution2ᚖgithubᚗcomᚋopenli
 	return ec._FlowActionExecution(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, v any) (entity.FlowActionExecutionStatus, error) {
+func (ec *executionContext) unmarshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, v any) (entity1.FlowActionExecutionStatus, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := entity.FlowActionExecutionStatus(tmp)
+	res := entity1.FlowActionExecutionStatus(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, sel ast.SelectionSet, v entity.FlowActionExecutionStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, sel ast.SelectionSet, v entity1.FlowActionExecutionStatus) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131701,13 +131784,13 @@ func (ec *executionContext) marshalNFlowActionExecutionStatus2githubᚗcomᚋope
 	return res
 }
 
-func (ec *executionContext) unmarshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, v any) (entity.FlowActionType, error) {
+func (ec *executionContext) unmarshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, v any) (entity1.FlowActionType, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := entity.FlowActionType(tmp)
+	res := entity1.FlowActionType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, sel ast.SelectionSet, v entity.FlowActionType) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, sel ast.SelectionSet, v entity1.FlowActionType) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131796,13 +131879,13 @@ func (ec *executionContext) marshalNFlowParticipant2ᚖgithubᚗcomᚋopenline�
 	return ec._FlowParticipant(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, v any) (entity.FlowParticipantRequirementsUnmeet, error) {
+func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, v any) (entity1.FlowParticipantRequirementsUnmeet, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := entity.FlowParticipantRequirementsUnmeet(tmp)
+	res := entity1.FlowParticipantRequirementsUnmeet(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, sel ast.SelectionSet, v entity.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, sel ast.SelectionSet, v entity1.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131812,13 +131895,13 @@ func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2githubᚗc
 	return res
 }
 
-func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, v any) ([]entity.FlowParticipantRequirementsUnmeet, error) {
+func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, v any) ([]entity1.FlowParticipantRequirementsUnmeet, error) {
 	var vSlice []any
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
 	}
 	var err error
-	res := make([]entity.FlowParticipantRequirementsUnmeet, len(vSlice))
+	res := make([]entity1.FlowParticipantRequirementsUnmeet, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
 		res[i], err = ec.unmarshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx, vSlice[i])
@@ -131829,7 +131912,7 @@ func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2ᚕgithu
 	return res, nil
 }
 
-func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, sel ast.SelectionSet, v []entity.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, sel ast.SelectionSet, v []entity1.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131873,13 +131956,13 @@ func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2ᚕgithub�
 	return ret
 }
 
-func (ec *executionContext) unmarshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, v any) (entity.FlowParticipantStatus, error) {
+func (ec *executionContext) unmarshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, v any) (entity1.FlowParticipantStatus, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := entity.FlowParticipantStatus(tmp)
+	res := entity1.FlowParticipantStatus(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, sel ast.SelectionSet, v entity.FlowParticipantStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, sel ast.SelectionSet, v entity1.FlowParticipantStatus) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131962,13 +132045,13 @@ func (ec *executionContext) marshalNFlowStatistics2ᚖgithubᚗcomᚋopenlineᚑ
 	return ec._FlowStatistics(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx context.Context, v any) (entity.FlowStatus, error) {
+func (ec *executionContext) unmarshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx context.Context, v any) (entity1.FlowStatus, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := entity.FlowStatus(tmp)
+	res := entity1.FlowStatus(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx context.Context, sel ast.SelectionSet, v entity.FlowStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx context.Context, sel ast.SelectionSet, v entity1.FlowStatus) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -134236,14 +134319,20 @@ func (ec *executionContext) marshalNSuggestedMergeOrganization2ᚖgithubᚗcom�
 	return ec._SuggestedMergeOrganization(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableIDType(ctx context.Context, v any) (model.TableIDType, error) {
-	var res model.TableIDType
-	err := res.UnmarshalGQL(v)
+func (ec *executionContext) unmarshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableIdType(ctx context.Context, v any) (entity.TableIdType, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := entity.TableIdType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableIDType(ctx context.Context, sel ast.SelectionSet, v model.TableIDType) graphql.Marshaler {
-	return v
+func (ec *executionContext) marshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableIdType(ctx context.Context, sel ast.SelectionSet, v entity.TableIdType) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNTableViewDef2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewDef(ctx context.Context, sel ast.SelectionSet, v model.TableViewDef) graphql.Marshaler {
@@ -134314,14 +134403,20 @@ func (ec *executionContext) unmarshalNTableViewDefUpdateInput2githubᚗcomᚋope
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewType(ctx context.Context, v any) (model.TableViewType, error) {
-	var res model.TableViewType
-	err := res.UnmarshalGQL(v)
+func (ec *executionContext) unmarshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableViewType(ctx context.Context, v any) (entity.TableViewType, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := entity.TableViewType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTableViewType(ctx context.Context, sel ast.SelectionSet, v model.TableViewType) graphql.Marshaler {
-	return v
+func (ec *executionContext) marshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableViewType(ctx context.Context, sel ast.SelectionSet, v entity.TableViewType) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNTag2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {
