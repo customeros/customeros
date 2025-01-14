@@ -72,7 +72,7 @@ func (r *industryReadRepository) GetInUseIndustries(ctx context2.Context, tenant
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide:false})-[:HAS_INDUSTRY]->(i:Industry) 
-				RETURN DISTINCT i, ORDER BY i.code`
+				RETURN DISTINCT i ORDER BY i.code`
 
 	params := map[string]any{
 		"tenant": tenant,
