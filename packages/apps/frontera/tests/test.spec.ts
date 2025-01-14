@@ -3,7 +3,9 @@ import { test } from './videoFixture';
 import { flow, organizations } from './test-data';
 import { FlowPage } from './pages/flows/flowPage';
 import { FlowsPage } from './pages/flows/flowsPage';
+import { LogoPage } from './pages/logoPage/logoPage';
 import { LoginPage } from './pages/loginPage/loginPage';
+import { SettingsPage } from './pages/settings/settingsPage';
 import { ContactsPage } from './pages/contacts/contactsPage';
 // import { ContactsPage } from './pages/contacts/contactsPage';
 import { CustomersPage } from './pages/customers/customersPage';
@@ -541,4 +543,21 @@ test('Create opportunities', async ({ page }, testInfo) => {
     5,
     5,
   );
+});
+
+test('Purchase mailboxes', async ({ page }, testInfo) => {
+  const loginPage = new LoginPage(page);
+  const logoPage = new LogoPage(page);
+  const settingsPage = new SettingsPage(page);
+
+  await loginPage.login();
+  await logoPage.goToSettings();
+  await settingsPage.goToMailboxes();
+  await settingsPage.setupMailboxes();
+  await settingsPage.searchForDomains();
+  await settingsPage.addDomainsToCart();
+  await settingsPage.setRedirectUrl();
+  await settingsPage.setUsernames();
+  await settingsPage.checkout();
+  await settingsPage.fillInPaymentForm();
 });

@@ -80,6 +80,7 @@ export const AddDomainsCard = observer(() => {
               onBlur={handleInputBlur}
               onChange={handleInputChange}
               value={store.mailboxes.domain}
+              dataTest='mailboxes-domain-input'
               autoFocus={store.mailboxes.domain.length === 0}
               invalid={store.mailboxes.invalidDomain.length > 0}
               onKeyDown={(e) => {
@@ -115,7 +116,10 @@ export const AddDomainsCard = observer(() => {
           >
             {store.mailboxes.invalidDomain ?? '_'}
           </span>
-          <div className={cn(displayedDomains.length > 0 && 'mt-2')}>
+          <div
+            data-test='mailboxes-domain-list'
+            className={cn(displayedDomains.length > 0 && 'mt-2')}
+          >
             {displayedDomains.map((domain) => (
               <div
                 key={`${domain}-${crypto.randomUUID()}`}
@@ -133,6 +137,7 @@ export const AddDomainsCard = observer(() => {
                   size='xs'
                   variant='ghost'
                   aria-label='add to cart'
+                  dataTest='mailboxes-domains-add-to-cart'
                   icon={<ShoppingCartAdd className='text-primary-600' />}
                   className='absolute right-0 invisible group-hover/item:visible'
                   onClick={() => {
@@ -150,6 +155,7 @@ export const AddDomainsCard = observer(() => {
               onClick={toggleDisplay}
               className='ml-[3px] mt-1'
               leftIcon={<RefreshCw01 />}
+              dataTest='mailboxes-domains-suggest-new'
             >
               Suggest new
             </Button>
