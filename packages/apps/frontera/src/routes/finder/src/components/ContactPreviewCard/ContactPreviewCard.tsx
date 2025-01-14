@@ -29,7 +29,6 @@ export const ContactPreviewCard = observer(() => {
   const [searchParams] = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditName, setIsEditName] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const contactId = store.ui.focusRow;
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
@@ -215,25 +214,21 @@ export const ContactPreviewCard = observer(() => {
                 <LinkedInSolid02 className='mt-[1px] text-gray-500 ' />
                 LinkedIn
               </div>
-              <div
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                className='flex items-center gap-1 w-full'
-              >
+              <div className='flex items-center gap-1 group  '>
                 <Link to={href || ''} target='_blank'>
-                  <span className='text-sm'>
+                  <p className='text-sm truncate w-[180px]'>
                     {fromatedUrl || 'LinkedIn profile link'}
-                  </span>
+                  </p>
                 </Link>
-                {fromatedUrl && isHovered && (
+                {fromatedUrl && (
                   <Link to={href || ''} target='_blank'>
                     <IconButton
                       size='xxs'
                       variant='ghost'
                       colorScheme='gray'
                       aria-label='social link'
-                      className='hover:bg-gray-200 '
                       icon={<LinkExternal02 className='text-gray-500' />}
+                      className='hover:bg-gray-200 opacity-0 group-hover:opacity-100'
                     />
                   </Link>
                 )}
