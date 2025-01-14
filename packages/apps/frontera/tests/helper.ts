@@ -65,6 +65,20 @@ export async function ensureLocatorIsVisible(
   return locator;
 }
 
+export async function ensureFirstLocatorIsVisible(
+  page: Page,
+  selector: string,
+): Promise<Locator> {
+  const locator = page.locator(selector).first();
+
+  await locator.waitFor({ state: 'attached', timeout: 15000 });
+  await expect(locator).toBeVisible({ timeout: 15000 });
+
+  await expect(locator).toBeEnabled({ timeout: 5000 });
+
+  return locator;
+}
+
 export async function ensureLocatorIsVisibleWithIndex(
   page: Page,
   selector: string,
@@ -121,6 +135,25 @@ export async function clickLocatorsThatAreVisible(
 
 export async function clickLocatorThatIsVisible(page: Page, selector: string) {
   const locator = await ensureLocatorIsVisible(page, selector);
+
+  // Add stability delay after ensuring visibility
+  await page.waitForTimeout(300);
+
+  try {
+    await locator.click({ timeout: 5000 });
+  } catch (error) {
+    await page.waitForTimeout(500);
+    await locator.click({ force: true, timeout: 5000 });
+  }
+
+  return locator;
+}
+
+export async function clickFirstLocatorThatIsVisible(
+  page: Page,
+  selector: string,
+) {
+  const locator = await ensureFirstLocatorIsVisible(page, selector);
 
   // Add stability delay after ensuring visibility
   await page.waitForTimeout(300);
