@@ -93,7 +93,6 @@ export const IssuePreviewModal: FC = () => {
   return (
     <>
       <TimelineEventPreviewHeader
-        parse='slack'
         onClose={closeModal}
         copyLabel='Copy link'
         name={issue.subject ?? ''}

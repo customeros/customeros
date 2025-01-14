@@ -1,4 +1,4 @@
-import { escapeForSlackWithMarkdown } from 'slack-to-html';
+import markdownToTxt from 'markdown-to-txt';
 
 import { DateTimeUtils } from '@utils/date';
 import { XClose } from '@ui/media/icons/XClose';
@@ -10,7 +10,6 @@ import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 interface TimelineEventPreviewHeaderProps {
   name: string;
   date?: string;
-  parse?: 'slack';
   copyLabel: string;
   onClose: () => void;
   children?: React.ReactNode;
@@ -22,12 +21,9 @@ export const TimelineEventPreviewHeader = ({
   onClose,
   copyLabel,
   children,
-  parse,
 }: TimelineEventPreviewHeaderProps) => {
   const [_, copy] = useCopyToClipboard();
-
-  const parsedName =
-    parse === 'slack' ? escapeForSlackWithMarkdown(name) : name;
+  const parsedName = markdownToTxt(name);
 
   return (
     <div
@@ -36,13 +32,8 @@ export const TimelineEventPreviewHeader = ({
     >
       <div>
         <div className='flex justify-between '>
-          <span
-            className='text-lg font-semibold text-gray-700'
-            dangerouslySetInnerHTML={
-              parse === 'slack' ? { __html: parsedName } : undefined
-            }
-          >
-            {parse !== 'slack' ? name : null}
+          <span className='text-lg font-semibold text-gray-700'>
+            {parsedName}
           </span>
 
           <div className='flex justify-end items-baseline'>
