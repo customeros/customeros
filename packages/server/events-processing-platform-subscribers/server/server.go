@@ -115,8 +115,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 	server.Services = service.InitServices(server.Config, server.AggregateStore, server.Log, grpcClients, postgresDb, &neo4jDriver)
 
 	// Setting up cache
-	industryMap, _ := server.Services.CommonServices.PostgresRepositories.IndustryMappingRepository.GetAllIndustryMappingsAsMap(ctx)
-	server.caches = caches.InitCaches(industryMap)
+	server.caches = caches.InitCaches()
 
 	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Services.CommonServices.PostgresRepositories.EventBufferRepository, server.Log, server.AggregateStore)
 	eventBufferWatcher.Start(ctx)
