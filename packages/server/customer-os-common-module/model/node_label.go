@@ -51,6 +51,7 @@ const (
 	NodeLabelFlowExecutionSettings     = "FlowExecutionSettings"
 	NodeLabelFlowActionExecution       = "FlowActionExecution"
 	NodeLabelLinkedinConnectionRequest = "LinkedinConnectionRequest"
+	NodeLabelIndustry                  = "Industry"
 )
 
 func NodeLabelWithTenant(label string, tenant string) string {

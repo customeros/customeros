@@ -44,6 +44,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	socialFilterCypher, socialFilterParams := "", make(map[string]interface{})
 	tagFilterCypher, tagFilterParams := "", make(map[string]interface{})
 	locationFilterCypher, locationFilterParams := "", make(map[string]interface{})
+	industryFilterCypher, industryFilterParams := "", make(map[string]interface{})
 	userFilterCypher, userFilterParams := "", make(map[string]interface{})
 	domainFilterCypher, domainFilterParams := "", make(map[string]interface{})
 	parentOrganizationFilterCypher, parentOrganizationFilterParams := "", make(map[string]interface{})
@@ -75,6 +76,11 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		locationFilter.Negate = false
 		locationFilter.LogicalOperator = utils.AND
 		locationFilter.Filters = make([]*utils.CypherFilter, 0)
+
+		industryFilter := new(utils.CypherFilter)
+		industryFilter.Negate = false
+		industryFilter.LogicalOperator = utils.AND
+		industryFilter.Filters = make([]*utils.CypherFilter, 0)
 
 		parentOrganizationFilter := new(utils.CypherFilter)
 		parentOrganizationFilter.Negate = false
@@ -147,7 +153,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 				createNumberCypherFilter(filter, organizationFilter, "yearFounded")
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsIndustry) {
-				createInOrEmptyStringFilter(filter, organizationFilter, string(neo4jentity.OrganizationPropertyIndustry))
+				createInOrEmptyStringFilter(filter, industryFilter, string(neo4jentity.IndustryPropertyCode))
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsChurnDate) {
 				createTimeFilter(filter, organizationFilter, "derivedChurnedAt")
@@ -214,6 +220,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if len(locationFilter.Filters) > 0 {
 			locationFilterCypher, locationFilterParams = locationFilter.BuildCypherFilterFragmentWithParamName("l", "l_param_")
 		}
+		if len(industryFilter.Filters) > 0 {
+			industryFilterCypher, industryFilterParams = industryFilter.BuildCypherFilterFragmentWithParamName("i", "i_param_")
+		}
 		if len(userFilter.Filters) > 0 {
 			userFilterCypher, userFilterParams = userFilter.BuildCypherFilterFragmentWithParamName("u", "u_param_")
 		}
@@ -236,6 +245,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	utils.MergeMapToMap(socialFilterParams, params)
 	utils.MergeMapToMap(tagFilterParams, params)
 	utils.MergeMapToMap(locationFilterParams, params)
+	utils.MergeMapToMap(industryFilterParams, params)
 	utils.MergeMapToMap(userFilterParams, params)
 	utils.MergeMapToMap(domainFilterParams, params)
 	utils.MergeMapToMap(parentOrganizationFilterParams, params)
@@ -256,6 +266,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if tagFilterCypher != "" {
 			countQuery += ` OPTIONAL MATCH (o)-[:TAGGED]->(t:Tag) WITH *`
 		}
+		if industryFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (o)-[:HAS_INDUSTRY]->(i:Industry) WITH *`
+		}
 		if locationFilterCypher != "" {
 			countQuery += ` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location) WITH *`
 		}
@@ -265,7 +278,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 
 		countQuery += ` WHERE (o.hide = false OR o.hide IS NULL) `
 
-		if organizationFilterCypher != "" || domainFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || parentOrganizationFilterCypher != "" || userFilterCypher != "" {
+		if organizationFilterCypher != "" || domainFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || parentOrganizationFilterCypher != "" || userFilterCypher != "" || industryFilterCypher != "" {
 			countQuery += " AND "
 		}
 
@@ -284,6 +297,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		}
 		if tagFilterCypher != "" {
 			countQueryParts = append(countQueryParts, tagFilterCypher)
+		}
+		if industryFilterCypher != "" {
+			countQueryParts = append(countQueryParts, industryFilterCypher)
 		}
 		if locationFilterCypher != "" {
 			countQueryParts = append(countQueryParts, locationFilterCypher)
@@ -312,6 +328,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		if tagFilterCypher != "" {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:TAGGED]->(t:Tag_%s) WITH *`, tenant)
 		}
+		if industryFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeOrganizationsIndustry))) {
+			selectQuery += ` OPTIONAL MATCH (o)-[:HAS_INDUSTRY]->(i:Industry) WITH *`
+		}
 		if locationFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCountry) || sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCity))) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (o)-[:ASSOCIATED_WITH]->(l:Location_%s) WITH *`, tenant)
 		}
@@ -320,7 +339,7 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		}
 		selectQuery += ` WHERE (o.hide = false OR o.hide IS NULL) `
 
-		if organizationFilterCypher != "" || domainFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || parentOrganizationFilterCypher != "" || locationFilterCypher != "" || userFilterCypher != "" {
+		if organizationFilterCypher != "" || domainFilterCypher != "" || socialFilterCypher != "" || tagFilterCypher != "" || parentOrganizationFilterCypher != "" || locationFilterCypher != "" || userFilterCypher != "" || industryFilterCypher != "" {
 			selectQuery += " AND "
 		}
 
@@ -339,6 +358,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		}
 		if tagFilterCypher != "" {
 			queryParts = append(queryParts, tagFilterCypher)
+		}
+		if industryFilterCypher != "" {
+			queryParts = append(queryParts, industryFilterCypher)
 		}
 		if locationFilterCypher != "" {
 			queryParts = append(queryParts, locationFilterCypher)
@@ -475,9 +497,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsIndustry) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += "CASE WHEN o.industry <> \"\" and not o.industry is null THEN toLower(o.industry) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY "
+			aliases += `CASE WHEN i.name <> "" and not i.name is null THEN toLower(i.name) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
-			aliases += "CASE WHEN o.industry <> \"\" and not o.industry is null THEN toLower(o.industry) ELSE '' END as SORT_BY "
+			aliases += `CASE WHEN i.name <> "" and not i.name is null THEN toLower(i.name) ELSE '' END as SORT_BY `
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsChurnDate) {
