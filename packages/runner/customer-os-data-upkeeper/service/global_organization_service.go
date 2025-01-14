@@ -612,28 +612,28 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 
 	//process records
 	for _, record := range records {
-		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichWithIndustry.Record")
+		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations.Record")
 		defer recordSpan.Finish()
 		recordSpan.LogFields(log.Uint64("record.id", record.ID), log.String("record.primaryDomain", record.PrimaryDomain))
 
 		// mark record as processed initially to not process same record again, even if error occurs
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo(recordCtx, record.ID)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error marking record as processed"))
+			tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking record as processed"))
 			s.log.Errorf("Error marking record as processed: %s", err.Error())
 			continue
 		}
 
 		// Find organizations by domain across all tenants
-		tenantWithOrgId, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants(ctx, record.PrimaryDomain)
+		tenantWithOrgId, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants(recordCtx, record.PrimaryDomain)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error getting organizations by domain"))
+			tracing.TraceErr(recordSpan, errors.Wrap(err, "error getting organizations by domain"))
 			s.log.Errorf("Error getting organizations by domain: %s", err.Error())
 			continue
 		}
 
 		for _, tenantOrgs := range tenantWithOrgId {
-			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			innerCtx := common.WithCustomContext(recordCtx, &common.CustomContext{
 				Tenant:    tenantOrgs.Tenant,
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
@@ -649,7 +649,7 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 			}
 			_, err = s.commonServices.OrganizationService.Save(innerCtx, nil, utils.StringPtr(tenantOrgs.OrganizationId), dataFields)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "error syncing organization"))
+				tracing.TraceErr(recordSpan, errors.Wrap(err, "error syncing organization"))
 				s.log.Errorf("Error syncing organization: %s", err.Error())
 				continue
 			}

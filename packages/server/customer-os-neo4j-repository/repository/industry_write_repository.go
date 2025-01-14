@@ -8,7 +8,7 @@ import (
 )
 
 type IndustryWriteRepository interface {
-	ReplaceForOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, industryCode, organizationId string) error
+	ReplaceForOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, industryCode string) error
 }
 
 type industryWriteRepository struct {
@@ -23,8 +23,8 @@ func NewIndustryWriteRepository(driver *neo4j.DriverWithContext, database string
 	}
 }
 
-func (r *industryWriteRepository) ReplaceForOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, industryCode, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithOrganization")
+func (r *industryWriteRepository) ReplaceForOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, industryCode string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryWriteRepository.ReplaceForOrganization")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
