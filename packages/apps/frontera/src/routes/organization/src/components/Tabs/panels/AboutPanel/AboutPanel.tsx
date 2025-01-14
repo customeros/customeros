@@ -8,7 +8,6 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
-import { Select } from '@ui/form/Select';
 import { Tag01 } from '@ui/media/icons/Tag01';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Users03 } from '@ui/media/icons/Users03';
@@ -19,7 +18,6 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
-import { Briefcase02 } from '@ui/media/icons/Briefcase02';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
@@ -30,19 +28,14 @@ import {
   OrganizationStage,
   OrganizationRelationship,
 } from '@graphql/types';
+import { BusinessTypeInput } from '@organization/components/Tabs/panels/AboutPanel/components/businessType';
 
 import { Tags } from './components/tags';
 import { Domains } from './components/Domains';
 import { SocialMediaList } from '../../shared';
 import { OwnerInput } from './components/owner';
 import { Branches } from './components/branches';
-import {
-  stageOptions,
-  industryOptions,
-  getStageOptions,
-  businessTypeOptions,
-  relationshipOptions,
-} from './util';
+import { stageOptions, getStageOptions, relationshipOptions } from './util';
 
 const iconMap = {
   Customer: <ActivityHeart className='text-gray-500' />,
@@ -163,115 +156,87 @@ export const AboutPanel = observer(() => {
 
         <Domains />
 
-        {!!organization?.value?.valueProposition && (
-          <p className='text-sm pt-3 pb-1'>
-            {organization.value.valueProposition}
-          </p>
-        )}
+        <div className='flex flex-col w-full items-start justify-start gap-3 mt-3'>
+          {!!organization?.value?.valueProposition && (
+            <p className='text-sm'>{organization.value.valueProposition}</p>
+          )}
 
-        <Tags
-          className='py-2'
-          dataTest='org-about-tags'
-          inputPlaceholder='Search...'
-          onCreate={handleCreateOption}
-          placeholder='Organization tags'
-          leftAccessory={<Tag01 className='mr-3 text-gray-500' />}
-          value={
-            organization.value.tags?.map((t) => ({
-              value: t.metadata.id,
-              label: t.name,
-            })) ?? []
-          }
-          options={store.tags
-            .getByEntityType(EntityType.Organization)
-            .map((t) => ({
-              value: t.id,
-              label: t.value?.name,
-            }))}
-          onChange={(selection) => {
-            const tags = selection
-              .map((o) => store.tags.getById(o.value)?.value)
-              .filter(Boolean);
+          <Tags
+            dataTest='org-about-tags'
+            inputPlaceholder='Search...'
+            onCreate={handleCreateOption}
+            placeholder='Organization tags'
+            leftAccessory={<Tag01 className='mr-3 text-gray-500' />}
+            value={
+              organization.value.tags?.map((t) => ({
+                value: t.metadata.id,
+                label: t.name,
+              })) ?? []
+            }
+            options={store.tags
+              .getByEntityType(EntityType.Organization)
+              .map((t) => ({
+                value: t.id,
+                label: t.value?.name,
+              }))}
+            onChange={(selection) => {
+              const tags = selection
+                .map((o) => store.tags.getById(o.value)?.value)
+                .filter(Boolean);
 
-            organization.draft();
-            organization.value.tags = tags as TagDatum[];
-            organization.commit();
-          }}
-        />
-        <div className='flex items-center justify-center w-full pb-1'>
-          <div className='flex-2' data-test='org-about-relationship'>
-            <Menu>
-              <MenuButton
-                data-test='org-about-relationship'
-                className='min-h-[28px] text-md outline-none focus:outline-none items-center'
-              >
-                {
-                  iconMap[
-                    (selectedRelationshipOption?.label ??
-                      'unknown') as keyof typeof iconMap
-                  ]
-                }
-                {''}
-                <span
-                  className={cn(
-                    'ml-3 text-sm',
-                    !selectedRelationshipOption?.label && 'text-gray-400',
-                  )}
-                >
-                  {selectedRelationshipOption?.label ?? 'Relationship'}
-                </span>
-              </MenuButton>
-              <MenuList side='bottom' align='start'>
-                {relationshipOptions.map((option) => (
-                  <MenuItem
-                    key={option.value}
-                    onClick={() => {
-                      organization.value!.relationship = option.value;
-                      organization.value!.stage = match(option.value)
-                        .with(
-                          OrganizationRelationship.Prospect,
-                          () => OrganizationStage.Lead,
-                        )
-                        .with(
-                          OrganizationRelationship.Customer,
-                          () => OrganizationStage.InitialValue,
-                        )
-                        .with(
-                          OrganizationRelationship.NotAFit,
-                          () => OrganizationStage.Unqualified,
-                        )
-                        .with(
-                          OrganizationRelationship.FormerCustomer,
-                          () => OrganizationStage.Target,
-                        )
-                        .otherwise(() => undefined);
-
-                      organization.commit();
-                    }}
-                  >
-                    {iconMap[option.label as keyof typeof iconMap]}
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </MenuList>
-            </Menu>
-          </div>
-          {selectedRelationshipOption?.value !==
-            OrganizationRelationship.Customer && (
-            <div className='flex-1' data-test='org-about-stage'>
+              organization.draft();
+              organization.value.tags = tags as TagDatum[];
+              organization.commit();
+            }}
+          />
+          <div className='flex items-center justify-center w-full '>
+            <div className='flex-2' data-test='org-about-relationship'>
               <Menu>
-                <MenuButton className='min-h-[28px] outline-none focus:outline-none'>
-                  <Target05 className='text-gray-500 mb-0.5' />
-                  <span className='ml-3 text-sm'>
-                    {selectedStageOption?.label || 'Stage'}
+                <MenuButton
+                  data-test='org-about-relationship'
+                  className='min-h-[20px] text-md outline-none focus:outline-none items-center'
+                >
+                  {
+                    iconMap[
+                      (selectedRelationshipOption?.label ??
+                        'unknown') as keyof typeof iconMap
+                    ]
+                  }
+                  {''}
+                  <span
+                    className={cn(
+                      'ml-3 text-sm',
+                      !selectedRelationshipOption?.label && 'text-gray-400',
+                    )}
+                  >
+                    {selectedRelationshipOption?.label ?? 'Relationship'}
                   </span>
                 </MenuButton>
                 <MenuList side='bottom' align='start'>
-                  {applicableStageOptions.map((option) => (
+                  {relationshipOptions.map((option) => (
                     <MenuItem
                       key={option.value}
                       onClick={() => {
-                        organization.value!.stage = option.value;
+                        organization.value!.relationship = option.value;
+                        organization.value!.stage = match(option.value)
+                          .with(
+                            OrganizationRelationship.Prospect,
+                            () => OrganizationStage.Lead,
+                          )
+                          .with(
+                            OrganizationRelationship.Customer,
+                            () => OrganizationStage.InitialValue,
+                          )
+                          .with(
+                            OrganizationRelationship.NotAFit,
+                            () => OrganizationStage.Unqualified,
+                          )
+                          .with(
+                            OrganizationRelationship.FormerCustomer,
+                            () => OrganizationStage.Target,
+                          )
+                          .otherwise(() => undefined);
+
                         organization.commit();
                       }}
                     >
@@ -282,51 +247,43 @@ export const AboutPanel = observer(() => {
                 </MenuList>
               </Menu>
             </div>
-          )}
-        </div>
-        <div className='flex flex-col w-full flex-1 items-start justify-start gap-0'>
-          <Select
-            isClearable
-            size={'sm'}
-            name='industry'
-            placeholder='Industry'
-            options={industryOptions}
-            dataTest='org-about-industry'
-            leftElement={<Building07 className='text-gray-500 mr-3' />}
-            onChange={(option) => {
-              organization.value!.industry = option?.value;
-              organization.commit();
-            }}
-            value={
-              industryOptions
-                ? industryOptions.map((option) =>
-                    option.options.find(
-                      (v) => v.value === organization?.value?.industry,
-                    ),
-                  )
-                : null
-            }
-          />
-
-          <Select
-            size={'sm'}
-            isClearable
-            name='businessType'
-            placeholder='Business type'
-            options={businessTypeOptions}
-            dataTest='org-about-business-type'
-            leftElement={<Briefcase02 className='text-gray-500 mr-3' />}
-            value={businessTypeOptions.map((option) =>
-              option.value === organization.value!.market ? option : null,
+            {selectedRelationshipOption?.value !==
+              OrganizationRelationship.Customer && (
+              <div className='flex-1' data-test='org-about-stage'>
+                <Menu>
+                  <MenuButton className='min-h-[20px] outline-none focus:outline-none'>
+                    <Target05 className='text-gray-500 mb-0.5' />
+                    <span className='ml-3 text-sm'>
+                      {selectedStageOption?.label || 'Stage'}
+                    </span>
+                  </MenuButton>
+                  <MenuList side='bottom' align='start'>
+                    {applicableStageOptions.map((option) => (
+                      <MenuItem
+                        key={option.value}
+                        onClick={() => {
+                          organization.value!.stage = option.value;
+                          organization.commit();
+                        }}
+                      >
+                        {iconMap[option.label as keyof typeof iconMap]}
+                        {option.label}
+                      </MenuItem>
+                    ))}
+                  </MenuList>
+                </Menu>
+              </div>
             )}
-            onChange={(option) => {
-              organization.value!.market = option?.value;
-              organization.commit();
-            }}
-          />
+          </div>
+          <p className='text-sm'>
+            <Building07 className='text-gray-500 mr-3' />
+            {organization?.value?.industry}
+          </p>
+
+          <BusinessTypeInput id={id} />
 
           {organization.value!.employees && (
-            <p className='text-sm py-2'>
+            <p className='text-sm '>
               <Users03 className='text-gray-500 mr-3' />
               {organization.value!.employees} employees
             </p>

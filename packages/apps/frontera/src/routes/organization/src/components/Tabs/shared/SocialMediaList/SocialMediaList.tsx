@@ -22,7 +22,7 @@ export const SocialMediaList = observer(
     if (!organization || !organization?.value) return null;
 
     return (
-      <div className='flex flex-col gap-3 mt-2'>
+      <div className='flex flex-col gap-3 '>
         {value?.map(({ value: v, label: l }) => (
           <SocialMediaItem
             id={v}
