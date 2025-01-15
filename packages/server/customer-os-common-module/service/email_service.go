@@ -233,7 +233,7 @@ func (s *emailService) linkEmail(ctx context.Context, txWithPostCommit *utils.Tx
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		// check linked entity exists
-		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, *txWithPostCommit.Tx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
+		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
 			return nil, err

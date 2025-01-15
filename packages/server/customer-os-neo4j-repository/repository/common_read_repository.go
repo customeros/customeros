@@ -18,7 +18,7 @@ type CommonReadRepository interface {
 	GenerateId(ctx context.Context, tenant, label string) (string, error)
 
 	ExistsById(ctx context.Context, tenant, id, label string) (bool, error)
-	ExistsByIdInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, label string) (bool, error)
+	ExistsByIdInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, id, label string) (bool, error)
 	GetById(ctx context.Context, tenant, id, label string) (*dbtype.Node, error)
 	IsLinkedWith(ctx context.Context, tenant, parentId string, parentType model.EntityType, relationship, childId string, childType model.EntityType) (bool, error)
 	ExistsByIdLinkedTo(ctx context.Context, tenant, id, label, linkedToId, linkedToLabel, linkRelationship string) (bool, error)
@@ -78,7 +78,7 @@ func (r *commonReadRepository) ExistsById(ctx context.Context, tenant, id, label
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		return r.ExistsByIdInTx(ctx, tx, tenant, id, label)
+		return r.ExistsByIdInTx(ctx, &tx, tenant, id, label)
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -88,7 +88,7 @@ func (r *commonReadRepository) ExistsById(ctx context.Context, tenant, id, label
 	return result.(bool), nil
 }
 
-func (r *commonReadRepository) ExistsByIdInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, label string) (bool, error) {
+func (r *commonReadRepository) ExistsByIdInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, id, label string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsByIdInTx")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -105,16 +105,17 @@ func (r *commonReadRepository) ExistsByIdInTx(ctx context.Context, tx neo4j.Mana
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
-	queryResult, err := tx.Run(ctx, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		span.LogFields(log.Bool("result.exists", false))
-		return false, err
-	}
-	result := queryResult.Next(ctx)
+	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
 
-	span.LogFields(log.Bool("result.exists", result))
-	return result, err
+	nodeFound := result != nil && len(result.([]*dbtype.Node)) > 0
+	span.LogFields(log.Bool("result.exists", nodeFound))
+	return nodeFound, err
 }
 
 func (r *commonReadRepository) GetById(ctx context.Context, tenant, id, label string) (*dbtype.Node, error) {

@@ -89,15 +89,6 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 	if createFlow {
 		span.LogFields(log.String("flow", "create"))
 
-		// validate organization exists
-		if utils.IfNotNilString(organizationId) != "" {
-			err = s.services.OrganizationService.ValidateOrganizationExists(ctx, utils.IfNotNilString(organizationId))
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return "", err
-			}
-		}
-
 		// set default values
 		if dataFields.Source == nil {
 			dataFields.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
@@ -122,6 +113,13 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 		if createFlow {
 			// if organization is provided, link job role with organization
 			if utils.IfNotNilString(organizationId) != "" {
+				// validate organization exists
+				err = s.services.OrganizationService.ValidateOrganizationExists(ctx, txWithPostCommit.Tx, utils.IfNotNilString(organizationId))
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return "", err
+				}
+
 				if err = s.services.Neo4jRepositories.JobRoleWriteRepository.LinkContactWithOrganization(ctx, txWithPostCommit.Tx, common.GetContext(ctx).Tenant, jobRoleId, utils.IfNotNilString(contactId), utils.IfNotNilString(organizationId), dataFields); err != nil {
 					return "", err
 				}

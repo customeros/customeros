@@ -69,13 +69,6 @@ func (s *actionService) CreateActionForOrganization(ctx context.Context, txWithP
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	// validate organization exists
-	err = s.services.OrganizationService.ValidateOrganizationExists(ctx, organizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
 	// set default values
 	if actionFields.AppSource == nil {
 		actionFields.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))
@@ -97,6 +90,11 @@ func (s *actionService) CreateActionForOrganization(ctx context.Context, txWithP
 	}
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		// validate organization exists
+		err = s.services.OrganizationService.ValidateOrganizationExists(ctx, txWithPostCommit.Tx, organizationId)
+		if err != nil {
+			return nil, err
+		}
 
 		// create action
 		err = s.services.Neo4jRepositories.ActionWriteRepository.CreateV2(ctx, txWithPostCommit.Tx, tenant, actionId, organizationId, model.ORGANIZATION, actionFields)

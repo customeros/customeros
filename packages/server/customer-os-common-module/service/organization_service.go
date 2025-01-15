@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"strings"
 	"time"
@@ -49,7 +50,7 @@ type OrganizationService interface {
 	CheckOrganizationExistsWithEmail(ctx context.Context, email string) (bool, string, error)
 	CheckOrganizationExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
 	GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
-	ValidateOrganizationExists(ctx context.Context, organizationId string) error
+	ValidateOrganizationExists(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId string) error
 }
 
 type organizationService struct {
@@ -572,16 +573,15 @@ func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	err = s.ValidateOrganizationExists(ctx, organizationId)
-	if err != nil {
-		return err
-	}
-
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		err = s.ValidateOrganizationExists(ctx, txWithPostCommit.Tx, organizationId)
+		if err != nil {
+			return nil, err
+		}
+
 		fields := data_fields.OrganizationFields{Hide: utils.BoolPtr(true)}
 		err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, txWithPostCommit.Tx, tenant, organizationId, fields)
 		if err != nil {
-			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
@@ -599,13 +599,16 @@ func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.
 					s.services.RabbitMQService.PublishEventCompleted(ctx, tenant, contactEntity.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 				}
 			}
-
 			return nil
 		})
 		return nil, nil
 	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
-	return err
+	return nil
 }
 
 func (s *organizationService) Show(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error {
@@ -669,19 +672,16 @@ func (s *organizationService) AddParentOrganization(ctx context.Context, txWithP
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	// validate parent and sub organizations exist
-	err = s.ValidateOrganizationExists(ctx, parentOrganizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	err = s.ValidateOrganizationExists(ctx, subOrganizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		// validate parent and sub organizations exist
+		err = s.ValidateOrganizationExists(ctx, txWithPostCommit.Tx, parentOrganizationId)
+		if err != nil {
+			return nil, err
+		}
+		err = s.ValidateOrganizationExists(ctx, txWithPostCommit.Tx, subOrganizationId)
+		if err != nil {
+			return nil, err
+		}
 
 		err = s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithParentOrganization(ctx, txWithPostCommit.Tx, tenant, subOrganizationId, parentOrganizationId, relationType)
 		if err != nil {
@@ -729,19 +729,18 @@ func (s *organizationService) RemoveParentOrganization(ctx context.Context, txWi
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	// validate parent and sub organizations exist
-	err = s.ValidateOrganizationExists(ctx, parentOrganizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	err = s.ValidateOrganizationExists(ctx, subOrganizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		// validate parent and sub organizations exist
+		err = s.ValidateOrganizationExists(ctx, txWithPostCommit.Tx, parentOrganizationId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		err = s.ValidateOrganizationExists(ctx, txWithPostCommit.Tx, subOrganizationId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
 
 		err = s.services.Neo4jRepositories.OrganizationWriteRepository.UnlinkParentOrganization(ctx, txWithPostCommit.Tx, tenant, subOrganizationId, parentOrganizationId)
 		if err != nil {
@@ -791,7 +790,7 @@ func (s *organizationService) UpdateOnboardingStatus(ctx context.Context, txWith
 	tenant := common.GetTenantFromContext(ctx)
 
 	// validate parent and sub organizations exist
-	err = s.ValidateOrganizationExists(ctx, organizationId)
+	err = s.ValidateOrganizationExists(ctx, nil, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -1072,7 +1071,7 @@ func (s *organizationService) UnlinkDomain(ctx context.Context, txWithPostCommit
 	tenant := common.GetTenantFromContext(ctx)
 
 	// validate organization exists
-	err = s.ValidateOrganizationExists(ctx, organizationId)
+	err = s.ValidateOrganizationExists(ctx, nil, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -1346,7 +1345,7 @@ func (s *organizationService) CheckOrganizationExistsWithLinkedIn(ctx context.Co
 	return len(orgs) > 0, orgId, nil
 }
 
-func (s *organizationService) ValidateOrganizationExists(ctx context.Context, organizationId string) error {
+func (s *organizationService) ValidateOrganizationExists(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.ValidateOrganizationExists")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -1358,7 +1357,8 @@ func (s *organizationService) ValidateOrganizationExists(ctx context.Context, or
 		return err
 	}
 
-	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), organizationId, model.NodeLabelOrganization)
+	// validate organization exists
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, tx, common.GetTenantFromContext(ctx), organizationId, model.NodeLabelOrganization)
 	if err != nil || !exists {
 		err = errors.New("organization not found")
 		tracing.TraceErr(span, err)

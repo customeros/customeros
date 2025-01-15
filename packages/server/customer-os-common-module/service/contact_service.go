@@ -411,7 +411,7 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		var innerErr error
 		// validate contact exists
-		exists, innerErr := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, *txWithPostCommit.Tx, tenant, contactId, model.NodeLabelContact)
+		exists, innerErr := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, txWithPostCommit.Tx, tenant, contactId, model.NodeLabelContact)
 		if innerErr != nil || !exists {
 			innerErr = errors.New("contact not found")
 			tracing.TraceErr(span, innerErr)
@@ -419,7 +419,7 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 		}
 
 		// validate organization exists
-		exists, innerErr = s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, *txWithPostCommit.Tx, tenant, organizationId, model.NodeLabelOrganization)
+		exists, innerErr = s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, txWithPostCommit.Tx, tenant, organizationId, model.NodeLabelOrganization)
 		if innerErr != nil || !exists {
 			innerErr = errors.New("organization not found")
 			tracing.TraceErr(span, innerErr)

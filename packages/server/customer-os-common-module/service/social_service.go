@@ -221,7 +221,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		// validate linked entity exists
-		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, *txWithPostCommit.Tx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
+		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
 			return nil, err
@@ -394,7 +394,7 @@ func (s *socialService) RemoveSocialFromEntity(ctx context.Context, txWithPostCo
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		// validate linked entity exists
-		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, *txWithPostCommit.Tx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
+		exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, txWithPostCommit.Tx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
 			return nil, err
