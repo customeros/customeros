@@ -15,7 +15,6 @@ query getOrganizationsByIds($ids: [ID!]) {
     relationship
     lastFundingRound
     leadSource
-    valueProposition
     slackChannelId
     employees
     yearFounded

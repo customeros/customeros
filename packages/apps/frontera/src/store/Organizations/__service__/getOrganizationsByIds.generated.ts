@@ -25,7 +25,6 @@ export type GetOrganizationsByIdsQuery = {
     relationship?: Types.OrganizationRelationship | null;
     lastFundingRound?: Types.FundingRound | null;
     leadSource?: string | null;
-    valueProposition?: string | null;
     slackChannelId?: string | null;
     employees?: any | null;
     yearFounded?: any | null;
