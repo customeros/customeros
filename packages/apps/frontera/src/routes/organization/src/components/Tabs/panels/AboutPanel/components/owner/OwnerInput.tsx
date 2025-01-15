@@ -7,6 +7,7 @@ import { User } from '@graphql/types';
 import { Combobox } from '@ui/form/Combobox';
 import { Key01 } from '@ui/media/icons/Key01';
 import { useStore } from '@shared/hooks/useStore';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/overlay/Popover';
 
@@ -53,19 +54,21 @@ export const OwnerInput = observer(({ id, owner, dataTest }: OwnerProps) => {
   return (
     <>
       <Popover open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
-        <PopoverTrigger className={cn('flex items-center')}>
-          <Key01 className='mr-3 text-gray-500' />
-          <div
-            data-test={dataTest}
-            className='flex flex-wrap  w-fit items-center'
-          >
-            {value ? (
-              <div className='text-sm'>{value.label}</div>
-            ) : (
-              <span className='text-gray-400 text-sm'>Owner</span>
-            )}
-          </div>
-        </PopoverTrigger>
+        <Tooltip label='Owner' align='start' placement='top'>
+          <PopoverTrigger className={cn('flex items-center')}>
+            <Key01 className='mr-3 text-gray-500' />
+            <div
+              data-test={dataTest}
+              className='flex flex-wrap  w-fit items-center'
+            >
+              {value ? (
+                <div className='text-sm'>{value.label}</div>
+              ) : (
+                <span className='text-gray-400 text-sm'>Owner</span>
+              )}
+            </div>
+          </PopoverTrigger>
+        </Tooltip>
         <PopoverContent align='start' className='min-w-[264px] max-w-[320px]'>
           <Combobox
             isMulti
