@@ -725,13 +725,17 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 			})
 
 			// TODO only industry is synced. once adding other fields, refactor this
-			if record.IndustryNaicsCode == "" {
+			if record.IndustryNaicsCode == "" && record.Description == "" {
 				continue
 			}
 
 			// sync organization
-			dataFields := data_fields.OrganizationFields{
-				IndustryCode: utils.StringPtr(record.IndustryNaicsCode),
+			dataFields := data_fields.OrganizationFields{}
+			if record.IndustryNaicsCode != "" {
+				dataFields.Industry = utils.StringPtr(record.IndustryNaicsCode)
+			}
+			if record.Description != "" {
+				dataFields.Description = utils.StringPtr(record.Description)
 			}
 			_, err = s.commonServices.OrganizationService.Save(innerCtx, nil, utils.StringPtr(tenantOrgs.OrganizationId), dataFields)
 			if err != nil {

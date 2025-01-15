@@ -267,8 +267,7 @@ func (r *globalOrganizationRepository) GetGlobalOrganizationsToSyncIntoTenantOrg
 
 	organizations := make([]*entity.GlobalOrganization, 0)
 	result := r.db.WithContext(ctx).
-		Where("industry_naics_code IS NOT NULL").
-		Where("industry_naics_code <> ''").
+		Where("((industry_naics_code IS NOT NULL AND industry_naics_code <> '') AND (description IS NOT NULL AND description <> ''))").
 		Where("synced_to_neo_at IS NULL OR synced_to_neo_at < ?", utils.Now().Add(-24*time.Hour*time.Duration(daysFromPreviousSync))).
 		Order("CASE WHEN synced_to_neo_at IS NULL THEN 0 ELSE 1 END, synced_to_neo_at").
 		Limit(limit).
