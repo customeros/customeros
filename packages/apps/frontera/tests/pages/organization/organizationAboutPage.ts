@@ -4,6 +4,7 @@ import {
   writeTextInLocator,
   createRequestPromise,
   createResponsePromise,
+  clickLocatorThatIsVisible,
   clickLocatorsThatAreVisible,
 } from '../../helper';
 
@@ -15,7 +16,7 @@ export class OrganizationAboutPage {
   private page: Page;
 
   private orgAboutName = 'input[data-test="org-about-name"]';
-  private orgAboutWww = 'input[data-test="org-about-www"]';
+  private orgAboutDomain = 'span[data-test="org-about-domain"]';
   private orgAboutDescription = 'textarea[data-test="org-about-description"]';
   private orgAboutTags = 'div[data-test="org-about-tags"]';
   private orgAboutRelationship = 'button[data-test="org-about-relationship"]';
@@ -45,9 +46,11 @@ export class OrganizationAboutPage {
   private orgAboutSocialLinkEmpty =
     'input[data-test="org-about-social-link"][placeholder="Social link"]';
   private orgTest = 'input[data-test="test"]';
+  private addDomainInput = 'input[data-test="add-domain-input"]';
+  private addDomain = 'button[data-test="add-domain"]';
 
-  async addWebsiteToOrg(website: string) {
-    await clickLocatorsThatAreVisible(this.page, this.orgAboutWww);
+  async addDomainToOrg(website: string) {
+    await clickLocatorsThatAreVisible(this.page, this.orgAboutDomain);
 
     const requestPromise = createRequestPromise(this.page, 'website', website);
 
@@ -57,14 +60,15 @@ export class OrganizationAboutPage {
       undefined,
     );
 
-    const input = this.page.locator(this.orgAboutWww);
+    const input = this.page.locator(this.addDomainInput);
 
-    await this.page.waitForTimeout(1000);
-    await input.press('Meta+A');
-    await input.press('Backspace');
-    await this.page.waitForTimeout(1000);
+    await this.page.waitForTimeout(500);
+    // await input.press('Meta+A');
+    // await input.press('Backspace');
+    // await this.page.waitForTimeout(1000);
     await input.pressSequentially(website, { delay: 200 });
     await this.page.keyboard.press('Tab');
+    await clickLocatorThatIsVisible(this.page, this.addDomain);
 
     await Promise.all([requestPromise, responsePromise]);
     await this.page.waitForTimeout(5000);
@@ -225,7 +229,7 @@ export class OrganizationAboutPage {
 
   async populateAboutFields(update: {
     name: string;
-    website: string;
+    domain: string;
     orgAboutTags: string;
     orgAboutOwner: string;
     orgAboutIndustry: string;
@@ -238,7 +242,7 @@ export class OrganizationAboutPage {
   }) {
     await this.page.fill(this.orgAboutName, update.name);
 
-    await this.addWebsiteToOrg(update.website);
+    await this.addDomainToOrg(update.domain);
 
     await this.page.fill(this.orgAboutDescription, update.orgAboutDescription);
 
@@ -265,7 +269,7 @@ export class OrganizationAboutPage {
 
   async checkPopulatedAboutFields(update: {
     name: string;
-    website: string;
+    domain: string;
     orgAboutTags: string;
     orgAboutOwner: string;
     orgAboutIndustry: string;
@@ -285,7 +289,7 @@ export class OrganizationAboutPage {
         .toHaveValue(update.name),
       //TODO: waiting for the fix of the issue [COS-5192: Website save fails to get saved](https://linear.app/customer-os/issue/COS-5192/website-save-fails-to-get-saved)
       // expect
-      //   .soft(this.page.locator(this.orgAboutWww))
+      //   .soft(this.page.locator(this.orgAboutDomain))
       //   .toHaveValue(update.website),
       expect
         .soft(this.page.locator(this.orgAboutDescription))
@@ -332,7 +336,7 @@ export class OrganizationAboutPage {
   }
 
   async enrichOrganization(website: string) {
-    await this.addWebsiteToOrg(website);
+    await this.addDomainToOrg(website);
 
     await this.page.waitForLoadState('networkidle');
     await this.page.locator(this.orgAboutName).waitFor({ state: 'visible' });
@@ -344,14 +348,14 @@ export class OrganizationAboutPage {
     );
   }
 
-  async checkEnrichedAboutFields(create: { name: string; website: string }) {
+  async checkEnrichedAboutFields(create: { name: string; domain: string }) {
     await Promise.all([
       expect
         .soft(this.page.locator(this.orgAboutName))
         .toHaveValue(create.name),
       expect
-        .soft(this.page.locator(this.orgAboutWww))
-        .toHaveValue(create.website),
+        .soft(this.page.locator(this.orgAboutDomain))
+        .toHaveValue(create.domain),
       expect
         .soft(this.page.locator(this.orgAboutDescription))
         .toHaveValue('Actionable Intelligence for a Safer World™ '),

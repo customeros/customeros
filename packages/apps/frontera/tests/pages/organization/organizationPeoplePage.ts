@@ -76,6 +76,7 @@ export class OrganizationPeoplePage {
       undefined,
     );
 
+    await this.page.waitForTimeout(500);
     await orgPeopleContactTitleInput.pressSequentially('CTO', { delay: 500 });
     await this.page.keyboard.press('Tab');
     await Promise.all([requestPromise, responsePromise]);

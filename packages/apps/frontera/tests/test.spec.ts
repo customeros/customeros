@@ -22,7 +22,9 @@ import { OpportunitiesKanbanPage } from './pages/opportunitiesKanban/opportuniti
 
 test.setTimeout(180000);
 
-test('Convert an Organization to Customer', async ({ page }, testInfo) => {
+test('Convert an Organization to Customer [COS-6448]', async ({
+  page,
+}, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const customersPage = new CustomersPage(page);
@@ -79,7 +81,7 @@ test('Add About information to an Organization', async ({ page }, testInfo) => {
   await organizationSideNavPage.goToAbout();
 
   //Check enrichment
-  await organizationAboutPage.enrichOrganization(organizations.create.website);
+  await organizationAboutPage.enrichOrganization(organizations.create.domain);
   organizations.create.name = organizationName;
   await organizationAboutPage.checkEnrichedAboutFields(organizations.create);
 
@@ -88,9 +90,7 @@ test('Add About information to an Organization', async ({ page }, testInfo) => {
   await organizationAboutPage.checkPopulatedAboutFields(organizations.update);
 });
 
-test.skip('Create People entry in an Organization', async ({
-  page,
-}, testInfo) => {
+test('Create People entry in an Organization', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationPeoplePage = new OrganizationPeoplePage(page);

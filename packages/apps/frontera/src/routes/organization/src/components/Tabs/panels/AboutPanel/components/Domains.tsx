@@ -65,7 +65,9 @@ export const Domains = observer(() => {
           }}
         >
           <Globe01 className='text-gray-500' />
-          <span className='text-sm text-gray-400'>Add domain</span>
+          <span data-test='org-about-domain' className='text-sm text-gray-400'>
+            Add domain
+          </span>
         </div>
       </div>
     );

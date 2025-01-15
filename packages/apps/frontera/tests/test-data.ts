@@ -3,7 +3,7 @@ import { FlowStatuses } from './pages/flows/flowsStatuses';
 export const organizations = {
   create: {
     name: '',
-    website: 'https://www.cognyte.com',
+    domain: 'playwright-cognyte.com',
     orgAboutDescription: 'This is an initial description',
     orgAboutTags: 'testOrgTag',
     orgAboutRelationship: 'Not a fit',
@@ -18,7 +18,7 @@ export const organizations = {
   },
   update: {
     name: 'Yahoo! Inc.',
-    website: 'https://www.yahoo.com',
+    domain: 'playwright-yahoo.com',
     orgAboutDescription:
       'This org is simply the best, better than all the rest',
     orgAboutTags: 'testOrgTag',
