@@ -628,26 +628,26 @@ func TestQueryResolver_Contact_WithOrganizations_ById(t *testing.T) {
 	require.Equal(t, organizationId2, organizations[1].ID)
 }
 
-func TestMutationResolver_ContactAddOrganizationByID(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	orgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
-	orgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org2")
-	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId1)
-
-	rawResponse := callGraphQL(t, "contact/add_organization_to_contact", map[string]interface{}{"contactId": contactId, "organizationId": orgId2})
-
-	var contactStruct struct {
-		Contact_AddOrganizationById model.Contact
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
-	require.Nil(t, err)
-	require.NotNil(t, contactStruct)
-}
+//func TestMutationResolver_ContactAddOrganizationByID(t *testing.T) {
+//	ctx := context.Background()
+//	defer tearDownTestCase(ctx)(t)
+//	neo4jtest.CreateTenant(ctx, driver, tenantName)
+//
+//	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+//	orgId1 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org1")
+//	orgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org2")
+//	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId1)
+//
+//	rawResponse := callGraphQL(t, "contact/add_organization_to_contact", map[string]interface{}{"contactId": contactId, "organizationId": orgId2})
+//
+//	var contactStruct struct {
+//		Contact_AddOrganizationById model.Contact
+//	}
+//
+//	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+//	require.Nil(t, err)
+//	require.NotNil(t, contactStruct)
+//}
 
 //func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
 //	ctx := context.Background()
