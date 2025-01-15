@@ -120,6 +120,10 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 			continue
 		}
 
+		if !utils.IsValidDomain(primaryDomain) {
+			continue
+		}
+
 		// check if primary domain is accepted
 		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
 			continue
@@ -278,6 +282,10 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 
 		// if primary domain is empty, skip processing
 		if primaryDomain == "" {
+			continue
+		}
+
+		if !utils.IsValidDomain(primaryDomain) {
 			continue
 		}
 
