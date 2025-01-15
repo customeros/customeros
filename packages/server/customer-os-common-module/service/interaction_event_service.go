@@ -264,7 +264,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 	}
 
 	if newInteractionEvent.SessionIdentifier != nil {
-		sessionExists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, tx, tenant, *newInteractionEvent.SessionIdentifier, commonModel.NodeLabelInteractionSession)
+		sessionExists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, &tx, tenant, *newInteractionEvent.SessionIdentifier, commonModel.NodeLabelInteractionSession)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -298,7 +298,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 		}
 	}
 	if newInteractionEvent.MeetingIdentifier != nil {
-		meetingExists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, tx, tenant, *newInteractionEvent.MeetingIdentifier, commonModel.NodeLabelMeeting)
+		meetingExists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, &tx, tenant, *newInteractionEvent.MeetingIdentifier, commonModel.NodeLabelMeeting)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -322,7 +322,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 		}
 	}
 	if newInteractionEvent.RepliesTo != nil {
-		parentExists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, tx, tenant, *newInteractionEvent.RepliesTo, commonModel.NodeLabelInteractionEvent)
+		parentExists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, &tx, tenant, *newInteractionEvent.RepliesTo, commonModel.NodeLabelInteractionEvent)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
