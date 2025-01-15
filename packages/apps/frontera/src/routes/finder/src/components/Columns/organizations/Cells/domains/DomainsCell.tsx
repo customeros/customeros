@@ -16,7 +16,18 @@ export const DomainsCell = observer(({ organizationId }: DomainCellProps) => {
     <div className='flex items-center cursor-pointer'>
       <p className='text-gray-700  truncate'>
         {domains?.length ? (
-          <span className='truncate'>{domains.join(', ')}</span>
+          <span className='truncate'>
+            {domains.map((domain) => (
+              <a
+                target='_blank'
+                rel='noopener noreferrer'
+                href={`https://${domain}`}
+                className='hover:underline'
+              >
+                {domain}
+              </a>
+            ))}
+          </span>
         ) : organization?.isEnriching ? (
           <span
             className='text-gray-400'
