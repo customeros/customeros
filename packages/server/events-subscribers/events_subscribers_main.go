@@ -83,6 +83,89 @@ func main() {
 	}, postgresDb, &neo4jDriver, cfg.Neo4j.Database, eventsProcessingGrpcClient, appLogger)
 
 	// Register listeners
+	commonServices.RabbitMQService.RegisterHandler(dto.Delete{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateBankAccount{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.DeleteBankAccount{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateBankAccount{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateComment{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateComment{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateContact{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateContact{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.AddContactToOrganization{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateSocialForContact{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.RemoveSocialFromContact{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateContract{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.ChangeStatusForContract{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateContract{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateCustomFieldTemplate{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateCustomFieldTemplate{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateDomain{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.AddDomain{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.RemoveDomain{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.AddEmail{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.RegisterEmail{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.RemoveEmail{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateOrganization{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateOrganization{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateOrganizationOnboardingStatus{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.AddActionToOrganization{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.AddParentOrganization{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.AddSocialToOrganization{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.AddSubOrganization{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.MergeOrganizations{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.RemoveParentOrganization{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.RemoveSocialFromOrganization{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.RemoveSubOrganization{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateSocialForOrganization{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.AddUserAssigneeToIssue{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.AddUserFollowerToIssue{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateIssue{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.RemoveUserAssigneeFromIssue{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.RemoveUserFollowerFromIssue{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateIssue{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.SaveJobRole{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateLocation{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateLogEntry{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateLogEntry{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateOpportunity{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateOpportunity{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CloseServiceLineItem{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateServiceLineItem{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.DeleteServiceLineItem{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.PauseServiceLineItem{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.ResumeServiceLineItem{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateServiceLineItem{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateSocial{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateSocial{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.AddTag{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.RemoveTag{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.SaveTag{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateTenantBillingProfile{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateTenantBillingProfile{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateTenantSettings{}, listeners.Handle_NotHandledListener)
+
+	commonServices.RabbitMQService.RegisterHandler(dto.CreateUser{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UserLogin{}, listeners.Handle_NotHandledListener)
+	commonServices.RabbitMQService.RegisterHandler(dto.UpdateUser{}, listeners.Handle_NotHandledListener)
+
+	// flow
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowOn{}, listeners.Handle_FlowOn)
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowParticipantSchedule{}, listeners.Handle_FlowParticipantSchedule)
 	commonServices.RabbitMQService.RegisterHandler(dto.FlowComputeParticipantsRequirements{}, listeners.Handle_FlowComputeParticipantsRequirements)
@@ -95,6 +178,7 @@ func main() {
 	// contact
 	commonServices.RabbitMQService.RegisterHandler(dto.AddSocialToContact{}, listeners.OnSocialAddedToContact)
 	commonServices.RabbitMQService.RegisterHandler(dto.RequestEnrichContact{}, listeners.OnRequestedEnrichContact)
+	commonServices.RabbitMQService.RegisterHandler(dto.ShowContact{}, listeners.Handle_NotHandledListener)
 	commonServices.RabbitMQService.RegisterHandler(dto.HideContact{}, listeners.OnContactHidden)
 
 	// organization
