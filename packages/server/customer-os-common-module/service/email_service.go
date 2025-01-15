@@ -603,6 +603,13 @@ func (s *emailService) UpdateEmailValidationDetails(ctx context.Context, emailId
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
+	if validationFields.Domain != "" {
+		err = s.services.DomainService.MergeDomain(ctx, nil, validationFields.Domain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
+
 	err = s.services.Neo4jRepositories.EmailWriteRepository.EmailValidated(ctx, tenant, emailId, validationFields)
 	if err != nil {
 		tracing.TraceErr(span, err)

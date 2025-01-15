@@ -131,11 +131,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 					e.work = CASE WHEN e.work IS NULL THEN NOT $isFreeAccount ELSE e.work END
 				WITH e, CASE WHEN $domain <> '' THEN true ELSE false END AS shouldMergeDomain
 				WHERE shouldMergeDomain
-				MERGE (d:Domain {domain:$domain})
-				ON CREATE SET 	d.id=randomUUID(), 
-								d.createdAt=datetime(), 
-								d.updatedAt=datetime(),
-								d.source=$source
+				MATCH (d:Domain {domain:$domain})
 				WITH d, e
 				MERGE (e)-[:HAS_DOMAIN]->(d)`, tenant)
 	params := map[string]any{
