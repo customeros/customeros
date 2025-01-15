@@ -12,7 +12,7 @@ export class TagService {
 
   public async createTag(
     payload: Partial<TagDatum>,
-    options?: { onSucces?: (serverId: string) => void },
+    options?: { onSuccess?: (serverId: string) => void },
   ) {
     if (!payload.name) {
       console.error('TagService.createTag: name is required');
@@ -50,7 +50,7 @@ export class TagService {
       ids: [serverId],
     });
 
-    options?.onSucces?.(serverId);
+    options?.onSuccess?.(serverId);
     this.store.ui.toastSuccess('Tag created', 'tag-created');
   }
 }

@@ -157,7 +157,7 @@ export class EditPersonaTagUsecase {
     this.tagService.createTag(
       { name, entityType: EntityType.Contact },
       {
-        onSucces: (id) => {
+        onSuccess: (id) => {
           this.select(id);
           this.newTags.add(name);
           this.setSearchTerm('');
