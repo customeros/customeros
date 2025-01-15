@@ -81,8 +81,9 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 		}
 		if jobRoleEntity == nil {
 			createFlow = true
+		} else {
+			jobRoleId = jobRoleEntity.Id
 		}
-		jobRoleId = jobRoleEntity.Id
 	}
 
 	if createFlow {

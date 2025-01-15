@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/opentracing/opentracing-go/log"
 	"io"
 	"net/http"
 	"os"
@@ -281,6 +282,13 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 		buf := make([]byte, 4096)
 		stackSize := runtime.Stack(buf, false)
 		server.log.Errorf("panic occurred: %v\nBacktrace:\n%s", e, string(buf[:stackSize]))
+
+		tracer := opentracing.GlobalTracer()
+		span := tracer.StartSpan("panic-recovery")
+		defer span.Finish()
+		field := log.String("stack", string(string(buf[:stackSize])))
+		tracing.TraceErr(span, e, field)
+
 		return gqlerror.Errorf("Internal server error!")
 	})
 	srv.SetErrorPresenter(func(ctx context.Context, e error) *gqlerror.Error {
