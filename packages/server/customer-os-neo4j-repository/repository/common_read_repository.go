@@ -113,7 +113,7 @@ func (r *commonReadRepository) ExistsByIdInTx(ctx context.Context, tx *neo4j.Man
 		}
 	})
 
-	nodeFound := result != nil && len(result.([]*dbtype.Node)) > 0
+	nodeFound := result != nil && len(result.([]string)) > 0
 	span.LogFields(log.Bool("result.exists", nodeFound))
 	return nodeFound, err
 }
