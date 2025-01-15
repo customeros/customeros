@@ -65,7 +65,8 @@ func TestStartCron(t *testing.T) {
 			CronScheduleProcessWebsiteForGlobalOrgs:                           "0 0 */1 * * *",
 			CronScheduleSendOrganizationsReminders:                            "0 0 */1 * * *",
 			CronScheduleProcessWebSessions:                                    "0 0 */1 * * *",
-			CronScheduleEnrichIndustry:                                        "0 0 */1 * * *",
+			CronScheduleEnrichGlobalOrgIndustry:                               "0 0 */1 * * *",
+			CronScheduleEnrichGlobalOrgDescription:                            "0 0 */1 * * *",
 			CronScheduleSyncFromGlobalOrgsToTenantOrgs:                        "0 0 */1 * * *",
 		},
 	}

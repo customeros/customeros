@@ -29,7 +29,8 @@ import (
 type GlobalOrganizationService interface {
 	SyncDataIntoGlobalOrganizations()
 	ScrapinCompanyByWebsite()
-	EnrichWithIndustry()
+	EnrichIndustry()
+	EnrichDescription()
 	SyncGlobalOrgsToTenantOrganizations()
 }
 
@@ -484,11 +485,11 @@ func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Conte
 	return nil
 }
 
-func (s *globalOrganizationService) EnrichWithIndustry() {
+func (s *globalOrganizationService) EnrichIndustry() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.EnrichWithIndustry")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.EnrichIndustry")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
@@ -510,7 +511,7 @@ func (s *globalOrganizationService) EnrichWithIndustry() {
 
 	//process records
 	for _, record := range records {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichWithIndustry.Record")
+		span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichIndustry.Record")
 		defer span.Finish()
 		span.LogFields(log.Uint64("record.id", record.ID))
 
@@ -588,6 +589,85 @@ Company Name: %s
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetIndustry(ctx, record.ID, industryEntity.Code, industryEntity.Name)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "error setting industry"))
+			continue
+		}
+	}
+}
+
+func (s *globalOrganizationService) EnrichDescription() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.EnrichDescription")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 10
+	hoursFromPreviousAttempt := 24
+	maxAttempts := 3
+
+	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToEnrichDescription(ctx, hoursFromPreviousAttempt, maxAttempts, limit)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting records to process"))
+		s.log.Errorf("Error getting records to process: %s", err.Error())
+		return
+	}
+
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	//process records
+	for _, record := range records {
+		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichDescription.Record")
+		defer recordSpan.Finish()
+		recordSpan.LogFields(log.Uint64("record.id", record.ID))
+
+		// mark record as processed initially to not process same record again, even if error occurs
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkDescriptionEnrichRequested(recordCtx, record.ID)
+		if err != nil {
+			tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking record as processed"))
+			s.log.Errorf("Error marking record as processed: %s", err.Error())
+			continue
+		}
+
+		// prepare Anthropic prompt
+		var descLines []string
+		descriptions := []string{record.Description, record.SourceDescription1, record.SourceDescription2, record.SourceDescription3, record.SourceDescription4, record.SourceDescription5}
+		for i, d := range descriptions {
+			if strings.TrimSpace(d) != "" {
+				descLines = append(descLines, fmt.Sprintf("Description Line %d: %s", i+1, d))
+			}
+		}
+
+		// Construct the prompt
+		prompt := fmt.Sprintf(`
+You are a world-class company analyst. Read the provided information about a company, then produce a single, concise paragraph up to 300 characters max, focusing on who the company servers and how they make money. 
+Be direct and dont include any marketing speak or jargon. Include only this final paragraph as your entire output. Do not include any explanations, disclaimers, or references to this instruction.
+---
+Company Name: %s
+Company Domain: %s
+%s
+---
+`, record.Name, record.PrimaryDomain, strings.Join(descLines, "\n"))
+
+		// ask AI for concise description
+		aiOutput, err := s.commonServices.AIService.AskAI(recordCtx, enum.AIModelAnthropicHaiku, &prompt)
+		if err != nil {
+			tracing.TraceErr(recordSpan, errors.Wrap(err, "error asking AI"))
+			continue
+		}
+		aiDescrition := utils.IfNotNilString(aiOutput)
+		recordSpan.LogFields(log.String("result.description", aiDescrition))
+
+		if aiDescrition == "" {
+			continue
+		}
+
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDescription(recordCtx, record.ID, aiDescrition)
+		if err != nil {
+			tracing.TraceErr(recordSpan, errors.Wrap(err, "error setting description"))
 			continue
 		}
 	}
