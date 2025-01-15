@@ -521,16 +521,16 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 	span.LogFields(tracingLog.Bool("isPersonalEmail", isPersonalEmail))
 
 	if isPersonalEmail {
-		playerNode, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetPlayerByAuthIdProvider(ctx, signInRequest.LoggedInEmail, signInRequest.Provider)
+		playerNodes, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetPlayersByAuthId(ctx, signInRequest.LoggedInEmail)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, false, err
 		}
-		if playerNode != nil {
+
+		if playerNodes != nil && len(playerNodes) > 0 {
 			span.LogFields(tracingLog.Object("playerIdentified", true))
 
-			playerId := neo4jmapper.MapDbNodeToPlayerEntity(playerNode).Id
-
+			playerId := neo4jmapper.MapDbNodeToPlayerEntity(playerNodes[0]).Id
 			usersDb, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetUsersForPlayer(ctx, []string{playerId})
 			if err != nil {
 				tracing.TraceErr(span, err)
