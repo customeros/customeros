@@ -22,8 +22,10 @@ func NotifyUserActivity(notification string, apiKey string) error {
 
 	provider := commonService.NewNovuService(&commonService.Services{
 		GlobalConfig: &config.GlobalConfig{
-			NovuConfig: &config.NovuConfig{
-				ApiKey: apiKey,
+			ExternalServices: config.ExternalServices{
+				NovuConfig: config.NovuConfig{
+					ApiKey: apiKey,
+				},
 			},
 		},
 	})
