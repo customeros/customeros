@@ -88,8 +88,8 @@ describe('OrganizationsService - Integration Tests', () => {
         expect.soft(organization?.tags).toEqual([]);
         expect.soft(organization?.socialMedia).toEqual([]);
         expect.soft(organization?.subsidiaries).toEqual([]);
+
         expect.soft(organization?.stage).toBe('LEAD');
-        expect.soft(organization?.valueProposition).toBe('');
         expect.soft(organization?.yearFounded).toBeNull();
         expect.soft(organization?.website).toBe('');
 

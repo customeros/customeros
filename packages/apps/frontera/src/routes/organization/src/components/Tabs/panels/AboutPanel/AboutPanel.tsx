@@ -159,8 +159,8 @@ export const AboutPanel = observer(() => {
         <Domains />
 
         <div className='flex flex-col w-full flex-1 items-start justify-start gap-3 mt-3'>
-          {!!organization?.value?.valueProposition && (
-            <p className='text-sm'>{organization.value.valueProposition}</p>
+          {!!organization?.value?.description && (
+            <p className='text-sm'>{organization.value.description}</p>
           )}
 
           <Tags

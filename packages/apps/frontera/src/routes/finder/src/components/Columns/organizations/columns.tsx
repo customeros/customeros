@@ -54,7 +54,7 @@ export const columns: Record<string, Column> = {
 
       const icon = enrichedOrg?.iconUrl;
       const logo = enrichedOrg?.logoUrl;
-      const description = enrichedOrg?.valueProposition;
+      const description = enrichedOrg?.description;
       const isEnriching = props.getValue()?.isEnriching;
 
       return (

@@ -56,7 +56,6 @@ query getOrganizations(
       relationship
       lastFundingRound
       leadSource
-      valueProposition
       slackChannelId
       public
       enrichDetails {
