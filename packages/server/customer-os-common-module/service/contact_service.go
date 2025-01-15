@@ -259,7 +259,7 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 					return nil, err
 				}
 
-				err = s.services.FlowService.FlowParticipantDelete(ctx, flowParticipant.Id)
+				err = s.services.FlowService.FlowParticipantDelete(ctx, txWithPostCommit, flowParticipant.Id)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err
