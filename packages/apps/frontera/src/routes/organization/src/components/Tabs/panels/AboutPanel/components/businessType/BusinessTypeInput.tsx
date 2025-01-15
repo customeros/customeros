@@ -6,7 +6,7 @@ import { cn } from '@ui/utils/cn.ts';
 import { Market } from '@graphql/types';
 import { Combobox } from '@ui/form/Combobox';
 import { useStore } from '@shared/hooks/useStore';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Briefcase02 } from '@ui/media/icons/Briefcase02';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/overlay/Popover';
@@ -51,7 +51,7 @@ export const BusinessTypeInput = observer(
     return (
       <>
         <Popover open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
-          <Tooltip align='start' placement='top' label='Business type'>
+          <Tooltip align='start' label='Business type'>
             <PopoverTrigger className={cn('flex items-center ')}>
               <Briefcase02 className='text-gray-500 mr-3' />
               <div

@@ -200,7 +200,7 @@ export const AboutPanel = observer(() => {
               className='flex-2 flex items-center'
             >
               <Menu>
-                <Tooltip align='start' placement='top' label='Relationship'>
+                <Tooltip align='start' label='Relationship'>
                   <MenuButton
                     data-test='org-about-relationship'
                     className='min-h-[20px] text-md outline-none focus:outline-none items-center'
@@ -264,7 +264,7 @@ export const AboutPanel = observer(() => {
                 className='flex-1 flex items-center'
               >
                 <Menu>
-                  <Tooltip label='Stage' align='start' placement='top'>
+                  <Tooltip label='Stage' align='start'>
                     <MenuButton className='min-h-[20px] outline-none focus:outline-none'>
                       <Target05 className='text-gray-500 mb-0.5' />
                       <span className='ml-3 text-sm'>
@@ -290,7 +290,7 @@ export const AboutPanel = observer(() => {
               </div>
             )}
           </div>
-          <Tooltip align='start' placement='top' label='Industry'>
+          <Tooltip align='start' label='Industry'>
             <p className='text-sm flex items-center cursor-default'>
               <Building07 className='text-gray-500 mr-3 ' />
               {organization?.value?.industryName ? (
@@ -301,7 +301,7 @@ export const AboutPanel = observer(() => {
             </p>
           </Tooltip>
           {organization.country && (
-            <Tooltip align='start' placement='top' label='Country'>
+            <Tooltip align='start' label='Country'>
               <p className='text-sm flex items-center cursor-default'>
                 <div className='flex items-center mr-3'>
                   {organization.value.locations?.[0]?.countryCodeA2 &&
@@ -316,7 +316,7 @@ export const AboutPanel = observer(() => {
           <BusinessTypeInput id={id} />
 
           {typeof organization.value!.employees === 'number' && (
-            <Tooltip align='start' placement='top' label='Number of employees'>
+            <Tooltip align='start' label='Number of employees'>
               <p className='text-sm flex items-center cursor-default '>
                 <Users02 className='text-gray-500 mr-3' />
                 {organization.value!.employees} employees

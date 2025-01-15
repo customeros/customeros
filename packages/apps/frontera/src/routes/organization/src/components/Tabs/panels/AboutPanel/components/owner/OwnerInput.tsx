@@ -54,7 +54,7 @@ export const OwnerInput = observer(({ id, owner, dataTest }: OwnerProps) => {
   return (
     <>
       <Popover open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
-        <Tooltip label='Owner' align='start' placement='top'>
+        <Tooltip label='Owner' align='start'>
           <PopoverTrigger className={cn('flex items-center')}>
             <Key01 className='mr-3 text-gray-500' />
             <div
