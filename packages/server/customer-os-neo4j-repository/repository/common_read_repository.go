@@ -109,7 +109,7 @@ func (r *commonReadRepository) ExistsByIdInTx(ctx context.Context, tx *neo4j.Man
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+			return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
 		}
 	})
 
