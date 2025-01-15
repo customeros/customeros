@@ -8,12 +8,14 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
+import { flags } from '@ui/media/flags';
 import { Tag01 } from '@ui/media/icons/Tag01';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Users03 } from '@ui/media/icons/Users03';
 import { useStore } from '@shared/hooks/useStore';
 import { Seeding } from '@ui/media/icons/Seeding';
 import { Target05 } from '@ui/media/icons/Target05';
+import { Share07 } from '@ui/media/icons/Share07.tsx';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
@@ -156,7 +158,7 @@ export const AboutPanel = observer(() => {
 
         <Domains />
 
-        <div className='flex flex-col w-full items-start justify-start gap-3 mt-3'>
+        <div className='flex flex-col w-full flex-1 items-start justify-start gap-3 mt-3'>
           {!!organization?.value?.valueProposition && (
             <p className='text-sm'>{organization.value.valueProposition}</p>
           )}
@@ -190,7 +192,10 @@ export const AboutPanel = observer(() => {
             }}
           />
           <div className='flex items-center justify-center w-full '>
-            <div className='flex-2' data-test='org-about-relationship'>
+            <div
+              data-test='org-about-relationship'
+              className='flex-2 flex items-center'
+            >
               <Menu>
                 <MenuButton
                   data-test='org-about-relationship'
@@ -249,7 +254,10 @@ export const AboutPanel = observer(() => {
             </div>
             {selectedRelationshipOption?.value !==
               OrganizationRelationship.Customer && (
-              <div className='flex-1' data-test='org-about-stage'>
+              <div
+                data-test='org-about-stage'
+                className='flex-1 flex items-center'
+              >
                 <Menu>
                   <MenuButton className='min-h-[20px] outline-none focus:outline-none'>
                     <Target05 className='text-gray-500 mb-0.5' />
@@ -276,19 +284,30 @@ export const AboutPanel = observer(() => {
             )}
           </div>
 
-          <p className='text-sm'>
-            <Building07 className='text-gray-500 mr-3' />
+          <p className='text-sm inline items-center'>
+            <Building07 className='text-gray-500 mr-3 -mt-[3px]' />
             {organization?.value?.industryName ? (
-              organization.value.industryName
+              <span>{organization.value.industryName}</span>
             ) : (
               <span className={'text-gray-400'}>Industry not found yet</span>
             )}
           </p>
 
+          {organization.country && (
+            <p className='text-sm flex items-center'>
+              <div className='flex items-center mr-3'>
+                {organization.value.locations?.[0]?.countryCodeA2 &&
+                  flags[organization.value.locations?.[0]?.countryCodeA2]}
+              </div>
+
+              {organization.country}
+            </p>
+          )}
+
           <BusinessTypeInput id={id} />
 
-          {organization.value!.employees && (
-            <p className='text-sm '>
+          {typeof organization.value!.employees === 'number' && (
+            <p className='text-sm flex items-center cursor-default '>
               <Users03 className='text-gray-500 mr-3' />
               {organization.value!.employees} employees
             </p>
@@ -301,6 +320,7 @@ export const AboutPanel = observer(() => {
           />
           <SocialMediaList
             dataTest='org-about-social-link'
+            leftElement={<Share07 className='text-gray-500' />}
             value={organization?.value.socialMedia.map((s) => ({
               value: s.id,
               label: s.url,
