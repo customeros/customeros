@@ -81,18 +81,17 @@ func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, 
 	}
 
 	dataFields := data_fields.OrganizationFields{
-		GlobalOrgId:      utils.ToPtr(globalOrgId),
-		Name:             utils.StringPtr(globalOrganization.Name),
-		PrimaryDomain:    utils.StringPtr(globalOrganization.PrimaryDomain),
-		Description:      utils.StringPtr(globalOrganization.Description),
-		Website:          utils.StringPtr(globalOrganization.Website),
-		LogoUrl:          utils.StringPtr(globalOrganization.LogoUrl),
-		IconUrl:          utils.StringPtr(globalOrganization.IconUrl),
-		LinkedInUrl:      utils.StringPtr(globalOrganization.LinkedInUrl),
-		LinkedInAlias:    utils.StringPtr(globalOrganization.LinkedInAlias),
-		ValueProposition: utils.StringPtr(globalOrganization.ValueProposition),
-		Domains:          utils.StringToSlice(globalOrganization.OtherDomains),
-		IndustryCode:     utils.StringPtrNillable(globalOrganization.IndustryNaicsCode),
+		GlobalOrgId:   utils.ToPtr(globalOrgId),
+		Name:          utils.StringPtr(globalOrganization.Name),
+		PrimaryDomain: utils.StringPtr(globalOrganization.PrimaryDomain),
+		Description:   utils.StringPtr(globalOrganization.Description),
+		Website:       utils.StringPtr(globalOrganization.Website),
+		LogoUrl:       utils.StringPtr(globalOrganization.LogoUrl),
+		IconUrl:       utils.StringPtr(globalOrganization.IconUrl),
+		LinkedInUrl:   utils.StringPtr(globalOrganization.LinkedInUrl),
+		LinkedInAlias: utils.StringPtr(globalOrganization.LinkedInAlias),
+		Domains:       utils.StringToSlice(globalOrganization.OtherDomains),
+		IndustryCode:  utils.StringPtrNillable(globalOrganization.IndustryNaicsCode),
 	}
 	if globalOrganization.YearFounded > 0 {
 		dataFields.YearFounded = utils.Int64Ptr(int64(globalOrganization.YearFounded))

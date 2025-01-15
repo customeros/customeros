@@ -498,13 +498,10 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	organizationDataFields := data_fields.OrganizationFields{
 		Name:               input.Name,
 		ReferenceId:        input.ReferenceID,
-		Description:        input.Description,
 		Website:            input.Website,
 		IsPublic:           input.IsPublic,
 		Market:             utils.ToPtr(mapper.MapMarketFromModel(input.Market)),
 		Employees:          input.Employees,
-		TargetAudience:     input.TargetAudience,
-		ValueProposition:   input.ValueProposition,
 		LastFundingAmount:  input.LastFundingAmount,
 		LastFundingRound:   utils.ToPtr(enummapper.MapFundingRoundFromModel(input.LastFundingRound)),
 		Note:               input.Note,

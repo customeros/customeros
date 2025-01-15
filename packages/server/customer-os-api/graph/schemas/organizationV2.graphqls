@@ -38,7 +38,7 @@ type OrganizationUiDetails {
     relationship:           OrganizationRelationship
     lastFundingRound:       FundingRound
     leadSource:             String
-    valueProposition:       String
+    valueProposition:       String @deprecated
     slackChannelId:         String
     public:                 Boolean
     employees:              Int64

@@ -22,8 +22,6 @@ type OrganizationFields struct {
 	Industry           *string                             `json:"industry,omitempty"`
 	IndustryCode       *string                             `json:"industryCode,omitempty"`
 	IndustryName       *string                             `json:"industryName,omitempty"` // industry name used only for logging, do not set manually
-	TargetAudience     *string                             `json:"targetAudience,omitempty"`
-	ValueProposition   *string                             `json:"valueProposition,omitempty"`
 	LastFundingRound   *string                             `json:"lastFundingRound,omitempty"`
 	LastFundingAmount  *string                             `json:"lastFundingAmount,omitempty"`
 	ReferenceId        *string                             `json:"referenceId,omitempty"`

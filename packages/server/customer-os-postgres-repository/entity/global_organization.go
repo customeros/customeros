@@ -16,7 +16,6 @@ type GlobalOrganization struct {
 	LinkedInUrl            string    `gorm:"column:linkedin;type:varchar(255)" json:"linkedin"`
 	LinkedInAlias          string    `gorm:"column:linkedin_alias;type:varchar(255)" json:"linkedinAlias"`
 	OtherSocials           []string  `gorm:"column:other_socials;type:text[]" json:"otherSocials"`
-	ValueProposition       string    `gorm:"column:value_proposition;type:text" json:"valueProposition"`
 	IndustryNaicsCode      string    `gorm:"column:industry_naics_code;type:varchar(255)" json:"industryNaicsCode"`
 	IndustryNaicsName      string    `gorm:"column:industry_naics_name;type:varchar(255)" json:"industryNaicsName"`
 	IndustrySetAt          time.Time `gorm:"column:industry_set_at;type:timestamp" json:"industrySetAt"`

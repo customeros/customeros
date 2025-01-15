@@ -155,12 +155,10 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 			globalOrganization.Name = name
 		}
 		if data.Company.Description != "" {
-			globalOrganization.Description = data.Company.Description
 			globalOrganization.SourceDescription1 = data.Company.Description
 		}
 		if data.Company.Tagline != nil {
 			if tagline, ok := data.Company.Tagline.(string); ok {
-				globalOrganization.ValueProposition = tagline
 				globalOrganization.SourceDescription2 = tagline
 			}
 		}
@@ -318,15 +316,9 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 			globalOrganization.Name = name
 		}
 		if data.LongDescription != "" {
-			if globalOrganization.Description == "" {
-				globalOrganization.Description = data.LongDescription
-			}
 			globalOrganization.SourceDescription3 = data.LongDescription
 		}
 		if data.Description != "" {
-			if globalOrganization.ValueProposition == "" {
-				globalOrganization.ValueProposition = data.Description
-			}
 			globalOrganization.SourceDescription4 = data.Description
 		}
 		if data.Company.GetEmployees() > 0 && globalOrganization.EmployeeCount == 0 {

@@ -77,9 +77,9 @@ type Organization implements MetadataInterface {
     socialMedia:            [Social!]! @goField(forceResolver: true)
     subsidiaries:           [LinkedOrganization!]! @goField(forceResolver: true)
     tags:                   [Tag!] @goField(forceResolver: true)
-    targetAudience:         String
+    targetAudience:         String @deprecated
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
-    valueProposition:       String
+    valueProposition:       String @deprecated
     website:                String
     yearFounded:            Int64
     stage:                  OrganizationStage
@@ -218,8 +218,8 @@ input OrganizationSaveInput {
     public:             Boolean
     market:             Market
     employees:          Int64
-    targetAudience:     String
-    valueProposition:   String
+    targetAudience:     String @deprecated
+    valueProposition:   String @deprecated
     lastFundingRound:   FundingRound
     lastFundingAmount:  String
     logoUrl:            String
@@ -308,8 +308,8 @@ input OrganizationUpdateInput {
     public:             Boolean
     market:             Market
     employees:          Int64
-    targetAudience:     String
-    valueProposition:   String
+    targetAudience:     String @deprecated
+    valueProposition:   String @deprecated
     lastFundingRound:   FundingRound
     lastFundingAmount:  String
     logo:               String

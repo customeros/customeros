@@ -125,14 +125,6 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 			cypherUpdate += `org.industry = $industry,`
 			paramsUpdate["industry"] = *data.Industry
 		}
-		if data.TargetAudience != nil {
-			cypherUpdate += `org.targetAudience = $targetAudience,`
-			paramsUpdate["targetAudience"] = *data.TargetAudience
-		}
-		if data.ValueProposition != nil {
-			cypherUpdate += `org.valueProposition = $valueProposition,`
-			paramsUpdate["valueProposition"] = data.ValueProposition
-		}
 		if data.LastFundingRound != nil {
 			cypherUpdate += `org.lastFundingRound = $lastFundingRound,`
 			paramsUpdate["lastFundingRound"] = *data.LastFundingRound
