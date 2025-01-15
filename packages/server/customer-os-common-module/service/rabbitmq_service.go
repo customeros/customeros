@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 	"log"
 	"reflect"
 	"strings"
@@ -440,7 +441,8 @@ func (r *RabbitMQService) ProcessMessage(d amqp091.Delivery) error {
 	// Invoke the appropriate handler based on the event type
 	eventHandler, found := r.handlerRegistry[event.Event.EventType]
 	if !found {
-		return errors.New("Handler not found for event type: " + event.Event.EventType)
+		span.LogFields(tracingLog.Message("Handler not found for event type"))
+		return nil
 	}
 
 	if data == nil {
