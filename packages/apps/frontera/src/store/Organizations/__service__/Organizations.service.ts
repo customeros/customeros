@@ -529,6 +529,7 @@ export class OrganizationsService {
           });
       })
       .with(['updatedAt'], () => undefined)
+      .with(['accountDetails'], () => undefined)
       .with(['domainsDetails', ...P.array()], async () => {
         if (type === 'update' || type === 'delete') {
           return await this.removeDomain({

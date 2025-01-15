@@ -251,6 +251,7 @@ export class ContractStore implements Store<Contract> {
 
       await this.service.updateContract({
         input: {
+          contractName: this.value.contractName,
           committedPeriodInMonths: this.value?.committedPeriodInMonths,
           serviceStarted: this.value?.serviceStarted,
           autoRenew: this.value.autoRenew,
@@ -288,6 +289,7 @@ export class ContractStore implements Store<Contract> {
 
       await this.service.updateContract({
         input: {
+          contractName: this.value.contractName,
           billingDetails: {
             organizationLegalName:
               this.value?.billingDetails?.organizationLegalName,
