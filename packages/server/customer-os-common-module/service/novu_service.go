@@ -79,11 +79,7 @@ type novuService struct {
 }
 
 func NewNovuService(services *Services) NovuService {
-	apiKey := ""
-
-	if services.GlobalConfig.NovuConfig != nil {
-		apiKey = services.GlobalConfig.NovuConfig.ApiKey
-	}
+	apiKey := services.GlobalConfig.ExternalServices.NovuConfig.ApiKey
 
 	return &novuService{
 		NovuClient: novu.NewAPIClient(apiKey, &novu.Config{}),

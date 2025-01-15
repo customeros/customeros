@@ -9,7 +9,6 @@ type GlobalConfig struct {
 	GrpcClientConfig    *GrpcClientConfig
 	TemporalConfig      *TemporalConfig
 	RabbitMQConfig      *RabbitMQConfig
-	NovuConfig          *NovuConfig
 
 	// Customer OS
 	InternalServices InternalServices
@@ -30,4 +29,5 @@ type ExternalServices struct {
 	OpenSRSConfig    OpenSRSConfig
 	PostmarkConfig   PostmarkConfig
 	StripeConfig     StripeConfig
+	NovuConfig       NovuConfig
 }

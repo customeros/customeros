@@ -69,16 +69,17 @@ func main() {
 
 	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{
 		RabbitMQConfig: &cfg.RabbitMQ,
-		NovuConfig:     &cfg.NovuConfig,
 		InternalServices: commonConfig.InternalServices{
 			EnrichmentApiConfig: cfg.InternalServices.EnrichmentApi,
 			AiApiConfig:         cfg.InternalServices.AiApi,
 			ValidationApiConfig: cfg.InternalServices.ValidationApi,
 		},
 		ExternalServices: commonConfig.ExternalServices{
-			OpenSRSConfig:    cfg.OpenSRSConfig,
-			NamecheapConfig:  cfg.NamecheapConfig,
-			CloudflareConfig: cfg.CloudflareConfig,
+			OpenSRSConfig:    cfg.ExternalServices.OpenSRSConfig,
+			NamecheapConfig:  cfg.ExternalServices.NamecheapConfig,
+			CloudflareConfig: cfg.ExternalServices.CloudflareConfig,
+			AnthropicConfig:  cfg.ExternalServices.AnthropicConfig,
+			NovuConfig:       cfg.ExternalServices.NovuConfig,
 		},
 	}, postgresDb, &neo4jDriver, cfg.Neo4j.Database, eventsProcessingGrpcClient, appLogger)
 
