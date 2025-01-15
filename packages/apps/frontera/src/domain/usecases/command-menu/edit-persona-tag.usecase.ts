@@ -1,6 +1,7 @@
 import { RootStore } from '@store/root';
 import { TagStore } from '@store/Tags/Tag.store';
-import { action, computed, reaction, observable, runInAction } from 'mobx';
+import { TagService, ContactService } from '@domain/services';
+import { action, computed, reaction, observable } from 'mobx';
 
 import { Tag, EntityType } from '@graphql/types';
 
@@ -9,7 +10,10 @@ export class EditPersonaTagUsecase {
   @observable private accessor newTags = new Set();
   @observable public accessor initialTags: TagStore[] = [];
   @observable public accessor shouldPreventClose = true;
+
   private root = RootStore.getInstance();
+  private tagService = new TagService();
+  private contactService = new ContactService();
 
   constructor() {
     this.select = this.select.bind(this);
@@ -129,16 +133,12 @@ export class EditPersonaTagUsecase {
         (e) => e.metadata.id === id,
       );
 
-      this.contact.draft();
-
       if (typeof foundIndex !== 'undefined' && foundIndex > -1) {
-        this.contact.value.tags?.splice(foundIndex, 1);
+        this.contactService.removeTag(this.contact, tag);
         this.newTags.delete(tag.value.name);
       } else {
-        this.contact.value.tags = this.contact.value.tags ?? [];
-        this.contact.value.tags.push(tag.value);
+        this.contactService.addTag(this.contact, tag);
       }
-      this.contact.commit();
     } else {
       this.root.contacts.updateTags(this.contextIds, [tag.value as Tag]);
     }
@@ -154,26 +154,13 @@ export class EditPersonaTagUsecase {
 
     if (!this.contact) return;
 
-    this.root.tags?.create(
+    this.tagService.createTag(
       { name, entityType: EntityType.Contact },
       {
-        onSucces: (id) => {
-          runInAction(() => {
-            this.contact?.draft();
-            this.contact?.value.tags?.push({
-              name,
-              metadata: {
-                id,
-              },
-              colorCode:
-                this.root.tags.getById(name)?.value?.colorCode ?? 'grayModern',
-              entityType: EntityType.Contact,
-            });
-            this.contact?.commit();
-
-            this.newTags.add(name);
-            this.setSearchTerm('');
-          });
+        onSuccess: (id) => {
+          this.select(id);
+          this.newTags.add(name);
+          this.setSearchTerm('');
 
           if (!this.shouldPreventClose) {
             this.close();

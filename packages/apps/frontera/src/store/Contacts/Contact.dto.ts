@@ -174,6 +174,39 @@ export class Contact extends Entity<ContactDatum> {
     }
   }
 
+  @action
+  public addTag(id: string) {
+    this.draft();
+
+    if (!this.value.tags) {
+      this.value.tags = [];
+    }
+
+    const tag = this.store.root.tags.getById(id);
+
+    if (!tag) {
+      console.error(`Contact.addTag: Tag with id ${id} not found`);
+
+      return;
+    }
+
+    this.value.tags.push(tag.value);
+    this.commit({ syncOnly: true });
+  }
+
+  @action
+  public removeTag(id: string) {
+    this.draft();
+
+    if (!this.value.tags) {
+      this.value.tags = [];
+    }
+
+    this.value.tags = this.value.tags.filter((tag) => tag.metadata.id !== id);
+    this.commit({ syncOnly: true });
+  }
+
+  // @deprecated
   async removeTagFromContact(tagId: string) {
     try {
       await this.service.removeTagsFromContact({
