@@ -49,6 +49,7 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("dataFields", dataFields))
+	span.LogFields(log.String("id", utils.IfNotNilString(id)), log.String("contactId", utils.IfNotNilString(contactId)), log.String("organizationId", utils.IfNotNilString(organizationId)))
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)
@@ -81,6 +82,7 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 		if jobRoleEntity == nil {
 			createFlow = true
 		}
+		jobRoleId = jobRoleEntity.Id
 	}
 
 	if createFlow {
@@ -322,9 +324,15 @@ func (s *jobRoleService) IdentifyJobRole(ctx context.Context, contactId, organiz
 	}
 
 	if jobRoleDbNode == nil {
+		span.LogFields(log.Bool("result.found", false))
 		return nil, nil
 	}
-	return neo4jmapper.MapDbNodeToJobRoleEntity(jobRoleDbNode), nil
+
+	jobRoleEntity := neo4jmapper.MapDbNodeToJobRoleEntity(jobRoleDbNode)
+	span.LogFields(log.Bool("result.found", true))
+	span.LogFields(log.String("result.jobRoleId", jobRoleEntity.Id))
+
+	return jobRoleEntity, nil
 }
 
 func (s *jobRoleService) GetById(ctx context.Context, jobRoleId string) (*neo4jentity.JobRoleEntity, error) {
