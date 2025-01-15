@@ -50,11 +50,11 @@ export const Domains = observer(() => {
 
   if (!formattedData.length) {
     return (
-      <div className='flex flex-col mt-1'>
+      <div className='flex flex-col mt-1 h-6'>
         <div
           tabIndex={0}
           role={'button'}
-          className='flex items-center w-full gap-2 group'
+          className='flex items-center w-full gap-2 group h-full'
           onClick={() => {
             store.ui.commandMenu.setOpen(true);
             store.ui.commandMenu.setType('AddNewDomain');

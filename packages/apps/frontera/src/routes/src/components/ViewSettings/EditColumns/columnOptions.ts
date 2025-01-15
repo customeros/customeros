@@ -126,7 +126,6 @@ export const organizationsHelperTextMap: Record<
   [ColumnViewType.OrganizationsRelationship]: 'E.g. Customer',
   [ColumnViewType.OrganizationsRenewalLikelihood]: 'E.g. High',
   [ColumnViewType.OrganizationsRenewalDate]: 'E.g. 3 Aug 2027',
-  [ColumnViewType.OrganizationsWebsite]: 'E.g. www.pile.com',
   [ColumnViewType.OrganizationsLeadSource]: 'E.g. Newsletter',
   [ColumnViewType.OrganizationsSocials]: 'E.g. /acmecorp',
   [ColumnViewType.OrganizationsCreatedDate]: 'E.g. 28 Mar 2019',

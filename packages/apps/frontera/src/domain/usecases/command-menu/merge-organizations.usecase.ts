@@ -38,10 +38,7 @@ export class MergeOrganizationsCase {
         });
 
         if (organization_Merge.id) {
-          this.root.ui.toastSuccess(
-            `Successfully merged 2 organizations`,
-            this.primaryId,
-          );
+          this.root.ui.toastSuccess(`Merged organizations`, this.primaryId);
         }
       });
     } catch (err) {

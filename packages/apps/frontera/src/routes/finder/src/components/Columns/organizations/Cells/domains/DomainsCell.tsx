@@ -17,7 +17,7 @@ export const DomainsCell = observer(({ organizationId }: DomainCellProps) => {
       <p className='text-gray-700  truncate'>
         {domains?.length ? (
           <span className='truncate'>
-            {domains.map((domain) => (
+            {domains.map((domain, index) => (
               <a
                 target='_blank'
                 rel='noopener noreferrer'
@@ -26,6 +26,7 @@ export const DomainsCell = observer(({ organizationId }: DomainCellProps) => {
                 key={`primary-domain-${domain}`}
               >
                 {domain}
+                {index < domains.length - 1 && ', '}
               </a>
             ))}
           </span>

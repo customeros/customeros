@@ -45,7 +45,13 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
 
   const columns =
     tableViewDef?.value?.columns
-      .filter((c) => ![ColumnViewType.FlowTotalCount].includes(c.columnType))
+      .filter(
+        (c) =>
+          ![
+            ColumnViewType.FlowTotalCount,
+            ColumnViewType.OrganizationsWebsite,
+          ].includes(c.columnType),
+      )
       .map((c) => ({
         ...c,
         label: optionsMap[c.columnType],
