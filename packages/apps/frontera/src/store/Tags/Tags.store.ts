@@ -24,10 +24,9 @@ export class TagsStore implements GroupStore<TagDatum> {
   sync = makeAutoSyncableGroup.sync;
   load = makeAutoSyncableGroup.load<TagDatum>();
   subscribe = makeAutoSyncableGroup.subscribe;
-  private service: TagService;
+  private service = TagService.getInstance();
 
   constructor(public root: RootStore, public transport: Transport) {
-    this.service = new TagService(transport);
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'Tags',
@@ -85,6 +84,18 @@ export class TagsStore implements GroupStore<TagDatum> {
 
     this.invalidate();
   }
+
+  createNew = (payload?: Partial<TagDatum>) => {
+    const newTag = new TagStore(this.root, this.transport);
+
+    if (payload) {
+      merge(newTag.value, payload);
+    }
+
+    this.value.set(newTag.value.metadata.id, newTag);
+
+    return newTag;
+  };
 
   create = async (
     payload?: TagInput,
