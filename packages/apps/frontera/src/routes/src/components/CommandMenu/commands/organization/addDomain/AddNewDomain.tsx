@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 
+import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { AddOrganizationDomainCase } from '@domain/usecases/command-menu/add-organization-domain.usecase';
 
@@ -53,16 +54,24 @@ export const AddNewDomain = observer(() => {
   }, [organization?.id]);
 
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current?.focus();
-    }
-  }, [inputRef.current]);
+    const focusTimer = setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus({ preventScroll: true });
+      }
+    }, 0);
+
+    return () => clearTimeout(focusTimer);
+  }, []); // Run only on mount
 
   const handleClose = () => {
     addNewDomainCase.reset();
     ui.commandMenu.toggle('AddNewDomain');
     ui.commandMenu.clearCallback();
   };
+
+  useKeyBindings({
+    Escape: handleClose,
+  });
 
   return (
     <Command shouldFilter={false} className={'!w-auto'}>
@@ -90,6 +99,7 @@ export const AddNewDomain = observer(() => {
 
           <div className={'mt-4'}>
             <Input
+              autoFocus
               size={'sm'}
               ref={inputRef}
               placeholder='Organization’s domain'
@@ -97,17 +107,21 @@ export const AddNewDomain = observer(() => {
               onChange={(e) => {
                 addNewDomainCase.setInputValue(e.target.value);
               }}
+              className={cn({
+                'border-error-600 hover:!border-error-600 focus:!border-error-600 active:!border-error-600':
+                  addNewDomainCase.error && !addNewDomainCase.associatedOrg,
+              })}
               onKeyDownCapture={(e) => {
                 e.stopPropagation();
 
                 if (e.key === 'Enter') {
                   handleConfirm();
                 }
+
+                if (e.key === 'Escape') {
+                  handleClose();
+                }
               }}
-              className={cn({
-                'border-error-600 hover:!border-error-600 focus:!border-error-600 active:!border-error-600':
-                  addNewDomainCase.error && !addNewDomainCase.associatedOrg,
-              })}
             />
             {addNewDomainCase.error && !addNewDomainCase.associatedOrg && (
               <p className='text-xs text-error-600'>

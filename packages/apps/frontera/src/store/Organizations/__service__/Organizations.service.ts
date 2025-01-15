@@ -534,7 +534,7 @@ export class OrganizationsService {
         if (type === 'update' || type === 'delete') {
           return await this.removeDomain({
             organizationId,
-            domain: oldValue,
+            domain: typeof oldValue === 'string' ? oldValue : oldValue?.domain,
           });
         }
 
