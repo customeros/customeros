@@ -76,6 +76,11 @@ func IsValidDomain(input string) bool {
 	if strings.ContainsAny(input, "/?&") {
 		return false
 	}
+	// if starting with www. reject
+	if strings.HasPrefix(input, "www.") {
+		return false
+	}
+
 	_, err := publicsuffix.EffectiveTLDPlusOne(input)
 	return err == nil
 }

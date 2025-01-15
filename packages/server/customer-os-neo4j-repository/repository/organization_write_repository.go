@@ -236,10 +236,7 @@ func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *ne
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
-	cypher := `MERGE (d:Domain {domain: $domain}) 
-  				ON CREATE SET 	d.createdAt = datetime(), 
-                				d.updatedAt = datetime()
-				WITH d
+	cypher := `MATCH (d:Domain {domain: $domain}) 
 				MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
 				OPTIONAL MATCH (d)<-[:HAS_DOMAIN]-(otherOrg:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
 				WHERE org <> otherOrg
