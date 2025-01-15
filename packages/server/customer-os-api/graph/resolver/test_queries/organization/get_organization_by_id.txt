@@ -11,8 +11,6 @@ query GetOrganization($organizationId: ID!){
     description
     domains
     website
-    targetAudience
-    valueProposition
     lastFundingRound
     lastFundingAmount
     note

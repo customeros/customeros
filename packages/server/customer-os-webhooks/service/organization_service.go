@@ -241,14 +241,11 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		}
 		if !matchingOrganizationExists {
 			organizationDataFields.Name = utils.StringPtr(orgInput.Name)
-			organizationDataFields.Description = utils.StringPtr(orgInput.Description)
 			organizationDataFields.Website = utils.StringPtr(orgInput.Website)
 			organizationDataFields.Industry = utils.StringPtr(orgInput.Industry)
 			organizationDataFields.IsPublic = utils.BoolPtr(orgInput.IsPublic)
 			organizationDataFields.Employees = utils.Int64Ptr(orgInput.Employees)
 			organizationDataFields.Market = utils.StringPtr(orgInput.Market)
-			organizationDataFields.TargetAudience = utils.StringPtr(orgInput.TargetAudience)
-			organizationDataFields.ValueProposition = utils.StringPtr(orgInput.ValueProposition)
 			organizationDataFields.LastFundingRound = utils.StringPtr(orgInput.LastFundingRound)
 			organizationDataFields.LastFundingAmount = utils.StringPtr(orgInput.LastFundingAmount)
 			organizationDataFields.Note = utils.StringPtr(orgInput.Note)
