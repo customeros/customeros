@@ -88,7 +88,7 @@ func (r *playerReadRepository) GetPlayersByAuthId(ctx context.Context, authId st
 		}
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error getting player by identityId: %w", err)
+		return nil, fmt.Errorf("error getting player by authId: %w", err)
 	}
 
 	return result.([]*dbtype.Node), nil
