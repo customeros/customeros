@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
-import { set } from 'lodash';
 import { observer } from 'mobx-react-lite';
 import { TagDatum } from '@store/Tags/Tag.store';
+import { AddJobRole } from '@domain/usecases/people-contact-card/add-jobrole.usecase';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
@@ -45,12 +45,19 @@ interface ContactCardProps {
   id: string;
   expandAll: boolean;
 }
+
+const jobRoleUseCase = new AddJobRole();
+
 export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
   const store = useStore();
   const { dispatchEvent } = useEvent('openEmailEditor');
   const [isExpanded, setIsExpanded] = useState(false);
   const { onOpen, onClose, open } = useDisclosure();
   const contactStore = store.contacts.getById(id);
+
+  const jobRoleStore = store.jobRoles.getById(
+    contactStore?.value.primaryOrganizationJobRoleId || '',
+  );
 
   const handleCreateOption = (value: string) => {
     store.tags?.create(
@@ -258,23 +265,16 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                     onFocus={(e) => e.target.select()}
                     dataTest='org-people-contact-title'
                     onKeyDown={(e) => e.stopPropagation()}
-                    value={
-                      contactStore.value.primaryOrganizationJobRoleTitle || ''
-                    }
+                    value={jobRoleStore?.value.jobTitle || ''}
+                    onBlur={() => {
+                      jobRoleUseCase.createJobRole(id);
+                    }}
+                    onChange={(e) => {
+                      jobRoleUseCase.setJobRole(e.target.value);
+                    }}
                     placeholder={
                       isEnriching ? 'Getting job title...' : 'No job title yet'
                     }
-                    onBlur={() => {
-                      contactStore.draft();
-                      contactStore.commit();
-                    }}
-                    onChange={(e) => {
-                      set(
-                        contactStore.value,
-                        'primaryOrganizationJobRoleTitle',
-                        e.target.value,
-                      );
-                    }}
                   />
                 )}
               </div>

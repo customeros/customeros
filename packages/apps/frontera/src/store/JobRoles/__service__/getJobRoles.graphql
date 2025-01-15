@@ -1,0 +1,20 @@
+query GetJobRoles($ids: [ID!]!) {
+  jobRoles(ids: $ids) {
+    id
+    createdAt
+    updatedAt
+    contact {
+      metadata {
+        id
+      }
+    }
+    jobTitle
+    primary
+    description
+    company
+    startedAt
+    endedAt
+    source
+    appSource
+  }
+}

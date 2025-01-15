@@ -6,6 +6,7 @@ import type { Transport } from './transport';
 import { RootStore } from './root';
 import { ContactService } from './Contacts/__service__/Contacts.service';
 import { InvoicesService } from './Invoices/__service__/Invoices.service';
+import { JobRolesService } from './JobRoles/__service__/JobRoles.service';
 import { MailboxesService } from './Settings/__service__/Mailboxes/Mailboxes.service';
 import { TableViewDefsService } from './TableViewDefs/__services__/TableViewDef.service';
 import { OrganizationsService } from './Organizations/__service__/Organizations.service';
@@ -18,6 +19,7 @@ export class GraphqlService {
   private contactService: ContactService;
   private mailboxService: MailboxesService;
   private tableViewDefService: TableViewDefsService;
+  private jobRolesService: JobRolesService;
 
   constructor(private root: RootStore, private transport: Transport) {
     this.organizationsService = OrganizationsService.getInstance();
@@ -27,6 +29,7 @@ export class GraphqlService {
     this.mailboxService = MailboxesService.getInstance(this.transport);
     this.tableViewDefService = TableViewDefsService.getInstance();
     this.getStore = this.getStore.bind(this);
+    this.jobRolesService = JobRolesService.getInstance();
   }
 
   public async mutate(operation: Operation) {
@@ -82,6 +85,7 @@ export class GraphqlService {
 
         return await this.tableViewDefService.mutateOperation(operation, store);
       })
+
       .otherwise(() => {});
   }
 

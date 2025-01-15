@@ -91,6 +91,12 @@ export class Contact extends Entity<ContactDatum> {
     return this.value.flows ?? [];
   }
 
+  get jobRole() {
+    return this.store.root.jobRoles.retrieveJobRoles([
+      this.value.primaryOrganizationJobRoleId || '',
+    ]);
+  }
+
   @computed
   get name() {
     return (

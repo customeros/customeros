@@ -17,6 +17,7 @@ import { ContactsStore } from './Contacts/Contacts.store';
 import { MailboxesStore } from './Settings/Mailboxes.store';
 import { ContractsStore } from './Contracts/Contracts.store';
 import { RemindersStore } from './Reminders/Reminders.store';
+import { JobRolesStore } from './JobRoles/JobRoles.store.ts';
 import { CustomFieldsStore } from './Settings/CustomFields.store';
 import { IndustriesStore } from './Industries/Industries.store.ts';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
@@ -61,6 +62,7 @@ export class RootStore {
   flowEmailVariables: FlowEmailVariablesStore;
   mailboxes: MailboxesStore;
   externalSystemInstances: ExternalSystemInstancesStore;
+  jobRoles: JobRolesStore;
 
   static instance: RootStore;
 
@@ -82,6 +84,7 @@ export class RootStore {
     this.settings = new SettingsStore(this, this.transport);
     this.mailboxes = new MailboxesStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
+    this.jobRoles = new JobRolesStore(this, this.transport);
     this.contacts = new ContactsStore(this, this.transport);
     this.contracts = new ContractsStore(this, this.transport);
     this.reminders = new RemindersStore(this, this.transport);
