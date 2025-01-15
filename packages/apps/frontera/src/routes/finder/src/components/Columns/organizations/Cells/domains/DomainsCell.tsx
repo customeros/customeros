@@ -23,6 +23,7 @@ export const DomainsCell = observer(({ organizationId }: DomainCellProps) => {
                 rel='noopener noreferrer'
                 href={`https://${domain}`}
                 className='hover:underline'
+                key={`primary-domain-${domain}`}
               >
                 {domain}
               </a>
