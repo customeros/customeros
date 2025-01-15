@@ -239,9 +239,6 @@ func (l *organizationListenerImpl) updateOrganizationWithEnrichData(ctx context.
 	if (organizationEntity.YearFounded == nil || *organizationEntity.YearFounded < 1000) && data.FoundedYear > 0 {
 		orgFields.YearFounded = utils.Int64Ptr(data.FoundedYear)
 	}
-	if organizationEntity.ValueProposition == "" && data.ShortDescription != "" {
-		orgFields.ValueProposition = utils.StringPtr(data.ShortDescription)
-	}
 	if organizationEntity.Description == "" && data.LongDescription != "" {
 		orgFields.Description = utils.StringPtr(data.LongDescription)
 	}
