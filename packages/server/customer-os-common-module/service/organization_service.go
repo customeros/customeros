@@ -153,13 +153,17 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	}
 
 	// prepare domains in advance
+	domains := input.Domains
+	domains = utils.RemoveEmpties(domains)
+	domains = utils.RemoveDuplicates(domains)
+
 	if primaryDomain != "" {
 		err = s.services.DomainService.MergeDomain(ctx, nil, primaryDomain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
 		}
 	}
-	for _, domain := range input.Domains {
+	for _, domain := range domains {
 		err = s.services.DomainService.MergeDomain(ctx, nil, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
@@ -174,11 +178,9 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	}
 
 	if createFlow {
-		domains := input.Domains
 		if primaryDomain != "" {
 			domains = append(domains, primaryDomain)
 		}
-		domains = utils.RemoveEmpties(domains)
 		domains = utils.RemoveDuplicates(domains)
 
 		// Dedup organizations by domain
@@ -316,8 +318,8 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		// if no name is provided, we try to extract if from domain
 		if utils.IfNotNilString(input.Name) == "" {
 			domain := primaryDomain
-			if domain == "" && len(input.Domains) > 0 {
-				domain = input.Domains[0]
+			if domain == "" && len(domains) > 0 {
+				domain = domains[0]
 			}
 			if domain != "" {
 				input.Name = utils.StringPtr(utils.CapitalizeAllParts(utils.GetDomainWithoutTLD(domain), []string{"-", "_", "."}))
@@ -402,8 +404,8 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		}
 
 		// link with domains
-		if input.Domains != nil && len(input.Domains) > 0 {
-			for _, domain := range input.Domains {
+		if len(domains) > 0 {
+			for _, domain := range domains {
 				linked, err := s.LinkWithDomain(ctx, txWithPostCommit, organizationId, domain)
 				if err != nil {
 					tracing.TraceErr(span, err)
