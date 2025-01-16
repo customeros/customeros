@@ -52,7 +52,8 @@ export class OrganizationsPage {
     '[data-test="organization-last-touchpoint-date-in-all-orgs-table"]';
   private organizationRelationshipButtonInAllOrgsTable =
     'button[data-test="organization-relationship-button-in-all-orgs-table"]';
-  private relationshipCustomer = 'div[data-test="relationship-CUSTOMER"]';
+  private relationshipCustomer =
+    'div[data-test="org-dashboard-relationship-CUSTOMER"]';
   private allOrgsSelectAllOrgs = 'button[data-test="all-orgs-select-all-orgs"]';
   private orgActionsArchive = 'button[data-test="org-actions-archive"]';
   private orgActionsConfirmArchive =
@@ -97,7 +98,7 @@ export class OrganizationsPage {
 
     const requestPromise = createRequestPromise(
       this.page,
-      'name',
+      'input?.name',
       organizationName,
     );
 

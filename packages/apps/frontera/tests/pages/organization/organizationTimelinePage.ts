@@ -141,7 +141,7 @@ export class OrganizationTimelinePage {
 
     const requestPromise = createRequestPromise(
       this.page,
-      'content',
+      'input?.content',
       'Test Reminder!',
     );
 

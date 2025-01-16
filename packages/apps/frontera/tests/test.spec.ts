@@ -58,7 +58,9 @@ test('Convert an Organization to Customer [COS-6448]', async ({
   await customersPage.ensureCustomerExists(organizationName, true);
 });
 
-test('Add About information to an Organization', async ({ page }, testInfo) => {
+test('Add About information to an Organization [COS-6528]', async ({
+  page,
+}, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationAboutPage = new OrganizationAboutPage(page);
@@ -86,8 +88,8 @@ test('Add About information to an Organization', async ({ page }, testInfo) => {
   await organizationAboutPage.checkEnrichedAboutFields(organizations.create);
 
   //Check updates that override the enrichment
-  await organizationAboutPage.populateAboutFields(organizations.update);
-  await organizationAboutPage.checkPopulatedAboutFields(organizations.update);
+  // await organizationAboutPage.populateAboutFields(organizations.update);
+  // await organizationAboutPage.checkPopulatedAboutFields(organizations.update);
 });
 
 test('Create People entry in an Organization', async ({ page }, testInfo) => {

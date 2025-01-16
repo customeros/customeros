@@ -68,7 +68,11 @@ export class OrganizationPeoplePage {
       this.orgPeopleContactTitle,
     );
 
-    const requestPromise = createRequestPromise(this.page, 'jobTitle', 'CTO');
+    const requestPromise = createRequestPromise(
+      this.page,
+      'input?.jobTitle',
+      'CTO',
+    );
 
     const responsePromise = createResponsePromise(
       this.page,
