@@ -90,7 +90,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
               <div className=' flex items-center justify-between w-full'>
                 <div key={email.id} className='flex items-center'>
                   <p
-                    className='text-sm max-w-[230px] text-ellipsis overflow-hidden'
+                    className='text-sm max-w-[230px] text-ellipsis overflow-hidden cursor-default'
                     onClick={() =>
                       copyToClipboard(email?.email || '', 'Email copied')
                     }
