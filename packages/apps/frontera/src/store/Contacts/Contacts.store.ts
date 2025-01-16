@@ -153,8 +153,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     }
   }
 
-  @action
-  async retrieve(ids: string[]) {
+  async preload(ids: string[]) {
     ids.forEach((id) => {
       if (this.value.has(id)) {
         return;
@@ -163,10 +162,21 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       this.value.set(id, new Contact(this, Contact.default({ id })));
     });
 
+    this.retrieve(ids);
+  }
+
+  @action
+  async retrieve(ids: string[]) {
     try {
       const { ui_contacts } = await this.service.getContactsByIds({
         ids,
       });
+
+      const jobRoleIds = ui_contacts?.reduce(
+        (acc, curr) =>
+          curr?.jobRoleIds?.length ? (acc = [...acc, ...curr.jobRoleIds]) : acc,
+        [] as string[],
+      );
 
       runInAction(() => {
         ui_contacts.forEach((raw) => {
@@ -187,6 +197,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
         this.size = this.value.size;
         this.version++;
       });
+      await this.root.jobRoles.retrieveJobRoles(jobRoleIds);
     } catch (err) {
       runInAction(() => {
         ids.forEach((id) => {
