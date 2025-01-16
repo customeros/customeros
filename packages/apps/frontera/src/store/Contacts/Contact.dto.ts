@@ -2,6 +2,7 @@ import { set, merge } from 'lodash';
 import { Entity } from '@store/record';
 import { Transport } from '@store/transport';
 import { FlowStore } from '@store/Flows/Flow.store';
+import { JobRoleDatum } from '@store/JobRoles/JobRole.dto';
 import { countryMap } from '@assets/countries/countriesMap';
 import { action, computed, observable, runInAction } from 'mobx';
 
@@ -91,12 +92,6 @@ export class Contact extends Entity<ContactDatum> {
     return this.value.flows ?? [];
   }
 
-  get jobRole() {
-    return this.store.root.jobRoles.retrieveJobRoles([
-      this.value.primaryOrganizationJobRoleId || '',
-    ]);
-  }
-
   @computed
   get name() {
     return (
@@ -114,6 +109,19 @@ export class Contact extends Entity<ContactDatum> {
     return this.value.connectedUsers.map(
       (id) => this.store.root.users.value.get(id)?.value,
     );
+  }
+
+  @computed
+  get jobRoles() {
+    this.store.root.jobRoles.retrieveJobRoles(this.value.jobRoleIds);
+
+    return this.value.jobRoleIds.reduce((acc, id) => {
+      const record = this.store.root.jobRoles.getById(id);
+
+      if (record) acc.push(record.value);
+
+      return acc;
+    }, [] as JobRoleDatum[]);
   }
 
   @computed
@@ -294,6 +302,7 @@ export class Contact extends Entity<ContactDatum> {
         emails: [],
         phones: [],
         tags: [],
+        jobRoleIds: [],
         locations: [],
         connectedUsers: [],
         flows: [],

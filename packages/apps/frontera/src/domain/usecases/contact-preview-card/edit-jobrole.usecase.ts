@@ -4,7 +4,7 @@ import { JobRoleService } from '@domain/services/jobrole/jobRole.service';
 import { SaveJobRolesMutationVariables } from '@store/JobRoles/__service__/saveJobRole.generated';
 type SaveJobRolePayload = SaveJobRolesMutationVariables['input'];
 
-export class AddJobRole {
+export class EditJobRole {
   private root = RootStore.getInstance();
 
   private jobRoleService = new JobRoleService();

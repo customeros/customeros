@@ -15,6 +15,9 @@ export class JobRoleService {
   @action
   async create(jobRole: SaveJobRolePayload) {
     let tempId = '';
+    const contactStore = this.root.contacts.getById(jobRole.contactId || '');
+
+    if (!contactStore) return;
 
     try {
       const draft = new JobRole(this.root.jobRoles, JobRole.default(jobRole));
@@ -25,6 +28,8 @@ export class JobRoleService {
         input: {
           jobTitle: jobRole.jobTitle,
           contactId: jobRole.contactId,
+          primary: jobRole.primary,
+          organizationId: jobRole.organizationId,
         },
       });
 
@@ -46,6 +51,28 @@ export class JobRoleService {
         this.root.jobRoles.value.delete(tempId);
         this.root.jobRoles.error = (e as Error).message;
       });
+    } finally {
+      contactStore?.draft();
+      contactStore.value.primaryOrganizationJobRoleTitle = jobRole.jobTitle;
+      contactStore?.commit({ syncOnly: true });
+    }
+  }
+
+  @action
+  async update(jobRole: SaveJobRolePayload) {
+    try {
+      await this.service.saveJobRoles({
+        input: {
+          ...jobRole,
+          id: jobRole.id,
+        },
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.root.jobRoles.error = (e as Error).message;
+      });
+    } finally {
+      this.root.jobRoles.version++;
     }
   }
 }

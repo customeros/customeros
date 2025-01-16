@@ -34,6 +34,11 @@ export class JobRole extends Entity<JobRoleDatum> {
     });
   }
 
+  @computed
+  get primary() {
+    return this.value.primary;
+  }
+
   static default(
     payload?: JobRoleDatum | SaveJobRolesMutationVariables['input'],
   ): JobRoleDatum {

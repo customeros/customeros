@@ -37,7 +37,7 @@ export const OrganizationNameCell = observer(
     }
 
     return (
-      <div className='flex items-center gap-2 group'>
+      <div className='flex items-center gap-2 group/orgName'>
         <span className='inline truncate'>
           {org.length ? (
             <Link
@@ -61,7 +61,7 @@ export const OrganizationNameCell = observer(
           size='xxs'
           variant='ghost'
           icon={<Edit03 />}
-          className='opacity-0 group-hover:opacity-100 mt-[3px]'
+          className='opacity-0 group-hover/orgName:opacity-100 mt-[3px]'
           aria-label={`navigate-to-${contactStore?.value.primaryOrganizationName}`}
           onClick={() => {
             store.ui.commandMenu.setType('EditLatestOrgActive');

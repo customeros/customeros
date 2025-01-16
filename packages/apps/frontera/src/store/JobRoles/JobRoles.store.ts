@@ -18,6 +18,16 @@ export class JobRolesStore extends Store<JobRoleDatum, JobRole> {
   }
 
   @action
+  getjobTitleStoreByContactId(contactId: string) {
+    return this.value.get(contactId)?.value.id;
+  }
+
+  @action
+  getjobTitleByContactId(contactId: string) {
+    return this.value.get(contactId)?.value.jobTitle;
+  }
+
+  @action
   async retrieveJobRoles(ids: string[]) {
     try {
       const { jobRoles } = await this.service.getJobRoles({ ids });

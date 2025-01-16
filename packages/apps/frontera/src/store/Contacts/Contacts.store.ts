@@ -169,7 +169,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       });
 
       runInAction(() => {
-        const jobRolesIds: string[] = [];
+        // let jobRolesIds: string[] = [];
 
         ui_contacts.forEach((raw) => {
           if (this.value.has(raw.id)) {
@@ -186,18 +186,16 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
           }
 
           // this part of the code needs to be removed from here if the application gets heavy
-          if (raw.primaryOrganizationJobRoleId) {
-            if (
-              !this.root.jobRoles.value.has(raw.primaryOrganizationJobRoleId)
-            ) {
-              jobRolesIds.push(raw.primaryOrganizationJobRoleId);
-            }
-          }
+          //   if (raw.jobRoleIds) {
+          //     if (!this.root.jobRoles.value.has(raw.jobRoleIds[0])) {
+          //       jobRolesIds = [...jobRolesIds, ...raw.jobRoleIds];
+          //     }
+          //   }
         });
 
-        if (jobRolesIds.length > 0) {
-          this.root.jobRoles.retrieveJobRoles(jobRolesIds);
-        }
+        // if (jobRolesIds.length > 0) {
+        //   this.root.jobRoles.retrieveJobRoles(jobRolesIds);
+        // }
         this.size = this.value.size;
         this.version++;
       });
@@ -482,6 +480,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       enrichedAt: null,
       description: '',
       phones: [],
+      jobRoleIds: [],
       prefix: '',
       timezone: '',
       profilePhotoUrl: '',

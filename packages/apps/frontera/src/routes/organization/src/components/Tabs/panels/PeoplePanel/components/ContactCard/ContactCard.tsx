@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import { TagDatum } from '@store/Tags/Tag.store';
@@ -51,13 +51,17 @@ const jobRoleUseCase = new AddJobRole();
 export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
   const store = useStore();
   const { dispatchEvent } = useEvent('openEmailEditor');
+  const orgId = useParams()?.id as string;
   const [isExpanded, setIsExpanded] = useState(false);
   const { onOpen, onClose, open } = useDisclosure();
   const contactStore = store.contacts.getById(id);
+  const jobRoles = store.contacts.getById(id)?.jobRoles;
 
-  const jobRoleStore = store.jobRoles.getById(
-    contactStore?.value.primaryOrganizationJobRoleId || '',
+  const findPrimaryJobRole = jobRoles?.find(
+    (j) => j.primary && j.contact?.metadata.id === id,
   );
+
+  const jobRoleStore = store.jobRoles.getById(findPrimaryJobRole?.id || '');
 
   const handleCreateOption = (value: string) => {
     store.tags?.create(
@@ -109,8 +113,6 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
   const email =
     contactStore?.value.emails.find((e) => e.primary)?.email ??
     contactStore?.value.emails[0]?.email;
-
-  const jobTitle = contactStore?.value.primaryOrganizationJobRoleTitle;
 
   const isEnriching = contactStore?.isEnriching;
 
@@ -250,13 +252,13 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                   <p
                     className={cn(
                       'text-sm line-clamp-1 cursor-default',
-                      !jobTitle && 'text-gray-400',
+                      !findPrimaryJobRole?.jobTitle && 'text-gray-400',
                       !isExpanded && 'cursor-pointer',
                     )}
                   >
                     {isEnriching
                       ? 'Getting job title...'
-                      : jobTitle || 'No job title yet'}
+                      : findPrimaryJobRole?.jobTitle || 'No job title yet'}
                   </p>
                 ) : (
                   <Input
@@ -265,16 +267,24 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                     onFocus={(e) => e.target.select()}
                     dataTest='org-people-contact-title'
                     onKeyDown={(e) => e.stopPropagation()}
-                    value={jobRoleStore?.value.jobTitle || ''}
                     onBlur={() => {
-                      jobRoleUseCase.createJobRole(id);
+                      jobRoleUseCase.submitJobRole(id, orgId);
                     }}
-                    onChange={(e) => {
-                      jobRoleUseCase.setJobRole(e.target.value);
-                    }}
+                    value={
+                      findPrimaryJobRole?.jobTitle || jobRoleUseCase.jobRole
+                    }
                     placeholder={
                       isEnriching ? 'Getting job title...' : 'No job title yet'
                     }
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+
+                      jobRoleUseCase.setJobRole(newValue);
+
+                      if (jobRoleStore) {
+                        findPrimaryJobRole!.jobTitle = newValue;
+                      }
+                    }}
                   />
                 )}
               </div>
