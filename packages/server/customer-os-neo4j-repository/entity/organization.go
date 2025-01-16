@@ -20,7 +20,6 @@ const (
 	OrganizationPropertyIndustry                  OrganizationProperty = "industry"
 	OrganizationPropertyIsPublic                  OrganizationProperty = "isPublic"
 	OrganizationPropertyDomainCheckedAt           OrganizationProperty = "techDomainCheckedAt"
-	OrganizationPropertyCheckedAt                 OrganizationProperty = "techCheckedAt"
 	OrganizationPropertyLastTouchpointRequestedAt OrganizationProperty = "techLastTouchpointRequestedAt"
 	OrganizationPropertyLastTouchpointType        OrganizationProperty = "lastTouchpointType"
 	OrganizationPropertyLastTouchpointAt          OrganizationProperty = "lastTouchpointAt"
@@ -119,7 +118,6 @@ type OrganizationEnrichDetails struct {
 
 type OrganizationInternalFields struct {
 	DomainCheckedAt           *time.Time
-	CheckedAt                 *time.Time
 	LastTouchpointRequestedAt *time.Time
 	HiddenAt                  *time.Time
 }

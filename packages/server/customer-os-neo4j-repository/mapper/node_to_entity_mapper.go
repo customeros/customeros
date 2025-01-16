@@ -291,7 +291,6 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		},
 		OrganizationInternalFields: entity.OrganizationInternalFields{
 			DomainCheckedAt: utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyDomainCheckedAt)),
-			CheckedAt:       utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyCheckedAt)),
 			HiddenAt:        utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyHiddenAt)),
 		},
 		EventStoreAggregate: entity.EventStoreAggregate{
