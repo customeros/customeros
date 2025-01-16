@@ -137,7 +137,7 @@ require (
 
 require (
 	github.com/Boostport/mjml-go v0.15.0
-	github.com/aws/aws-sdk-go v1.55.3
+	github.com/aws/aws-sdk-go v1.55.6
 	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
