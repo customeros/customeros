@@ -1,5 +1,5 @@
-import { useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useRef, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
@@ -28,6 +28,22 @@ export const OrganizationNameCell = observer(
 
     const isEnriching = contactStore?.isEnriching;
 
+    const preloadOrganization = () => {
+      const organizationId = contactStore?.value?.primaryOrganizationId;
+
+      if (!contactStore || !organizationId) return;
+
+      if (!store.organizations.value.has(organizationId)) {
+        store.organizations.retrieve([
+          contactStore.value.primaryOrganizationId!,
+        ]);
+      }
+    };
+
+    useEffect(() => {
+      preloadOrganization();
+    }, []);
+
     if (!org?.length && isEnriching) {
       return (
         <p className='text-gray-400'>
@@ -45,10 +61,7 @@ export const OrganizationNameCell = observer(
               ref={linkRef}
               className='inline text-gray-700 no-underline hover:no-underline font-normal cursor-pointer'
             >
-              <span
-                onClick={() => {}}
-                className='inline text-gray-700 no-underline hover:no-underline font-normal cursor-pointer'
-              >
+              <span className='inline text-gray-700 no-underline hover:no-underline font-normal cursor-pointer'>
                 {contactStore?.value.primaryOrganizationName}
               </span>
             </Link>

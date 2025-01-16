@@ -94,7 +94,7 @@ export const ContractStartModal = ({
             </h1>
           </div>
           <div className='flex flex-col'>
-            <p className='text-sm'>
+            <div className='text-sm'>
               Congrats! Let’s make{' '}
               <span className='font-medium '>{organizationName}’s </span>
               contract live starting on
@@ -104,7 +104,7 @@ export const ContractStartModal = ({
                   onChange={(e) => setServiceStarted(e)}
                 />
               </div>
-            </p>
+            </div>
             <p className='text-sm mt-3'>
               Once the contract goes live, we’ll start sending invoices.
             </p>
