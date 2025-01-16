@@ -6,6 +6,54 @@ import (
 	"strings"
 )
 
+var domainExceptions = []string{
+	"nhs.uk",
+	"gov.uk",
+	"ac.uk",
+	"mod.uk",
+	"parliament.uk",
+	"police.uk",
+	"ltd.uk",
+	"plc.uk",
+	"me.uk",
+	"sch.uk",
+}
+
+func isDomainException(hostname string) bool {
+	for _, ex := range domainExceptions {
+		if hostname == ex {
+			return true
+		}
+		if strings.HasSuffix(hostname, "."+ex) {
+			return true
+		}
+	}
+	return false
+}
+
+func tldPlusOneException(hostname string) string {
+	for _, ex := range domainExceptions {
+		// If exactly the exception
+		if hostname == ex {
+			return ex
+		}
+		// If it ends with our exception (e.g. "my.sub.nhs.uk" ends with ".nhs.uk")
+		if strings.HasSuffix(hostname, "."+ex) {
+			// Remove the ".nhs.uk" part
+			label := strings.TrimSuffix(hostname, "."+ex)
+			parts := strings.Split(label, ".")
+			// If there's only one label before the exception, e.g., "sub.nhs.uk"
+			if len(parts) == 1 {
+				return parts[0] + "." + ex // → "sub.nhs.uk"
+			}
+			// If multiple labels, e.g. "my.sub.nhs.uk", keep the last label + ex
+			lastPart := parts[len(parts)-1]
+			return lastPart + "." + ex // → "sub.nhs.uk"
+		}
+	}
+	return ""
+}
+
 // GetDomainWithoutTLD returns everything before the last dot in the domain
 func GetDomainWithoutTLD(domain string) string {
 	// Split the domain by dots
@@ -28,6 +76,11 @@ func ExtractDomain(input string) string {
 
 	domain, err := publicsuffix.EffectiveTLDPlusOne(hostname)
 	if err != nil {
+		// PSL failed; check our exception fallback
+		fallbackDomain := tldPlusOneException(hostname)
+		if fallbackDomain != "" {
+			return fallbackDomain
+		}
 		return ""
 	}
 
@@ -61,26 +114,40 @@ func extractHostname(inputURL string) string {
 }
 
 func IsValidTLD(input string) bool {
-	etld, im := publicsuffix.PublicSuffix(input)
-	var validtld = false
-	if im { // ICANN managed
-		validtld = true
-	} else if strings.IndexByte(etld, '.') >= 0 { // privately managed
-		validtld = true
+	// If the entire domain is in or ends with an exception, consider it valid
+	if isDomainException(input) {
+		return true
 	}
-	return validtld
+
+	etld, icannManaged := publicsuffix.PublicSuffix(input)
+
+	// PSL recognized the domain
+	if icannManaged {
+		return true
+	}
+	// PSL says it's privately managed (i.e. something like 'co.uk' or 'appspot.com')
+	if strings.Contains(etld, ".") {
+		return true
+	}
+	// Otherwise, we consider it invalid
+	return false
 }
 
 func IsValidDomain(input string) bool {
-	// Quick reject if input looks like a URL with paths or query
+	// Quick reject if input looks like a URL with paths or queries
 	if strings.ContainsAny(input, "/?&") {
 		return false
 	}
-	// if starting with www. reject
+	// Reject if starting with "www."
 	if strings.HasPrefix(input, "www.") {
 		return false
 	}
 
 	_, err := publicsuffix.EffectiveTLDPlusOne(input)
-	return err == nil
+	if err == nil {
+		// PSL was happy
+		return true
+	}
+	// PSL errored; check the exception
+	return isDomainException(input)
 }
