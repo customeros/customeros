@@ -954,6 +954,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 					primaryJobRoleFilter.Filters = append(primaryJobRoleFilter.Filters, utils.CreateStringCypherFilter("jobTitle", filter.Filter.Value.Str, filter.Filter.Operation))
 				}
 			}
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsTimeInCurrentRole) {
+				createTimeFilter(filter, primaryJobRoleFilter, "startedAt")
+			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsPhoneNumbers) {
 				if filter.Filter.Operation == commonmodel.ComparisonOperatorNotContains {
 					innerGroupFilter := new(utils.CypherFilter)
@@ -1149,7 +1152,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if primaryEmailFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeContactsPrimaryEmail))) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:HAS {primary:true}]->(pe:Email_%s) WITH *`, tenant)
 		}
-		if primaryOrganizationFilterCypher != "" || primaryJobRoleFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeContactsOrganization) || sort.By == string(postgresEntity.ColumnViewTypeContactsJobTitle))) {
+		if primaryOrganizationFilterCypher != "" || primaryJobRoleFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeContactsOrganization) || sort.By == string(postgresEntity.ColumnViewTypeContactsJobTitle) || sort.By == string(postgresEntity.ColumnViewTypeContactsTimeInCurrentRole))) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)--(pj:JobRole_%s {primary:true})--(po:Organization_%s {hide:false}) WITH *`, tenant, tenant)
 		}
 		if phoneNumberFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeContactsPhoneNumbers))) {
@@ -1288,6 +1291,13 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			aliases += `CASE WHEN pj.jobTitle <> '' AND NOT pj.jobTitle IS NULL THEN toLower(pj.jobTitle) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN pj.jobTitle <> '' AND NOT pj.jobTitle IS NULL THEN toLower(pj.jobTitle) ELSE '' END AS SORT_BY `
+		}
+	}
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsTimeInCurrentRole) {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN pj.startedAt IS NOT NULL THEN pj.startedAt ELSE datetime({year:2100}) END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN pj.startedAt IS NOT NULL THEN pj.startedAt ELSE datetime({year:1900}) END as SORT_BY `
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsPhoneNumbers) {
