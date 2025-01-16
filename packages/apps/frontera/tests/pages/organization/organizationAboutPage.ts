@@ -49,14 +49,14 @@ export class OrganizationAboutPage {
   private addDomainInput = 'input[data-test="add-domain-input"]';
   private addDomain = 'button[data-test="add-domain"]';
 
-  async addDomainToOrg(website: string) {
+  async addDomainToOrg(domain: string) {
     await clickLocatorsThatAreVisible(this.page, this.orgAboutDomain);
 
-    const requestPromise = createRequestPromise(this.page, 'website', website);
+    const requestPromise = createRequestPromise(this.page, 'domain', domain);
 
     const responsePromise = createResponsePromise(
       this.page,
-      'organization_Save?.metadata?.id',
+      'checkDomain?.domainOrganizationId',
       undefined,
     );
 
@@ -66,8 +66,8 @@ export class OrganizationAboutPage {
     // await input.press('Meta+A');
     // await input.press('Backspace');
     // await this.page.waitForTimeout(1000);
-    await input.pressSequentially(website, { delay: 200 });
-    await this.page.keyboard.press('Tab');
+    await input.pressSequentially(domain, { delay: 200 });
+    // await this.page.keyboard.press('Tab');
     await clickLocatorThatIsVisible(this.page, this.addDomain);
 
     await Promise.all([requestPromise, responsePromise]);
