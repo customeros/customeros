@@ -36,40 +36,24 @@ func (s *domainService) CheckDomains() {
 	tracing.TagComponentCronJob(span)
 
 	limit := 500
-	delayFromLastUpdateInDays := 90
+	delayFromLastUpdateInDays := 30
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		records, err := s.commonServices.Neo4jRepositories.DomainReadRepository.GetDomainsForPrimaryCheck(ctx, delayFromLastUpdateInDays, limit)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error getting domains for primary check"))
-			return
-		}
-
-		// no record
-		if len(records) == 0 {
-			return
-		}
-
-		for _, record := range records {
-			err = s.commonServices.DomainService.UpdateDomainPrimaryDetails(ctx, record)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error updating domain primary details"))
-				s.log.Errorf("Error updating domain primary details: %s", err.Error())
-			}
-		}
-		if len(records) < limit {
-			return
-		}
-
-		// force exit after single iteration
+	records, err := s.commonServices.Neo4jRepositories.DomainReadRepository.GetDomainsForPrimaryCheck(ctx, delayFromLastUpdateInDays, limit)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting domains for primary check"))
 		return
+	}
+
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	for _, domain := range records {
+		err = s.commonServices.DomainService.UpdateDomainPrimaryDetails(ctx, domain)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Error updating domain primary details"))
+			s.log.Errorf("Error updating domain primary details: %s", err.Error())
+		}
 	}
 }

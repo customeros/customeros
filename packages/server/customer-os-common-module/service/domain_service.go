@@ -159,29 +159,22 @@ func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain s
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, domain)
 
-	// Run primary domain check in a separate goroutine
-	go func() {
-		// Perform the primary domain check asynchronously
-		isPrimary, primaryDomain := domaincheck.PrimaryDomainCheck(domain)
+	_, isPrimary, primaryDomain := s.CheckDomainWithMailsherpa(ctx, domain)
 
-		// Call the saving logic after the primary domain check finishes
-		err := s.services.Neo4jRepositories.DomainWriteRepository.SetPrimaryDetails(context.Background(), domain, primaryDomain, isPrimary)
+	err := s.services.Neo4jRepositories.DomainWriteRepository.SetPrimaryDetails(ctx, domain, primaryDomain, isPrimary)
+	if err != nil {
+		// Log the error in tracing
+		tracing.TraceErr(span, errors.Wrap(err, "Error while setting primary details asynchronously"))
+	}
+
+	// If the domain is not primary, trigger the domain merge
+	if !isPrimary && primaryDomain != "" {
+		err = s.MergeDomain(ctx, nil, primaryDomain)
 		if err != nil {
-			// Log the error in tracing
-			tracing.TraceErr(span, errors.Wrap(err, "Error while setting primary details asynchronously"))
+			// Log the error during domain merging
+			tracing.TraceErr(span, errors.Wrap(err, "Error while merging primary domain"))
 		}
-
-		// If the domain is not primary, trigger the domain merge
-		if !isPrimary && primaryDomain != "" {
-			err = s.MergeDomain(context.Background(), nil, primaryDomain)
-			if err != nil {
-				// Log the error during domain merging
-				tracing.TraceErr(span, errors.Wrap(err, "Error while merging primary domain asynchronously"))
-			}
-		}
-	}()
-
-	// Return early, as the operation is now async
+	}
 	return nil
 }
 

@@ -645,7 +645,7 @@ func (s *globalOrganizationService) EnrichDescription() {
 		prompt := fmt.Sprintf(`
 You are a world-class company analyst. Read the provided information about a company, then produce a single, concise paragraph up to 300 characters max, focusing on who the company servers and how they make money. 
 Be direct and dont include any marketing speak or jargon. Include only this final paragraph as your entire output. Do not include any explanations, disclaimers, or references to this instruction.
-If you cannot produce a description, set the output N/A.
+Output should be in english. If you cannot produce a description, set the output N/A.
 ---
 Company Name: %s
 Company Domain: %s
