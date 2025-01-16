@@ -21,8 +21,10 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { getFormattedLink } from '@utils/getExternalLink';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
+import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { LinkedInSolid02 } from '@ui/media/icons/LinkedInSolid02';
+import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import {
   Tag,
   DataSource,
@@ -50,12 +52,14 @@ const jobRoleUseCase = new AddJobRole();
 
 export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
   const store = useStore();
-  const { dispatchEvent } = useEvent('openEmailEditor');
-  const orgId = useParams()?.id as string;
   const [isExpanded, setIsExpanded] = useState(false);
+  const { dispatchEvent } = useEvent('openEmailEditor');
   const { onOpen, onClose, open } = useDisclosure();
+  const orgId = useParams()?.id as string;
   const contactStore = store.contacts.getById(id);
   const jobRoles = store.contacts.getById(id)?.jobRoles;
+
+  const [_, copyToClipboard] = useCopyToClipboard();
 
   const findPrimaryJobRole = jobRoles?.find(
     (j) => j.primary && j.contact?.metadata.id === id,
@@ -128,7 +132,7 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
         className={cn(
           isExpanded ? 'bg-white' : 'border-transparent',
           !isExpanded && 'cursor-pointer',
-          'px-2 pb-2.5 pt-0.5  max-w-[400px]',
+          'px-2 pb-2.5 pt-0.5 group-hover/card:border-gray-200 group-hover/card:bg-white max-w-[400px]',
         )}
       >
         <CardHeader style={{ paddingBottom: !isExpanded ? '0' : '8px' }}>
@@ -301,34 +305,47 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
             )}
             <EmailsSection contactId={id} />
 
-            <div className='flex items-center max-h-6'>
+            <div className='flex items-center  max-h-6 group/linkedin'>
               <Linkedin className='text-gray-500 mr-4' />
-
-              {linkedInProfile ? (
-                <Link
-                  target='_blank'
-                  to={linkedInProfile || ''}
-                  className='cursor-pointer no-underline hover:no-underline'
-                >
+              <div className='flex items-start justify-between w-full'>
+                {linkedInProfile ? (
                   <p
                     className={cn(
                       'text-sm cursor-pointer w-[300px] truncate no-underline hover:no-underline',
                     )}
+                    onClick={() =>
+                      copyToClipboard(
+                        linkedInProfile,
+                        'LinkedIn profile copied',
+                      )
+                    }
                   >
-                    {formattedLink ?? 'LinkedIn profile URL'}
+                    {formattedLink}
                   </p>
-                </Link>
-              ) : (
-                <p
-                  onClick={() => onOpen()}
-                  className={cn(
-                    'text-sm cursor-pointer w-[300px] truncate no-underline hover:no-underline',
-                    'text-gray-400',
-                  )}
-                >
-                  {'LinkedIn profile URL'}
-                </p>
-              )}
+                ) : (
+                  <p
+                    onClick={() => onOpen()}
+                    className={cn(
+                      'text-sm cursor-pointer w-[300px] truncate no-underline hover:no-underline',
+                      'text-gray-400',
+                    )}
+                  >
+                    {'LinkedIn profile URL'}
+                  </p>
+                )}
+                {linkedInProfile && (
+                  <Link target='_blank' to={linkedInProfile || ''}>
+                    <IconButton
+                      size='xxs'
+                      variant='ghost'
+                      colorScheme='gray'
+                      aria-label='social link'
+                      icon={<LinkExternal02 className='text-gray-500' />}
+                      className='hover:bg-gray-200 opacity-0 group-hover/linkedin:opacity-100'
+                    />
+                  </Link>
+                )}
+              </div>
             </div>
 
             <Tags
