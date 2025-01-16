@@ -34,7 +34,10 @@ export class EditJobRole {
   @action
   async updateJobRole(jobRole: SaveJobRolePayload) {
     try {
-      await this.jobRoleService.update(jobRole);
+      await this.jobRoleService.update({
+        ...jobRole,
+        primary: jobRole.primary,
+      });
     } catch (e) {
       throw new Error(e instanceof Error ? e.message : String(e));
     }

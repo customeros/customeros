@@ -26,14 +26,14 @@ export const JobTitleCell = observer(({ contactId }: JobTitleCellProps) => {
 
   return (
     <div ref={ref} className='flex justify-between gap-2 group/jobTitle'>
-      <div className='flex gap-2'>
+      <div className='flex gap-2 truncate'>
         {!jobRolesStore?.value.jobTitle && (
           <p className='text-gray-400'>
             {enrichingStatus ? 'Enriching...' : 'Not set'}
           </p>
         )}
         {jobRolesStore?.value.jobTitle && (
-          <p className='overflow-ellipsis overflow-hidden'>
+          <p className='overflow-ellipsis overflow-hidden '>
             {jobRolesStore?.value.jobTitle}
           </p>
         )}
