@@ -597,6 +597,88 @@ func TestQueryResolver_UIContactsSearch_SortByPhoneNumber(t *testing.T) {
 	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsPhoneNumbers, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
+func TestQueryResolver_UIContactsSearch_FilterByFlow(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f1", Name: "A"})
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f2", Name: "AA"})
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f3", Name: "B"})
+
+	//contact 1 in flow 1 and flow 2
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c1"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp11"})
+	neo4jtest.LinkNodes(ctx, driver, "f1", "fp11", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp11", "c1", "HAS")
+
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp12"})
+	neo4jtest.LinkNodes(ctx, driver, "f2", "fp12", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp12", "c1", "HAS")
+
+	//contact 2 in flow 1
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c2"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp2"})
+	neo4jtest.LinkNodes(ctx, driver, "f1", "fp2", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp2", "c2", "HAS")
+
+	//contact 3 in flow 3
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c3"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp3"})
+	neo4jtest.LinkNodes(ctx, driver, "f3", "fp3", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp3", "c3", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
+
+	searchBy := postgresEntity.ColumnViewTypeContactsFlows
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 1)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 4, 3)
+	assertContactSearch(t, searchBy, []string{"f1"}, commonModel.ComparisonOperatorIn, 4, 2)
+	assertContactSearch(t, searchBy, []string{"f2"}, commonModel.ComparisonOperatorIn, 4, 1)
+	assertContactSearch(t, searchBy, []string{"f3"}, commonModel.ComparisonOperatorIn, 4, 1)
+	assertContactSearch(t, searchBy, []string{"f4"}, commonModel.ComparisonOperatorIn, 4, 0)
+	assertContactSearch(t, searchBy, []string{"f1", "f2"}, commonModel.ComparisonOperatorIn, 4, 2)
+	assertContactSearch(t, searchBy, []string{"f1", "f3"}, commonModel.ComparisonOperatorIn, 4, 3)
+	assertContactSearch(t, searchBy, []string{"f1", "f4"}, commonModel.ComparisonOperatorIn, 4, 2)
+
+	assertContactSearch(t, searchBy, []string{"f1"}, commonModel.ComparisonOperatorNotIn, 4, 2)
+	assertContactSearch(t, searchBy, []string{"f2"}, commonModel.ComparisonOperatorNotIn, 4, 3)
+	assertContactSearch(t, searchBy, []string{"f3"}, commonModel.ComparisonOperatorNotIn, 4, 3)
+	assertContactSearch(t, searchBy, []string{"f4"}, commonModel.ComparisonOperatorNotIn, 4, 4)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByFlow(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f1", Name: "A"})
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f2", Name: "B"})
+
+	//contact 1 in flow 1
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c1"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp1"})
+	neo4jtest.LinkNodes(ctx, driver, "f1", "fp1", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp1", "c1", "HAS")
+
+	//contact 2 in flow 1
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c2"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp2"})
+	neo4jtest.LinkNodes(ctx, driver, "f2", "fp2", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp2", "c2", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty"})
+
+	expectedAsc := []string{"c1", "c2", "empty"}
+	expectedDesc := []string{"c2", "c1", "empty"}
+
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsFlows, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsFlows, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
 func TestQueryResolver_UIContactsSearch_SortByLinkedInFollowerCount(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
