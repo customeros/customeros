@@ -20,6 +20,7 @@ import { Tags } from '@organization/components/Tabs';
 import { getFormattedLink } from '@utils/getExternalLink';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 import { LinkedInSolid02 } from '@ui/media/icons/LinkedInSolid02';
+import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 
 import { EmailsSection } from './components';
 import { EnrichContactModal } from './components/EnrichContactModal';
@@ -28,6 +29,8 @@ const jobRoleUseCase = new EditJobRole();
 
 export const ContactPreviewCard = observer(() => {
   const store = useStore();
+  const [_, copyToClipboard] = useCopyToClipboard();
+
   const [searchParams] = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditName, setIsEditName] = useState(false);
@@ -226,11 +229,20 @@ export const ContactPreviewCard = observer(() => {
                 LinkedIn
               </div>
               <div className='flex items-center gap-1 group  '>
-                <Link to={href || ''} target='_blank'>
-                  <p className='text-sm truncate w-[180px]'>
-                    {fromatedUrl || 'LinkedIn profile link'}
+                {fromatedUrl ? (
+                  <p
+                    className='text-sm truncate w-[180px] cursor-default'
+                    onClick={() => {
+                      copyToClipboard(fromatedUrl, 'LinkedIn profile copied');
+                    }}
+                  >
+                    {fromatedUrl}
                   </p>
-                </Link>
+                ) : (
+                  <p className='text-sm truncate w-[180px] text-gray-400'>
+                    LinkedIn profile link
+                  </p>
+                )}
                 {fromatedUrl && (
                   <Link to={href || ''} target='_blank'>
                     <IconButton
