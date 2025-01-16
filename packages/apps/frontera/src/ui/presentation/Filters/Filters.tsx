@@ -20,7 +20,6 @@ import {
 } from '@graphql/types';
 
 import { Filter } from '../Filter/Filter';
-import { categorySelected } from '../Filter/utils/utils';
 
 type FilterType = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -156,56 +155,27 @@ export const Filters = ({
     filter: FilterItem,
     index: number,
   ) => {
-    if (filter.property === 'EMAIL_VERIFICATION_PRIMARY_EMAIL') {
-      const emailVerificationValues = Array.isArray(value) ? value : [value];
-
-      const updatedValue = emailVerificationValues.map((val) => ({
-        category: categorySelected(val as string),
-        value: val,
-      }));
-
+    if (Array.isArray(value) && value.length === 0) {
       setFilters(
         {
           ...filter,
-          value: updatedValue,
+          property: filter.property,
+          active: false,
+          operation: filter.operation,
+          value: value,
+        },
+        index,
+      );
+    } else {
+      setFilters(
+        {
+          ...filter,
+          value: value,
           property: filter.property,
           active: true,
         },
         index,
       );
-
-      if ((value as [])?.length === 0) {
-        setFilters(
-          {
-            ...filter,
-            active: false,
-          },
-          index,
-        );
-      }
-    } else {
-      if (Array.isArray(value) && value.length === 0) {
-        setFilters(
-          {
-            ...filter,
-            property: filter.property,
-            active: false,
-            operation: filter.operation,
-            value: value,
-          },
-          index,
-        );
-      } else {
-        setFilters(
-          {
-            ...filter,
-            value: value,
-            property: filter.property,
-            active: true,
-          },
-          index,
-        );
-      }
     }
   };
 
