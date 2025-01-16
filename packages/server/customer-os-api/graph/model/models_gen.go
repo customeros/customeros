@@ -978,6 +978,7 @@ type DomainCheckDetails struct {
 	ValidSyntax                   bool    `json:"validSyntax"`
 	Accessible                    bool    `json:"accessible"`
 	Primary                       bool    `json:"primary"`
+	AllowedForOrganization        bool    `json:"allowedForOrganization"`
 	PrimaryDomain                 string  `json:"primaryDomain"`
 	DomainOrganizationID          *string `json:"domainOrganizationId,omitempty"`
 	DomainOrganizationName        *string `json:"domainOrganizationName,omitempty"`

@@ -13,6 +13,7 @@ type DomainCheckDetails {
     validSyntax:                    Boolean!
     accessible:                     Boolean!
     primary:                        Boolean!
+    allowedForOrganization:         Boolean!
     primaryDomain:                  String!
     domainOrganizationId:           String
     domainOrganizationName:         String
