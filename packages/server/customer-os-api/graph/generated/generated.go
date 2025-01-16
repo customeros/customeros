@@ -521,6 +521,7 @@ type ComplexityRoot struct {
 
 	DomainCheckDetails struct {
 		Accessible                    func(childComplexity int) int
+		AllowedForOrganization        func(childComplexity int) int
 		Domain                        func(childComplexity int) int
 		DomainOrganizationID          func(childComplexity int) int
 		DomainOrganizationName        func(childComplexity int) int
@@ -4453,6 +4454,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.DomainCheckDetails.Accessible(childComplexity), true
+
+	case "DomainCheckDetails.allowedForOrganization":
+		if e.complexity.DomainCheckDetails.AllowedForOrganization == nil {
+			break
+		}
+
+		return e.complexity.DomainCheckDetails.AllowedForOrganization(childComplexity), true
 
 	case "DomainCheckDetails.domain":
 		if e.complexity.DomainCheckDetails.Domain == nil {
@@ -14215,6 +14223,7 @@ type DomainCheckDetails {
     validSyntax:                    Boolean!
     accessible:                     Boolean!
     primary:                        Boolean!
+    allowedForOrganization:         Boolean!
     primaryDomain:                  String!
     domainOrganizationId:           String
     domainOrganizationName:         String
@@ -15674,7 +15683,7 @@ type Organization implements MetadataInterface {
     employeeGrowthRate:     String
     employees:              Int64
     headquarters:           String
-    industry:               String
+    industry:               String @deprecated
     industryGroup:          String @deprecated
     lastFundingAmount:      String
     lastFundingRound:       FundingRound
@@ -15693,9 +15702,9 @@ type Organization implements MetadataInterface {
     socialMedia:            [Social!]! @goField(forceResolver: true)
     subsidiaries:           [LinkedOrganization!]! @goField(forceResolver: true)
     tags:                   [Tag!] @goField(forceResolver: true)
-    targetAudience:         String
+    targetAudience:         String @deprecated
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
-    valueProposition:       String
+    valueProposition:       String @deprecated
     website:                String
     yearFounded:            Int64
     stage:                  OrganizationStage
@@ -15828,14 +15837,14 @@ input OrganizationSaveInput {
     notes:              String
     domains:            [String!]
     website:            String
-    industry:           String
+    industry:           String @deprecated
     subIndustry:        String @deprecated
     industryGroup:      String @deprecated
     public:             Boolean
     market:             Market
     employees:          Int64
-    targetAudience:     String
-    valueProposition:   String
+    targetAudience:     String @deprecated
+    valueProposition:   String @deprecated
     lastFundingRound:   FundingRound
     lastFundingAmount:  String
     logoUrl:            String
@@ -15863,7 +15872,7 @@ input OrganizationInput {
     notes:         String
     domains:       [String!]
     website:       String
-    industry:      String
+    industry:      String @deprecated
     subIndustry:   String @deprecated
     industryGroup: String @deprecated
     public:        Boolean
@@ -15918,14 +15927,14 @@ input OrganizationUpdateInput {
     description:        String
     notes:              String
     website:            String
-    industry:           String
+    industry:           String @deprecated
     subIndustry:        String @deprecated
     industryGroup:      String @deprecated
     public:             Boolean
     market:             Market
     employees:          Int64
-    targetAudience:     String
-    valueProposition:   String
+    targetAudience:     String @deprecated
+    valueProposition:   String @deprecated
     lastFundingRound:   FundingRound
     lastFundingAmount:  String
     logo:               String
@@ -16104,7 +16113,7 @@ type OrganizationUiDetails {
     relationship:           OrganizationRelationship
     lastFundingRound:       FundingRound
     leadSource:             String
-    valueProposition:       String
+    valueProposition:       String @deprecated
     slackChannelId:         String
     public:                 Boolean
     employees:              Int64
@@ -41578,6 +41587,50 @@ func (ec *executionContext) _DomainCheckDetails_primary(ctx context.Context, fie
 }
 
 func (ec *executionContext) fieldContext_DomainCheckDetails_primary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DomainCheckDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DomainCheckDetails_allowedForOrganization(ctx context.Context, field graphql.CollectedField, obj *model.DomainCheckDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DomainCheckDetails_allowedForOrganization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AllowedForOrganization, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DomainCheckDetails_allowedForOrganization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DomainCheckDetails",
 		Field:      field,
@@ -91363,6 +91416,8 @@ func (ec *executionContext) fieldContext_Query_checkDomain(ctx context.Context, 
 				return ec.fieldContext_DomainCheckDetails_accessible(ctx, field)
 			case "primary":
 				return ec.fieldContext_DomainCheckDetails_primary(ctx, field)
+			case "allowedForOrganization":
+				return ec.fieldContext_DomainCheckDetails_allowedForOrganization(ctx, field)
 			case "primaryDomain":
 				return ec.fieldContext_DomainCheckDetails_primaryDomain(ctx, field)
 			case "domainOrganizationId":
@@ -118348,6 +118403,11 @@ func (ec *executionContext) _DomainCheckDetails(ctx context.Context, sel ast.Sel
 			}
 		case "primary":
 			out.Values[i] = ec._DomainCheckDetails_primary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "allowedForOrganization":
+			out.Values[i] = ec._DomainCheckDetails_allowedForOrganization(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

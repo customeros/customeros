@@ -30,6 +30,10 @@ func (r *queryResolver) CheckDomain(ctx context.Context, domain string) (*model.
 		ValidSyntax: utils.IsValidDomain(domain),
 	}
 
+	if domain == "" {
+		return output, nil
+	}
+
 	accessible, isPrimary, primaryDomain := r.Services.CommonServices.DomainService.CheckDomainWithMailsherpa(ctx, domain)
 	output.Accessible = accessible
 	output.Primary = isPrimary
@@ -56,6 +60,8 @@ func (r *queryResolver) CheckDomain(ctx context.Context, domain string) (*model.
 			output.PrimaryDomainOrganizationName = utils.StringPtr(organizationByDomainEntity.Name)
 		}
 	}
+
+	output.AllowedForOrganization = r.Services.CommonServices.DomainService.IsAcceptedDomainForOrganization(ctx, domain)
 
 	return output, nil
 }
