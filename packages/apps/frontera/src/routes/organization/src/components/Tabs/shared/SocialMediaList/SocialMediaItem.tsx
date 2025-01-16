@@ -44,7 +44,7 @@ export const SocialMediaItem = observer(
         <div className='w-full  group'>
           <div className='h-full relative w-full flex items-center'>
             <div className='h-full flex items-center '>
-              <p
+              <div
                 tabIndex={0}
                 role={'button'}
                 data-test={dataTest}
@@ -54,7 +54,7 @@ export const SocialMediaItem = observer(
               >
                 <SocialIcon url={value}>{leftElement}</SocialIcon>
                 <span className='ml-3'>{formattedUrl}</span>
-              </p>
+              </div>
 
               <div className='flex items-center gap-1'>
                 <div>
@@ -73,7 +73,7 @@ export const SocialMediaItem = observer(
                 </div>
 
                 <Menu onOpenChange={(isOpen) => setIsOpen(isOpen)}>
-                  <MenuButton>
+                  <MenuButton asChild>
                     <IconButton
                       size='xxs'
                       variant='ghost'

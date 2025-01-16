@@ -295,10 +295,10 @@ export const AboutPanel = observer(() => {
 
           {organization.country && (
             <p className='text-sm flex items-center'>
-              <div className='flex items-center mr-3'>
+              <span className='flex items-center mr-3'>
                 {organization.value.locations?.[0]?.countryCodeA2 &&
                   flags[organization.value.locations?.[0]?.countryCodeA2]}
-              </div>
+              </span>
 
               {organization.country}
             </p>
