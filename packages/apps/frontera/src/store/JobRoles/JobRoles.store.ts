@@ -45,7 +45,6 @@ export class JobRolesStore extends Store<JobRoleDatum, JobRole> {
           }
         });
       });
-      this.version++;
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error).message;
