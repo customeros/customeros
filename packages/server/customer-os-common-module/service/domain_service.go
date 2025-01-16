@@ -159,13 +159,29 @@ func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain s
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, domain)
 
+	domain = strings.ToLower(strings.TrimSpace(domain))
+
+	// check if domain exists
+	domainNode, err := s.services.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, nil, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error while getting domain"))
+		return err
+	}
+	if domainNode == nil {
+		err = errors.New("Domain not found: " + domain)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	_, isPrimary, primaryDomain := s.CheckDomainWithMailsherpa(ctx, domain)
 
-	err := s.services.Neo4jRepositories.DomainWriteRepository.SetPrimaryDetails(ctx, domain, primaryDomain, isPrimary)
+	err = s.services.Neo4jRepositories.DomainWriteRepository.SetPrimaryDetails(ctx, domain, primaryDomain, isPrimary)
 	if err != nil {
 		// Log the error in tracing
 		tracing.TraceErr(span, errors.Wrap(err, "Error while setting primary details asynchronously"))
 	}
+
+	_ = s.services.RabbitMQService.PublishEvent(ctx, domain, model.DOMAIN, dto.UpdateDomain{Primary: isPrimary, PrimaryDomain: primaryDomain})
 
 	// If the domain is not primary, trigger the domain merge
 	if !isPrimary && primaryDomain != "" {
@@ -204,9 +220,8 @@ func (s *domainService) MergeDomain(ctx context.Context, txWithPostCommit *utils
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err = s.services.RabbitMQService.PublishEvent(ctx, domain, model.DOMAIN, dto.CreateDomain{Domain: domain, Source: neo4jentity.DataSourceOpenline.String()})
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateDomain"))
+			if domainJustCreated {
+				_ = s.services.RabbitMQService.PublishEvent(ctx, domain, model.DOMAIN, dto.CreateDomain{Domain: domain, Source: neo4jentity.DataSourceOpenline.String()})
 			}
 			return nil
 		})
