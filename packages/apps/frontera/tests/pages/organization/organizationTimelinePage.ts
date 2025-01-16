@@ -137,20 +137,16 @@ export class OrganizationTimelinePage {
       this.timelineReminderEditor,
     );
 
-    await this.page.waitForResponse('**/customer-os-api');
-
     const requestPromise = createRequestPromise(
       this.page,
       'input?.content',
       'Test Reminder!',
     );
 
-    // Type the note
     await timelineReminderEditor.pressSequentially('Test Reminder!', {
       delay: 500,
     });
 
-    // Wait for both the request to be sent and the response to be received
     await Promise.all([requestPromise]);
   }
 

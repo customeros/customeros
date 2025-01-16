@@ -27,7 +27,7 @@ export class OrganizationPeoplePage {
 
   private orgPeopleContactTitle = 'input[data-test="org-people-contact-title"]';
   private orgPeopleContactEmail = 'p[data-test="add-work-email"]';
-  private orgPeopleLinkedInUrl = 'span[data-test="org-people-linkedin"]';
+  private orgPeopleLinkedInUrl = 'p[data-test="org-people-linkedin"]';
   private orgPeopleLinkedInInput = 'input[data-test="linkedin-url-input"]';
   private orgPeopleConfirmLinkedInUrl = 'button[data-test="add-linkedin-url"]';
   private orgPeopleorgAboutTags = 'div[data-test="org-about-tags"]';
@@ -76,7 +76,7 @@ export class OrganizationPeoplePage {
 
     const responsePromise = createResponsePromise(
       this.page,
-      'jobRole_Update?.id',
+      'jobRole_Save',
       undefined,
     );
 
@@ -92,10 +92,11 @@ export class OrganizationPeoplePage {
 
     await this.addTitleToContact();
 
+    const emailUsername = createTinyUUID();
     let page = await writeTextInLocator(
       this.page,
       this.orgPeopleContactEmail,
-      'contact@org.com',
+      emailUsername + '@org.com',
     );
 
     await page.keyboard.press('Enter');
