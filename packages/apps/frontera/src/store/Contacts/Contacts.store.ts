@@ -468,6 +468,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       enrichedAt: null,
       description: '',
       phones: [],
+      jobRoleIds: [],
       prefix: '',
       timezone: '',
       profilePhotoUrl: '',

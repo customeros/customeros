@@ -38,6 +38,7 @@ export type GetContactsByIdsQuery = {
     primaryOrganizationJobRoleDescription?: string | null;
     primaryOrganizationJobRoleStartDate?: any | null;
     primaryOrganizationJobRoleEndDate?: any | null;
+    jobRoleIds: Array<string>;
     phones: Array<string>;
     connectedUsers: Array<string>;
     flows: Array<string>;

@@ -1,0 +1,3 @@
+mutation saveJobRoles($input: JobRoleSaveInput!) {
+  jobRole_Save(input: $input)
+}
