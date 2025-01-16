@@ -44,6 +44,7 @@ export const AddLinkedInToContactModal = observer(
       () => {
         linkedInUseCase.submitLinkedInUrl();
         !linkedInUseCase.emptyLinkedInUrl && onClose();
+        !linkedInUseCase.invalidLinkedInUrl && onClose();
       },
       {
         targetRef: modalRef,
@@ -74,11 +75,15 @@ export const AddLinkedInToContactModal = observer(
                 variant='unstyled'
                 value={linkedInUseCase.inputValue}
                 placeholder='linkedin.com/in/john-lemon'
-                onChange={(e) => linkedInUseCase.setInputValue(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Escape') {
                     onClose();
                   }
+                }}
+                onChange={(e) => {
+                  linkedInUseCase.setInputValue(e.target.value);
+
+                  linkedInUseCase.resetErrors();
                 }}
               />
             </div>
@@ -109,7 +114,8 @@ export const AddLinkedInToContactModal = observer(
               dataTest='add-linkedin-url'
               onClick={() => {
                 linkedInUseCase.submitLinkedInUrl();
-                linkedInUseCase.validateLinkedInUrl() && onClose();
+                !linkedInUseCase.emptyLinkedInUrl && onClose();
+                !linkedInUseCase.invalidLinkedInUrl && onClose();
               }}
             >
               Add & enrich
