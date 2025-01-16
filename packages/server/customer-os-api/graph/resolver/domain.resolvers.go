@@ -24,6 +24,7 @@ func (r *queryResolver) CheckDomain(ctx context.Context, domain string) (*model.
 	span.LogKV("request.domain", domain)
 
 	domain = strings.ToLower(strings.TrimSpace(domain))
+	domain = utils.ExtractDomain(domain)
 
 	output := &model.DomainCheckDetails{
 		Domain:      domain,
