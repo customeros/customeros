@@ -186,6 +186,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 	tracing.TagComponentCronJob(span)
 
 	limit := 100
+	delayMinutesFromLastCheck := 60 * 24 * 3 // 3 days
 
 	for {
 		select {
@@ -196,7 +197,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 			// continue as normal
 		}
 
-		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsWithWebsiteAndWithoutDomains(ctx, limit, 360)
+		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsWithWebsiteAndWithoutDomains(ctx, limit, delayMinutesFromLastCheck)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting organizations: %v", err)
@@ -215,12 +216,11 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
 
-			organizationDbNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(innerCtx, record.Tenant, record.OrganizationId)
+			organizationEntity, err := s.commonServices.OrganizationService.GetById(innerCtx, record.Tenant, record.OrganizationId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error getting organization {%s}: %s", record.OrganizationId, err.Error())
 			}
-			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
 			primaryDomain, _ := s.commonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(innerCtx, organizationEntity.Website)
 			if primaryDomain != "" {
@@ -230,7 +230,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 					s.log.Errorf("Error linking with domain {%s}: %s", record.OrganizationId, err.Error())
 				}
 			}
-			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyDomainCheckedAt), utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelOrganization, record.OrganizationId, string(neo4jentity.OrganizationPropertyDomainCheckedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating domain checked at: %s", err.Error())

@@ -108,12 +108,15 @@ func TestExtractDomain(t *testing.T) {
 			input:    "http://example.com:8080",
 			expected: "example.com",
 		},
-		// Note: This next test only makes sense if your code supports IDNA or punycode. If not, it's good future-proofing.
 		{
 			name:     "Internationalized Domain Name (punycode)",
 			input:    "http://xn--exmple-cua.com",
 			expected: "xn--exmple-cua.com",
-			// or the Unicode-decoded version if you do IDNA decoding
+		},
+		{
+			name:     "UK NHS domain",
+			input:    "nhs.uk",
+			expected: "nhs.uk",
 		},
 	}
 
