@@ -541,6 +541,70 @@ func TestQueryResolver_UIContactsSearch_SortByJobTitle(t *testing.T) {
 	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsJobTitle, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
+func TestQueryResolver_UIContactsSearch_FilterByTimeInCurrentRole(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
+	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
+	firstOfFebruary := utils.FirstTimeOfMonth(2024, 2)
+	firstOfMarch := utils.FirstTimeOfMonth(2024, 3)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "1", "1", neo4jentity.JobRoleEntity{Primary: true, StartedAt: &firstOfDecember})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "2", "2", neo4jentity.JobRoleEntity{Primary: false, StartedAt: &firstOfFebruary})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "3"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "3", "3", neo4jentity.JobRoleEntity{Primary: true, StartedAt: &firstOfMarch})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "5"})
+
+	searchBy := postgresEntity.ColumnViewTypeContactsTimeInCurrentRole
+
+	assertContactSearch(t, searchBy, firstOfDecember, commonModel.ComparisonOperatorGt, 5, 2)
+	assertContactSearch(t, searchBy, firstOfJanuary, commonModel.ComparisonOperatorGt, 5, 1)
+	assertContactSearch(t, searchBy, firstOfFebruary, commonModel.ComparisonOperatorGt, 5, 1)
+	assertContactSearch(t, searchBy, firstOfJanuary, commonModel.ComparisonOperatorLt, 5, 0)
+	assertContactSearch(t, searchBy, firstOfFebruary, commonModel.ComparisonOperatorLt, 5, 1)
+	assertContactSearch(t, searchBy, firstOfMarch, commonModel.ComparisonOperatorLt, 5, 2)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByTimeInCurrentRole(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
+	firstOfFebruary := utils.FirstTimeOfMonth(2024, 2)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "1", "1", neo4jentity.JobRoleEntity{Primary: true, StartedAt: &firstOfDecember})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "2", "2", neo4jentity.JobRoleEntity{Primary: false, StartedAt: &firstOfFebruary})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty"})
+
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelContact))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsTimeInCurrentRole, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsTimeInCurrentRole, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
 func TestQueryResolver_UIContactsSearch_FilterByPhoneNumber(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
