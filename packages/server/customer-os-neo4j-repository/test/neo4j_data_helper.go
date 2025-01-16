@@ -180,6 +180,7 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 			MERGE (u:User {id: $userId})-[:USER_BELONGS_TO_TENANT]->(t)
 			SET u:User_%s, 
+				u.name=$name,
 				u.roles=$roles,
 				u.internal=$internal,
 				u.test=$test,
@@ -196,6 +197,7 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":          tenant,
 		"userId":          userId,
+		"name":            user.Name,
 		"firstName":       user.FirstName,
 		"lastName":        user.LastName,
 		"source":          user.Source,

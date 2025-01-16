@@ -762,6 +762,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	phoneNumberFilterCypher, phoneNumberFilterParams := "", make(map[string]interface{})
 	flowFilterCypher, flowFilterParams := "", make(map[string]interface{})
 	flowParticipantFilterCypher, flowParticipantFilterParams := "", make(map[string]interface{})
+	userConnectedFilterCypher, userConnectedFilterParams := "", make(map[string]interface{})
 
 	if where != nil {
 		contactFilter := new(utils.CypherFilter)
@@ -814,6 +815,11 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		flowParticipantFilter.LogicalOperator = utils.AND
 		flowParticipantFilter.Filters = make([]*utils.CypherFilter, 0)
 
+		userConnectedFilter := new(utils.CypherFilter)
+		userConnectedFilter.Negate = false
+		userConnectedFilter.LogicalOperator = utils.AND
+		userConnectedFilter.Filters = make([]*utils.CypherFilter, 0)
+
 		for _, filter := range where.And {
 			// TODO
 			//ColumnViewTypeContactsEmails                     ColumnViewType = "CONTACTS_EMAILS"
@@ -825,7 +831,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			//ColumnViewTypeContactsLanguages                  ColumnViewType = "CONTACTS_LANGUAGES"
 			//ColumnViewTypeContactsTimeInCurrentRole          ColumnViewType = "CONTACTS_TIME_IN_CURRENT_ROLE"
 			//ColumnViewTypeContactsExperience                 ColumnViewType = "CONTACTS_EXPERIENCE"
-			//ColumnViewTypeContactsConnections                ColumnViewType = "CONTACTS_CONNECTIONS"
 			//ColumnViewTypeContactsFlowNextAction             ColumnViewType = "CONTACTS_FLOW_NEXT_ACTION"
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsName) {
 				logicalOperator := utils.AND
@@ -980,6 +985,21 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsFlowStatus) {
 				createInOrEmptyStringFilter(filter, flowParticipantFilter, "status")
 			}
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsConnections) {
+				// special case for not connected with
+				if filter.Filter.Operation == commonmodel.ComparisonOperatorNotIn && filter.Filter.Value.ArrayStr != nil {
+					rawCypher := ""
+					for _, v := range *filter.Filter.Value.ArrayStr {
+						if rawCypher != "" {
+							rawCypher += " AND "
+						}
+						rawCypher += fmt.Sprintf(` NOT (c)-[:CONNECTED_WITH]->(:User{id:"%s"}) `, v)
+					}
+					flowFilter.Filters = append(flowFilter.Filters, utils.CreateRawCypherFilter(rawCypher))
+				} else {
+					createInOrEmptyStringFilter(filter, userConnectedFilter, "id")
+				}
+			}
 		}
 
 		if len(contactFilter.Filters) > 0 {
@@ -1012,6 +1032,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if len(flowParticipantFilter.Filters) > 0 {
 			flowParticipantFilterCypher, flowParticipantFilterParams = flowParticipantFilter.BuildCypherFilterFragmentWithParamName("fc", "fc_param_")
 		}
+		if len(userConnectedFilter.Filters) > 0 {
+			userConnectedFilterCypher, userConnectedFilterParams = userConnectedFilter.BuildCypherFilterFragmentWithParamName("uc", "uc_param_")
+		}
 	}
 
 	//endregion
@@ -1031,6 +1054,7 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	utils.MergeMapToMap(phoneNumberFilterParams, params)
 	utils.MergeMapToMap(flowFilterParams, params)
 	utils.MergeMapToMap(flowParticipantFilterParams, params)
+	utils.MergeMapToMap(userConnectedFilterParams, params)
 
 	//region count selectQuery
 	countQuery := ""
@@ -1060,10 +1084,13 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if flowParticipantFilterCypher != "" {
 			countQuery += ` OPTIONAL MATCH (c)<-[:HAS]-(fc:FlowParticipant)<-[:HAS]-(:Flow) WITH *`
 		}
+		if userConnectedFilterCypher != "" {
+			countQuery += ` OPTIONAL MATCH (c)-[:CONNECTED_WITH]->(uc:User) WITH *`
+		}
 
 		countQuery += ` WHERE (c.hide = false OR c.hide IS NULL) `
 
-		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" || primaryOrganizationFilterCypher != "" || primaryJobRoleFilterCypher != "" || phoneNumberFilterCypher != "" || flowFilterCypher != "" || flowParticipantFilterCypher != "" {
+		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" || primaryOrganizationFilterCypher != "" || primaryJobRoleFilterCypher != "" || phoneNumberFilterCypher != "" || flowFilterCypher != "" || flowParticipantFilterCypher != "" || userConnectedFilterCypher != "" {
 			countQuery += " AND "
 		}
 
@@ -1098,6 +1125,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if flowParticipantFilterCypher != "" {
 			countQueryParts = append(countQueryParts, flowParticipantFilterCypher)
 		}
+		if userConnectedFilterCypher != "" {
+			countQueryParts = append(countQueryParts, userConnectedFilterCypher)
+		}
 
 		countQuery = countQuery + strings.Join(countQueryParts, " AND ") + fmt.Sprintf(` RETURN count(distinct(c))`)
 	}
@@ -1131,10 +1161,13 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		if flowParticipantFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeContactsFlowStatus))) {
 			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)<-[:HAS]-(fc:FlowParticipant_%s)<-[:HAS]-(:Flow_%s) WITH *`, tenant, tenant)
 		}
+		if userConnectedFilterCypher != "" || (sort != nil && (sort.By == string(postgresEntity.ColumnViewTypeContactsConnections))) {
+			selectQuery += fmt.Sprintf(` OPTIONAL MATCH (c)-[:CONNECTED_WITH]->(uc:User_%s) WITH *`, tenant)
+		}
 
 		selectQuery += ` WHERE (c.hide = false OR c.hide IS NULL) `
 
-		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" || primaryOrganizationFilterCypher != "" || primaryJobRoleFilterCypher != "" || phoneNumberFilterCypher != "" || flowFilterCypher != "" || flowParticipantFilterCypher != "" {
+		if contactFilterCypher != "" || linkedInFilterCypher != "" || tagFilterCypher != "" || locationFilterCypher != "" || primaryEmailFilterCypher != "" || primaryOrganizationFilterCypher != "" || primaryJobRoleFilterCypher != "" || phoneNumberFilterCypher != "" || flowFilterCypher != "" || flowParticipantFilterCypher != "" || userConnectedFilterCypher != "" {
 			selectQuery += " AND "
 		}
 
@@ -1168,6 +1201,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 		}
 		if flowParticipantFilterCypher != "" {
 			queryParts = append(queryParts, flowParticipantFilterCypher)
+		}
+		if userConnectedFilterCypher != "" {
+			queryParts = append(queryParts, userConnectedFilterCypher)
 		}
 		selectQuery = selectQuery + strings.Join(queryParts, " AND ")
 	}
@@ -1273,6 +1309,13 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 			aliases += `CASE WHEN fc.status <> '' AND NOT fc.status IS NULL THEN toLower(fc.status) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
 		} else {
 			aliases += `CASE WHEN fc.status <> '' AND NOT fc.status IS NULL THEN toLower(fc.status) ELSE '' END AS SORT_BY `
+		}
+	}
+	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsConnections) {
+		if sort.Direction == commonmodel.SortingDirectionAsc {
+			aliases += `CASE WHEN uc.name <> '' AND NOT uc.name IS NULL THEN toLower(uc.name) ELSE 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' END as SORT_BY `
+		} else {
+			aliases += `CASE WHEN uc.name <> '' AND NOT uc.name IS NULL THEN toLower(uc.name) ELSE '' END AS SORT_BY `
 		}
 	}
 
