@@ -192,14 +192,18 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     }
   }
 
-  @action
-  async retrieve(ids: string[]) {
+  async preload(ids: string[]) {
     ids.forEach((id) => {
       if (this.value.has(id)) return;
 
       this.value.set(id, new Organization(this, Organization.default({ id })));
     });
 
+    this.retrieve(ids);
+  }
+
+  @action
+  async retrieve(ids: string[]) {
     try {
       const { ui_organizations } = await this.service.getOrganizationsByIds({
         ids,

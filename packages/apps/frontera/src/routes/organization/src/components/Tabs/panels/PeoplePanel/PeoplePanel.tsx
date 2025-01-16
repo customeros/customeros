@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
@@ -28,9 +28,9 @@ export const PeoplePanel = observer(() => {
   const store = useStore();
   const { open, onOpen, onClose } = useDisclosure();
   const id = useParams()?.id as string;
-  const organization = store.organizations.getById(id);
   const [expandAll, setExpandAll] = useState(false);
-  const contacts = store.organizations.getById(id)?.contacts;
+  const organization = store.organizations.getById(id);
+  const contacts = organization?.contacts;
 
   const searchSortContact = searchSortContactUseCase;
 
@@ -50,6 +50,12 @@ export const PeoplePanel = observer(() => {
           .includes(search.toLowerCase())
       );
     }).length === 0 && search;
+
+  useEffect(() => {
+    if (organization?.value.contacts.length) {
+      store.contacts.preload(organization?.value.contacts);
+    }
+  }, []);
 
   if (!contacts) return null;
 

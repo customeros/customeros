@@ -34,7 +34,7 @@ export const OrganizationNameCell = observer(
       if (!contactStore || !organizationId) return;
 
       if (!store.organizations.value.has(organizationId)) {
-        store.organizations.retrieve([
+        store.organizations.preload([
           contactStore.value.primaryOrganizationId!,
         ]);
       }

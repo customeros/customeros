@@ -113,8 +113,6 @@ export class Contact extends Entity<ContactDatum> {
 
   @computed
   get jobRoles() {
-    this.store.root.jobRoles.retrieveJobRoles(this.value.jobRoleIds);
-
     return this.value.jobRoleIds.reduce((acc, id) => {
       const record = this.store.root.jobRoles.getById(id);
 
