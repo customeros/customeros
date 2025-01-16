@@ -1208,6 +1208,110 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 	return contactId
 }
 
+func CreateFlow(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, flow entity.FlowEntity) string {
+	flowId := utils.NewUUIDIfEmpty(flow.Id)
+	createdAt := flow.CreatedAt
+	if createdAt.IsZero() {
+		createdAt = utils.Now()
+	}
+	updatedAt := flow.UpdatedAt
+	if updatedAt.IsZero() {
+		updatedAt = utils.Now()
+	}
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+			MERGE (t)<-[:BELONGS_TO_TENANT]-(f:Flow:Flow_%s { id: $id })
+			ON MATCH SET
+				f.name = $name,
+				f.updatedAt = $updatedAt,
+				f.nodes = $nodes,
+				f.edges = $edges,
+				f.firstStartedAt = $firstStartedAt,
+				f.defaultName = $defaultName,
+				f.status = $status,
+				f.onHold = $onHold,
+				f.ready = $ready,
+				f.scheduled = $scheduled,
+				f.inProgress = $inProgress,
+				f.completed = $completed,
+				f.goalAchieved = $goalAchieved
+			ON CREATE SET
+				f.createdAt = $createdAt,
+				f.updatedAt = $updatedAt,
+				f.defaultName = $defaultName,
+				f.name = $name,
+				f.nodes = $nodes,
+				f.edges = $edges,
+				f.firstStartedAt = $firstStartedAt,
+				f.status = $status,
+				f.onHold = $onHold,
+				f.ready = $ready,
+				f.scheduled = $scheduled,
+				f.inProgress = $inProgress,
+				f.completed = $completed,
+				f.goalAchieved = $goalAchieved
+			RETURN f
+`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":         tenant,
+		"id":             flowId,
+		"defaultName":    flow.DefaultName,
+		"name":           flow.Name,
+		"nodes":          flow.Nodes,
+		"edges":          flow.Edges,
+		"firstStartedAt": utils.TimePtrAsAny(flow.FirstStartedAt),
+		"status":         flow.Status,
+		"createdAt":      createdAt,
+		"updatedAt":      updatedAt,
+		"onHold":         flow.OnHold,
+		"ready":          flow.Ready,
+		"scheduled":      flow.Scheduled,
+		"inProgress":     flow.InProgress,
+		"completed":      flow.Completed,
+		"goalAchieved":   flow.GoalAchieved,
+	})
+	return flowId
+}
+
+func CreateFlowParticipant(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, flowParticipant entity.FlowParticipantEntity) string {
+	flowParticipantId := utils.NewUUIDIfEmpty(flowParticipant.Id)
+	createdAt := flowParticipant.CreatedAt
+	if createdAt.IsZero() {
+		createdAt = utils.Now()
+	}
+	updatedAt := flowParticipant.UpdatedAt
+	if updatedAt.IsZero() {
+		updatedAt = utils.Now()
+	}
+	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
+			MERGE (t)<-[:BELONGS_TO_TENANT]-(fc:FlowParticipant:FlowParticipant_%s {id: $id})
+			ON MATCH SET
+				fc.updatedAt = $updatedAt,
+				fc.entityId = $entityId,
+				fc.entityType = $entityType,
+				fc.requirementsUnmeet = $requirementsUnmeet,
+				fc.status = $status
+			ON CREATE SET
+				fc.createdAt = $createdAt,
+				fc.updatedAt = $updatedAt,
+				fc.entityId = $entityId,
+				fc.entityType = $entityType,
+				fc.requirementsUnmeet = $requirementsUnmeet,
+				fc.status = $status
+			RETURN fc
+`, tenant)
+	ExecuteWriteQuery(ctx, driver, query, map[string]any{
+		"tenant":             tenant,
+		"id":                 flowParticipantId,
+		"createdAt":          createdAt,
+		"updatedAt":          updatedAt,
+		"entityId":           flowParticipant.EntityId,
+		"entityType":         flowParticipant.EntityType.String(),
+		"requirementsUnmeet": flowParticipant.RequirementsUnmeet,
+		"status":             flowParticipant.Status,
+	})
+	return flowParticipantId
+}
+
 func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social entity.SocialEntity) string {
 	socialId := utils.NewUUIDIfEmpty(social.Id)
 	query := fmt.Sprintf(`MERGE (s:Social:Social_%s {id: $id})
