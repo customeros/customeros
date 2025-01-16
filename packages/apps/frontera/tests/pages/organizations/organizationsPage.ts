@@ -333,7 +333,6 @@ export class OrganizationsPage {
   }
 
   async updateOrgToCustomer(organizationName: string) {
-    // First find the row container using data-index
     const rowLocator = this.page
       .locator(`${this.finderTableOrganizations} div[data-index]`)
       .filter({
@@ -342,12 +341,10 @@ export class OrganizationsPage {
         ),
       });
 
-    // Then find the relationship cell within that row
     await rowLocator
       .locator('[data-test="organization-relationship-in-all-orgs-table"]')
       .click();
 
-    // Click the customer option
     await clickLocatorThatIsVisible(this.page, this.relationshipCustomer);
   }
 
