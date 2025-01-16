@@ -169,8 +169,6 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       });
 
       runInAction(() => {
-        // let jobRolesIds: string[] = [];
-
         ui_contacts.forEach((raw) => {
           if (this.value.has(raw.id)) {
             const record = this.value.get(raw.id);
@@ -184,18 +182,8 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
 
             this.value.set(record.id, record);
           }
-
-          // this part of the code needs to be removed from here if the application gets heavy
-          //   if (raw.jobRoleIds) {
-          //     if (!this.root.jobRoles.value.has(raw.jobRoleIds[0])) {
-          //       jobRolesIds = [...jobRolesIds, ...raw.jobRoleIds];
-          //     }
-          //   }
         });
 
-        // if (jobRolesIds.length > 0) {
-        //   this.root.jobRoles.retrieveJobRoles(jobRolesIds);
-        // }
         this.size = this.value.size;
         this.version++;
       });
