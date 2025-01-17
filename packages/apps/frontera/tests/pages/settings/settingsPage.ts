@@ -176,12 +176,8 @@ export class SettingsPage {
 
     const responseData = await response.json();
 
-    expect(responseData).toMatchObject({
-      data: {
-        mailstack_GetPaymentIntent: {
-          clientSecret: expect.any(String),
-        },
-      },
-    });
+    expect(
+      responseData?.data?.mailstack_GetPaymentIntent?.clientSecret,
+    ).toBeTruthy();
   }
 }

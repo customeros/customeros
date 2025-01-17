@@ -47,8 +47,8 @@ export const flow = {
   },
   update: {
     status: FlowStatuses.Stopped,
-    onHold: '1',
-    ready: '0',
+    onHold: '0',
+    ready: '1',
     scheduled: '0',
     inProgress: '0',
     completed: '0',

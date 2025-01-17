@@ -92,9 +92,7 @@ test('Add About information to an Organization [COS-6528]', async ({
   // await organizationAboutPage.checkPopulatedAboutFields(organizations.update);
 });
 
-test('Create People entry in an Organization [COS-6537]', async ({
-  page,
-}, testInfo) => {
+test('Create People entry in an Organization', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationPeoplePage = new OrganizationPeoplePage(page);
@@ -211,7 +209,7 @@ test('CmdK global menu', async ({ page }, testInfo) => {
   await organizationsCmdKPage.verifyNavigationToSettings(page);
 });
 
-test('Assign contact to flow [COS-6537]', async ({ page }, testInfo) => {
+test('Assign contact to flow', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const flowsPage = new FlowsPage(page);
   const flowPage = new FlowPage(page);

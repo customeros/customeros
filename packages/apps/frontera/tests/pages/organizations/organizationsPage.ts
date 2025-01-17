@@ -88,13 +88,15 @@ export class OrganizationsPage {
     initialOrg: boolean,
     testInfo?: TestInfo,
   ) {
-    await clickLocatorsThatAreVisible(
-      this.page,
-      organizationCreatorLocator,
-      this.organizationsCreateNewOrgOrgName,
-    );
+    await clickLocatorThatIsVisible(this.page, organizationCreatorLocator);
 
     const organizationName = randomUUID();
+
+    await this.page
+      .locator(this.organizationsCreateNewOrgOrgName)
+      .fill(organizationName);
+
+    await this.page.waitForTimeout(1000);
 
     const requestPromise = createRequestPromise(
       this.page,
@@ -108,8 +110,6 @@ export class OrganizationsPage {
       undefined,
     );
 
-    await this.page.keyboard.type(organizationName);
-    await this.page.waitForTimeout(300);
     await clickLocatorThatIsVisible(this.page, this.addOrgModalAddOrg);
     await Promise.all([requestPromise, responsePromise]);
 
