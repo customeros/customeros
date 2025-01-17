@@ -41,13 +41,14 @@ export const AddEmail = observer(() => {
         label={label}
         placeholder='Add new email'
         value={addNewEmailCase.inputValue}
-        onValueChange={(value) => {
-          addNewEmailCase.setInputValue(value);
-        }}
         onKeyDownCapture={(e) => {
           if (e.key === '') {
             e.stopPropagation();
           }
+        }}
+        onValueChange={(value) => {
+          addNewEmailCase.setInputValue(value);
+          addNewEmailCase.setErrors('');
         }}
       />
       <div className='flex flex-col'>
