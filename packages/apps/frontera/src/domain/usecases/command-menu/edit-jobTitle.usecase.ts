@@ -6,22 +6,30 @@ type SaveJobRolePayload = SaveJobRolesMutationVariables['input'];
 
 export class EditJobRole {
   private root = RootStore.getInstance();
-
   private jobRoleService = new JobRoleService();
-  @observable accessor jobRole: string = '';
+  private contactId: string;
+  @observable accessor jobRole: string | undefined = undefined;
 
-  constructor() {
+  constructor(contactId: string) {
+    this.contactId = contactId;
     this.setJobRole = this.setJobRole.bind(this);
   }
 
-  setJobRole(jobRole: string) {
+  @action
+  setJobRole(jobRole: string | undefined) {
     this.jobRole = jobRole;
+  }
+
+  getJobRole() {
+    return (
+      this.jobRole ?? this.root.jobRoles.getjobTitleByContactId(this.contactId)
+    );
   }
 
   async createJobRole(contactId: string, orgId: string) {
     try {
       await this.jobRoleService.create({
-        jobTitle: this.jobRole,
+        jobTitle: this.getJobRole(),
         contactId: contactId,
         primary: true,
         organizationId: orgId,
@@ -46,12 +54,20 @@ export class EditJobRole {
   @action
   async submitJobRole(contactId: string, orgId: string) {
     const jobTitle = this.root.jobRoles.getjobTitleByContactId(contactId);
+    const jobId = Array.from(this.root.jobRoles.value.values()).find(
+      (job) => job.value.contact?.metadata.id === contactId,
+    )?.id;
+
+    if (!this.jobRole) return;
 
     if (jobTitle) {
-      await this.updateJobRole({ jobTitle: this.jobRole });
+      await this.updateJobRole({
+        jobTitle: this.getJobRole(),
+        contactId,
+        id: jobId,
+      });
     } else {
       await this.createJobRole(contactId, orgId);
     }
-    this.jobRole = '';
   }
 }

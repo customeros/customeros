@@ -24,7 +24,11 @@ export class JobRolesStore extends Store<JobRoleDatum, JobRole> {
 
   @action
   getjobTitleByContactId(contactId: string) {
-    return this.value.get(contactId)?.value.jobTitle;
+    return Array.from(this.value.values())
+      .filter(
+        (j) => j.value.contact?.metadata.id === contactId && j.value.primary,
+      )
+      .map((j) => j.value.jobTitle)[0];
   }
 
   @action

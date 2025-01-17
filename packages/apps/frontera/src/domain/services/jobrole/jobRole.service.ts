@@ -46,6 +46,7 @@ export class JobRoleService {
         });
       });
       this.root.jobRoles.version++;
+      this.root.contacts.retrieve([jobRole.contactId || '']);
     } catch (e) {
       runInAction(() => {
         this.root.jobRoles.value.delete(tempId);
@@ -73,6 +74,7 @@ export class JobRoleService {
       });
     } finally {
       this.root.jobRoles.version++;
+      this.root.contacts.retrieve([jobRole.contactId || '']);
     }
   }
 }

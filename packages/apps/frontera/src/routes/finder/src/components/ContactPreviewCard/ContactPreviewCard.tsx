@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { useKeyBindings } from 'rooks';
@@ -24,8 +24,6 @@ import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 
 import { EmailsSection } from './components';
 import { EnrichContactModal } from './components/EnrichContactModal';
-
-const jobRoleUseCase = new EditJobRole();
 
 export const ContactPreviewCard = observer(() => {
   const store = useStore();
@@ -56,14 +54,6 @@ export const ContactPreviewCard = observer(() => {
 
   const company = contact?.value.primaryOrganizationName;
 
-  const jobRoles = store.contacts.getById(String(contactId))?.jobRoles;
-
-  const findPrimaryJobRole = jobRoles?.find(
-    (j) => j.primary && j.contact?.metadata.id === contactId,
-  );
-
-  const jobRolesStore = store.jobRoles.getById(findPrimaryJobRole?.id || '');
-
   const countryA3 = contact?.value.locations?.[0]?.countryCodeA3;
   const countryA2 = contact?.value.locations?.[0]?.countryCodeA2;
   const flag = flags[countryA2 || ''];
@@ -84,6 +74,11 @@ export const ContactPreviewCard = observer(() => {
   const formatedFollowersCount = contact?.value?.linkedInFollowerCount
     ?.toLocaleString()
     .replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  const jobRoleUseCase = useMemo(
+    () => new EditJobRole(String(contactId)),
+    [contactId],
+  );
 
   if (!contact) return null;
 
@@ -167,22 +162,16 @@ export const ContactPreviewCard = observer(() => {
             variant='unstyled'
             placeholder='Enter title'
             onFocus={(e) => e.target.select()}
-            value={findPrimaryJobRole?.jobTitle || ''}
+            value={jobRoleUseCase.getJobRole() || ''}
             className='w-[290px] overflow-hidden text-ellipsis whitespace-nowrap'
+            onChange={(e) => {
+              jobRoleUseCase.setJobRole(e.target.value);
+            }}
             onBlur={() => {
               jobRoleUseCase.submitJobRole(
                 String(contactId),
                 contact.value.primaryOrganizationId || '',
               );
-            }}
-            onChange={(e) => {
-              const newValue = e.target.value;
-
-              jobRoleUseCase.setJobRole(newValue);
-
-              if (jobRolesStore) {
-                jobRolesStore.value.jobTitle = newValue;
-              }
             }}
           />
           <div className={cn('flex items-center mb-4', countryA3 && 'gap-1')}>

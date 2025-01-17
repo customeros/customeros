@@ -17,6 +17,7 @@ export const JobTitleCell = observer(({ contactId }: JobTitleCellProps) => {
 
   const contactStore = store.contacts.value.get(contactId);
   const jobRoles = store.contacts.getById(String(contactId))?.jobRoles;
+
   const findPrimaryJobRole = jobRoles?.find(
     (j) => j.primary && j.contact?.metadata.id === contactId,
   );
