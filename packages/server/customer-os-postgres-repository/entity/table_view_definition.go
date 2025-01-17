@@ -116,6 +116,7 @@ const (
 	ColumnViewTypeContactsEmails                     ColumnViewType = "CONTACTS_EMAILS"
 	ColumnViewTypeContactsPersonalEmails             ColumnViewType = "CONTACTS_PERSONAL_EMAILS"
 	ColumnViewTypeContactsPrimaryEmail               ColumnViewType = "CONTACTS_PRIMARY_EMAIL"
+	ColumnViewTypeEmailVerificationPrimaryEmail      ColumnViewType = "EMAIL_VERIFICATION_PRIMARY_EMAIL"
 	ColumnViewTypeContactsPhoneNumbers               ColumnViewType = "CONTACTS_PHONE_NUMBERS"
 	ColumnViewTypeContactsLinkedin                   ColumnViewType = "CONTACTS_LINKEDIN"
 	ColumnViewTypeContactsCity                       ColumnViewType = "CONTACTS_CITY"

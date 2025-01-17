@@ -867,6 +867,101 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 				innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.EmailPropertyEmail), filter.Filter.Value.Str, filter.Filter.Operation))
 				primaryEmailFilter.Filters = append(contactFilter.Filters, innerGroupFilter)
 			}
+			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeEmailVerificationPrimaryEmail) {
+
+				if filter.Filter.Operation == commonmodel.ComparisonOperatorIsEmpty {
+					innerGroupFilter := new(utils.CypherFilter)
+					innerGroupFilter.Negate = false
+					innerGroupFilter.LogicalOperator = utils.AND
+					innerGroupFilter.Filters = make([]*utils.CypherFilter, 0)
+
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNull(string(neo4jentity.EmailPropertyIsFirewalled)))
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNull(string(neo4jentity.EmailPropertyIsFreeAccount)))
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNull(string(neo4jentity.EmailPropertyIsRisky)))
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNull(string(neo4jentity.EmailPropertyIsValidSyntax)))
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNull(string(neo4jentity.EmailPropertyIsMailboxFull)))
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNull(string(neo4jentity.EmailPropertyIsCatchAll)))
+
+					primaryEmailFilter.Filters = append(contactFilter.Filters, innerGroupFilter)
+				} else if filter.Filter.Operation == commonmodel.ComparisonOperatorIsNotEmpty {
+					innerGroupFilter := new(utils.CypherFilter)
+					innerGroupFilter.Negate = false
+					innerGroupFilter.LogicalOperator = utils.OR
+					innerGroupFilter.Filters = make([]*utils.CypherFilter, 0)
+
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNotNull(string(neo4jentity.EmailPropertyIsFirewalled)))
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNotNull(string(neo4jentity.EmailPropertyIsFreeAccount)))
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNotNull(string(neo4jentity.EmailPropertyIsRisky)))
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNotNull(string(neo4jentity.EmailPropertyIsValidSyntax)))
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNotNull(string(neo4jentity.EmailPropertyIsMailboxFull)))
+					innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNotNull(string(neo4jentity.EmailPropertyIsCatchAll)))
+
+					primaryEmailFilter.Filters = append(contactFilter.Filters, innerGroupFilter)
+				} else {
+					innerGroupFilter := new(utils.CypherFilter)
+					innerGroupFilter.Filters = make([]*utils.CypherFilter, 0)
+
+					if filter.Filter.Operation == commonmodel.ComparisonOperatorIn {
+						innerGroupFilter.Negate = false
+						innerGroupFilter.LogicalOperator = utils.OR
+					} else if filter.Filter.Operation == commonmodel.ComparisonOperatorNotIn {
+						innerGroupFilter.Negate = true
+						innerGroupFilter.LogicalOperator = utils.AND
+					}
+
+					if filter.Filter.Value.ArrayStr != nil {
+						for _, v := range *filter.Filter.Value.ArrayStr {
+
+							if v == "firewall_protected" {
+								innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterEq(string(neo4jentity.EmailPropertyIsFirewalled), true))
+							}
+							if v == "free_account" {
+								innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterEq(string(neo4jentity.EmailPropertyIsFreeAccount), true))
+							}
+							if v == "no_risk" {
+								innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterEq(string(neo4jentity.EmailPropertyIsRisky), false))
+							}
+							if v == "incorrect_format" {
+								innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterEq(string(neo4jentity.EmailPropertyIsValidSyntax), false))
+							}
+							if v == "invalid_mailbox" { // todo WTF is this
+
+								andFilter := new(utils.CypherFilter)
+								andFilter.Negate = false
+								andFilter.LogicalOperator = utils.AND
+								andFilter.Filters = make([]*utils.CypherFilter, 0)
+
+								andFilter.Filters = append(andFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.EmailPropertyDeliverable), "UNDELIVERABLE", commonmodel.ComparisonOperatorEquals))
+								andFilter.Filters = append(andFilter.Filters, utils.CreateCypherFilterEq(string(neo4jentity.EmailPropertyIsMailboxFull), true))
+
+								innerGroupFilter.Filters = append(innerGroupFilter.Filters, andFilter)
+							}
+							if v == "mailbox_full" {
+								innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterEq(string(neo4jentity.EmailPropertyIsMailboxFull), true))
+							}
+							if v == "catch_all" {
+								innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterEq(string(neo4jentity.EmailPropertyIsCatchAll), true))
+							}
+							if v == "not_verified" {
+								innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateCypherFilterIsNull(string(neo4jentity.EmailPropertyValidatedAt)))
+							}
+							if v == "verification_in_progress" {
+								andFilter := new(utils.CypherFilter)
+								andFilter.Negate = false
+								andFilter.LogicalOperator = utils.AND
+								andFilter.Filters = make([]*utils.CypherFilter, 0)
+
+								andFilter.Filters = append(andFilter.Filters, utils.CreateCypherFilterIsNull(string(neo4jentity.EmailPropertyValidatedAt)))
+								andFilter.Filters = append(andFilter.Filters, utils.CreateCypherFilterIsNotNull(string(neo4jentity.EmailPropertyValidationRequestedAt)))
+
+								innerGroupFilter.Filters = append(innerGroupFilter.Filters, andFilter)
+							}
+						}
+					}
+
+					primaryEmailFilter.Filters = append(contactFilter.Filters, innerGroupFilter)
+				}
+			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsCountry) {
 				createInOrEmptyStringFilter(filter, locationFilter, "countryCodeA2")
 			}
