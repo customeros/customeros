@@ -19,7 +19,7 @@ import { Social, TableViewDef, ColumnViewType } from '@graphql/types';
 import {
   OwnerCell,
   AvatarCell,
-  WebsiteCell,
+  DomainsCell,
   IndustryCell,
   OnboardingCell,
   OrganizationCell,
@@ -54,7 +54,7 @@ export const columns: Record<string, Column> = {
 
       const icon = enrichedOrg?.iconUrl;
       const logo = enrichedOrg?.logoUrl;
-      const description = enrichedOrg?.valueProposition;
+      const description = enrichedOrg?.description;
       const isEnriching = props.getValue()?.isEnriching;
 
       return (
@@ -90,24 +90,24 @@ export const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
   }),
-  [ColumnViewType.OrganizationsWebsite]: columnHelper.accessor(
-    'value.website',
+  [ColumnViewType.OrganizationsPrimaryDomains]: columnHelper.accessor(
+    'value.domainsDetails',
     {
-      id: ColumnViewType.OrganizationsWebsite,
-      minSize: 92,
-      maxSize: 400,
+      id: ColumnViewType.OrganizationsPrimaryDomains,
+      minSize: 152,
+      maxSize: 500,
       enableColumnFilter: false,
       enableResizing: true,
       enableSorting: false,
       cell: (props) => {
         const organizationId = props.row.original.value.id;
 
-        return <WebsiteCell organizationId={organizationId} />;
+        return <DomainsCell organizationId={organizationId} />;
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          title='Website'
-          id={ColumnViewType.OrganizationsWebsite}
+          title='Primary Domains'
+          id={ColumnViewType.OrganizationsPrimaryDomains}
           {...getTHeadProps<Organization>(props)}
         />
       ),
@@ -535,7 +535,7 @@ export const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
   [ColumnViewType.OrganizationsIndustry]: columnHelper.accessor(
-    'value.industry',
+    'value.industryName',
     {
       id: ColumnViewType.OrganizationsIndustry,
       minSize: 95,

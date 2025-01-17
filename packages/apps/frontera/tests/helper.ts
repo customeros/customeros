@@ -65,6 +65,20 @@ export async function ensureLocatorIsVisible(
   return locator;
 }
 
+export async function ensureFirstLocatorIsVisible(
+  page: Page,
+  selector: string,
+): Promise<Locator> {
+  const locator = page.locator(selector).first();
+
+  await locator.waitFor({ state: 'attached', timeout: 15000 });
+  await expect(locator).toBeVisible({ timeout: 15000 });
+
+  await expect(locator).toBeEnabled({ timeout: 5000 });
+
+  return locator;
+}
+
 export async function ensureLocatorIsVisibleWithIndex(
   page: Page,
   selector: string,
@@ -121,6 +135,25 @@ export async function clickLocatorsThatAreVisible(
 
 export async function clickLocatorThatIsVisible(page: Page, selector: string) {
   const locator = await ensureLocatorIsVisible(page, selector);
+
+  // Add stability delay after ensuring visibility
+  await page.waitForTimeout(300);
+
+  try {
+    await locator.click({ timeout: 5000 });
+  } catch (error) {
+    await page.waitForTimeout(500);
+    await locator.click({ force: true, timeout: 5000 });
+  }
+
+  return locator;
+}
+
+export async function clickFirstLocatorThatIsVisible(
+  page: Page,
+  selector: string,
+) {
+  const locator = await ensureFirstLocatorIsVisible(page, selector);
 
   // Add stability delay after ensuring visibility
   await page.waitForTimeout(300);
@@ -192,11 +225,37 @@ export async function clickLocatorThatIsVisibleAndHasText(
   await page.click(selector);
 }
 
+interface Variables {
+  [key: string]: unknown;
+  input?: {
+    name?: string;
+    [key: string]: string | number | boolean | object | undefined;
+  };
+}
+
 export function createRequestPromise(
   page: Page,
   expectedKey: string,
   expectedValue: string | number,
 ) {
+  const getValueFromPath = (
+    data: Variables,
+    key: string,
+  ): string | number | undefined => {
+    if (key.includes('?.')) {
+      const path = key.split('?.');
+      let value: unknown = data;
+
+      for (const k of path) {
+        value = (value as Record<string, unknown>)?.[k];
+      }
+
+      return value as string | number | undefined;
+    }
+
+    return data?.[key] as string | number | undefined;
+  };
+
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(
@@ -219,7 +278,8 @@ export function createRequestPromise(
               const parsedData = JSON.parse(postData);
 
               return (
-                parsedData.variables?.input?.[expectedKey] === expectedValue
+                getValueFromPath(parsedData.variables, expectedKey) ===
+                expectedValue
               );
             }
           }

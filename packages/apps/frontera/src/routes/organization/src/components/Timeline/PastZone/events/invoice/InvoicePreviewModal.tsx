@@ -37,7 +37,7 @@ export const InvoicePreviewModal = observer(() => {
             number={invoice?.value?.invoiceNumber}
           />
 
-          <div className='flex justify-end items-center'>
+          <div className='flex justify-end items-baseline'>
             <Tooltip side='bottom' asChild={false} label='Copy invoice link'>
               <IconButton
                 size='xs'

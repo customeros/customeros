@@ -50,16 +50,6 @@ export const ContactBulkCommands = observer(() => {
           Add to flow...
         </CommandItem>
         <AddContactFlowSubItemGroup />
-
-        <CommandItem
-          leftAccessory={<Certificate02 />}
-          keywords={contactKeywords.edit_job_title}
-          onSelect={() => {
-            store.ui.commandMenu.setType('EditJobTitle');
-          }}
-        >
-          Edit job title
-        </CommandItem>
         <CommandItem
           leftAccessory={<Certificate02 />}
           onSelect={() => {

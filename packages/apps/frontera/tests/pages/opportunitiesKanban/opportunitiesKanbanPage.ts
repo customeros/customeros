@@ -341,7 +341,7 @@ export class OpportunitiesKanbanPage {
 
     const requestPromise = createRequestPromise(
       this.page,
-      'name',
+      'input?.name',
       opportunityName,
     );
 

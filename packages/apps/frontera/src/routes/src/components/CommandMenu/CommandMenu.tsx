@@ -37,6 +37,8 @@ import {
   ChangeStage,
   EditJobTitle,
   EditTimeZone,
+  AddNewDomain,
+  RemoveDomain,
   CreateNewFlow,
   FlowsCommands,
   DuplicateFlow,
@@ -125,6 +127,8 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   // Organization
   OrganizationHub: <OrganizationHub />,
   OrganizationBulkCommands: <OrganizationBulkCommands />,
+  AddNewDomain: <AddNewDomain />,
+  RemoveDomain: <RemoveDomain />,
   OrganizationCommands: <OrganizationCommands />,
   ChangeBulkArrEstimate: <ChangeBulkArrEstimate />,
   MergeConfirmationModal: <MergeConfirmationModal />,

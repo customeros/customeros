@@ -1,9 +1,9 @@
-import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
 
-import { set } from 'lodash';
 import { observer } from 'mobx-react-lite';
 import { TagDatum } from '@store/Tags/Tag.store';
+import { AddJobRole } from '@domain/usecases/people-contact-card/add-jobrole.usecase';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
@@ -21,8 +21,10 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { getFormattedLink } from '@utils/getExternalLink';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
+import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { LinkedInSolid02 } from '@ui/media/icons/LinkedInSolid02';
+import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import {
   Tag,
   DataSource,
@@ -45,12 +47,25 @@ interface ContactCardProps {
   id: string;
   expandAll: boolean;
 }
+
+const jobRoleUseCase = new AddJobRole();
+
 export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
   const store = useStore();
-  const { dispatchEvent } = useEvent('openEmailEditor');
   const [isExpanded, setIsExpanded] = useState(false);
+  const { dispatchEvent } = useEvent('openEmailEditor');
   const { onOpen, onClose, open } = useDisclosure();
+  const orgId = useParams()?.id as string;
   const contactStore = store.contacts.getById(id);
+  const jobRoles = store.contacts.getById(id)?.jobRoles;
+
+  const [_, copyToClipboard] = useCopyToClipboard();
+
+  const findPrimaryJobRole = jobRoles?.find(
+    (j) => j.primary && j.contact?.metadata.id === id,
+  );
+
+  const jobRoleStore = store.jobRoles.getById(findPrimaryJobRole?.id || '');
 
   const handleCreateOption = (value: string) => {
     store.tags?.create(
@@ -103,8 +118,6 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
     contactStore?.value.emails.find((e) => e.primary)?.email ??
     contactStore?.value.emails[0]?.email;
 
-  const jobTitle = contactStore?.value.primaryOrganizationJobRoleTitle;
-
   const isEnriching = contactStore?.isEnriching;
 
   if (!contactStore) return null;
@@ -119,7 +132,7 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
         className={cn(
           isExpanded ? 'bg-white' : 'border-transparent',
           !isExpanded && 'cursor-pointer',
-          'px-2 pb-2.5 pt-0.5  max-w-[400px]',
+          'px-2 pb-2.5 pt-0.5 group-hover/card:border-gray-200 group-hover/card:bg-white max-w-[400px]',
         )}
       >
         <CardHeader style={{ paddingBottom: !isExpanded ? '0' : '8px' }}>
@@ -243,13 +256,13 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                   <p
                     className={cn(
                       'text-sm line-clamp-1 cursor-default',
-                      !jobTitle && 'text-gray-400',
+                      !findPrimaryJobRole?.jobTitle && 'text-gray-400',
                       !isExpanded && 'cursor-pointer',
                     )}
                   >
                     {isEnriching
                       ? 'Getting job title...'
-                      : jobTitle || 'No job title yet'}
+                      : findPrimaryJobRole?.jobTitle || 'No job title yet'}
                   </p>
                 ) : (
                   <Input
@@ -258,22 +271,23 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                     onFocus={(e) => e.target.select()}
                     dataTest='org-people-contact-title'
                     onKeyDown={(e) => e.stopPropagation()}
+                    onBlur={() => {
+                      jobRoleUseCase.submitJobRole(id, orgId);
+                    }}
                     value={
-                      contactStore.value.primaryOrganizationJobRoleTitle || ''
+                      findPrimaryJobRole?.jobTitle || jobRoleUseCase.jobRole
                     }
                     placeholder={
                       isEnriching ? 'Getting job title...' : 'No job title yet'
                     }
-                    onBlur={() => {
-                      contactStore.draft();
-                      contactStore.commit();
-                    }}
                     onChange={(e) => {
-                      set(
-                        contactStore.value,
-                        'primaryOrganizationJobRoleTitle',
-                        e.target.value,
-                      );
+                      const newValue = e.target.value;
+
+                      jobRoleUseCase.setJobRole(newValue);
+
+                      if (jobRoleStore) {
+                        findPrimaryJobRole!.jobTitle = newValue;
+                      }
                     }}
                   />
                 )}
@@ -291,34 +305,48 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
             )}
             <EmailsSection contactId={id} />
 
-            <div className='flex items-center max-h-6'>
+            <div className='flex items-center  max-h-6 group/linkedin'>
               <Linkedin className='text-gray-500 mr-4' />
-
-              {linkedInProfile ? (
-                <Link
-                  target='_blank'
-                  to={linkedInProfile || ''}
-                  className='cursor-pointer no-underline hover:no-underline'
-                >
+              <div className='flex items-start justify-between w-full'>
+                {linkedInProfile ? (
                   <p
                     className={cn(
                       'text-sm cursor-pointer w-[300px] truncate no-underline hover:no-underline',
                     )}
+                    onClick={() =>
+                      copyToClipboard(
+                        linkedInProfile,
+                        'LinkedIn profile copied',
+                      )
+                    }
                   >
-                    {formattedLink ?? 'LinkedIn profile URL'}
+                    {formattedLink}
                   </p>
-                </Link>
-              ) : (
-                <p
-                  onClick={() => onOpen()}
-                  className={cn(
-                    'text-sm cursor-pointer w-[300px] truncate no-underline hover:no-underline',
-                    'text-gray-400',
-                  )}
-                >
-                  {'LinkedIn profile URL'}
-                </p>
-              )}
+                ) : (
+                  <p
+                    onClick={() => onOpen()}
+                    data-test='org-people-linkedin'
+                    className={cn(
+                      'text-sm cursor-pointer w-[300px] truncate no-underline hover:no-underline',
+                      'text-gray-400',
+                    )}
+                  >
+                    {'LinkedIn profile URL'}
+                  </p>
+                )}
+                {linkedInProfile && (
+                  <Link target='_blank' to={linkedInProfile || ''}>
+                    <IconButton
+                      size='xxs'
+                      variant='ghost'
+                      colorScheme='gray'
+                      aria-label='social link'
+                      icon={<LinkExternal02 className='text-gray-500' />}
+                      className='hover:bg-gray-200 opacity-0 group-hover/linkedin:opacity-100'
+                    />
+                  </Link>
+                )}
+              </div>
             </div>
 
             <Tags

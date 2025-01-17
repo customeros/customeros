@@ -6,7 +6,6 @@ import { ColumnViewType } from '@graphql/types';
 export const csvDataMapper = {
   [ColumnViewType.OrganizationsAvatar]: (d: Organization) => d?.value?.logoUrl,
   [ColumnViewType.OrganizationsName]: (d: Organization) => d.value?.name,
-  [ColumnViewType.OrganizationsWebsite]: (d: Organization) => d.value?.website,
   [ColumnViewType.OrganizationsRelationship]: (d: Organization) =>
     d.value?.relationship,
   [ColumnViewType.OrganizationsUpdatedDate]: (d: Organization) =>
@@ -40,6 +39,11 @@ export const csvDataMapper = {
     d.value?.employees,
   [ColumnViewType.OrganizationsSocials]: (d: Organization) =>
     d.value?.socialMedia.find((e) => e?.url?.includes('linkedin'))?.url,
+  [ColumnViewType.OrganizationsPrimaryDomains]: (d: Organization) =>
+    d.value?.domainsDetails
+      .filter((e) => e.primary)
+      ?.map((e) => e.domain)
+      .join('; '),
 
   [ColumnViewType.OrganizationsLastTouchpoint]: (d: Organization) =>
     `${d?.value?.lastTouchPointType} - ${DateTimeUtils.format(
@@ -56,7 +60,7 @@ export const csvDataMapper = {
       : 'Unknown',
   [ColumnViewType.OrganizationsLtv]: (d: Organization) => d?.value?.ltv,
   [ColumnViewType.OrganizationsIndustry]: (d: Organization) =>
-    d.value?.industry ?? 'Unknown',
+    d.value?.industryName ?? 'Unknown',
   [ColumnViewType.OrganizationsContactCount]: (d: Organization) =>
     d?.contacts?.length,
   [ColumnViewType.OrganizationsLinkedinFollowerCount]: (d: Organization) =>

@@ -43,7 +43,7 @@ export const StartFlow = observer(() => {
           <CommandCancelIconButton onClose={handleClose} />
         </div>
 
-        <p className='text-sm mt-2'>
+        <div className='text-sm mt-2'>
           Making this flow live will trigger it for{' '}
           {flow?.value.participants?.length}{' '}
           {flow?.value.participants?.length === 1 ? 'contact' : 'contacts'}{' '}
@@ -52,7 +52,7 @@ export const StartFlow = observer(() => {
           <p className='mt-2'>
             We will automatically save your latest changes.
           </p>
-        </p>
+        </div>
         <div className='flex justify-between gap-3 mt-6'>
           <CommandCancelButton onClose={handleClose} />
 

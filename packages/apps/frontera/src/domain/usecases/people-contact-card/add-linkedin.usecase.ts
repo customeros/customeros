@@ -11,6 +11,7 @@ export class LinkedIn {
   @observable accessor emptyLinkedInUrl: boolean = false;
   @observable accessor invalidLinkedInUrl: boolean = false;
   @observable accessor error: string = '';
+  @observable accessor errorsTriggered: boolean = false;
 
   constructor() {
     this.setInputValue = this.setInputValue.bind(this);
@@ -92,10 +93,27 @@ export class LinkedIn {
     this.inputValue = '';
     this.emptyLinkedInUrl = false;
     this.invalidLinkedInUrl = false;
+    this.errorsTriggered = false;
+  }
+
+  @action
+  resetErrors() {
+    this.error = '';
+    this.emptyLinkedInUrl = false;
+    this.invalidLinkedInUrl = false;
+  }
+
+  @action
+  async getErrors() {
+    if (!this.errorsTriggered) return false;
+
+    return !!(this.validateLinkedInUrl() || (await this.error));
   }
 
   @action
   async submitLinkedInUrl() {
+    this.errorsTriggered = true;
+
     if (this.validateLinkedInUrl()) return;
     await this.checkIfLinkedInUrlExists(this.linkedInUrl);
 

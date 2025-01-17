@@ -1,0 +1,5 @@
+mutation removeDomain($organizationId: ID!, $domain: String!) {
+  organization_RemoveDomain(organizationId: $organizationId, domain: $domain) {
+    accepted
+  }
+}

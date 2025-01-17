@@ -56,6 +56,28 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     });
   };
 
+  public setView = async (
+    key: string,
+    filterFn: (records: Contact[]) => Contact[],
+  ) => {
+    const ids = this.searchResults.get(key);
+    const cursor = this.cursors.get(key) ?? 0;
+    const chunkedIds = (ids ?? []).slice(
+      0,
+      this.chunkSize * cursor + this.chunkSize,
+    );
+
+    const records: Contact[] = [];
+
+    chunkedIds.forEach((id) => {
+      if (this.value?.has(id)) {
+        records.push(this.value.get(id) as Contact);
+      }
+    });
+
+    this.views.set(key, filterFn(records));
+  };
+
   public getById(id: string) {
     if (!this.value || typeof id !== 'string') return null;
 
@@ -153,8 +175,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     }
   }
 
-  @action
-  async retrieve(ids: string[]) {
+  async preload(ids: string[]) {
     ids.forEach((id) => {
       if (this.value.has(id)) {
         return;
@@ -163,10 +184,21 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       this.value.set(id, new Contact(this, Contact.default({ id })));
     });
 
+    this.retrieve(ids);
+  }
+
+  @action
+  async retrieve(ids: string[]) {
     try {
       const { ui_contacts } = await this.service.getContactsByIds({
         ids,
       });
+
+      const jobRoleIds = ui_contacts?.reduce(
+        (acc, curr) =>
+          curr?.jobRoleIds?.length ? (acc = [...acc, ...curr.jobRoleIds]) : acc,
+        [] as string[],
+      );
 
       runInAction(() => {
         ui_contacts.forEach((raw) => {
@@ -187,6 +219,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
         this.size = this.value.size;
         this.version++;
       });
+      await this.root.jobRoles.retrieveJobRoles(jobRoleIds);
     } catch (err) {
       runInAction(() => {
         ids.forEach((id) => {
@@ -434,84 +467,6 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
   }
 
   @action
-  async createWithoutOrg({
-    socialUrl,
-    options,
-  }: {
-    socialUrl: string;
-    options?: {
-      onSuccess?: (serverId: string) => void;
-    };
-  }) {
-    this.isLoading = true;
-
-    const newContact = new Contact(this, Contact.default());
-    const tempId = newContact.id;
-    const socialId = crypto.randomUUID();
-    let serverId: string | undefined = undefined;
-
-    (newContact.value = {
-      id: socialId,
-      firstName: '',
-      lastName: '',
-      name: '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      flows: [],
-      locations: [],
-      emails: [],
-      connectedUsers: [],
-      tags: [],
-      enrichedEmailEnrichedAt: null,
-      enrichedEmailFound: null,
-      enrichedFailedAt: null,
-      enrichedAt: null,
-      description: '',
-      phones: [],
-      prefix: '',
-      timezone: '',
-      profilePhotoUrl: '',
-    }),
-      this.value.set(tempId, newContact);
-
-    try {
-      const { contact_Create } = await this.service.createContact({
-        contactInput: {
-          socialUrl,
-        },
-      });
-
-      runInAction(() => {
-        serverId = contact_Create;
-        newContact.id = serverId;
-        this.value.set(serverId, newContact);
-        this.value.delete(tempId);
-
-        this.sync({ action: 'APPEND', ids: [serverId] });
-        this.isLoading = false;
-      });
-
-      this.root.ui.toastSuccess(`Contact created`, 'create-contact-success');
-    } catch (e) {
-      this.root.ui.toastError(
-        `We couldn't create this contact. Please try again.`,
-        'create-contact-error',
-      );
-      runInAction(() => {
-        this.error = (e as Error)?.message;
-      });
-    } finally {
-      serverId && options?.onSuccess?.(serverId);
-
-      setTimeout(() => {
-        if (serverId) {
-          this.value.get(serverId)?.invalidate();
-        }
-      }, 2000);
-    }
-  }
-
-  @action
   async createBulkByEmail({
     emails,
     options,
@@ -552,6 +507,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
         this.isBootstrapped = false;
         this.bootstrap();
       }, 300);
+      this.refreshCurrentView();
     }
   }
 
@@ -596,6 +552,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
         this.isBootstrapped = false;
         this.bootstrap();
       }, 300);
+      this.refreshCurrentView();
     }
   }
 
@@ -711,4 +668,14 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       }
     });
   };
+
+  private refreshCurrentView() {
+    const currentPreset = new URLSearchParams(window.location.search).get(
+      'preset',
+    );
+
+    if (currentPreset) {
+      this.search(currentPreset);
+    }
+  }
 }

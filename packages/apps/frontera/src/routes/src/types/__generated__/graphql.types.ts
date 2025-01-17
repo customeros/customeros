@@ -393,6 +393,7 @@ export enum ColumnViewType {
   OrganizationsOnboardingStatus = 'ORGANIZATIONS_ONBOARDING_STATUS',
   OrganizationsOwner = 'ORGANIZATIONS_OWNER',
   OrganizationsParentOrganization = 'ORGANIZATIONS_PARENT_ORGANIZATION',
+  OrganizationsPrimaryDomains = 'ORGANIZATIONS_PRIMARY_DOMAINS',
   OrganizationsRelationship = 'ORGANIZATIONS_RELATIONSHIP',
   OrganizationsRenewalDate = 'ORGANIZATIONS_RENEWAL_DATE',
   OrganizationsRenewalLikelihood = 'ORGANIZATIONS_RENEWAL_LIKELIHOOD',
@@ -621,6 +622,7 @@ export type ContactUiDetails = {
   flows: Array<Scalars['ID']['output']>;
   hide: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
+  jobRoleIds: Array<Scalars['ID']['output']>;
   lastName: Scalars['String']['output'];
   linkedInAlias?: Maybe<Scalars['String']['output']>;
   linkedInExternalId?: Maybe<Scalars['String']['output']>;
@@ -1362,6 +1364,7 @@ export type Domain = {
 export type DomainCheckDetails = {
   __typename?: 'DomainCheckDetails';
   accessible: Scalars['Boolean']['output'];
+  allowedForOrganization: Scalars['Boolean']['output'];
   domain: Scalars['String']['output'];
   domainOrganizationId?: Maybe<Scalars['String']['output']>;
   domainOrganizationName?: Maybe<Scalars['String']['output']>;
@@ -1619,6 +1622,7 @@ export type Flow = MetadataInterface & {
   senders: Array<FlowSender>;
   statistics: FlowStatistics;
   status: FlowStatus;
+  tableViewDefId: Scalars['String']['output'];
 };
 
 export type FlowAction = {
@@ -1841,6 +1845,12 @@ export type GlobalOrganization = {
   organizationId?: Maybe<Scalars['ID']['output']>;
   primaryDomain: Scalars['String']['output'];
   website: Scalars['String']['output'];
+};
+
+export type Industry = {
+  __typename?: 'Industry';
+  code: Scalars['String']['output'];
+  name: Scalars['String']['output'];
 };
 
 export type InteractionEvent = Node & {
@@ -2111,10 +2121,6 @@ export type IssueSummaryByStatus = {
   status: Scalars['String']['output'];
 };
 
-/**
- * Describes the relationship a Contact has with a Organization.
- * **A `return` object**
- */
 export type JobRole = {
   __typename?: 'JobRole';
   appSource: Scalars['String']['output'];
@@ -2124,12 +2130,7 @@ export type JobRole = {
   description?: Maybe<Scalars['String']['output']>;
   endedAt?: Maybe<Scalars['Time']['output']>;
   id: Scalars['ID']['output'];
-  /** The Contact's job title. */
   jobTitle?: Maybe<Scalars['String']['output']>;
-  /**
-   * Organization associated with a Contact.
-   * **Required.**
-   */
   organization?: Maybe<Organization>;
   primary: Scalars['Boolean']['output'];
   source: DataSource;
@@ -2137,10 +2138,6 @@ export type JobRole = {
   updatedAt: Scalars['Time']['output'];
 };
 
-/**
- * Describes the relationship a Contact has with an Organization.
- * **A `create` object**
- */
 export type JobRoleInput = {
   appSource?: InputMaybe<Scalars['String']['input']>;
   company?: InputMaybe<Scalars['String']['input']>;
@@ -2158,10 +2155,18 @@ export type JobRoleParticipant = {
   type?: Maybe<Scalars['String']['output']>;
 };
 
-/**
- * Describes the relationship a Contact has with an Organization.
- * **A `create` object**
- */
+export type JobRoleSaveInput = {
+  company?: InputMaybe<Scalars['String']['input']>;
+  contactId?: InputMaybe<Scalars['ID']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  endedAt?: InputMaybe<Scalars['Time']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  jobTitle?: InputMaybe<Scalars['String']['input']>;
+  organizationId?: InputMaybe<Scalars['ID']['input']>;
+  primary?: InputMaybe<Scalars['Boolean']['input']>;
+  startedAt?: InputMaybe<Scalars['Time']['input']>;
+};
+
 export type JobRoleUpdateInput = {
   company?: InputMaybe<Scalars['String']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
@@ -2524,8 +2529,12 @@ export type Mutation = {
   invoice_Simulate: Array<InvoiceSimulate>;
   invoice_Update: Invoice;
   invoice_Void: Invoice;
+  /** @deprecated No longer supported */
   jobRole_Create: JobRole;
+  /** @deprecated No longer supported */
   jobRole_Delete: Result;
+  jobRole_Save: Scalars['ID']['output'];
+  /** @deprecated No longer supported */
   jobRole_Update: JobRole;
   location_RemoveFromContact: Contact;
   location_RemoveFromOrganization: Organization;
@@ -2975,6 +2984,10 @@ export type MutationJobRole_DeleteArgs = {
   roleId: Scalars['ID']['input'];
 };
 
+export type MutationJobRole_SaveArgs = {
+  input?: InputMaybe<JobRoleSaveInput>;
+};
+
 export type MutationJobRole_UpdateArgs = {
   contactId: Scalars['ID']['input'];
   input: JobRoleUpdateInput;
@@ -3183,6 +3196,7 @@ export type MutationOrganization_SaveArgs = {
 
 export type MutationOrganization_SaveByGlobalOrganizationArgs = {
   globalOrganizationId: Scalars['Int64']['input'];
+  input?: InputMaybe<OrganizationSaveInputFromGlobalOrg>;
 };
 
 export type MutationOrganization_SetOwnerArgs = {
@@ -3570,7 +3584,9 @@ export type Organization = MetadataInterface & {
    */
   id: Scalars['ID']['output'];
   inboundCommsCount: Scalars['Int64']['output'];
+  /** @deprecated No longer supported */
   industry?: Maybe<Scalars['String']['output']>;
+  /** @deprecated No longer supported */
   industryGroup?: Maybe<Scalars['String']['output']>;
   /**
    * Deprecated, use relationship instead
@@ -3645,6 +3661,7 @@ export type Organization = MetadataInterface & {
   sourceOfTruth: DataSource;
   stage?: Maybe<OrganizationStage>;
   stageLastUpdated?: Maybe<Scalars['Time']['output']>;
+  /** @deprecated No longer supported */
   subIndustry?: Maybe<Scalars['String']['output']>;
   subsidiaries: Array<LinkedOrganization>;
   /**
@@ -3654,6 +3671,7 @@ export type Organization = MetadataInterface & {
   subsidiaryOf: Array<LinkedOrganization>;
   suggestedMergeTo: Array<SuggestedMergeOrganization>;
   tags?: Maybe<Array<Tag>>;
+  /** @deprecated No longer supported */
   targetAudience?: Maybe<Scalars['String']['output']>;
   timelineEvents: Array<TimelineEvent>;
   timelineEventsTotalCount: Scalars['Int64']['output'];
@@ -3662,6 +3680,7 @@ export type Organization = MetadataInterface & {
    * @deprecated Use metadata.lastUpdated
    */
   updatedAt: Scalars['Time']['output'];
+  /** @deprecated No longer supported */
   valueProposition?: Maybe<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
   yearFounded?: Maybe<Scalars['Int64']['output']>;
@@ -3777,6 +3796,11 @@ export type OrganizationSaveInput = {
   yearFounded?: InputMaybe<Scalars['Int64']['input']>;
 };
 
+export type OrganizationSaveInputFromGlobalOrg = {
+  relationship?: InputMaybe<OrganizationRelationship>;
+  stage?: InputMaybe<OrganizationStage>;
+};
+
 export type OrganizationSearchResult = {
   __typename?: 'OrganizationSearchResult';
   ids: Array<Scalars['ID']['output']>;
@@ -3822,7 +3846,10 @@ export type OrganizationUiDetails = {
   hide: Scalars['Boolean']['output'];
   iconUrl?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  /** @deprecated Use industryCode */
   industry?: Maybe<Scalars['String']['output']>;
+  industryCode?: Maybe<Scalars['String']['output']>;
+  industryName?: Maybe<Scalars['String']['output']>;
   lastFundingRound?: Maybe<FundingRound>;
   lastTouchPointAt?: Maybe<Scalars['Time']['output']>;
   lastTouchPointType?: Maybe<LastTouchpointType>;
@@ -3852,6 +3879,7 @@ export type OrganizationUiDetails = {
   subsidiaries: Array<Scalars['String']['output']>;
   tags: Array<Tag>;
   updatedAt: Scalars['Time']['output'];
+  /** @deprecated No longer supported */
   valueProposition?: Maybe<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
   yearFounded?: Maybe<Scalars['Int64']['output']>;
@@ -4070,11 +4098,13 @@ export type Query = {
   gcli_Search: Array<GCliItem>;
   globalOrganizations_Search: Array<GlobalOrganization>;
   global_Cache: GlobalCache;
+  industries_InUse: Array<Industry>;
   interactionEvent: InteractionEvent;
   invoice: Invoice;
   invoice_ByNumber: Invoice;
   invoices: InvoicesPage;
   issue: Issue;
+  jobRoles: Array<JobRole>;
   logEntry: LogEntry;
   mailstack_CheckUnavailableDomains: Array<Scalars['String']['output']>;
   mailstack_DomainPurchaseSuggestions: Array<Scalars['String']['output']>;
@@ -4253,6 +4283,10 @@ export type QueryInvoicesArgs = {
 
 export type QueryIssueArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type QueryJobRolesArgs = {
+  ids: Array<Scalars['ID']['input']>;
 };
 
 export type QueryLogEntryArgs = {

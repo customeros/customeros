@@ -114,7 +114,18 @@ export class TableViewDefStore extends Store<TableViewDefDatum, TableViewDef> {
   }
 
   get teamPresets() {
-    return this.toArray().filter((p) => p.value.isShared && !p.value.isPreset);
+    return this.toArray().filter(
+      (p) =>
+        p.value.isShared &&
+        !p.value.isPreset &&
+        p.value.tableId !== TableIdType.FlowContacts,
+    );
+  }
+
+  get flowContactsPresets() {
+    return this.toArray().filter(
+      (p) => p.value.tableId === TableIdType.FlowContacts,
+    );
   }
 
   public getById(id: string) {

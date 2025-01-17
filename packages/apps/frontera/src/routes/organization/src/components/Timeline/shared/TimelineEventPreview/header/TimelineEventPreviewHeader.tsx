@@ -1,4 +1,4 @@
-import { escapeForSlackWithMarkdown } from 'slack-to-html';
+import markdownToTxt from 'markdown-to-txt';
 
 import { DateTimeUtils } from '@utils/date';
 import { XClose } from '@ui/media/icons/XClose';
@@ -10,7 +10,6 @@ import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 interface TimelineEventPreviewHeaderProps {
   name: string;
   date?: string;
-  parse?: 'slack';
   copyLabel: string;
   onClose: () => void;
   children?: React.ReactNode;
@@ -22,12 +21,9 @@ export const TimelineEventPreviewHeader = ({
   onClose,
   copyLabel,
   children,
-  parse,
 }: TimelineEventPreviewHeaderProps) => {
   const [_, copy] = useCopyToClipboard();
-
-  const parsedName =
-    parse === 'slack' ? escapeForSlackWithMarkdown(name) : name;
+  const parsedName = markdownToTxt(name);
 
   return (
     <div
@@ -36,16 +32,11 @@ export const TimelineEventPreviewHeader = ({
     >
       <div>
         <div className='flex justify-between '>
-          <span
-            className='text-lg font-semibold text-gray-700'
-            dangerouslySetInnerHTML={
-              parse === 'slack' ? { __html: parsedName } : undefined
-            }
-          >
-            {parse !== 'slack' ? name : null}
+          <span className='text-lg font-semibold text-gray-700'>
+            {parsedName}
           </span>
 
-          <div className='flex justify-end items-center'>
+          <div className='flex justify-end items-baseline'>
             {children}
             <Tooltip side='bottom' asChild={false} label={copyLabel}>
               <div>
@@ -56,7 +47,7 @@ export const TimelineEventPreviewHeader = ({
                   colorScheme='gray'
                   aria-label={copyLabel}
                   onClick={() => copy(window.location.href)}
-                  icon={<Link01 height='18px' color='gray.500' />}
+                  icon={<Link01 className='text-gray-500' />}
                 />
               </div>
             </Tooltip>
@@ -68,7 +59,7 @@ export const TimelineEventPreviewHeader = ({
                   onClick={onClose}
                   colorScheme='gray'
                   aria-label='Close preview'
-                  icon={<XClose height='24px' color='gray.500' />}
+                  icon={<XClose className='text-gray-500' />}
                 />
               </div>
             </Tooltip>

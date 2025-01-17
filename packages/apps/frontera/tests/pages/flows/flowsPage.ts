@@ -73,7 +73,11 @@ export class FlowsPage {
 
     const flowName = createTinyUUID();
 
-    const requestPromise = createRequestPromise(this.page, 'name', flowName);
+    const requestPromise = createRequestPromise(
+      this.page,
+      'input?.name',
+      flowName,
+    );
 
     const responsePromise = createResponsePromise(
       this.page,

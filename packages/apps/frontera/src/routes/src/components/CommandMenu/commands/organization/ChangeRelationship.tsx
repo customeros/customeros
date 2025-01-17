@@ -123,6 +123,7 @@ export const ChangeRelationship = observer(() => {
           <CommandItem
             key={option.value}
             onSelect={handleSelect(option.value)}
+            data-test={`org-dashboard-relationship-${option.value}`}
             rightAccessory={
               selectedRelationshipOption?.value === option.value ? (
                 <Check />

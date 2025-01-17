@@ -17,7 +17,9 @@ import { ContactsStore } from './Contacts/Contacts.store';
 import { MailboxesStore } from './Settings/Mailboxes.store';
 import { ContractsStore } from './Contracts/Contracts.store';
 import { RemindersStore } from './Reminders/Reminders.store';
+import { JobRolesStore } from './JobRoles/JobRoles.store.ts';
 import { CustomFieldsStore } from './Settings/CustomFields.store';
+import { IndustriesStore } from './Industries/Industries.store.ts';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
 import { FlowSendersStore } from './FlowSenders/FlowSenders.store.ts';
 import { TableViewDefStore } from './TableViewDefs/TableViewDef.store';
@@ -53,12 +55,14 @@ export class RootStore {
   customFields: CustomFieldsStore;
   tableViewDefs: TableViewDefStore;
   organizations: OrganizationsStore;
+  industries: IndustriesStore;
   opportunities: OpportunitiesStore;
   timelineEvents: TimelineEventsStore;
   contractLineItems: ContractLineItemsStore;
   flowEmailVariables: FlowEmailVariablesStore;
   mailboxes: MailboxesStore;
   externalSystemInstances: ExternalSystemInstancesStore;
+  jobRoles: JobRolesStore;
 
   static instance: RootStore;
 
@@ -76,9 +80,11 @@ export class RootStore {
     this.users = new UsersStore(this, this.transport);
     this.flows = new FlowsStore(this, this.transport);
     this.session = new SessionStore(this, this.transport);
+    this.industries = new IndustriesStore(this, this.transport);
     this.settings = new SettingsStore(this, this.transport);
     this.mailboxes = new MailboxesStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
+    this.jobRoles = new JobRolesStore(this, this.transport);
     this.contacts = new ContactsStore(this, this.transport);
     this.contracts = new ContractsStore(this, this.transport);
     this.reminders = new RemindersStore(this, this.transport);
@@ -118,6 +124,7 @@ export class RootStore {
     await Promise.all([
       this.tableViewDefs.bootstrap(),
       this.globalCache.bootstrap(),
+      this.industries.bootstrap(),
       this.settings.bootstrap(),
       this.customFields.bootstrap(),
       this.mailboxes.bootstrap(),
