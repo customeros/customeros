@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
@@ -12,7 +12,6 @@ interface SocialsCellProps {
 export const OrganizationLinkedInCell = observer(
   ({ organizationId }: SocialsCellProps) => {
     const store = useStore();
-    const [metaKey, setMetaKey] = useState(false);
     const organization = store.organizations.getById(organizationId);
 
     const linkedIn = organization?.value?.socialMedia.find((social) =>
@@ -42,22 +41,12 @@ export const OrganizationLinkedInCell = observer(
       : '';
 
     return (
-      <div
-        className='flex items-center cursor-pointer'
-        onKeyUp={() => metaKey && setMetaKey(false)}
-        onKeyDown={(e) => e.metaKey && setMetaKey(true)}
-        onClick={(e) => {
-          if (e.metaKey) {
-            e.stopPropagation();
-            window.open(url, '_blank', 'noopener');
-
-            return;
-          }
-          store.ui.commandMenu.setType('EditCompanyLinkedin');
-          store.ui.commandMenu.setOpen(true);
-        }}
-      >
-        <p className='text-gray-700 truncate'>{displayLink}</p>
+      <div className='flex items-center cursor-pointer'>
+        <Link to={url} target='_blank' className='flex items-center'>
+          <p className='text-gray-700 truncate hover:underline'>
+            {displayLink}
+          </p>
+        </Link>
       </div>
     );
   },
