@@ -30,7 +30,7 @@ import (
 type OrganizationService interface {
 	GetById(ctx context.Context, tenant, organizationId string) (*neo4jentity.OrganizationEntity, error)
 
-	CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64) (string, error)
+	CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64, dataFields data_fields.OrganizationFields) (string, error)
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.OrganizationFields) (string, error)
 	LinkWithDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) (bool, error)
 	UnlinkDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId, domain string) error
@@ -63,7 +63,7 @@ func NewOrganizationService(services *Services) OrganizationService {
 	}
 }
 
-func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64) (string, error) {
+func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64, dataFields data_fields.OrganizationFields) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.CreateFromGlobalOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -81,19 +81,17 @@ func (s *organizationService) CreateFromGlobalOrganization(ctx context.Context, 
 		return "", err
 	}
 
-	dataFields := data_fields.OrganizationFields{
-		GlobalOrgId:   utils.ToPtr(globalOrgId),
-		Name:          utils.StringPtr(globalOrganization.Name),
-		PrimaryDomain: utils.StringPtr(globalOrganization.PrimaryDomain),
-		Description:   utils.StringPtr(globalOrganization.Description),
-		Website:       utils.StringPtr(globalOrganization.Website),
-		LogoUrl:       utils.StringPtr(globalOrganization.LogoUrl),
-		IconUrl:       utils.StringPtr(globalOrganization.IconUrl),
-		LinkedInUrl:   utils.StringPtr(globalOrganization.LinkedInUrl),
-		LinkedInAlias: utils.StringPtr(globalOrganization.LinkedInAlias),
-		Domains:       utils.StringToSlice(globalOrganization.OtherDomains),
-		IndustryCode:  utils.StringPtrNillable(globalOrganization.IndustryNaicsCode),
-	}
+	dataFields.GlobalOrgId = utils.ToPtr(globalOrgId)
+	dataFields.Name = utils.StringPtr(globalOrganization.Name)
+	dataFields.PrimaryDomain = utils.StringPtr(globalOrganization.PrimaryDomain)
+	dataFields.Description = utils.StringPtr(globalOrganization.Description)
+	dataFields.Website = utils.StringPtr(globalOrganization.Website)
+	dataFields.LogoUrl = utils.StringPtr(globalOrganization.LogoUrl)
+	dataFields.IconUrl = utils.StringPtr(globalOrganization.IconUrl)
+	dataFields.LinkedInUrl = utils.StringPtr(globalOrganization.LinkedInUrl)
+	dataFields.LinkedInAlias = utils.StringPtr(globalOrganization.LinkedInAlias)
+	dataFields.Domains = utils.StringToSlice(globalOrganization.OtherDomains)
+	dataFields.IndustryCode = utils.StringPtrNillable(globalOrganization.IndustryNaicsCode)
 	if globalOrganization.YearFounded > 0 {
 		dataFields.YearFounded = utils.Int64Ptr(int64(globalOrganization.YearFounded))
 	}

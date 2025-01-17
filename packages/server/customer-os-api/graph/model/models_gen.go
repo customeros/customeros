@@ -2219,6 +2219,11 @@ type OrganizationSaveInput struct {
 	OwnerID            *string                   `json:"ownerId,omitempty"`
 }
 
+type OrganizationSaveInputFromGlobalOrg struct {
+	Stage        *OrganizationStage        `json:"stage,omitempty"`
+	Relationship *OrganizationRelationship `json:"relationship,omitempty"`
+}
+
 type OrganizationSearchResult struct {
 	Ids            []string `json:"ids"`
 	TotalElements  int64    `json:"totalElements"`
