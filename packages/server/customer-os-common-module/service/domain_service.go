@@ -173,8 +173,8 @@ func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain s
 		return err
 	}
 
-	_, isPrimary, primaryDomain := s.CheckDomainWithMailsherpa(ctx, domain)
-	span.LogFields(log.Bool("result.mailsherpa.isPrimary", isPrimary), log.String("result.mailsherpa.primaryDomain", primaryDomain))
+	accessible, isPrimary, primaryDomain := s.CheckDomainWithMailsherpa(ctx, domain)
+	span.LogFields(log.Bool("result.mailsherpa.isPrimary", isPrimary), log.String("result.mailsherpa.primaryDomain", primaryDomain), log.Bool("result.mailsherpa.accessible", accessible))
 	if primaryDomain != "" {
 		if !utils.IsValidDomain(primaryDomain) {
 			primaryDomain = ""
@@ -185,13 +185,13 @@ func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain s
 		}
 	}
 
-	err = s.services.Neo4jRepositories.DomainWriteRepository.SetPrimaryDetails(ctx, domain, primaryDomain, isPrimary)
+	err = s.services.Neo4jRepositories.DomainWriteRepository.SetPrimaryDetails(ctx, domain, primaryDomain, isPrimary, accessible)
 	if err != nil {
 		// Log the error in tracing
 		tracing.TraceErr(span, errors.Wrap(err, "Error while setting primary details asynchronously"))
 	}
 
-	_ = s.services.RabbitMQService.PublishEvent(ctx, domain, model.DOMAIN, dto.UpdateDomain{Primary: isPrimary, PrimaryDomain: primaryDomain})
+	_ = s.services.RabbitMQService.PublishEvent(ctx, domain, model.DOMAIN, dto.UpdateDomain{Primary: isPrimary, PrimaryDomain: primaryDomain, Accessible: accessible})
 
 	// If the domain is not primary, trigger the domain merge
 	if !isPrimary && primaryDomain != "" {
