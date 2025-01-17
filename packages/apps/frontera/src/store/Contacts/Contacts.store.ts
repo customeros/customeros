@@ -56,6 +56,28 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     });
   };
 
+  public setView = async (
+    key: string,
+    filterFn: (records: Contact[]) => Contact[],
+  ) => {
+    const ids = this.searchResults.get(key);
+    const cursor = this.cursors.get(key) ?? 0;
+    const chunkedIds = (ids ?? []).slice(
+      0,
+      this.chunkSize * cursor + this.chunkSize,
+    );
+
+    const records: Contact[] = [];
+
+    chunkedIds.forEach((id) => {
+      if (this.value?.has(id)) {
+        records.push(this.value.get(id) as Contact);
+      }
+    });
+
+    this.views.set(key, filterFn(records));
+  };
+
   public getById(id: string) {
     if (!this.value || typeof id !== 'string') return null;
 
