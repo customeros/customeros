@@ -2,12 +2,13 @@ package dataloader
 
 import (
 	"context"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"net/http"
 	"time"
 
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	cosapi_interfaces "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/interfaces"
+	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 )
 
 const defaultDataloaderWaitTime = 32 * time.Millisecond
@@ -121,112 +122,112 @@ type Loaders struct {
 }
 
 type tagBatcher struct {
-	tagService commonservice.TagService
+	tagService interfaces.TagService
 }
 type emailBatcher struct {
-	emailService       service.EmailService
-	commonEmailService commonservice.EmailService
+	emailService       cosapi_interfaces.EmailService
+	commonEmailService interfaces.EmailService
 }
 type locationBatcher struct {
-	locationService       service.LocationService
-	locationCommonService commonservice.LocationService
+	locationService       cosapi_interfaces.LocationService
+	locationCommonService interfaces.LocationService
 }
 type socialBatcher struct {
-	socialService commonservice.SocialService
+	socialService interfaces.SocialService
 }
 type jobRoleBatcher struct {
-	jobRoleService commonservice.JobRoleService
+	jobRoleService interfaces.JobRoleService
 }
 type calendarBatcher struct {
-	calendarService service.CalendarService
+	calendarService cosapi_interfaces.CalendarService
 }
 type domainBatcher struct {
-	domainService commonservice.DomainService
+	domainService interfaces.DomainService
 }
 type interactionEventBatcher struct {
-	interactionEventService commonservice.InteractionEventService
+	interactionEventService interfaces.InteractionEventService
 }
 type interactionSessionBatcher struct {
-	interactionSessionService commonservice.InteractionSessionService
+	interactionSessionService interfaces.InteractionSessionService
 }
 type interactionEventParticipantBatcher struct {
-	interactionEventService commonservice.InteractionEventService
+	interactionEventService interfaces.InteractionEventService
 }
 type interactionSessionParticipantBatcher struct {
-	interactionSessionService commonservice.InteractionSessionService
+	interactionSessionService interfaces.InteractionSessionService
 }
 type meetingParticipantBatcher struct {
-	meetingService service.MeetingService
+	meetingService cosapi_interfaces.MeetingService
 }
 type phoneNumberBatcher struct {
-	phoneNumberService commonservice.PhoneNumberService
+	phoneNumberService interfaces.PhoneNumberService
 }
 type notedEntityBatcher struct {
-	noteService service.NoteService
+	noteService cosapi_interfaces.NoteService
 }
 type userBatcher struct {
-	userService       service.UserService
-	userCommonService commonservice.UserService
+	userService       cosapi_interfaces.UserService
+	userCommonService interfaces.UserService
 }
 type contactBatcher struct {
-	contactService service.ContactService
+	contactService cosapi_interfaces.ContactService
 }
 type organizationBatcher struct {
-	organizationService       service.OrganizationService
-	commonOrganizationService commonservice.OrganizationService
+	organizationService       cosapi_interfaces.OrganizationService
+	commonOrganizationService interfaces.OrganizationService
 }
 type noteBatcher struct {
-	noteService service.NoteService
+	noteService cosapi_interfaces.NoteService
 }
 type attachmentBatcher struct {
-	attachmentService commonservice.AttachmentService
+	attachmentService interfaces.AttachmentService
 }
 type externalSystemBatcher struct {
-	externalSystemService commonservice.ExternalSystemService
+	externalSystemService interfaces.ExternalSystemService
 }
 type timelineEventBatcher struct {
-	timelineEventService service.TimelineEventService
+	timelineEventService cosapi_interfaces.TimelineEventService
 }
 type issueBatcher struct {
-	issueService service.IssueService
+	issueService cosapi_interfaces.IssueService
 }
 type meetingBatcher struct {
-	meetingService service.MeetingService
+	meetingService cosapi_interfaces.MeetingService
 }
 type countryBatcher struct {
-	countryService service.CountryService
+	countryService cosapi_interfaces.CountryService
 }
 type actionBatcher struct {
-	actionService commonservice.ActionService
+	actionService interfaces.ActionService
 }
 type actionItemBatcher struct {
-	actionItemService service.ActionItemService
+	actionItemService cosapi_interfaces.ActionItemService
 }
 type issueParticipantBatcher struct {
-	issueService service.IssueService
+	issueService cosapi_interfaces.IssueService
 }
 type commentBatcher struct {
-	commentService service.CommentService
+	commentService cosapi_interfaces.CommentService
 }
 type contractBatcher struct {
-	contractService service.ContractService
+	contractService cosapi_interfaces.ContractService
 }
 type serviceLineItemBatcher struct {
-	serviceLineItemService commonservice.ServiceLineItemService
+	serviceLineItemService interfaces.ServiceLineItemService
 }
 type opportunityBatcher struct {
-	opportunityService commonservice.OpportunityService
+	opportunityService interfaces.OpportunityService
 }
 type invoiceBatcher struct {
-	invoiceService commonservice.InvoiceService
+	invoiceService interfaces.InvoiceService
 }
 type flowBatcher struct {
-	flowService          commonservice.FlowService
-	flowExecutionService commonservice.FlowExecutionService
+	flowService          interfaces.FlowService
+	flowExecutionService interfaces.FlowExecutionService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
-func NewDataLoader(services *service.Services) *Loaders {
+func NewDataLoader(services *cosapi_services.Services) *Loaders {
 	tagBatcher := &tagBatcher{
 		tagService: services.CommonServices.TagService,
 	}

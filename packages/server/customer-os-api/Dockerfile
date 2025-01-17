@@ -6,8 +6,7 @@ COPY customer-os-neo4j-repository/. ./customer-os-neo4j-repository/
 COPY customer-os-postgres-repository/. ./customer-os-postgres-repository/
 COPY events-processing-proto/. ./events-processing-proto/
 COPY events/. ./events/
-COPY validation-api/. ./validation-api/
-COPY enrichment-api/. ./enrichment-api/
+COPY mailsherpa-api/. ./mailsherpa-api/
 COPY customer-os-api/. ./customer-os-api
 
 WORKDIR /app/customer-os-api

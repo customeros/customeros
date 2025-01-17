@@ -19,15 +19,7 @@ cd ../events-processing-platform
 go mod tidy
 cd ../events-processing-platform-subscribers
 go mod tidy
-cd ../file-store-api
-go mod tidy
-cd ../settings-api
-go mod tidy
-cd ../user-admin-api
-go mod tidy
-cd ../validation-api
-go mod tidy
-cd ../enrichment-api
+cd ../mailsherpa-api
 go mod tidy
 cd ../..
 cd runner

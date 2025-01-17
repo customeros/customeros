@@ -3,28 +3,31 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	common_srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	pkgerrors "github.com/pkg/errors"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	pkgerrors "github.com/pkg/errors"
-	"strings"
-	"sync"
-	"time"
 )
 
 type domains struct {
@@ -51,7 +54,7 @@ func NewOrganizationService(log logger.Logger, repositories *repository.Reposito
 		repositories: repositories,
 		grpcClients:  grpcClients,
 		services:     services,
-		maxWorkers:   services.cfg.ConcurrencyConfig.OrganizationSyncConcurrency,
+		maxWorkers:   services.cfg.App.ConcurrencyConfig.OrganizationSyncConcurrency,
 		cache:        cache,
 	}
 }
@@ -154,8 +157,8 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 
 	tenant := common.GetTenantFromContext(ctx)
 	appSource := utils.StringFirstNonEmpty(orgInput.AppSource, constants.AppSourceCustomerOsWebhooks)
-	var failedSync = false
-	var reason = ""
+	failedSync := false
+	reason := ""
 	orgInput.Normalize()
 
 	// Check if organization sync should be skipped
@@ -293,7 +296,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 	if !failedSync && orgInput.HasDomains() {
 		for _, domain := range orgInput.Domains {
-			//check if the domain is already linked to an organization. If the domain is already linked, skip the link operation
+			// check if the domain is already linked to an organization. If the domain is already linked, skip the link operation
 			domainInUse, err := s.repositories.OrganizationRepository.IsDomainUsedByOrganization(ctx, tenant, domain, organizationId)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -326,13 +329,13 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	if !failedSync {
 		if orgInput.HasEmail() {
 			_, err = s.services.CommonServices.EmailService.Merge(ctx, nil, tenant,
-				commonservice.EmailFields{
+				interfaces.EmailFields{
 					Email:     orgInput.Email,
 					AppSource: orgInput.AppSource,
 					Source:    neo4jentity.DecodeDataSource(orgInput.ExternalSystem),
 					Primary:   true,
 				},
-				&commonservice.LinkWith{
+				&common_srv.LinkWith{
 					Type: commonmodel.ORGANIZATION,
 					Id:   organizationId,
 				})
@@ -387,7 +390,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 						Address:  orgInput.Address,
 						Address2: orgInput.Address2,
 						Zip:      orgInput.Zip,
-					}, &commonservice.LinkWith{
+					}, &common_srv.LinkWith{
 						Type: commonmodel.ORGANIZATION,
 						Id:   organizationId,
 					})
@@ -405,7 +408,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				// Link social to organization
 				_, err = s.services.CommonServices.SocialService.AddSocialToEntity(ctx,
 					nil,
-					commonservice.LinkWith{
+					common_srv.LinkWith{
 						Id:   organizationId,
 						Type: commonmodel.ORGANIZATION,
 					}, neo4jentity.SocialEntity{

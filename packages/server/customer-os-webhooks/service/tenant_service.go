@@ -15,16 +15,16 @@ type TenantService interface {
 }
 
 type tenantService struct {
-	log          logger.Logger
-	repositories *repository.Repositories
-	caches       *caches.Cache
+	log    logger.Logger
+	neo4j  *repository.Repositories
+	caches *caches.Cache
 }
 
 func NewTenantService(log logger.Logger, repositories *repository.Repositories, caches *caches.Cache) TenantService {
 	return &tenantService{
-		log:          log,
-		repositories: repositories,
-		caches:       caches,
+		log:    log,
+		neo4j:  repositories,
+		caches: caches,
 	}
 }
 
@@ -34,7 +34,7 @@ func (s *tenantService) Exists(ctx context.Context, tenant string) bool {
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	if !s.caches.CheckTenant(tenant) {
-		_, err := s.repositories.TenantRepository.GetTenant(ctx, tenant)
+		_, err := s.neo4j.TenantRepository.GetTenant(ctx, tenant)
 		if err != nil {
 			span.LogFields(log.Bool("output", false))
 			return false

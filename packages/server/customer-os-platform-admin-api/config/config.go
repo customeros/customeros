@@ -5,22 +5,21 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/metrics"
 	"log"
 )
 
 type Config struct {
-	ApiPort             string `env:"PORT" envDefault:"10005" validate:"required"`
-	MetricsPort         string `env:"PORT_METRICS" envDefault:"10005" validate:"required"`
-	GrpcClientConfig    config.GrpcClientConfig
-	Logger              logger.Config
-	PostgresConfig      config.PostgresConfig
-	PostgresAsyncConfig config.PostgresAsyncConfig
-	Neo4j               config.Neo4jConfig
-	Jaeger              tracing.JaegerConfig
-	Metrics             metrics.Config
+	App    App
+	Common config.CommonConfig
+}
+
+type App struct {
+	ApiPort     string `env:"PORT" envDefault:"10005" validate:"required"`
+	MetricsPort string `env:"PORT_METRICS" envDefault:"10005" validate:"required"`
+	Logger      logger.Config
+	Metrics     metrics.Config
 }
 
 func InitConfig() (*Config, error) {

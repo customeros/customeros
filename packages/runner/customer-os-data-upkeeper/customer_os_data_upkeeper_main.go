@@ -10,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"github.com/opentracing/opentracing-go"
@@ -39,17 +39,14 @@ func main() {
 	ctx := context.Background()
 
 	// Initialize postgres db
-	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
-		PostgresConfig:      &cfg.PostgresConfig,
-		PostgresAsyncConfig: &cfg.PostgresAsyncConfig,
-	})
+	postgresDb, err := commonConfig.InitPostgres(cfg.Common)
 	if err != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
 	}
 	defer postgresDb.Close()
 
 	// Neo4j DB
-	neo4jDriver, errNeo4j := commonConfig.NewNeo4jDriver(cfg.Neo4j)
+	neo4jDriver, errNeo4j := commonConfig.NewNeo4jDriver(cfg.Common.Infrastructure.Neo4jConfig)
 	if errNeo4j != nil {
 		appLogger.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
 	}
@@ -57,8 +54,8 @@ func main() {
 
 	// Events processing
 	var epClient *grpc_client.Clients
-	if cfg.GrpcClientConfig.EventsProcessingPlatformEnabled {
-		df := grpc_client.NewDialFactory(&cfg.GrpcClientConfig)
+	if cfg.Common.Infrastructure.GrpcClientConfig.EventsProcessingPlatformEnabled {
+		df := grpc_client.NewDialFactory(&cfg.Common.Infrastructure.GrpcClientConfig)
 		gRPCconn, err := df.GetEventsProcessingPlatformConn()
 		defer df.Close(gRPCconn)
 		if err != nil {
@@ -76,16 +73,10 @@ func main() {
 	eventBufferStoreService := eventbuffer.NewEventBufferStoreService(repositories.PostgresRepositories.EventBufferRepository, appLogger)
 
 	cntnr := &container.Container{
-		Cfg:          cfg,
-		Log:          appLogger,
-		Repositories: repositories,
-		CommonServices: commonService.InitServices(&commonConfig.GlobalConfig{
-			RabbitMQConfig: &cfg.RabbitMQConfig,
-			ExternalServices: commonConfig.ExternalServices{
-				AnthropicConfig: cfg.ExternalServices.Anthropic,
-				NovuConfig:      cfg.NovuConfig,
-			},
-		}, postgresDb, &neo4jDriver, cfg.Neo4j.Database, epClient, appLogger),
+		Cfg:                           cfg,
+		Log:                           appLogger,
+		Repositories:                  repositories,
+		CommonServices:                commonService.InitCommonServices(appLogger, repositories.Neo4jRepositories, repositories.PostgresRepositories, cfg.Common, epClient),
 		EventProcessingServicesClient: epClient,
 		EventBufferStoreService:       eventBufferStoreService,
 	}
@@ -120,15 +111,15 @@ func run(log logger.Logger, cron *cron.Cron) error {
 }
 
 func initLogger(cfg *config.Config) logger.Logger {
-	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
+	appLogger := logger.NewExtendedAppLogger(&cfg.Common.Infrastructure.LoggerConfig)
 	appLogger.InitLogger()
 	appLogger.WithName(constants.ServiceName)
 	return appLogger
 }
 
 func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
-	if cfg.Jaeger.Enabled {
-		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Jaeger, appLogger)
+	if cfg.Common.Infrastructure.JaegerConfig.Enabled {
+		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Common.Infrastructure.JaegerConfig, appLogger)
 		if err != nil {
 			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
 		}

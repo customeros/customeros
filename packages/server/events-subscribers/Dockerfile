@@ -6,8 +6,7 @@ COPY customer-os-neo4j-repository/. ./customer-os-neo4j-repository/
 COPY customer-os-postgres-repository/. ./customer-os-postgres-repository/
 COPY events-processing-proto/. ./events-processing-proto/
 COPY events-subscribers/. ./events-subscribers
-COPY enrichment-api/. ./enrichment-api/
-COPY validation-api/. ./validation-api/
+COPY mailsherpa-api/. ./mailsherpa-api/
 
 WORKDIR /app/events-subscribers
 RUN go build -v -o /go/bin/app

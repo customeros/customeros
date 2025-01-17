@@ -137,20 +137,6 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
-    directory: "/packages/runner/sync-tracked-data"
-    schedule:
-      interval: "daily"
-      time: "04:00"
-    open-pull-requests-limit: 3
-    labels:
-      - "go"
-      - "dependencies"
-      - "app/sync-tracked-data"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
     directory: "/packages/runner/sync-customer-os-data"
     schedule:
       interval: "daily"
@@ -221,7 +207,7 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
-    directory: "/packages/server/file-store-api"
+    directory: "/packages/server/mailsherpa-api"
     schedule:
       interval: "daily"
       time: "04:00"
@@ -229,63 +215,7 @@ updates:
     labels:
       - "go"
       - "dependencies"
-      - "app/file-store-api"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
-    directory: "/packages/server/settings-api"
-    schedule:
-      interval: "daily"
-      time: "04:00"
-    open-pull-requests-limit: 5
-    labels:
-      - "go"
-      - "dependencies"
-      - "app/settings-api"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
-    directory: "/packages/server/validation-api"
-    schedule:
-      interval: "daily"
-      time: "04:00"
-    open-pull-requests-limit: 5
-    labels:
-      - "go"
-      - "dependencies"
-      - "app/validation-api"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
-    directory: "/packages/server/enrichment-api"
-    schedule:
-      interval: "daily"
-      time: "06:00"
-    open-pull-requests-limit: 5
-    labels:
-      - "go"
-      - "dependencies"
-      - "app/enrichment-api"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
-    directory: "/packages/server/user-admin-api"
-    schedule:
-      interval: "daily"
-      time: "04:00"
-    open-pull-requests-limit: 5
-    labels:
-      - "go"
-      - "dependencies"
-      - "app/user-admin-api"
+      - "app/mailsherpa-api"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"

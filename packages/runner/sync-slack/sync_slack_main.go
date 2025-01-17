@@ -36,17 +36,14 @@ func main() {
 	ctx := context.Background()
 
 	// Initialize postgres db
-	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
-		PostgresConfig:      &cfg.PostgresConfig,
-		PostgresAsyncConfig: &cfg.PostgresAsyncConfig,
-	})
+	postgresDb, err := commonConfig.InitPostgres(&cfg.CommonConfig)
 	if err != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
 	}
 	defer postgresDb.Close()
 
 	// Neo4j DB
-	neo4jDriver, errNeo4j := commonConfig.NewNeo4jDriver(cfg.Neo4j)
+	neo4jDriver, errNeo4j := commonConfig.NewNeo4jDriver(cfg.CommonConfig.Infrastructure.Neo4jConfig)
 	if errNeo4j != nil {
 		appLogger.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
 	}

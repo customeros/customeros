@@ -36,7 +36,7 @@ func (s *RawDataStoreDB) CreateDBHandler(ctx *Context) *gorm.DB {
 		return gormDb.(*gorm.DB)
 	}
 	connectionString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s search_path=%s",
-		s.cfg.PostgresConfig.Host, s.cfg.PostgresConfig.Port, s.cfg.RawDataStoreDBName, s.cfg.PostgresConfig.User, s.cfg.PostgresConfig.Password, ctx.Schema)
+		s.cfg.CommonConfig.Infrastructure.PostgresConfig.Host, s.cfg.CommonConfig.Infrastructure.PostgresConfig.Port, s.cfg.RawDataStoreDBName, s.cfg.CommonConfig.Infrastructure.PostgresConfig.User, s.cfg.CommonConfig.Infrastructure.PostgresConfig.Password, ctx.Schema)
 	gormDb, err := gorm.Open(postgres.Open(connectionString), initGormConfig(s.cfg))
 	if err != nil {
 		panic(err)
@@ -45,9 +45,9 @@ func (s *RawDataStoreDB) CreateDBHandler(ctx *Context) *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
-	sqlDb.SetMaxIdleConns(s.cfg.PostgresConfig.MaxIdleConn)
-	sqlDb.SetMaxOpenConns(s.cfg.PostgresConfig.MaxConn)
-	sqlDb.SetConnMaxLifetime(time.Duration(s.cfg.PostgresConfig.ConnMaxLifetime) * time.Second)
+	sqlDb.SetMaxIdleConns(s.cfg.CommonConfig.Infrastructure.PostgresConfig.MaxIdleConn)
+	sqlDb.SetMaxOpenConns(s.cfg.CommonConfig.Infrastructure.PostgresConfig.MaxConn)
+	sqlDb.SetConnMaxLifetime(time.Duration(s.cfg.CommonConfig.Infrastructure.PostgresConfig.ConnMaxLifetime) * time.Second)
 
 	cacheHandler.Set(ctx.Schema, gormDb, gocache.DefaultExpiration)
 
@@ -91,7 +91,7 @@ func initGormConfig(cfg *Config) *gorm.Config {
 // initLog Connection Log Configuration
 func initLog(cfg *Config) logger.Interface {
 	var logLevel = logger.Silent
-	switch cfg.PostgresConfig.LogLevel {
+	switch cfg.CommonConfig.Infrastructure.PostgresConfig.LogLevel {
 	case "ERROR":
 		logLevel = logger.Error
 	case "WARN":

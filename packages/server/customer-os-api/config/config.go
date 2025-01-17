@@ -5,7 +5,6 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
-	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -15,22 +14,36 @@ import (
 )
 
 type Config struct {
-	Server           ServerConfig
-	GraphQL          GraphQLConfig
-	Admin            AdminConfig
-	Database         DatabaseConfig
-	Messaging        MessagingConfig
-	Observability    ObservabilityConfig
-	App              AppConfig
-	InternalServices InternalServicesConfig
-	ExternalServices ExternalServicesConfig
-	GrpcClient       config.GrpcClientConfig
+	Server         ServerConfig
+	App            AppConfig
+	GrpcClient     config.GrpcClientConfig
+	CommonServices config.CommonConfig
+}
+
+// Top level Containers
+
+type AppConfig struct {
+	Admin                                  AdminConfig
+	AuthConfig                             AuthConfig
+	CORS                                   CORSConfig
+	EncodedEncryptionKey                   string   `env:"ENCODED_ENCRYPTION_KEY"`
+	TrackingPublicUrl                      string   `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
+	InvoicePaidRedirectUrl                 string   `env:"INVOICE_PAID_REDIRECT_URL" envDefault:"https://customeros.ai/payments/status/paid/"`
+	DefaultGlobalOrgPrimaryDomainsInSearch []string `env:"DEFAULT_GLOBAL_ORG_PRIMARY_DOMAINS_IN_SEARCH" envDefault:"stripe.com,zapier.com,braintreepayments.com,discord.com,airtable.com,framer.com,gocardless.com,gong.io,intercom.com,linear.app,loom.com,mailchimp.com,monday.com,notion.so,brex.com,monzo.com,mercury.com,thebrowser.company,descript.com,ramp.com,pleo.io,scale.com,perplexity.ai,runwayml.com,togetherai.com,pulley.com,pitch.com,raycast.com,height.app,tailscale.com,elevenlabs.io,hume.ai,huggingface.co,rabbit.com,figma.com,superhuman.com,vercel.com"`
 }
 
 type ServerConfig struct {
-	ApiPort     string `env:"PORT" envDefault:"10000" validate:"required"`
-	MetricsPort string `env:"PORT_METRICS" envDefault:"10000" validate:"required"`
-	Logger      logger.Config
+	ApiPort       string `env:"PORT" envDefault:"10000" validate:"required"`
+	MetricsPort   string `env:"PORT_METRICS" envDefault:"10000" validate:"required"`
+	Logger        logger.Config
+	GraphQL       GraphQLConfig
+	Observability ObservabilityConfig
+}
+
+// Config helpers
+type AuthConfig struct {
+	ProviderTenantName string `env:"PROVIDER_TENANT_NAME,required"`
+	ProviderUsername   string `env:"PROVIDER_USERNAME,required"`
 }
 
 type GraphQLConfig struct {
@@ -42,16 +55,6 @@ type AdminConfig struct {
 	Key string `env:"ADMIN_KEY,required"`
 }
 
-type DatabaseConfig struct {
-	Postgres      config.PostgresConfig
-	PostgresAsync config.PostgresAsyncConfig
-	Neo4j         config.Neo4jConfig
-}
-
-type MessagingConfig struct {
-	RabbitMQ config.RabbitMQConfig
-}
-
 type ObservabilityConfig struct {
 	Jaeger  tracing.JaegerConfig
 	Metrics metrics.Config
@@ -60,41 +63,6 @@ type ObservabilityConfig struct {
 type CORSConfig struct {
 	AllowOrigins []string `env:"ALLOW_ORIGINS" envDefault:"*"`
 	AllowHeaders []string `env:"ALLOW_HEADERS" envDefault:"x-openline-username"`
-}
-
-type MailstackConfig struct {
-	SupportedTlds []string `env:"MAILSTACK_SUPPORTED_TLDS" envDefault:"com"`
-}
-
-type InternalServicesConfig struct {
-	ValidationApiConfig config.ValidationAPIConfig
-	EnrichmentApiConfig config.EnrichmentAPIConfig
-	CustomerOsApiUrl    string `env:"CUSTOMER_OS_API_URL" envDefault:"https://api.customeros.ai" validate:"required"`
-	FileStoreApi        fsc.FileStoreApiConfig
-}
-
-type IntegrationAppConfig struct {
-	WorkspaceKey                    string `env:"INTEGRATION_APP_WORKSPACE_KEY"`
-	WorkspaceSecret                 string `env:"INTEGRATION_APP_WORKSPACE_SECRET"`
-	ApiTriggerUrlCreatePaymentLinks string `env:"INTEGRATION_APP_API_TRIGGER_URL_CREATE_PAYMENT_LINKS"`
-}
-
-type ExternalServicesConfig struct {
-	Anthropic      config.AnthropicConfig
-	Cloudflare     config.CloudflareConfig
-	IntegrationApp IntegrationAppConfig
-	Namecheap      config.NamecheapConfig
-	OpenSRS        config.OpenSRSConfig
-	Postmark       config.PostmarkConfig
-	Stripe         config.StripeConfig
-}
-
-type AppConfig struct {
-	CORS                                   CORSConfig
-	TrackingPublicUrl                      string `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
-	InvoicePaidRedirectUrl                 string `env:"INVOICE_PAID_REDIRECT_URL" envDefault:"https://customeros.ai/payments/status/paid/"`
-	Mailstack                              MailstackConfig
-	DefaultGlobalOrgPrimaryDomainsInSearch []string `env:"DEFAULT_GLOBAL_ORG_PRIMARY_DOMAINS_IN_SEARCH" envDefault:"stripe.com,zapier.com,braintreepayments.com,discord.com,airtable.com,framer.com,gocardless.com,gong.io,intercom.com,linear.app,loom.com,mailchimp.com,monday.com,notion.so,brex.com,monzo.com,mercury.com,thebrowser.company,descript.com,ramp.com,pleo.io,scale.com,perplexity.ai,runwayml.com,togetherai.com,pulley.com,pitch.com,raycast.com,height.app,tailscale.com,elevenlabs.io,hume.ai,huggingface.co,rabbit.com,figma.com,superhuman.com,vercel.com"`
 }
 
 func InitConfig() (*Config, error) {

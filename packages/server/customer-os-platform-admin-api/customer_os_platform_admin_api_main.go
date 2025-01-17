@@ -20,7 +20,7 @@ func main() {
 	}
 
 	// Initialize logger
-	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
+	appLogger := logger.NewExtendedAppLogger(&cfg.App.Logger)
 	appLogger.InitLogger()
 	appLogger.WithName(constants.ServiceName)
 

@@ -2,21 +2,24 @@ package invoice
 
 import (
 	"context"
+	"strings"
+
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonServices "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
-	"strings"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 )
 
 type InvoiceSubscriber struct {
@@ -25,15 +28,25 @@ type InvoiceSubscriber struct {
 	cfg                 *config.Config
 	grpcClients         *grpc_client.Clients
 	invoiceEventHandler *InvoiceEventHandler
+	CommonServices      *commonServices.CommonServices
 }
 
-func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, services *service.Services, grpcClients *grpc_client.Clients) *InvoiceSubscriber {
+func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, service *service.Services, grpcClients *grpc_client.Clients) *InvoiceSubscriber {
 	return &InvoiceSubscriber{
-		log:                 log,
-		db:                  db,
-		cfg:                 cfg,
-		grpcClients:         grpcClients,
-		invoiceEventHandler: NewInvoiceEventHandler(log, services, *cfg, grpcClients),
+		log:         log,
+		db:          db,
+		cfg:         cfg,
+		grpcClients: grpcClients,
+		invoiceEventHandler: NewInvoiceEventHandler(
+			log,
+			*cfg,
+			grpcClients,
+			service.Neo4jRepositories,
+			service.PostgresRepositories,
+			service.CommonServices.InvoiceService,
+			service.CommonServices.FileService,
+			service.CommonServices.PostmarkService,
+		),
 	}
 }
 
@@ -64,7 +77,6 @@ func (consumer *InvoiceSubscriber) runWorker(ctx context.Context, worker subscri
 }
 
 func (s *InvoiceSubscriber) ProcessEvents(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error {
-
 	for {
 		event := stream.Recv()
 		select {

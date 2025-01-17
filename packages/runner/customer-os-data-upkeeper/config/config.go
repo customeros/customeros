@@ -4,55 +4,37 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	cronconf "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/cron/config"
-	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/file_store_client"
 	commconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"log"
 )
 
-type Config struct {
-	Neo4j commconf.Neo4jConfig
-
-	PostgresConfig      commconf.PostgresConfig
-	PostgresAsyncConfig commconf.PostgresAsyncConfig
-
+type CommonConfig struct {
+	Enrow            commconf.EnrowConfig
 	Logger           logger.Config
 	Jaeger           tracing.JaegerConfig
-	Cron             cronconf.Config
 	GrpcClientConfig commconf.GrpcClientConfig
 	RabbitMQConfig   commconf.RabbitMQConfig
-	NovuConfig       commconf.NovuConfig
-	CustomerOS       struct {
-		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
-		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
-	}
-	PlatformAdminApi struct {
-		Url    string `env:"PLATFORM_ADMIN_API_URL"`
-		ApiKey string `env:"PLATFORM_ADMIN_API_KEY"`
-	}
-	EnrichmentApiConfig commconf.EnrichmentAPIConfig
-	ValidationApi       struct {
-		Url    string `env:"VALIDATION_API_URL" validate:"required"`
-		ApiKey string `env:"VALIDATION_API_KEY" validate:"required"`
-	}
-	BetterContactApi struct {
-		Url    string `env:"BETTER_CONTACT_API_URL" validate:"required"`
-		ApiKey string `env:"BETTER_CONTACT_API_KEY" validate:"required"`
-	}
-	ScrubbyIoConfig struct {
-		ApiUrl string `env:"SCRUBBY_IO_API_URL" envDefault:"https://api.scrubby.io" validate:"required"`
-		ApiKey string `env:"SCRUBBY_IO_API_KEY" validate:"required"`
-	}
-	EnrowConfig struct {
-		ApiUrl string `env:"ENROW_API_URL" envDefault:"https://api.enrow.io" validate:"required"`
-		ApiKey string `env:"ENROW_API_KEY" validate:"required"`
-	}
-	FileStoreApiConfig fsc.FileStoreApiConfig
+	ScrubbyIo        commconf.ScrubbyIoConfig
+	Anthropic        commconf.AnthropicConfig
+	CustomerOsApi    commconf.CustomerOsApiConfig
+	BetterContact    commconf.BetterContactConfig
+	Postgres         commconf.PostgresConfig
+	PostgresAsync    commconf.PostgresAsyncConfig
+	Neo4j            commconf.Neo4jConfig
+}
+
+type AppConfig struct {
+	Cron               cronconf.Config
 	ProcessConfig      ProcessConfig
 	EventNotifications EventNotifications
 	Limits             Limits
-	ExternalServices   ExternalServicesConfig
+}
+
+type Config struct {
+	Common *commconf.CommonConfig
+	App    AppConfig
 }
 
 type ProcessConfig struct {
@@ -79,10 +61,6 @@ type EventNotifications struct {
 	}
 }
 
-type ExternalServicesConfig struct {
-	Anthropic commconf.AnthropicConfig
-}
-
 func Load() *Config {
 	if err := godotenv.Load(); err != nil {
 		log.Print("Failed loading .env file")
@@ -91,6 +69,31 @@ func Load() *Config {
 	cfg := Config{}
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("%+v", err)
+	}
+	cmnCfg := CommonConfig{}
+	if err := env.Parse(&cmnCfg); err != nil {
+		log.Fatalf("%+v", err)
+	}
+
+	cfg.Common = &commconf.CommonConfig{
+		Infrastructure: commconf.InfrastructureConfig{
+			LoggerConfig:        cmnCfg.Logger,
+			JaegerConfig:        cmnCfg.Jaeger,
+			GrpcClientConfig:    cmnCfg.GrpcClientConfig,
+			RabbitMQConfig:      cmnCfg.RabbitMQConfig,
+			PostgresConfig:      cmnCfg.Postgres,
+			PostgresAsyncConfig: cmnCfg.PostgresAsync,
+			Neo4jConfig:         cmnCfg.Neo4j,
+		},
+		External: commconf.ExternalServicesConfig{
+			EnrowConfig:         cmnCfg.Enrow,
+			ScrubbyIoConfig:     cmnCfg.ScrubbyIo,
+			AnthropicConfig:     cmnCfg.Anthropic,
+			BetterContactConfig: cmnCfg.BetterContact,
+		},
+		Internal: commconf.InternalServicesConfig{
+			CustomerOsApi: cmnCfg.CustomerOsApi,
+		},
 	}
 
 	return &cfg

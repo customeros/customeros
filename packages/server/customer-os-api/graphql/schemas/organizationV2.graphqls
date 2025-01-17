@@ -1,0 +1,80 @@
+extend type Query {
+    ui_organizations(ids: [ID!]): [OrganizationUiDetails!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    ui_organizations_search(limit: Int, where: Filter, sort: SortBy): OrganizationSearchResult! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    # initial load of page -> request 100 orgs with filters and sorting
+    # when a filter is applied, call ui_organizations_search, get IDs back and request just those specific orgs
+    # when you scroll down -> request more orgs with the same filters and sorting
+}
+
+type OrganizationSearchResult{
+    ids: [ID!]!
+    totalElements: Int64! # length of the id array
+    totalAvailable: Int64! # everyting in db
+}
+
+type OrganizationUiDetails {
+    # organizations props on node
+    id:                     ID!
+    createdAt:              Time!
+    updatedAt:              Time!
+
+    hide:                   Boolean!
+
+    referenceId:            String!
+    customerOsId:           String!
+
+    name:                   String!
+    notes:                  String
+    description:            String
+    industry:               String @deprecated(reason: "Use industryCode")
+    industryCode:           String
+    industryName:           String
+    market:                 Market
+    website:                String
+    logoUrl:                String
+    iconUrl:                String
+    stage:                  OrganizationStage
+    relationship:           OrganizationRelationship
+    lastFundingRound:       FundingRound
+    leadSource:             String
+    valueProposition:       String
+    slackChannelId:         String
+    public:                 Boolean
+    employees:              Int64
+    yearFounded:            Int64
+
+    enrichedAt: Time
+    enrichedFailedAt: Time
+    enrichedRequestedAt: Time
+
+    ltv:            Float
+    churnedAt:      Time
+
+    renewalSummaryArrForecast:       Float
+    renewalSummaryMaxArrForecast:    Float
+    renewalSummaryRenewalLikelihood: OpportunityRenewalLikelihood
+    renewalSummaryNextRenewalAt:   Time
+
+    onboardingStatus: OnboardingStatus!
+    onboardingStatusUpdatedAt: Time
+    onboardingComments: String
+
+    lastTouchPointAt:  Time
+    lastTouchPointType: LastTouchpointType
+
+    # data from associated entities
+    domains:              [String!]! @deprecated(reason: "Use domainsDetails")
+    domainsDetails:       [Domain!]!
+    contracts:            [String!]! # in profile
+    contacts:             [String!]! # in profile
+    contactCount:         Int        # in table
+    socialMedia:          [Social!]!
+    tags:                 [Tag!]!
+    locations:            [Location!]!
+    owner:                User
+
+    parentId:             ID
+    parentName:           String
+    subsidiaries:         [String!]!
+}

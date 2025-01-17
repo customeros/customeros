@@ -3,28 +3,31 @@ package server
 import (
 	"bytes"
 	"context"
-	"github.com/gin-contrib/cors"
-	ginzap "github.com/gin-contrib/zap"
-	"github.com/gin-gonic/gin"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/route"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
-	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/gin-contrib/cors"
+	ginzap "github.com/gin-contrib/zap"
+	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/sirupsen/logrus"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/route"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
 )
 
 type server struct {
@@ -46,7 +49,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	// Setting up tracing
-	tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.Jaeger, server.log)
+	tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.Common.Infrastructure.JaegerConfig, server.log)
 	if err != nil {
 		server.log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 	}
@@ -56,24 +59,21 @@ func (server *server) Run(parentCtx context.Context) error {
 	registerPrometheusMetrics()
 
 	// Initialize postgres db
-	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
-		PostgresConfig:      &server.cfg.PostgresConfig,
-		PostgresAsyncConfig: &server.cfg.PostgresAsyncConfig,
-	})
+	postgresDb, err := commonConfig.InitPostgres(&server.cfg.Common)
 	if err != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
 	}
 	defer postgresDb.Close()
 
 	// Setting up Neo4j
-	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Neo4j)
+	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Common.Infrastructure.Neo4jConfig)
 	if err != nil {
-		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
+		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Common.Infrastructure.Neo4jConfig.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
 
 	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(&server.cfg.GrpcClientConfig)
+	df := grpc_client.NewDialFactory(&server.cfg.Common.Infrastructure.GrpcClientConfig)
 	gRPCconn, err := df.GetEventsProcessingPlatformConn()
 	if err != nil {
 		server.log.Fatalf("Failed to connect: %v", err)
@@ -81,10 +81,16 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer df.Close(gRPCconn)
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 
-	// Setting up Postgres repositories
-	commonServices := commonservice.InitServices(&commonConfig.GlobalConfig{
-		RabbitMQConfig: &server.cfg.RabbitMQConfig,
-	}, postgresDb, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer, server.log)
+	// Setting up CommonServices & repositories
+	repos := repository.InitRepos(&neo4jDriver, postgresDb, server.cfg.Common.Infrastructure.Neo4jConfig.Database)
+
+	commonServices := commonservice.InitCommonServices(
+		server.log,
+		repos.Neo4jRepositories,
+		repos.PostgresRepositories,
+		&server.cfg.Common,
+		grpcContainer,
+	)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -108,8 +114,14 @@ func (server *server) Run(parentCtx context.Context) error {
 	appCache := caches.NewCache()
 
 	// Setting up services
-	serviceContainer := service.InitServices(server.log, &neo4jDriver, postgresDb, server.cfg, commonServices, grpcContainer, appCache)
-
+	serviceContainer := service.InitServices(
+		server.log,
+		repos,
+		server.cfg,
+		commonServices,
+		grpcContainer,
+		appCache,
+	)
 	route.AddExternalSystemRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
 	route.AddUserRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
 	route.AddOrganizationRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)
@@ -126,19 +138,19 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.GET("/readiness", ReadinessHandler)
 	r.GET("/", RootHandler)
 
-	if server.cfg.ApiPort == server.cfg.MetricsPort {
-		r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
+	if server.cfg.App.ApiPort == server.cfg.App.MetricsPort {
+		r.GET(server.cfg.App.Metrics.PrometheusPath, metricsHandler)
 	} else {
 		go func() {
 			mr := gin.Default()
 			mr.Use(prometheusMiddleware())
 			mr.Use(bodyLoggerMiddleware)
-			mr.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
-			mr.Run(":" + server.cfg.MetricsPort)
+			mr.GET(server.cfg.App.Metrics.PrometheusPath, metricsHandler)
+			mr.Run(":" + server.cfg.App.MetricsPort)
 		}()
 	}
 
-	r.Run(":" + server.cfg.ApiPort)
+	r.Run(":" + server.cfg.App.ApiPort)
 
 	<-server.doneCh
 	server.log.Infof("Application %s exited properly", constants.ServiceName)
@@ -170,8 +182,8 @@ func registerPrometheusMetrics() {
 func prometheusMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func(start time.Time) {
-			//TODO implement metrics COS-314 https://linear.app/customer-os/issue/COS-314/add-prometheus-metrics-on-success-and-failed-webhook-rest-api-calls
-			//TODO count duration / success / failed requests
+			// TODO implement metrics COS-314 https://linear.app/customer-os/issue/COS-314/add-prometheus-metrics-on-success-and-failed-webhook-rest-api-calls
+			// TODO count duration / success / failed requests
 		}(time.Now())
 		c.Next()
 	}

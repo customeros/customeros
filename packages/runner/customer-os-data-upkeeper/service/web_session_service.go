@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -23,10 +23,10 @@ type WebSesssionService interface {
 type webSessionService struct {
 	cfg            *config.Config
 	log            logger.Logger
-	commonServices *commonservice.Services
+	commonServices *commonservice.CommonServices
 }
 
-func NewWebSessionService(cfg *config.Config, log logger.Logger, s *commonservice.Services) WebSesssionService {
+func NewWebSessionService(cfg *config.Config, log logger.Logger, s *commonservice.CommonServices) WebSesssionService {
 	return &webSessionService{
 		cfg:            cfg,
 		log:            log,
@@ -104,7 +104,7 @@ func (s *webSessionService) closeSessions(ctx context.Context, sessions []entity
 		}
 
 		// publish event
-		err := s.commonServices.RabbitMQService.PublishWebhookEvent(ctx, event)
+		err := s.commonServices.Events.Publisher.PublishWebhookEvent(ctx, event)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)

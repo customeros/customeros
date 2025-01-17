@@ -6,10 +6,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	service "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"time"
@@ -24,10 +24,10 @@ type contractService struct {
 	log                    logger.Logger
 	repositories           *repository.Repositories
 	eventsProcessingClient *grpc_client.Clients
-	services               *service.Services
+	services               *service.CommonServices
 }
 
-func NewContractService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *grpc_client.Clients, services *service.Services) ContractService {
+func NewContractService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *grpc_client.Clients, services *service.CommonServices) ContractService {
 	return &contractService{
 		cfg:                    cfg,
 		log:                    log,

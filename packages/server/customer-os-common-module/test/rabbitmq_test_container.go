@@ -43,7 +43,7 @@ func InitTestRabbitMQ() (testcontainers.Container, string) {
 
 	// Attempt to connect to RabbitMQ with retries
 	var rabbitConn *amqp091.Connection
-	maxRetries := 10
+	maxRetries := 3
 	for i := 0; i < maxRetries; i++ {
 		rabbitConn, err = amqp091.Dial(connString)
 		if err == nil {

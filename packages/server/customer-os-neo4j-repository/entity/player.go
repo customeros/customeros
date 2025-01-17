@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+type PlayerRelation string
+
+const (
+	IDENTIFIES PlayerRelation = "IDENTIFIES"
+)
+
 type PlayerEntity struct {
 	Id            string
 	IdentityId    string

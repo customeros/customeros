@@ -180,7 +180,6 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 			MERGE (u:User {id: $userId})-[:USER_BELONGS_TO_TENANT]->(t)
 			SET u:User_%s, 
-				u.name=$name,
 				u.roles=$roles,
 				u.internal=$internal,
 				u.test=$test,
@@ -197,7 +196,6 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":          tenant,
 		"userId":          userId,
-		"name":            user.Name,
 		"firstName":       user.FirstName,
 		"lastName":        user.LastName,
 		"source":          user.Source,
@@ -435,40 +433,36 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 									e.createdAt=$createdAt,
 									e.updatedAt=$updatedAt,
 									e.work=$work,
-									e.retryValidation=$retryValidation,
-									e.techValidationRequestedAt=$techValidationRequestedAt,
-									e.techValidatedAt=$techValidatedAt
+									e.retryValidation=$retryValidation
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":                    tenant,
-		"emailId":                   emailId,
-		"email":                     entity.Email,
-		"rawEmail":                  entity.RawEmail,
-		"createdAt":                 entity.CreatedAt,
-		"updatedAt":                 entity.UpdatedAt,
-		"isCatchAll":                entity.IsCatchAll,
-		"deliverable":               entity.Deliverable,
-		"isValidSyntax":             entity.IsValidSyntax,
-		"isRoleAccount":             entity.IsRoleAccount,
-		"isSystemGenerated":         entity.IsSystemGenerated,
-		"username":                  entity.Username,
-		"isRisky":                   entity.IsRisky,
-		"isFirewalled":              entity.IsFirewalled,
-		"provider":                  entity.Provider,
-		"firewall":                  entity.Firewall,
-		"isMailboxFull":             entity.IsMailboxFull,
-		"isFreeAccount":             entity.IsFreeAccount,
-		"smtpSuccess":               entity.SmtpSuccess,
-		"verifyResponseCode":        entity.ResponseCode,
-		"verifyErrorCode":           entity.ErrorCode,
-		"verifyDescription":         entity.Description,
-		"isPrimaryDomain":           entity.IsPrimaryDomain,
-		"primaryDomain":             entity.PrimaryDomain,
-		"alternateEmail":            entity.AlternateEmail,
-		"work":                      entity.Work,
-		"retryValidation":           entity.RetryValidation,
-		"techValidationRequestedAt": utils.TimePtrAsAny(entity.EmailInternalFields.ValidationRequestedAt),
-		"techValidatedAt":           utils.TimePtrAsAny(entity.EmailInternalFields.ValidatedAt),
+		"tenant":             tenant,
+		"emailId":            emailId,
+		"email":              entity.Email,
+		"rawEmail":           entity.RawEmail,
+		"createdAt":          entity.CreatedAt,
+		"updatedAt":          entity.UpdatedAt,
+		"isCatchAll":         entity.IsCatchAll,
+		"deliverable":        entity.Deliverable,
+		"isValidSyntax":      entity.IsValidSyntax,
+		"isRoleAccount":      entity.IsRoleAccount,
+		"isSystemGenerated":  entity.IsSystemGenerated,
+		"username":           entity.Username,
+		"isRisky":            entity.IsRisky,
+		"isFirewalled":       entity.IsFirewalled,
+		"provider":           entity.Provider,
+		"firewall":           entity.Firewall,
+		"isMailboxFull":      entity.IsMailboxFull,
+		"isFreeAccount":      entity.IsFreeAccount,
+		"smtpSuccess":        entity.SmtpSuccess,
+		"verifyResponseCode": entity.ResponseCode,
+		"verifyErrorCode":    entity.ErrorCode,
+		"verifyDescription":  entity.Description,
+		"isPrimaryDomain":    entity.IsPrimaryDomain,
+		"primaryDomain":      entity.PrimaryDomain,
+		"alternateEmail":     entity.AlternateEmail,
+		"work":               entity.Work,
+		"retryValidation":    entity.RetryValidation,
 	})
 	return emailId
 }
@@ -1214,110 +1208,6 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 	return contactId
 }
 
-func CreateFlow(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, flow entity.FlowEntity) string {
-	flowId := utils.NewUUIDIfEmpty(flow.Id)
-	createdAt := flow.CreatedAt
-	if createdAt.IsZero() {
-		createdAt = utils.Now()
-	}
-	updatedAt := flow.UpdatedAt
-	if updatedAt.IsZero() {
-		updatedAt = utils.Now()
-	}
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:BELONGS_TO_TENANT]-(f:Flow:Flow_%s { id: $id })
-			ON MATCH SET
-				f.name = $name,
-				f.updatedAt = $updatedAt,
-				f.nodes = $nodes,
-				f.edges = $edges,
-				f.firstStartedAt = $firstStartedAt,
-				f.defaultName = $defaultName,
-				f.status = $status,
-				f.onHold = $onHold,
-				f.ready = $ready,
-				f.scheduled = $scheduled,
-				f.inProgress = $inProgress,
-				f.completed = $completed,
-				f.goalAchieved = $goalAchieved
-			ON CREATE SET
-				f.createdAt = $createdAt,
-				f.updatedAt = $updatedAt,
-				f.defaultName = $defaultName,
-				f.name = $name,
-				f.nodes = $nodes,
-				f.edges = $edges,
-				f.firstStartedAt = $firstStartedAt,
-				f.status = $status,
-				f.onHold = $onHold,
-				f.ready = $ready,
-				f.scheduled = $scheduled,
-				f.inProgress = $inProgress,
-				f.completed = $completed,
-				f.goalAchieved = $goalAchieved
-			RETURN f
-`, tenant)
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":         tenant,
-		"id":             flowId,
-		"defaultName":    flow.DefaultName,
-		"name":           flow.Name,
-		"nodes":          flow.Nodes,
-		"edges":          flow.Edges,
-		"firstStartedAt": utils.TimePtrAsAny(flow.FirstStartedAt),
-		"status":         flow.Status,
-		"createdAt":      createdAt,
-		"updatedAt":      updatedAt,
-		"onHold":         flow.OnHold,
-		"ready":          flow.Ready,
-		"scheduled":      flow.Scheduled,
-		"inProgress":     flow.InProgress,
-		"completed":      flow.Completed,
-		"goalAchieved":   flow.GoalAchieved,
-	})
-	return flowId
-}
-
-func CreateFlowParticipant(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, flowParticipant entity.FlowParticipantEntity) string {
-	flowParticipantId := utils.NewUUIDIfEmpty(flowParticipant.Id)
-	createdAt := flowParticipant.CreatedAt
-	if createdAt.IsZero() {
-		createdAt = utils.Now()
-	}
-	updatedAt := flowParticipant.UpdatedAt
-	if updatedAt.IsZero() {
-		updatedAt = utils.Now()
-	}
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:BELONGS_TO_TENANT]-(fc:FlowParticipant:FlowParticipant_%s {id: $id})
-			ON MATCH SET
-				fc.updatedAt = $updatedAt,
-				fc.entityId = $entityId,
-				fc.entityType = $entityType,
-				fc.requirementsUnmeet = $requirementsUnmeet,
-				fc.status = $status
-			ON CREATE SET
-				fc.createdAt = $createdAt,
-				fc.updatedAt = $updatedAt,
-				fc.entityId = $entityId,
-				fc.entityType = $entityType,
-				fc.requirementsUnmeet = $requirementsUnmeet,
-				fc.status = $status
-			RETURN fc
-`, tenant)
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant":             tenant,
-		"id":                 flowParticipantId,
-		"createdAt":          createdAt,
-		"updatedAt":          updatedAt,
-		"entityId":           flowParticipant.EntityId,
-		"entityType":         flowParticipant.EntityType.String(),
-		"requirementsUnmeet": flowParticipant.RequirementsUnmeet,
-		"status":             flowParticipant.Status,
-	})
-	return flowParticipantId
-}
-
 func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social entity.SocialEntity) string {
 	socialId := utils.NewUUIDIfEmpty(social.Id)
 	query := fmt.Sprintf(`MERGE (s:Social:Social_%s {id: $id})
@@ -1489,7 +1379,5 @@ func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 		"jobRoleId":      jobRoleId,
 		"title":          jobRole.JobTitle,
 		"primary":        jobRole.Primary,
-		"startedAt":      jobRole.StartedAt,
-		"endedAt":        jobRole.EndedAt,
 	})
 }

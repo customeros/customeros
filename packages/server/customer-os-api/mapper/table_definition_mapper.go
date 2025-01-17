@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
 )
 
 func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition, span opentracing.Span) *model.TableViewDef {
@@ -23,7 +24,7 @@ func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition, sp
 	for _, column := range columnsStruct.Columns {
 		columns = append(columns, &model.ColumnView{
 			ColumnID:   column.ColumnId,
-			ColumnType: postgresEntity.ColumnViewType(column.ColumnType),
+			ColumnType: model.ColumnViewType(column.ColumnType),
 			Width:      column.Width,
 			Visible:    column.Visible,
 			Name:       column.Name,
@@ -33,8 +34,8 @@ func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition, sp
 	return &model.TableViewDef{
 		ID:             strconv.Itoa(int(entity.ID)),
 		Name:           entity.Name,
-		TableType:      postgresEntity.TableViewType(entity.TableType),
-		TableID:        postgresEntity.TableIdType(entity.TableId),
+		TableType:      model.TableViewType(entity.TableType),
+		TableID:        model.TableIDType(entity.TableId),
 		Icon:           entity.Icon,
 		Order:          entity.Order,
 		Filters:        entity.Filters,

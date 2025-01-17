@@ -16,9 +16,10 @@ import (
 
 func prepareInvoiceEventHandler() *InvoiceEventHandler {
 	return &InvoiceEventHandler{
-		services:    testDatabase.Services,
 		grpcClients: testMockedGrpcClient,
 		log:         testLogger,
+		invoice:     testDatabase.CommonServices.InvoiceService,
+		neo4j:       testDatabase.CommonServices.Neo4jRepositories,
 	}
 }
 

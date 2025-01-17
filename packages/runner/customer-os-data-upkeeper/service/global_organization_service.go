@@ -13,8 +13,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -37,10 +37,10 @@ type GlobalOrganizationService interface {
 type globalOrganizationService struct {
 	cfg            *config.Config
 	log            logger.Logger
-	commonServices *commonService.Services
+	commonServices *commonService.CommonServices
 }
 
-func NewGlobalOrganizationService(cfg *config.Config, log logger.Logger, commonServices *commonService.Services) GlobalOrganizationService {
+func NewGlobalOrganizationService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices) GlobalOrganizationService {
 	return &globalOrganizationService{
 		cfg:            cfg,
 		log:            log,
@@ -453,7 +453,7 @@ func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Conte
 		return err
 	}
 	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequestWithContext(ctx, "GET", s.cfg.EnrichmentApiConfig.Url+"/scrapinOrganization", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequestWithContext(ctx, "GET", s.cfg.Common.Internal.CustomerOsApi.ApiUrl+"/scrapinOrganization", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		return err
@@ -462,7 +462,7 @@ func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Conte
 	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, s.cfg.EnrichmentApiConfig.ApiKey)
+	req.Header.Set(security.ApiKeyHeader, s.cfg.Common.Internal.CustomerOsApi.ApiKey)
 
 	// Make the HTTP request, retry once if response status is 502
 	var response *http.Response

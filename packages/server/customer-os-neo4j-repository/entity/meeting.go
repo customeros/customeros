@@ -25,6 +25,8 @@ type MeetingEntity struct {
 	Status             *enum.MeetingStatus
 }
 
+type MeetingEntities []MeetingEntity
+
 func (MeetingEntity) IsTimelineEvent() {
 }
 

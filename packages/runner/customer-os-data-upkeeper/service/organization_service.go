@@ -9,7 +9,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
+	common_srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -28,11 +29,11 @@ type OrganizationService interface {
 type organizationService struct {
 	cfg                    *config.Config
 	log                    logger.Logger
-	commonServices         *commonService.Services
+	commonServices         *commonService.CommonServices
 	eventsProcessingClient *grpc_client.Clients
 }
 
-func NewOrganizationService(cfg *config.Config, log logger.Logger, commonServices *commonService.Services, client *grpc_client.Clients) OrganizationService {
+func NewOrganizationService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices, client *grpc_client.Clients) OrganizationService {
 	return &organizationService{
 		cfg:                    cfg,
 		log:                    log,
@@ -286,7 +287,7 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 				Tenant:    record.Tenant,
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
-			err = s.commonServices.RabbitMQService.PublishEvent(innerCtx, record.OrganizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: record.Param1})
+			err = s.commonServices.Events.Publisher.PublishEvent(innerCtx, record.OrganizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: record.Param1})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error enriching organization {%s}: %s", record.OrganizationId, err.Error())
@@ -342,7 +343,7 @@ func (s *organizationService) removeEmptySocials(ctx context.Context) {
 			AppSource: constants.AppSourceDataUpkeeper,
 		})
 		err = s.commonServices.SocialService.RemoveSocialFromEntity(innerCtx, nil,
-			commonService.LinkWith{
+			common_srv.LinkWith{
 				Id:   record.LinkedEntityId,
 				Type: model.ORGANIZATION,
 			},
@@ -382,7 +383,7 @@ func (s *organizationService) removeDuplicatedSocials(ctx context.Context) {
 
 		// remove social
 		err = s.commonServices.SocialService.RemoveSocialFromEntity(innerCtx, nil,
-			commonService.LinkWith{
+			common_srv.LinkWith{
 				Id:   record.LinkedEntityId,
 				Type: model.ORGANIZATION,
 			},
@@ -419,7 +420,7 @@ func (s *organizationService) SendReminders() {
 		})
 
 		reminder := neo4jmapper.MapDbNodeToReminderEntity(reminderNode)
-		err := s.commonServices.ReminderService.SendNotification(innerCtx, reminder.Id, s.cfg.NovuConfig.FronteraUrl)
+		err := s.commonServices.ReminderService.SendNotification(innerCtx, reminder.Id, s.cfg.Common.External.NovuCofig.FronteraUrl)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error sending reminder {%s}: %s", reminder.Id, err.Error())

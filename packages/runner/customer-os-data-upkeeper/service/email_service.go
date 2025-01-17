@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"io"
 	"net/http"
 	"net/url"
@@ -15,17 +16,13 @@ import (
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	validationcsv "github.com/openline-ai/openline-customer-os/packages/server/validation-api/csv"
-	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -54,7 +51,7 @@ type EmailService interface {
 type emailService struct {
 	cfg            *config.Config
 	log            logger.Logger
-	commonServices *commonservice.Services
+	commonServices *commonservice.CommonServices
 }
 
 func (s *emailService) CheckEnrowRequestsWithoutResponse() {
@@ -75,14 +72,14 @@ func (s *emailService) CheckEnrowRequestsWithoutResponse() {
 		client := &http.Client{}
 
 		// Create POST request
-		req, err := http.NewRequest("GET", fmt.Sprintf("%s/email/verify/single?id=%s", s.cfg.EnrowConfig.ApiUrl, url.QueryEscape(record.RequestID)), nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s/email/verify/single?id=%s", s.cfg.Common.External.EnrowConfig.ApiUrl, url.QueryEscape(record.RequestID)), nil)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 			return
 		}
 
 		// Set headers
-		req.Header.Set("x-api-key", s.cfg.EnrowConfig.ApiKey)
+		req.Header.Set("x-api-key", s.cfg.Common.External.EnrowConfig.ApiKey)
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Accept", "application/json")
 
@@ -124,7 +121,7 @@ func (s *emailService) CheckEnrowRequestsWithoutResponse() {
 	}
 }
 
-func NewEmailService(cfg *config.Config, log logger.Logger, commonServices *commonservice.Services) EmailService {
+func NewEmailService(cfg *config.Config, log logger.Logger, commonServices *commonservice.CommonServices) EmailService {
 	return &emailService{
 		cfg:            cfg,
 		log:            log,
@@ -140,7 +137,7 @@ func (s *emailService) ValidateEmails() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := s.cfg.Limits.EmailsValidationLimit
+	limit := s.cfg.App.Limits.EmailsValidationLimit
 	delayFromLastUpdateInSeconds := 10
 	delayFromLastValidationAttemptInMinutes := 30 // 30 minutes
 
@@ -202,7 +199,7 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 	tracing.TagComponentCronJob(span)
 
 	limit := 200
-	workers := s.cfg.Limits.BulkEmailsValidationThreads
+	workers := s.cfg.App.Limits.BulkEmailsValidationThreads
 
 	records, err := s.commonServices.PostgresRepositories.EmailValidationRecordRepository.GetUnprocessedEmailRecords(ctx, limit)
 	if err != nil {
@@ -223,18 +220,14 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 				defer wg.Done()
 				for record := range recordChan {
 					// Call the email validation method (Placeholder)
-					validationResult, err := s.callEmailValidation(ctx, record.Tenant, record.Email, record.VerifyCatchAll)
+					validationResult, err := s.commonServices.VerifyService.ValidateEmail(ctx, record.Email)
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "Error calling email validation"))
+						tracing.TraceErr(span, errors.Wrap(err, "Error validating email"))
 						s.log.Errorf("Error validating email: %v", err)
 						continue
 					}
 
-					dataObj := validationResult.Data
-					if dataObj == nil {
-						dataObj = &validationmodel.ValidateEmailMailSherpaData{}
-					}
-					data, err := json.Marshal(dataObj)
+					data, err := json.Marshal(validationResult)
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "Error marshalling data"))
 						s.log.Errorf("Error marshalling data: %v", err)
@@ -250,9 +243,9 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 					}
 
 					// create billable event
-					if dataObj.EmailData.Deliverable != "unknown" && dataObj.EmailData.Deliverable != "" {
+					if validationResult.EmailData.Deliverable != "unknown" && validationResult.EmailData.Deliverable != "" {
 						billableEvent := postgresentity.BillableEventEmailVerifiedNotCatchAll
-						if dataObj.DomainData.IsCatchAll {
+						if validationResult.DomainData.IsCatchAll {
 							billableEvent = postgresentity.BillableEventEmailVerifiedCatchAll
 						}
 						_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, record.Tenant, billableEvent,
@@ -266,7 +259,7 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 					}
 
 					// Update bulk request based on deliverable or undeliverable result
-					if strings.ToLower(dataObj.EmailData.Deliverable) == "true" {
+					if strings.ToLower(validationResult.EmailData.Deliverable) == "true" {
 						err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.IncrementDeliverableEmails(ctx, record.RequestID)
 					} else {
 						err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.IncrementUndeliverableEmails(ctx, record.RequestID)
@@ -345,20 +338,19 @@ func (s *emailService) checkAndUpdateBulkRequests(ctx context.Context, requestsT
 
 			// Upload result file to S3
 			basePath := fmt.Sprintf("/EMAIL_VALIDATION/BULK/%d", utils.Now().Year())
-			filesStoreService := fsc.NewFileStoreApiService(&s.cfg.FileStoreApiConfig)
 
-			fileDTO, err := filesStoreService.UploadSingleFileBytes(request.Tenant, basePath, requestID, requestID+".csv", csvContent, span)
+			fileDTO, err := s.commonServices.FileService.UploadSingleFileBytes(ctx, basePath, requestID, requestID+".csv", &csvContent, false)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "UploadSingleFileBytes"))
 				continue
 			}
 
-			if fileDTO.Id == "" {
+			if fileDTO.ID == "" {
 				tracing.TraceErr(span, errors.New("fileDTO.Id is empty"))
 				continue
 			}
 
-			err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.MarkRequestAsCompleted(ctx, requestID, fileDTO.Id)
+			err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.MarkRequestAsCompleted(ctx, requestID, fileDTO.ID)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error marking request as completed"))
 				s.log.Errorf("Failed to mark request %s as completed: %v", requestID, err)
@@ -440,14 +432,14 @@ func (s *emailService) callScrubbyIo(ctx context.Context, email string) (Scrubby
 	span.LogFields(log.String("email", email))
 
 	encodedEmail := url.QueryEscape(email)
-	req, err := http.NewRequest("GET", s.cfg.ScrubbyIoConfig.ApiUrl+"/fetch_email/"+encodedEmail, nil)
+	req, err := http.NewRequest("GET", s.cfg.Common.External.ScrubbyIoConfig.ApiUrl+"/fetch_email/"+encodedEmail, nil)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		return ScrubbyIoResponse{}, err
 	}
 
 	// Set the request headers
-	req.Header.Set("x-api-key", s.cfg.ScrubbyIoConfig.ApiKey)
+	req.Header.Set("x-api-key", s.cfg.Common.External.ScrubbyIoConfig.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Make the HTTP request
@@ -476,93 +468,6 @@ func (s *emailService) callScrubbyIo(ctx context.Context, email string) (Scrubby
 	return scrubbyIoResponse, nil
 }
 
-func (s *emailService) callEmailValidation(ctx context.Context, tenant, email string, verifyCatchAll bool) (validationmodel.ValidateEmailResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.callEmailValidation")
-	defer span.Finish()
-	span.LogFields(log.String("email", email), log.Bool("verifyCatchAll", verifyCatchAll))
-	tracing.TagTenant(span, tenant)
-
-	emptyResponse := validationmodel.ValidateEmailResponse{}
-
-	// prepare validation api request
-	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequestWithOptions{
-		Email: email,
-		Options: validationmodel.ValidateEmailRequestOptions{
-			VerifyCatchAll:      verifyCatchAll,
-			ExtendedWaitingTime: true,
-		},
-	})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
-		return emptyResponse, err
-	}
-	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("POST", s.cfg.ValidationApi.Url+"/validateEmailV2", bytes.NewBuffer(requestBody))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
-		return emptyResponse, err
-	}
-	// Inject span context into the HTTP request
-	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
-
-	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, s.cfg.ValidationApi.ApiKey)
-	req.Header.Set(security.TenantHeader, tenant)
-
-	// Make the HTTP request
-	client := &http.Client{}
-	response, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
-		return emptyResponse, err
-	}
-	defer response.Body.Close()
-	responseBody, err := io.ReadAll(response.Body)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
-		return emptyResponse, err
-	}
-
-	// if response status is 504 retry once
-	if response.StatusCode == http.StatusGatewayTimeout {
-		span.LogFields(log.Int("response.status.firstAttempt", response.StatusCode))
-		response, err = client.Do(req)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
-			return emptyResponse, err
-		}
-		defer response.Body.Close()
-		responseBody, err = io.ReadAll(response.Body)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
-			return emptyResponse, err
-		}
-	}
-
-	span.LogFields(log.Int("response.statusCode", response.StatusCode))
-
-	if response.StatusCode == http.StatusGatewayTimeout {
-		err = errors.New("validation api returned 504 status code")
-		tracing.TraceErr(span, err)
-		return emptyResponse, err
-	}
-
-	var validationResponse validationmodel.ValidateEmailResponse
-	err = json.Unmarshal(responseBody, &validationResponse)
-	if err != nil {
-		span.LogFields(log.String("response.body", string(responseBody)))
-		tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
-		return emptyResponse, err
-	}
-	if validationResponse.Data == nil {
-		tracing.LogObjectAsJson(span, "response", validationResponse)
-		err = errors.New("email validation response data is empty: " + validationResponse.InternalMessage)
-		tracing.TraceErr(span, err)
-		return emptyResponse, err
-	}
-	return validationResponse, nil
-}
-
 func (s *emailService) generateBulkEmailValidationResponseCSVFileContent(ctx context.Context, requestId string) ([]byte, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.generateBulkEmailValidationResponseCSVFileContent")
 	defer span.Finish()
@@ -574,7 +479,7 @@ func (s *emailService) generateBulkEmailValidationResponseCSVFileContent(ctx con
 	writer := csv.NewWriter(&buffer)
 
 	// Write the CSV header
-	header, _ := validationcsv.GenerateCSVRow(validationmodel.ValidateEmailMailSherpaData{})
+	header, _ := GenerateCSVRow(interfaces.ValidateEmailMailSherpaData{})
 	if err := writer.Write(header); err != nil {
 		return nil, fmt.Errorf("failed to write header: %v", err)
 	}
@@ -597,7 +502,7 @@ func (s *emailService) generateBulkEmailValidationResponseCSVFileContent(ctx con
 		// Process each record and generate the CSV row
 		for _, record := range records {
 			// Parse the record data (assuming it's in JSON format) into ValidateEmailMailSherpaData
-			var validationData validationmodel.ValidateEmailMailSherpaData
+			var validationData interfaces.ValidateEmailMailSherpaData
 			if record.Data == "" {
 				tracing.TraceErr(span, fmt.Errorf("validation data is empty for email %s and requestId %s", record.Email, record.RequestID))
 				continue
@@ -607,7 +512,7 @@ func (s *emailService) generateBulkEmailValidationResponseCSVFileContent(ctx con
 			}
 
 			// Generate CSV row
-			_, row := validationcsv.GenerateCSVRow(validationData)
+			_, row := GenerateCSVRow(validationData)
 			if err := writer.Write(row); err != nil {
 				return nil, fmt.Errorf("failed to write row for email %s: %v", record.Email, err)
 			}
@@ -622,6 +527,48 @@ func (s *emailService) generateBulkEmailValidationResponseCSVFileContent(ctx con
 
 	// Return the CSV content as a byte slice
 	return buffer.Bytes(), nil
+}
+
+func GenerateCSVRow(data interfaces.ValidateEmailMailSherpaData) (header []string, row []string) {
+	// Define the header fields (without the excluded ones)
+	header = []string{
+		"Email", "SyntaxIsValid", "User", "Domain", "CleanEmail",
+		"IsFirewalled", "Provider", "SecureGatewayProvider", "IsCatchAll", "CanConnectSMTP",
+		"HasMXRecord", "HasSPFRecord", "TLSRequired", "IsPrimaryDomain", "PrimaryDomain",
+		"SkippedValidation", "Deliverable", "IsMailboxFull", "IsRoleAccount", "IsSystemGenerated",
+		"IsFreeAccount", "SmtpSuccess", "RetryValidation", "TLSRequired", "AlternateEmail",
+	}
+
+	// Create the corresponding row for the given data
+	row = []string{
+		data.Email,
+		fmt.Sprintf("%v", data.Syntax.IsValid),
+		data.Syntax.User,
+		data.Syntax.Domain,
+		data.Syntax.CleanEmail,
+		fmt.Sprintf("%v", data.DomainData.IsFirewalled),
+		data.DomainData.Provider,
+		data.DomainData.SecureGatewayProvider,
+		fmt.Sprintf("%v", data.DomainData.IsCatchAll),
+		fmt.Sprintf("%v", data.DomainData.CanConnectSMTP),
+		fmt.Sprintf("%v", data.DomainData.HasMXRecord),
+		fmt.Sprintf("%v", data.DomainData.HasSPFRecord),
+		fmt.Sprintf("%v", data.DomainData.TLSRequired),
+		fmt.Sprintf("%v", data.DomainData.IsPrimaryDomain),
+		data.DomainData.PrimaryDomain,
+		fmt.Sprintf("%v", data.EmailData.SkippedValidation),
+		data.EmailData.Deliverable,
+		fmt.Sprintf("%v", data.EmailData.IsMailboxFull),
+		fmt.Sprintf("%v", data.EmailData.IsRoleAccount),
+		fmt.Sprintf("%v", data.EmailData.IsSystemGenerated),
+		fmt.Sprintf("%v", data.EmailData.IsFreeAccount),
+		fmt.Sprintf("%v", data.EmailData.SmtpSuccess),
+		fmt.Sprintf("%v", data.EmailData.RetryValidation),
+		fmt.Sprintf("%v", data.EmailData.TLSRequired),
+		data.EmailData.AlternateEmail,
+	}
+
+	return header, row
 }
 
 func (s *emailService) CleanEmails() {

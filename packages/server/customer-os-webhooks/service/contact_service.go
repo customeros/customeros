@@ -3,26 +3,29 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	common_srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	pkgerrors "github.com/pkg/errors"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	pkgerrors "github.com/pkg/errors"
-	"strings"
-	"sync"
-	"time"
 )
 
 type ContactService interface {
@@ -44,7 +47,7 @@ func NewContactService(log logger.Logger, repositories *repository.Repositories,
 		repositories: repositories,
 		grpcClients:  grpcClients,
 		services:     services,
-		maxWorkers:   services.cfg.ConcurrencyConfig.ContactSyncConcurrency,
+		maxWorkers:   services.cfg.App.ConcurrencyConfig.ContactSyncConcurrency,
 	}
 }
 
@@ -127,9 +130,9 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	tracing.LogObjectAsJson(span, "contactInput", contactInput)
 
 	tenant := common.GetTenantFromContext(ctx)
-	var appSource = utils.StringFirstNonEmpty(contactInput.AppSource, constants.AppSourceCustomerOsWebhooks)
-	var failedSync = false
-	var reason = ""
+	appSource := utils.StringFirstNonEmpty(contactInput.AppSource, constants.AppSourceCustomerOsWebhooks)
+	failedSync := false
+	reason := ""
 
 	contactInput.Normalize()
 
@@ -149,7 +152,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	}
 
 	// Filter out un-existing organizations
-	var identifiedOrganizations = make(map[string]model.ReferencedOrganization)
+	identifiedOrganizations := make(map[string]model.ReferencedOrganization)
 	for _, org := range contactInput.Organizations {
 		orgId, _ := s.services.OrganizationService.GetIdForReferencedOrganization(ctx, tenant, contactInput.ExternalSystem, org)
 		if orgId != "" {
@@ -270,13 +273,13 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	}
 	if !failedSync && contactInput.HasPrimaryEmail() {
 		_, err = s.services.CommonServices.EmailService.Merge(ctx, nil, tenant,
-			commonservice.EmailFields{
+			interfaces.EmailFields{
 				Email:     contactInput.Email,
 				AppSource: appSource,
 				Source:    neo4jentity.DecodeDataSource(contactInput.ExternalSystem),
 				Primary:   true,
 			},
-			&commonservice.LinkWith{
+			&common_srv.LinkWith{
 				Type: commonmodel.CONTACT,
 				Id:   contactId,
 			})
@@ -289,13 +292,13 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	if !failedSync && contactInput.HasAdditionalEmails() {
 		for _, email := range contactInput.AdditionalEmails {
 			_, err = s.services.CommonServices.EmailService.Merge(ctx, nil, tenant,
-				commonservice.EmailFields{
+				interfaces.EmailFields{
 					Email:     email,
 					AppSource: appSource,
 					Source:    neo4jentity.DecodeDataSource(contactInput.ExternalSystem),
 					Primary:   false,
 				},
-				&commonservice.LinkWith{
+				&common_srv.LinkWith{
 					Type: commonmodel.CONTACT,
 					Id:   contactId,
 				})
@@ -310,7 +313,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		for _, social := range contactInput.Socials {
 			_, err = s.services.CommonServices.SocialService.AddSocialToEntity(ctx,
 				nil,
-				commonservice.LinkWith{
+				common_srv.LinkWith{
 					Id:   contactId,
 					Type: commonmodel.CONTACT,
 				},
@@ -387,7 +390,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 						Address:    contactInput.Address,
 						Zip:        contactInput.Zip,
 						PostalCode: contactInput.PostalCode,
-					}, &commonservice.LinkWith{
+					}, &common_srv.LinkWith{
 						Type: commonmodel.CONTACT,
 						Id:   contactId,
 					})

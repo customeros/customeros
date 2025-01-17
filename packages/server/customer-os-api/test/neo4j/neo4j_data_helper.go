@@ -14,7 +14,7 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
 )
 
 // Deprecated
@@ -206,7 +206,7 @@ func CreateEntityTemplate(ctx context.Context, driver *neo4j.DriverWithContext, 
 }
 
 // Deprecated
-func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, issue entity.IssueEntity) string {
+func CreateIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, issue neo4jentity.IssueEntity) string {
 	issueId, _ := uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue {id:$id})

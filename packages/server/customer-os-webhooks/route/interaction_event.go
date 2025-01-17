@@ -16,7 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -249,8 +249,8 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 			processEmailCheck := services.CommonServices.MailService.ProcessEmailCheck(ctx, tenantByName, &loadedEmail)
 
 			if processEmailCheck.ProcessEmail ||
-				processEmailCheck.SkipReason == "BULK | FROM NON-PRIMARY DOMAIN" { //allow personal emails to be processed
-				err = processMailstackReply(ctx, services, tenantByName, postmarkEmailWebhookData, cfg.Slack.NotifyFlowGoalAchieved)
+				processEmailCheck.SkipReason == "BULK | FROM NON-PRIMARY DOMAIN" { // allow personal emails to be processed
+				err = processMailstackReply(ctx, services, tenantByName, postmarkEmailWebhookData, cfg.Common.External.SlackConfig.NotifyFlowGoalAchieved)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					log.Errorf("(SyncInteractionEvent) error processing email for flows: %s", err.Error())
@@ -258,7 +258,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 					return
 				}
 
-				if cfg.Slack.NotifyPostmarkEmail != "" {
+				if cfg.Common.External.SlackConfig.NotifyPostmarkEmail != "" {
 					slackMessageText := "*From:* " + postmarkEmailWebhookData.FromFull.Email + " - " + postmarkEmailWebhookData.FromFull.Name + "\n"
 					for _, t := range postmarkEmailWebhookData.ToFull {
 						slackMessageText += "*To:* " + t.Email + " - " + t.Name + "\n"
@@ -272,7 +272,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 					slackMessageText += "*Subject:* " + postmarkEmailWebhookData.Subject + "\n"
 					slackMessageText += "*Body:* " + postmarkEmailWebhookData.HtmlBody
 
-					utils.SendSlackMessage(ctx, cfg.Slack.NotifyPostmarkEmail, slackMessageText)
+					utils.SendSlackMessage(ctx, cfg.Common.External.SlackConfig.NotifyPostmarkEmail, slackMessageText)
 				}
 			}
 		}
@@ -456,7 +456,7 @@ func processMailstackReply(ctx context.Context, services *service.Services, tena
 				}
 			}
 
-			err = services.CommonServices.RabbitMQService.PublishEvent(ctx, flowActionExecution.FlowId, commonModel.FLOW, dto.FlowParticipantGoalAchieved{
+			err = services.CommonServices.Events.Publisher.PublishEvent(ctx, flowActionExecution.FlowId, commonModel.FLOW, dto.FlowParticipantGoalAchieved{
 				ParticipantId:   flowParticipant.EntityId,
 				ParticipantType: flowParticipant.EntityType,
 			})
@@ -464,7 +464,7 @@ func processMailstackReply(ctx context.Context, services *service.Services, tena
 				tracing.TraceErr(span, err)
 			}
 
-			services.CommonServices.RabbitMQService.PublishEventCompleted(ctx, tenant, flowParticipant.Id, commonModel.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
+			services.CommonServices.Events.Publisher.PublishEventCompleted(ctx, tenant, flowParticipant.Id, commonModel.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
 		}
 
 	}

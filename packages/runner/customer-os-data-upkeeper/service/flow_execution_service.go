@@ -7,7 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -26,10 +26,10 @@ type FlowExecutionService interface {
 type flowExecutionService struct {
 	cfg            *config.Config
 	log            logger.Logger
-	commonServices *commonService.Services
+	commonServices *commonService.CommonServices
 }
 
-func NewFlowExecutionService(cfg *config.Config, log logger.Logger, commonServices *commonService.Services) FlowExecutionService {
+func NewFlowExecutionService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices) FlowExecutionService {
 	return &flowExecutionService{
 		cfg:            cfg,
 		log:            log,
@@ -156,7 +156,7 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 
 	if flowsUpdated != nil && len(flowsUpdated) > 0 {
 		for _, flowData := range flowsUpdated {
-			s.commonServices.RabbitMQService.PublishEventCompletedBulk(ctx, flowData.Tenant, flowData.Strings, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+			s.commonServices.Events.Publisher.PublishEventCompletedBulk(ctx, flowData.Tenant, flowData.Strings, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 

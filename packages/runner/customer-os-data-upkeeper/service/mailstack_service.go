@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/pkg/errors"
 
@@ -18,10 +18,10 @@ type MailstackService interface {
 type mailstackService struct {
 	cfg            *config.Config
 	log            logger.Logger
-	commonServices *commonservice.Services
+	commonServices *commonservice.CommonServices
 }
 
-func NewMailstackService(cfg *config.Config, log logger.Logger, commonServices *commonservice.Services) MailstackService {
+func NewMailstackService(cfg *config.Config, log logger.Logger, commonServices *commonservice.CommonServices) MailstackService {
 	return &mailstackService{
 		cfg:            cfg,
 		log:            log,

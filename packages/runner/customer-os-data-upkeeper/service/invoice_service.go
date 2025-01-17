@@ -8,13 +8,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -76,12 +76,12 @@ type InvoiceService interface {
 type invoiceService struct {
 	cfg                    *config.Config
 	log                    logger.Logger
-	commonServices         *commonService.Services
+	commonServices         *commonService.CommonServices
 	repositories           *repository.Repositories
 	eventsProcessingClient *grpc_client.Clients
 }
 
-func NewInvoiceService(cfg *config.Config, log logger.Logger, commonServices *commonService.Services, repositories *repository.Repositories, client *grpc_client.Clients) InvoiceService {
+func NewInvoiceService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices, repositories *repository.Repositories, client *grpc_client.Clients) InvoiceService {
 	return &invoiceService{
 		cfg:                    cfg,
 		log:                    log,
@@ -95,7 +95,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	if s.cfg.ProcessConfig.CycleInvoicingEnabled == false {
+	if s.cfg.App.ProcessConfig.CycleInvoicingEnabled == false {
 		s.log.Infof("Cycle invoicing is disabled, stopping")
 		return
 	}
@@ -126,7 +126,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceTime, s.cfg.ProcessConfig.DelayGenerateCycleInvoiceInMinutes, limit)
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceTime, s.cfg.App.ProcessConfig.DelayGenerateCycleInvoiceInMinutes, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for invoicing: %v", err)
@@ -298,7 +298,7 @@ func (s *invoiceService) SendPayNotifications() {
 		}
 
 		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForPayNotifications(
-			ctx, s.cfg.ProcessConfig.DelaySendPayInvoiceNotificationInMinutes, s.cfg.ProcessConfig.RetrySendPayInvoiceNotificationDays, referenceTime)
+			ctx, s.cfg.App.ProcessConfig.DelaySendPayInvoiceNotificationInMinutes, s.cfg.App.ProcessConfig.RetrySendPayInvoiceNotificationDays, referenceTime)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting invoices for pay notifications: %v", err)
@@ -417,9 +417,9 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	if s.cfg.ProcessConfig.OffCycleInvoicingEnabled == false {
+	if s.cfg.App.ProcessConfig.OffCycleInvoicingEnabled == false {
 		s.log.Infof("Off-cycle invoicing is disabled, stopping")
-		span.LogFields(log.Bool("off_cycle_invoicing_enabled", s.cfg.ProcessConfig.OffCycleInvoicingEnabled))
+		span.LogFields(log.Bool("off_cycle_invoicing_enabled", s.cfg.App.ProcessConfig.OffCycleInvoicingEnabled))
 		return
 	}
 
@@ -445,7 +445,7 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, referenceTime, s.cfg.ProcessConfig.DelayGenerateOffCycleInvoiceInMinutes, limit)
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, referenceTime, s.cfg.App.ProcessConfig.DelayGenerateOffCycleInvoiceInMinutes, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting contracts for off-cycle invoicing: %v", err)
@@ -523,7 +523,7 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 		return
 	}
 
-	if s.cfg.EventNotifications.IntegrationAppEventWebhookUrls.GeneratePaymentLinkUrl == "" {
+	if s.cfg.App.EventNotifications.IntegrationAppEventWebhookUrls.GeneratePaymentLinkUrl == "" {
 		err := errors.New("GeneratePaymentLinkUrl is not configured")
 		tracing.TraceErr(span, err)
 		s.log.Error(err.Error())
@@ -543,7 +543,7 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 		}
 
 		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForPaymentLinkRequest(
-			ctx, s.cfg.ProcessConfig.DelayRequestPaymentLinkInMinutes, s.cfg.ProcessConfig.RequestPaymentLinkLookBackWindowInDays, referenceTime, limit)
+			ctx, s.cfg.App.ProcessConfig.DelayRequestPaymentLinkInMinutes, s.cfg.App.ProcessConfig.RequestPaymentLinkLookBackWindowInDays, referenceTime, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting invoices for payment links generation: %v", err)
@@ -627,7 +627,7 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 			client := &http.Client{}
 
 			// Create a POST request with headers and body
-			req, err := http.NewRequest("POST", s.cfg.EventNotifications.IntegrationAppEventWebhookUrls.GeneratePaymentLinkUrl, bytes.NewBuffer(requestBodyJSON))
+			req, err := http.NewRequest("POST", s.cfg.App.EventNotifications.IntegrationAppEventWebhookUrls.GeneratePaymentLinkUrl, bytes.NewBuffer(requestBodyJSON))
 			if err != nil {
 				tracing.TraceErr(span, err)
 				continue
@@ -902,7 +902,7 @@ func (s *invoiceService) SendInvoiceFinalizedEvent() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	if s.cfg.EventNotifications.IntegrationAppEventWebhookUrls.InvoiceFinalizedUrl == "" {
+	if s.cfg.App.EventNotifications.IntegrationAppEventWebhookUrls.InvoiceFinalizedUrl == "" {
 		err := errors.New("InvoiceFinalizedUrl is not configured")
 		tracing.TraceErr(span, err)
 		s.log.Error(err.Error())
@@ -921,7 +921,7 @@ func (s *invoiceService) SendInvoiceFinalizedEvent() {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetReadyInvoicesForFinalizedEvent(ctx, s.cfg.ProcessConfig.DelayAutoPayInvoiceInMinutes, referenceTime, limit)
+		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetReadyInvoicesForFinalizedEvent(ctx, s.cfg.App.ProcessConfig.DelayAutoPayInvoiceInMinutes, referenceTime, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting invoices for finalized event: %v", err)
@@ -968,7 +968,7 @@ func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Conte
 		AppSource: constants.AppSourceDataUpkeeper,
 	})
 
-	if s.cfg.EventNotifications.IntegrationAppEventWebhookUrls.InvoiceFinalizedUrl == "" {
+	if s.cfg.App.EventNotifications.IntegrationAppEventWebhookUrls.InvoiceFinalizedUrl == "" {
 		return nil
 	}
 
@@ -1040,7 +1040,7 @@ func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Conte
 	client := &http.Client{}
 
 	// Create a POST request with headers and body
-	req, err := http.NewRequest("POST", s.cfg.EventNotifications.IntegrationAppEventWebhookUrls.InvoiceFinalizedUrl, bytes.NewBuffer(requestBodyJSON))
+	req, err := http.NewRequest("POST", s.cfg.App.EventNotifications.IntegrationAppEventWebhookUrls.InvoiceFinalizedUrl, bytes.NewBuffer(requestBodyJSON))
 	if err != nil {
 		return fmt.Errorf("error creating request: %v", err)
 	}

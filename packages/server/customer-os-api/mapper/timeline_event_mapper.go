@@ -1,10 +1,11 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
 )
 
 func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.TimelineEvent {
@@ -13,7 +14,7 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.T
 	}
 	switch (*timelineEventEntity).TimelineEventLabel() {
 	case commonmodel.NodeLabelIssue:
-		issueEntity := (*timelineEventEntity).(*entity.IssueEntity)
+		issueEntity := (*timelineEventEntity).(*neo4jentity.IssueEntity)
 		return MapEntityToIssue(issueEntity)
 	case commonmodel.NodeLabelNote:
 		noteEntity := (*timelineEventEntity).(*entity.NoteEntity)
@@ -22,7 +23,7 @@ func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.T
 		interactionEventEntity := (*timelineEventEntity).(*neo4jentity.InteractionEventEntity)
 		return MapEntityToInteractionEvent(interactionEventEntity)
 	case commonmodel.NodeLabelMeeting:
-		meetingEntity := (*timelineEventEntity).(*entity.MeetingEntity)
+		meetingEntity := (*timelineEventEntity).(*neo4jentity.MeetingEntity)
 		return MapEntityToMeeting(meetingEntity)
 	case commonmodel.NodeLabelAction:
 		actionEntity := (*timelineEventEntity).(*neo4jentity.ActionEntity)

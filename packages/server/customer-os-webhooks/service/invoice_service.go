@@ -3,8 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -12,15 +17,12 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	"strconv"
-	"strings"
-	"sync"
-	"time"
 )
 
 type InvoiceService interface {
@@ -41,7 +43,7 @@ func NewInvoiceService(log logger.Logger, repositories *repository.Repositories,
 		repositories: repositories,
 		grpcClients:  grpcClients,
 		services:     services,
-		maxWorkers:   services.cfg.ConcurrencyConfig.InvoiceSyncConcurrency,
+		maxWorkers:   services.cfg.App.ConcurrencyConfig.InvoiceSyncConcurrency,
 	}
 }
 
@@ -127,8 +129,8 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 	tracing.LogObjectAsJson(span, "invoiceInput", invoiceInput)
 
 	tenant := common.GetTenantFromContext(ctx)
-	var failedSync = false
-	var reason = ""
+	failedSync := false
+	reason := ""
 
 	invoiceInput.Normalize()
 
