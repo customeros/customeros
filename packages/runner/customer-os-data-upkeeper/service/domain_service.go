@@ -35,7 +35,7 @@ func (s *domainService) CheckDomains() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 500
+	limit := 50
 	delayFromLastUpdateInDays := 30
 
 	records, err := s.commonServices.Neo4jRepositories.DomainReadRepository.GetDomainsForPrimaryCheck(ctx, delayFromLastUpdateInDays, limit)

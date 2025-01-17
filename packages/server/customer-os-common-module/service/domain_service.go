@@ -174,6 +174,16 @@ func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain s
 	}
 
 	_, isPrimary, primaryDomain := s.CheckDomainWithMailsherpa(ctx, domain)
+	span.LogFields(log.Bool("result.mailsherpa.isPrimary", isPrimary), log.String("result.mailsherpa.primaryDomain", primaryDomain))
+	if primaryDomain != "" {
+		if !utils.IsValidDomain(primaryDomain) {
+			primaryDomain = ""
+		}
+		_, isPrimaryDomainPrimary, _ := s.CheckDomainWithMailsherpa(ctx, primaryDomain)
+		if !isPrimaryDomainPrimary {
+			primaryDomain = ""
+		}
+	}
 
 	err = s.services.Neo4jRepositories.DomainWriteRepository.SetPrimaryDetails(ctx, domain, primaryDomain, isPrimary)
 	if err != nil {
