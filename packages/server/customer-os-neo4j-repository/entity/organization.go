@@ -20,6 +20,7 @@ const (
 	OrganizationPropertyIndustry                  OrganizationProperty = "industry"
 	OrganizationPropertyIsPublic                  OrganizationProperty = "isPublic"
 	OrganizationPropertyDomainCheckedAt           OrganizationProperty = "techDomainCheckedAt"
+	OrganizationPropertyCheckedAt                 OrganizationProperty = "techCheckedAt"
 	OrganizationPropertyLastTouchpointRequestedAt OrganizationProperty = "techLastTouchpointRequestedAt"
 	OrganizationPropertyLastTouchpointType        OrganizationProperty = "lastTouchpointType"
 	OrganizationPropertyLastTouchpointAt          OrganizationProperty = "lastTouchpointAt"
@@ -43,7 +44,9 @@ type OrganizationEntity struct {
 	Name               string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
 	Description        string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
 	Website            string `neo4jDb:"property:website;lookupName:WEBSITE;supportCaseSensitive:true"`
-	Industry           string // Free text industry, replaced with link to industry node. Use industry as temporary field for sync from other systems
+	Industry           string `neo4jDb:"property:industry;lookupName:INDUSTRY;supportCaseSensitive:true"`
+	TargetAudience     string
+	ValueProposition   string
 	IsPublic           bool
 	Hide               bool
 	Market             string
@@ -118,6 +121,7 @@ type OrganizationEnrichDetails struct {
 
 type OrganizationInternalFields struct {
 	DomainCheckedAt           *time.Time
+	CheckedAt                 *time.Time
 	LastTouchpointRequestedAt *time.Time
 	HiddenAt                  *time.Time
 }

@@ -2,19 +2,21 @@ package notifications
 
 import (
 	"context"
+	"strings"
+
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
-	"strings"
 )
 
 type NotificationsSubscriber struct {
@@ -29,7 +31,7 @@ func NewNotificationsSubscriber(log logger.Logger, db *esdb.Client, services *se
 		log:             log,
 		db:              db,
 		cfg:             cfg,
-		orgEventHandler: NewOrganizationEventHandler(log, services, cfg),
+		orgEventHandler: NewOrganizationEventHandler(log, cfg, services.Neo4jRepositories, services.CommonServices.NovuService),
 	}
 }
 
@@ -60,7 +62,6 @@ func (consumer *NotificationsSubscriber) runWorker(ctx context.Context, worker s
 }
 
 func (s *NotificationsSubscriber) ProcessEvents(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error {
-
 	for {
 		event := stream.Recv()
 		select {

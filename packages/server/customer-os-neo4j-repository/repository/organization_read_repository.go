@@ -62,10 +62,10 @@ type OrganizationReadRepository interface {
 	GetHiddenOrganizationIds(ctx context.Context, tenant string, hiddenAfter time.Time) ([]string, error)
 	GetMergedOrganizationIds(ctx context.Context, tenant string, mergedAfter time.Time) ([]string, error)
 	GetOrganizationsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error)
+	GetOrganizationsToCheck(ctx context.Context, minutesSinceLastUpdate, hoursSinceLastCheck, limit int) ([]TenantAndOrganization, error)
 	GetActiveOrganizationIdsByDomain(ctx context.Context, tenant string, domains []string) (map[string]string, error)
 	GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
-	GetOrganizationsByDomainAcrossAllTenants(ctx context.Context, domain string) ([]TenantAndOrganizationId, error)
 }
 
 type organizationReadRepository struct {
@@ -1228,6 +1228,54 @@ func (r *organizationReadRepository) GetOrganizationsWithEmail(ctx context.Conte
 	return result.([]*dbtype.Node), err
 }
 
+func (r *organizationReadRepository) GetOrganizationsToCheck(ctx context.Context, minutesFromLastUpdate, hoursFromLastCheck, limit int) ([]TenantAndOrganization, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsToCheck")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Int("limit", limit))
+	span.LogFields(log.Int("minutesFromLastUpdate", minutesFromLastUpdate))
+	span.LogFields(log.Int("hoursFromLastCheck", hoursFromLastCheck))
+
+	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
+				WHERE
+					(o.hide IS NULL OR o.hide = false) AND
+					(o.techCheckedAt IS NULL OR o.checkedAt < datetime() - duration({hours: $hoursFromLastCheck})) AND
+					o.updatedAt < datetime() - duration({minutes: $minutesFromLastUpdate})
+					ORDER BY CASE WHEN o.techCheckedAt IS NULL THEN 0 ELSE 1 END, o.techCheckedAt ASC
+				RETURN t.name, o LIMIT $limit`
+	params := map[string]any{
+		"limit":                 limit,
+		"minutesFromLastUpdate": minutesFromLastUpdate,
+		"hoursFromLastCheck":    hoursFromLastCheck,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndOrganization, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndOrganization{
+				Tenant:       v.Values[0].(string),
+				Organization: v.Values[1].(*dbtype.Node),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
+}
+
 func (r *organizationReadRepository) GetActiveOrganizationIdsByDomain(ctx context.Context, tenant string, domains []string) (map[string]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetActiveOrganizationIdsByDomain")
 	defer span.Finish()
@@ -1330,43 +1378,4 @@ func (r *organizationReadRepository) GetLinkedParentOrganizations(ctx context.Co
 		return nil, err
 	}
 	return result.([]*utils.DbNodeWithRelationAndId), err
-}
-
-func (r *organizationReadRepository) GetOrganizationsByDomainAcrossAllTenants(ctx context.Context, domain string) ([]TenantAndOrganizationId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-
-	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain {domain:$domain})
-				RETURN t.name, org.id`
-
-	params := map[string]any{
-		"domain": domain,
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	session := r.prepareReadSession(ctx)
-	defer session.Close(ctx)
-
-	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, cypher, params)
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Collect(ctx)
-	})
-	if err != nil {
-		return nil, err
-	}
-	output := make([]TenantAndOrganizationId, 0)
-	for _, v := range records.([]*neo4j.Record) {
-		output = append(output,
-			TenantAndOrganizationId{
-				Tenant:         v.Values[0].(string),
-				OrganizationId: v.Values[1].(string),
-			})
-	}
-	span.LogFields(log.Int("result.count", len(output)))
-	return output, nil
 }

@@ -20,13 +20,8 @@ type GlobalOrganizationRepository interface {
 	Update(ctx context.Context, organization *entity.GlobalOrganization) (*entity.GlobalOrganization, error)
 	Search(ctx context.Context, searchTerm string, limit int) ([]*entity.GlobalOrganization, error)
 	GetOrganizationsToEnrichIndustry(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*entity.GlobalOrganization, error)
-	GetOrganizationsToEnrichDescription(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*entity.GlobalOrganization, error)
 	MarkIndustryEnrichRequested(ctx context.Context, id uint64) error
-	MarkDescriptionEnrichRequested(ctx context.Context, id uint64) error
 	SetIndustry(ctx context.Context, id uint64, industryNaicsCode, industryNaicsName string) error
-	SetDescription(ctx context.Context, id uint64, description string) error
-	GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx context.Context, daysFromPreviousSync, limit int) ([]*entity.GlobalOrganization, error)
-	MarkGlobalOrganizationSyncedToNeo(ctx context.Context, id uint64) error
 }
 
 type globalOrganizationRepository struct {
@@ -46,14 +41,14 @@ func (r *globalOrganizationRepository) GetById(ctx context.Context, id uint64) (
 	organization := &entity.GlobalOrganization{}
 	result := r.db.WithContext(ctx).Where("id = ?", id).First(organization)
 	if result.Error != nil {
-		span.LogFields(tracingLog.Bool("result.found", false))
+		span.LogFields(tracingLog.Bool("found", false))
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		tracing.TraceErr(span, result.Error)
 		return nil, result.Error
 	}
-	span.LogFields(tracingLog.Bool("result.found", true))
+	span.LogFields(tracingLog.Bool("found", true))
 	return organization, nil
 }
 
@@ -153,29 +148,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichIndustry(ctx cont
 		Where("industry_naics_code IS NULL OR industry_naics_code = ''").
 		Where("industry_request_count IS NULL OR industry_request_count < ?", maxAttempts).
 		Where("industry_requested_at IS NULL OR industry_requested_at < ?", utils.Now().Add(-1*time.Hour*time.Duration(hoursFromPreviousAttempt))).
-		Order("CASE WHEN industry_requested_at IS NULL THEN 0 ELSE 1 END, industry_requested_at ASC").
-		Limit(limit).
-		Find(&organizations)
-	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
-		return nil, result.Error
-	}
-	span.LogFields(tracingLog.Int("found", len(organizations)))
-	return organizations, nil
-}
-
-func (r *globalOrganizationRepository) GetOrganizationsToEnrichDescription(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*entity.GlobalOrganization, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetOrganizationsToEnrichDescription")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Int("hoursFromPreviousAttempt", hoursFromPreviousAttempt), tracingLog.Int("limit", limit), tracingLog.Int("maxAttempts", maxAttempts))
-
-	organizations := make([]*entity.GlobalOrganization, 0)
-	result := r.db.WithContext(ctx).
-		Where("description IS NULL OR description = ''").
-		Where("description_request_count IS NULL OR description_request_count < ?", maxAttempts).
-		Where("description_requested_at IS NULL OR description_requested_at < ?", utils.Now().Add(-1*time.Hour*time.Duration(hoursFromPreviousAttempt))).
-		Order("CASE WHEN description_requested_at IS NULL THEN 0 ELSE 1 END,description_requested_at ASC").
+		Order("CASE WHEN industry_requested_at IS NULL THEN 0 ELSE 1 END, industry_requested_at").
 		Limit(limit).
 		Find(&organizations)
 	if result.Error != nil {
@@ -194,25 +167,8 @@ func (r *globalOrganizationRepository) MarkIndustryEnrichRequested(ctx context.C
 
 	result := r.db.WithContext(ctx).Model(&entity.GlobalOrganization{}).
 		Where("id = ?", id).
-		UpdateColumn("industry_request_count", gorm.Expr("COALESCE(industry_request_count, 0) + 1")).
-		UpdateColumn("industry_requested_at", utils.Now())
-	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
-		return result.Error
-	}
-	return nil
-}
-
-func (r *globalOrganizationRepository) MarkDescriptionEnrichRequested(ctx context.Context, id uint64) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.MarkDescriptionEnrichRequested")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Uint64("id", id))
-
-	result := r.db.WithContext(ctx).Model(&entity.GlobalOrganization{}).
-		Where("id = ?", id).
-		UpdateColumn("description_request_count", gorm.Expr("COALESCE(description_request_count, 0) + 1")).
-		UpdateColumn("description_requested_at", utils.Now())
+		Update("industry_requested_at", utils.Now()).
+		UpdateColumn("industry_request_count", gorm.Expr("COALESCE(industry_request_count, 0) + 1"))
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
 		return result.Error
@@ -233,62 +189,6 @@ func (r *globalOrganizationRepository) SetIndustry(ctx context.Context, id uint6
 			"industry_naics_name": industryNaicsName,
 			"industry_set_at":     utils.Now(),
 		})
-	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
-		return result.Error
-	}
-	return nil
-}
-
-func (r *globalOrganizationRepository) SetDescription(ctx context.Context, id uint64, description string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetDescription")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Uint64("id", id), tracingLog.String("description", description))
-
-	result := r.db.WithContext(ctx).Model(&entity.GlobalOrganization{}).
-		Where("id = ?", id).
-		Updates(map[string]interface{}{
-			"description":        description,
-			"description_set_at": utils.Now(),
-		})
-	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
-		return result.Error
-	}
-	return nil
-}
-
-func (r *globalOrganizationRepository) GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx context.Context, daysFromPreviousSync, limit int) ([]*entity.GlobalOrganization, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetGlobalOrganizationsToSyncIntoTenantOrganizations")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Int("daysFromPreviousSync", daysFromPreviousSync), tracingLog.Int("limit", limit))
-
-	organizations := make([]*entity.GlobalOrganization, 0)
-	result := r.db.WithContext(ctx).
-		Where("((industry_naics_code IS NOT NULL AND industry_naics_code <> '') AND (description IS NOT NULL AND description <> ''))").
-		Where("synced_to_neo_at IS NULL OR synced_to_neo_at < ?", utils.Now().Add(-24*time.Hour*time.Duration(daysFromPreviousSync))).
-		Order("CASE WHEN synced_to_neo_at IS NULL THEN 0 ELSE 1 END, synced_to_neo_at").
-		Limit(limit).
-		Find(&organizations)
-	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
-		return nil, result.Error
-	}
-	span.LogFields(tracingLog.Int("found", len(organizations)))
-	return organizations, nil
-}
-
-func (r *globalOrganizationRepository) MarkGlobalOrganizationSyncedToNeo(ctx context.Context, id uint64) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Uint64("id", id))
-
-	result := r.db.WithContext(ctx).Model(&entity.GlobalOrganization{}).
-		Where("id = ?", id).
-		UpdateColumn("synced_to_neo_at", utils.Now())
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
 		return result.Error

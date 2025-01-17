@@ -37,7 +37,7 @@ export const OrganizationTableActions = observer(
   }: TableActionsProps) => {
     const store = useStore();
 
-    const [_targetId, setTargetId] = useState<string | null>(null);
+    const [targetId, setTargetId] = useState<string | null>(null);
 
     const selectCount = selection?.length;
 
@@ -54,6 +54,12 @@ export const OrganizationTableActions = observer(
       store.ui.commandMenu.setCallback(() => {
         clearSelection();
       });
+    };
+
+    const onCreateContact = () => {
+      if (!focusedId) return;
+      store.ui.commandMenu.setType('AddContactsBulk');
+      store.ui.commandMenu.setOpen(true);
     };
 
     const onOpenCommandK = () => {
@@ -155,6 +161,13 @@ export const OrganizationTableActions = observer(
         u: moveToAllOrgs,
         t: moveToTarget,
         o: moveToOpportunities,
+        c: (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+
+          if (selectCount > 1) return;
+          onCreateContact();
+        },
         Escape: clearSelection,
       },
       { when: enableKeyboardShortcuts },
@@ -193,6 +206,24 @@ export const OrganizationTableActions = observer(
         handleOpen('DeleteConfirmationModal');
       },
       { when: enableKeyboardShortcuts },
+    );
+
+    useModKey(
+      'v',
+      () => {
+        if (focusedId) {
+          if (!targetId) {
+            setTargetId(focusedId);
+          }
+          onCreateContact();
+        }
+      },
+      {
+        when:
+          enableKeyboardShortcuts &&
+          selectCount <= 1 &&
+          typeof focusedId === 'string',
+      },
     );
 
     return (

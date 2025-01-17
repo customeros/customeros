@@ -8,23 +8,26 @@ import (
 	"time"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	service "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
+	common_srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 )
 
 type OrganizationListener interface {
@@ -32,15 +35,27 @@ type OrganizationListener interface {
 }
 
 type organizationListenerImpl struct {
-	services *service.Services
-	log      logger.Logger
+	services          *service.CommonServices
+	neo4jRepositories *repository.Repositories
+	log               logger.Logger
+	config            *config.CommonConfig
 }
 
-func NewOrganizationListener(services *service.Services, log logger.Logger) OrganizationListener {
-	return &organizationListenerImpl{services: services, log: log}
+func NewOrganizationListener(
+	services *service.CommonServices,
+	neo4jRepositories *repository.Repositories,
+	log logger.Logger,
+	config *config.CommonConfig,
+) OrganizationListener {
+	return &organizationListenerImpl{
+		log:               log,
+		config:            config,
+		neo4jRepositories: neo4jRepositories,
+		services:          services,
+	}
 }
 
-func OnRequestedEnrichOrganization(ctx context.Context, services *service.Services, input any) error {
+func OnRequestedEnrichOrganization(ctx context.Context, dependencies *model.DependencyContainer, input any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnRequestedEnrichOrganization")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -58,21 +73,14 @@ func OnRequestedEnrichOrganization(ctx context.Context, services *service.Servic
 
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
-	if services.GlobalConfig.InternalServices.EnrichmentApiConfig.Url == "" || services.GlobalConfig.InternalServices.EnrichmentApiConfig.ApiKey == "" {
-		err := errors.New("enrichment api url or api key is not set")
-		tracing.TraceErr(span, err)
-		return err
-	}
+	l := NewOrganizationListener(
+		dependencies.CommonServices,
+		dependencies.Neo4jRepositories,
+		dependencies.Logger,
+		dependencies.CommonConfig,
+	)
 
-	if services.GlobalConfig.InternalServices.AiApiConfig.Url == "" || services.GlobalConfig.InternalServices.AiApiConfig.ApiKey == "" {
-		err := errors.New("ai api url or api key is not set")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	l := NewOrganizationListener(services, services.Logger)
-
-	domain, _ := services.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, messageData.Url)
+	domain, _ := dependencies.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, messageData.Url)
 	if domain == "" {
 		return nil
 	}
@@ -103,7 +111,7 @@ func (l *organizationListenerImpl) enrichOrganization(ctx context.Context, tenan
 		return nil
 	}
 
-	organizationDbNode, err := l.services.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
+	organizationDbNode, err := l.neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		l.log.Errorf("Error getting organization with id %s: %v", organizationId, err)
@@ -116,18 +124,18 @@ func (l *organizationListenerImpl) enrichOrganization(ctx context.Context, tenan
 		return nil
 	}
 
-	err = l.services.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichRequestedAt), utils.NowPtr())
+	err = l.neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichRequestedAt), utils.NowPtr())
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich requested at"))
 	}
 
-	l.services.RabbitMQService.PublishEventCompleted(ctx, tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+	l.services.Events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 	enrichOrganizationResponse, err := l.callApiEnrichOrganization(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call enrich organization API"))
 		l.log.Errorf("Error calling enrich organization API: %s", err.Error())
-		err = l.services.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
+		err = l.neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich failed at"))
 		}
@@ -136,7 +144,7 @@ func (l *organizationListenerImpl) enrichOrganization(ctx context.Context, tenan
 	if enrichOrganizationResponse != nil && enrichOrganizationResponse.Success == true {
 		l.updateOrganizationWithEnrichData(ctx, tenant, domain, enrichOrganizationResponse.PrimaryEnrichSource, *organizationEntity, enrichOrganizationResponse.Data)
 	} else {
-		err = l.services.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
+		err = l.neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich failed at"))
 		}
@@ -159,7 +167,7 @@ func (l *organizationListenerImpl) callApiEnrichOrganization(ctx context.Context
 		return nil, err
 	}
 	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequestWithContext(ctx, "GET", l.services.GlobalConfig.InternalServices.EnrichmentApiConfig.Url+"/enrichOrganization", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequestWithContext(ctx, "GET", l.config.InternalServices.EnrichmentApiConfig.Url+"/enrichOrganization", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		return nil, err
@@ -168,7 +176,7 @@ func (l *organizationListenerImpl) callApiEnrichOrganization(ctx context.Context
 	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, l.services.GlobalConfig.InternalServices.EnrichmentApiConfig.ApiKey)
+	req.Header.Set(security.ApiKeyHeader, l.config.InternalServices.EnrichmentApiConfig.ApiKey)
 	req.Header.Set(security.TenantHeader, tenant)
 
 	// Make the HTTP request, retry once if response status is 502
@@ -239,6 +247,9 @@ func (l *organizationListenerImpl) updateOrganizationWithEnrichData(ctx context.
 	if (organizationEntity.YearFounded == nil || *organizationEntity.YearFounded < 1000) && data.FoundedYear > 0 {
 		orgFields.YearFounded = utils.Int64Ptr(data.FoundedYear)
 	}
+	if organizationEntity.ValueProposition == "" && data.ShortDescription != "" {
+		orgFields.ValueProposition = utils.StringPtr(data.ShortDescription)
+	}
 	if organizationEntity.Description == "" && data.LongDescription != "" {
 		orgFields.Description = utils.StringPtr(data.LongDescription)
 	}
@@ -273,6 +284,11 @@ func (l *organizationListenerImpl) updateOrganizationWithEnrichData(ctx context.
 		orgFields.IconUrl = utils.StringPtr(data.Icons[0])
 	}
 
+	// set industry
+	if organizationEntity.Industry == "" && data.Industry != "" {
+		orgFields.Industry = utils.StringPtr(data.Industry)
+	}
+
 	_, err := l.services.OrganizationService.Save(ctx, nil, &organizationEntity.ID, orgFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -293,7 +309,7 @@ func (l *organizationListenerImpl) updateOrganizationWithEnrichData(ctx context.
 			AppSource:     utils.StringPtr(constants.AppEnrichment),
 			Source:        utils.StringPtr(constants.SourceOpenline),
 		},
-			&service.LinkWith{
+			&common_srv.LinkWith{
 				Id:   organizationEntity.ID,
 				Type: commonmodel.ORGANIZATION,
 			})
@@ -323,7 +339,7 @@ func (l *organizationListenerImpl) addSocial(ctx context.Context, organizationId
 		Source:     neo4jentity.DataSourceOpenline,
 	}
 
-	_, err := l.services.SocialService.AddSocialToEntity(ctx, nil, service.LinkWith{
+	_, err := l.services.SocialService.AddSocialToEntity(ctx, nil, common_srv.LinkWith{
 		Id:   organizationId,
 		Type: commonmodel.ORGANIZATION,
 	}, socialEntity)

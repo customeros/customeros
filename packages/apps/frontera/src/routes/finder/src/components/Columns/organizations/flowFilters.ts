@@ -21,7 +21,7 @@ export const getFlowFilters = (filter: FilterItem | undefined | null) => {
 
         if (!filterValues) return false;
 
-        return filterValues.includes(row.value?.industryName);
+        return filterValues.includes(row.value?.industry);
       },
     )
     .with(

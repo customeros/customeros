@@ -6,10 +6,7 @@ export const LastTouchpointDateCell = ({
   lastTouchPointAt: string;
 }) => {
   return (
-    <span
-      className='text-gray-700'
-      data-test='organization-last-touchpoint-date-in-all-orgs-table'
-    >
+    <span className='text-gray-700'>
       {DateTimeUtils.timeAgo(lastTouchPointAt, {
         addSuffix: true,
       })}

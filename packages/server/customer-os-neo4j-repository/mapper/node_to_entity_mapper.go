@@ -238,6 +238,8 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		Description:        utils.GetStringPropOrEmpty(props, "description"),
 		Website:            utils.GetStringPropOrEmpty(props, "website"),
 		Industry:           utils.GetStringPropOrEmpty(props, string(entity.OrganizationPropertyIndustry)),
+		TargetAudience:     utils.GetStringPropOrEmpty(props, "targetAudience"),
+		ValueProposition:   utils.GetStringPropOrEmpty(props, "valueProposition"),
 		LastFundingRound:   utils.GetStringPropOrEmpty(props, "lastFundingRound"),
 		LastFundingAmount:  utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
 		Note:               utils.GetStringPropOrEmpty(props, "note"),
@@ -291,6 +293,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		},
 		OrganizationInternalFields: entity.OrganizationInternalFields{
 			DomainCheckedAt: utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyDomainCheckedAt)),
+			CheckedAt:       utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyCheckedAt)),
 			HiddenAt:        utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyHiddenAt)),
 		},
 		EventStoreAggregate: entity.EventStoreAggregate{
@@ -1004,7 +1007,6 @@ func MapDbNodeToDomainEntity(node *dbtype.Node) *entity.DomainEntity {
 		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(entity.DomainPropertySource))),
 		Domain:        utils.GetStringPropOrEmpty(props, string(entity.DomainPropertyDomain)),
 		IsPrimary:     utils.GetBoolPropOrNil(props, string(entity.DomainPropertyIsPrimary)),
-		Accessible:    utils.GetBoolPropOrNil(props, string(entity.DomainPropertyAccessible)),
 		PrimaryDomain: utils.GetStringPropOrEmpty(props, string(entity.DomainPropertyPrimaryDomain)),
 		InternalFields: entity.DomainInternalFields{
 			PrimaryDomainCheckRequestedAt: utils.GetTimePropOrNil(props, string(entity.DomainPropertyPrimaryDomainCheckRequestedAt)),
@@ -1060,7 +1062,6 @@ func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
 		Id:             utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		TableViewDefId: utils.GetStringPropOrEmpty(props, "tableViewDefId"),
 		DefaultName:    utils.GetStringPropOrEmpty(props, "defaultName"),
 		Name:           utils.GetStringPropOrEmpty(props, "name"),
 		Nodes:          utils.GetStringPropOrEmpty(props, "nodes"),

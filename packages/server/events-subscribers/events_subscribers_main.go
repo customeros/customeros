@@ -9,19 +9,24 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/listeners"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/handlers"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 )
 
 const (
-	AppName = "events-subscribers"
+	AppName                                = "events-subscribers"
+	EventsQueueName                        = "events"
+	EventsFlowParticipantScheduleQueueName = "events-flow-participant-schedule"
 )
 
 func main() {
@@ -40,7 +45,7 @@ func main() {
 	}
 	defer tracing.RecoverAndLogToJaeger(appLogger)
 
-	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.CommonConfig{
 		PostgresConfig:      &cfg.PostgresConfig,
 		PostgresAsyncConfig: &cfg.PostgresAsyncConfig,
 	})
@@ -67,54 +72,52 @@ func main() {
 		eventsProcessingGrpcClient = grpc_client.InitClients(gRPCconn)
 	}
 
-	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{
-		RabbitMQConfig: &cfg.RabbitMQ,
-		InternalServices: commonConfig.InternalServices{
-			EnrichmentApiConfig: cfg.InternalServices.EnrichmentApi,
-			AiApiConfig:         cfg.InternalServices.AiApi,
-			ValidationApiConfig: cfg.InternalServices.ValidationApi,
-		},
-		ExternalServices: commonConfig.ExternalServices{
-			OpenSRSConfig:    cfg.ExternalServices.OpenSRSConfig,
-			NamecheapConfig:  cfg.ExternalServices.NamecheapConfig,
-			CloudflareConfig: cfg.ExternalServices.CloudflareConfig,
-			AnthropicConfig:  cfg.ExternalServices.AnthropicConfig,
-			NovuConfig:       cfg.ExternalServices.NovuConfig,
-		},
-	}, postgresDb, &neo4jDriver, cfg.Neo4j.Database, eventsProcessingGrpcClient, appLogger)
+	postgresRepositories := repository.InitRepositories(postgresDb)
+	neo4jRepositories := neo4jRepo.InitNeo4jRepositories(&neo4jDriver, cfg.Neo4j.Database)
 
-	// Register listeners
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowOn{}, listeners.Handle_FlowOn)
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowParticipantSchedule{}, listeners.Handle_FlowParticipantSchedule)
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowComputeParticipantsRequirements{}, listeners.Handle_FlowComputeParticipantsRequirements)
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowParticipantGoalAchieved{}, listeners.Handle_FlowParticipantGoalAchieved)
+	commonServices := commonService.InitCommonServices(
+		appLogger,
+		neo4jRepositories,
+		postgresRepositories,
+		&cfg.CommonConfig,
+		eventsProcessingGrpcClient,
+	)
 
-	// mailstack
-	commonServices.RabbitMQService.RegisterHandler(dto.MailstackProvisionBuyRequest{}, listeners.Handle_MailstackProvisionBuyRequest)
-	commonServices.RabbitMQService.RegisterHandler(dto.MailstackProvisionMailbox{}, listeners.Handle_MailstackProvisionMailbox)
+	// Create dependencies for event handlers
+	dependencies := &model.DependencyContainer{
+		Logger:               appLogger,
+		GRPCClients:          eventsProcessingGrpcClient,
+		CommonConfig:         &cfg.CommonConfig,
+		PostgresRepositories: postgresRepositories,
+		Neo4jRepositories:    neo4jRepositories,
+		CommonServices:       commonServices,
+	}
 
-	// contact
-	commonServices.RabbitMQService.RegisterHandler(dto.AddSocialToContact{}, listeners.OnSocialAddedToContact)
-	commonServices.RabbitMQService.RegisterHandler(dto.RequestEnrichContact{}, listeners.OnRequestedEnrichContact)
-	commonServices.RabbitMQService.RegisterHandler(dto.HideContact{}, listeners.OnContactHidden)
+	// Create Events Service
+	eventsService, err := events.NewEventsService(
+		dependencies.CommonConfig.RabbitMQConfig.Url,
+		appLogger,
+	)
+	if err != nil {
+		appLogger.Fatalf("Failed to create events service: %v", err)
+	}
+	defer eventsService.Close()
 
-	// organization
-	commonServices.RabbitMQService.RegisterHandler(dto.RequestRefreshLastTouchpoint{}, listeners.OnRequestLastTouchpointRefresh)
-	commonServices.RabbitMQService.RegisterHandler(dto.RequestEnrichOrganization{}, listeners.OnRequestedEnrichOrganization)
+	// Register all handlers
+	handlers.InitHandlerRegistration(eventsService, dependencies)
 
-	// email
-	commonServices.RabbitMQService.RegisterHandler(dto.RequestValidateEmail{}, listeners.OnRequestedValidateEmail)
+	// Set up queue listeners
+	go func() {
+		if err := eventsService.Subscriber.ListenQueue(EventsQueueName); err != nil {
+			appLogger.Fatalf("Failed to listen to queue %s: %v", EventsQueueName, err)
+		}
+	}()
 
-	// Automation Engine
-	commonServices.RabbitMQService.RegisterHandler(dto.WebhookEvent{}, listeners.OnWebhookEventCreated)
-
-	// Flow Engine
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowAgentEvent{}, listeners.OnFlowAgentEventCreated)
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowAgentExecutionResultEvent{}, listeners.OnFlowAgentExecutionResultsEventCreated)
-
-	// Listen for messages
-	commonServices.RabbitMQService.ListenQueue(commonService.EventsQueueName)
-	commonServices.RabbitMQService.ListenQueueExclusive(commonService.EventsFlowParticipantScheduleQueueName)
+	go func() {
+		if err := eventsService.Subscriber.ListenQueueExclusive(EventsFlowParticipantScheduleQueueName); err != nil {
+			appLogger.Fatalf("Failed to listen to exclusive queue %s: %v", EventsFlowParticipantScheduleQueueName, err)
+		}
+	}()
 
 	// Block the main thread from exiting
 	forever := make(chan bool)

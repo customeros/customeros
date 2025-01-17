@@ -32,11 +32,8 @@ export const LogoSection = observer(() => {
   return (
     <div className='flex justify-between'>
       <Menu>
-        <div className='py-2 pr-3 pl-[18px]'>
-          <MenuButton
-            data-test='logo-button'
-            className='flex items-center gap-1.5 !outline-none'
-          >
+        <div data-test='logo-button' className='py-2 pr-3 pl-[18px]'>
+          <MenuButton className='flex items-center gap-1.5 !outline-none'>
             <Image
               width={20}
               height={20}
@@ -53,7 +50,7 @@ export const LogoSection = observer(() => {
         </div>
         <MenuList align='start' side='bottom' className='min-w-[137px]'>
           <MenuItem className='group' onClick={() => navigate('/settings')}>
-            <div data-test='logo-settings' className='flex gap-2 items-center'>
+            <div className='flex gap-2 items-center'>
               <Settings02 className='group-hover:text-gray-700 text-gray-500' />
               <span>Settings</span>
             </div>

@@ -32,7 +32,6 @@ export const RedirectUrlCard = observer(() => {
           variant='outline'
           placeholder='Website URL'
           value={store.mailboxes.redirectUrl}
-          dataTest='settings-mailboxes-redirect-url'
           invalid={dirty && store.mailboxes.invalidRedirectUrl.length > 0}
           onKeyDown={(e) => {
             e.stopPropagation();

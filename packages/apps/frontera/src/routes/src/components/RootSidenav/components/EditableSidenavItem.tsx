@@ -89,16 +89,13 @@ export const EditableSideNavItem = observer(
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-
                   store.ui.commandMenu.setContext({
                     ids: [id],
                     entity: 'TableViewDef',
                   });
                   store.ui.commandMenu.setType('RenameTableViewDef');
                   store.ui.commandMenu.setOpen(true);
-                  setTimeout(() => {
-                    setIsEditing(false);
-                  }, 1);
+                  setIsEditing(false);
                 }}
               >
                 <TextInput className='text-gray-500' />

@@ -357,11 +357,6 @@ const getFilterFn = (
           return filterTypeList(filter, [participantStatus]);
         },
       )
-      .with({ property: 'FLOW_ID' }, (filter) => (row: Contact) => {
-        if (!filter.active || !filter.value[0]) return true;
-
-        return row?.flowsIds.includes(filter.value[0]);
-      })
 
       .otherwise(() => noop)
   );

@@ -23,7 +23,6 @@ export class Entity<T extends object> {
     } = { syncOnly: false },
   ) {
     this.store.commit(this.id, opts);
-    this.version++;
   }
 
   /**

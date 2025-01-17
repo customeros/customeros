@@ -14,8 +14,7 @@ export type GetOrganizationsByIdsQuery = {
     name: string;
     notes?: string | null;
     description?: string | null;
-    industryName?: string | null;
-    industryCode?: string | null;
+    industry?: string | null;
     market?: Types.Market | null;
     website?: string | null;
     logoUrl?: string | null;
@@ -25,6 +24,7 @@ export type GetOrganizationsByIdsQuery = {
     relationship?: Types.OrganizationRelationship | null;
     lastFundingRound?: Types.FundingRound | null;
     leadSource?: string | null;
+    valueProposition?: string | null;
     slackChannelId?: string | null;
     employees?: any | null;
     yearFounded?: any | null;
@@ -54,12 +54,6 @@ export type GetOrganizationsByIdsQuery = {
     contracts: Array<string>;
     contacts: Array<string>;
     subsidiaries: Array<string>;
-    domainsDetails: Array<{
-      __typename?: 'Domain';
-      domain: string;
-      primary?: boolean | null;
-      primaryDomain?: string | null;
-    }>;
     socialMedia: Array<{
       __typename?: 'Social';
       id: string;

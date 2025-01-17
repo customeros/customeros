@@ -85,7 +85,6 @@ export const EmptyMailboxes = ({ onUpdate }: EmptyMailboxesProps) => {
         <Button
           className='mt-5 mx-3'
           colorScheme='primary'
-          dataTest='set-up-mailboxes'
           onClick={handleButtonClick}
           rightIcon={<ChevronRight />}
         >

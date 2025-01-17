@@ -22,13 +22,7 @@ export class DevtoolsStore {
   @observable accessor detailedStore: string | null = null;
   @observable accessor detailedEntityId: string | null = null;
 
-  visibleStores = [
-    'organizations',
-    'tableViewDefs',
-    'contacts',
-    'contracts',
-    'flows',
-  ];
+  visibleStores = ['organizations', 'tableViewDefs', 'contacts', 'contracts'];
 
   constructor() {}
 

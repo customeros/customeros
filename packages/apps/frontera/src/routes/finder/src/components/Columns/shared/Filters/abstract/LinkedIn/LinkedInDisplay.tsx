@@ -1,7 +1,9 @@
+import { useRef } from 'react';
+import { Link } from 'react-router-dom';
+
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
-import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { getExternalUrl, getFormattedLink } from '@utils/getExternalLink';
 
 interface LinkedInDisplayProps {
@@ -15,7 +17,7 @@ export const LinkedInDisplay = ({
   link,
   type,
 }: LinkedInDisplayProps) => {
-  const [_, copyToClipboard] = useCopyToClipboard();
+  const linkRef = useRef<HTMLAnchorElement>(null);
 
   const formattedLink = getFormattedLink(link).replace(
     /^linkedin\.com\/(?:in\/|company\/)?/,
@@ -32,12 +34,13 @@ export const LinkedInDisplay = ({
   return (
     <div className='flex items-center group'>
       <Tooltip label={url ?? ''}>
-        <p
-          className='text-gray-700 truncate cursor-default'
-          onClick={() => copyToClipboard(url, 'LinkedIn profile copied')}
+        <Link
+          to={url}
+          ref={linkRef}
+          className='flex items-center gap-1 no-underline hover:no-underline cursor-pointer'
         >
-          {displayLink}
-        </p>
+          <p className='text-gray-700 truncate'>{displayLink}</p>
+        </Link>
       </Tooltip>
 
       <IconButton

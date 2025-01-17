@@ -2,9 +2,16 @@ package service
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
@@ -15,27 +22,22 @@ import (
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type organizationService struct {
 	organizationpb.UnimplementedOrganizationGrpcServiceServer
-	services                   *Services
 	log                        logger.Logger
 	organizationCommands       *command_handler.CommandHandlers
 	organizationRequestHandler organization.OrganizationRequestHandler
+	requestHandlerService      RequestHandler
 }
 
-func NewOrganizationService(log logger.Logger, organizationCommands *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config, services *Services) *organizationService {
+func NewOrganizationService(log logger.Logger, organizationCommands *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config, req RequestHandler) *organizationService {
 	return &organizationService{
 		log:                        log,
-		services:                   services,
 		organizationCommands:       organizationCommands,
-		organizationRequestHandler: organization.NewOrganizationRequestHandler(log, aggregateStore, cfg.Utils),
+		organizationRequestHandler: organization.NewOrganizationRequestHandler(log, aggregateStore, *cfg.Utils),
+		requestHandlerService:      req,
 	}
 }
 
@@ -76,7 +78,7 @@ func (s *organizationService) RefreshDerivedData(ctx context.Context, request *o
 	initAggregateFunc := func() eventstore.Aggregate {
 		return aggregate.NewOrganizationTempAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
 	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{SkipLoadEvents: true}, request); err != nil {
+	if _, err := s.requestHandlerService.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{SkipLoadEvents: true}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(RefreshDerivedData.Handle) tenant:{%s}, err: %s", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)

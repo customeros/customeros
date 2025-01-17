@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -28,7 +27,7 @@ func NewFlowEdgeRepository(gormDb *gorm.DB) FlowEdgeRepository {
 }
 
 func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.CreateFlowEdge")
+	span, ctx := tracing.StartTracerSpan(ctx, "FlowEdgeRepository.CreateFlowEdge")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -43,7 +42,7 @@ func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge entity.FlowEdg
 }
 
 func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge entity.FlowEdge) ([]entity.FlowEdge, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.FindAll")
+	span, ctx := tracing.StartTracerSpan(ctx, "FlowEdgeRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -59,7 +58,7 @@ func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge entity.FlowEd
 }
 
 func (f *flowEdgeRepository) Find(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.Find")
+	span, ctx := tracing.StartTracerSpan(ctx, "FlowEdgeRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -79,7 +78,7 @@ func (f *flowEdgeRepository) Find(ctx context.Context, flowEdge entity.FlowEdge)
 }
 
 func (f *flowEdgeRepository) Update(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.Update")
+	span, ctx := tracing.StartTracerSpan(ctx, "FlowEdgeRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 

@@ -2,7 +2,6 @@ import { set, merge } from 'lodash';
 import { Entity } from '@store/record';
 import { Transport } from '@store/transport';
 import { FlowStore } from '@store/Flows/Flow.store';
-import { JobRoleDatum } from '@store/JobRoles/JobRole.dto';
 import { countryMap } from '@assets/countries/countriesMap';
 import { action, computed, observable, runInAction } from 'mobx';
 
@@ -88,8 +87,12 @@ export class Contact extends Entity<ContactDatum> {
   }
 
   @computed
-  get flowsIds(): string[] {
-    return this.value.flows ?? [];
+  get flowsIds(): string[] | undefined {
+    if (!this.flows?.length) return undefined;
+
+    return this.flows.map((flow) => {
+      return flow?.id;
+    });
   }
 
   @computed
@@ -109,17 +112,6 @@ export class Contact extends Entity<ContactDatum> {
     return this.value.connectedUsers.map(
       (id) => this.store.root.users.value.get(id)?.value,
     );
-  }
-
-  @computed
-  get jobRoles() {
-    return this.value.jobRoleIds.reduce((acc, id) => {
-      const record = this.store.root.jobRoles.getById(id);
-
-      if (record) acc.push(record.value);
-
-      return acc;
-    }, [] as JobRoleDatum[]);
   }
 
   @computed
@@ -186,39 +178,6 @@ export class Contact extends Entity<ContactDatum> {
     }
   }
 
-  @action
-  public addTag(id: string) {
-    this.draft();
-
-    if (!this.value.tags) {
-      this.value.tags = [];
-    }
-
-    const tag = this.store.root.tags.getById(id);
-
-    if (!tag) {
-      console.error(`Contact.addTag: Tag with id ${id} not found`);
-
-      return;
-    }
-
-    this.value.tags.push(tag.value);
-    this.commit({ syncOnly: true });
-  }
-
-  @action
-  public removeTag(id: string) {
-    this.draft();
-
-    if (!this.value.tags) {
-      this.value.tags = [];
-    }
-
-    this.value.tags = this.value.tags.filter((tag) => tag.metadata.id !== id);
-    this.commit({ syncOnly: true });
-  }
-
-  // @deprecated
   async removeTagFromContact(tagId: string) {
     try {
       await this.service.removeTagsFromContact({
@@ -300,7 +259,6 @@ export class Contact extends Entity<ContactDatum> {
         emails: [],
         phones: [],
         tags: [],
-        jobRoleIds: [],
         locations: [],
         connectedUsers: [],
         flows: [],

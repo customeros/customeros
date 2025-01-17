@@ -15,6 +15,8 @@ type Config struct {
 	RabbitMQConfig   config.RabbitMQConfig
 	GrpcClientConfig config.GrpcClientConfig
 
+	CommonConfig config.CommonConfig
+
 	SyncData struct {
 		CronSync string `env:"CRON_SYNC" envDefault:"0 */1 * * * *"`
 	}

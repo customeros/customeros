@@ -11,11 +11,7 @@ func ToHookFunc() mapstructure.DecodeHookFunc {
 		if t == reflect.TypeOf(time.Time{}) {
 			switch f.Kind() {
 			case reflect.String:
-				unmarshalledTime, err := UnmarshalDateTime(data.(string))
-				if unmarshalledTime == nil {
-					return time.Time{}, err
-				}
-				return *unmarshalledTime, err
+				return time.Parse(time.RFC3339, data.(string))
 			case reflect.Float64:
 				return time.Unix(0, int64(data.(float64))*int64(time.Millisecond)), nil
 			case reflect.Int64:

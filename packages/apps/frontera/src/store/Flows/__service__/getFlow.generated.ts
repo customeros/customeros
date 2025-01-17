@@ -4,56 +4,5 @@ export type GetFlowQueryVariables = Types.Exact<{
   id: Types.Scalars['ID']['input'];
 }>;
 
-export type GetFlowQuery = {
-  __typename?: 'Query';
-  flow: {
-    __typename?: 'Flow';
-    name: string;
-    edges: string;
-    nodes: string;
-    status: Types.FlowStatus;
-    tableViewDefId: string;
-    firstStartedAt?: any | null;
-    metadata: { __typename?: 'Metadata'; id: string };
-    senders: Array<{
-      __typename?: 'FlowSender';
-      metadata: { __typename?: 'Metadata'; id: string };
-      user?: { __typename?: 'User'; id: string } | null;
-      flow?: {
-        __typename?: 'Flow';
-        metadata: { __typename?: 'Metadata'; id: string };
-      } | null;
-    }>;
-    statistics: {
-      __typename?: 'FlowStatistics';
-      total: any;
-      onHold: any;
-      ready: any;
-      scheduled: any;
-      inProgress: any;
-      completed: any;
-      goalAchieved: any;
-    };
-    participants: Array<{
-      __typename?: 'FlowParticipant';
-      status: Types.FlowParticipantStatus;
-      entityId: string;
-      entityType: string;
-      requirementsUnmeet: Array<Types.FlowParticipantRequirementsUnmeet>;
-      executions: Array<{
-        __typename?: 'FlowActionExecution';
-        status: Types.FlowActionExecutionStatus;
-        scheduledAt?: any | null;
-        executedAt?: any | null;
-        error?: string | null;
-        metadata: { __typename?: 'Metadata'; id: string };
-        action: {
-          __typename?: 'FlowAction';
-          action: Types.FlowActionType;
-          metadata: { __typename?: 'Metadata'; id: string };
-        };
-      }>;
-      metadata: { __typename?: 'Metadata'; id: string };
-    }>;
-  };
-};
+
+export type GetFlowQuery = { __typename?: 'Query', flow: { __typename?: 'Flow', name: string, edges: string, nodes: string, status: Types.FlowStatus, firstStartedAt?: any | null, metadata: { __typename?: 'Metadata', id: string }, senders: Array<{ __typename?: 'FlowSender', metadata: { __typename?: 'Metadata', id: string }, user?: { __typename?: 'User', id: string } | null, flow?: { __typename?: 'Flow', metadata: { __typename?: 'Metadata', id: string } } | null }>, statistics: { __typename?: 'FlowStatistics', total: any, onHold: any, ready: any, scheduled: any, inProgress: any, completed: any, goalAchieved: any }, participants: Array<{ __typename?: 'FlowParticipant', status: Types.FlowParticipantStatus, entityId: string, entityType: string, requirementsUnmeet: Array<Types.FlowParticipantRequirementsUnmeet>, executions: Array<{ __typename?: 'FlowActionExecution', status: Types.FlowActionExecutionStatus, scheduledAt?: any | null, executedAt?: any | null, error?: string | null, metadata: { __typename?: 'Metadata', id: string }, action: { __typename?: 'FlowAction', action: Types.FlowActionType, metadata: { __typename?: 'Metadata', id: string } } }>, metadata: { __typename?: 'Metadata', id: string } }> } };

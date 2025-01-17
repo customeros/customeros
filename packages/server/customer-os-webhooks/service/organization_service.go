@@ -241,11 +241,14 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		}
 		if !matchingOrganizationExists {
 			organizationDataFields.Name = utils.StringPtr(orgInput.Name)
+			organizationDataFields.Description = utils.StringPtr(orgInput.Description)
 			organizationDataFields.Website = utils.StringPtr(orgInput.Website)
 			organizationDataFields.Industry = utils.StringPtr(orgInput.Industry)
 			organizationDataFields.IsPublic = utils.BoolPtr(orgInput.IsPublic)
 			organizationDataFields.Employees = utils.Int64Ptr(orgInput.Employees)
 			organizationDataFields.Market = utils.StringPtr(orgInput.Market)
+			organizationDataFields.TargetAudience = utils.StringPtr(orgInput.TargetAudience)
+			organizationDataFields.ValueProposition = utils.StringPtr(orgInput.ValueProposition)
 			organizationDataFields.LastFundingRound = utils.StringPtr(orgInput.LastFundingRound)
 			organizationDataFields.LastFundingAmount = utils.StringPtr(orgInput.LastFundingAmount)
 			organizationDataFields.Note = utils.StringPtr(orgInput.Note)
@@ -300,11 +303,8 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				s.log.Errorf("error while checking if domain is linked to organization: %v", err.Error())
 				continue
 			}
-
-			_, _, primaryDomain := s.services.CommonServices.DomainService.CheckDomainWithMailsherpa(ctx, domain)
-
 			if !domainInUse {
-				_, err = s.services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, organizationId, primaryDomain)
+				_, err = s.services.CommonServices.OrganizationService.LinkWithDomain(ctx, nil, organizationId, domain)
 				if err != nil {
 					tracing.TraceErr(span, pkgerrors.Wrapf(err, "failed to link domain %s with organization %s", domain, organizationId))
 				}

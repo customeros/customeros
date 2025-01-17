@@ -28,7 +28,7 @@ export class TagStore implements Store<TagDatum> {
   sync = makeAutoSyncableGroup.sync;
   load = makeAutoSyncable.load<TagDatum>();
   update = makeAutoSyncable.update<TagDatum>();
-  private service = TagService.getInstance();
+  private service: TagService;
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
@@ -37,6 +37,7 @@ export class TagStore implements Store<TagDatum> {
       mutator: this.save,
       getId: (item) => item?.metadata.id,
     });
+    this.service = new TagService(transport);
   }
 
   init(data: TagDatum): TagDatum {

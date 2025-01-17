@@ -50,7 +50,7 @@ export const SlackThreadPreviewModal = () => {
               {event?.interactionSession?.name || 'Thread'}
             </h2>
           </div>
-          <div className='flex justify-end items-baseline'>
+          <div className='flex justify-end items-center'>
             <Tooltip side='bottom' label='Copy link to this thread'>
               <div>
                 <IconButton

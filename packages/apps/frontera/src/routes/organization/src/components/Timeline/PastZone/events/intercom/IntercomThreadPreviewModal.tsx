@@ -86,7 +86,7 @@ export const IntercomThreadPreviewModal = () => {
               {title}
             </h2>
           </div>
-          <div className='flex justify-end items-baseline flex-row'>
+          <div className='flex justify-end items-center flex-row'>
             <Tooltip
               side='bottom'
               asChild={false}

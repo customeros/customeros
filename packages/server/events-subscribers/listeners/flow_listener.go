@@ -5,13 +5,13 @@ import (
 	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 )
 
-func Handle_FlowOn(ctx context.Context, services *service.Services, input any) error {
+func Handle_FlowOn(ctx context.Context, services *service.CommonServices, input any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_FlowOn")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -42,7 +42,7 @@ func Handle_FlowOn(ctx context.Context, services *service.Services, input any) e
 	}
 
 	for _, v := range *flowParticipants {
-		err := services.RabbitMQService.PublishEventOnExchange(ctx, v.Id, model.FLOW_PARTICIPANT, dto.FlowParticipantSchedule{}, service.EventsExchangeName, service.EventsFlowParticipantScheduleRoutingKey)
+		err := services.Events.Publisher.PublishEventOnExchange(ctx, v.Id, model.FLOW_PARTICIPANT, dto.FlowParticipantSchedule{}, service.EventsExchangeName, service.EventsFlowParticipantScheduleRoutingKey)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -52,7 +52,7 @@ func Handle_FlowOn(ctx context.Context, services *service.Services, input any) e
 	return nil
 }
 
-func Handle_FlowParticipantSchedule(ctx context.Context, services *service.Services, input any) error {
+func Handle_FlowParticipantSchedule(ctx context.Context, services *service.CommonServices, input any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_FlowParticipantSchedule")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)

@@ -251,7 +251,10 @@ export class FlowStore implements Store<Flow> {
 
       runInAction(() => {
         contactStore?.draft();
-        contactStore?.value.flows.push(this.value.metadata.id);
+        contactStore!.value.flows = [
+          ...(contactStore?.value.flows ?? []),
+          this.value.name,
+        ];
         contactStore?.commit({ syncOnly: true });
 
         const newFLowContact = new FlowParticipantStore(
@@ -405,7 +408,6 @@ const getDefaultValue = (): Flow => ({
   name: '',
   status: FlowStatus.Off,
   description: '',
-  tableViewDefId: '',
   metadata: {
     source: DataSource.Openline,
     appSource: DataSource.Openline,

@@ -68,15 +68,6 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
-  TableViewType:
-    model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity.TableViewType
-  TableIdType:
-    model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity.TableIdType
-  ColumnViewType:
-    model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity.ColumnViewType
   SortBy:
     model:
       - github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model.SortBy

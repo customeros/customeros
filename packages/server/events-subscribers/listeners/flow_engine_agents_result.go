@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -13,7 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/handlers"
 )
 
-func OnFlowAgentExecutionResultsEventCreated(ctx context.Context, s *service.Services, input any) error {
+func OnFlowAgentExecutionResultsEventCreated(ctx context.Context, s *service.CommonServices, input any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnFlowAgentExecutionResultsEventCreated")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)

@@ -136,6 +136,7 @@ export const CreateNewContactModal = observer(
                   <Button
                     size='xs'
                     leftIcon={<Signature />}
+                    dataTest='org-people-add-by-name'
                     onClick={() => contactCreate.setType('email')}
                     data-inactive={contactCreate.getType !== 'email'}
                     className={cn('w-full', {
@@ -147,7 +148,6 @@ export const CreateNewContactModal = observer(
                   <Button
                     size='xs'
                     leftIcon={<Signature />}
-                    dataTest='org-people-add-by-name'
                     onClick={() => contactCreate.setType('name')}
                     data-inactive={contactCreate.getType !== 'name'}
                     className={cn('w-full', {

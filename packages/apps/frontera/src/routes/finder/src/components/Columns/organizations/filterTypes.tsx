@@ -43,6 +43,8 @@ import { countryMap } from '@assets/countries/countriesMap';
 import { Globe04 } from '@ui/media/icons/Globe04';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 
+import { industries } from './filterOptions';
+
 export const getFilterTypes = (store?: RootStore) => {
   const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     [ColumnViewType.OrganizationsName]: {
@@ -59,10 +61,10 @@ export const getFilterTypes = (store?: RootStore) => {
         <Building07 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
     },
-    [ColumnViewType.OrganizationsPrimaryDomains]: {
+    [ColumnViewType.OrganizationsWebsite]: {
       filterType: 'text',
-      filterName: 'Primary Domain',
-      filterAccesor: ColumnViewType.OrganizationsPrimaryDomains,
+      filterName: 'Website',
+      filterAccesor: ColumnViewType.OrganizationsWebsite,
       filterOperators: [
         ComparisonOperator.Contains,
         ComparisonOperator.NotContains,
@@ -344,9 +346,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsNotEmpty,
       ],
       icon: <Building05 />,
-      options: store?.industries?.toArray().map((industry) => ({
-        id: industry.value.code,
-        label: industry.value.name,
+      options: industries.map((industry) => ({
+        id: industry,
+        label: industry,
       })),
     },
     [ColumnViewType.OrganizationsContactCount]: {

@@ -8,10 +8,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/multierr"
 )
@@ -21,7 +21,7 @@ var SubscribedAgents = [1]enum.AgentID{
 	enum.AgentVisitorID,
 }
 
-func HandleWebsiteVisitorEvent(c context.Context, s *service.Services, sourceEvent commonEnum.FlowListenerEvent, eventData *data_fields.WebsiteVisitEvent) error {
+func HandleWebsiteVisitorEvent(c context.Context, dependencies *model.DependencyContainer, sourceEvent commonEnum.FlowListenerEvent, eventData *data_fields.WebsiteVisitEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.HandleWebsiteVisitorEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -32,7 +32,7 @@ func HandleWebsiteVisitorEvent(c context.Context, s *service.Services, sourceEve
 	})
 
 	// find list of active agents that listen on event
-	agents, err := s.PostgresRepositories.AgentsRepository.FindAllFromAgentsList(ctx, SubscribedAgents[:])
+	agents, err := dependencies.PostgresRepositories.AgentsRepository.FindAllFromAgentsList(ctx, SubscribedAgents[:])
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -51,7 +51,7 @@ func HandleWebsiteVisitorEvent(c context.Context, s *service.Services, sourceEve
 			Status:       enum.AgentExecutionRunning.String(),
 			StartedAt:    utils.NowPtr(),
 		}
-		execution, err := s.PostgresRepositories.AgentExecutionRepository.Create(ctx, agentExecutionRecord)
+		execution, err := dependencies.PostgresRepositories.AgentExecutionRepository.Create(ctx, agentExecutionRecord)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			loopErr = multierr.Append(loopErr, err)
@@ -64,7 +64,7 @@ func HandleWebsiteVisitorEvent(c context.Context, s *service.Services, sourceEve
 
 		// call agent service
 		if execution != nil {
-			err = s.AgentVisitorIDService.RunAgent(ctx, &agent, eventData)
+			err = dependencies.CommonServices.AgentService.RunAgent(ctx, &agent, eventData)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				loopErr = multierr.Append(loopErr, err)
@@ -81,7 +81,7 @@ func HandleWebsiteVisitorEvent(c context.Context, s *service.Services, sourceEve
 			agentExecutionRecord.CompletedAt = utils.NowPtr()
 		}
 
-		execution, err = s.PostgresRepositories.AgentExecutionRepository.Update(ctx, agentExecutionRecord)
+		execution, err = dependencies.PostgresRepositories.AgentExecutionRepository.Update(ctx, agentExecutionRecord)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			loopErr = multierr.Append(loopErr, err)

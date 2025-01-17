@@ -680,7 +680,7 @@ func (r *contractReadRepository) GetLiveContractsWithoutRenewalOpportunities(ctx
 
 	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)
 				WHERE c.status = $liveStatus AND c.lengthInMonths > 0  AND NOT (c)-[:ACTIVE_RENEWAL]->(:RenewalOpportunity)
-				RETURN t.name, c.id LIMIT $limit`
+				RETURN c, t.name LIMIT $limit`
 	params := map[string]any{
 		"liveStatus": neo4jenum.ContractStatusLive.String(),
 		"limit":      limit,

@@ -10,12 +10,12 @@ import { useModKey } from '@shared/hooks/useModKey';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 export const EditContactFlow = observer(() => {
-  const store = useStore();
+  const { contacts, ui, flows } = useStore();
   const [search, setSearch] = useState('');
 
-  const context = store.ui.commandMenu.context;
+  const context = ui.commandMenu.context;
 
-  const contact = store.contacts.getById(context.ids?.[0] as string);
+  const contact = contacts.value.get(context.ids?.[0] as string);
   const selectedIds = context.ids;
 
   const label =
@@ -27,12 +27,12 @@ export const EditContactFlow = observer(() => {
     id: string,
     type: 'ConfirmBulkFlowEdit' | 'ConfirmSingleFlowEdit',
   ) => {
-    store.ui.commandMenu.toggle(type);
-    store.ui.commandMenu.setContext({
-      ...store.ui.commandMenu.context,
+    ui.commandMenu.toggle(type);
+    ui.commandMenu.setContext({
+      ...ui.commandMenu.context,
       property: id,
     });
-    store.ui.commandMenu.setOpen(true);
+    ui.commandMenu.setOpen(true);
   };
 
   const handleSelect = (opt: FlowStore) => {
@@ -42,7 +42,7 @@ export const EditContactFlow = observer(() => {
 
     if (selectedIds.length === 1) {
       if (contact?.flowsIds?.includes(opt.id) || !contact) {
-        store.ui.commandMenu.setOpen(false);
+        ui.commandMenu.setOpen(false);
 
         return;
       }
@@ -56,15 +56,15 @@ export const EditContactFlow = observer(() => {
   };
 
   useModKey('Enter', () => {
-    store.ui.commandMenu.setOpen(false);
+    ui.commandMenu.setOpen(false);
   });
 
-  const flowOptions = store.flows.toComputedArray((arr) => arr);
+  const flowOptions = flows.toComputedArray((arr) => arr);
 
   const handleCreateOption = (value: string) => {
-    store.flows?.create(value, {
+    flows?.create(value, {
       onSuccess: (flowId) => {
-        const newFlow = store.flows.value.get(flowId) as FlowStore;
+        const newFlow = flows.value.get(flowId) as FlowStore;
 
         if (!newFlow) return;
         handleSelect(newFlow);

@@ -18,7 +18,6 @@ module.exports = {
     '@stylistic',
     'perfectionist',
     '@typescript-eslint',
-    'validate-jsx-nesting',
     'eslint-plugin-prettier',
   ],
   rules: {
@@ -139,6 +138,5 @@ module.exports = {
         ignoreCase: true,
       },
     ],
-    'validate-jsx-nesting/no-invalid-jsx-nesting': 'error',
   },
 };

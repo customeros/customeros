@@ -76,6 +76,7 @@ type OrganizationsColumnType =
   | ColumnViewType.OrganizationsRelationship
   | ColumnViewType.OrganizationsRenewalLikelihood
   | ColumnViewType.OrganizationsRenewalDate
+  | ColumnViewType.OrganizationsWebsite
   | ColumnViewType.OrganizationsChurnDate
   | ColumnViewType.OrganizationsParentOrganization;
 
@@ -92,6 +93,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsRelationship]: 'Relationship',
   [ColumnViewType.OrganizationsRenewalLikelihood]: 'Health',
   [ColumnViewType.OrganizationsRenewalDate]: 'Renewal Date',
+  [ColumnViewType.OrganizationsWebsite]: 'Website',
   [ColumnViewType.OrganizationsLeadSource]: 'Source',
   [ColumnViewType.OrganizationsSocials]: 'LinkedIn',
   [ColumnViewType.OrganizationsCreatedDate]: 'Created Date',
@@ -110,7 +112,6 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsCountry]: 'Country',
   [ColumnViewType.OrganizationsParentOrganization]: 'Parent Org',
   [ColumnViewType.OrganizationsUpdatedDate]: 'Last Updated',
-  [ColumnViewType.OrganizationsPrimaryDomains]: 'Primary Domains',
 };
 
 export const organizationsHelperTextMap: Record<
@@ -126,6 +127,7 @@ export const organizationsHelperTextMap: Record<
   [ColumnViewType.OrganizationsRelationship]: 'E.g. Customer',
   [ColumnViewType.OrganizationsRenewalLikelihood]: 'E.g. High',
   [ColumnViewType.OrganizationsRenewalDate]: 'E.g. 3 Aug 2027',
+  [ColumnViewType.OrganizationsWebsite]: 'E.g. www.pile.com',
   [ColumnViewType.OrganizationsLeadSource]: 'E.g. Newsletter',
   [ColumnViewType.OrganizationsSocials]: 'E.g. /acmecorp',
   [ColumnViewType.OrganizationsCreatedDate]: 'E.g. 28 Mar 2019',
@@ -144,7 +146,6 @@ export const organizationsHelperTextMap: Record<
   [ColumnViewType.OrganizationsHeadquarters]: 'E.g. Germany',
   [ColumnViewType.OrganizationsParentOrganization]: 'E.g. Alphabet',
   [ColumnViewType.OrganizationsUpdatedDate]: 'E.g. 16 Sep 2024',
-  [ColumnViewType.OrganizationsPrimaryDomains]: 'eg. pile.com',
 };
 
 export const contactsHelperTextMap: Record<string, string> = {

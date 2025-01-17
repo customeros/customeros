@@ -682,7 +682,7 @@ func (r *contactReadRepository) GetContactsToCheck(ctx context.Context, minutesF
 		output = append(output,
 			TenantAndContact{
 				Tenant:  v.Values[0].(string),
-				Contact: utils.ToPtr(v.Values[1].(dbtype.Node)),
+				Contact: v.Values[1].(*dbtype.Node),
 			})
 	}
 	span.LogFields(log.Int("result.count", len(output)))

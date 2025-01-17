@@ -1,5 +1,0 @@
-mutation removeDomains($organizationId: ID!, $domains: [String!]) {
-  organization_RemoveDomains(organizationId: $organizationId, domains: $domains) {
-    accepted
-  }
-}

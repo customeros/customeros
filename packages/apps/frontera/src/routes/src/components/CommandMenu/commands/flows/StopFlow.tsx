@@ -37,14 +37,14 @@ export const StopFlow = observer(() => {
         </div>
 
         {/* todo update when we support multiple record types*/}
-        <div className='text-sm mt-2'>
+        <p className='text-sm mt-2'>
           This will stop all upcoming steps for your active contacts from taking
           place.
           <p className='mt-2'>
             When you start the flow again, contacts will pick up from the last
             completed step on a new schedule.
           </p>
-        </div>
+        </p>
 
         <div className='flex justify-between gap-3 mt-6'>
           <CommandCancelButton onClose={handleClose} />

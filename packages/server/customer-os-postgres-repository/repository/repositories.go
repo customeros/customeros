@@ -55,6 +55,7 @@ type Repositories struct {
 	GlobalOrganizationRepository                 GlobalOrganizationRepository
 	GlobalOrganizationWebsiteToProcessRepository GlobalOrganizationWebsiteToProcessRepository
 	GoogleServiceAccountKeyRepository            GoogleServiceAccountKeyRepository
+	IndustryMappingRepository                    IndustryMappingRepository
 	MailStackDomainRepository                    MailStackDomainRepository
 	MailstackBuyRequestRepository                MailstackBuyRequestRepository
 	MagicLinkRepository                          MagicLinkRepository
@@ -135,6 +136,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		FlowTransitionsRegistryRepository:            NewFlowTransitionsRegistryRepository(postgresDB.GormDB),
 		GlobalOrganizationRepository:                 NewGlobalOrganizationRepository(postgresDB.GormDB),
 		GlobalOrganizationWebsiteToProcessRepository: NewGlobalOrganizationWebsiteToProcessRepository(postgresDB.GormDB),
+		IndustryMappingRepository:                    NewIndustryMappingRepository(postgresDB.GormDB),
 		MailStackDomainRepository:                    NewMailStackDomainRepository(postgresDB.GormDB),
 		MailstackBuyRequestRepository:                NewMailstackBuyRequestRepository(postgresDB.GormDB),
 		MagicLinkRepository:                          NewMagicLinkRepository(postgresDB.GormDB),
@@ -203,6 +205,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&entity.FlowTransitionsRegistry{},
 		&entity.GlobalOrganization{},
 		&entity.GlobalOrganizationWebsiteToProcess{},
+		&entity.IndustryMapping{},
 		&entity.MailStackDomain{},
 		&entity.MailstackBuyRequest{},
 		&entity.MailstackBuyRequestDomain{},

@@ -2,21 +2,23 @@ package test
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	commonServices "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/test"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
-	"testing"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 )
 
 type TestDatabase struct {
@@ -26,7 +28,7 @@ type TestDatabase struct {
 	postgresContainer testcontainers.Container
 	GormDB            *gorm.DB
 
-	CommonServices *commonService.Services
+	CommonServices *commonServices.CommonServices
 	Services       *service.Services
 	GrpcClients    *grpc_client.Clients
 }
@@ -60,11 +62,17 @@ func SetupTestDatabase() (TestDatabase, func()) {
 		AsyncGormDB: testDBs.GormDB,
 	}
 
-	testDBs.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{
+	testDBs.CommonServices = commonServices.InitCommonServices(
+        &commonConfig.CommonConfig{
 		RabbitMQConfig: &commonConfig.RabbitMQConfig{
 			Url: rabbitMqUrl,
 		},
-	}, postgresGormDB, testDBs.Driver, "neo4j", testDBs.GrpcClients, SetupTestLogger())
+	}, 
+        postgresGormDB, 
+        testDBs.Driver, 
+        "neo4j", 
+        testDBs.GrpcClients, 
+        SetupTestLogger()),
 	testDBs.Services = &service.Services{
 		CommonServices: testDBs.CommonServices,
 	}

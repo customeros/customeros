@@ -82,10 +82,10 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       },
     )
     .with(
-      { property: ColumnViewType.OrganizationsPrimaryDomains },
+      { property: ColumnViewType.OrganizationsWebsite },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const value = row?.primaryDomains?.join(' ') || '';
+        const value = row?.value.website || '';
 
         return filterTypeText(filter, value);
       },
@@ -301,7 +301,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsIndustry },
       (filter) => (row: Organization) => {
         if (!filter.active) return true;
-        const value = row?.value?.industryCode;
+        const value = row?.value.industry;
 
         if (!value)
           return (

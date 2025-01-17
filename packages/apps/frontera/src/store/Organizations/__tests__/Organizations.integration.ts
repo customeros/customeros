@@ -73,7 +73,7 @@ describe('OrganizationsService - Integration Tests', () => {
         expect.soft(organization?.description).toBe('');
         expect.soft(organization?.employees).toEqual(0);
         expect.soft(organization?.iconUrl).toBe('');
-        expect.soft(organization?.industryCode).toBeNull();
+        expect.soft(organization?.industry).toBe('');
         expect(organization.lastTouchPointAt).not.toBeNull();
         expect.soft(organization.lastTouchPointType).not.toBeNull();
         expect.soft(organization?.leadSource).toBe('');
@@ -88,8 +88,8 @@ describe('OrganizationsService - Integration Tests', () => {
         expect.soft(organization?.tags).toEqual([]);
         expect.soft(organization?.socialMedia).toEqual([]);
         expect.soft(organization?.subsidiaries).toEqual([]);
-
         expect.soft(organization?.stage).toBe('LEAD');
+        expect.soft(organization?.valueProposition).toBe('');
         expect.soft(organization?.yearFounded).toBeNull();
         expect.soft(organization?.website).toBe('');
 

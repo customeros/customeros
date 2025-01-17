@@ -8,10 +8,7 @@ import (
 	"github.com/biter777/countries"
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -29,9 +26,7 @@ import (
 type GlobalOrganizationService interface {
 	SyncDataIntoGlobalOrganizations()
 	ScrapinCompanyByWebsite()
-	EnrichIndustry()
-	EnrichDescription()
-	SyncGlobalOrgsToTenantOrganizations()
+	EnrichWithIndustry()
 }
 
 type globalOrganizationService struct {
@@ -106,25 +101,18 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 			continue
 		}
 
-		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Company.WebsiteUrl) {
-			continue
-		}
-
 		// identify primary domain
-		accessible, _, primaryDomain := s.commonServices.DomainService.CheckDomainWithMailsherpa(ctx, data.Company.WebsiteUrl)
-		if !accessible {
-			continue
-		}
+		_, primaryDomain := domaincheck.PrimaryDomainCheck(data.Company.WebsiteUrl)
 
 		// if primary domain is empty, skip processing
 		if primaryDomain == "" {
 			continue
 		}
 
-		if !utils.IsValidDomain(primaryDomain) {
+		// check if website is accepted
+		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Company.WebsiteUrl) {
 			continue
 		}
-
 		// check if primary domain is accepted
 		if !s.commonServices.DomainService.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
 			continue
@@ -268,23 +256,16 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 			continue
 		}
 
-		// check if website is accepted
-		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Domain) {
-			continue
-		}
-
 		// identify primary domain
-		accessible, _, primaryDomain := s.commonServices.DomainService.CheckDomainWithMailsherpa(ctx, data.Domain)
-		if !accessible {
-			continue
-		}
+		_, primaryDomain := domaincheck.PrimaryDomainCheck(data.Domain)
 
 		// if primary domain is empty, skip processing
 		if primaryDomain == "" {
 			continue
 		}
 
-		if !utils.IsValidDomain(primaryDomain) {
+		// check if website is accepted
+		if s.commonServices.DomainService.IsKnownCompanyHostingUrl(ctx, data.Domain) {
 			continue
 		}
 
@@ -360,13 +341,6 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 				globalOrganization.LinkedInUrl = link.Url
 				break
 			}
-		}
-		if len(data.Company.Industries) > 0 {
-			industryDesc := "Business area: "
-			for _, industry := range data.Company.Industries {
-				industryDesc += industry.Name + "; "
-			}
-			globalOrganization.SourceDescription5 = industryDesc
 		}
 
 		if createGlobalOrg {
@@ -485,11 +459,11 @@ func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Conte
 	return nil
 }
 
-func (s *globalOrganizationService) EnrichIndustry() {
+func (s *globalOrganizationService) EnrichWithIndustry() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.EnrichIndustry")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.EnrichWithIndustry")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
@@ -511,7 +485,7 @@ func (s *globalOrganizationService) EnrichIndustry() {
 
 	//process records
 	for _, record := range records {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichIndustry.Record")
+		span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichWithIndustry.Record")
 		defer span.Finish()
 		span.LogFields(log.Uint64("record.id", record.ID))
 
@@ -590,160 +564,6 @@ Company Name: %s
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "error setting industry"))
 			continue
-		}
-	}
-}
-
-func (s *globalOrganizationService) EnrichDescription() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.EnrichDescription")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	limit := 10
-	hoursFromPreviousAttempt := 24
-	maxAttempts := 3
-
-	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToEnrichDescription(ctx, hoursFromPreviousAttempt, maxAttempts, limit)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to process"))
-		s.log.Errorf("Error getting records to process: %s", err.Error())
-		return
-	}
-
-	// no record
-	if len(records) == 0 {
-		return
-	}
-
-	//process records
-	for _, record := range records {
-		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichDescription.Record")
-		defer recordSpan.Finish()
-		recordSpan.LogFields(log.Uint64("record.id", record.ID))
-
-		// mark record as processed initially to not process same record again, even if error occurs
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkDescriptionEnrichRequested(recordCtx, record.ID)
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking record as processed"))
-			s.log.Errorf("Error marking record as processed: %s", err.Error())
-			continue
-		}
-
-		// prepare Anthropic prompt
-		var descLines []string
-		descriptions := []string{record.Description, record.SourceDescription1, record.SourceDescription2, record.SourceDescription3, record.SourceDescription4, record.SourceDescription5}
-		for i, d := range descriptions {
-			if strings.TrimSpace(d) != "" {
-				descLines = append(descLines, fmt.Sprintf("Description Line %d: %s", i+1, d))
-			}
-		}
-
-		// Construct the prompt
-		prompt := fmt.Sprintf(`
-You are a world-class company analyst. Read the provided information about a company, then produce a single, concise paragraph up to 300 characters max, focusing on who the company servers and how they make money. 
-Be direct and dont include any marketing speak or jargon. Include only this final paragraph as your entire output. Do not include any explanations, disclaimers, or references to this instruction.
-Output should be in english. If you cannot produce a description, set the output N/A.
----
-Company Name: %s
-Company Domain: %s
-%s
----
-`, record.Name, record.PrimaryDomain, strings.Join(descLines, "\n"))
-
-		// ask AI for concise description
-		aiOutput, err := s.commonServices.AIService.AskAI(recordCtx, enum.AIModelAnthropicHaiku, &prompt)
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error asking AI"))
-			continue
-		}
-		aiDescrition := utils.IfNotNilString(aiOutput)
-		recordSpan.LogFields(log.String("result.description", aiDescrition))
-
-		if aiDescrition == "" || aiDescrition == "N/A" {
-			aiDescrition = utils.FirstNotEmptyString(record.Description, record.SourceDescription3, record.SourceDescription1, record.SourceDescription4, record.SourceDescription2)
-		}
-
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDescription(recordCtx, record.ID, aiDescrition)
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error setting description"))
-			continue
-		}
-	}
-}
-
-func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	limit := 20
-	daysFromPreviousSync := 30
-
-	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx, daysFromPreviousSync, limit)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error getting records to process"))
-		s.log.Errorf("Error getting records to process: %s", err.Error())
-		return
-	}
-
-	// no record
-	if len(records) == 0 {
-		return
-	}
-
-	//process records
-	for _, record := range records {
-		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations.Record")
-		defer recordSpan.Finish()
-		recordSpan.LogFields(log.Uint64("record.id", record.ID), log.String("record.primaryDomain", record.PrimaryDomain))
-
-		// mark record as processed initially to not process same record again, even if error occurs
-		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo(recordCtx, record.ID)
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking record as processed"))
-			s.log.Errorf("Error marking record as processed: %s", err.Error())
-			continue
-		}
-
-		// Find organizations by domain across all tenants
-		tenantWithOrgId, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByDomainAcrossAllTenants(recordCtx, record.PrimaryDomain)
-		if err != nil {
-			tracing.TraceErr(recordSpan, errors.Wrap(err, "error getting organizations by domain"))
-			s.log.Errorf("Error getting organizations by domain: %s", err.Error())
-			continue
-		}
-
-		for _, tenantOrgs := range tenantWithOrgId {
-			innerCtx := common.WithCustomContext(recordCtx, &common.CustomContext{
-				Tenant:    tenantOrgs.Tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
-
-			// TODO only industry is synced. once adding other fields, refactor this
-			if record.IndustryNaicsCode == "" && record.Description == "" {
-				continue
-			}
-
-			// sync organization
-			dataFields := data_fields.OrganizationFields{}
-			if record.IndustryNaicsCode != "" {
-				dataFields.Industry = utils.StringPtr(record.IndustryNaicsCode)
-			}
-			if record.Description != "" {
-				dataFields.Description = utils.StringPtr(record.Description)
-			}
-			_, err = s.commonServices.OrganizationService.Save(innerCtx, nil, utils.StringPtr(tenantOrgs.OrganizationId), dataFields)
-			if err != nil {
-				tracing.TraceErr(recordSpan, errors.Wrap(err, "error syncing organization"))
-				s.log.Errorf("Error syncing organization: %s", err.Error())
-				continue
-			}
 		}
 	}
 }

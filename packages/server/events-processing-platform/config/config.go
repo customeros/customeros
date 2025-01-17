@@ -3,36 +3,28 @@ package config
 import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
-	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/file_store_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstoredb"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstoredb"
 )
 
 type Config struct {
-	ServiceName         string `env:"SERVICE_NAME" envDefault:"events-processing-platform"`
-	Logger              logger.Config
-	EventStoreConfig    eventstoredb.EventStoreConfig
-	Neo4j               config.Neo4jConfig
-	PostgresConfig      config.PostgresConfig
-	PostgresAsyncConfig config.PostgresAsyncConfig
-	Jaeger              tracing.JaegerConfig
-	GRPC                GRPC
-	Services            Services
-	Utils               Utils
+	ServiceName      string `env:"SERVICE_NAME" envDefault:"events-processing-platform"`
+	Logger           logger.Config
+	EventStoreConfig *eventstoredb.EventStoreConfig
+	Jaeger           *tracing.JaegerConfig
+	GRPC             *GRPC
+	Utils            *Utils
+
+	CommonServices *config.CommonConfig
 }
 
 type GRPC struct {
 	Port        string `env:"GRPC_PORT" envDefault:":5001" validate:"required"`
 	Development bool   `env:"GRPC_DEVELOPMENT" envDefault:"false"`
 	ApiKey      string `env:"GRPC_API_KEY" validate:"required"`
-}
-
-type Services struct {
-	FileStoreApiConfig fsc.FileStoreApiConfig
 }
 
 type Utils struct {

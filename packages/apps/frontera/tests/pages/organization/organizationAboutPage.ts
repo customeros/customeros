@@ -4,7 +4,6 @@ import {
   writeTextInLocator,
   createRequestPromise,
   createResponsePromise,
-  clickLocatorThatIsVisible,
   clickLocatorsThatAreVisible,
 } from '../../helper';
 
@@ -16,14 +15,13 @@ export class OrganizationAboutPage {
   private page: Page;
 
   private orgAboutName = 'input[data-test="org-about-name"]';
-  private orgAboutDomainEmpty = 'span[data-test="org-about-domain-empty"]';
-  private orgAboutDomainFilled = 'span[data-test="org-about-domain-filled"]';
-  private orgAboutDescription = 'p[data-test="org-about-description"]';
+  private orgAboutWww = 'input[data-test="org-about-www"]';
+  private orgAboutDescription = 'textarea[data-test="org-about-description"]';
   private orgAboutTags = 'div[data-test="org-about-tags"]';
   private orgAboutRelationship = 'button[data-test="org-about-relationship"]';
   private relationshipNotAFit = 'div[role="menuitem"]:has-text("Not a fit")';
   private orgAboutStage = 'div[data-test="org-about-stage"]';
-  private orgAboutIndustry = 'span[data-test="org-about-industry"]';
+  private orgAboutIndustry = 'div[data-test="org-about-industry"]';
   private industryIndependentPowerAndRenewableElectricityProducers =
     'div[role="option"]:has-text("Independent Power and Renewable Electricity Producers")';
   private orgAboutBusinessType = 'div[data-test="org-about-business-type"]';
@@ -47,53 +45,31 @@ export class OrganizationAboutPage {
   private orgAboutSocialLinkEmpty =
     'input[data-test="org-about-social-link"][placeholder="Social link"]';
   private orgTest = 'input[data-test="test"]';
-  private addDomainInput = 'input[data-test="add-domain-input"]';
-  private addDomain = 'button[data-test="add-domain"]';
-  private mergeOrganizations = 'button[data-test="merge-organizations"]';
 
-  async updateDomainToOrg(domains: string) {
-    await this.addDomainToOrg(domains, 'update');
-  }
+  async addWebsiteToOrg(website: string) {
+    await clickLocatorsThatAreVisible(this.page, this.orgAboutWww);
 
-  async addDomainToOrg(domain: string, domainToOrgOperation: string = 'add') {
-    const domainToOrgOperationLocator =
-      domainToOrgOperation === 'add'
-        ? this.orgAboutDomainEmpty
-        : this.orgAboutDomainFilled;
+    const requestPromise = createRequestPromise(this.page, 'website', website);
 
-    await clickLocatorsThatAreVisible(this.page, domainToOrgOperationLocator);
-
-    const addDomainRequestPromise = createRequestPromise(
+    const responsePromise = createResponsePromise(
       this.page,
-      'domain',
-      domain,
-    );
-
-    const addDomainResponsePromise = createResponsePromise(
-      this.page,
-      'checkDomain?.domainOrganizationId',
+      'organization_Save?.metadata?.id',
       undefined,
     );
 
-    const input = this.page.locator(this.addDomainInput);
+    const input = this.page.locator(this.orgAboutWww);
 
-    await this.page.waitForTimeout(500);
-    await input.pressSequentially(domain, { delay: 200 });
-    await clickLocatorThatIsVisible(this.page, this.addDomain);
+    await this.page.waitForTimeout(1000);
+    await input.press('Meta+A');
+    await input.press('Backspace');
+    await this.page.waitForTimeout(1000);
+    await input.pressSequentially(website, { delay: 200 });
+    await this.page.keyboard.press('Tab');
 
-    await Promise.all([addDomainRequestPromise, addDomainResponsePromise]);
-
-    const mergeOrganizationsResponsePromise = createResponsePromise(
-      this.page,
-      'organization_Merge',
-      undefined,
-    );
-
-    await clickLocatorThatIsVisible(this.page, this.mergeOrganizations);
-
-    await Promise.all([mergeOrganizationsResponsePromise]);
+    await Promise.all([requestPromise, responsePromise]);
     await this.page.waitForTimeout(5000);
-    await this.page.reload(); // needed when the test runs locally
+    await this.page.reload();
+    await this.page.waitForLoadState('networkidle');
   }
 
   async addRelationshipToOrg(relationship: string) {
@@ -103,7 +79,7 @@ export class OrganizationAboutPage {
 
     const requestPromise = createRequestPromise(
       this.page,
-      'input?.relationship',
+      'relationship',
       relationship,
     );
 
@@ -126,7 +102,7 @@ export class OrganizationAboutPage {
 
     const requestPromise = createRequestPromise(
       this.page,
-      'input?.industry',
+      'industry',
       industry,
     );
 
@@ -155,7 +131,7 @@ export class OrganizationAboutPage {
 
     const requestPromise = createRequestPromise(
       this.page,
-      'input?.market',
+      'market',
       orgAboutBusinessType,
     );
 
@@ -181,7 +157,7 @@ export class OrganizationAboutPage {
 
     const requestPromise = createRequestPromise(
       this.page,
-      'input?.lastFundingRound',
+      'lastFundingRound',
       orgAboutLastFundingRound,
     );
 
@@ -211,7 +187,7 @@ export class OrganizationAboutPage {
 
     const requestPromise = createRequestPromise(
       this.page,
-      'input?.employees',
+      'employees',
       orgAboutNumberOfEmployees,
     );
 
@@ -249,7 +225,7 @@ export class OrganizationAboutPage {
 
   async populateAboutFields(update: {
     name: string;
-    domain: string;
+    website: string;
     orgAboutTags: string;
     orgAboutOwner: string;
     orgAboutIndustry: string;
@@ -262,7 +238,7 @@ export class OrganizationAboutPage {
   }) {
     await this.page.fill(this.orgAboutName, update.name);
 
-    await this.updateDomainToOrg(update.domain);
+    await this.addWebsiteToOrg(update.website);
 
     await this.page.fill(this.orgAboutDescription, update.orgAboutDescription);
 
@@ -289,7 +265,7 @@ export class OrganizationAboutPage {
 
   async checkPopulatedAboutFields(update: {
     name: string;
-    domain: string;
+    website: string;
     orgAboutTags: string;
     orgAboutOwner: string;
     orgAboutIndustry: string;
@@ -309,7 +285,7 @@ export class OrganizationAboutPage {
         .toHaveValue(update.name),
       //TODO: waiting for the fix of the issue [COS-5192: Website save fails to get saved](https://linear.app/customer-os/issue/COS-5192/website-save-fails-to-get-saved)
       // expect
-      //   .soft(this.page.locator(this.orgAboutDomainEmpty))
+      //   .soft(this.page.locator(this.orgAboutWww))
       //   .toHaveValue(update.website),
       expect
         .soft(this.page.locator(this.orgAboutDescription))
@@ -333,18 +309,19 @@ export class OrganizationAboutPage {
       expect
         .soft(this.page.locator(this.orgAboutNumberOfEmployees))
         .toContainText(update.orgAboutNumberOfEmployees),
-      // expect
-      //   .soft(this.getSocialLinkLocator('facebook.com/cognyte').count())
-      //   .toBeGreaterThan(0),
       expect
-        .soft(this.getSocialLinkLocator('/silkwebro').count())
-        .toBeGreaterThan(0),
+        .soft(this.getSocialLinkLocator('facebook.com/cognyte'))
+        .toHaveCount(1),
+      expect.soft(this.getSocialLinkLocator('/cognyte')).toHaveCount(1),
+      expect.soft(this.getSocialLinkLocator('/Cognyte')).toHaveCount(1),
+      expect.soft(this.getSocialLinkLocator('/3669')).toHaveCount(1),
       expect
-        .soft(this.getSocialLinkLocator('youtube.com/c/Gomagro').count())
-        .toBeGreaterThan(0),
-      expect
-        .soft(this.getSocialLinkLocator('/992874').count())
-        .toBeGreaterThan(0),
+        .soft(
+          this.getSocialLinkLocator(
+            'youtube.com/channel/UCqIvlQRaVQ38kr03p5QTDWA',
+          ),
+        )
+        .toHaveCount(1),
       expect
         .soft(this.getSocialLinkLocator(update.orgAboutSocialLinkEmpty))
         .toHaveCount(1),
@@ -354,8 +331,8 @@ export class OrganizationAboutPage {
     ]);
   }
 
-  async enrichOrganization(domain: string) {
-    await this.addDomainToOrg(domain);
+  async enrichOrganization(website: string) {
+    await this.addWebsiteToOrg(website);
 
     await this.page.waitForLoadState('networkidle');
     await this.page.locator(this.orgAboutName).waitFor({ state: 'visible' });
@@ -363,45 +340,43 @@ export class OrganizationAboutPage {
 
   private getSocialLinkLocator(exactText: string) {
     return this.page.locator(
-      `p[data-test="${this.socialLinkDataTest}"]:has-text("${exactText}")`,
+      `p[data-test="${this.socialLinkDataTest}"]:text-is("${exactText}")`,
     );
   }
 
-  async checkEnrichedAboutFields(create: { name: string; domain: string }) {
-    const socialLinks = ['/silkwebro', 'youtube.com/c/Gomagro', '/992874'];
-
-    // First scroll each social link into view
-    for (const link of socialLinks) {
-      const locator = this.getSocialLinkLocator(link);
-
-      await locator.scrollIntoViewIfNeeded();
-    }
-
-    // Then check all conditions
+  async checkEnrichedAboutFields(create: { name: string; website: string }) {
     await Promise.all([
       expect
         .soft(this.page.locator(this.orgAboutName))
         .toHaveValue(create.name),
       expect
-        .soft(this.page.locator(this.orgAboutDomainFilled))
-        .toHaveText(create.domain),
-      expect.soft(this.page.locator(this.orgAboutDescription)).not.toBeEmpty(),
+        .soft(this.page.locator(this.orgAboutWww))
+        .toHaveValue(create.website),
+      expect
+        .soft(this.page.locator(this.orgAboutDescription))
+        .toHaveValue('Actionable Intelligence for a Safer World™ '),
       expect
         .soft(this.page.locator(this.orgAboutRelationship))
         .toContainText('Prospect'),
-      expect.soft(this.page.locator(this.orgAboutStage)).toContainText('Lead'),
+      expect
+        .soft(this.page.locator(this.orgAboutStage))
+        .toContainText('Target'),
       expect
         .soft(this.page.locator(this.orgAboutIndustry))
-        .toHaveText('Industry not found yet'),
+        .toContainText('Internet Software & Services'),
       expect
-        .soft(await this.getSocialLinkLocator('/silkwebro').count())
-        .toBeGreaterThan(0),
+        .soft(this.getSocialLinkLocator('facebook.com/cognyte'))
+        .toHaveCount(1),
+      expect.soft(this.getSocialLinkLocator('/cognyte')).toHaveCount(1),
+      expect.soft(this.getSocialLinkLocator('/Cognyte')).toHaveCount(1),
+      expect.soft(this.getSocialLinkLocator('/3669')).toHaveCount(1),
       expect
-        .soft(await this.getSocialLinkLocator('youtube.com/c/Gomagro').count())
-        .toBeGreaterThan(0),
-      expect
-        .soft(await this.getSocialLinkLocator('/992874').count())
-        .toBeGreaterThan(0),
+        .soft(
+          this.getSocialLinkLocator(
+            'youtube.com/channel/UCqIvlQRaVQ38kr03p5QTDWA',
+          ),
+        )
+        .toHaveCount(1),
     ]);
   }
 }

@@ -44,7 +44,6 @@ export const AddLinkedInToContactModal = observer(
       () => {
         linkedInUseCase.submitLinkedInUrl();
         !linkedInUseCase.emptyLinkedInUrl && onClose();
-        !linkedInUseCase.invalidLinkedInUrl && onClose();
       },
       {
         targetRef: modalRef,
@@ -73,18 +72,13 @@ export const AddLinkedInToContactModal = observer(
               <p>We'll auto-enrich this contact using their LinkedIn profile</p>
               <Input
                 variant='unstyled'
-                dataTest='linkedin-url-input'
                 value={linkedInUseCase.inputValue}
                 placeholder='linkedin.com/in/john-lemon'
+                onChange={(e) => linkedInUseCase.setInputValue(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Escape') {
                     onClose();
                   }
-                }}
-                onChange={(e) => {
-                  linkedInUseCase.setInputValue(e.target.value);
-
-                  linkedInUseCase.resetErrors();
                 }}
               />
             </div>
@@ -115,8 +109,7 @@ export const AddLinkedInToContactModal = observer(
               dataTest='add-linkedin-url'
               onClick={() => {
                 linkedInUseCase.submitLinkedInUrl();
-                !linkedInUseCase.emptyLinkedInUrl && onClose();
-                !linkedInUseCase.invalidLinkedInUrl && onClose();
+                linkedInUseCase.validateLinkedInUrl() && onClose();
               }}
             >
               Add & enrich

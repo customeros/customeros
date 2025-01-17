@@ -210,7 +210,7 @@ export const TagList = observer(
               tags.map((tag) => (
                 <div
                   key={tag.value.metadata.id}
-                  className='py-1 max-h-[30px] mb-1 border rounded-md border-gray-200 flex justify-between items-center group bg-white'
+                  className='py-1 max-h-[32px] mb-1 border rounded-md border-gray-200 flex justify-between items-center group bg-white'
                 >
                   <TagColorPicker
                     colorCode={tag.value.colorCode}
@@ -222,15 +222,15 @@ export const TagList = observer(
                       });
                     }}
                   />
-                  <div className='flex flex-grow '>
+                  <div className='flex-grow '>
                     {editingTag?.id === tag.value.metadata.id ? (
-                      <div className='ml-2 overflow-hidden'>
+                      <div className='ml-6 overflow-hidden'>
                         <Input
                           autoFocus
-                          size='xxs'
+                          size='xs'
                           ref={inputRef}
                           variant='unstyled'
-                          className='mb-[3px] bg-white '
+                          className='mb-[1px] bg-white'
                           defaultValue={editingTag?.name}
                           onFocus={(e) => {
                             e.target.select();
@@ -264,7 +264,7 @@ export const TagList = observer(
                     ) : (
                       <>
                         <span
-                          className='cursor-pointer ml-2 text-sm break-all line-clamp-1 w-full '
+                          className='cursor-pointer ml-2 text-sm break-all line-clamp-1 '
                           onClick={() =>
                             setEditingTag({
                               id: tag.value.metadata.id,

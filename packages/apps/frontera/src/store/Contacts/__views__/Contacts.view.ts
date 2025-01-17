@@ -1,6 +1,8 @@
 import { inPlaceSort } from 'fast-sort';
 import { action, reaction } from 'mobx';
 
+import { TableIdType } from '@shared/types/__generated__/graphql.types';
+
 import type { Contact } from '../Contact.dto';
 
 import { indexAndSearch } from './util';
@@ -60,6 +62,8 @@ export class ContactsView {
   @action
   public update = () => {
     const preset = this.store.root.tableViewDefs.contactsPreset;
+    const tableId = this.store.root.tableViewDefs.getById(preset || '')?.value
+      .tableId;
 
     if (!preset) return;
 
@@ -82,6 +86,13 @@ export class ContactsView {
       const filteredIdsWithSortValues = (data as Contact[]).reduce(
         (acc, curr) => {
           if (!curr) return acc;
+
+          if (tableId === TableIdType.FlowContacts) {
+            acc = acc.filter(
+              (v) =>
+                v.record.hasFlows && (currentFlowId ? v.record.flowsIds : true),
+            );
+          }
 
           if (
             defaultFilters.every((fn) => fn(curr)) &&

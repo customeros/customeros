@@ -207,7 +207,7 @@ export class OrganizationAccountPage {
 
     const requestPromise = createRequestPromise(
       this.page,
-      'input?.notes',
+      'notes',
       '<p class="my-3" dir="ltr"><span style="white-space: pre-wrap;">Test Note!</span></p>',
     );
 

@@ -14,6 +14,8 @@ type Config struct {
 	GoogleOAuthConfig config.GoogleOAuthConfig
 	AzureOAuthConfig  config.AzureOAuthConfig
 
+	CommonConfig config.CommonConfig
+
 	SyncData struct {
 		CronSync  string `env:"CRON_SYNC" envDefault:"0 */1 * * * *"`
 		BatchSize int64  `env:"BATCH_SIZE" envDefault:"100"`

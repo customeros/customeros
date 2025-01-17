@@ -2,25 +2,25 @@ package graph
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/opentracing/opentracing-go"
 	"strings"
 	"time"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
+	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"golang.org/x/sync/errgroup"
-
-	"github.com/pkg/errors"
 )
 
 type GraphSubscriber struct {
@@ -29,6 +29,7 @@ type GraphSubscriber struct {
 	cfg                      *config.Config
 	organizationEventHandler *OrganizationEventHandler
 	invoiceEventHandler      *InvoiceEventHandler
+	services                 *service.Services
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
@@ -36,8 +37,8 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		log:                      log,
 		db:                       db,
 		cfg:                      cfg,
-		organizationEventHandler: NewOrganizationEventHandler(log, services, grpcClients, cache),
-		invoiceEventHandler:      NewInvoiceEventHandler(log, services, grpcClients),
+		organizationEventHandler: NewOrganizationEventHandler(log, grpcClients, cache, services.CommonServices.Events, services.Neo4jRepositories, services.PostgresRepositories, services.CommonServices.CurrencyService),
+		invoiceEventHandler:      NewInvoiceEventHandler(log, grpcClients, services.Neo4jRepositories),
 	}
 }
 
@@ -68,7 +69,6 @@ func (s *GraphSubscriber) runWorker(ctx context.Context, worker subscriptions.Wo
 }
 
 func (s *GraphSubscriber) ProcessEvents(ctx context.Context, stream *esdb.PersistentSubscription, workerID int) error {
-
 	for {
 		event := stream.Recv()
 		select {

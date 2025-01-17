@@ -7,6 +7,6 @@ export * from './renewal';
 export * from './socials';
 export * from './touchpoint';
 export * from './touchpointDate';
-export * from './domains';
+export * from './website';
 export * from './industry';
 export * from './tags';

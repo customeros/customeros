@@ -7,6 +7,4 @@ export * from './RelationshipSubItemGroup';
 export * from './UpdateHealthStatusSubItemGroup';
 export * from './MergeConfirmationModal';
 export * from './EditCompanyLinkedin';
-export * from './addDomain';
-export * from './RemoveDomain';
 export * from './keywords.ts';

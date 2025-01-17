@@ -81,28 +81,6 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     return this.value.get(id) as Organization;
   }
 
-  public setView = async (
-    key: string,
-    filterFn: (records: Organization[]) => Organization[],
-  ) => {
-    const ids = this.searchResults.get(key);
-    const cursor = this.cursors.get(key) ?? 0;
-    const chunkedIds = (ids ?? []).slice(
-      0,
-      this.chunkSize * cursor + this.chunkSize,
-    );
-
-    const records: Organization[] = [];
-
-    chunkedIds.forEach((id) => {
-      if (this.value?.has(id)) {
-        records.push(this.value.get(id) as Organization);
-      }
-    });
-
-    this.views.set(key, filterFn(records));
-  };
-
   // temporary unused
   @action
   private async _getRecentChanges() {
@@ -212,16 +190,6 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         this.error = (err as Error)?.message;
       });
     }
-  }
-
-  async preload(ids: string[]) {
-    ids.forEach((id) => {
-      if (this.value.has(id)) return;
-
-      this.value.set(id, new Organization(this, Organization.default({ id })));
-    });
-
-    this.retrieve(ids);
   }
 
   @action
@@ -353,7 +321,10 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         });
         opts?.onSucces?.(record.id);
 
-        this.root.ui.toastSuccess('Added an organization', record.id);
+        this.root.ui.toastSuccess(
+          'Organization created successfully!',
+          record.id,
+        );
       });
     } catch (error) {
       runInAction(() => {
@@ -363,7 +334,6 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
           'create-org-faillure',
         );
       });
-    } finally {
       this.refreshCurrentView();
     }
   }
@@ -376,10 +346,6 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       const { organization_SaveByGlobalOrganization } =
         await this.service.importOrganization({
           globalOrganizationId: globalId,
-          input: {
-            relationship: payload?.relationship,
-            stage: payload?.stage,
-          },
         });
 
       serverId = organization_SaveByGlobalOrganization?.id;
@@ -446,7 +412,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         this.sync({ action: 'DELETE', ids });
 
         this.root.ui.toastSuccess(
-          `Archived ${ids.length} ${
+          `Successfully archived ${ids.length} ${
             ids.length > 1 ? 'organizations' : 'organization'
           }`,
           crypto.randomUUID(),
@@ -492,7 +458,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         this.sync({ action: 'INVALIDATE', ids: [primaryId] });
 
         this.root.ui.toastSuccess(
-          `Merged ${mergeIds.length} ${
+          `Successfully merged ${mergeIds.length} ${
             mergeIds.length > 1 ? 'organizations' : 'organization'
           }`,
           primaryId,

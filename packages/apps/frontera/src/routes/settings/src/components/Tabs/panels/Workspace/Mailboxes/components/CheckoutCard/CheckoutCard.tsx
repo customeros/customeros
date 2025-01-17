@@ -129,7 +129,6 @@ export const CheckoutCard = observer(
                 colorScheme='primary'
                 rightIcon={<ChevronRight />}
                 isLoading={store.mailboxes.isLoading}
-                dataTest='settings-mailboxes-checkout'
                 onClick={() => {
                   handlePaymentView();
                 }}

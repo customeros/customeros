@@ -120,7 +120,7 @@ export const getOrganizationSortFn = (columnId: string) =>
     )
     .with(
       ColumnViewType.OrganizationsIndustry,
-      () => (row: Organization) => row?.value.industryName,
+      () => (row: Organization) => row?.value.industry,
     )
     .with(
       ColumnViewType.OrganizationsContactCount,

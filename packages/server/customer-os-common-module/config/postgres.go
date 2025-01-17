@@ -3,13 +3,14 @@ package config
 import (
 	"database/sql"
 	"fmt"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	gormLogger "gorm.io/gorm/logger"
 	"io"
 	"log"
 	"os"
 	"time"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	gormLogger "gorm.io/gorm/logger"
 )
 
 type PostgresDB struct {
@@ -20,7 +21,7 @@ type PostgresDB struct {
 	AsyncGormDB *gorm.DB
 }
 
-func InitPostgres(cfg *GlobalConfig) (*PostgresDB, error) {
+func InitPostgres(cfg *CommonConfig) (*PostgresDB, error) {
 	var err error
 	db := &PostgresDB{}
 
@@ -75,7 +76,7 @@ func initConfig(logLevel string) *gorm.Config {
 
 // initLog Connection Log Configuration
 func initLog(logLevel string) gormLogger.Interface {
-	var postgresLogLevel = gormLogger.Silent
+	postgresLogLevel := gormLogger.Silent
 	switch logLevel {
 	case "ERROR":
 		postgresLogLevel = gormLogger.Error

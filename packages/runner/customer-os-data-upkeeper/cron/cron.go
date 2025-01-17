@@ -1,7 +1,6 @@
 package cron
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"sync"
 
 	"github.com/robfig/cron"
@@ -113,9 +112,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.Cron.CronScheduleUpdateOrganization, GroupOrganization, updateOrganizations, "updateOrganizations")
 	addJob(cont.Cfg.Cron.CronScheduleSyncDataToGlobalOrgs, GroupGlobalOrg, syncDataToGlobalOrgs, "syncDataToGlobalOrgs")
 	addJob(cont.Cfg.Cron.CronScheduleProcessWebsiteForGlobalOrgs, GroupGlobalOrg, processWebsiteForGlobalOrgs, "processWebsiteForGlobalOrgs")
-	addJob(cont.Cfg.Cron.CronScheduleEnrichGlobalOrgIndustry, GroupGlobalOrg, enrichGlobalOrgIndustry, "enrichGlobalOrgIndustry")
-	addJob(cont.Cfg.Cron.CronScheduleEnrichGlobalOrgDescription, GroupGlobalOrg, enrichGlobalOrgDescription, "enrichGlobalOrgDescription")
-	addJob(cont.Cfg.Cron.CronScheduleSyncFromGlobalOrgsToTenantOrgs, GroupGlobalOrg, syncGlobalOrgsToTenantOrganizations, "syncGlobalOrgsToTenantOrganizations")
+	addJob(cont.Cfg.Cron.CronScheduleEnrichIndustry, GroupGlobalOrg, enrichWithIndustry, "enrichWithIndustry")
 
 	// Contract Jobs
 	addJob(cont.Cfg.Cron.CronScheduleUpdateContract, GroupContract, updateContractsStatusAndRenewal, "updateContractsStatusAndRenewal")
@@ -169,7 +166,6 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 func lockAndRunJob(cont *container.Container, groupName string, job func(*container.Container)) {
 	jobLocks.locks[groupName].Lock()
 	defer jobLocks.locks[groupName].Unlock()
-	defer tracing.RecoverAndLogToJaeger(cont.Log)
 	job(cont)
 }
 
@@ -325,12 +321,8 @@ func checkMailstackDomainReputation(cont *container.Container) {
 	service.NewMailstackService(cont.Cfg, cont.Log, cont.CommonServices).CheckMailstackDomainReputation()
 }
 
-func enrichGlobalOrgIndustry(cont *container.Container) {
-	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).EnrichIndustry()
-}
-
-func enrichGlobalOrgDescription(cont *container.Container) {
-	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).EnrichDescription()
+func enrichWithIndustry(cont *container.Container) {
+	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).EnrichWithIndustry()
 }
 
 func sendReminders(cont *container.Container) {
@@ -339,8 +331,4 @@ func sendReminders(cont *container.Container) {
 
 func processWebSessions(cont *container.Container) {
 	service.NewWebSessionService(cont.Cfg, cont.Log, cont.CommonServices).ProcessWebSessions()
-}
-
-func syncGlobalOrgsToTenantOrganizations(cont *container.Container) {
-	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).SyncGlobalOrgsToTenantOrganizations()
 }

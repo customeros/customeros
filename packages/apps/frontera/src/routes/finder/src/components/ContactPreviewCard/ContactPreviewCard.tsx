@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
+import set from 'lodash/set';
 import { useKeyBindings } from 'rooks';
 import cityTimezone from 'city-timezones';
 import { observer } from 'mobx-react-lite';
-import { EditJobRole } from '@domain/usecases/contact-preview-card/edit-jobrole.usecase';
 
 import { cn } from '@ui/utils/cn';
 import { X } from '@ui/media/icons/X';
@@ -20,20 +20,16 @@ import { Tags } from '@organization/components/Tabs';
 import { getFormattedLink } from '@utils/getExternalLink';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 import { LinkedInSolid02 } from '@ui/media/icons/LinkedInSolid02';
-import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 
 import { EmailsSection } from './components';
 import { EnrichContactModal } from './components/EnrichContactModal';
 
-const jobRoleUseCase = new EditJobRole();
-
 export const ContactPreviewCard = observer(() => {
   const store = useStore();
-  const [_, copyToClipboard] = useCopyToClipboard();
-
   const [searchParams] = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditName, setIsEditName] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const contactId = store.ui.focusRow;
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
@@ -56,13 +52,7 @@ export const ContactPreviewCard = observer(() => {
 
   const company = contact?.value.primaryOrganizationName;
 
-  const jobRoles = store.contacts.getById(String(contactId))?.jobRoles;
-
-  const findPrimaryJobRole = jobRoles?.find(
-    (j) => j.primary && j.contact?.metadata.id === contactId,
-  );
-
-  const jobRolesStore = store.jobRoles.getById(findPrimaryJobRole?.id || '');
+  const jobTitle = contact?.value.primaryOrganizationJobRoleTitle;
 
   const countryA3 = contact?.value.locations?.[0]?.countryCodeA3;
   const countryA2 = contact?.value.locations?.[0]?.countryCodeA2;
@@ -165,24 +155,21 @@ export const ContactPreviewCard = observer(() => {
           <Input
             size='xs'
             variant='unstyled'
+            value={jobTitle || ''}
             placeholder='Enter title'
             onFocus={(e) => e.target.select()}
-            value={findPrimaryJobRole?.jobTitle || ''}
             className='w-[290px] overflow-hidden text-ellipsis whitespace-nowrap'
             onBlur={() => {
-              jobRoleUseCase.submitJobRole(
-                String(contactId),
-                contact.value.primaryOrganizationId || '',
-              );
+              contact.draft();
+              set(contact.value, 'primaryOrganizationJobRoleTitle', jobTitle);
+              contact.commit();
             }}
             onChange={(e) => {
-              const newValue = e.target.value;
-
-              jobRoleUseCase.setJobRole(newValue);
-
-              if (jobRolesStore) {
-                jobRolesStore.value.jobTitle = newValue;
-              }
+              set(
+                contact.value,
+                'primaryOrganizationJobRoleTitle',
+                e.target.value,
+              );
             }}
           />
           <div className={cn('flex items-center mb-4', countryA3 && 'gap-1')}>
@@ -228,30 +215,25 @@ export const ContactPreviewCard = observer(() => {
                 <LinkedInSolid02 className='mt-[1px] text-gray-500 ' />
                 LinkedIn
               </div>
-              <div className='flex items-center gap-1 group  '>
-                {fromatedUrl ? (
-                  <p
-                    className='text-sm truncate w-[180px] cursor-default'
-                    onClick={() => {
-                      copyToClipboard(fromatedUrl, 'LinkedIn profile copied');
-                    }}
-                  >
-                    {fromatedUrl}
-                  </p>
-                ) : (
-                  <p className='text-sm truncate w-[180px] text-gray-400'>
-                    LinkedIn profile link
-                  </p>
-                )}
-                {fromatedUrl && (
+              <div
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                className='flex items-center gap-1 w-full'
+              >
+                <Link to={href || ''} target='_blank'>
+                  <span className='text-sm'>
+                    {fromatedUrl || 'LinkedIn profile link'}
+                  </span>
+                </Link>
+                {fromatedUrl && isHovered && (
                   <Link to={href || ''} target='_blank'>
                     <IconButton
                       size='xxs'
                       variant='ghost'
                       colorScheme='gray'
                       aria-label='social link'
+                      className='hover:bg-gray-200 '
                       icon={<LinkExternal02 className='text-gray-500' />}
-                      className='hover:bg-gray-200 opacity-0 group-hover:opacity-100'
                     />
                   </Link>
                 )}

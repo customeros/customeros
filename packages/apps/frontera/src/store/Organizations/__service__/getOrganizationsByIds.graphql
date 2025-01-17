@@ -4,8 +4,7 @@ query getOrganizationsByIds($ids: [ID!]) {
     name
     notes
     description
-    industryName
-    industryCode
+    industry
     market
     website
     logoUrl
@@ -15,6 +14,7 @@ query getOrganizationsByIds($ids: [ID!]) {
     relationship
     lastFundingRound
     leadSource
+    valueProposition
     slackChannelId
     employees
     yearFounded
@@ -24,11 +24,6 @@ query getOrganizationsByIds($ids: [ID!]) {
     ltv
     hide
     domains
-    domainsDetails {
-      domain
-      primary
-      primaryDomain
-    }
     createdAt
     updatedAt
     churnedAt

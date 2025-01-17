@@ -1,14 +1,16 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Organization {
@@ -28,6 +30,9 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		Name:               entity.Name,
 		Description:        utils.StringPtr(entity.Description),
 		Website:            utils.StringPtr(entity.Website),
+		Industry:           utils.StringPtr(entity.Industry),
+		TargetAudience:     utils.StringPtr(entity.TargetAudience),
+		ValueProposition:   utils.StringPtr(entity.ValueProposition),
 		Public:             utils.BoolPtr(entity.IsPublic),
 		Employees:          utils.Int64Ptr(entity.Employees),
 		Market:             MapMarketToModel(entity.Market),
@@ -124,10 +129,14 @@ func MapOrganizationSaveInputToEntity(input model.OrganizationSaveInput) *data_f
 		Domains:            input.Domains,
 		ReferenceId:        input.ReferenceID,
 		Name:               input.Name,
+		Description:        input.Description,
 		Website:            input.Website,
+		Industry:           input.Industry,
 		IsPublic:           input.Public,
 		Employees:          input.Employees,
 		Note:               input.Notes,
+		TargetAudience:     input.TargetAudience,
+		ValueProposition:   input.ValueProposition,
 		LogoUrl:            input.LogoURL,
 		YearFounded:        input.YearFounded,
 		EmployeeGrowthRate: input.EmployeeGrowthRate,

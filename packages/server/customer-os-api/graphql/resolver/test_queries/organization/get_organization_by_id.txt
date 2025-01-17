@@ -1,0 +1,41 @@
+query GetOrganization($organizationId: ID!){
+  organization(id: $organizationId) {
+    metadata {
+        id
+        created
+        lastUpdated
+    }
+    customId
+    customerOsId
+    name
+    description
+    domains
+    website
+    industry
+    targetAudience
+    valueProposition
+    lastFundingRound
+    lastFundingAmount
+    note
+    public
+    isCustomer
+    lastTouchPointTimelineEventId
+    lastTouchPointAt
+    lastTouchPointType
+    logo
+    icon
+    yearFounded
+    employeeGrowthRate
+    headquarters
+    relationship
+    stage
+    contactCount
+    accountDetails {
+      onboarding {
+        updatedAt
+        status
+        comments
+      }
+    }
+  }
+}

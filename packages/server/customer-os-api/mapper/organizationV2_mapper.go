@@ -1,12 +1,14 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, output *model.OrganizationUIDetails) {
@@ -23,6 +25,8 @@ func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, ou
 	output.Name = entity.Name
 	output.Description = utils.StringPtr(entity.Description)
 	output.Website = utils.StringPtr(entity.Website)
+	output.Industry = utils.StringPtr(entity.Industry)
+	output.ValueProposition = utils.StringPtr(entity.ValueProposition)
 	output.Public = utils.BoolPtr(entity.IsPublic)
 	output.Employees = utils.Int64Ptr(entity.Employees)
 	output.Market = MapMarketToModel(entity.Market)

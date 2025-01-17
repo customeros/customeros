@@ -1,0 +1,416 @@
+package api_meeting
+
+import (
+	"context"
+	"fmt"
+	"reflect"
+	"time"
+
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"golang.org/x/exp/slices"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	cosapi_interfaces "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/interfaces"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	api_filters "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services/filters"
+	api_sort "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services/sort"
+)
+
+type meetingService struct {
+	log          logger.Logger
+	repositories *repository.Repositories
+	organization cosapi_interfaces.OrganizationService
+	note         cosapi_interfaces.NoteService
+}
+
+func NewMeetingService(
+	log logger.Logger,
+	repositories *repository.Repositories,
+	org cosapi_interfaces.OrganizationService,
+	note cosapi_interfaces.NoteService,
+) cosapi_interfaces.MeetingService {
+	return &meetingService{
+		log:          log,
+		repositories: repositories,
+		organization: org,
+		note:         note,
+	}
+}
+
+func (s *meetingService) Create(ctx context.Context, newMeeting *cosapi_interfaces.MeetingCreateData) (*entity.MeetingEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingService.Create")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	queryResult, err := session.ExecuteWrite(ctx, s.createMeetingInDBTxWork(ctx, newMeeting))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, participant := range newMeeting.CreatedBy {
+		if participant.ContactId != nil {
+			s.organization.UpdateLastTouchpointByContactId(ctx, *participant.ContactId)
+		}
+		if participant.OrganizationId != nil {
+			s.organization.UpdateLastTouchpoint(ctx, *participant.OrganizationId)
+		}
+	}
+	for _, participant := range newMeeting.AttendedBy {
+		if participant.ContactId != nil {
+			s.organization.UpdateLastTouchpointByContactId(ctx, *participant.ContactId)
+		}
+		if participant.OrganizationId != nil {
+			s.organization.UpdateLastTouchpoint(ctx, *participant.OrganizationId)
+		}
+	}
+
+	return s.mapDbNodeToMeetingEntity(*queryResult.(*dbtype.Node)), nil
+}
+
+func (s *meetingService) Update(ctx context.Context, input *cosapi_interfaces.MeetingUpdateData) (*entity.MeetingEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingService.Update")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		meetingDbNode, err := s.repositories.MeetingRepository.Update(ctx, tx, common.GetTenantFromContext(ctx), input.MeetingEntity)
+		tenant := common.GetContext(ctx).Tenant
+		if input.ExternalReference != nil {
+			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, input.MeetingEntity.Id, commonModel.NodeLabelMeeting, *input.ExternalReference)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if err != nil {
+			return nil, err
+		}
+		if input.NoteEntity != nil {
+			_, err := s.note.UpdateNote(ctx, input.NoteEntity)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return meetingDbNode, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToMeetingEntity(*queryResult.(*dbtype.Node)), nil
+}
+
+func (s *meetingService) LinkAttendedBy(ctx context.Context, meetingID string, participant cosapi_interfaces.MeetingParticipant) error {
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		tenant := common.GetContext(ctx).Tenant
+		err := s.linkAttendedByTxWork(ctx, tx, tenant, meetingID, participant, entity.ATTENDED_BY)
+		return nil, err
+	})
+
+	if participant.ContactId != nil {
+		s.organization.UpdateLastTouchpointByContactId(ctx, *participant.ContactId)
+	}
+	if participant.OrganizationId != nil {
+		s.organization.UpdateLastTouchpoint(ctx, *participant.OrganizationId)
+	}
+
+	return err
+}
+
+func (s *meetingService) UnlinkAttendedBy(ctx context.Context, meetingID string, participant cosapi_interfaces.MeetingParticipant) error {
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		tenant := common.GetContext(ctx).Tenant
+		err := s.unlinkAttendedByTxWork(ctx, tx, tenant, meetingID, participant, entity.ATTENDED_BY)
+		return nil, err
+	})
+
+	if participant.ContactId != nil {
+		s.organization.UpdateLastTouchpointByContactId(ctx, *participant.ContactId)
+	}
+	if participant.OrganizationId != nil {
+		s.organization.UpdateLastTouchpoint(ctx, *participant.OrganizationId)
+	}
+
+	return err
+}
+
+func (s *meetingService) GetMeetingById(ctx context.Context, id string) (*entity.MeetingEntity, error) {
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		result, err := tx.Run(ctx, fmt.Sprintf(`
+			MATCH (m:Meeting_%s {id:$id}) RETURN m`,
+			common.GetTenantFromContext(ctx)),
+			map[string]interface{}{
+				"id": id,
+			})
+		record, err := result.Single(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return record.Values[0], nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapDbNodeToMeetingEntity(queryResult.(dbtype.Node)), nil
+}
+
+func (s *meetingService) createMeetingInDBTxWork(ctx context.Context, newMeeting *cosapi_interfaces.MeetingCreateData) func(tx neo4j.ManagedTransaction) (any, error) {
+	return func(tx neo4j.ManagedTransaction) (any, error) {
+		tenant := common.GetContext(ctx).Tenant
+		meetingDbNode, err := s.repositories.MeetingRepository.Create(ctx, tx, common.GetTenantFromContext(ctx), newMeeting.MeetingEntity)
+		if err != nil {
+			return nil, err
+		}
+		meetingId := utils.GetPropsFromNode(*meetingDbNode)["id"].(string)
+
+		for _, createdBy := range newMeeting.CreatedBy {
+			err := s.linkAttendedByTxWork(ctx, tx, tenant, meetingId, createdBy, entity.CREATED_BY)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		for _, attendedBy := range newMeeting.AttendedBy {
+			err := s.linkAttendedByTxWork(ctx, tx, tenant, meetingId, attendedBy, entity.ATTENDED_BY)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if newMeeting.NoteInput != nil {
+			toEntity := mapper.MapNoteInputToEntity(newMeeting.NoteInput)
+			_, err := s.repositories.NoteRepository.CreateNoteForMeetingTx(ctx, tx, tenant, meetingId, toEntity)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if newMeeting.ExternalReference != nil {
+			err := s.repositories.ExternalSystemRepository.LinkNodeWithExternalSystemInTx(ctx, tx, tenant, meetingId, commonModel.NodeLabelMeeting, *newMeeting.ExternalReference)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return meetingDbNode, nil
+	}
+}
+
+func (s *meetingService) linkAttendedByTxWork(ctx context.Context, tx neo4j.ManagedTransaction, tenantName, meetingId string, participant cosapi_interfaces.MeetingParticipant, relationType entity.MeetingRelation) error {
+	var err error
+	if participant.ContactId != nil {
+		err = s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenantName, meetingId, *participant.ContactId, commonModel.CONTACT, relationType)
+	} else if participant.UserId != nil {
+		err = s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenantName, meetingId, *participant.UserId, commonModel.USER, relationType)
+	} else if participant.OrganizationId != nil {
+		err = s.repositories.MeetingRepository.LinkWithParticipantInTx(ctx, tx, tenantName, meetingId, *participant.OrganizationId, commonModel.ORGANIZATION, relationType)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *meetingService) unlinkAttendedByTxWork(ctx context.Context, tx neo4j.ManagedTransaction, tenantName, meetingId string, participant cosapi_interfaces.MeetingParticipant, relationType entity.MeetingRelation) error {
+	var err error
+	if participant.ContactId != nil {
+		err = s.repositories.MeetingRepository.UnlinkParticipantInTx(ctx, tx, tenantName, meetingId, *participant.ContactId, commonModel.CONTACT, relationType)
+	} else if participant.UserId != nil {
+		err = s.repositories.MeetingRepository.UnlinkParticipantInTx(ctx, tx, tenantName, meetingId, *participant.UserId, commonModel.USER, relationType)
+	} else if participant.OrganizationId != nil {
+		err = s.repositories.MeetingRepository.UnlinkParticipantInTx(ctx, tx, tenantName, meetingId, *participant.OrganizationId, commonModel.ORGANIZATION, relationType)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// createdAt takes priority over startedAt
+func (s *meetingService) migrateStartedAt(props map[string]any) time.Time {
+	if props["createdAt"] != nil {
+		return utils.GetTimePropOrNow(props, "createdAt")
+	}
+	if props["startedAt"] != nil {
+		return utils.GetTimePropOrNow(props, "startedAt")
+	}
+	return time.Now()
+}
+
+func (s *meetingService) mapDbNodeToMeetingEntity(node dbtype.Node) *entity.MeetingEntity {
+	props := utils.GetPropsFromNode(node)
+	status := entity.GetMeetingStatus(utils.GetStringPropOrEmpty(props, "status"))
+	meetingEntity := entity.MeetingEntity{
+		Id:                 utils.GetStringPropOrEmpty(props, "id"),
+		Name:               utils.GetStringPropOrNil(props, "name"),
+		ConferenceUrl:      utils.GetStringPropOrNil(props, "conferenceUrl"),
+		MeetingExternalUrl: utils.GetStringPropOrNil(props, "meetingExternalUrl"),
+		Agenda:             utils.GetStringPropOrNil(props, "agenda"),
+		AgendaContentType:  utils.GetStringPropOrNil(props, "agendaContentType"),
+		CreatedAt:          s.migrateStartedAt(props),
+		UpdatedAt:          utils.GetTimePropOrNow(props, "updatedAt"),
+		StartedAt:          utils.GetTimePropOrNil(props, "startedAt"),
+		EndedAt:            utils.GetTimePropOrNil(props, "endedAt"),
+		Recording:          utils.GetStringPropOrNil(props, "recording"),
+		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:             neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Status:             &status,
+	}
+
+	return &meetingEntity
+}
+
+func MapMeetingParticipantInputToParticipant(participant *model.MeetingParticipantInput) cosapi_interfaces.MeetingParticipant {
+	meetingParticipant := cosapi_interfaces.MeetingParticipant{
+		UserId:         participant.UserID,
+		ContactId:      participant.ContactID,
+		OrganizationId: participant.OrganizationID,
+	}
+	return meetingParticipant
+}
+
+func MapMeetingParticipantInputListToParticipant(input []*model.MeetingParticipantInput) []cosapi_interfaces.MeetingParticipant {
+	var inputData []cosapi_interfaces.MeetingParticipant
+	for _, participant := range input {
+		inputData = append(inputData, MapMeetingParticipantInputToParticipant(participant))
+	}
+	return inputData
+}
+
+func (s *meetingService) GetParticipantsForMeetings(ctx context.Context, ids []string, relation entity.MeetingRelation) (*neo4jentity.MeetingParticipants, error) {
+	records, err := s.repositories.MeetingRepository.GetParticipantsForMeetings(ctx, common.GetTenantFromContext(ctx), ids, relation)
+	if err != nil {
+		return nil, err
+	}
+
+	interactionEventParticipants := s.convertDbNodesToMeetingParticipants(records)
+
+	return &interactionEventParticipants, nil
+}
+
+func (s *meetingService) GetMeetingForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.MeetingEntity, error) {
+	record, err := s.repositories.MeetingRepository.GetMeetingForInteractionEvent(ctx, common.GetTenantFromContext(ctx), interactionEventId)
+	if err != nil {
+		return nil, err
+	}
+	if record == nil {
+		return nil, nil
+	}
+	return s.mapDbNodeToMeetingEntity(*record), nil
+}
+
+func (s *meetingService) GetMeetingsForInteractionEvents(ctx context.Context, ids []string) (*entity.MeetingEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingService.GetMeetingsForInteractionEvents")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("ids", ids))
+
+	issues, err := s.repositories.MeetingRepository.GetAllForInteractionEvents(ctx, common.GetTenantFromContext(ctx), ids)
+	if err != nil {
+		return nil, err
+	}
+	meetingEntities := make(entity.MeetingEntities, 0, len(issues))
+	for _, v := range issues {
+		meetingEntity := s.mapDbNodeToMeetingEntity(*v.Node)
+		meetingEntity.DataloaderKey = v.LinkedNodeId
+		meetingEntities = append(meetingEntities, *meetingEntity)
+	}
+	return &meetingEntities, nil
+}
+
+func (s *meetingService) FindAll(ctx context.Context, externalSystemID string, externalID *string, page, limit int, filter *model.Filter, sortBy []*commonModel.SortBy) (*utils.Pagination, error) {
+	session := utils.NewNeo4jReadSession(ctx, s.getNeo4jDriver())
+	defer session.Close(ctx)
+
+	paginatedResult := utils.Pagination{
+		Limit: limit,
+		Page:  page,
+	}
+	cypherSort, err := api_sort.BuildSort(sortBy, reflect.TypeOf(entity.MeetingEntity{}))
+	if err != nil {
+		return nil, err
+	}
+	cypherFilter, err := api_filters.BuildFilter(filter, reflect.TypeOf(entity.MeetingEntity{}))
+	if err != nil {
+		return nil, err
+	}
+
+	dbNodesWithTotalCount, err := s.repositories.MeetingRepository.GetPaginatedMeetings(
+		ctx, session,
+		externalSystemID,
+		externalID,
+		common.GetContext(ctx).Tenant,
+		common.GetContext(ctx).UserEmail,
+		paginatedResult.GetSkip(),
+		paginatedResult.GetLimit(),
+		cypherFilter,
+		cypherSort)
+	if err != nil {
+		return nil, err
+	}
+	paginatedResult.SetTotalRows(dbNodesWithTotalCount.Count)
+
+	meetings := make(entity.MeetingEntities, 0, len(dbNodesWithTotalCount.Nodes))
+
+	for _, v := range dbNodesWithTotalCount.Nodes {
+		meetings = append(meetings, *s.mapDbNodeToMeetingEntity(*v))
+	}
+	paginatedResult.SetRows(&meetings)
+	return &paginatedResult, nil
+}
+
+func (s *meetingService) convertDbNodesToMeetingParticipants(records []*utils.DbNodeWithRelationAndId) neo4jentity.MeetingParticipants {
+	meetingParticipants := neo4jentity.MeetingParticipants{}
+	for _, v := range records {
+		if slices.Contains(v.Node.Labels, commonModel.NodeLabelUser) {
+			participant := neo4jmapper.MapDbNodeToUserEntity(v.Node)
+			participant.DataloaderKey = v.LinkedNodeId
+			meetingParticipants = append(meetingParticipants, participant)
+		} else if slices.Contains(v.Node.Labels, commonModel.NodeLabelContact) {
+			participant := neo4jmapper.MapDbNodeToContactEntity(v.Node)
+			participant.DataloaderKey = v.LinkedNodeId
+			meetingParticipants = append(meetingParticipants, participant)
+		} else if slices.Contains(v.Node.Labels, commonModel.NodeLabelOrganization) {
+			participant := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
+			participant.DataloaderKey = v.LinkedNodeId
+			meetingParticipants = append(meetingParticipants, participant)
+		} else if slices.Contains(v.Node.Labels, commonModel.NodeLabelEmail) {
+			participant := neo4jmapper.MapDbNodeToEmailEntity(v.Node)
+			participant.DataloaderKey = v.LinkedNodeId
+			meetingParticipants = append(meetingParticipants, participant)
+		}
+	}
+	return meetingParticipants
+}
+
+func (s *meetingService) getNeo4jDriver() neo4j.DriverWithContext {
+	return *s.repositories.Drivers.Neo4jDriver
+}

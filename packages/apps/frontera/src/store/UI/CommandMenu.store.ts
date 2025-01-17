@@ -12,8 +12,6 @@ export type CommandMenuType =
   | 'ChangeStage'
   | 'UpdateHealthStatus'
   | 'ChangeTags'
-  | 'AddNewDomain'
-  | 'RemoveDomain'
   | 'RenameOpportunityName'
   | 'ChangeArrEstimate'
   | 'OpportunityCommands'

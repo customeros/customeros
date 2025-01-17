@@ -27,13 +27,15 @@ import {
 
 class TagService {
   private static instance: TagService | null = null;
-  private transport = Transport.getInstance();
+  private transport: Transport;
 
-  constructor() {}
+  constructor(transport: Transport) {
+    this.transport = transport;
+  }
 
-  static getInstance(): TagService {
+  static getInstance(transport: Transport): TagService {
     if (!TagService.instance) {
-      TagService.instance = new TagService();
+      TagService.instance = new TagService(transport);
     }
 
     return TagService.instance;

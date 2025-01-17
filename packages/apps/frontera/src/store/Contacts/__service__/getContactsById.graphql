@@ -28,7 +28,6 @@ query getContactsByIds($ids: [ID!]) {
     primaryOrganizationJobRoleDescription
     primaryOrganizationJobRoleStartDate
     primaryOrganizationJobRoleEndDate
-    jobRoleIds
     emails {
       id
       primary

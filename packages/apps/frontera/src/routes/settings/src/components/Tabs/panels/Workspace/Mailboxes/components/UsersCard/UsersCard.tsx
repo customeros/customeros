@@ -49,7 +49,6 @@ export const UsersCard = observer(() => {
             variant='outline'
             placeholder='E.g. john'
             value={store.mailboxes.usernames[0]}
-            dataTest='settings-mailboxes-first-username'
             invalid={isUsername1Dirty && error1.length > 0}
             onKeyDown={(e) => {
               e.stopPropagation();
@@ -90,7 +89,6 @@ export const UsersCard = observer(() => {
             variant='outline'
             placeholder='E.g. melinda'
             value={store.mailboxes.usernames[1]}
-            dataTest='settings-mailboxes-second-username'
             invalid={isUsername2Dirty && error2.length > 0}
             onKeyDown={(e) => {
               e.stopPropagation();

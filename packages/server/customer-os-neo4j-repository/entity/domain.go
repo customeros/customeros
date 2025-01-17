@@ -13,7 +13,6 @@ const (
 	DomainPropertySource                        DomainProperty = "source"
 	DomainPropertyAppSource                     DomainProperty = "appSource"
 	DomainPropertyIsPrimary                     DomainProperty = "primary"
-	DomainPropertyAccessible                    DomainProperty = "accessible"
 	DomainPropertyPrimaryDomain                 DomainProperty = "primaryDomain"
 	DomainPropertyPrimaryDomainCheckRequestedAt DomainProperty = "techPrimaryDomainCheckRequestedAt"
 )
@@ -26,7 +25,6 @@ type DomainEntity struct {
 	Source         DataSource
 	AppSource      string
 	IsPrimary      *bool
-	Accessible     *bool
 	PrimaryDomain  string
 	InternalFields DomainInternalFields
 }

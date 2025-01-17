@@ -81,9 +81,9 @@ func main() {
 		Repositories: repositories,
 		CommonServices: commonService.InitServices(&commonConfig.GlobalConfig{
 			RabbitMQConfig: &cfg.RabbitMQConfig,
+			NovuConfig:     &cfg.NovuConfig,
 			ExternalServices: commonConfig.ExternalServices{
 				AnthropicConfig: cfg.ExternalServices.Anthropic,
-				NovuConfig:      cfg.NovuConfig,
 			},
 		}, postgresDb, &neo4jDriver, cfg.Neo4j.Database, epClient, appLogger),
 		EventProcessingServicesClient: epClient,

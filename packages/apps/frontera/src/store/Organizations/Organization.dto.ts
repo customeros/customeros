@@ -59,15 +59,6 @@ export class Organization extends Entity<OrganizationDatum> {
   }
 
   @computed
-  get primaryDomains() {
-    if (!this.value.domainsDetails) return [];
-
-    return this.value.domainsDetails
-      .filter((e) => e.primary)
-      .map((e) => e.domain);
-  }
-
-  @computed
   get isEnriching(): boolean {
     return (
       this.value?.enrichedRequestedAt &&
@@ -233,7 +224,6 @@ export class Organization extends Entity<OrganizationDatum> {
         ltv: 0,
         hide: false,
         domains: [],
-        domainsDetails: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         churnedAt: null,

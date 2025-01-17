@@ -25,7 +25,6 @@ import { uniqBy } from 'lodash';
 import { type RootStore } from '@store/root';
 
 import { Type01 } from '@ui/media/icons/Type01';
-import { Globe01 } from '@ui/media/icons/Globe01';
 import { RadioButton } from '@ui/media/icons/RadioButton';
 import { ListBulleted } from '@ui/media/icons/ListBulleted';
 
@@ -38,12 +37,12 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
       columnAccesor: ColumnViewType.OrganizationsName,
       icon: <Type01 className='mb-0.5' />,
     },
-    [ColumnViewType.OrganizationsPrimaryDomains]: {
+    [ColumnViewType.OrganizationsWebsite]: {
       fieldType: CustomFieldTemplateType.FreeText,
       fieldTypeName: 'Text',
-      fieldName: 'Primary Domains',
-      columnAccesor: ColumnViewType.OrganizationsPrimaryDomains,
-      icon: <Globe01 className='mb-0.5' />,
+      fieldName: 'Website',
+      columnAccesor: ColumnViewType.OrganizationsWebsite,
+      icon: <Type01 className='mb-0.5' />,
     },
     [ColumnViewType.OrganizationsRelationship]: {
       fieldType: CustomFieldTemplateType.SingleSelect,
@@ -235,8 +234,8 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
       fieldName: 'Industry',
       columnAccesor: ColumnViewType.OrganizationsIndustry,
       icon: <RadioButton />,
-      options: uniqBy(store?.organizations.toArray(), 'value.industryName')
-        .map((v) => v.value.industryName)
+      options: uniqBy(store?.organizations.toArray(), 'value.industry')
+        .map((v) => v.value.industry)
         .filter(Boolean)
         .sort((a, b) => (a && b ? a?.localeCompare(b) : -1))
         .map((industry) => ({

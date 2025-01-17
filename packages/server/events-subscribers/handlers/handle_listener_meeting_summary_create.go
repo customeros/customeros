@@ -9,7 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	service "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neoEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -18,7 +18,7 @@ import (
 	"go.uber.org/multierr"
 )
 
-func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceEvent commonEnum.FlowListenerEvent, eventData *data_fields.MeetingSummaryEvent) error {
+func HandleMeetingSummaryEvent(ctx context.Context, s *service.CommonServices, sourceEvent commonEnum.FlowListenerEvent, eventData *data_fields.MeetingSummaryEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.HandleMeetingSummaryEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -43,7 +43,7 @@ func HandleMeetingSummaryEvent(ctx context.Context, s *service.Services, sourceE
 	return errs
 }
 
-func publishCreateTimelineEvent(ctx context.Context, s *service.Services, flow *entity.Flows, eventData *data_fields.MeetingSummaryEvent, sourceEvent commonEnum.FlowListenerEvent) error {
+func publishCreateTimelineEvent(ctx context.Context, s *service.CommonServices, flow *entity.Flows, eventData *data_fields.MeetingSummaryEvent, sourceEvent commonEnum.FlowListenerEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.publishCreateTimelineEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -99,7 +99,7 @@ func publishCreateTimelineEvent(ctx context.Context, s *service.Services, flow *
 	return allErr
 }
 
-func createFlowExecutionRecordForMeetingSummary(ctx context.Context, s *service.Services, flow *entity.Flows, eventData *data_fields.MeetingSummaryEvent) (*entity.FlowExecution, error) {
+func createFlowExecutionRecordForMeetingSummary(ctx context.Context, s *service.CommonServices, flow *entity.Flows, eventData *data_fields.MeetingSummaryEvent) (*entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.createFlowExecutionRecordForMeetingSummary")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -107,7 +107,7 @@ func createFlowExecutionRecordForMeetingSummary(ctx context.Context, s *service.
 	return nil, nil
 }
 
-func createContactsAndOrganizations(ctx context.Context, s *service.Services, participantEmails *[]string) (*[]string, error) {
+func createContactsAndOrganizations(ctx context.Context, s *service.CommonServices, participantEmails *[]string) (*[]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.createContactsAndOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -153,7 +153,7 @@ func createContactsAndOrganizations(ctx context.Context, s *service.Services, pa
 	return &allOrgIds, nil
 }
 
-func createOrgFromEmail(ctx context.Context, s *service.Services, email string, tenantDomains []string) (string, error) {
+func createOrgFromEmail(ctx context.Context, s *service.CommonServices, email string, tenantDomains []string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.createOrgFromEmail")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -199,7 +199,7 @@ func createMarkdownEvent(system commonEnum.Source, eventData *data_fields.Meetin
 	}, nil
 }
 
-func handleMarkdownEventPublishing(ctx context.Context, s *service.Services,
+func handleMarkdownEventPublishing(ctx context.Context, s *service.CommonServices,
 	system commonEnum.Source, sourceEvent commonEnum.FlowListenerEvent, orgId string,
 	mdEvent *data_fields.MarkdownEventFields, flowExecutionId string,
 ) error {
@@ -221,7 +221,7 @@ func handleMarkdownEventPublishing(ctx context.Context, s *service.Services,
 	}
 
 	// publish event
-	if err := s.RabbitMQService.PublishFlowAgentEvent(ctx, flowAgentEvent); err != nil {
+	if err := s.Events.Publisher.PublishFlowAgentEvent(ctx, flowAgentEvent); err != nil {
 		err = fmt.Errorf("failed to publish markdown event for org %s: %w", orgId, err)
 		tracing.TraceErr(span, err)
 		return err

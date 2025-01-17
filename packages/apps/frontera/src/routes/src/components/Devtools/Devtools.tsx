@@ -86,14 +86,12 @@ export const Devtools = observer(() => {
       | (typeof store)['tableViewDefs']
       | (typeof store)['contacts']
       | (typeof store)['contracts']
-      | (typeof store)['flows']
       | null
     >()
     .with('tableViewDefs', () => store.tableViewDefs)
     .with('organizations', () => store.organizations)
     .with('contacts', () => store.contacts)
     .with('contracts', () => store.contracts)
-    .with('flows', () => store.flows)
     .otherwise(() => null);
 
   const getEntityName = (entity: Record<string, string>) =>
@@ -103,7 +101,6 @@ export const Devtools = observer(() => {
       .with('tableViewDefs', () => get(entity, 'name', 'Unnamed'))
       .with('contacts', () => get(entity, 'name', 'Unnamed'))
       .with('contracts', () => get(entity, 'value.contractName', 'Unnamed'))
-      .with('flows', () => get(entity, 'value.name', 'Unnamed'))
       .otherwise(() => 'Unnamed');
 
   return createPortal(

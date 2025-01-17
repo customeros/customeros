@@ -2,10 +2,12 @@ import { afterAll } from 'vitest';
 import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service.ts';
 import { organizationsTestState } from '@store/Organizations/__tests__/organizationsTestState.ts';
 
+import { Transport } from './transport';
 import { TagService } from './Tags/__service__/Tag.service';
 
+const transport = new Transport();
 const organizationsService = OrganizationsService.getInstance();
-const tagService = TagService.getInstance();
+const tagService = TagService.getInstance(transport);
 
 afterAll(async () => {
   const tagIds = await tagService

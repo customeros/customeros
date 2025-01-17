@@ -84,12 +84,7 @@ export const Mailboxes = observer(() => {
                   Mailboxes
                 </span>
                 <ChevronRight className='mt-0.5 text-gray-400 size-3' />
-                <span
-                  data-test='settings-mailboxes-add-new'
-                  className='font-semibold cursor-default'
-                >
-                  Add new
-                </span>
+                <span className='font-semibold cursor-default'>Add new</span>
               </div>
               <div className='space-y-4'>
                 <AddDomainsCard />

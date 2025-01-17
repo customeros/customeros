@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/opentracing/opentracing-go"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -30,7 +29,7 @@ func NewAgentsRepository(gormDb *gorm.DB) AgentsRepository {
 }
 
 func (f *agentsRepository) Create(ctx context.Context, agent *entity.Agents) (*entity.Agents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentsRepository.Create")
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentsRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -47,7 +46,7 @@ func (f *agentsRepository) Create(ctx context.Context, agent *entity.Agents) (*e
 }
 
 func (f *agentsRepository) FindAll(ctx context.Context, agent entity.Agents) ([]entity.Agents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentsRepository.FindAll")
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentsRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -69,7 +68,7 @@ func (f *agentsRepository) FindAll(ctx context.Context, agent entity.Agents) ([]
 }
 
 func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []enum.AgentID) ([]entity.Agents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentsRepository.FindAllFromAgentsList")
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentsRepository.FindAllFromAgentsList")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -84,7 +83,7 @@ func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []e
 	query := f.gormDb.Where("is_active = ? AND (flow_id = ? OR flow_id IS NULL)", true, "")
 
 	if len(agentIds) > 0 {
-		query = query.Where("registry_id IN (?)", agentIds)
+		query = query.Where("registy_id IN (?)", agentIds)
 	}
 
 	err := query.Find(&records).Error
@@ -97,7 +96,7 @@ func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []e
 }
 
 func (f *agentsRepository) Find(ctx context.Context, agent entity.Agents) (*entity.Agents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentsRepository.Find")
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentsRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -117,7 +116,7 @@ func (f *agentsRepository) Find(ctx context.Context, agent entity.Agents) (*enti
 }
 
 func (f *agentsRepository) Update(ctx context.Context, agent entity.Agents) (*entity.Agents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentsRepository.Update")
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentsRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 

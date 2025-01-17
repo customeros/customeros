@@ -18,13 +18,9 @@ import type { Organization } from '../Organization.dto';
 import AddTagDocument from './addTag.graphql';
 import AddSocialDocument from './addSocial.graphql';
 import RemoveTagDocument from './removeTag.graphql';
-import AddDomainDocument from './addDomain.graphql';
-import CheckDomainDocument from './checkDomain.graphql';
 import UpdateSocialDocument from './updateSocial.graphql';
 import RemoveSocialDocument from './removeSocial.graphql';
 import CheckWebsiteDocument from './checkWebsite.graphql';
-import RemoveDomainDocument from './removeDomain.graphql';
-import RemoveDomainsDocument from './removeDomains.graphql';
 import AddSubsidiaryDocument from './addSubsidiary.graphql';
 import GetOrganizationsDocument from './getOrganizations.graphql';
 import SaveOrganizationDocument from './saveOrganization.graphql';
@@ -44,17 +40,9 @@ import {
   AddSocialMutationVariables,
 } from './addSocial.generated';
 import {
-  CheckDomainQuery,
-  CheckDomainQueryVariables,
-} from './checkDomain.generated';
-import {
-  AddDomainMutation,
-  AddDomainMutationVariables,
-} from './addDomain.generated';
-import {
   CheckWebsiteQuery,
   CheckWebsiteQueryVariables,
-} from './checkWebsite.generated';
+} from './checkWebsite.generated.ts';
 import {
   UpdateSocialMutation,
   UpdateSocialMutationVariables,
@@ -63,14 +51,6 @@ import {
   RemoveSocialMutation,
   RemoveSocialMutationVariables,
 } from './removeSocial.generated';
-import {
-  RemoveDomainMutation,
-  RemoveDomainMutationVariables,
-} from './removeDomain.generated';
-import {
-  RemoveDomainsMutation,
-  RemoveDomainsMutationVariables,
-} from './removeDomains.generated';
 import {
   GetOrganizationsQuery,
   GetOrganizationsQueryVariables,
@@ -100,13 +80,13 @@ import {
   UpdateOrganizationMutationVariables,
 } from './updateOrganization.generated';
 import {
-  ImportOrganizationMutation,
-  ImportOrganizationMutationVariables,
-} from './importOrganization.generated';
-import {
   GetOrganizationsByIdsQuery,
   GetOrganizationsByIdsQueryVariables,
 } from './getOrganizationsByIds.generated';
+import {
+  ImportOrganizationMutation,
+  ImportOrganizationMutationVariables,
+} from './importOrganization.generated.ts';
 import {
   RemoveTagFromOrganizationMutation,
   RemoveTagFromOrganizationMutationVariables,
@@ -122,7 +102,7 @@ import {
 import {
   SearchGlobalOrganizationsQuery,
   SearchGlobalOrganizationsQueryVariables,
-} from './searchGlobalOrganizations.generated';
+} from './searchGlobalOrganizations.generated.ts';
 import {
   GetArchivedOrganizationsAfterQuery,
   GetArchivedOrganizationsAfterQueryVariables,
@@ -216,34 +196,6 @@ export class OrganizationsService {
       SaveOrganizationMutation,
       SaveOrganizationMutationVariables
     >(SaveOrganizationDocument, payload);
-  }
-
-  async removeDomain(payload: RemoveDomainMutationVariables) {
-    return this.transport.graphql.request<
-      RemoveDomainMutation,
-      RemoveDomainMutationVariables
-    >(RemoveDomainDocument, payload);
-  }
-
-  async addDomain(payload: AddDomainMutationVariables) {
-    return this.transport.graphql.request<
-      AddDomainMutation,
-      AddDomainMutationVariables
-    >(AddDomainDocument, payload);
-  }
-
-  async removeDomains(payload: RemoveDomainsMutationVariables) {
-    return this.transport.graphql.request<
-      RemoveDomainsMutation,
-      RemoveDomainsMutationVariables
-    >(RemoveDomainsDocument, payload);
-  }
-
-  async checkDomain(payload: CheckDomainQueryVariables) {
-    return this.transport.graphql.request<
-      CheckDomainQuery,
-      CheckDomainQueryVariables
-    >(CheckDomainDocument, payload);
   }
 
   async hideOrganizations(payload: HideOrganizationsMutationVariables) {
@@ -529,20 +481,6 @@ export class OrganizationsService {
           });
       })
       .with(['updatedAt'], () => undefined)
-      .with(['accountDetails'], () => undefined)
-      .with(['domainsDetails', ...P.array()], async () => {
-        if (type === 'update' || type === 'delete') {
-          return await this.removeDomain({
-            organizationId,
-            domain: typeof oldValue === 'string' ? oldValue : oldValue?.domain,
-          });
-        }
-
-        return await this.addDomain({
-          organizationId,
-          domain: value?.domain,
-        });
-      })
       .otherwise(async () => {
         const payload = makePayload<OrganizationUpdateInput>(operation);
 

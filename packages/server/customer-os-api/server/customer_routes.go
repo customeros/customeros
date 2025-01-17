@@ -7,16 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/billing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/customerbase"
-	restEnrich "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/enrich"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/flows"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/mailstack"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/outreach"
-	reveal "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/reveal_setup"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/verify"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/billing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/customerbase"
+	restEnrich "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/enrich"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/flows"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
+	reveal "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/reveal_setup"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
+	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
 )
 
 const (
@@ -31,7 +31,7 @@ const (
 	WebhooksPath     = "/webhooks/v1"
 )
 
-func registerBillingRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *caches.Cache) {
+func registerBillingRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/organizations/:id/invoices", BillingPath),
@@ -42,7 +42,7 @@ func registerBillingRoutes(ctx context.Context, r *gin.Engine, s *service.Servic
 	})
 }
 
-func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *caches.Cache) {
+func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
 	// Organization Routes
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
@@ -100,7 +100,7 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *service.S
 	})
 }
 
-func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *caches.Cache) {
+func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/person", EnrichPath),
@@ -129,7 +129,7 @@ func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 	})
 }
 
-func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *caches.Cache) {
+func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
 
 	// webhook admin
 	registerRoute(ctx, r, RouteConfig{
@@ -169,17 +169,17 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *service.Services,
 	})
 }
 
-func registerIDRoutes(ctx context.Context, r *gin.Engine, s *service.Services) {
+func registerIDRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      "/me",
-		handler:   handlers.AuthorizeMe(s),
+		handler:   handlers.AuthorizeMe(),
 		routeType: RouteCustomer,
 		services:  s,
 	})
 }
 
-func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *caches.Cache) {
+func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/domains", MailstackPath),
@@ -262,7 +262,7 @@ func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *service.Serv
 	})
 }
 
-func registerOutreachRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *caches.Cache) {
+func registerOutreachRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/track/email", OutreachPath),
@@ -273,7 +273,7 @@ func registerOutreachRoutes(ctx context.Context, r *gin.Engine, s *service.Servi
 	})
 }
 
-func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *caches.Cache) {
+func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/trackers", RevealPath),
@@ -293,7 +293,7 @@ func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *service.Service
 	})
 }
 
-func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *service.Services, cache *caches.Cache) {
+func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/email", VerifyPath),

@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -16,6 +17,8 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/pkg/errors"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -117,14 +120,17 @@ func (s *organizationService) UpkeepOrganizations() {
 		return
 	}
 
-	s.updateDerivedNextRenewalDates(ctx)
+	now := utils.Now()
+
+	s.updateDerivedNextRenewalDates(ctx, now)
 	s.linkWithDomain(ctx)
 	s.enrichOrganization(ctx)
 	s.removeEmptySocials(ctx)
-	s.removeDuplicatedSocials(ctx)
+	s.removeDuplicatedSocials(ctx, now)
+	s.checkOrganizations(ctx)
 }
 
-func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context) {
+func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context, referenceTime time.Time) {
 	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.updateDerivedNextRenewalDates")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
@@ -186,7 +192,6 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 	tracing.TagComponentCronJob(span)
 
 	limit := 100
-	delayMinutesFromLastCheck := 60 * 24 * 3 // 3 days
 
 	for {
 		select {
@@ -197,7 +202,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 			// continue as normal
 		}
 
-		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsWithWebsiteAndWithoutDomains(ctx, limit, delayMinutesFromLastCheck)
+		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsWithWebsiteAndWithoutDomains(ctx, limit, 360)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting organizations: %v", err)
@@ -216,15 +221,12 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
 
-			organizationEntity, err := s.commonServices.OrganizationService.GetById(innerCtx, record.Tenant, record.OrganizationId)
+			organizationDbNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(innerCtx, record.Tenant, record.OrganizationId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error getting organization {%s}: %s", record.OrganizationId, err.Error())
 			}
-
-			if s.commonServices.DomainService.IsKnownCompanyHostingUrl(innerCtx, organizationEntity.Website) {
-				continue
-			}
+			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
 			primaryDomain, _ := s.commonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(innerCtx, organizationEntity.Website)
 			if primaryDomain != "" {
@@ -234,7 +236,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 					s.log.Errorf("Error linking with domain {%s}: %s", record.OrganizationId, err.Error())
 				}
 			}
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelOrganization, record.OrganizationId, string(neo4jentity.OrganizationPropertyDomainCheckedAt), utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyDomainCheckedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating domain checked at: %s", err.Error())
@@ -354,7 +356,7 @@ func (s *organizationService) removeEmptySocials(ctx context.Context) {
 	}
 }
 
-func (s *organizationService) removeDuplicatedSocials(ctx context.Context) {
+func (s *organizationService) removeDuplicatedSocials(ctx context.Context, now time.Time) {
 	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.removeDuplicatedSocials")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
@@ -394,6 +396,98 @@ func (s *organizationService) removeDuplicatedSocials(ctx context.Context) {
 
 	}
 
+}
+
+func (s *organizationService) checkOrganizations(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.checkOrganizations")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 1000
+	minutesSinceLastUpdate := 180
+	hoursSinceLastCheck := 24
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsToCheck(ctx, minutesSinceLastUpdate, hoursSinceLastCheck, limit)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting organization: %v", err)
+			return
+		}
+
+		// no record
+		if len(records) == 0 {
+			return
+		}
+
+		// update organization name
+		for _, record := range records {
+			// create new context from main one with custom context
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+
+			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(record.Organization)
+
+			saveOrganization := false
+			organizationFields := data_fields.OrganizationFields{}
+
+			name := strings.TrimSpace(organizationEntity.Name)
+
+			// remove legal part
+			legalEntities := []string{
+				"llc", "ltd", "inc", "corp", "corporation", "incorporated", "limited",
+				"company", "co", "plc", "gmbh", "bv", "nv", "sa", "ag", "pty", "ptd",
+				"holdings", "group", "lp", "llp", "l.l.c.", "l.l.p.", "s.a.", "n.v.",
+				"b.v.", "a.g.", "p.t.y.", "p.t.d.", "pty. ltd.", "pty ltd",
+			}
+			// Join the legal entities to form a regex pattern
+			pattern := `(?i)\s+(` + strings.Join(legalEntities, `|`) + `)\.?$`
+			re := regexp.MustCompile(pattern)
+
+			// Remove the suffix if it matches the pattern
+			name = re.ReplaceAllString(name, "")
+
+			cleanName := utils.CleanName(name)
+
+			if cleanName != organizationEntity.Name {
+				organizationFields.Name = utils.StringPtr(cleanName)
+				saveOrganization = true
+			}
+
+			if saveOrganization {
+				_, err = s.commonServices.OrganizationService.Save(innerCtx, nil, &organizationEntity.ID, organizationFields)
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "OrganizationService.Save"))
+					s.log.Errorf("Error updating organization {%s}: %s", organizationEntity.ID, err.Error())
+				}
+			}
+
+			// mark organization as checked
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelOrganization, organizationEntity.ID, string(neo4jentity.OrganizationPropertyCheckedAt), utils.NowPtr())
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error updating organization' checked at: %s", err.Error())
+			}
+		}
+
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
+		}
+
+		// force exit after single iteration
+		return
+	}
 }
 
 func (s *organizationService) SendReminders() {
