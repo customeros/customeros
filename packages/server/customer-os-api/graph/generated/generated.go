@@ -1157,7 +1157,7 @@ type ComplexityRoot struct {
 		OrganizationRemoveSubsidiary               func(childComplexity int, organizationID string, subsidiaryID string) int
 		OrganizationRemoveTag                      func(childComplexity int, input model.OrganizationTagInput) int
 		OrganizationSave                           func(childComplexity int, input model.OrganizationSaveInput) int
-		OrganizationSaveByGlobalOrganization       func(childComplexity int, globalOrganizationID int64) int
+		OrganizationSaveByGlobalOrganization       func(childComplexity int, globalOrganizationID int64, input *model.OrganizationSaveInputFromGlobalOrg) int
 		OrganizationSetOwner                       func(childComplexity int, organizationID string, userID string) int
 		OrganizationShow                           func(childComplexity int, id string) int
 		OrganizationShowAll                        func(childComplexity int, ids []string) int
@@ -2011,7 +2011,7 @@ type MutationResolver interface {
 	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error)
 	OpportunityRenewalUpdateAllForOrganization(ctx context.Context, input model.OpportunityRenewalUpdateAllForOrganizationInput) (*model.Organization, error)
 	OrganizationSave(ctx context.Context, input model.OrganizationSaveInput) (*model.Organization, error)
-	OrganizationSaveByGlobalOrganization(ctx context.Context, globalOrganizationID int64) (*model.OrganizationUIDetails, error)
+	OrganizationSaveByGlobalOrganization(ctx context.Context, globalOrganizationID int64, input *model.OrganizationSaveInputFromGlobalOrg) (*model.OrganizationUIDetails, error)
 	OrganizationHide(ctx context.Context, id string) (string, error)
 	OrganizationHideAll(ctx context.Context, ids []string) (*model.Result, error)
 	OrganizationShow(ctx context.Context, id string) (string, error)
@@ -8592,7 +8592,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.OrganizationSaveByGlobalOrganization(childComplexity, args["globalOrganizationId"].(int64)), true
+		return e.complexity.Mutation.OrganizationSaveByGlobalOrganization(childComplexity, args["globalOrganizationId"].(int64), args["input"].(*model.OrganizationSaveInputFromGlobalOrg)), true
 
 	case "Mutation.organization_SetOwner":
 		if e.complexity.Mutation.OrganizationSetOwner == nil {
@@ -12669,6 +12669,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputOpportunityUpdateInput,
 		ec.unmarshalInputOrganizationInput,
 		ec.unmarshalInputOrganizationSaveInput,
+		ec.unmarshalInputOrganizationSaveInputFromGlobalOrg,
 		ec.unmarshalInputOrganizationTagInput,
 		ec.unmarshalInputOrganizationUpdateInput,
 		ec.unmarshalInputPagination,
@@ -15637,7 +15638,7 @@ input OpportunityRenewalUpdateAllForOrganizationInput {
 
 extend type Mutation {
     organization_Save(input: OrganizationSaveInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_SaveByGlobalOrganization(globalOrganizationId: Int64!): OrganizationUiDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_SaveByGlobalOrganization(globalOrganizationId: Int64!, input: OrganizationSaveInputFromGlobalOrg): OrganizationUiDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     organization_Hide(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_HideAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -15827,6 +15828,11 @@ type OrganizationPage implements Pages {
     totalPages: Int!
     totalElements: Int64!
     totalAvailable: Int64!
+}
+
+input OrganizationSaveInputFromGlobalOrg {
+    stage:              OrganizationStage
+    relationship:       OrganizationRelationship
 }
 
 input OrganizationSaveInput {
@@ -22570,6 +22576,11 @@ func (ec *executionContext) field_Mutation_organization_SaveByGlobalOrganization
 		return nil, err
 	}
 	args["globalOrganizationId"] = arg0
+	arg1, err := ec.field_Mutation_organization_SaveByGlobalOrganization_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
 	return args, nil
 }
 func (ec *executionContext) field_Mutation_organization_SaveByGlobalOrganization_argsGlobalOrganizationID(
@@ -22587,6 +22598,24 @@ func (ec *executionContext) field_Mutation_organization_SaveByGlobalOrganization
 	}
 
 	var zeroVal int64
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_organization_SaveByGlobalOrganization_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*model.OrganizationSaveInputFromGlobalOrg, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal *model.OrganizationSaveInputFromGlobalOrg
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalOOrganizationSaveInputFromGlobalOrg2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationSaveInputFromGlobalOrg(ctx, tmp)
+	}
+
+	var zeroVal *model.OrganizationSaveInputFromGlobalOrg
 	return zeroVal, nil
 }
 
@@ -71086,7 +71115,7 @@ func (ec *executionContext) _Mutation_organization_SaveByGlobalOrganization(ctx 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationSaveByGlobalOrganization(rctx, fc.Args["globalOrganizationId"].(int64))
+			return ec.resolvers.Mutation().OrganizationSaveByGlobalOrganization(rctx, fc.Args["globalOrganizationId"].(int64), fc.Args["input"].(*model.OrganizationSaveInputFromGlobalOrg))
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
@@ -112033,6 +112062,40 @@ func (ec *executionContext) unmarshalInputOrganizationSaveInput(ctx context.Cont
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputOrganizationSaveInputFromGlobalOrg(ctx context.Context, obj any) (model.OrganizationSaveInputFromGlobalOrg, error) {
+	var it model.OrganizationSaveInputFromGlobalOrg
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"stage", "relationship"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "stage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stage"))
+			data, err := ec.unmarshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationStage(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Stage = data
+		case "relationship":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
+			data, err := ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationRelationship(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Relationship = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputOrganizationTagInput(ctx context.Context, obj any) (model.OrganizationTagInput, error) {
 	var it model.OrganizationTagInput
 	asMap := map[string]any{}
@@ -136720,6 +136783,14 @@ func (ec *executionContext) marshalOOrganizationRelationship2ᚖgithubᚗcomᚋo
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOOrganizationSaveInputFromGlobalOrg2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationSaveInputFromGlobalOrg(ctx context.Context, v any) (*model.OrganizationSaveInputFromGlobalOrg, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputOrganizationSaveInputFromGlobalOrg(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐOrganizationStage(ctx context.Context, v any) (*model.OrganizationStage, error) {

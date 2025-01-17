@@ -76,13 +76,22 @@ func (r *mutationResolver) OrganizationSave(ctx context.Context, input model.Org
 }
 
 // OrganizationSaveByGlobalOrganization is the resolver for the organization_SaveByGlobalOrganization field.
-func (r *mutationResolver) OrganizationSaveByGlobalOrganization(ctx context.Context, globalOrganizationID int64) (*model.OrganizationUIDetails, error) {
+func (r *mutationResolver) OrganizationSaveByGlobalOrganization(ctx context.Context, globalOrganizationID int64, input *model.OrganizationSaveInputFromGlobalOrg) (*model.OrganizationUIDetails, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationSaveByGlobalOrganization", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.globalOrganizationID", globalOrganizationID)
 
-	organizationId, err := r.Services.CommonServices.OrganizationService.CreateFromGlobalOrganization(ctx, nil, uint64(globalOrganizationID))
+	dataFields := data_fields.OrganizationFields{}
+	if input != nil {
+		if input.Stage != nil {
+			dataFields.Stage = utils.ToPtr(enummapper.MapStageFromModel(*input.Stage))
+		}
+		if input.Relationship != nil {
+			dataFields.Relationship = utils.ToPtr(enummapper.MapRelationshipFromModel(*input.Relationship))
+		}
+	}
+	organizationId, err := r.Services.CommonServices.OrganizationService.CreateFromGlobalOrganization(ctx, nil, uint64(globalOrganizationID), dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to save organization")

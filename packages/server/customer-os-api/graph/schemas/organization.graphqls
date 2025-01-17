@@ -12,7 +12,7 @@ extend type Query {
 
 extend type Mutation {
     organization_Save(input: OrganizationSaveInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_SaveByGlobalOrganization(globalOrganizationId: Int64!): OrganizationUiDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_SaveByGlobalOrganization(globalOrganizationId: Int64!, input: OrganizationSaveInputFromGlobalOrg): OrganizationUiDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     organization_Hide(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_HideAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -202,6 +202,11 @@ type OrganizationPage implements Pages {
     totalPages: Int!
     totalElements: Int64!
     totalAvailable: Int64!
+}
+
+input OrganizationSaveInputFromGlobalOrg {
+    stage:              OrganizationStage
+    relationship:       OrganizationRelationship
 }
 
 input OrganizationSaveInput {
