@@ -376,6 +376,10 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       const { organization_SaveByGlobalOrganization } =
         await this.service.importOrganization({
           globalOrganizationId: globalId,
+          input: {
+            relationship: payload?.relationship,
+            stage: payload?.stage,
+          },
         });
 
       serverId = organization_SaveByGlobalOrganization?.id;

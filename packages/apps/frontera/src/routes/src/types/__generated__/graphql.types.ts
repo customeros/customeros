@@ -1364,6 +1364,7 @@ export type Domain = {
 export type DomainCheckDetails = {
   __typename?: 'DomainCheckDetails';
   accessible: Scalars['Boolean']['output'];
+  allowedForOrganization: Scalars['Boolean']['output'];
   domain: Scalars['String']['output'];
   domainOrganizationId?: Maybe<Scalars['String']['output']>;
   domainOrganizationName?: Maybe<Scalars['String']['output']>;
@@ -3195,6 +3196,7 @@ export type MutationOrganization_SaveArgs = {
 
 export type MutationOrganization_SaveByGlobalOrganizationArgs = {
   globalOrganizationId: Scalars['Int64']['input'];
+  input?: InputMaybe<OrganizationSaveInputFromGlobalOrg>;
 };
 
 export type MutationOrganization_SetOwnerArgs = {
@@ -3582,6 +3584,7 @@ export type Organization = MetadataInterface & {
    */
   id: Scalars['ID']['output'];
   inboundCommsCount: Scalars['Int64']['output'];
+  /** @deprecated No longer supported */
   industry?: Maybe<Scalars['String']['output']>;
   /** @deprecated No longer supported */
   industryGroup?: Maybe<Scalars['String']['output']>;
@@ -3668,6 +3671,7 @@ export type Organization = MetadataInterface & {
   subsidiaryOf: Array<LinkedOrganization>;
   suggestedMergeTo: Array<SuggestedMergeOrganization>;
   tags?: Maybe<Array<Tag>>;
+  /** @deprecated No longer supported */
   targetAudience?: Maybe<Scalars['String']['output']>;
   timelineEvents: Array<TimelineEvent>;
   timelineEventsTotalCount: Scalars['Int64']['output'];
@@ -3676,6 +3680,7 @@ export type Organization = MetadataInterface & {
    * @deprecated Use metadata.lastUpdated
    */
   updatedAt: Scalars['Time']['output'];
+  /** @deprecated No longer supported */
   valueProposition?: Maybe<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
   yearFounded?: Maybe<Scalars['Int64']['output']>;
@@ -3791,6 +3796,11 @@ export type OrganizationSaveInput = {
   yearFounded?: InputMaybe<Scalars['Int64']['input']>;
 };
 
+export type OrganizationSaveInputFromGlobalOrg = {
+  relationship?: InputMaybe<OrganizationRelationship>;
+  stage?: InputMaybe<OrganizationStage>;
+};
+
 export type OrganizationSearchResult = {
   __typename?: 'OrganizationSearchResult';
   ids: Array<Scalars['ID']['output']>;
@@ -3869,6 +3879,7 @@ export type OrganizationUiDetails = {
   subsidiaries: Array<Scalars['String']['output']>;
   tags: Array<Tag>;
   updatedAt: Scalars['Time']['output'];
+  /** @deprecated No longer supported */
   valueProposition?: Maybe<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
   yearFounded?: Maybe<Scalars['Int64']['output']>;
