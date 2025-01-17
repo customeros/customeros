@@ -81,6 +81,28 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     return this.value.get(id) as Organization;
   }
 
+  public setView = async (
+    key: string,
+    filterFn: (records: Organization[]) => Organization[],
+  ) => {
+    const ids = this.searchResults.get(key);
+    const cursor = this.cursors.get(key) ?? 0;
+    const chunkedIds = (ids ?? []).slice(
+      0,
+      this.chunkSize * cursor + this.chunkSize,
+    );
+
+    const records: Organization[] = [];
+
+    chunkedIds.forEach((id) => {
+      if (this.value?.has(id)) {
+        records.push(this.value.get(id) as Organization);
+      }
+    });
+
+    this.views.set(key, filterFn(records));
+  };
+
   // temporary unused
   @action
   private async _getRecentChanges() {
