@@ -25,7 +25,6 @@ func (r *queryResolver) Agents(ctx context.Context) ([]*model.Agent, error) {
 // Agent is the resolver for the agent field.
 func (r *queryResolver) Agent(ctx context.Context, id string) (*model.Agent, error) {
 	flowId := "123"
-	print(ctx)
 
 	return &model.Agent{
 		ID:           "1",
