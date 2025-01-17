@@ -111,7 +111,7 @@ describe('OrganizationsService - Integration Tests', () => {
       organizationsService,
     );
 
-    const organization_tag_name = 'IT_' + crypto.randomUUID();
+    const organization_tag_name = 'Vitest_' + crypto.randomUUID();
 
     await organizationsService.addTag({
       input: {
@@ -148,7 +148,7 @@ describe('OrganizationsService - Integration Tests', () => {
     );
 
     const organization_initial_social_url =
-      'www.IT_' + crypto.randomUUID() + '.com';
+      'www.Vitest_' + crypto.randomUUID() + '.com';
     const { organization_AddSocial } = await organizationsService.addSocial({
       organizationId: id,
       input: {
@@ -165,7 +165,7 @@ describe('OrganizationsService - Integration Tests', () => {
     );
 
     const organization_subsequent_social_url =
-      'www.IT_' + crypto.randomUUID() + '.com';
+      'www.Vitest_' + crypto.randomUUID() + '.com';
 
     await organizationsService.updateSocial({
       input: {
@@ -349,7 +349,7 @@ describe('OrganizationsService - Integration Tests', () => {
       organizationsService,
     );
 
-    const contract_name = 'IT_' + crypto.randomUUID();
+    const contract_name = 'Vitest_' + crypto.randomUUID();
     const threeMonthsAgo = new Date();
 
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);

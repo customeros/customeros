@@ -4,15 +4,17 @@ import { VitestHelper } from '@store/vitest-helper.ts';
 import { EmailLabel, EntityType, PhoneNumberLabel } from '@graphql/types';
 
 import { ContactService } from '../../Contacts/__service__/Contacts.service';
+import { JobRolesService } from '../../JobRoles/__service__/JobRoles.service.ts';
 import { OrganizationsService } from '../../Organizations/__service__/Organizations.service';
 
 const organizationsService = OrganizationsService.getInstance();
 const contactService = ContactService.getInstance();
+const jobRolesService = JobRolesService.getInstance();
 
 describe('ContactsService - Integration Tests', () => {
   it('create contact', async () => {
     const contact_social_url =
-      'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
+      'https://www.linkedin.com/in/Vitest_' + crypto.randomUUID();
 
     const { contact_Create } = await contactService.createContact({
       contactInput: { socialUrl: contact_social_url },
@@ -79,17 +81,17 @@ describe('ContactsService - Integration Tests', () => {
     const { id } = await VitestHelper.createOrganizationForTest(
       organizationsService,
     );
-    const contact_social_url = 'IT_' + crypto.randomUUID();
+    const contact_social_url = 'Vitest_' + crypto.randomUUID();
     const { contact_CreateForOrganization } =
       await contactService.createContactForOrganization({
         organizationId: id,
         input: { socialUrl: contact_social_url },
       });
 
-    const contact_name = 'IT_' + crypto.randomUUID();
-    const contact_description = 'IT_' + crypto.randomUUID();
-    const contact_firstName = 'IT_' + crypto.randomUUID();
-    const contact_lastName = 'IT_' + crypto.randomUUID();
+    const contact_name = 'Vitest_' + crypto.randomUUID();
+    const contact_description = 'Vitest_' + crypto.randomUUID();
+    const contact_firstName = 'Vitest_' + crypto.randomUUID();
+    const contact_lastName = 'Vitest_' + crypto.randomUUID();
     const contact_prefix = 'Mr.';
     const contact_profilePhotoUrl = 'https://example.com';
     const contact_timezone = 'America/North_Dakota/New_Salem';
@@ -130,7 +132,7 @@ describe('ContactsService - Integration Tests', () => {
       organizationsService,
     );
 
-    const contact_first_social_url = 'IT_' + crypto.randomUUID();
+    const contact_first_social_url = 'Vitest_' + crypto.randomUUID();
 
     const firstContact = await contactService.createContactForOrganization({
       organizationId: id,
@@ -138,7 +140,7 @@ describe('ContactsService - Integration Tests', () => {
     });
     const firstContactId = firstContact.contact_CreateForOrganization.id;
 
-    const contact_second_social_url = 'IT_' + crypto.randomUUID();
+    const contact_second_social_url = 'Vitest_' + crypto.randomUUID();
 
     const secondContact = await contactService.createContactForOrganization({
       organizationId: id,
@@ -147,7 +149,7 @@ describe('ContactsService - Integration Tests', () => {
 
     const secondContactId: string =
       secondContact.contact_CreateForOrganization.id;
-    const contact_third_social_url = 'IT_' + crypto.randomUUID();
+    const contact_third_social_url = 'Vitest_' + crypto.randomUUID();
 
     const thirdContact = await contactService.createContactForOrganization({
       organizationId: id,
@@ -173,7 +175,7 @@ describe('ContactsService - Integration Tests', () => {
     const { id, name } = await VitestHelper.createOrganizationForTest(
       organizationsService,
     );
-    const contact_social_url = 'IT_' + crypto.randomUUID();
+    const contact_social_url = 'Vitest_' + crypto.randomUUID();
 
     const { contact_CreateForOrganization } =
       await contactService.createContactForOrganization({
@@ -197,92 +199,52 @@ describe('ContactsService - Integration Tests', () => {
     ).toBeNull();
     expect(contactBeforeFirstJobRole.primaryOrganizationName).toBe(name);
 
-    const jobRoleCreateOneDescription = 'IT_' + crypto.randomUUID();
-    const jobRoleCreateOneTitle = 'IT_' + crypto.randomUUID();
+    const contactAfterCreation = await contactService.getContact(
+      contact_CreateForOrganization.id,
+    );
+    const jobRoleBeforeUpdate = await jobRolesService.getJobRoles({
+      ids: contactAfterCreation.jobRoleIds[0],
+    });
+
+    expect(jobRoleBeforeUpdate.jobRoles[0].description).toBe('');
+    expect(jobRoleBeforeUpdate.jobRoles[0].jobTitle).toBeNull();
+    expect(jobRoleBeforeUpdate.jobRoles[0].primary).toBe(true);
+    expect(jobRoleBeforeUpdate.jobRoles[0].startedAt).toBe(null);
+    expect(jobRoleBeforeUpdate.jobRoles[0].contact?.metadata.id).toBe(
+      contactBeforeFirstJobRole.id,
+    );
+
+    const jobRoleCreateOneDescription = 'Vitest_' + crypto.randomUUID();
+    const jobRoleCreateOneTitle = 'Vitest_' + crypto.randomUUID();
     const jobRoleCreateOneStartedAt = new Date().toISOString();
 
-    const { jobRole_Create } = await contactService.addJobRole({
-      contactId: contactBeforeFirstJobRole.id,
+    await jobRolesService.saveJobRoles({
       input: {
         description: jobRoleCreateOneDescription,
         jobTitle: jobRoleCreateOneTitle,
         organizationId: id,
         startedAt: jobRoleCreateOneStartedAt,
+        contactId: contactBeforeFirstJobRole.id,
       },
     });
 
-    //this needs to be reimplemented because now we are working with only primary job role
+    const contactAfterFirstJobRole = await contactService.getContact(
+      contact_CreateForOrganization.id,
+    );
 
-    // const contactAfterFirstJobRole = await contactService.getContact(
-    //   contact_CreateForOrganization.id,
-    // );
+    expect(contactAfterFirstJobRole.jobRoleIds.length).toBe(1);
 
-    // expect(contactAfterFirstJobRole.contact?.jobRoles.length).toBe(2);
-    // expect(contactAfterFirstJobRole.contact?.jobRoles[1].jobTitle).toBe(
-    //   jobRoleCreateOneTitle,
-    // );
-    // expect(contactAfterFirstJobRole.contact?.jobRoles[1].description).toBe(
-    //   jobRoleCreateOneDescription,
-    // );
-    // expect(contactAfterFirstJobRole.contact?.jobRoles[1].primary).toBe(false);
-    // expect(contactAfterFirstJobRole.contact?.jobRoles[1].company).toBeNull();
-    // expect(
-    //   new Date(
-    //     contactAfterFirstJobRole.contact?.jobRoles[1].startedAt,
-    //   ).getTime(),
-    // ).toBe(new Date(jobRoleCreateOneStartedAt).getTime());
-    // expect(contactAfterFirstJobRole.contact?.jobRoles[0].endedAt).toBeNull();
-
-    const jobRoleUpdateDescription = 'IT_' + crypto.randomUUID();
-    const jobRoleUpdateTitle = 'IT_' + crypto.randomUUID();
-    const jobRoleUpdateStartedAt = new Date().toISOString();
-    const jobRoleUpdateCompany = new Date().toISOString();
-
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 second delay to have different endedAt
-
-    const jobRoleUpdateEndedAt = new Date().toISOString();
-
-    await contactService.updateJobRole({
-      contactId: contactBeforeFirstJobRole.id,
-      input: {
-        id: jobRole_Create.id,
-        description: jobRoleUpdateDescription,
-        jobTitle: jobRoleUpdateTitle,
-        organizationId: id,
-        startedAt: jobRoleUpdateStartedAt,
-        company: jobRoleUpdateCompany,
-        endedAt: jobRoleUpdateEndedAt,
-        primary: true,
-      },
+    const jobRole = await jobRolesService.getJobRoles({
+      ids: contactAfterFirstJobRole.jobRoleIds[0],
     });
 
-    //Same here needs to be reimplemented
-
-    // const contactAfterUpdateJobRole = await contactService.getContact(
-    //   contact_CreateForOrganization.id,
-    // );
-
-    // expect(contactAfterUpdateJobRole.contact?.jobRoles.length).toBe(2);
-    // expect(contactAfterUpdateJobRole.contact?.jobRoles[1].jobTitle).toBe(
-    //   jobRoleUpdateTitle,
-    // );
-    // expect(contactAfterUpdateJobRole.contact?.jobRoles[1].description).toBe(
-    //   jobRoleUpdateDescription,
-    // );
-    // expect(contactAfterUpdateJobRole.contact?.jobRoles[1].primary).toBe(true);
-    // expect(contactAfterUpdateJobRole.contact?.jobRoles[1].company).toBe(
-    //   jobRoleUpdateCompany,
-    // );
-    // expect(
-    //   new Date(
-    //     contactAfterUpdateJobRole.contact?.jobRoles[1].startedAt,
-    //   ).getTime(),
-    // ).toBe(new Date(jobRoleUpdateStartedAt).getTime());
-    // expect(
-    //   new Date(
-    //     contactAfterUpdateJobRole.contact?.jobRoles[1].endedAt,
-    //   ).getTime(),
-    // ).toBe(new Date(jobRoleUpdateEndedAt).getTime());
+    expect(jobRole.jobRoles[0].description).toBe(jobRoleCreateOneDescription);
+    expect(jobRole.jobRoles[0].jobTitle).toBe(jobRoleCreateOneTitle);
+    expect(jobRole.jobRoles[0].primary).toBe(true);
+    expect(jobRole.jobRoles[0].startedAt).toBe(jobRoleCreateOneStartedAt);
+    expect(jobRole.jobRoles[0].contact?.metadata.id).toBe(
+      contactBeforeFirstJobRole.id,
+    );
   });
 
   it('links contact to organization', async () => {
@@ -317,14 +279,14 @@ describe('ContactsService - Integration Tests', () => {
     const { contact_Create } = await contactService.createContact({
       contactInput: {},
     });
-    const emailOne = 'IT_' + crypto.randomUUID() + '@example.com';
+    const emailOne = 'Vitest_' + crypto.randomUUID() + '@example.com';
 
     await contactService.updateContactEmail({
       contactId: contact_Create,
       previousEmail: '',
       input: {
         email: emailOne,
-        appSource: 'IT_test',
+        appSource: 'Vitest_test',
         label: EmailLabel.Personal,
       },
     });
@@ -381,14 +343,14 @@ describe('ContactsService - Integration Tests', () => {
       contactAfterEmailUpdate.emails[0].emailValidationDetails.smtpSuccess,
     ).toBeNull();
 
-    const emailTwo = 'IT_' + crypto.randomUUID() + '@example.com';
+    const emailTwo = 'Vitest_' + crypto.randomUUID() + '@example.com';
 
     await contactService.updateContactEmail({
       contactId: contact_Create,
       previousEmail: '',
       input: {
         email: emailTwo,
-        appSource: 'IT_test',
+        appSource: 'Vitest_test',
         label: EmailLabel.Work,
       },
     });
@@ -451,7 +413,7 @@ describe('ContactsService - Integration Tests', () => {
     const { id } = await VitestHelper.createOrganizationForTest(
       organizationsService,
     );
-    const contact_social_url = 'IT_' + crypto.randomUUID();
+    const contact_social_url = 'Vitest_' + crypto.randomUUID();
 
     const { contact_CreateForOrganization } =
       await contactService.createContactForOrganization({
@@ -476,7 +438,7 @@ describe('ContactsService - Integration Tests', () => {
     const { id } = await VitestHelper.createOrganizationForTest(
       organizationsService,
     );
-    const contact_social_url = 'IT_' + crypto.randomUUID();
+    const contact_social_url = 'Vitest_' + crypto.randomUUID();
 
     const { contact_CreateForOrganization } =
       await contactService.createContactForOrganization({
@@ -652,7 +614,7 @@ describe('ContactsService - Integration Tests', () => {
   // expect(contactCreated.contact?.organizations.content[0].name).toBe(name);
 
   // const contact_added_social_url =
-  //   'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
+  //   'https://www.linkedin.com/in/Vitest_' + crypto.randomUUID();
 
   // await contactService.addSocial({
   //   contactId: contactCreated.contact!.metadata.id,
@@ -669,7 +631,7 @@ describe('ContactsService - Integration Tests', () => {
   // );
 
   // const contact_updated_social_url =
-  //   'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
+  //   'https://www.linkedin.com/in/Vitest_' + crypto.randomUUID();
 
   // await contactService.updateSocial({
   //   input: {
@@ -690,7 +652,7 @@ describe('ContactsService - Integration Tests', () => {
 
   // it('archives contact', async () => {
   //   const contact_social_url =
-  //     'https://www.linkedin.com/in/IT_' + crypto.randomUUID();
+  //     'https://www.linkedin.com/in/Vitest_' + crypto.randomUUID();
 
   //   const { contact_Create } = await contactService.createContact({
   //     contactInput: { socialUrl: contact_social_url },
