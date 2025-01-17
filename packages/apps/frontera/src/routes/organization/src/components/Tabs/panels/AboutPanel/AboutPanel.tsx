@@ -160,7 +160,9 @@ export const AboutPanel = observer(() => {
 
         <div className='flex flex-col w-full flex-1 items-start justify-start gap-3 mt-3'>
           {!!organization?.value?.description && (
-            <p className='text-sm'>{organization.value.description}</p>
+            <p className='text-sm' data-test='org-about-description'>
+              {organization.value.description}
+            </p>
           )}
 
           <Tags
@@ -289,7 +291,9 @@ export const AboutPanel = observer(() => {
             {organization?.value?.industryName ? (
               <span>{organization.value.industryName}</span>
             ) : (
-              <span className={'text-gray-400'}>Industry not found yet</span>
+              <span className={'text-gray-400'} data-test='org-about-industry'>
+                Industry not found yet
+              </span>
             )}
           </p>
 

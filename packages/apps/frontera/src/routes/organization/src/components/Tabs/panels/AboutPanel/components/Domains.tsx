@@ -65,7 +65,12 @@ export const Domains = observer(() => {
           }}
         >
           <Globe01 className='text-gray-500' />
-          <span className='text-sm text-gray-400'>Add domain</span>
+          <span
+            className='text-sm text-gray-400'
+            data-test='org-about-domain-empty'
+          >
+            Add domain
+          </span>
         </div>
       </div>
     );
@@ -84,6 +89,7 @@ export const Domains = observer(() => {
             >
               {index === 0 && <Globe01 className='mr-2 text-gray-500' />}
               <span
+                data-test='org-about-domain-filled'
                 className={cn({
                   'ml-6': index !== 0,
                 })}

@@ -102,6 +102,7 @@ export const AddNewDomain = observer(() => {
               autoFocus
               size={'sm'}
               ref={inputRef}
+              dataTest='add-domain-input'
               placeholder='Organization’s domain'
               value={addNewDomainCase.inputValue}
               onChange={(e) => {
@@ -140,9 +141,9 @@ export const AddNewDomain = observer(() => {
               className='w-full'
               colorScheme='primary'
               onClick={handleConfirm}
+              dataTest={'add-domain'}
               loadingText={'Adding domain...'}
               isLoading={addNewDomainCase.isValidating}
-              dataTest={'add-contact-to-flow-confirmation'}
               data-test='contact-actions-confirm-flow-change'
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {

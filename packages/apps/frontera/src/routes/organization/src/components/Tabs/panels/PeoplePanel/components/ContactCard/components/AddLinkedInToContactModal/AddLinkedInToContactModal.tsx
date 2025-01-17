@@ -73,6 +73,7 @@ export const AddLinkedInToContactModal = observer(
               <p>We'll auto-enrich this contact using their LinkedIn profile</p>
               <Input
                 variant='unstyled'
+                dataTest='linkedin-url-input'
                 value={linkedInUseCase.inputValue}
                 placeholder='linkedin.com/in/john-lemon'
                 onKeyDown={(e) => {

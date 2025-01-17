@@ -67,7 +67,7 @@ export const RemoveDomain = observer(() => {
             className='w-full'
             colorScheme='error'
             onClick={handleConfirm}
-            dataTest={'add-contact-to-flow-confirmation'}
+            dataTest={'remove-domain'}
             data-test='contact-actions-confirm-flow-change'
             onKeyDown={(e) => {
               if (e.key === 'Enter') {

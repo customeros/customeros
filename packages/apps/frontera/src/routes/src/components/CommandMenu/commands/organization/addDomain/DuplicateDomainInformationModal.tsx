@@ -90,7 +90,7 @@ export const DuplicateDomainInformation = observer(
             colorScheme='primary'
             ref={confirmButtonRef}
             onClick={handleConfirm}
-            dataTest={'add-contact-to-flow-confirmation'}
+            dataTest={'merge-organizations'}
             data-test='contact-actions-confirm-flow-change'
             onKeyDown={(e) => {
               if (e.key === 'Enter') {

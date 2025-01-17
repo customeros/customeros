@@ -325,6 +325,7 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                 ) : (
                   <p
                     onClick={() => onOpen()}
+                    data-test='org-people-linkedin'
                     className={cn(
                       'text-sm cursor-pointer w-[300px] truncate no-underline hover:no-underline',
                       'text-gray-400',

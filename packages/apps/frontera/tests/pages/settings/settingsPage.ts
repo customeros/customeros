@@ -33,7 +33,12 @@ export class SettingsPage {
     'input[data-test="settings-mailboxes-second-username"]';
   settingsMailboxesSecondUsernameId = 'settings-mailboxes-second-username';
   settingsMailboxesCheckout = 'button[data-test="settings-mailboxes-checkout"]';
-  stripeFieldNumberInput = '#Field-numberInput';
+  stripeFieldNumberInputId = '[id="Field-numberInput"]';
+  stripeFieldExpiryInputId = '[id="Field-expiryInput"]';
+  stripeFieldFieldCvcInputId = '[id="Field-cvcInput"]';
+  stripeFieldFieldCountryInputId = '[id="Field-countryInput"]';
+  stripeFieldFieldPostalCodeInputId = '[id="Field-postalCodeInput"]';
+  submitButton = 'button[typeof="submit"]';
 
   async goToMailboxes() {
     await clickLocatorsThatAreVisible(this.page, this.sideNavSettingsMailboxes);
@@ -150,11 +155,17 @@ export class SettingsPage {
       'iframe[title="Secure payment input frame"]',
     );
 
-    await stripeIframe.locator('[name="number"]').fill('4242424242424242');
-    await stripeIframe.locator('[name="expiry"]').fill('1234');
-    await stripeIframe.locator('[name="cvc"]').fill('123');
-
-    await this.page.locator('button[typeof="submit"]').click();
+    await stripeIframe
+      .locator(this.stripeFieldNumberInputId)
+      .fill('4242424242424242');
+    await stripeIframe.locator(this.stripeFieldExpiryInputId).fill('1234');
+    await stripeIframe.locator(this.stripeFieldFieldCvcInputId).fill('123');
+    await stripeIframe.locator(this.stripeFieldFieldCountryInputId).click();
+    await stripeIframe.getByLabel('Country').selectOption('US');
+    await stripeIframe
+      .locator(this.stripeFieldFieldPostalCodeInputId)
+      .fill('99999');
+    await this.page.locator(this.submitButton).click();
 
     const response = await this.page.waitForResponse(
       (response) =>

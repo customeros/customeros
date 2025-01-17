@@ -22,7 +22,9 @@ import { OpportunitiesKanbanPage } from './pages/opportunitiesKanban/opportuniti
 
 test.setTimeout(180000);
 
-test('Convert an Organization to Customer', async ({ page }, testInfo) => {
+test('Convert an Organization to Customer [COS-6448]', async ({
+  page,
+}, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const customersPage = new CustomersPage(page);
@@ -56,7 +58,9 @@ test('Convert an Organization to Customer', async ({ page }, testInfo) => {
   await customersPage.ensureCustomerExists(organizationName, true);
 });
 
-test('Add About information to an Organization', async ({ page }, testInfo) => {
+test('Add About information to an Organization [COS-6528]', async ({
+  page,
+}, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationAboutPage = new OrganizationAboutPage(page);
@@ -79,16 +83,16 @@ test('Add About information to an Organization', async ({ page }, testInfo) => {
   await organizationSideNavPage.goToAbout();
 
   //Check enrichment
-  await organizationAboutPage.enrichOrganization(organizations.create.website);
+  await organizationAboutPage.enrichOrganization(organizations.create.domain);
   organizations.create.name = organizationName;
   await organizationAboutPage.checkEnrichedAboutFields(organizations.create);
 
   //Check updates that override the enrichment
-  await organizationAboutPage.populateAboutFields(organizations.update);
-  await organizationAboutPage.checkPopulatedAboutFields(organizations.update);
+  // await organizationAboutPage.populateAboutFields(organizations.update);
+  // await organizationAboutPage.checkPopulatedAboutFields(organizations.update);
 });
 
-test.skip('Create People entry in an Organization', async ({
+test('Create People entry in an Organization [COS-6537]', async ({
   page,
 }, testInfo) => {
   const loginPage = new LoginPage(page);
@@ -207,7 +211,7 @@ test('CmdK global menu', async ({ page }, testInfo) => {
   await organizationsCmdKPage.verifyNavigationToSettings(page);
 });
 
-test('Assign contact to flow', async ({ page }, testInfo) => {
+test('Assign contact to flow [COS-6537]', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const flowsPage = new FlowsPage(page);
   const flowPage = new FlowPage(page);

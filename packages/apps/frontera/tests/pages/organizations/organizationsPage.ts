@@ -19,8 +19,7 @@ export class OrganizationsPage {
   private sideNavItemCustomers = sideNavSelectors.sideNavItemCustomers;
   private sideNavItemCustomersSelected =
     sideNavSelectors.sideNavItemCustomersSelected;
-  private finderTableOrganizations =
-    'div[data-test="finder-table-ORGANIZATIONS"]';
+  private finderTableOrganizations = '[data-test="finder-table-ORGANIZATIONS"]';
   private allOrgsAddOrg = 'button[data-test="all-orgs-add-org"]';
   private createOrganizationFromTable =
     'button[data-test="create-organization-from-table"]';
@@ -28,7 +27,7 @@ export class OrganizationsPage {
     'input[data-test="organizations-create-new-org-org-name"]';
   private addOrgModalAddOrg = 'div[data-test="add-org-modal-add-org"]';
   private organizationNameInAllOrgsTable =
-    'p[data-test="organization-name-in-all-orgs-table"]';
+    '[data-test="organization-name-in-all-orgs-table"]';
   private organizationWebsiteInAllOrgsTable =
     'span[data-test="organization-website-in-all-orgs-table"]';
   private organizationRelationshipInAllOrgsTable =
@@ -46,12 +45,15 @@ export class OrganizationsPage {
   private organizationContactsInAllOrgsTable =
     'div[data-test="organization-contacts-in-all-orgs-table"]';
   private organizationStageInAllOrgsTable =
-    'p[data-test="organization-stage-in-all-orgs-table"]';
-  private organizationLastTouchpointInAllOrgsTable =
-    '[data-test="organization-last-touchpoint-in-all-orgs-table"]';
+    'div[data-test="organization-stage-in-all-orgs-table"]';
+  // private organizationLastTouchpointInAllOrgsTable =
+  //   '[data-test="organization-last-touchpoint-in-all-orgs-table"]';
+  private organizationLastTouchpointDateInAllOrgsTable =
+    '[data-test="organization-last-touchpoint-date-in-all-orgs-table"]';
   private organizationRelationshipButtonInAllOrgsTable =
     'button[data-test="organization-relationship-button-in-all-orgs-table"]';
-  private relationshipCustomer = 'div[data-test="relationship-CUSTOMER"]';
+  private relationshipCustomer =
+    'div[data-test="org-dashboard-relationship-CUSTOMER"]';
   private allOrgsSelectAllOrgs = 'button[data-test="all-orgs-select-all-orgs"]';
   private orgActionsArchive = 'button[data-test="org-actions-archive"]';
   private orgActionsConfirmArchive =
@@ -96,7 +98,7 @@ export class OrganizationsPage {
 
     const requestPromise = createRequestPromise(
       this.page,
-      'name',
+      'input?.name',
       organizationName,
     );
 
@@ -276,7 +278,7 @@ export class OrganizationsPage {
             .locator(this.organizationStageInAllOrgsTable)
             .innerText();
 
-          expect(stage).toBe('Target');
+          expect(stage).toBe('Lead');
         });
       },
       maxAttempts,
@@ -287,7 +289,7 @@ export class OrganizationsPage {
       this.page,
       async () => {
         await this.page.waitForSelector(
-          this.organizationLastTouchpointInAllOrgsTable,
+          this.organizationLastTouchpointDateInAllOrgsTable,
           { state: 'attached', timeout: 10000 },
         );
 
@@ -303,14 +305,14 @@ export class OrganizationsPage {
           } else {
             console.warn('Last touchpoint element not found');
           }
-        }, this.organizationLastTouchpointInAllOrgsTable);
+        }, this.organizationLastTouchpointDateInAllOrgsTable);
 
         await assertWithRetry(async () => {
-          const lastTouchpoint = await newEntry
-            .locator(this.organizationLastTouchpointInAllOrgsTable)
+          const lastTouchpointDate = await newEntry
+            .locator(this.organizationLastTouchpointDateInAllOrgsTable)
             .innerText();
 
-          expect(lastTouchpoint).toBe('Created');
+          expect(lastTouchpointDate).toBe('today');
         });
       },
       maxAttempts,
@@ -331,17 +333,18 @@ export class OrganizationsPage {
   }
 
   async updateOrgToCustomer(organizationName: string) {
-    const newEntry = this.page
-      .locator(
-        `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,
-      )
-      .locator('..')
-      .locator('..')
-      .locator('..');
+    const rowLocator = this.page
+      .locator(`${this.finderTableOrganizations} div[data-index]`)
+      .filter({
+        has: this.page.locator(
+          `${this.organizationNameInAllOrgsTable}:text("${organizationName}")`,
+        ),
+      });
 
-    await newEntry
-      .locator(this.organizationRelationshipButtonInAllOrgsTable)
+    await rowLocator
+      .locator('[data-test="organization-relationship-in-all-orgs-table"]')
       .click();
+
     await clickLocatorThatIsVisible(this.page, this.relationshipCustomer);
   }
 
