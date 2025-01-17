@@ -363,6 +363,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
           'create-org-faillure',
         );
       });
+    } finally {
       this.refreshCurrentView();
     }
   }
