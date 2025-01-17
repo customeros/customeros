@@ -165,7 +165,7 @@ export class SettingsPage {
     await stripeIframe
       .locator(this.stripeFieldFieldPostalCodeInputId)
       .fill('99999');
-    await this.page.locator(this.submitButton).click();
+    await clickLocatorThatIsVisible(this.page, this.submitButton);
 
     const response = await this.page.waitForResponse(
       (response) =>
