@@ -467,85 +467,6 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
   }
 
   @action
-  async createWithoutOrg({
-    socialUrl,
-    options,
-  }: {
-    socialUrl: string;
-    options?: {
-      onSuccess?: (serverId: string) => void;
-    };
-  }) {
-    this.isLoading = true;
-
-    const newContact = new Contact(this, Contact.default());
-    const tempId = newContact.id;
-    const socialId = crypto.randomUUID();
-    let serverId: string | undefined = undefined;
-
-    (newContact.value = {
-      id: socialId,
-      firstName: '',
-      lastName: '',
-      name: '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      flows: [],
-      locations: [],
-      emails: [],
-      connectedUsers: [],
-      tags: [],
-      enrichedEmailEnrichedAt: null,
-      enrichedEmailFound: null,
-      enrichedFailedAt: null,
-      enrichedAt: null,
-      description: '',
-      phones: [],
-      jobRoleIds: [],
-      prefix: '',
-      timezone: '',
-      profilePhotoUrl: '',
-    }),
-      this.value.set(tempId, newContact);
-
-    try {
-      const { contact_Create } = await this.service.createContact({
-        contactInput: {
-          socialUrl,
-        },
-      });
-
-      runInAction(() => {
-        serverId = contact_Create;
-        newContact.id = serverId;
-        this.value.set(serverId, newContact);
-        this.value.delete(tempId);
-
-        this.sync({ action: 'APPEND', ids: [serverId] });
-        this.isLoading = false;
-      });
-
-      this.root.ui.toastSuccess(`Contact created`, 'create-contact-success');
-    } catch (e) {
-      this.root.ui.toastError(
-        `We couldn't create this contact. Please try again.`,
-        'create-contact-error',
-      );
-      runInAction(() => {
-        this.error = (e as Error)?.message;
-      });
-    } finally {
-      serverId && options?.onSuccess?.(serverId);
-
-      setTimeout(() => {
-        if (serverId) {
-          this.value.get(serverId)?.invalidate();
-        }
-      }, 2000);
-    }
-  }
-
-  @action
   async createBulkByEmail({
     emails,
     options,
@@ -586,6 +507,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
         this.isBootstrapped = false;
         this.bootstrap();
       }, 300);
+      this.refreshCurrentView();
     }
   }
 
@@ -630,6 +552,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
         this.isBootstrapped = false;
         this.bootstrap();
       }, 300);
+      this.refreshCurrentView();
     }
   }
 
@@ -745,4 +668,14 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       }
     });
   };
+
+  private refreshCurrentView() {
+    const currentPreset = new URLSearchParams(window.location.search).get(
+      'preset',
+    );
+
+    if (currentPreset) {
+      this.search(currentPreset);
+    }
+  }
 }
