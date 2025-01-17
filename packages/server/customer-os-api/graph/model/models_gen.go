@@ -102,6 +102,41 @@ type AddTagInput struct {
 	Tag        *TagIDOrNameInput `json:"tag"`
 }
 
+type Agent struct {
+	ID           string        `json:"id"`
+	Type         AgentType     `json:"type"`
+	Tenant       string        `json:"tenant"`
+	Name         string        `json:"name"`
+	Capabilities []*Capability `json:"capabilities"`
+	Goal         string        `json:"goal"`
+	IsActive     bool          `json:"isActive"`
+	FlowID       *string       `json:"flowId,omitempty"`
+	Visible      bool          `json:"visible"`
+	CreatedAt    time.Time     `json:"createdAt"`
+	UpdatedAt    time.Time     `json:"updatedAt"`
+	Error        *string       `json:"error,omitempty"`
+	Color        string        `json:"color"`
+	Icon         string        `json:"icon"`
+	Status       AgentStatus   `json:"status"`
+}
+
+type AgentSaveInput struct {
+	ID           *string                `json:"id,omitempty"`
+	Type         *AgentType             `json:"type,omitempty"`
+	Tenant       *string                `json:"tenant,omitempty"`
+	Name         *string                `json:"name,omitempty"`
+	Capabilities []*CapabilitySaveInput `json:"capabilities,omitempty"`
+	Goal         *string                `json:"goal,omitempty"`
+	IsActive     *bool                  `json:"isActive,omitempty"`
+	FlowID       *string                `json:"flowId,omitempty"`
+	Visible      *bool                  `json:"visible,omitempty"`
+	CreatedAt    time.Time              `json:"createdAt"`
+	UpdatedAt    time.Time              `json:"updatedAt"`
+	Color        *string                `json:"color,omitempty"`
+	Icon         *string                `json:"icon,omitempty"`
+	Status       *AgentStatus           `json:"status,omitempty"`
+}
+
 type Attachment struct {
 	ID            string     `json:"id"`
 	CreatedAt     time.Time  `json:"createdAt"`
@@ -282,6 +317,28 @@ type Calendar struct {
 	Source        DataSource   `json:"source"`
 	SourceOfTruth DataSource   `json:"sourceOfTruth"`
 	AppSource     string       `json:"appSource"`
+}
+
+type Capability struct {
+	ID       string           `json:"id"`
+	Type     CapabilityType   `json:"type"`
+	Name     string           `json:"name"`
+	Action   string           `json:"action"`
+	Optional bool             `json:"optional"`
+	Values   string           `json:"values"`
+	Errors   *string          `json:"errors,omitempty"`
+	Status   CapabilityStatus `json:"status"`
+}
+
+type CapabilitySaveInput struct {
+	ID       *string           `json:"id,omitempty"`
+	Type     *CapabilityType   `json:"type,omitempty"`
+	Name     *string           `json:"name,omitempty"`
+	Action   *string           `json:"action,omitempty"`
+	Optional *bool             `json:"optional,omitempty"`
+	Values   *string           `json:"values,omitempty"`
+	Errors   *string           `json:"errors,omitempty"`
+	Status   *CapabilityStatus `json:"status,omitempty"`
 }
 
 type ColumnView struct {
@@ -3115,6 +3172,90 @@ func (e ActionType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type AgentStatus string
+
+const (
+	AgentStatusOn                AgentStatus = "ON"
+	AgentStatusOff               AgentStatus = "OFF"
+	AgentStatusOnAgentError      AgentStatus = "ON_AGENT_ERROR"
+	AgentStatusOnCapabilityError AgentStatus = "ON_CAPABILITY_ERROR"
+)
+
+var AllAgentStatus = []AgentStatus{
+	AgentStatusOn,
+	AgentStatusOff,
+	AgentStatusOnAgentError,
+	AgentStatusOnCapabilityError,
+}
+
+func (e AgentStatus) IsValid() bool {
+	switch e {
+	case AgentStatusOn, AgentStatusOff, AgentStatusOnAgentError, AgentStatusOnCapabilityError:
+		return true
+	}
+	return false
+}
+
+func (e AgentStatus) String() string {
+	return string(e)
+}
+
+func (e *AgentStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AgentStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AgentStatus", str)
+	}
+	return nil
+}
+
+func (e AgentStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type AgentType string
+
+const (
+	AgentTypeWebVisitIdentifier AgentType = "WEB_VISIT_IDENTIFIER"
+)
+
+var AllAgentType = []AgentType{
+	AgentTypeWebVisitIdentifier,
+}
+
+func (e AgentType) IsValid() bool {
+	switch e {
+	case AgentTypeWebVisitIdentifier:
+		return true
+	}
+	return false
+}
+
+func (e AgentType) String() string {
+	return string(e)
+}
+
+func (e *AgentType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AgentType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AgentType", str)
+	}
+	return nil
+}
+
+func (e AgentType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type BilledType string
 
 const (
@@ -3204,6 +3345,92 @@ func (e *CalendarType) UnmarshalGQL(v any) error {
 }
 
 func (e CalendarType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type CapabilityStatus string
+
+const (
+	CapabilityStatusActive             CapabilityStatus = "ACTIVE"
+	CapabilityStatusActiveWithWarnings CapabilityStatus = "ACTIVE_WITH_WARNINGS"
+	CapabilityStatusInactive           CapabilityStatus = "INACTIVE"
+	CapabilityStatusPending            CapabilityStatus = "PENDING"
+)
+
+var AllCapabilityStatus = []CapabilityStatus{
+	CapabilityStatusActive,
+	CapabilityStatusActiveWithWarnings,
+	CapabilityStatusInactive,
+	CapabilityStatusPending,
+}
+
+func (e CapabilityStatus) IsValid() bool {
+	switch e {
+	case CapabilityStatusActive, CapabilityStatusActiveWithWarnings, CapabilityStatusInactive, CapabilityStatusPending:
+		return true
+	}
+	return false
+}
+
+func (e CapabilityStatus) String() string {
+	return string(e)
+}
+
+func (e *CapabilityStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CapabilityStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CapabilityStatus", str)
+	}
+	return nil
+}
+
+func (e CapabilityStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type CapabilityType string
+
+const (
+	CapabilityTypeWebsiteTracker        CapabilityType = "WEBSITE_TRACKER"
+	CapabilityTypeSendSLACkNotification CapabilityType = "SEND_SLACK_NOTIFICATION"
+)
+
+var AllCapabilityType = []CapabilityType{
+	CapabilityTypeWebsiteTracker,
+	CapabilityTypeSendSLACkNotification,
+}
+
+func (e CapabilityType) IsValid() bool {
+	switch e {
+	case CapabilityTypeWebsiteTracker, CapabilityTypeSendSLACkNotification:
+		return true
+	}
+	return false
+}
+
+func (e CapabilityType) String() string {
+	return string(e)
+}
+
+func (e *CapabilityType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CapabilityType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CapabilityType", str)
+	}
+	return nil
+}
+
+func (e CapabilityType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
