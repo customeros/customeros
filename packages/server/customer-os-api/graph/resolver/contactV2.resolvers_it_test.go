@@ -90,6 +90,147 @@ func TestQueryResolver_UIContactsSearch_FilterByPrimaryEmail(t *testing.T) {
 	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorNotContains, 5, 1)
 }
 
+func TestQueryResolver_UIContactsSearch_FilterByEmailVerificationPrimaryEmail(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	//validated email
+	contact1 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact1, neo4jentity.EmailEntity{
+		Email:         "1@gmail.com",
+		Primary:       true,
+		IsFirewalled:  utils.BoolPtr(true),
+		IsFreeAccount: utils.BoolPtr(true),
+		IsRisky:       utils.BoolPtr(false),
+		IsValidSyntax: utils.BoolPtr(false),
+		IsMailboxFull: utils.BoolPtr(true),
+		IsCatchAll:    utils.BoolPtr(true),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact11 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A1"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact11, neo4jentity.EmailEntity{
+		Email:        "11@gmail.com",
+		Primary:      true,
+		IsFirewalled: utils.BoolPtr(true),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact12 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A2"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact12, neo4jentity.EmailEntity{
+		Email:         "12@gmail.com",
+		Primary:       true,
+		IsFreeAccount: utils.BoolPtr(true),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact13 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A3"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact13, neo4jentity.EmailEntity{
+		Email:   "13@gmail.com",
+		Primary: true,
+		IsRisky: utils.BoolPtr(false),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact14 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A4"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact14, neo4jentity.EmailEntity{
+		Email:         "14@gmail.com",
+		Primary:       true,
+		IsValidSyntax: utils.BoolPtr(false),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact15 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A5"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact15, neo4jentity.EmailEntity{
+		Email:         "15@gmail.com",
+		Primary:       true,
+		IsMailboxFull: utils.BoolPtr(true),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact16 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A6"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact16, neo4jentity.EmailEntity{
+		Email:      "16@gmail.com",
+		Primary:    true,
+		IsCatchAll: utils.BoolPtr(true),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	//not validated email
+	contact2 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "B"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact2, neo4jentity.EmailEntity{
+		Email:   "2@gmail.com",
+		Primary: true,
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           nil,
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	//validated email
+	contact3 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "C"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact3, neo4jentity.EmailEntity{
+		Email:         "3@gmail.com",
+		Primary:       true,
+		Deliverable:   utils.StringPtr("UNDELIVERABLE"),
+		IsFirewalled:  utils.BoolPtr(false),
+		IsFreeAccount: utils.BoolPtr(false),
+		IsRisky:       utils.BoolPtr(true),
+		IsValidSyntax: utils.BoolPtr(true),
+		IsMailboxFull: utils.BoolPtr(true),
+		IsCatchAll:    utils.BoolPtr(false),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact4 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "D"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact4, neo4jentity.EmailEntity{
+		Email:   "4@gmail.com",
+		Primary: true,
+	})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "E"})
+
+	searchBy := postgresEntity.ColumnViewTypeEmailVerificationPrimaryEmail
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 11, 3)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 11, 8)
+	assertContactSearch(t, searchBy, []string{"firewall_protected"}, commonModel.ComparisonOperatorIn, 11, 2)
+	assertContactSearch(t, searchBy, []string{"free_account"}, commonModel.ComparisonOperatorIn, 11, 2)
+	assertContactSearch(t, searchBy, []string{"no_risk"}, commonModel.ComparisonOperatorIn, 11, 2)
+	assertContactSearch(t, searchBy, []string{"incorrect_format"}, commonModel.ComparisonOperatorIn, 11, 2)
+	assertContactSearch(t, searchBy, []string{"invalid_mailbox"}, commonModel.ComparisonOperatorIn, 11, 1)
+	assertContactSearch(t, searchBy, []string{"mailbox_full"}, commonModel.ComparisonOperatorIn, 11, 3)
+	assertContactSearch(t, searchBy, []string{"catch_all"}, commonModel.ComparisonOperatorIn, 11, 2)
+	assertContactSearch(t, searchBy, []string{"not_verified"}, commonModel.ComparisonOperatorIn, 11, 3)
+	assertContactSearch(t, searchBy, []string{"verification_in_progress"}, commonModel.ComparisonOperatorIn, 11, 1)
+}
+
 func TestQueryResolver_UIContactsSearch_SortByPrimaryEmail(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)
