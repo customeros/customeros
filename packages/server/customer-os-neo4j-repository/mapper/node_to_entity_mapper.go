@@ -1004,6 +1004,7 @@ func MapDbNodeToDomainEntity(node *dbtype.Node) *entity.DomainEntity {
 		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(entity.DomainPropertySource))),
 		Domain:        utils.GetStringPropOrEmpty(props, string(entity.DomainPropertyDomain)),
 		IsPrimary:     utils.GetBoolPropOrNil(props, string(entity.DomainPropertyIsPrimary)),
+		Accessible:    utils.GetBoolPropOrNil(props, string(entity.DomainPropertyAccessible)),
 		PrimaryDomain: utils.GetStringPropOrEmpty(props, string(entity.DomainPropertyPrimaryDomain)),
 		InternalFields: entity.DomainInternalFields{
 			PrimaryDomainCheckRequestedAt: utils.GetTimePropOrNil(props, string(entity.DomainPropertyPrimaryDomainCheckRequestedAt)),

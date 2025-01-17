@@ -58,7 +58,17 @@ func (r *mutationResolver) OrganizationSave(ctx context.Context, input model.Org
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	organizationId, err := r.Services.CommonServices.OrganizationService.Save(ctx, nil, input.ID, *mapper.MapOrganizationSaveInputToEntity(input))
+	dataFields := *mapper.MapOrganizationSaveInputToEntity(input)
+
+	// if domains were set as websites, extract domain part
+	domains := dataFields.Domains
+	correctedDomains := make([]string, 0)
+	for _, domain := range domains {
+		correctedDomains = append(correctedDomains, utils.ExtractDomain(domain))
+	}
+	dataFields.Domains = correctedDomains
+
+	organizationId, err := r.Services.CommonServices.OrganizationService.Save(ctx, nil, input.ID, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to save organization")

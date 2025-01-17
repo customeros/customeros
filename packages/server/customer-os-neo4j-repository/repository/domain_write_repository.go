@@ -12,7 +12,7 @@ import (
 
 type DomainWriteRepository interface {
 	MergeDomain(ctx context.Context, tx *neo4j.ManagedTransaction, domain, source, appSource string) (bool, error)
-	SetPrimaryDetails(ctx context.Context, domain, primaryDomain string, primary bool) error
+	SetPrimaryDetails(ctx context.Context, domain, primaryDomain string, primary, accessible bool) error
 }
 
 type domainWriteRepository struct {
@@ -62,19 +62,24 @@ func (r domainWriteRepository) MergeDomain(ctx context.Context, tx *neo4j.Manage
 	return result.(bool), nil
 }
 
-func (r domainWriteRepository) SetPrimaryDetails(ctx context.Context, domain, primaryDomain string, primary bool) error {
+func (r domainWriteRepository) SetPrimaryDetails(ctx context.Context, domain, primaryDomain string, primary, accessible bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainWriteRepository.SetPrimaryDetails")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	span.SetTag(tracing.SpanTagEntityId, domain)
 	span.LogFields(log.String("primaryDomain", primaryDomain), log.Bool("primary", primary))
 
-	cypher := `MATCH (d:Domain {domain:$domain}) SET d.primary=$primary, d.primaryDomain=$primaryDomain, d.techPrimaryDomainCheckRequestedAt=datetime()`
+	cypher := `MATCH (d:Domain {domain:$domain}) 
+				SET d.primary=$primary, 
+					d.accessible=$accessible, 
+					d.primaryDomain=$primaryDomain, 
+					d.techPrimaryDomainCheckRequestedAt=datetime()`
 
 	params := map[string]interface{}{
 		"domain":        domain,
 		"primaryDomain": primaryDomain,
 		"primary":       primary,
+		"accessible":    accessible,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
