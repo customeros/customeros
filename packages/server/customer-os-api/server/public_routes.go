@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/private"
 
 	"github.com/gin-gonic/gin"
 
@@ -13,6 +14,30 @@ import (
 )
 
 func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      "/rml",
+		handler:   private.RML(s),
+		routeType: RoutePublic,
+		services:  s,
+	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      "/pml",
+		handler:   private.PML(s),
+		routeType: RoutePublic,
+		services:  s,
+	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      "/signin",
+		handler:   private.Signin(s),
+		routeType: RoutePublic,
+		services:  s,
+	})
+
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      "/invoice/:invoiceId/pay",

@@ -65,10 +65,10 @@ async function customerOsSignIn(
   },
 ) {
   try {
-    await fetch(`${process.env.USER_ADMIN_API_URL}/signin`, {
+    await fetch(`${process.env.CUSTOMER_OS_API_PATH}/signin`, {
       method: 'POST',
       headers: {
-        'X-Openline-API-KEY': process.env.USER_ADMIN_API_KEY,
+        'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
@@ -96,10 +96,10 @@ function fetchTenant(email) {
 }
 
 function fetchMagicLink(email) {
-  return fetch(`${process.env.USER_ADMIN_API_URL + '/rml'}`, {
+  return fetch(`${process.env.CUSTOMER_OS_API_PATH + '/rml'}`, {
     method: 'POST',
     headers: {
-      'X-Openline-API-KEY': process.env.USER_ADMIN_API_KEY,
+      'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -109,10 +109,10 @@ function fetchMagicLink(email) {
 }
 
 function verifyMagicLink(code) {
-  return fetch(`${process.env.USER_ADMIN_API_URL + '/pml'}`, {
+  return fetch(`${process.env.CUSTOMER_OS_API_PATH + '/pml'}`, {
     method: 'POST',
     headers: {
-      'X-Openline-API-KEY': process.env.USER_ADMIN_API_KEY,
+      'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -189,10 +189,10 @@ async function createServer() {
     followRedirects: true,
   });
 
-  const customerOsStreamProxy = createProxyMiddleware({
-    pathFilter: '/customer-os-stream',
-    pathRewrite: { '^/customer-os-stream': '' },
-    target: process.env.CUSTOMER_OS_API_PATH + '/stream',
+  const settingsApiProxy = createProxyMiddleware({
+    pathFilter: '/sa',
+    pathRewrite: { '^/sa': '/internal/v1' },
+    target: process.env.CUSTOMER_OS_API_PATH,
     changeOrigin: true,
     headers: {
       'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
@@ -202,26 +202,13 @@ async function createServer() {
     followRedirects: true,
   });
 
-  const settingsApiProxy = createProxyMiddleware({
-    pathFilter: '/sa',
-    pathRewrite: { '^/sa': '' },
-    target: process.env.SETTINGS_API_PATH,
-    changeOrigin: true,
-    headers: {
-      'X-Openline-API-KEY': process.env.SETTINGS_API_KEY,
-    },
-    logger: console,
-    preserveHeaderKeyCase: true,
-    followRedirects: true,
-  });
-
   const userAdminApiProxy = createProxyMiddleware({
     pathFilter: '/ua',
-    pathRewrite: { '^/ua': '' },
-    target: process.env.USER_ADMIN_API_URL,
+    pathRewrite: { '^/ua': '/internal/v1' },
+    target: process.env.CUSTOMER_OS_API_PATH,
     changeOrigin: true,
     headers: {
-      'X-Openline-API-KEY': process.env.USER_ADMIN_API_KEY,
+      'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
     },
     logger: console,
     preserveHeaderKeyCase: true,
@@ -230,11 +217,11 @@ async function createServer() {
 
   const fileStorageApiProxy = createProxyMiddleware({
     pathFilter: '/fs',
-    pathRewrite: { '^/fs': '' },
-    target: process.env.FILE_STORAGE_API_PATH,
+    pathRewrite: { '^/fs': '/internal/v1' },
+    target: process.env.CUSTOMER_OS_API_PATH,
     changeOrigin: true,
     headers: {
-      'X-Openline-API-KEY': process.env.FILE_STORAGE_API_KEY,
+      'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
     },
     logger: console,
     preserveHeaderKeyCase: true,
@@ -242,7 +229,6 @@ async function createServer() {
   });
 
   app.use(customerOsApiProxy);
-  app.use(customerOsStreamProxy);
   app.use(settingsApiProxy);
   app.use(userAdminApiProxy);
   app.use(fileStorageApiProxy);

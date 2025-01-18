@@ -127,30 +127,6 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
-		path:      fmt.Sprintf("%s/rml", InternalPath),
-		handler:   private.RML(s),
-		routeType: RouteInternal,
-		services:  s,
-	})
-
-	registerRoute(ctx, r, RouteConfig{
-		method:    "POST",
-		path:      fmt.Sprintf("%s/pml", InternalPath),
-		handler:   private.PML(s),
-		routeType: RouteInternal,
-		services:  s,
-	})
-
-	registerRoute(ctx, r, RouteConfig{
-		method:    "POST",
-		path:      fmt.Sprintf("%s/signin", InternalPath),
-		handler:   private.Signin(s),
-		routeType: RouteInternal,
-		services:  s,
-	})
-
-	registerRoute(ctx, r, RouteConfig{
-		method:    "POST",
 		path:      fmt.Sprintf("%s/revoke", InternalPath),
 		handler:   private.Revoke(s),
 		routeType: RouteInternal,
