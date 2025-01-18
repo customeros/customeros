@@ -93,7 +93,8 @@ func Load() *Config {
 			BetterContactConfig: cmnCfg.BetterContact,
 		},
 		Internal: commonconf.InternalServicesConfig{
-			CustomerOsApi: cmnCfg.CustomerOsApi,
+			CustomerOsApi:       cmnCfg.CustomerOsApi,
+			MailSherpaApiConfig: cmnCfg.Mailsherpa,
 		},
 	}
 
