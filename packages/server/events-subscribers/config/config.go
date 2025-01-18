@@ -27,6 +27,14 @@ type CommonConfig struct {
 	RabbitMQ      commonconf.RabbitMQConfig
 	GrpcClient    commonconf.GrpcClientConfig
 	MailSherpaApi commonconf.MailSherpaApiConfig
+	BetterContact commonconf.BetterContactConfig
+	Scrapin       commonconf.ScrapinConfig
+	Snitcher      commonconf.SnitcherConfig
+	Anthropic     commonconf.AnthropicConfig
+	Novu          commonconf.NovuCofig
+	Namecheap     commonconf.NamecheapConfig
+	OpenSrs       commonconf.OpenSRSConfig
+	Cloudflare    commonconf.CloudflareConfig
 }
 
 func Load() *Config {
@@ -55,6 +63,16 @@ func Load() *Config {
 		},
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.MailSherpaApi,
+		},
+		External: commonconf.ExternalServicesConfig{
+			BetterContactConfig: cmnCfg.BetterContact,
+			ScrapinConfig:       cmnCfg.Scrapin,
+			SnitcherConfig:      cmnCfg.Snitcher,
+			AnthropicConfig:     cmnCfg.Anthropic,
+			NovuCofig:           cmnCfg.Novu,
+			NamecheapConfig:     cmnCfg.Namecheap,
+			OpenSRSConfig:       cmnCfg.OpenSrs,
+			CloudflareConfig:    cmnCfg.Cloudflare,
 		},
 	}
 
