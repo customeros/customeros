@@ -5,15 +5,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	comlog "github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonServices "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	neo4jt "github.com/customeros/customeros/packages/server/customer-os-common-module/test"
-	neo4jRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
@@ -61,8 +61,8 @@ func SetupTestDatabase() (TestDatabase, func()) {
 	}
 
 	// Initialize repositories
-	neo4jRepositories := neo4jRepo.InitNeo4jRepositories(testDBs.Driver, "neo4j")
-	postgresRepositories := &repository.Repositories{}
+	neo4jRepositories := neo4j_repository.InitNeo4jRepositories(testDBs.Driver, "neo4j")
+	postgresRepositories := &postgres_repository.Repositories{}
 
 	testDBs.CommonServices = commonServices.InitCommonServices(
 		SetupTestLogger(),
