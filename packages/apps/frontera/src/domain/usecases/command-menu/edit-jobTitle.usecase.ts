@@ -42,6 +42,8 @@ export class EditJobRoleUseCase {
       primary: jobRole.primary ?? true,
       ...jobRole,
     });
+
+    this.root.jobRoles.getById(jobRole.id!)!.value.jobTitle = jobRole.jobTitle;
   }
 
   @action
@@ -66,7 +68,6 @@ export class EditJobRoleUseCase {
         primary: true,
         company: orgId,
       });
-      this.root.contacts.getById(contactId)?.addJobRole(this.getJobRole || '');
     }
   }
 }

@@ -22,21 +22,19 @@ export const JobTitleCell = observer(({ contactId }: JobTitleCellProps) => {
     (j) => j.primary && j.contact?.metadata.id === contactId,
   );
 
-  const jobRolesStore = store.jobRoles.getById(findPrimaryJobRole?.id || '');
-
   const enrichingStatus = contactStore?.isEnriching;
 
   return (
     <div ref={ref} className='flex justify-between gap-2 group/jobTitle'>
       <div className='flex gap-2 truncate'>
-        {!jobRolesStore?.value.jobTitle && (
+        {!findPrimaryJobRole?.jobTitle && (
           <p className='text-gray-400'>
             {enrichingStatus ? 'Enriching...' : 'Not set'}
           </p>
         )}
-        {jobRolesStore?.value.jobTitle && (
+        {findPrimaryJobRole?.jobTitle && (
           <p className='overflow-ellipsis overflow-hidden '>
-            {jobRolesStore?.value.jobTitle}
+            {findPrimaryJobRole.jobTitle}
           </p>
         )}
         <IconButton

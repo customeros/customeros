@@ -669,7 +669,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     });
   };
 
-  private refreshCurrentView() {
+  public refreshCurrentView() {
     const currentPreset = new URLSearchParams(window.location.search).get(
       'preset',
     );

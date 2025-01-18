@@ -1,5 +1,5 @@
+import { action } from 'mobx';
 import { RootStore } from '@store/root';
-import { action, runInAction } from 'mobx';
 import { JobRolesService as JobRoleRepo } from '@store/JobRoles/__service__/JobRoles.service';
 import { SaveJobRolesMutationVariables } from '@store/JobRoles/__service__/saveJobRole.generated';
 
@@ -34,22 +34,28 @@ export class JobRoleService {
     const serverId = res?.jobRole_Save;
 
     this.root.jobRoles.createNew({ id: serverId, ...jobRole });
+
+    if (serverId) {
+      this.root.contacts.getById(jobRole.contactId || '')?.addJobRole(serverId);
+      this.root.contacts.retrieve([jobRole.contactId || '']);
+    }
   }
 
   @action
   async update(jobRole: SaveJobRolePayload) {
-    try {
-      await this.jobRoleRepo.saveJobRoles({
-        input: {
-          ...jobRole,
-          id: jobRole.id,
-        },
-      });
-    } catch (e) {
-      runInAction(() => {
-        this.root.jobRoles.error = (e as Error).message;
-      });
-    } finally {
+    const [res, err] = await unwrap(
+      this.jobRoleRepo.saveJobRoles({ input: { ...jobRole, id: jobRole.id } }),
+    );
+
+    if (err) {
+      console.error(err);
+
+      return;
+    }
+
+    if (!res) {
+      console.error('No response from saveJobRoles');
+    } else {
       this.root.contacts.retrieve([jobRole.id || '']);
     }
   }

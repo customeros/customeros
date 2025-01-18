@@ -187,14 +187,9 @@ export class Contact extends Entity<ContactDatum> {
   }
 
   @action
-  public addJobRole(jobRole: string) {
+  public addJobRole(jobRoleId: string) {
     this.draft();
-
-    const jobRoleId = Array.from(this.store.root.jobRoles.value.values()).find(
-      (j) => j.value.jobTitle === jobRole,
-    )?.id;
-
-    this.value.jobRoleIds.push(jobRoleId || '');
+    this.value.jobRoleIds.push(jobRoleId);
     this.commit({ syncOnly: true });
   }
 

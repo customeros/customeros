@@ -42,6 +42,8 @@ export class AddJobRole {
       primary: jobRole.primary ?? true,
       ...jobRole,
     });
+
+    this.root.jobRoles.getById(jobRole.id!)!.value.jobTitle = jobRole.jobTitle;
   }
 
   @action
@@ -60,8 +62,12 @@ export class AddJobRole {
         id: jobId,
       });
     } else {
-      await this.createJobRole(contactId, orgId);
-      this.root.contacts.getById(contactId)?.addJobRole(this.getJobRole || '');
+      await this.jobRoleService.create({
+        jobTitle: this.getJobRole,
+        contactId,
+        primary: true,
+        company: orgId,
+      });
     }
   }
 }

@@ -28,28 +28,22 @@ export class EditJobRole {
   }
 
   async createJobRole(contactId: string, orgId: string) {
-    try {
-      await this.jobRoleService.create({
-        jobTitle: this.getJobRole,
-        contactId: contactId,
-        primary: true,
-        organizationId: orgId,
-      });
-    } catch (e) {
-      throw new Error(e instanceof Error ? e.message : String(e));
-    }
+    await this.jobRoleService.create({
+      jobTitle: this.getJobRole,
+      contactId,
+      primary: true,
+      company: orgId,
+    });
   }
 
   @action
   async updateJobRole(jobRole: SaveJobRolePayload) {
-    try {
-      await this.jobRoleService.update({
-        ...jobRole,
-        primary: jobRole.primary,
-      });
-    } catch (e) {
-      throw new Error(e instanceof Error ? e.message : String(e));
-    }
+    await this.jobRoleService.update({
+      primary: jobRole.primary ?? true,
+      ...jobRole,
+    });
+
+    this.root.jobRoles.getById(jobRole.id!)!.value.jobTitle = jobRole.jobTitle;
   }
 
   @action
@@ -68,7 +62,12 @@ export class EditJobRole {
         id: jobId,
       });
     } else {
-      await this.createJobRole(contactId, orgId);
+      await this.jobRoleService.create({
+        jobTitle: this.getJobRole,
+        contactId,
+        primary: true,
+        company: orgId,
+      });
     }
   }
 }

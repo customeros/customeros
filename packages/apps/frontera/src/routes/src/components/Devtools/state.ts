@@ -28,6 +28,7 @@ export class DevtoolsStore {
     'contacts',
     'contracts',
     'flows',
+    'jobRoles',
   ];
 
   constructor() {}
