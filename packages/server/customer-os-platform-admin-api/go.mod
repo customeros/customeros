@@ -14,12 +14,12 @@ replace github.com/customeros/customeros/packages/server/events-processing-proto
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
+	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
+	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-contrib/zap v1.1.4
 	github.com/gin-gonic/gin v1.10.0
 	github.com/joho/godotenv v1.5.1
-	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
-	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.5
@@ -49,6 +49,8 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/coocood/freecache v1.2.4 // indirect
+	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c // indirect
+	github.com/customeros/customeros/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c // indirect
 	github.com/customeros/mailsherpa v0.3.8 // indirect
 	github.com/customeros/mailwatcher v0.1.6 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -98,8 +100,6 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
 	github.com/nyaruka/phonenumbers v1.4.4 // indirect
-	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c // indirect
-	github.com/customeros/customeros/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
