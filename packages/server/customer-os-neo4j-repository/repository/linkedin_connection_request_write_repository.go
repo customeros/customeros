@@ -1,19 +1,21 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type LinkedinConnectionRequestWriteRepository interface {
-	Save(ctx context.Context, tx *neo4j.ManagedTransaction, input *entity.LinkedinConnectionRequest) error
+	Save(ctx context.Context, tx *neo4j.ManagedTransaction, input *neo4j_entity.LinkedinConnectionRequest) error
 }
 
 type linkedinConnectionRequestWriteRepository struct {
@@ -28,7 +30,7 @@ func NewLinkedinConnectionRequestWriteRepository(driver *neo4j.DriverWithContext
 	}
 }
 
-func (r *linkedinConnectionRequestWriteRepository) Save(ctx context.Context, tx *neo4j.ManagedTransaction, input *entity.LinkedinConnectionRequest) error {
+func (r *linkedinConnectionRequestWriteRepository) Save(ctx context.Context, tx *neo4j.ManagedTransaction, input *neo4j_entity.LinkedinConnectionRequest) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LinkedinConnectionRequestWriteRepository.Save")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -38,7 +40,6 @@ func (r *linkedinConnectionRequestWriteRepository) Save(ctx context.Context, tx 
 	tenant := common.GetTenantFromContext(ctx)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
-
 		cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 							MERGE (t)<-[:BELONGS_TO_TENANT]-(l:LinkedinConnectionRequest:LinkedinConnectionRequest_%s {id:$id})
 							ON CREATE SET 

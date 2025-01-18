@@ -1,17 +1,19 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type WorkspaceWriteRepository interface {
-	Merge(ctx context.Context, workspace entity.WorkspaceEntity) (*dbtype.Node, error)
+	Merge(ctx context.Context, workspace neo4j_entity.WorkspaceEntity) (*dbtype.Node, error)
 }
 
 type workspaceWriteRepository struct {
@@ -26,7 +28,7 @@ func NewWorkspaceWriteRepository(driver *neo4j.DriverWithContext, database strin
 	}
 }
 
-func (r *workspaceWriteRepository) Merge(ctx context.Context, workspace entity.WorkspaceEntity) (*dbtype.Node, error) {
+func (r *workspaceWriteRepository) Merge(ctx context.Context, workspace neo4j_entity.WorkspaceEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -49,8 +51,8 @@ func (r *workspaceWriteRepository) Merge(ctx context.Context, workspace entity.W
 			map[string]any{
 				"name":          workspace.Name,
 				"provider":      workspace.Provider,
-				"source":        utils.StringFirstNonEmpty(workspace.Source.String(), entity.DataSourceOpenline.String()),
-				"sourceOfTruth": utils.StringFirstNonEmpty(workspace.SourceOfTruth.String(), entity.DataSourceOpenline.String()),
+				"source":        utils.StringFirstNonEmpty(workspace.Source.String(), neo4j_entity.DataSourceOpenline.String()),
+				"sourceOfTruth": utils.StringFirstNonEmpty(workspace.SourceOfTruth.String(), neo4j_entity.DataSourceOpenline.String()),
 				"appSource":     workspace.AppSource,
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)

@@ -1,4 +1,4 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
@@ -10,11 +10,11 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type TenantRepository interface {
-	Create(ctx context.Context, tenantEntity entity.Tenant) (*entity.Tenant, error)
+	Create(ctx context.Context, tenantEntity postgres_entity.Tenant) (*postgres_entity.Tenant, error)
 	GetTenant(ctx context.Context, hashID string) (string, error)
 	GetHashID(ctx context.Context, tenant string) (string, error)
 	PermanentlyDelete(ctx context.Context, tenant string) error
@@ -33,7 +33,7 @@ func (e *tenantRepository) GetTenant(ctx context.Context, hashID string) (string
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var tenant entity.Tenant
+	var tenant postgres_entity.Tenant
 	err := e.gormDb.
 		Where("tenant_hash = ?", hashID).
 		First(&tenant).Error
@@ -50,7 +50,7 @@ func (e *tenantRepository) GetHashID(ctx context.Context, tenantName string) (st
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var tenant entity.Tenant
+	var tenant postgres_entity.Tenant
 	err := e.gormDb.
 		Where("name = ?", tenantName).
 		First(&tenant).Error
@@ -62,7 +62,7 @@ func (e *tenantRepository) GetHashID(ctx context.Context, tenantName string) (st
 	return tenant.HashID, nil
 }
 
-func (e *tenantRepository) Create(ctx context.Context, tenantEntity entity.Tenant) (*entity.Tenant, error) {
+func (e *tenantRepository) Create(ctx context.Context, tenantEntity postgres_entity.Tenant) (*postgres_entity.Tenant, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -86,7 +86,7 @@ func (e *tenantRepository) PermanentlyDelete(ctx context.Context, tenant string)
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantRepository.PermanentlyDelete")
 	defer span.Finish()
 
-	err := e.gormDb.Where("name = ?", tenant).Delete(&entity.Tenant{}).Error
+	err := e.gormDb.Where("name = ?", tenant).Delete(&postgres_entity.Tenant{}).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "failed to delete tenant")

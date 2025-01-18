@@ -7,15 +7,16 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 type ReferrerQueryParams struct {
@@ -96,15 +97,14 @@ func RevealWebsiteEvents(services *cosapi_services.Services) gin.HandlerFunc {
 
 		return
 	}
-
 }
 
-func assignEventToSession(ctx context.Context, s *cosapi_services.Services, trackerData *entity.WebTrackerEvents) error {
+func assignEventToSession(ctx context.Context, s *cosapi_services.Services, trackerData *postgres_entity.WebTrackerEvents) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "Tracking.assignEventsToSession")
 	defer span.Finish()
 
 	// find active session for visitor
-	query := entity.WebSession{
+	query := postgres_entity.WebSession{
 		Tenant:    trackerData.Tenant,
 		VisitorID: trackerData.VisitorID,
 		IsActive:  true,
@@ -118,7 +118,7 @@ func assignEventToSession(ctx context.Context, s *cosapi_services.Services, trac
 	// if no active session found, create one if event is page_view
 	if session == nil && trackerData.EventType == enum.WebTrackerPageView.String() {
 
-		query := entity.WebSession{
+		query := postgres_entity.WebSession{
 			Tenant:        trackerData.Tenant,
 			VisitorID:     trackerData.VisitorID,
 			IP:            trackerData.IP,
@@ -158,7 +158,7 @@ func assignEventToSession(ctx context.Context, s *cosapi_services.Services, trac
 	trackerData.SessionID = session.ID
 
 	// update existing session last activity
-	updateQuery := entity.WebSession{
+	updateQuery := postgres_entity.WebSession{
 		ID:           session.ID,
 		LastActivity: utils.Now(),
 	}
@@ -182,15 +182,14 @@ func setReferrerQueryParams(ctx context.Context, queryParams []ReferrerQueryPara
 	}
 	results := string(bytes)
 	return &results, nil
-
 }
 
-func buildTrackerDbData(c *gin.Context, tenant string) *entity.WebTrackerEvents {
+func buildTrackerDbData(c *gin.Context, tenant string) *postgres_entity.WebTrackerEvents {
 	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Tracking.buildTrackerEventData")
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
 
-	tracking := entity.WebTrackerEvents{}
+	tracking := postgres_entity.WebTrackerEvents{}
 
 	// 1 Get the raw request body
 	rawJSON, err := c.GetRawData()

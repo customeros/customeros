@@ -1,13 +1,14 @@
-package repository
+package postgres_repository
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type AiPromptLogRepository interface {
-	Store(aiPrompt entity.AiPromptLog) (string, error)
+	Store(aiPrompt postgres_entity.AiPromptLog) (string, error)
 	UpdateResponse(id string, rawResponse string) error
 	UpdateError(id string, postProcessErrorMessage string) error
 }
@@ -20,9 +21,8 @@ func NewAiPromptLogRepository(gormDb *gorm.DB) AiPromptLogRepository {
 	return &aiPromptLogRepositoryImpl{gormDb: gormDb}
 }
 
-func (repo *aiPromptLogRepositoryImpl) Store(aiPrompt entity.AiPromptLog) (string, error) {
+func (repo *aiPromptLogRepositoryImpl) Store(aiPrompt postgres_entity.AiPromptLog) (string, error) {
 	err := repo.gormDb.Save(&aiPrompt).Error
-
 	if err != nil {
 		logrus.Errorf("Failed storing aiPromptResponse: %v", aiPrompt)
 		return "", err
@@ -32,8 +32,7 @@ func (repo *aiPromptLogRepositoryImpl) Store(aiPrompt entity.AiPromptLog) (strin
 }
 
 func (repo *aiPromptLogRepositoryImpl) UpdateResponse(id string, rawResponse string) error {
-	err := repo.gormDb.Model(&entity.AiPromptLog{}).Where("id = ?", id).Update("raw_response", rawResponse).Error
-
+	err := repo.gormDb.Model(&postgres_entity.AiPromptLog{}).Where("id = ?", id).Update("raw_response", rawResponse).Error
 	if err != nil {
 		logrus.Errorf("Failed marking email as sent to event store: %v", id)
 		return err
@@ -43,7 +42,7 @@ func (repo *aiPromptLogRepositoryImpl) UpdateResponse(id string, rawResponse str
 }
 
 func (repo *aiPromptLogRepositoryImpl) UpdateError(id string, postProcessErrorMessage string) error {
-	tx := repo.gormDb.Model(&entity.AiPromptLog{}).Where("id = ?", id)
+	tx := repo.gormDb.Model(&postgres_entity.AiPromptLog{}).Where("id = ?", id)
 
 	if postProcessErrorMessage != "" {
 		tx.Update("post_process_error", true)
@@ -54,7 +53,6 @@ func (repo *aiPromptLogRepositoryImpl) UpdateError(id string, postProcessErrorMe
 	}
 
 	err := tx.Error
-
 	if err != nil {
 		logrus.Errorf("Failed marking email as sent to event store: %v", id)
 		return err

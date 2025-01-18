@@ -16,7 +16,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -231,7 +231,7 @@ func saveClientIP(ctx context.Context, s *cosapi_services.Services, clientIP, in
 		return err
 	}
 
-	details := entity.EnrichDetailsTracking{
+	details := postgres_entity.EnrichDetailsTracking{
 		IP:             clientIP,
 		CompanyDomain:  &verifyEmail.Domain,
 		CompanyWebsite: &verifyEmail.Domain,

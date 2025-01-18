@@ -1,10 +1,10 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -12,8 +12,8 @@ import (
 )
 
 type EmailLookupRepository interface {
-	GetById(ctx context.Context, id string) (*entity.EmailLookup, error)
-	Create(ctx context.Context, emailLookup entity.EmailLookup) (*entity.EmailLookup, error)
+	GetById(ctx context.Context, id string) (*postgres_entity.EmailLookup, error)
+	Create(ctx context.Context, emailLookup postgres_entity.EmailLookup) (*postgres_entity.EmailLookup, error)
 }
 
 type emailLookupRepository struct {
@@ -24,14 +24,14 @@ func NewEmailLookupRepository(gormDb *gorm.DB) EmailLookupRepository {
 	return &emailLookupRepository{gormDb: gormDb}
 }
 
-func (e emailLookupRepository) GetById(ctx context.Context, id string) (*entity.EmailLookup, error) {
+func (e emailLookupRepository) GetById(ctx context.Context, id string) (*postgres_entity.EmailLookup, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailLookupRepository.GetById")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	span.LogFields(tracingLog.String("id", id))
 
-	var result entity.EmailLookup
+	var result postgres_entity.EmailLookup
 	err := e.gormDb.
 		Where("id = ?", id).
 		First(&result).
@@ -50,7 +50,7 @@ func (e emailLookupRepository) GetById(ctx context.Context, id string) (*entity.
 	return &result, nil
 }
 
-func (e emailLookupRepository) Create(ctx context.Context, emailLookup entity.EmailLookup) (*entity.EmailLookup, error) {
+func (e emailLookupRepository) Create(ctx context.Context, emailLookup postgres_entity.EmailLookup) (*postgres_entity.EmailLookup, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailLookupRepository.Create")
 	defer span.Finish()
 	tracing.TagTenant(span, emailLookup.Tenant)

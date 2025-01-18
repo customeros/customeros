@@ -3,12 +3,12 @@ package api_country
 import (
 	"context"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -28,7 +28,7 @@ func NewCountryService(log logger.Logger, repository *repository.Repositories) c
 	}
 }
 
-func (s *countryService) GetCountriesForPhoneNumbers(ctx context.Context, ids []string) (*entity.CountryEntities, error) {
+func (s *countryService) GetCountriesForPhoneNumbers(ctx context.Context, ids []string) (*neo4j_entity.CountryEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CountryService.GetCountriesForOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -38,7 +38,7 @@ func (s *countryService) GetCountriesForPhoneNumbers(ctx context.Context, ids []
 	if err != nil {
 		return nil, err
 	}
-	CountryEntities := make(entity.CountryEntities, 0, len(countryDbNodes))
+	CountryEntities := make(neo4j_entity.CountryEntities, 0, len(countryDbNodes))
 	for _, v := range countryDbNodes {
 		countryEntity := s.mapDbNodeToCountryEntity(*v.Node)
 		countryEntity.DataloaderKey = v.LinkedNodeId
@@ -47,9 +47,9 @@ func (s *countryService) GetCountriesForPhoneNumbers(ctx context.Context, ids []
 	return &CountryEntities, nil
 }
 
-func (s *countryService) mapDbNodeToCountryEntity(node dbtype.Node) *entity.CountryEntity {
+func (s *countryService) mapDbNodeToCountryEntity(node dbtype.Node) *neo4j_entity.CountryEntity {
 	props := utils.GetPropsFromNode(node)
-	return &entity.CountryEntity{
+	return &neo4j_entity.CountryEntity{
 		Name:      utils.GetStringPropOrEmpty(props, "name"),
 		CodeA2:    utils.GetStringPropOrEmpty(props, "codeA2"),
 		CodeA3:    utils.GetStringPropOrEmpty(props, "codeA3"),

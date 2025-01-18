@@ -1,11 +1,11 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
 	"errors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
@@ -13,12 +13,12 @@ import (
 )
 
 type CacheEmailScrubbyRepository interface {
-	Save(ctx context.Context, cacheEmailScrubby entity.CacheEmailScrubby) (*entity.CacheEmailScrubby, error)
-	GetAllByEmail(ctx context.Context, email string) ([]entity.CacheEmailScrubby, error)
-	GetLatestByEmail(ctx context.Context, email string) (*entity.CacheEmailScrubby, error)
+	Save(ctx context.Context, cacheEmailScrubby postgres_entity.CacheEmailScrubby) (*postgres_entity.CacheEmailScrubby, error)
+	GetAllByEmail(ctx context.Context, email string) ([]postgres_entity.CacheEmailScrubby, error)
+	GetLatestByEmail(ctx context.Context, email string) (*postgres_entity.CacheEmailScrubby, error)
 	SetStatus(ctx context.Context, email, status string) error
-	SetJustChecked(ctx context.Context, id string) (*entity.CacheEmailScrubby, error)
-	GetToCheck(ctx context.Context, delayFromPreviousCheckInHours, limit int) ([]entity.CacheEmailScrubby, error)
+	SetJustChecked(ctx context.Context, id string) (*postgres_entity.CacheEmailScrubby, error)
+	GetToCheck(ctx context.Context, delayFromPreviousCheckInHours, limit int) ([]postgres_entity.CacheEmailScrubby, error)
 }
 
 type cacheEmailScrubbyRepository struct {
@@ -29,7 +29,7 @@ func NewCacheEmailScrubbyRepository(gormDb *gorm.DB) CacheEmailScrubbyRepository
 	return &cacheEmailScrubbyRepository{db: gormDb}
 }
 
-func (r *cacheEmailScrubbyRepository) Save(ctx context.Context, cacheEmailScrubby entity.CacheEmailScrubby) (*entity.CacheEmailScrubby, error) {
+func (r *cacheEmailScrubbyRepository) Save(ctx context.Context, cacheEmailScrubby postgres_entity.CacheEmailScrubby) (*postgres_entity.CacheEmailScrubby, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.Save")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -46,13 +46,13 @@ func (r *cacheEmailScrubbyRepository) Save(ctx context.Context, cacheEmailScrubb
 	return &cacheEmailScrubby, nil
 }
 
-func (r *cacheEmailScrubbyRepository) GetAllByEmail(ctx context.Context, email string) ([]entity.CacheEmailScrubby, error) {
+func (r *cacheEmailScrubbyRepository) GetAllByEmail(ctx context.Context, email string) ([]postgres_entity.CacheEmailScrubby, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.GetAllByEmail")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("email", email))
 
-	var cacheEmailScrubbys []entity.CacheEmailScrubby
+	var cacheEmailScrubbys []postgres_entity.CacheEmailScrubby
 	result := r.db.WithContext(ctx).Where("email = ?", email).Order("created_at desc").Find(&cacheEmailScrubbys)
 
 	if result.Error != nil {
@@ -62,13 +62,13 @@ func (r *cacheEmailScrubbyRepository) GetAllByEmail(ctx context.Context, email s
 	return cacheEmailScrubbys, nil
 }
 
-func (r *cacheEmailScrubbyRepository) GetLatestByEmail(ctx context.Context, email string) (*entity.CacheEmailScrubby, error) {
+func (r *cacheEmailScrubbyRepository) GetLatestByEmail(ctx context.Context, email string) (*postgres_entity.CacheEmailScrubby, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.GetLatestByEmail")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("email", email))
 
-	var cacheEmailScrubby entity.CacheEmailScrubby
+	var cacheEmailScrubby postgres_entity.CacheEmailScrubby
 	result := r.db.WithContext(ctx).Where("email = ?", email).Order("created_at desc").First(&cacheEmailScrubby)
 
 	if result.Error != nil {
@@ -89,7 +89,7 @@ func (r *cacheEmailScrubbyRepository) SetStatus(ctx context.Context, email, stat
 	span.LogFields(log.String("email", email), log.String("status", status))
 
 	result := r.db.WithContext(ctx).
-		Model(&entity.CacheEmailScrubby{}).
+		Model(&postgres_entity.CacheEmailScrubby{}).
 		Where("email = ?", email).
 		Updates(map[string]interface{}{
 			"status":     status,
@@ -108,13 +108,13 @@ func (r *cacheEmailScrubbyRepository) SetStatus(ctx context.Context, email, stat
 	return nil
 }
 
-func (r *cacheEmailScrubbyRepository) SetJustChecked(ctx context.Context, id string) (*entity.CacheEmailScrubby, error) {
+func (r *cacheEmailScrubbyRepository) SetJustChecked(ctx context.Context, id string) (*postgres_entity.CacheEmailScrubby, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.SetJustChecked")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("id", id))
 
-	var cacheEmailScrubby entity.CacheEmailScrubby
+	var cacheEmailScrubby postgres_entity.CacheEmailScrubby
 	result := r.db.WithContext(ctx).Where("id = ?", id).First(&cacheEmailScrubby)
 
 	if result.Error != nil {
@@ -130,19 +130,19 @@ func (r *cacheEmailScrubbyRepository) SetJustChecked(ctx context.Context, id str
 	return &cacheEmailScrubby, nil
 }
 
-func (r *cacheEmailScrubbyRepository) GetToCheck(ctx context.Context, delayFromPreviousCheckInHours, limit int) ([]entity.CacheEmailScrubby, error) {
+func (r *cacheEmailScrubbyRepository) GetToCheck(ctx context.Context, delayFromPreviousCheckInHours, limit int) ([]postgres_entity.CacheEmailScrubby, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.GetToCheck")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.Int("delayFromPreviousCheckInHours", delayFromPreviousCheckInHours), log.Int("limit", limit))
 
-	var cacheEmailScrubbys []entity.CacheEmailScrubby
+	var cacheEmailScrubbys []postgres_entity.CacheEmailScrubby
 
 	// Calculate the cutoff time
 	cutoffTime := time.Now().Add(-time.Duration(delayFromPreviousCheckInHours) * time.Hour)
 
 	result := r.db.WithContext(ctx).
-		Where("status = ? AND checked_at < ?", string(entity.ScrubbyStatusPending), cutoffTime).
+		Where("status = ? AND checked_at < ?", string(postgres_entity.ScrubbyStatusPending), cutoffTime).
 		Order("checked_at asc").
 		Limit(limit).
 		Find(&cacheEmailScrubbys)

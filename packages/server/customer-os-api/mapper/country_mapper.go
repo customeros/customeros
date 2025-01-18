@@ -1,12 +1,12 @@
 package mapper
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
-func MapEntityToCountry(entity *entity.CountryEntity) *model.Country {
+func MapEntityToCountry(entity *neo4j_entity.CountryEntity) *model.Country {
 	if entity == nil {
 		return nil
 	}
@@ -18,7 +18,7 @@ func MapEntityToCountry(entity *entity.CountryEntity) *model.Country {
 	}
 }
 
-func MapEntitiesToCountries(entities *entity.CountryEntities) []*model.Country {
+func MapEntitiesToCountries(entities *neo4j_entity.CountryEntities) []*model.Country {
 	var countries []*model.Country
 	for _, entity := range *entities {
 		countries = append(countries, MapEntityToCountry(&entity))

@@ -1,15 +1,15 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
 
 type BrowserAutomationRunResultRepository interface {
-	Get(ctx context.Context, runId int) (*entity.BrowserAutomationsRunResult, error)
+	Get(ctx context.Context, runId int) (*postgres_entity.BrowserAutomationsRunResult, error)
 }
 
 type browserAutomationRunResultRepositoryImpl struct {
@@ -20,12 +20,12 @@ func NewBrowserAutomationRunResultRepository(gormDb *gorm.DB) BrowserAutomationR
 	return &browserAutomationRunResultRepositoryImpl{gormDb: gormDb}
 }
 
-func (repo *browserAutomationRunResultRepositoryImpl) Get(ctx context.Context, runId int) (*entity.BrowserAutomationsRunResult, error) {
+func (repo *browserAutomationRunResultRepositoryImpl) Get(ctx context.Context, runId int) (*postgres_entity.BrowserAutomationsRunResult, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserAutomationRunRepository.Get")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var result *entity.BrowserAutomationsRunResult
+	var result *postgres_entity.BrowserAutomationsRunResult
 	err := repo.gormDb.Where("run_id = ? ", runId).Find(&result).Error
 
 	if err != nil {

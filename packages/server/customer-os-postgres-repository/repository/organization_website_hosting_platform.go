@@ -1,8 +1,8 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
@@ -26,7 +26,7 @@ func (o organizationWebsiteHostingPlatformRepository) GetAllUrlPatterns(ctx cont
 	tracing.TagComponentPostgresRepository(span)
 
 	var result []string
-	err := o.gormDb.Model(&entity.OrganizationWebsiteHostingPlatform{}).Pluck("url_pattern", &result).Error
+	err := o.gormDb.Model(&postgres_entity.OrganizationWebsiteHostingPlatform{}).Pluck("url_pattern", &result).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

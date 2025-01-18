@@ -1,10 +1,10 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -12,8 +12,8 @@ import (
 )
 
 type CacheEmailValidationRepository interface {
-	Get(ctx context.Context, email string) (*entity.CacheEmailValidation, error)
-	Save(ctx context.Context, cacheEmailValidation entity.CacheEmailValidation) (*entity.CacheEmailValidation, error)
+	Get(ctx context.Context, email string) (*postgres_entity.CacheEmailValidation, error)
+	Save(ctx context.Context, cacheEmailValidation postgres_entity.CacheEmailValidation) (*postgres_entity.CacheEmailValidation, error)
 }
 
 type cacheEmailValidationRepository struct {
@@ -24,13 +24,13 @@ func NewCacheEmailValidationRepository(gormDb *gorm.DB) CacheEmailValidationRepo
 	return &cacheEmailValidationRepository{db: gormDb}
 }
 
-func (r cacheEmailValidationRepository) Get(ctx context.Context, email string) (*entity.CacheEmailValidation, error) {
+func (r cacheEmailValidationRepository) Get(ctx context.Context, email string) (*postgres_entity.CacheEmailValidation, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailValidationRepository.Get")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("email", email))
 
-	var cacheEmailValidation entity.CacheEmailValidation
+	var cacheEmailValidation postgres_entity.CacheEmailValidation
 	result := r.db.WithContext(ctx).Where("email = ?", email).First(&cacheEmailValidation)
 
 	if result.Error != nil {
@@ -44,13 +44,13 @@ func (r cacheEmailValidationRepository) Get(ctx context.Context, email string) (
 	return &cacheEmailValidation, nil
 }
 
-func (r cacheEmailValidationRepository) Save(ctx context.Context, cacheEmailValidation entity.CacheEmailValidation) (*entity.CacheEmailValidation, error) {
+func (r cacheEmailValidationRepository) Save(ctx context.Context, cacheEmailValidation postgres_entity.CacheEmailValidation) (*postgres_entity.CacheEmailValidation, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailValidationRepository.Save")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.LogObjectAsJson(span, "cacheEmailValidation", cacheEmailValidation)
 
-	var existingData entity.CacheEmailValidation
+	var existingData postgres_entity.CacheEmailValidation
 	result := r.db.WithContext(ctx).Where("email = ?", cacheEmailValidation.Email).First(&existingData)
 
 	if result.Error != nil {

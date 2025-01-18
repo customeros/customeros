@@ -1,9 +1,9 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -15,9 +15,9 @@ type magicLinkRepository struct {
 }
 
 type MagicLinkRepository interface {
-	GetByEmail(ctx context.Context, email string) (*entity.MagicLink, error)
-	GetByCode(ctx context.Context, code string) (*entity.MagicLink, error)
-	Create(ctx context.Context, magicLink *entity.MagicLink) error
+	GetByEmail(ctx context.Context, email string) (*postgres_entity.MagicLink, error)
+	GetByCode(ctx context.Context, code string) (*postgres_entity.MagicLink, error)
+	Create(ctx context.Context, magicLink *postgres_entity.MagicLink) error
 	Delete(ctx context.Context, id string) error
 }
 
@@ -25,14 +25,14 @@ func NewMagicLinkRepository(db *gorm.DB) MagicLinkRepository {
 	return &magicLinkRepository{gormDb: db}
 }
 
-func (r *magicLinkRepository) GetByEmail(ctx context.Context, email string) (*entity.MagicLink, error) {
+func (r *magicLinkRepository) GetByEmail(ctx context.Context, email string) (*postgres_entity.MagicLink, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "MagicLinkRepository.GetByEmail")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	span.LogFields(tracingLog.String("email", email))
 
-	var result *entity.MagicLink
+	var result *postgres_entity.MagicLink
 	err := r.gormDb.
 		Where("email = ?", email).
 		First(&result).
@@ -52,14 +52,14 @@ func (r *magicLinkRepository) GetByEmail(ctx context.Context, email string) (*en
 	return result, nil
 }
 
-func (r *magicLinkRepository) GetByCode(ctx context.Context, code string) (*entity.MagicLink, error) {
+func (r *magicLinkRepository) GetByCode(ctx context.Context, code string) (*postgres_entity.MagicLink, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "MagicLinkRepository.GetByCode")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	span.LogFields(tracingLog.String("code", code))
 
-	var result *entity.MagicLink
+	var result *postgres_entity.MagicLink
 	err := r.gormDb.
 		Where("code = ?", code).
 		First(&result).
@@ -79,7 +79,7 @@ func (r *magicLinkRepository) GetByCode(ctx context.Context, code string) (*enti
 	return result, nil
 }
 
-func (r *magicLinkRepository) Create(ctx context.Context, input *entity.MagicLink) error {
+func (r *magicLinkRepository) Create(ctx context.Context, input *postgres_entity.MagicLink) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "MagicLinkRepository.Create")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
@@ -87,7 +87,7 @@ func (r *magicLinkRepository) Create(ctx context.Context, input *entity.MagicLin
 	span.LogFields(tracingLog.Object("magicLink", input))
 
 	// Check if the mailbox already exists
-	var magicLink entity.MagicLink
+	var magicLink postgres_entity.MagicLink
 	err := r.gormDb.
 		Where("code = ?", input.Code).
 		First(&magicLink).Error
@@ -99,7 +99,7 @@ func (r *magicLinkRepository) Create(ctx context.Context, input *entity.MagicLin
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// If not found, create a new mailbox
-		magicLink = entity.MagicLink{
+		magicLink = postgres_entity.MagicLink{
 			Email: input.Email,
 			Code:  input.Code,
 			Url:   input.Url,
@@ -127,7 +127,7 @@ func (r *magicLinkRepository) Delete(ctx context.Context, id string) error {
 	span.LogFields(tracingLog.Object("id", id))
 
 	// Check if the mailbox already exists
-	var magicLink entity.MagicLink
+	var magicLink postgres_entity.MagicLink
 	err := r.gormDb.
 		Where("id = ?", id).
 		First(&magicLink).Error

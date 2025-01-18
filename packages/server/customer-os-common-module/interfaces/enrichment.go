@@ -5,23 +5,23 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type EnrichmentService interface {
-	//primary interfaces
+	// primary interfaces
 	EnrichOrganization(ctx context.Context, domain, linkedinURL *string) (*OrganizationData, error)
-	EnrichPerson(ctx context.Context, person PersonSearch) (*uint64, *entity.ScrapInResponseBody, error)
+	EnrichPerson(ctx context.Context, person PersonSearch) (*uint64, *postgres_entity.ScrapInResponseBody, error)
 	IPIdentity(ctx context.Context, ipAddress string) (*SnitcherResponse, error)
-	FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) (dbID string, betterContactRequstID string, response *entity.BetterContactResponseBody, err error)
+	FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) (dbID string, betterContactRequstID string, response *postgres_entity.BetterContactResponseBody, err error)
 
 	// only use if you must
-	GetBrandfetchByDomain(ctx context.Context, domain string) (*entity.BrandfetchResponseBody, error)
+	GetBrandfetchByDomain(ctx context.Context, domain string) (*postgres_entity.BrandfetchResponseBody, error)
 
-	ScrapInPersonProfile(ctx context.Context, linkedInUrl string) (uint64, *entity.ScrapInResponseBody, error)
-	ScrapInSearchPerson(ctx context.Context, email, fistName, lastName, domain, companyName string) (uint64, *entity.ScrapInResponseBody, error)
-	ScrapInCompanyProfile(ctx context.Context, linkedInUrl string) (uint64, *entity.ScrapInResponseBody, error)
-	ScrapInSearchCompany(ctx context.Context, domain string) (uint64, *entity.ScrapInResponseBody, error)
+	ScrapInPersonProfile(ctx context.Context, linkedInUrl string) (uint64, *postgres_entity.ScrapInResponseBody, error)
+	ScrapInSearchPerson(ctx context.Context, email, fistName, lastName, domain, companyName string) (uint64, *postgres_entity.ScrapInResponseBody, error)
+	ScrapInCompanyProfile(ctx context.Context, linkedInUrl string) (uint64, *postgres_entity.ScrapInResponseBody, error)
+	ScrapInSearchCompany(ctx context.Context, domain string) (uint64, *postgres_entity.ScrapInResponseBody, error)
 }
 
 type PersonSearch struct {

@@ -5,7 +5,7 @@ import (
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -21,11 +21,11 @@ import (
 
 type externalSystemService struct {
 	log    logger.Logger
-	neo4j  *neoRepo.Repositories
+	neo4j  *neo4j_repository.Repositories
 	events *events.EventsService
 }
 
-func NewExternalSystemService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService) interfaces.ExternalSystemService {
+func NewExternalSystemService(log logger.Logger, neo4j *neo4j_repository.Repositories, events *events.EventsService) interfaces.ExternalSystemService {
 	return &externalSystemService{
 		log:    log,
 		neo4j:  neo4j,

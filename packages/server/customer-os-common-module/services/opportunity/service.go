@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -40,14 +39,14 @@ type ActionLikelihoodMetadata struct {
 type opportunityService struct {
 	log            logger.Logger
 	grpc           *grpc_client.Clients
-	neo4j          *neoRepo.Repositories
+	neo4j          *neo4j_repository.Repositories
 	events         *events.EventsService
 	contract       interfaces.ContractService
 	org            interfaces.OrganizationService
 	tenantSettings interfaces.TenantSettingsService
 }
 
-func NewOpportunityService(log logger.Logger, grpc *grpc_client.Clients, neo4j *neoRepo.Repositories, events *events.EventsService, contract interfaces.ContractService, org interfaces.OrganizationService, tenantSettings interfaces.TenantSettingsService) interfaces.OpportunityService {
+func NewOpportunityService(log logger.Logger, grpc *grpc_client.Clients, neo4j *neo4j_repository.Repositories, events *events.EventsService, contract interfaces.ContractService, org interfaces.OrganizationService, tenantSettings interfaces.TenantSettingsService) interfaces.OpportunityService {
 	return &opportunityService{
 		log:            log,
 		grpc:           grpc,
@@ -346,7 +345,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 		}
 
 		if utils.IfNotNilString(input.OrganizationId) != "" {
-			err = s.neo4j.CommonWriteRepository.Link(ctx, txWithPostCommit.Tx, tenant, repository.LinkDetails{
+			err = s.neo4j.CommonWriteRepository.Link(ctx, txWithPostCommit.Tx, tenant, neo4j_repository.LinkDetails{
 				FromEntityId:   *input.OrganizationId,
 				FromEntityType: commonModel.ORGANIZATION,
 				Relationship:   commonModel.HAS_OPPORTUNITY,

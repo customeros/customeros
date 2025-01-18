@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -14,7 +13,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neoEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"go.uber.org/multierr"
@@ -108,7 +108,7 @@ func handleWebsiteVisitorEvent(c context.Context, dependencies *model.Dependency
 	for _, agent := range agents {
 		var loopErr error
 		// create agent execution record
-		agentExecutionRecord := entity.AgentExecution{
+		agentExecutionRecord := postgres_entity.AgentExecution{
 			AgentID:      &agent.ID,
 			TriggerEvent: eventData.Type(),
 			Status:       enum.AgentExecutionRunning.String(),
@@ -181,7 +181,7 @@ func handleMeetingSummaryEvent(ctx context.Context, s *service.CommonServices, s
 	return errs
 }
 
-func publishCreateTimelineEvent(ctx context.Context, s *service.CommonServices, flow *entity.Flows, eventData *data_fields.MeetingSummaryEvent, sourceEvent commonenum.FlowListenerEvent) error {
+func publishCreateTimelineEvent(ctx context.Context, s *service.CommonServices, flow *postgres_entity.Flows, eventData *data_fields.MeetingSummaryEvent, sourceEvent commonenum.FlowListenerEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.publishCreateTimelineEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -237,7 +237,7 @@ func publishCreateTimelineEvent(ctx context.Context, s *service.CommonServices, 
 	return allErr
 }
 
-func createFlowExecutionRecordForMeetingSummary(ctx context.Context, s *service.CommonServices, flow *entity.Flows, eventData *data_fields.MeetingSummaryEvent) (*entity.FlowExecution, error) {
+func createFlowExecutionRecordForMeetingSummary(ctx context.Context, s *service.CommonServices, flow *postgres_entity.Flows, eventData *data_fields.MeetingSummaryEvent) (*postgres_entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.createFlowExecutionRecordForMeetingSummary")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)

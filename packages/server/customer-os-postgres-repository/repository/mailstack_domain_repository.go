@@ -1,4 +1,4 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
@@ -10,20 +10,20 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type MailStackDomainRepository interface {
-	RegisterDomain(ctx context.Context, tenant, domain string) (*entity.MailStackDomain, error)
+	RegisterDomain(ctx context.Context, tenant, domain string) (*postgres_entity.MailStackDomain, error)
 	CheckDomainOwnership(ctx context.Context, tenant, domain string) (bool, error)
-	GetDomain(ctx context.Context, tenant, domain string) (*entity.MailStackDomain, error)
-	GetActiveDomains(ctx context.Context, tenant string) ([]entity.MailStackDomain, error)
+	GetDomain(ctx context.Context, tenant, domain string) (*postgres_entity.MailStackDomain, error)
+	GetActiveDomains(ctx context.Context, tenant string) ([]postgres_entity.MailStackDomain, error)
 	MarkConfigured(ctx context.Context, tenant, domain string) error
 	SetDkimKeys(ctx context.Context, tenant, domain, dkimPublic, dkimPrivate string) error
-	CreateDMARCReport(ctx context.Context, tenant string, report *entity.DMARCMonitoring) error
-	CreateMailstackReputationScore(ctx context.Context, tenant string, score *entity.MailstackReputationEntity) error
-	GetDomainCrossTenant(ctx context.Context, domain string) (*entity.MailStackDomain, error)
-	GetAllActiveDomainsCrossTenant(ctx context.Context) ([]entity.MailStackDomain, error)
+	CreateDMARCReport(ctx context.Context, tenant string, report *postgres_entity.DMARCMonitoring) error
+	CreateMailstackReputationScore(ctx context.Context, tenant string, score *postgres_entity.MailstackReputationEntity) error
+	GetDomainCrossTenant(ctx context.Context, domain string) (*postgres_entity.MailStackDomain, error)
+	GetAllActiveDomainsCrossTenant(ctx context.Context) ([]postgres_entity.MailStackDomain, error)
 }
 
 type mailStackDomainRepository struct {
@@ -34,7 +34,7 @@ func NewMailStackDomainRepository(db *gorm.DB) MailStackDomainRepository {
 	return &mailStackDomainRepository{db: db}
 }
 
-func (r *mailStackDomainRepository) CreateMailstackReputationScore(ctx context.Context, tenant string, score *entity.MailstackReputationEntity) error {
+func (r *mailStackDomainRepository) CreateMailstackReputationScore(ctx context.Context, tenant string, score *postgres_entity.MailstackReputationEntity) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.CreateMailstackReputationScore")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -48,7 +48,7 @@ func (r *mailStackDomainRepository) CreateMailstackReputationScore(ctx context.C
 	return nil
 }
 
-func (r *mailStackDomainRepository) CreateDMARCReport(ctx context.Context, tenant string, report *entity.DMARCMonitoring) error {
+func (r *mailStackDomainRepository) CreateDMARCReport(ctx context.Context, tenant string, report *postgres_entity.DMARCMonitoring) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.CreateDMARCReport")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -65,14 +65,14 @@ func (r *mailStackDomainRepository) CreateDMARCReport(ctx context.Context, tenan
 	return nil
 }
 
-func (r *mailStackDomainRepository) RegisterDomain(ctx context.Context, tenant, domain string) (*entity.MailStackDomain, error) {
+func (r *mailStackDomainRepository) RegisterDomain(ctx context.Context, tenant, domain string) (*postgres_entity.MailStackDomain, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.RegisterDomain")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 
 	now := utils.Now()
-	mailStackDomain := entity.MailStackDomain{
+	mailStackDomain := postgres_entity.MailStackDomain{
 		Tenant:    tenant,
 		Domain:    domain,
 		CreatedAt: now,
@@ -96,7 +96,7 @@ func (r *mailStackDomainRepository) CheckDomainOwnership(ctx context.Context, te
 	tracing.TagTenant(span, tenant)
 	span.LogKV("domain", domain)
 
-	var mailStackDomain entity.MailStackDomain
+	var mailStackDomain postgres_entity.MailStackDomain
 	err := r.db.WithContext(ctx).
 		Where("tenant = ? AND domain = ? AND active = ?", tenant, domain, true).
 		First(&mailStackDomain).Error
@@ -116,13 +116,13 @@ func (r *mailStackDomainRepository) CheckDomainOwnership(ctx context.Context, te
 	return true, nil
 }
 
-func (r *mailStackDomainRepository) GetActiveDomains(ctx context.Context, tenant string) ([]entity.MailStackDomain, error) {
+func (r *mailStackDomainRepository) GetActiveDomains(ctx context.Context, tenant string) ([]postgres_entity.MailStackDomain, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.GetActiveDomains")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 
-	var mailStackDomains []entity.MailStackDomain
+	var mailStackDomains []postgres_entity.MailStackDomain
 	err := r.db.WithContext(ctx).
 		Where("tenant = ? AND active = ?", tenant, true).
 		Find(&mailStackDomains).Error
@@ -142,7 +142,7 @@ func (r *mailStackDomainRepository) MarkConfigured(ctx context.Context, tenant, 
 	span.LogKV("domain", domain)
 
 	err := r.db.WithContext(ctx).
-		Model(&entity.MailStackDomain{}).
+		Model(&postgres_entity.MailStackDomain{}).
 		Where("tenant = ? AND domain = ?", tenant, domain).
 		UpdateColumn("configured", true).
 		UpdateColumn("updated_at", utils.Now()).
@@ -163,7 +163,7 @@ func (r *mailStackDomainRepository) SetDkimKeys(ctx context.Context, tenant, dom
 	span.LogKV("domain", domain)
 
 	err := r.db.WithContext(ctx).
-		Model(&entity.MailStackDomain{}).
+		Model(&postgres_entity.MailStackDomain{}).
 		Where("tenant = ? AND domain = ?", tenant, domain).
 		UpdateColumn("dkim_public", dkimPublic).
 		UpdateColumn("dkim_private", dkimPrivate).
@@ -177,14 +177,14 @@ func (r *mailStackDomainRepository) SetDkimKeys(ctx context.Context, tenant, dom
 	return nil
 }
 
-func (r *mailStackDomainRepository) GetDomain(ctx context.Context, tenant, domain string) (*entity.MailStackDomain, error) {
+func (r *mailStackDomainRepository) GetDomain(ctx context.Context, tenant, domain string) (*postgres_entity.MailStackDomain, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.GetDomain")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.LogKV("domain", domain)
 
-	var mailStackDomain entity.MailStackDomain
+	var mailStackDomain postgres_entity.MailStackDomain
 	err := r.db.WithContext(ctx).
 		Where("tenant = ? AND domain = ?", tenant, domain).
 		First(&mailStackDomain).Error
@@ -199,13 +199,13 @@ func (r *mailStackDomainRepository) GetDomain(ctx context.Context, tenant, domai
 	return &mailStackDomain, nil
 }
 
-func (r *mailStackDomainRepository) GetDomainCrossTenant(ctx context.Context, domain string) (*entity.MailStackDomain, error) {
+func (r *mailStackDomainRepository) GetDomainCrossTenant(ctx context.Context, domain string) (*postgres_entity.MailStackDomain, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.GetDomainCrossTenant")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogKV("domain", domain)
 
-	var mailStackDomain entity.MailStackDomain
+	var mailStackDomain postgres_entity.MailStackDomain
 	err := r.db.WithContext(ctx).
 		Where("domain = ?", domain).
 		First(&mailStackDomain).Error
@@ -220,12 +220,12 @@ func (r *mailStackDomainRepository) GetDomainCrossTenant(ctx context.Context, do
 	return &mailStackDomain, nil
 }
 
-func (r *mailStackDomainRepository) GetAllActiveDomainsCrossTenant(ctx context.Context) ([]entity.MailStackDomain, error) {
+func (r *mailStackDomainRepository) GetAllActiveDomainsCrossTenant(ctx context.Context) ([]postgres_entity.MailStackDomain, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.GetAllActiveDomainsCrossTenant")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var mailStackDomains []entity.MailStackDomain
+	var mailStackDomains []postgres_entity.MailStackDomain
 	err := r.db.WithContext(ctx).
 		Where("active = ?", true).
 		Where("configured = ?", true).

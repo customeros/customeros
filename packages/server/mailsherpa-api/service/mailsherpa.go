@@ -6,27 +6,28 @@ import (
 	"strings"
 	"time"
 
-	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/verify"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/customeros/customeros/packages/server/mailsherpa-api/config"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+
+	"github.com/customeros/customeros/packages/server/mailsherpa-api/config"
 )
 
 type MailSherpaService struct {
 	log      logger.Logger
 	cfg      *config.Config
-	postgres *repository.Repositories
+	postgres *postgres_repository.Repositories
 }
 
-func NewMailSherpaService(log logger.Logger, config *config.Config, postgres *repository.Repositories) *MailSherpaService {
+func NewMailSherpaService(log logger.Logger, config *config.Config, postgres *postgres_repository.Repositories) *MailSherpaService {
 	return &MailSherpaService{
 		log:      log,
 		cfg:      config,
@@ -110,7 +111,7 @@ func (s *MailSherpaService) ValidateEmailWithMailSherpa(ctx context.Context, ema
 			result.EmailData.Deliverable = string(verify.EmailDeliverableStatusUnknown)
 			return result, nil
 		}
-		alternateEmailValidation := entity.CacheEmailValidation{}
+		alternateEmailValidation := postgres_entity.CacheEmailValidation{}
 		if emailValidation.AlternateEmail != "" {
 			alternateEmailValidation, _, err = s.getEmailValidationWithTimeout(ctx, emailValidation.AlternateEmail, syntaxValidation, true, "")
 			if err != nil {
@@ -136,14 +137,14 @@ func (s *MailSherpaService) ValidateEmailWithMailSherpa(ctx context.Context, ema
 	return result, nil
 }
 
-func (s *MailSherpaService) getDomainValidationWithTimeout(ctx context.Context, domain, email string) (entity.CacheEmailValidationDomain, bool, error) {
+func (s *MailSherpaService) getDomainValidationWithTimeout(ctx context.Context, domain, email string) (postgres_entity.CacheEmailValidationDomain, bool, error) {
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, MaxDurationCallMailSherpa)
 	defer cancel()
 
 	// Create a new independent background context for validation
 	validationCtx := context.Background()
 
-	domainValidation := entity.CacheEmailValidationDomain{}
+	domainValidation := postgres_entity.CacheEmailValidationDomain{}
 	errChan := make(chan error, 1)
 	timeout := false
 
@@ -162,12 +163,12 @@ func (s *MailSherpaService) getDomainValidationWithTimeout(ctx context.Context, 
 	case <-ctxWithTimeout.Done():
 		// Timeout occurred, set default values
 		timeout = true
-		domainValidation = entity.CacheEmailValidationDomain{}
+		domainValidation = postgres_entity.CacheEmailValidationDomain{}
 	}
 	return domainValidation, timeout, nil
 }
 
-func (s *MailSherpaService) getDomainValidation(ctx context.Context, domain, email string) (entity.CacheEmailValidationDomain, error) {
+func (s *MailSherpaService) getDomainValidation(ctx context.Context, domain, email string) (postgres_entity.CacheEmailValidationDomain, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.getDomainValidation")
 	defer span.Finish()
 	span.LogKV("domain", domain, "email", email)
@@ -187,7 +188,7 @@ func (s *MailSherpaService) getDomainValidation(ctx context.Context, domain, ema
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal domain validation data"))
 		}
-		cacheDomain, err = s.postgres.CacheEmailValidationDomainRepository.Save(ctx, entity.CacheEmailValidationDomain{
+		cacheDomain, err = s.postgres.CacheEmailValidationDomainRepository.Save(ctx, postgres_entity.CacheEmailValidationDomain{
 			Domain:              domain,
 			Provider:            domainValidation.Provider,
 			Firewall:            domainValidation.SecureGatewayProvider,
@@ -212,21 +213,21 @@ func (s *MailSherpaService) getDomainValidation(ctx context.Context, domain, ema
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save domain data"))
-			return entity.CacheEmailValidationDomain{}, err
+			return postgres_entity.CacheEmailValidationDomain{}, err
 		}
 	}
 
 	return *cacheDomain, nil
 }
 
-func (s *MailSherpaService) getEmailValidationWithTimeout(ctx context.Context, email string, syntaxValidation mailsherpa.SyntaxValidation, isPrimaryDomain bool, primaryDomain string) (entity.CacheEmailValidation, bool, error) {
+func (s *MailSherpaService) getEmailValidationWithTimeout(ctx context.Context, email string, syntaxValidation mailsherpa.SyntaxValidation, isPrimaryDomain bool, primaryDomain string) (postgres_entity.CacheEmailValidation, bool, error) {
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, MaxDurationCallMailSherpa)
 	defer cancel()
 
 	// Create a new independent background context for validation
 	validationCtx := context.Background()
 
-	emailValidation := entity.CacheEmailValidation{}
+	emailValidation := postgres_entity.CacheEmailValidation{}
 	errChan := make(chan error, 1)
 	timeout := false
 
@@ -245,14 +246,14 @@ func (s *MailSherpaService) getEmailValidationWithTimeout(ctx context.Context, e
 	case <-ctxWithTimeout.Done():
 		// Timeout occurred, set default values
 		timeout = true
-		emailValidation = entity.CacheEmailValidation{
+		emailValidation = postgres_entity.CacheEmailValidation{
 			Deliverable: string(verify.EmailDeliverableStatusUndeliverable),
 		}
 	}
 	return emailValidation, timeout, nil
 }
 
-func (s *MailSherpaService) getEmailValidation(ctx context.Context, email string, syntaxValidation mailsherpa.SyntaxValidation, isPrimaryDomain bool, primaryDomain string) (entity.CacheEmailValidation, error) {
+func (s *MailSherpaService) getEmailValidation(ctx context.Context, email string, syntaxValidation mailsherpa.SyntaxValidation, isPrimaryDomain bool, primaryDomain string) (postgres_entity.CacheEmailValidation, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.getEmailValidation")
 	defer span.Finish()
 	span.LogFields(
@@ -282,14 +283,14 @@ func (s *MailSherpaService) getEmailValidation(ctx context.Context, email string
 		emailValidation := mailsherpa.ValidateEmail(emailValidationRequest)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get email data with mailsherpa"))
-			return entity.CacheEmailValidation{}, err
+			return postgres_entity.CacheEmailValidation{}, err
 		}
 		jsonData, err := json.Marshal(emailValidation)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal email validation data"))
 		}
 
-		cacheEmailValidationEntity := entity.CacheEmailValidation{
+		cacheEmailValidationEntity := postgres_entity.CacheEmailValidation{
 			Email:               email,
 			Deliverable:         emailValidation.IsDeliverable,
 			IsMailboxFull:       emailValidation.IsMailboxFull,
@@ -321,7 +322,7 @@ func (s *MailSherpaService) getEmailValidation(ctx context.Context, email string
 		}
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save email data"))
-			return entity.CacheEmailValidation{}, err
+			return postgres_entity.CacheEmailValidation{}, err
 		}
 	}
 

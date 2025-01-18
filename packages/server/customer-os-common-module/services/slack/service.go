@@ -5,7 +5,7 @@ import (
 	"time"
 
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -15,10 +15,10 @@ import (
 )
 
 type slackService struct {
-	postgres *repository.Repositories
+	postgres *postgres_repository.Repositories
 }
 
-func NewSlackService(postgres *repository.Repositories) interfaces.SlackService {
+func NewSlackService(postgres *postgres_repository.Repositories) interfaces.SlackService {
 	return &slackService{
 		postgres: postgres,
 	}

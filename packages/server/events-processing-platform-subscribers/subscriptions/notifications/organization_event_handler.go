@@ -8,7 +8,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/novu"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -22,14 +22,14 @@ import (
 type OrganizationEventHandler struct {
 	log   logger.Logger
 	cfg   *config.Config
-	neo4j *repository.Repositories
+	neo4j *neo4j_repository.Repositories
 	novu  interfaces.NovuService
 }
 
 func NewOrganizationEventHandler(
 	log logger.Logger,
 	cfg *config.Config,
-	neo4j *repository.Repositories,
+	neo4j *neo4j_repository.Repositories,
 	novu interfaces.NovuService,
 ) *OrganizationEventHandler {
 	return &OrganizationEventHandler{

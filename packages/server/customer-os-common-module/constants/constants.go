@@ -1,10 +1,9 @@
 package constants
 
 const (
-	AppSourceCustomerOsApi = "customer-os-api"
-	AppSourceUserAdminApi  = "user-admin-api"
-	AppSourceFileStoreApi  = "file-store-api"
-	AppSourceSyncEmail     = "sync-email"
+	AppSourceCustomerOsApi    = "customer-os-api"
+	AppSourceSyncEmail        = "sync-email"
+	AppSourceFileStoreService = "file-store"
 
 	ComponentResolver        = "resolver"
 	ComponentRest            = "rest"
@@ -23,5 +22,5 @@ const (
 	Anthropic         = "anthropic"
 	OpenAI            = "openai"
 	AnthropicApiModel = "claude-3-5-sonnet-20240620"
-	//AnthropicApiModel = "claude-3-haiku-20240307"
+	// AnthropicApiModel = "claude-3-haiku-20240307"
 )

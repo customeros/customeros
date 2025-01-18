@@ -1,9 +1,9 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -12,9 +12,9 @@ import (
 )
 
 type CacheEmailTrueinboxRepository interface {
-	Create(ctx context.Context, record entity.CacheEmailTrueinbox) (*entity.CacheEmailTrueinbox, error)
-	GetLatestByEmail(ctx context.Context, email string) (*entity.CacheEmailTrueinbox, error)
-	GetAllByEmail(ctx context.Context, email string) ([]entity.CacheEmailTrueinbox, error)
+	Create(ctx context.Context, record postgres_entity.CacheEmailTrueinbox) (*postgres_entity.CacheEmailTrueinbox, error)
+	GetLatestByEmail(ctx context.Context, email string) (*postgres_entity.CacheEmailTrueinbox, error)
+	GetAllByEmail(ctx context.Context, email string) ([]postgres_entity.CacheEmailTrueinbox, error)
 }
 
 type cacheEmailTrueinboxRepository struct {
@@ -25,13 +25,13 @@ func NewCacheEmailTrueinboxRepository(gormDb *gorm.DB) CacheEmailTrueinboxReposi
 	return &cacheEmailTrueinboxRepository{db: gormDb}
 }
 
-func (r cacheEmailTrueinboxRepository) GetAllByEmail(ctx context.Context, email string) ([]entity.CacheEmailTrueinbox, error) {
+func (r cacheEmailTrueinboxRepository) GetAllByEmail(ctx context.Context, email string) ([]postgres_entity.CacheEmailTrueinbox, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailTrueinboxRepository.GetAllByEmail")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(tracingLog.String("email", email))
 
-	var records []entity.CacheEmailTrueinbox
+	var records []postgres_entity.CacheEmailTrueinbox
 	err := r.db.Where("email = ?", email).Order("created_at desc").Find(&records).Error
 	if err != nil {
 		return nil, err
@@ -42,13 +42,13 @@ func (r cacheEmailTrueinboxRepository) GetAllByEmail(ctx context.Context, email 
 	return records, nil
 }
 
-func (r cacheEmailTrueinboxRepository) GetLatestByEmail(ctx context.Context, email string) (*entity.CacheEmailTrueinbox, error) {
+func (r cacheEmailTrueinboxRepository) GetLatestByEmail(ctx context.Context, email string) (*postgres_entity.CacheEmailTrueinbox, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailTrueinboxRepository.GetLatestByEmail")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(tracingLog.String("email", email))
 
-	var data entity.CacheEmailTrueinbox
+	var data postgres_entity.CacheEmailTrueinbox
 	err := r.db.Where("email = ?", email).Order("created_at desc").First(&data).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -60,7 +60,7 @@ func (r cacheEmailTrueinboxRepository) GetLatestByEmail(ctx context.Context, ema
 	return &data, nil
 }
 
-func (r cacheEmailTrueinboxRepository) Create(ctx context.Context, record entity.CacheEmailTrueinbox) (*entity.CacheEmailTrueinbox, error) {
+func (r cacheEmailTrueinboxRepository) Create(ctx context.Context, record postgres_entity.CacheEmailTrueinbox) (*postgres_entity.CacheEmailTrueinbox, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailTrueinboxRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)

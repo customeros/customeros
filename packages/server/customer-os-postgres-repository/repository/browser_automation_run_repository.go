@@ -1,17 +1,18 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
+
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type BrowserAutomationRunRepository interface {
-	Get(ctx context.Context, automationType, status string) ([]entity.BrowserAutomationsRun, error)
-	Add(ctx context.Context, input *entity.BrowserAutomationsRun) error
+	Get(ctx context.Context, automationType, status string) ([]postgres_entity.BrowserAutomationsRun, error)
+	Add(ctx context.Context, input *postgres_entity.BrowserAutomationsRun) error
 	MarkAsProcessed(ctx context.Context, id int) error
 }
 
@@ -23,14 +24,13 @@ func NewBrowserAutomationRunRepository(gormDb *gorm.DB) BrowserAutomationRunRepo
 	return &browserAutomationRunRepositoryImpl{gormDb: gormDb}
 }
 
-func (r *browserAutomationRunRepositoryImpl) Get(ctx context.Context, automationType, status string) ([]entity.BrowserAutomationsRun, error) {
+func (r *browserAutomationRunRepositoryImpl) Get(ctx context.Context, automationType, status string) ([]postgres_entity.BrowserAutomationsRun, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserAutomationRunRepository.Get")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var result []entity.BrowserAutomationsRun
+	var result []postgres_entity.BrowserAutomationsRun
 	err := r.gormDb.Where("type = ? and status = ? ", automationType, status).Find(&result).Error
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -41,7 +41,7 @@ func (r *browserAutomationRunRepositoryImpl) Get(ctx context.Context, automation
 	return result, nil
 }
 
-func (r *browserAutomationRunRepositoryImpl) Add(ctx context.Context, input *entity.BrowserAutomationsRun) error {
+func (r *browserAutomationRunRepositoryImpl) Add(ctx context.Context, input *postgres_entity.BrowserAutomationsRun) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserAutomationRunRepository.Add")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -60,7 +60,7 @@ func (r *browserAutomationRunRepositoryImpl) MarkAsProcessed(ctx context.Context
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	err := r.gormDb.Model(&entity.BrowserAutomationsRun{}).Where("id = ?", id).Update("status", "PROCESSED").Error
+	err := r.gormDb.Model(&postgres_entity.BrowserAutomationsRun{}).Where("id = ?", id).Update("status", "PROCESSED").Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

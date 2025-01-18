@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/customeros/mailsherpa/mailvalidate"
 )
 
 type PostmarkInboundEmailData struct {
@@ -163,8 +163,8 @@ func (p *PostmarkInboundEmailData) GetHeaders() map[string]string {
 	return headers
 }
 
-func (p *PostmarkInboundEmailData) ToRawDbObject() entity.EmailRawData {
-	var result entity.EmailRawData
+func (p *PostmarkInboundEmailData) ToRawDbObject() postgres_entity.EmailRawData {
+	var result postgres_entity.EmailRawData
 
 	messageId := p.GetHeaderValue("Message-Id")
 	result.ProviderMessageId = messageId

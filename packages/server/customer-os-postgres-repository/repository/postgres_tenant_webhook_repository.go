@@ -1,8 +1,8 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository/helper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -17,7 +17,7 @@ type TenantWebhookRepo struct {
 type TenantWebhookRepository interface {
 	GetWebhook(ctx context.Context, tenant, event string) helper.QueryResult
 	GetWebhooks(ctx context.Context, tenant string) helper.QueryResult
-	CreateWebhook(ctx context.Context, integration entity.TenantWebhook) helper.QueryResult
+	CreateWebhook(ctx context.Context, integration postgres_entity.TenantWebhook) helper.QueryResult
 }
 
 func NewTenantWebhookRepo(db *gorm.DB) *TenantWebhookRepo {
@@ -30,7 +30,7 @@ func (r *TenantWebhookRepo) GetWebhook(ctx context.Context, tenant, event string
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 
-	var webhookEntity entity.TenantWebhook
+	var webhookEntity postgres_entity.TenantWebhook
 	err := r.db.
 		Where("tenant_name = ?", tenant).
 		Where("event = ?", event).
@@ -54,7 +54,7 @@ func (r *TenantWebhookRepo) GetWebhooks(ctx context.Context, tenant string) help
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 
-	var webhookEntity entity.TenantWebhook
+	var webhookEntity postgres_entity.TenantWebhook
 	err := r.db.
 		Where("tenant_name = ?", tenant).
 		Find(&webhookEntity).Error
@@ -66,12 +66,12 @@ func (r *TenantWebhookRepo) GetWebhooks(ctx context.Context, tenant string) help
 	return helper.QueryResult{Result: &webhookEntity}
 }
 
-func (r *TenantWebhookRepo) CreateWebhook(ctx context.Context, webhook entity.TenantWebhook) helper.QueryResult {
+func (r *TenantWebhookRepo) CreateWebhook(ctx context.Context, webhook postgres_entity.TenantWebhook) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantWebhookRepo.CreateWebhook")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	webhookEntity := entity.TenantWebhook{
+	webhookEntity := postgres_entity.TenantWebhook{
 		TenantName:      webhook.TenantName,
 		ApiKey:          webhook.ApiKey,
 		Event:           webhook.Event,

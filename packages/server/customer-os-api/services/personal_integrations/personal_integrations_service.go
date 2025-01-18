@@ -1,21 +1,22 @@
 package api_personal_integrations
 
 import (
-	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"golang.org/x/net/context"
+
+	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 )
 
 const CALCOM = "calcom"
 
 type personalIntegrationsService struct {
 	log      logger.Logger
-	postgres *repository.Repositories
+	postgres *postgres_repository.Repositories
 }
 
-func NewPersonalIntegrationsService(log logger.Logger, postgres *repository.Repositories) cosapi_interfaces.PersonalIntegrationsService {
+func NewPersonalIntegrationsService(log logger.Logger, postgres *postgres_repository.Repositories) cosapi_interfaces.PersonalIntegrationsService {
 	return &personalIntegrationsService{
 		log:      log,
 		postgres: postgres,

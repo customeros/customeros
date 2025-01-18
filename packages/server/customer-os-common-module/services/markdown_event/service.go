@@ -4,7 +4,7 @@ import (
 	"context"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -21,11 +21,11 @@ import (
 
 type markdownEventService struct {
 	log    logger.Logger
-	neo4j  *neoRepo.Repositories
+	neo4j  *neo4j_repository.Repositories
 	events *events.EventsService
 }
 
-func NewMarkdownEventService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService) interfaces.MarkdownEventService {
+func NewMarkdownEventService(log logger.Logger, neo4j *neo4j_repository.Repositories, events *events.EventsService) interfaces.MarkdownEventService {
 	return &markdownEventService{
 		log:    log,
 		neo4j:  neo4j,

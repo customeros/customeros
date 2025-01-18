@@ -1,29 +1,29 @@
 package mapper
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"golang.org/x/exp/slices"
 
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 )
 
-func MapDbNodeToJobRoleEntity(dbNode *dbtype.Node) *entity.JobRoleEntity {
+func MapDbNodeToJobRoleEntity(dbNode *dbtype.Node) *neo4j_entity.JobRoleEntity {
 	if dbNode == nil {
-		return &entity.JobRoleEntity{}
+		return &neo4j_entity.JobRoleEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	result := entity.JobRoleEntity{
+	result := neo4j_entity.JobRoleEntity{
 		Id:          utils.GetStringPropOrEmpty(props, "id"),
 		JobTitle:    utils.GetStringPropOrEmpty(props, "jobTitle"),
 		Description: utils.GetStringPropOrNil(props, "description"),
 		Company:     utils.GetStringPropOrNil(props, "company"),
 		Primary:     utils.GetBoolPropOrFalse(props, "primary"),
-		Source:      entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		Source:      neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		AppSource:   utils.GetStringPropOrEmpty(props, "appSource"),
 		CreatedAt:   utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:   utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -33,54 +33,54 @@ func MapDbNodeToJobRoleEntity(dbNode *dbtype.Node) *entity.JobRoleEntity {
 	return &result
 }
 
-func MapDbNodeToAttachmentEntity(dbNode *dbtype.Node) *entity.AttachmentEntity {
+func MapDbNodeToAttachmentEntity(dbNode *dbtype.Node) *neo4j_entity.AttachmentEntity {
 	if dbNode == nil {
-		return &entity.AttachmentEntity{}
+		return &neo4j_entity.AttachmentEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	createdAt := utils.GetTimePropOrEpochStart(props, "createdAt")
-	attachmentEntity := entity.AttachmentEntity{
+	attachmentEntity := neo4j_entity.AttachmentEntity{
 		Id:                 utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:          &createdAt,
 		FileName:           utils.GetStringPropOrEmpty(props, "fileName"),
 		MimeType:           utils.GetStringPropOrEmpty(props, "mimeType"),
 		CdnUrl:             utils.GetStringPropOrEmpty(props, "cdnUrl"),
-		PublicUrl:          utils.GetStringPropOrEmpty(props, string(entity.AttachmentPropertyPublicUrl)),
-		PublicUrlExpiresAt: utils.GetTimePropOrNil(props, string(entity.AttachmentPropertyPublicUrlExpiresAt)),
+		PublicUrl:          utils.GetStringPropOrEmpty(props, string(neo4j_entity.AttachmentPropertyPublicUrl)),
+		PublicUrlExpiresAt: utils.GetTimePropOrNil(props, string(neo4j_entity.AttachmentPropertyPublicUrlExpiresAt)),
 		BasePath:           utils.GetStringPropOrEmpty(props, "basePath"),
 		Size:               utils.GetInt64PropOrZero(props, "size"),
 		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:             entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:      entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:             neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &attachmentEntity
 }
 
-func MapDbNodeToWorkspaceEntity(dbNode *dbtype.Node) *entity.WorkspaceEntity {
+func MapDbNodeToWorkspaceEntity(dbNode *dbtype.Node) *neo4j_entity.WorkspaceEntity {
 	if dbNode == nil {
-		return &entity.WorkspaceEntity{}
+		return &neo4j_entity.WorkspaceEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	workspace := entity.WorkspaceEntity{
+	workspace := neo4j_entity.WorkspaceEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Name:          utils.GetStringPropOrEmpty(props, "domain"),
 		Provider:      utils.GetStringPropOrEmpty(props, "provider"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &workspace
 }
 
-func MapDbNodeToPlayerEntity(node *neo4j.Node) *entity.PlayerEntity {
+func MapDbNodeToPlayerEntity(node *neo4j.Node) *neo4j_entity.PlayerEntity {
 	if node == nil {
-		return &entity.PlayerEntity{}
+		return &neo4j_entity.PlayerEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
 
-	return &entity.PlayerEntity{
+	return &neo4j_entity.PlayerEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		AuthId:        utils.GetStringPropOrEmpty(props, "authId"),
 		Provider:      utils.GetStringPropOrEmpty(props, "provider"),
@@ -93,12 +93,12 @@ func MapDbNodeToPlayerEntity(node *neo4j.Node) *entity.PlayerEntity {
 	}
 }
 
-func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
+func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *neo4j_entity.InvoiceEntity {
 	if dbNode == nil {
-		return &entity.InvoiceEntity{}
+		return &neo4j_entity.InvoiceEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	invoiceEntity := entity.InvoiceEntity{
+	invoiceEntity := neo4j_entity.InvoiceEntity{
 		Id:                   utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:            utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:            utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -117,12 +117,12 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 		Vat:                  utils.GetFloatPropOrZero(props, "vat"),
 		TotalAmount:          utils.GetFloatPropOrZero(props, "totalAmount"),
 		RepositoryFileId:     utils.GetStringPropOrEmpty(props, "repositoryFileId"),
-		Source:               entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:               neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:        neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:            utils.GetStringPropOrEmpty(props, "appSource"),
 		Status:               enum.DecodeInvoiceStatus(utils.GetStringPropOrEmpty(props, "status")),
 		Note:                 utils.GetStringPropOrEmpty(props, "note"),
-		Customer: entity.InvoiceCustomer{
+		Customer: neo4j_entity.InvoiceCustomer{
 			Name:         utils.GetStringPropOrEmpty(props, "customerName"),
 			Email:        utils.GetStringPropOrEmpty(props, "customerEmail"),
 			AddressLine1: utils.GetStringPropOrEmpty(props, "customerAddressLine1"),
@@ -132,7 +132,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 			Country:      utils.GetStringPropOrEmpty(props, "customerAddressCountry"),
 			Region:       utils.GetStringPropOrEmpty(props, "customerAddressRegion"),
 		},
-		Provider: entity.InvoiceProvider{
+		Provider: neo4j_entity.InvoiceProvider{
 			LogoRepositoryFileId: utils.GetStringPropOrEmpty(props, "providerLogoRepositoryFileId"),
 			Name:                 utils.GetStringPropOrEmpty(props, "providerName"),
 			Email:                utils.GetStringPropOrEmpty(props, "providerEmail"),
@@ -143,35 +143,35 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 			Country:              utils.GetStringPropOrEmpty(props, "providerAddressCountry"),
 			Region:               utils.GetStringPropOrEmpty(props, "providerAddressRegion"),
 		},
-		PaymentDetails: entity.PaymentDetails{
-			PaymentLink:           utils.GetStringPropOrEmpty(props, string(entity.InvoicePropertyPaymentLink)),
-			PaymentLinkValidUntil: utils.GetTimePropOrNil(props, string(entity.InvoicePropertyPaymentLinkValidUntil)),
+		PaymentDetails: neo4j_entity.PaymentDetails{
+			PaymentLink:           utils.GetStringPropOrEmpty(props, string(neo4j_entity.InvoicePropertyPaymentLink)),
+			PaymentLinkValidUntil: utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyPaymentLinkValidUntil)),
 		},
-		InvoiceInternalFields: entity.InvoiceInternalFields{
-			InvoiceFinalizedSentAt:               utils.GetTimePropOrNil(props, string(entity.InvoicePropertyInvoiceFinalizedEventSentAt)),
-			InvoiceFinalizedWebhookProcessedAt:   utils.GetTimePropOrNil(props, string(entity.InvoicePropertyFinalizedWebhookProcessedAt)),
-			InvoicePaidWebhookProcessedAt:        utils.GetTimePropOrNil(props, string(entity.InvoicePropertyPaidWebhookProcessedAt)),
+		InvoiceInternalFields: neo4j_entity.InvoiceInternalFields{
+			InvoiceFinalizedSentAt:               utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyInvoiceFinalizedEventSentAt)),
+			InvoiceFinalizedWebhookProcessedAt:   utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyFinalizedWebhookProcessedAt)),
+			InvoicePaidWebhookProcessedAt:        utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyPaidWebhookProcessedAt)),
 			PaymentLinkRequestedAt:               utils.GetTimePropOrNil(props, "techPaymentLinkRequestedAt"),
 			PayInvoiceNotificationRequestedAt:    utils.GetTimePropOrNil(props, "techPayNotificationRequestedAt"),
 			PayInvoiceNotificationSentAt:         utils.GetTimePropOrNil(props, "techPayInvoiceNotificationSentAt"),
-			RemindInvoiceNotificationRequestedAt: utils.GetTimePropOrNil(props, string(entity.InvoicePropertyRemindInvoiceNotificationRequestedAt)),
-			LastRemindInvoiceNotificationSentAt:  utils.GetTimePropOrNil(props, string(entity.InvoicePropertyLastRemindInvoiceNotificationSentAt)),
+			RemindInvoiceNotificationRequestedAt: utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyRemindInvoiceNotificationRequestedAt)),
+			LastRemindInvoiceNotificationSentAt:  utils.GetTimePropOrNil(props, string(neo4j_entity.InvoicePropertyLastRemindInvoiceNotificationSentAt)),
 			PaidInvoiceNotificationSentAt:        utils.GetTimePropOrNil(props, "techPaidInvoiceNotificationSentAt"),
 			VoidInvoiceNotificationSentAt:        utils.GetTimePropOrNil(props, "techVoidInvoiceNotificationSentAt"),
 		},
-		EventStoreAggregate: entity.EventStoreAggregate{
+		EventStoreAggregate: neo4j_entity.EventStoreAggregate{
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
 		},
 	}
 	return &invoiceEntity
 }
 
-func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity {
+func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *neo4j_entity.InvoiceLineEntity {
 	if dbNode == nil {
-		return &entity.InvoiceLineEntity{}
+		return &neo4j_entity.InvoiceLineEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	invoiceLineEntity := entity.InvoiceLineEntity{
+	invoiceLineEntity := neo4j_entity.InvoiceLineEntity{
 		Id:                      utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:               utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:               utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -181,8 +181,8 @@ func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity
 		Amount:                  utils.GetFloatPropOrZero(props, "amount"),
 		Vat:                     utils.GetFloatPropOrZero(props, "vat"),
 		TotalAmount:             utils.GetFloatPropOrZero(props, "totalAmount"),
-		Source:                  entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:           entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:                  neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:           neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:               utils.GetStringPropOrEmpty(props, "appSource"),
 		ServiceLineItemId:       utils.GetStringPropOrEmpty(props, "serviceLineItemId"),
 		ServiceLineItemParentId: utils.GetStringPropOrEmpty(props, "serviceLineItemParentId"),
@@ -191,20 +191,20 @@ func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity
 	return &invoiceLineEntity
 }
 
-func MapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
+func MapDbNodeToUserEntity(dbNode *dbtype.Node) *neo4j_entity.UserEntity {
 	if dbNode == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	userEntity := entity.UserEntity{
+	userEntity := neo4j_entity.UserEntity{
 		Id:              utils.GetStringPropOrEmpty(props, "id"),
 		FirstName:       utils.GetStringPropOrEmpty(props, "firstName"),
 		LastName:        utils.GetStringPropOrEmpty(props, "lastName"),
 		Name:            utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:          neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
 		Roles:           utils.GetListStringPropOrEmpty(props, "roles"),
 		Internal:        utils.GetBoolPropOrFalse(props, "internal"),
@@ -212,46 +212,46 @@ func MapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
 		Bot:             utils.GetBoolPropOrFalse(props, "bot"),
 		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, "profilePhotoUrl"),
 		Timezone:        utils.GetStringPropOrEmpty(props, "timezone"),
-		LastLogin:       utils.GetTimePropOrNil(props, string(entity.UserPropertyLastLogin)),
-		FirstLogin:      utils.GetTimePropOrNil(props, string(entity.UserPropertyFirstLogin)),
-		OnboardingDetails: entity.UserOnboardingDetails{
-			ShowOnboardingPage:               utils.GetBoolPropOrTrue(props, string(entity.UserPropertyShowOnboardingPage)),
-			OnboardingInboundStepCompleted:   utils.GetBoolPropOrFalse(props, string(entity.UserPropertyOnboardingInboundStepCompleted)),
-			OnboardingOutboundStepCompleted:  utils.GetBoolPropOrFalse(props, string(entity.UserPropertyOnboardingOutboundStepCompleted)),
-			OnboardingCrmStepCompleted:       utils.GetBoolPropOrFalse(props, string(entity.UserPropertyOnboardingCrmStepCompleted)),
-			OnboardingMailstackStepCompleted: utils.GetBoolPropOrFalse(props, string(entity.UserPropertyOnboardingMailstackStepCompleted)),
+		LastLogin:       utils.GetTimePropOrNil(props, string(neo4j_entity.UserPropertyLastLogin)),
+		FirstLogin:      utils.GetTimePropOrNil(props, string(neo4j_entity.UserPropertyFirstLogin)),
+		OnboardingDetails: neo4j_entity.UserOnboardingDetails{
+			ShowOnboardingPage:               utils.GetBoolPropOrTrue(props, string(neo4j_entity.UserPropertyShowOnboardingPage)),
+			OnboardingInboundStepCompleted:   utils.GetBoolPropOrFalse(props, string(neo4j_entity.UserPropertyOnboardingInboundStepCompleted)),
+			OnboardingOutboundStepCompleted:  utils.GetBoolPropOrFalse(props, string(neo4j_entity.UserPropertyOnboardingOutboundStepCompleted)),
+			OnboardingCrmStepCompleted:       utils.GetBoolPropOrFalse(props, string(neo4j_entity.UserPropertyOnboardingCrmStepCompleted)),
+			OnboardingMailstackStepCompleted: utils.GetBoolPropOrFalse(props, string(neo4j_entity.UserPropertyOnboardingMailstackStepCompleted)),
 		},
 	}
 	return &userEntity
 }
 
-func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEntity {
+func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *neo4j_entity.OrganizationEntity {
 	if dbNode == nil {
-		return &entity.OrganizationEntity{}
+		return &neo4j_entity.OrganizationEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	organizationEntity := entity.OrganizationEntity{
+	organizationEntity := neo4j_entity.OrganizationEntity{
 		ID:                 utils.GetStringPropOrEmpty(props, "id"),
 		CustomerOsId:       utils.GetStringPropOrEmpty(props, "customerOsId"),
 		ReferenceId:        utils.GetStringPropOrEmpty(props, "referenceId"),
 		Name:               utils.GetStringPropOrEmpty(props, "name"),
 		Description:        utils.GetStringPropOrEmpty(props, "description"),
 		Website:            utils.GetStringPropOrEmpty(props, "website"),
-		Industry:           utils.GetStringPropOrEmpty(props, string(entity.OrganizationPropertyIndustry)),
+		Industry:           utils.GetStringPropOrEmpty(props, string(neo4j_entity.OrganizationPropertyIndustry)),
 		LastFundingRound:   utils.GetStringPropOrEmpty(props, "lastFundingRound"),
 		LastFundingAmount:  utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
 		Note:               utils.GetStringPropOrEmpty(props, "note"),
-		IsPublic:           utils.GetBoolPropOrFalse(props, string(entity.OrganizationPropertyIsPublic)),
-		Hide:               utils.GetBoolPropOrFalse(props, string(entity.OrganizationPropertyHide)),
-		Employees:          utils.GetInt64PropOrZero(props, string(entity.OrganizationPropertyEmployees)),
+		IsPublic:           utils.GetBoolPropOrFalse(props, string(neo4j_entity.OrganizationPropertyIsPublic)),
+		Hide:               utils.GetBoolPropOrFalse(props, string(neo4j_entity.OrganizationPropertyHide)),
+		Employees:          utils.GetInt64PropOrZero(props, string(neo4j_entity.OrganizationPropertyEmployees)),
 		Market:             utils.GetStringPropOrEmpty(props, "market"),
 		CreatedAt:          utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:             entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		Source:             neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		LastTouchpointAt:   utils.GetTimePropOrNil(props, "lastTouchpointAt"),
 		LastTouchpointId:   utils.GetStringPropOrNil(props, "lastTouchpointId"),
 		LastTouchpointType: utils.GetStringPropOrNil(props, "lastTouchpointType"),
-		YearFounded:        utils.GetInt64PropOrNil(props, string(entity.OrganizationPropertyYearFounded)),
+		YearFounded:        utils.GetInt64PropOrNil(props, string(neo4j_entity.OrganizationPropertyYearFounded)),
 		Headquarters:       utils.GetStringPropOrEmpty(props, "headquarters"),
 		EmployeeGrowthRate: utils.GetStringPropOrEmpty(props, "employeeGrowthRate"),
 		SlackChannelId:     utils.GetStringPropOrEmpty(props, "slackChannelId"),
@@ -261,108 +261,108 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		Stage:              enum.DecodeOrganizationStage(utils.GetStringPropOrEmpty(props, "stage")),
 		StageUpdatedAt:     utils.GetTimePropOrNil(props, "stageUpdatedAt"),
 		LeadSource:         utils.GetStringPropOrEmpty(props, "leadSource"),
-		IcpFit:             utils.GetBoolPropOrFalse(props, string(entity.OrganizationPropertyIcpFit)),
-		RenewalSummary: entity.RenewalSummary{
+		IcpFit:             utils.GetBoolPropOrFalse(props, string(neo4j_entity.OrganizationPropertyIcpFit)),
+		RenewalSummary: neo4j_entity.RenewalSummary{
 			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
 			MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),
-			RenewalLikelihood:      utils.GetStringPropOrEmpty(props, string(entity.OrganizationPropertyRenewalLikelihood)),
+			RenewalLikelihood:      utils.GetStringPropOrEmpty(props, string(neo4j_entity.OrganizationPropertyRenewalLikelihood)),
 			RenewalLikelihoodOrder: utils.GetInt64PropOrNil(props, "derivedRenewalLikelihoodOrder"),
 			NextRenewalAt:          utils.GetTimePropOrNil(props, "derivedNextRenewalAt"),
 		},
-		DerivedData: entity.DerivedData{
+		DerivedData: neo4j_entity.DerivedData{
 			ChurnedAt:    utils.GetTimePropOrNil(props, "derivedChurnedAt"),
 			Ltv:          utils.GetFloatPropOrZero(props, "derivedLtv"),
 			LtvCurrency:  enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "derivedLtvCurrency")),
-			ContactCount: utils.GetInt64PropOrZero(props, string(entity.OrganizationPropertyContactCount)),
+			ContactCount: utils.GetInt64PropOrZero(props, string(neo4j_entity.OrganizationPropertyContactCount)),
 		},
-		OnboardingDetails: entity.OnboardingDetails{
+		OnboardingDetails: neo4j_entity.OnboardingDetails{
 			Status:       utils.GetStringPropOrEmpty(props, "onboardingStatus"),
 			SortingOrder: utils.GetInt64PropOrNil(props, "onboardingStatusOrder"),
 			UpdatedAt:    utils.GetTimePropOrNil(props, "onboardingUpdatedAt"),
 			Comments:     utils.GetStringPropOrEmpty(props, "onboardingComments"),
 		},
-		EnrichDetails: entity.OrganizationEnrichDetails{
-			EnrichRequestedAt: utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyEnrichRequestedAt)),
-			EnrichedAt:        utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyEnrichedAt)),
-			EnrichFailedAt:    utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyEnrichFailedAt)),
-			EnrichAttempts:    utils.GetInt64PropOrZero(props, string(entity.OrganizationPropertyEnrichAttempts)),
+		EnrichDetails: neo4j_entity.OrganizationEnrichDetails{
+			EnrichRequestedAt: utils.GetTimePropOrNil(props, string(neo4j_entity.OrganizationPropertyEnrichRequestedAt)),
+			EnrichedAt:        utils.GetTimePropOrNil(props, string(neo4j_entity.OrganizationPropertyEnrichedAt)),
+			EnrichFailedAt:    utils.GetTimePropOrNil(props, string(neo4j_entity.OrganizationPropertyEnrichFailedAt)),
+			EnrichAttempts:    utils.GetInt64PropOrZero(props, string(neo4j_entity.OrganizationPropertyEnrichAttempts)),
 			EnrichSource:      enum.DecodeDomainEnrichSource(utils.GetStringPropOrEmpty(props, "enrichSource")),
 			EnrichDomain:      utils.GetStringPropOrEmpty(props, "enrichDomain"),
 		},
-		OrganizationInternalFields: entity.OrganizationInternalFields{
-			DomainCheckedAt: utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyDomainCheckedAt)),
-			HiddenAt:        utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyHiddenAt)),
+		OrganizationInternalFields: neo4j_entity.OrganizationInternalFields{
+			DomainCheckedAt: utils.GetTimePropOrNil(props, string(neo4j_entity.OrganizationPropertyDomainCheckedAt)),
+			HiddenAt:        utils.GetTimePropOrNil(props, string(neo4j_entity.OrganizationPropertyHiddenAt)),
 		},
-		EventStoreAggregate: entity.EventStoreAggregate{
+		EventStoreAggregate: neo4j_entity.EventStoreAggregate{
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
 		},
 	}
 	return &organizationEntity
 }
 
-func MapDbNodeToBillingProfileEntity(dbNode *dbtype.Node) *entity.BillingProfileEntity {
+func MapDbNodeToBillingProfileEntity(dbNode *dbtype.Node) *neo4j_entity.BillingProfileEntity {
 	if dbNode == nil {
-		return &entity.BillingProfileEntity{}
+		return &neo4j_entity.BillingProfileEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	billingProfileEntity := entity.BillingProfileEntity{
+	billingProfileEntity := neo4j_entity.BillingProfileEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		LegalName:     utils.GetStringPropOrEmpty(props, "legalName"),
 		TaxId:         utils.GetStringPropOrEmpty(props, "taxId"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &billingProfileEntity
 }
 
-func MapDbNodeToTenantEntity(dbNode *dbtype.Node) *entity.TenantEntity {
+func MapDbNodeToTenantEntity(dbNode *dbtype.Node) *neo4j_entity.TenantEntity {
 	if dbNode == nil {
-		return &entity.TenantEntity{}
+		return &neo4j_entity.TenantEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	tenant := entity.TenantEntity{
+	tenant := neo4j_entity.TenantEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		Name:      utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:    entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		Source:    neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		Active:    utils.GetBoolPropOrTrue(props, "active"),
 	}
 	return &tenant
 }
 
-func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettingsEntity {
+func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *neo4j_entity.TenantSettingsEntity {
 	if dbNode == nil {
-		return &entity.TenantSettingsEntity{}
+		return &neo4j_entity.TenantSettingsEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	tenantSettingsEntity := entity.TenantSettingsEntity{
+	tenantSettingsEntity := neo4j_entity.TenantSettingsEntity{
 		Id:                       utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:                utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:                utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		LogoRepositoryFileId:     utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyLogoRepositoryFileId)),
-		InvoicingEnabled:         utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyInvoicingEnabled)),
-		InvoicingPostpaid:        utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyInvoicingPostpaid)),
-		WorkspaceLogo:            utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyWorkspaceLogo)),
-		WorkspaceName:            utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyWorkspaceName)),
-		BaseCurrency:             enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyBaseCurrency))),
-		EnrichContacts:           utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyEnrichContacts)),
-		StripeCustomerPortalLink: utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyStripeCustomerPortalLink)),
-		SharedSlackChannelUrl:    utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertySlackChannelUrl)),
+		LogoRepositoryFileId:     utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertyLogoRepositoryFileId)),
+		InvoicingEnabled:         utils.GetBoolPropOrFalse(props, string(neo4j_entity.TenantSettingsPropertyInvoicingEnabled)),
+		InvoicingPostpaid:        utils.GetBoolPropOrFalse(props, string(neo4j_entity.TenantSettingsPropertyInvoicingPostpaid)),
+		WorkspaceLogo:            utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertyWorkspaceLogo)),
+		WorkspaceName:            utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertyWorkspaceName)),
+		BaseCurrency:             enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertyBaseCurrency))),
+		EnrichContacts:           utils.GetBoolPropOrFalse(props, string(neo4j_entity.TenantSettingsPropertyEnrichContacts)),
+		StripeCustomerPortalLink: utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertyStripeCustomerPortalLink)),
+		SharedSlackChannelUrl:    utils.GetStringPropOrEmpty(props, string(neo4j_entity.TenantSettingsPropertySlackChannelUrl)),
 	}
 	return &tenantSettingsEntity
 }
 
-func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBillingProfileEntity {
+func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *neo4j_entity.TenantBillingProfileEntity {
 	if dbNode == nil {
-		return &entity.TenantBillingProfileEntity{}
+		return &neo4j_entity.TenantBillingProfileEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	tenantBillingProfile := entity.TenantBillingProfileEntity{
+	tenantBillingProfile := neo4j_entity.TenantBillingProfileEntity{
 		Id:                     utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:              utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:              utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -380,20 +380,20 @@ func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBi
 		SendInvoicesBcc:        utils.GetStringPropOrEmpty(props, "sendInvoicesBcc"),
 		CanPayWithPigeon:       utils.GetBoolPropOrFalse(props, "canPayWithPigeon"),
 		CanPayWithBankTransfer: utils.GetBoolPropOrFalse(props, "canPayWithBankTransfer"),
-		Source:                 entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:          entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:                 neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:          neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:              utils.GetStringPropOrEmpty(props, "appSource"),
 		Check:                  utils.GetBoolPropOrFalse(props, "check"),
 	}
 	return &tenantBillingProfile
 }
 
-func MapDbNodeToCountryEntity(dbNode *dbtype.Node) *entity.CountryEntity {
+func MapDbNodeToCountryEntity(dbNode *dbtype.Node) *neo4j_entity.CountryEntity {
 	if dbNode == nil {
-		return &entity.CountryEntity{}
+		return &neo4j_entity.CountryEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	result := entity.CountryEntity{
+	result := neo4j_entity.CountryEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -405,12 +405,12 @@ func MapDbNodeToCountryEntity(dbNode *dbtype.Node) *entity.CountryEntity {
 	return &result
 }
 
-func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
+func MapDbNodeToContractEntity(dbNode *dbtype.Node) *neo4j_entity.ContractEntity {
 	if dbNode == nil {
-		return &entity.ContractEntity{}
+		return &neo4j_entity.ContractEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	contract := entity.ContractEntity{
+	contract := neo4j_entity.ContractEntity{
 		Id:                              utils.GetStringPropOrEmpty(props, "id"),
 		Name:                            utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:                       utils.GetTimePropOrEpochStart(props, "createdAt"),
@@ -422,8 +422,8 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		ContractStatus:                  enum.DecodeContractStatus(utils.GetStringPropOrEmpty(props, "status")),
 		TriggeredOnboardingStatusChange: utils.GetBoolPropOrFalse(props, "triggeredOnboardingStatusChange"),
 		NextInvoiceDate:                 utils.GetTimePropOrNil(props, "nextInvoiceDate"),
-		Source:                          entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:                   entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:                          neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:                   neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:                       utils.GetStringPropOrEmpty(props, "appSource"),
 		InvoicingStartDate:              utils.GetTimePropOrNil(props, "invoicingStartDate"),
 		Currency:                        enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
@@ -451,12 +451,12 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		LengthInMonths:                  utils.GetInt64PropOrZero(props, "lengthInMonths"),
 		Approved:                        utils.GetBoolPropOrFalse(props, "approved"),
 		Ltv:                             utils.GetFloatPropOrZero(props, "ltv"),
-		ContractInternalFields: entity.ContractInternalFields{
+		ContractInternalFields: neo4j_entity.ContractInternalFields{
 			StatusRenewalRequestedAt:      utils.GetTimePropOrNil(props, "techStatusRenewalRequestedAt"),
 			RolloutRenewalRequestedAt:     utils.GetTimePropOrNil(props, "techRolloutRenewalRequestedAt"),
 			NextPreviewInvoiceRequestedAt: utils.GetTimePropOrNil(props, "techNextPreviewInvoiceRequestedAt"),
 		},
-		EventStoreAggregate: entity.EventStoreAggregate{
+		EventStoreAggregate: neo4j_entity.EventStoreAggregate{
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
 		},
 	}
@@ -464,12 +464,12 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 	return &contract
 }
 
-func MapDbNodeToServiceLineItemEntity(dbNode *dbtype.Node) *entity.ServiceLineItemEntity {
+func MapDbNodeToServiceLineItemEntity(dbNode *dbtype.Node) *neo4j_entity.ServiceLineItemEntity {
 	if dbNode == nil {
-		return &entity.ServiceLineItemEntity{}
+		return &neo4j_entity.ServiceLineItemEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	serviceLineItem := entity.ServiceLineItemEntity{
+	serviceLineItem := neo4j_entity.ServiceLineItemEntity{
 		ID:            utils.GetStringPropOrEmpty(props, "id"),
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
@@ -477,8 +477,8 @@ func MapDbNodeToServiceLineItemEntity(dbNode *dbtype.Node) *entity.ServiceLineIt
 		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
 		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		Billed:        enum.DecodeBilledType(utils.GetStringPropOrEmpty(props, "billed")),
 		Price:         utils.GetFloatPropOrZero(props, "price"),
 		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
@@ -486,35 +486,35 @@ func MapDbNodeToServiceLineItemEntity(dbNode *dbtype.Node) *entity.ServiceLineIt
 		ParentID:      utils.GetStringPropOrEmpty(props, "parentId"),
 		Canceled:      utils.GetBoolPropOrFalse(props, "isCanceled"),
 		VatRate:       utils.GetFloatPropOrZero(props, "vatRate"),
-		Paused:        utils.GetBoolPropOrFalse(props, string(entity.SLIPropertyPaused)),
+		Paused:        utils.GetBoolPropOrFalse(props, string(neo4j_entity.SLIPropertyPaused)),
 	}
 	return &serviceLineItem
 }
 
-func MapDbNodeToTagEntity(dbNode *dbtype.Node) *entity.TagEntity {
+func MapDbNodeToTagEntity(dbNode *dbtype.Node) *neo4j_entity.TagEntity {
 	if dbNode == nil {
-		return &entity.TagEntity{}
+		return &neo4j_entity.TagEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	tag := entity.TagEntity{
-		Id:         utils.GetStringPropOrEmpty(props, string(entity.TagPropertyId)),
-		Name:       utils.GetStringPropOrEmpty(props, string(entity.TagPropertyName)),
-		CreatedAt:  utils.GetTimePropOrEpochStart(props, string(entity.TagPropertyCreatedAt)),
-		UpdatedAt:  utils.GetTimePropOrEpochStart(props, string(entity.TagPropertyUpdatedAt)),
-		Source:     entity.DataSource(utils.GetStringPropOrEmpty(props, string(entity.TagPropertySource))),
-		AppSource:  utils.GetStringPropOrEmpty(props, string(entity.TagPropertyAppSource)),
-		EntityType: model.DecodeEntityType(utils.GetStringPropOrEmpty(props, string(entity.TagPropertyEntityType))),
-		ColorCode:  utils.GetStringPropOrEmpty(props, string(entity.TagPropertyColorCode)),
+	tag := neo4j_entity.TagEntity{
+		Id:         utils.GetStringPropOrEmpty(props, string(neo4j_entity.TagPropertyId)),
+		Name:       utils.GetStringPropOrEmpty(props, string(neo4j_entity.TagPropertyName)),
+		CreatedAt:  utils.GetTimePropOrEpochStart(props, string(neo4j_entity.TagPropertyCreatedAt)),
+		UpdatedAt:  utils.GetTimePropOrEpochStart(props, string(neo4j_entity.TagPropertyUpdatedAt)),
+		Source:     neo4j_entity.DataSource(utils.GetStringPropOrEmpty(props, string(neo4j_entity.TagPropertySource))),
+		AppSource:  utils.GetStringPropOrEmpty(props, string(neo4j_entity.TagPropertyAppSource)),
+		EntityType: model.DecodeEntityType(utils.GetStringPropOrEmpty(props, string(neo4j_entity.TagPropertyEntityType))),
+		ColorCode:  utils.GetStringPropOrEmpty(props, string(neo4j_entity.TagPropertyColorCode)),
 	}
 	return &tag
 }
 
-func MapDbNodeToIssueEntity(dbNode *dbtype.Node) *entity.IssueEntity {
+func MapDbNodeToIssueEntity(dbNode *dbtype.Node) *neo4j_entity.IssueEntity {
 	if dbNode == nil {
-		return &entity.IssueEntity{}
+		return &neo4j_entity.IssueEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	issue := entity.IssueEntity{
+	issue := neo4j_entity.IssueEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:     utils.GetTimePropOrNow(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrNow(props, "updatedAt"),
@@ -522,56 +522,56 @@ func MapDbNodeToIssueEntity(dbNode *dbtype.Node) *entity.IssueEntity {
 		Status:        utils.GetStringPropOrEmpty(props, "status"),
 		Priority:      utils.GetStringPropOrEmpty(props, "priority"),
 		Description:   utils.GetStringPropOrEmpty(props, "description"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &issue
 }
 
-func MapDbNodeToCommentEntity(dbNode *dbtype.Node) *entity.CommentEntity {
+func MapDbNodeToCommentEntity(dbNode *dbtype.Node) *neo4j_entity.CommentEntity {
 	if dbNode == nil {
-		return &entity.CommentEntity{}
+		return &neo4j_entity.CommentEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	comment := entity.CommentEntity{
+	comment := neo4j_entity.CommentEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Content:       utils.GetStringPropOrEmpty(props, "content"),
 		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &comment
 }
 
-func MapDbNodeToSocialEntity(dbNode *dbtype.Node) *entity.SocialEntity {
+func MapDbNodeToSocialEntity(dbNode *dbtype.Node) *neo4j_entity.SocialEntity {
 	if dbNode == nil {
-		return &entity.SocialEntity{}
+		return &neo4j_entity.SocialEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	social := entity.SocialEntity{
-		Id:             utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyId)),
-		Url:            utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyUrl)),
-		Alias:          utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyAlias)),
-		FollowersCount: utils.GetInt64PropOrZero(props, string(entity.SocialPropertyFollowersCount)),
-		ExternalId:     utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyExternalId)),
-		CreatedAt:      utils.GetTimePropOrEpochStart(props, string(entity.SocialPropertyCreatedAt)),
-		UpdatedAt:      utils.GetTimePropOrEpochStart(props, string(entity.SocialPropertyUpdatedAt)),
-		AppSource:      utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyAppSource)),
-		Source:         entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(entity.SocialPropertySource))),
+	social := neo4j_entity.SocialEntity{
+		Id:             utils.GetStringPropOrEmpty(props, string(neo4j_entity.SocialPropertyId)),
+		Url:            utils.GetStringPropOrEmpty(props, string(neo4j_entity.SocialPropertyUrl)),
+		Alias:          utils.GetStringPropOrEmpty(props, string(neo4j_entity.SocialPropertyAlias)),
+		FollowersCount: utils.GetInt64PropOrZero(props, string(neo4j_entity.SocialPropertyFollowersCount)),
+		ExternalId:     utils.GetStringPropOrEmpty(props, string(neo4j_entity.SocialPropertyExternalId)),
+		CreatedAt:      utils.GetTimePropOrEpochStart(props, string(neo4j_entity.SocialPropertyCreatedAt)),
+		UpdatedAt:      utils.GetTimePropOrEpochStart(props, string(neo4j_entity.SocialPropertyUpdatedAt)),
+		AppSource:      utils.GetStringPropOrEmpty(props, string(neo4j_entity.SocialPropertyAppSource)),
+		Source:         neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(neo4j_entity.SocialPropertySource))),
 	}
 	return &social
 }
 
-func MapDbNodeToReminderEntity(dbNode *dbtype.Node) *entity.ReminderEntity {
+func MapDbNodeToReminderEntity(dbNode *dbtype.Node) *neo4j_entity.ReminderEntity {
 	if dbNode == nil {
-		return &entity.ReminderEntity{}
+		return &neo4j_entity.ReminderEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	reminder := entity.ReminderEntity{
+	reminder := neo4j_entity.ReminderEntity{
 		Id:             utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -585,17 +585,17 @@ func MapDbNodeToReminderEntity(dbNode *dbtype.Node) *entity.ReminderEntity {
 	return &reminder
 }
 
-func MapDbNodeToBankAccountEntity(dbNode *dbtype.Node) *entity.BankAccountEntity {
+func MapDbNodeToBankAccountEntity(dbNode *dbtype.Node) *neo4j_entity.BankAccountEntity {
 	if dbNode == nil {
-		return &entity.BankAccountEntity{}
+		return &neo4j_entity.BankAccountEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	bankAccount := entity.BankAccountEntity{
+	bankAccount := neo4j_entity.BankAccountEntity{
 		Id:                  utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:           utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:           utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:              entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:       entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:              neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:       neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:           utils.GetStringPropOrEmpty(props, "appSource"),
 		BankName:            utils.GetStringPropOrEmpty(props, "bankName"),
 		Currency:            enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
@@ -612,100 +612,100 @@ func MapDbNodeToBankAccountEntity(dbNode *dbtype.Node) *entity.BankAccountEntity
 }
 
 // TODO RETURN NIL NOT EMPTY
-func MapDbNodeToEmailEntity(node *dbtype.Node) *entity.EmailEntity {
+func MapDbNodeToEmailEntity(node *dbtype.Node) *neo4j_entity.EmailEntity {
 	if node == nil {
-		return &entity.EmailEntity{}
+		return &neo4j_entity.EmailEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	return &entity.EmailEntity{
+	return &neo4j_entity.EmailEntity{
 		Id:                utils.GetStringPropOrEmpty(props, "id"),
-		Email:             utils.GetStringPropOrEmpty(props, string(entity.EmailPropertyEmail)),
-		RawEmail:          utils.GetStringPropOrEmpty(props, string(entity.EmailPropertyRawEmail)),
-		Work:              utils.GetBoolPropOrNil(props, string(entity.EmailPropertyWork)),
+		Email:             utils.GetStringPropOrEmpty(props, string(neo4j_entity.EmailPropertyEmail)),
+		RawEmail:          utils.GetStringPropOrEmpty(props, string(neo4j_entity.EmailPropertyRawEmail)),
+		Work:              utils.GetBoolPropOrNil(props, string(neo4j_entity.EmailPropertyWork)),
 		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Primary:           utils.GetBoolPropOrFalse(props, "primary"),
-		Source:            entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		IsValidSyntax:     utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsValidSyntax)),
-		IsCatchAll:        utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsCatchAll)),
-		Deliverable:       utils.GetStringPropOrNil(props, string(entity.EmailPropertyDeliverable)),
-		IsRoleAccount:     utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsRoleAccount)),
-		IsSystemGenerated: utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsSystemGenerated)),
-		EmailInternalFields: entity.EmailInternalFields{
-			ValidatedAt:           utils.GetTimePropOrNil(props, string(entity.EmailPropertyValidatedAt)),
-			ValidationRequestedAt: utils.GetTimePropOrNil(props, string(entity.EmailPropertyValidationRequestedAt)),
+		Source:            neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		IsValidSyntax:     utils.GetBoolPropOrNil(props, string(neo4j_entity.EmailPropertyIsValidSyntax)),
+		IsCatchAll:        utils.GetBoolPropOrNil(props, string(neo4j_entity.EmailPropertyIsCatchAll)),
+		Deliverable:       utils.GetStringPropOrNil(props, string(neo4j_entity.EmailPropertyDeliverable)),
+		IsRoleAccount:     utils.GetBoolPropOrNil(props, string(neo4j_entity.EmailPropertyIsRoleAccount)),
+		IsSystemGenerated: utils.GetBoolPropOrNil(props, string(neo4j_entity.EmailPropertyIsSystemGenerated)),
+		EmailInternalFields: neo4j_entity.EmailInternalFields{
+			ValidatedAt:           utils.GetTimePropOrNil(props, string(neo4j_entity.EmailPropertyValidatedAt)),
+			ValidationRequestedAt: utils.GetTimePropOrNil(props, string(neo4j_entity.EmailPropertyValidationRequestedAt)),
 		},
-		Username:        utils.GetStringPropOrNil(props, string(entity.EmailPropertyUsername)),
-		IsRisky:         utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsRisky)),
-		IsFirewalled:    utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsFirewalled)),
-		Provider:        utils.GetStringPropOrNil(props, string(entity.EmailPropertyProvider)),
-		Firewall:        utils.GetStringPropOrNil(props, string(entity.EmailPropertyFirewall)),
-		IsMailboxFull:   utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsMailboxFull)),
-		IsFreeAccount:   utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsFreeAccount)),
-		SmtpSuccess:     utils.GetBoolPropOrNil(props, string(entity.EmailPropertySmtpSuccess)),
-		ResponseCode:    utils.GetStringPropOrNil(props, string(entity.EmailPropertyResponseCode)),
-		ErrorCode:       utils.GetStringPropOrNil(props, string(entity.EmailPropertyErrorCode)),
-		Description:     utils.GetStringPropOrNil(props, string(entity.EmailPropertyDescription)),
-		IsPrimaryDomain: utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsPrimaryDomain)),
-		PrimaryDomain:   utils.GetStringPropOrNil(props, string(entity.EmailPropertyPrimaryDomain)),
-		AlternateEmail:  utils.GetStringPropOrNil(props, string(entity.EmailPropertyAlternateEmail)),
-		RetryValidation: utils.GetBoolPropOrNil(props, string(entity.EmailPropertyRetryValidation)),
+		Username:        utils.GetStringPropOrNil(props, string(neo4j_entity.EmailPropertyUsername)),
+		IsRisky:         utils.GetBoolPropOrNil(props, string(neo4j_entity.EmailPropertyIsRisky)),
+		IsFirewalled:    utils.GetBoolPropOrNil(props, string(neo4j_entity.EmailPropertyIsFirewalled)),
+		Provider:        utils.GetStringPropOrNil(props, string(neo4j_entity.EmailPropertyProvider)),
+		Firewall:        utils.GetStringPropOrNil(props, string(neo4j_entity.EmailPropertyFirewall)),
+		IsMailboxFull:   utils.GetBoolPropOrNil(props, string(neo4j_entity.EmailPropertyIsMailboxFull)),
+		IsFreeAccount:   utils.GetBoolPropOrNil(props, string(neo4j_entity.EmailPropertyIsFreeAccount)),
+		SmtpSuccess:     utils.GetBoolPropOrNil(props, string(neo4j_entity.EmailPropertySmtpSuccess)),
+		ResponseCode:    utils.GetStringPropOrNil(props, string(neo4j_entity.EmailPropertyResponseCode)),
+		ErrorCode:       utils.GetStringPropOrNil(props, string(neo4j_entity.EmailPropertyErrorCode)),
+		Description:     utils.GetStringPropOrNil(props, string(neo4j_entity.EmailPropertyDescription)),
+		IsPrimaryDomain: utils.GetBoolPropOrNil(props, string(neo4j_entity.EmailPropertyIsPrimaryDomain)),
+		PrimaryDomain:   utils.GetStringPropOrNil(props, string(neo4j_entity.EmailPropertyPrimaryDomain)),
+		AlternateEmail:  utils.GetStringPropOrNil(props, string(neo4j_entity.EmailPropertyAlternateEmail)),
+		RetryValidation: utils.GetBoolPropOrNil(props, string(neo4j_entity.EmailPropertyRetryValidation)),
 	}
 }
 
-func MapDbNodeToPhoneNumberEntity(node *dbtype.Node) *entity.PhoneNumberEntity {
+func MapDbNodeToPhoneNumberEntity(node *dbtype.Node) *neo4j_entity.PhoneNumberEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	return &entity.PhoneNumberEntity{
+	return &neo4j_entity.PhoneNumberEntity{
 		Id:             utils.GetStringPropOrEmpty(props, "id"),
 		E164:           utils.GetStringPropOrEmpty(props, "e164"),
 		RawPhoneNumber: utils.GetStringPropOrEmpty(props, "rawPhoneNumber"),
 		Validated:      utils.GetBoolPropOrNil(props, "validated"),
-		Source:         entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:  entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:         neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:  neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
 		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
 	}
 }
 
-func MapDbNodeToExternalSystem(node *dbtype.Node) *entity.ExternalSystemEntity {
+func MapDbNodeToExternalSystem(node *dbtype.Node) *neo4j_entity.ExternalSystemEntity {
 	if node == nil {
-		return &entity.ExternalSystemEntity{}
+		return &neo4j_entity.ExternalSystemEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	externalSystemEntity := entity.ExternalSystemEntity{
+	externalSystemEntity := neo4j_entity.ExternalSystemEntity{
 		ExternalSystemId: commonenum.DecodeSource(utils.GetStringPropOrEmpty(props, "id")),
 		Name:             utils.GetStringPropOrEmpty(props, "name"),
 	}
 	if externalSystemEntity.ExternalSystemId == commonenum.SourceStripe {
-		externalSystemEntity.Stripe.PaymentMethodTypes = utils.GetListStringPropOrEmpty(props, entity.PropertyExternalSystemStripePaymentMethodTypes)
+		externalSystemEntity.Stripe.PaymentMethodTypes = utils.GetListStringPropOrEmpty(props, neo4j_entity.PropertyExternalSystemStripePaymentMethodTypes)
 	}
 	return &externalSystemEntity
 }
 
-func AddDbRelationshipToExternalSystemEntity(relationship dbtype.Relationship, entity *entity.ExternalSystemEntity) {
+func AddDbRelationshipToExternalSystemEntity(relationship dbtype.Relationship, neo4j_entity *neo4j_entity.ExternalSystemEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
-	entity.Relationship.SyncDate = utils.GetTimePropOrNil(props, "syncDate")
-	entity.Relationship.ExternalId = utils.GetStringPropOrEmpty(props, "externalId")
-	entity.Relationship.ExternalUrl = utils.GetStringPropOrNil(props, "externalUrl")
-	entity.Relationship.ExternalSource = utils.GetStringPropOrNil(props, "externalSource")
-	entity.Relationship.Primary = utils.GetBoolPropOrFalse(props, "primary")
+	neo4j_entity.Relationship.SyncDate = utils.GetTimePropOrNil(props, "syncDate")
+	neo4j_entity.Relationship.ExternalId = utils.GetStringPropOrEmpty(props, "externalId")
+	neo4j_entity.Relationship.ExternalUrl = utils.GetStringPropOrNil(props, "externalUrl")
+	neo4j_entity.Relationship.ExternalSource = utils.GetStringPropOrNil(props, "externalSource")
+	neo4j_entity.Relationship.Primary = utils.GetBoolPropOrFalse(props, "primary")
 }
 
 // TODO use nil
-func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
+func MapDbNodeToOpportunityEntity(node *dbtype.Node) *neo4j_entity.OpportunityEntity {
 	if node == nil {
-		return &entity.OpportunityEntity{}
+		return &neo4j_entity.OpportunityEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	opportunity := entity.OpportunityEntity{
+	opportunity := neo4j_entity.OpportunityEntity{
 		Id:                utils.GetStringPropOrEmpty(props, "id"),
 		Name:              utils.GetStringPropOrEmpty(props, "name"),
-		Amount:            utils.GetFloatPropOrZero(props, string(entity.OpportunityPropertyAmount)),
-		MaxAmount:         utils.GetFloatPropOrZero(props, string(entity.OpportunityPropertyMaxAmount)),
+		Amount:            utils.GetFloatPropOrZero(props, string(neo4j_entity.OpportunityPropertyAmount)),
+		MaxAmount:         utils.GetFloatPropOrZero(props, string(neo4j_entity.OpportunityPropertyMaxAmount)),
 		InternalType:      enum.DecodeOpportunityInternalType(utils.GetStringPropOrEmpty(props, "internalType")),
 		ExternalType:      utils.GetStringPropOrEmpty(props, "externalType"),
 		InternalStage:     enum.DecodeOpportunityInternalStage(utils.GetStringPropOrEmpty(props, "internalStage")),
@@ -713,18 +713,18 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 		EstimatedClosedAt: utils.GetTimePropOrNil(props, "estimatedClosedAt"),
 		ClosedAt:          utils.GetTimePropOrNil(props, "closedAt"),
 		GeneralNotes:      utils.GetStringPropOrEmpty(props, "generalNotes"),
-		NextSteps:         utils.GetStringPropOrEmpty(props, string(entity.OpportunityPropertyNextSteps)),
+		NextSteps:         utils.GetStringPropOrEmpty(props, string(neo4j_entity.OpportunityPropertyNextSteps)),
 		Comments:          utils.GetStringPropOrEmpty(props, "comments"),
 		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:            entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:     entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:            neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:     neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		OwnerUserId:       utils.GetStringPropOrEmpty(props, "ownerUserId"),
-		Currency:          enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, string(entity.OpportunityPropertyCurrency))),
-		LikelihoodRate:    utils.GetInt64PropOrDefault(props, string(entity.OpportunityPropertyLikelihoodRate), 0),
-		StageUpdatedAt:    utils.GetTimePropOrNil(props, string(entity.OpportunityPropertyStageUpdatedAt)),
-		RenewalDetails: entity.RenewalDetails{
+		Currency:          enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, string(neo4j_entity.OpportunityPropertyCurrency))),
+		LikelihoodRate:    utils.GetInt64PropOrDefault(props, string(neo4j_entity.OpportunityPropertyLikelihoodRate), 0),
+		StageUpdatedAt:    utils.GetTimePropOrNil(props, string(neo4j_entity.OpportunityPropertyStageUpdatedAt)),
+		RenewalDetails: neo4j_entity.RenewalDetails{
 			RenewedAt:              utils.GetTimePropOrNil(props, "renewedAt"),
 			RenewalLikelihood:      enum.DecodeRenewalLikelihood(utils.GetStringPropOrEmpty(props, "renewalLikelihood")),
 			RenewalUpdatedByUserId: utils.GetStringPropOrEmpty(props, "renewalUpdatedByUserId"),
@@ -732,16 +732,16 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 			RenewalApproved:        utils.GetBoolPropOrFalse(props, "renewalApproved"),
 			RenewalAdjustedRate:    utils.GetInt64PropOrDefault(props, "renewalAdjustedRate", 100),
 		},
-		InternalFields: entity.OpportunityInternalFields{
+		InternalFields: neo4j_entity.OpportunityInternalFields{
 			RolloutRenewalRequestedAt: utils.GetTimePropOrNil(props, "techRolloutRenewalRequestedAt"),
 		},
 	}
 	return &opportunity
 }
 
-func MapDbNodeToStateEntity(node dbtype.Node) *entity.StateEntity {
+func MapDbNodeToStateEntity(node dbtype.Node) *neo4j_entity.StateEntity {
 	props := utils.GetPropsFromNode(node)
-	result := entity.StateEntity{
+	result := neo4j_entity.StateEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		Name:      utils.GetStringPropOrEmpty(props, "name"),
 		Code:      utils.GetStringPropOrEmpty(props, "code"),
@@ -751,12 +751,12 @@ func MapDbNodeToStateEntity(node dbtype.Node) *entity.StateEntity {
 	return &result
 }
 
-func MapDbNodeToPageView(node *dbtype.Node) *entity.PageViewEntity {
+func MapDbNodeToPageView(node *dbtype.Node) *neo4j_entity.PageViewEntity {
 	if node == nil {
-		return &entity.PageViewEntity{}
+		return &neo4j_entity.PageViewEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	pageViewAction := entity.PageViewEntity{
+	pageViewAction := neo4j_entity.PageViewEntity{
 		Id:             utils.GetStringPropOrEmpty(props, "id"),
 		Application:    utils.GetStringPropOrEmpty(props, "application"),
 		TrackerName:    utils.GetStringPropOrEmpty(props, "trackerName"),
@@ -767,19 +767,19 @@ func MapDbNodeToPageView(node *dbtype.Node) *entity.PageViewEntity {
 		EngagedTime:    utils.GetInt64PropOrZero(props, "engagedTime"),
 		StartedAt:      utils.GetTimePropOrNow(props, "startedAt"),
 		EndedAt:        utils.GetTimePropOrNow(props, "endedAt"),
-		Source:         entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:  entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:         neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:  neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &pageViewAction
 }
 
-func MapDbNodeToLogEntryEntity(node *dbtype.Node) *entity.LogEntryEntity {
+func MapDbNodeToLogEntryEntity(node *dbtype.Node) *neo4j_entity.LogEntryEntity {
 	if node == nil {
-		return &entity.LogEntryEntity{}
+		return &neo4j_entity.LogEntryEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	logEntry := entity.LogEntryEntity{
+	logEntry := neo4j_entity.LogEntryEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Content:       utils.GetStringPropOrEmpty(props, "content"),
 		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
@@ -787,35 +787,35 @@ func MapDbNodeToLogEntryEntity(node *dbtype.Node) *entity.LogEntryEntity {
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &logEntry
 }
 
-func MapDbNodeToMarkdownEventEntity(node *dbtype.Node) *entity.MarkdownEventEntity {
+func MapDbNodeToMarkdownEventEntity(node *dbtype.Node) *neo4j_entity.MarkdownEventEntity {
 	if node == nil {
-		return &entity.MarkdownEventEntity{}
+		return &neo4j_entity.MarkdownEventEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	event := entity.MarkdownEventEntity{
+	event := neo4j_entity.MarkdownEventEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		Content:   utils.GetStringPropOrEmpty(props, "content"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:    entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		Source:    neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 	}
 	return &event
 }
 
-func MapDbNodeToMeetingEntity(node *dbtype.Node) *entity.MeetingEntity {
+func MapDbNodeToMeetingEntity(node *dbtype.Node) *neo4j_entity.MeetingEntity {
 	if node == nil {
-		return &entity.MeetingEntity{}
+		return &neo4j_entity.MeetingEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
 	status := enum.DecodeMeetingStatus(utils.GetStringPropOrEmpty(props, "status"))
-	meetingEntity := entity.MeetingEntity{
+	meetingEntity := neo4j_entity.MeetingEntity{
 		Id:                 utils.GetStringPropOrEmpty(props, "id"),
 		Name:               utils.GetStringPropOrNil(props, "name"),
 		ConferenceUrl:      utils.GetStringPropOrNil(props, "conferenceUrl"),
@@ -827,8 +827,8 @@ func MapDbNodeToMeetingEntity(node *dbtype.Node) *entity.MeetingEntity {
 		EndedAt:            utils.GetTimePropOrNil(props, "endedAt"),
 		Recording:          utils.GetStringPropOrNil(props, "recording"),
 		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:             entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:      entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:             neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		Status:             &status,
 	}
 	if props["createdAt"] != nil {
@@ -842,52 +842,52 @@ func MapDbNodeToMeetingEntity(node *dbtype.Node) *entity.MeetingEntity {
 	return &meetingEntity
 }
 
-func MapDbNodeToActionEntity(node *dbtype.Node) *entity.ActionEntity {
+func MapDbNodeToActionEntity(node *dbtype.Node) *neo4j_entity.ActionEntity {
 	if node == nil {
-		return &entity.ActionEntity{}
+		return &neo4j_entity.ActionEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	action := entity.ActionEntity{
+	action := neo4j_entity.ActionEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		Type:      commonenum.GetActionType(utils.GetStringPropOrEmpty(props, "type")),
 		Content:   utils.GetStringPropOrEmpty(props, "content"),
 		Metadata:  utils.GetStringPropOrEmpty(props, "metadata"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:    entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		Source:    neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 	}
 	return &action
 }
 
-func MapDbNodeToNoteEntity(node *dbtype.Node) *entity.NoteEntity {
+func MapDbNodeToNoteEntity(node *dbtype.Node) *neo4j_entity.NoteEntity {
 	if node == nil {
-		return &entity.NoteEntity{}
+		return &neo4j_entity.NoteEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	note := entity.NoteEntity{
+	note := neo4j_entity.NoteEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Content:       utils.GetStringPropOrEmpty(props, "content"),
 		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &note
 }
 
-func MapDbNodeToInteractionEventEntity(node *neo4j.Node) *entity.InteractionEventEntity {
+func MapDbNodeToInteractionEventEntity(node *neo4j.Node) *neo4j_entity.InteractionEventEntity {
 	if node == nil {
-		return &entity.InteractionEventEntity{}
+		return &neo4j_entity.InteractionEventEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
 
 	return MapDbPropsToInteractionEventEntity(props)
 }
 
-func MapDbPropsToInteractionEventEntity(props map[string]interface{}) *entity.InteractionEventEntity {
-	interactionEventEntity := entity.InteractionEventEntity{
+func MapDbPropsToInteractionEventEntity(props map[string]interface{}) *neo4j_entity.InteractionEventEntity {
+	interactionEventEntity := neo4j_entity.InteractionEventEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -899,18 +899,18 @@ func MapDbPropsToInteractionEventEntity(props map[string]interface{}) *entity.In
 		Content:       utils.GetStringPropOrEmpty(props, "content"),
 		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &interactionEventEntity
 }
 
-func MapDbNodeToInteractionSessionEntity(node *dbtype.Node) *entity.InteractionSessionEntity {
+func MapDbNodeToInteractionSessionEntity(node *dbtype.Node) *neo4j_entity.InteractionSessionEntity {
 	if node == nil {
-		return &entity.InteractionSessionEntity{}
+		return &neo4j_entity.InteractionSessionEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	interactionSession := entity.InteractionSessionEntity{
+	interactionSession := neo4j_entity.InteractionSessionEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Channel:       commonenum.DecodeInteractionSessionChannel(utils.GetStringPropOrEmpty(props, "channel")),
 		ChannelData:   utils.GetStringPropOrEmpty(props, "channelData"),
@@ -921,57 +921,57 @@ func MapDbNodeToInteractionSessionEntity(node *dbtype.Node) *entity.InteractionS
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &interactionSession
 }
 
-func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
+func MapDbNodeToContactEntity(dbNode *dbtype.Node) *neo4j_entity.ContactEntity {
 	props := utils.GetPropsFromNode(*dbNode)
-	contact := entity.ContactEntity{
+	contact := neo4j_entity.ContactEntity{
 		Id:              utils.GetStringPropOrEmpty(props, "id"),
-		FirstName:       utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyFirstName)),
-		LastName:        utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyLastName)),
-		Name:            utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyName)),
-		Description:     utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyDescription)),
-		Timezone:        utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyTimezone)),
-		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyProfilePhotoUrl)),
-		Username:        utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyUsername)),
-		Prefix:          utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyPrefix)),
-		Hide:            utils.GetBoolPropOrFalse(props, string(entity.ContactPropertyHide)),
-		HiddenAt:        utils.GetTimePropOrNil(props, string(entity.ContactPropertyHiddenAt)),
+		FirstName:       utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyFirstName)),
+		LastName:        utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyLastName)),
+		Name:            utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyName)),
+		Description:     utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyDescription)),
+		Timezone:        utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyTimezone)),
+		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyProfilePhotoUrl)),
+		Username:        utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyUsername)),
+		Prefix:          utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyPrefix)),
+		Hide:            utils.GetBoolPropOrFalse(props, string(neo4j_entity.ContactPropertyHide)),
+		HiddenAt:        utils.GetTimePropOrNil(props, string(neo4j_entity.ContactPropertyHiddenAt)),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		Source:          neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
-		EventStoreAggregate: entity.EventStoreAggregate{
+		EventStoreAggregate: neo4j_entity.EventStoreAggregate{
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
 		},
-		ContactInternalFields: entity.ContactInternalFields{
-			CheckedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyCheckedAt)),
+		ContactInternalFields: neo4j_entity.ContactInternalFields{
+			CheckedAt: utils.GetTimePropOrNil(props, string(neo4j_entity.ContactPropertyCheckedAt)),
 		},
-		EnrichDetails: entity.ContactEnrichDetails{
-			EnrichRequestedAt:         utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichRequestedAt)),
-			EnrichedAt:                utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichedAt)),
-			EnrichFailedAt:            utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichFailedAt)),
-			EnrichAttempts:            utils.GetInt64PropOrZero(props, string(entity.ContactPropertyEnrichAttempts)),
-			BettercontactFoundEmailAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyBettercontactFoundEmailAt)),
-			EnrichedScrapinRecordId:   utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyEnrichedScrapinRecordId)),
-			FindWorkEmailWithBetterContactRequestedId:   utils.GetStringPropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactRequestedId)),
-			FindWorkEmailWithBetterContactRequestedAt:   utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt)),
-			FindWorkEmailWithBetterContactCompletedAt:   utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt)),
-			FindWorkEmailWithBetterContactFound:         utils.GetBoolPropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactFound)),
-			FindMobilePhoneWithBetterContactRequestedId: utils.GetStringPropOrNil(props, string(entity.ContactPropertyFindMobilePhoneWithBetterContactRequestedId)),
-			FindMobilePhoneWithBetterContactRequestedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindMobilePhoneWithBetterContactRequestedAt)),
-			FindMobilePhoneWithBetterContactCompletedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindMobilePhoneWithBetterContactCompletedAt)),
-			FindMobilePhoneWithBetterContactFound:       utils.GetBoolPropOrNil(props, string(entity.ContactPropertyFindMobilePhoneWithBetterContactFound)),
+		EnrichDetails: neo4j_entity.ContactEnrichDetails{
+			EnrichRequestedAt:         utils.GetTimePropOrNil(props, string(neo4j_entity.ContactPropertyEnrichRequestedAt)),
+			EnrichedAt:                utils.GetTimePropOrNil(props, string(neo4j_entity.ContactPropertyEnrichedAt)),
+			EnrichFailedAt:            utils.GetTimePropOrNil(props, string(neo4j_entity.ContactPropertyEnrichFailedAt)),
+			EnrichAttempts:            utils.GetInt64PropOrZero(props, string(neo4j_entity.ContactPropertyEnrichAttempts)),
+			BettercontactFoundEmailAt: utils.GetTimePropOrNil(props, string(neo4j_entity.ContactPropertyBettercontactFoundEmailAt)),
+			EnrichedScrapinRecordId:   utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyEnrichedScrapinRecordId)),
+			FindWorkEmailWithBetterContactRequestedId:   utils.GetStringPropOrNil(props, string(neo4j_entity.ContactPropertyFindWorkEmailWithBetterContactRequestedId)),
+			FindWorkEmailWithBetterContactRequestedAt:   utils.GetTimePropOrNil(props, string(neo4j_entity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt)),
+			FindWorkEmailWithBetterContactCompletedAt:   utils.GetTimePropOrNil(props, string(neo4j_entity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt)),
+			FindWorkEmailWithBetterContactFound:         utils.GetBoolPropOrNil(props, string(neo4j_entity.ContactPropertyFindWorkEmailWithBetterContactFound)),
+			FindMobilePhoneWithBetterContactRequestedId: utils.GetStringPropOrNil(props, string(neo4j_entity.ContactPropertyFindMobilePhoneWithBetterContactRequestedId)),
+			FindMobilePhoneWithBetterContactRequestedAt: utils.GetTimePropOrNil(props, string(neo4j_entity.ContactPropertyFindMobilePhoneWithBetterContactRequestedAt)),
+			FindMobilePhoneWithBetterContactCompletedAt: utils.GetTimePropOrNil(props, string(neo4j_entity.ContactPropertyFindMobilePhoneWithBetterContactCompletedAt)),
+			FindMobilePhoneWithBetterContactFound:       utils.GetBoolPropOrNil(props, string(neo4j_entity.ContactPropertyFindMobilePhoneWithBetterContactFound)),
 		},
 	}
 	return &contact
 }
 
-func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) entity.TimelineEvent {
+func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) neo4j_entity.TimelineEvent {
 	if slices.Contains(dbNode.Labels, model.NodeLabelPageView) {
 		return MapDbNodeToPageView(dbNode)
 	} else if slices.Contains(dbNode.Labels, model.NodeLabelInteractionSession) {
@@ -992,71 +992,71 @@ func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) entity.TimelineEvent {
 	return nil
 }
 
-func MapDbNodeToDomainEntity(node *dbtype.Node) *entity.DomainEntity {
+func MapDbNodeToDomainEntity(node *dbtype.Node) *neo4j_entity.DomainEntity {
 	if node == nil {
-		return &entity.DomainEntity{}
+		return &neo4j_entity.DomainEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	domain := entity.DomainEntity{
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, string(entity.DomainPropertyCreatedAt)),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, string(entity.DomainPropertyUpdatedAt)),
-		AppSource:     utils.GetStringPropOrEmpty(props, string(entity.DomainPropertyAppSource)),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(entity.DomainPropertySource))),
-		Domain:        utils.GetStringPropOrEmpty(props, string(entity.DomainPropertyDomain)),
-		IsPrimary:     utils.GetBoolPropOrNil(props, string(entity.DomainPropertyIsPrimary)),
-		Accessible:    utils.GetBoolPropOrNil(props, string(entity.DomainPropertyAccessible)),
-		PrimaryDomain: utils.GetStringPropOrEmpty(props, string(entity.DomainPropertyPrimaryDomain)),
-		InternalFields: entity.DomainInternalFields{
-			PrimaryDomainCheckRequestedAt: utils.GetTimePropOrNil(props, string(entity.DomainPropertyPrimaryDomainCheckRequestedAt)),
+	domain := neo4j_entity.DomainEntity{
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, string(neo4j_entity.DomainPropertyCreatedAt)),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, string(neo4j_entity.DomainPropertyUpdatedAt)),
+		AppSource:     utils.GetStringPropOrEmpty(props, string(neo4j_entity.DomainPropertyAppSource)),
+		Source:        neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(neo4j_entity.DomainPropertySource))),
+		Domain:        utils.GetStringPropOrEmpty(props, string(neo4j_entity.DomainPropertyDomain)),
+		IsPrimary:     utils.GetBoolPropOrNil(props, string(neo4j_entity.DomainPropertyIsPrimary)),
+		Accessible:    utils.GetBoolPropOrNil(props, string(neo4j_entity.DomainPropertyAccessible)),
+		PrimaryDomain: utils.GetStringPropOrEmpty(props, string(neo4j_entity.DomainPropertyPrimaryDomain)),
+		InternalFields: neo4j_entity.DomainInternalFields{
+			PrimaryDomainCheckRequestedAt: utils.GetTimePropOrNil(props, string(neo4j_entity.DomainPropertyPrimaryDomainCheckRequestedAt)),
 		},
 	}
 	return &domain
 }
 
-func MapDbNodeToLocationEntity(node *dbtype.Node) *entity.LocationEntity {
+func MapDbNodeToLocationEntity(node *dbtype.Node) *neo4j_entity.LocationEntity {
 	if node == nil {
-		return &entity.LocationEntity{}
+		return &neo4j_entity.LocationEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	location := entity.LocationEntity{
+	location := neo4j_entity.LocationEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Name:          utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyName)),
+		Name:          utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyName)),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Country:       utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyCountry)),
-		CountryCodeA2: utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyCountryCodeA2)),
-		CountryCodeA3: utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyCountryCodeA3)),
-		Region:        utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyRegion)),
-		Locality:      utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyLocality)),
-		Address:       utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyAddress)),
-		Address2:      utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyAddress2)),
-		Zip:           utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyZip)),
-		AddressType:   utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyAddressType)),
-		HouseNumber:   utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyHouseNumber)),
-		PostalCode:    utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyPostalCode)),
-		PlusFour:      utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyPlusFour)),
-		Commercial:    utils.GetBoolPropOrFalse(props, string(entity.LocationPropertyCommercial)),
-		Predirection:  utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyPredirection)),
-		District:      utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyDistrict)),
-		Street:        utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyStreet)),
-		RawAddress:    utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyRawAddress)),
-		Latitude:      utils.GetFloatPropOrNil(props, string(entity.LocationPropertyLatitude)),
-		Longitude:     utils.GetFloatPropOrNil(props, string(entity.LocationPropertyLongitude)),
-		TimeZone:      utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyTimeZone)),
-		UtcOffset:     utils.GetFloatPropOrNil(props, string(entity.LocationPropertyUtcOffset)),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Country:       utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyCountry)),
+		CountryCodeA2: utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyCountryCodeA2)),
+		CountryCodeA3: utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyCountryCodeA3)),
+		Region:        utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyRegion)),
+		Locality:      utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyLocality)),
+		Address:       utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyAddress)),
+		Address2:      utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyAddress2)),
+		Zip:           utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyZip)),
+		AddressType:   utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyAddressType)),
+		HouseNumber:   utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyHouseNumber)),
+		PostalCode:    utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyPostalCode)),
+		PlusFour:      utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyPlusFour)),
+		Commercial:    utils.GetBoolPropOrFalse(props, string(neo4j_entity.LocationPropertyCommercial)),
+		Predirection:  utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyPredirection)),
+		District:      utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyDistrict)),
+		Street:        utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyStreet)),
+		RawAddress:    utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyRawAddress)),
+		Latitude:      utils.GetFloatPropOrNil(props, string(neo4j_entity.LocationPropertyLatitude)),
+		Longitude:     utils.GetFloatPropOrNil(props, string(neo4j_entity.LocationPropertyLongitude)),
+		TimeZone:      utils.GetStringPropOrEmpty(props, string(neo4j_entity.LocationPropertyTimeZone)),
+		UtcOffset:     utils.GetFloatPropOrNil(props, string(neo4j_entity.LocationPropertyUtcOffset)),
+		Source:        neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &location
 }
 
-func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
+func MapDbNodeToFlowEntity(node *dbtype.Node) *neo4j_entity.FlowEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	domain := entity.FlowEntity{
+	domain := neo4j_entity.FlowEntity{
 		Id:             utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -1065,7 +1065,7 @@ func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
 		Nodes:          utils.GetStringPropOrEmpty(props, "nodes"),
 		Edges:          utils.GetStringPropOrEmpty(props, "edges"),
 		FirstStartedAt: utils.GetTimePropOrNil(props, "firstStartedAt"),
-		Status:         entity.GetFlowStatus(utils.GetStringPropOrEmpty(props, "status")),
+		Status:         neo4j_entity.GetFlowStatus(utils.GetStringPropOrEmpty(props, "status")),
 		Total:          utils.GetInt64PropOrZero(props, "total"),
 		OnHold:         utils.GetInt64PropOrZero(props, "onHold"),
 		Ready:          utils.GetInt64PropOrZero(props, "ready"),
@@ -1077,29 +1077,29 @@ func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
 	return &domain
 }
 
-func MapDbNodeToFlowParticipantEntity(node *dbtype.Node) *entity.FlowParticipantEntity {
+func MapDbNodeToFlowParticipantEntity(node *dbtype.Node) *neo4j_entity.FlowParticipantEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	e := entity.FlowParticipantEntity{
+	e := neo4j_entity.FlowParticipantEntity{
 		Id:                 utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:          utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		EntityId:           utils.GetStringPropOrEmpty(props, "entityId"),
-		EntityType:         model.DecodeEntityType(utils.GetStringPropOrEmpty(props, "entityType")),
-		Status:             entity.GetFlowContactStatus(utils.GetStringPropOrEmpty(props, "status")),
-		RequirementsUnmeet: entity.GetFlowParticipantRequirementsUnmeet(utils.GetListStringPropOrEmpty(props, "requirementsUnmeet")),
+		EntityId:           utils.GetStringPropOrEmpty(props, "neo4j_entityId"),
+		EntityType:         model.DecodeEntityType(utils.GetStringPropOrEmpty(props, "neo4j_entityType")),
+		Status:             neo4j_entity.GetFlowContactStatus(utils.GetStringPropOrEmpty(props, "status")),
+		RequirementsUnmeet: neo4j_entity.GetFlowParticipantRequirementsUnmeet(utils.GetListStringPropOrEmpty(props, "requirementsUnmeet")),
 	}
 	return &e
 }
 
-func MapDbNodeToFlowSenderEntity(node *dbtype.Node) *entity.FlowSenderEntity {
+func MapDbNodeToFlowSenderEntity(node *dbtype.Node) *neo4j_entity.FlowSenderEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	e := entity.FlowSenderEntity{
+	e := neo4j_entity.FlowSenderEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -1108,13 +1108,13 @@ func MapDbNodeToFlowSenderEntity(node *dbtype.Node) *entity.FlowSenderEntity {
 	return &e
 }
 
-func MapDbNodeToFlowActionEntity(node *dbtype.Node) *entity.FlowActionEntity {
+func MapDbNodeToFlowActionEntity(node *dbtype.Node) *neo4j_entity.FlowActionEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
 
-	e := entity.FlowActionEntity{
+	e := neo4j_entity.FlowActionEntity{
 		Id:         utils.GetStringPropOrEmpty(props, "id"),
 		ExternalId: utils.GetStringPropOrEmpty(props, "externalId"),
 		CreatedAt:  utils.GetTimePropOrEpochStart(props, "createdAt"),
@@ -1123,11 +1123,11 @@ func MapDbNodeToFlowActionEntity(node *dbtype.Node) *entity.FlowActionEntity {
 		Type:       utils.GetStringPropOrEmpty(props, "type"),
 	}
 
-	e.Data.Action = entity.GetFlowActionType(utils.GetStringPropOrEmpty(props, "action"))
+	e.Data.Action = neo4j_entity.GetFlowActionType(utils.GetStringPropOrEmpty(props, "action"))
 
 	e.Data.WaitBefore = utils.GetInt64PropOrZero(props, "waitBefore")
 
-	e.Data.Entity = utils.GetStringPropOrNil(props, "data_entity")
+	e.Data.Entity = utils.GetStringPropOrNil(props, "data_neo4j_entity")
 	e.Data.TriggerType = utils.GetStringPropOrNil(props, "data_triggerType")
 	e.Data.Subject = utils.GetStringPropOrNil(props, "data_subject")
 	e.Data.BodyTemplate = utils.GetStringPropOrNil(props, "data_bodyTemplate")
@@ -1136,41 +1136,41 @@ func MapDbNodeToFlowActionEntity(node *dbtype.Node) *entity.FlowActionEntity {
 	return &e
 }
 
-func MapDbNodeToFlowExecutionSettingsEntity(node *dbtype.Node) *entity.FlowExecutionSettingsEntity {
+func MapDbNodeToFlowExecutionSettingsEntity(node *dbtype.Node) *neo4j_entity.FlowExecutionSettingsEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	e := entity.FlowExecutionSettingsEntity{
+	e := neo4j_entity.FlowExecutionSettingsEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		FlowId:    utils.GetStringPropOrEmpty(props, "flowId"),
-		EntityId:  utils.GetStringPropOrEmpty(props, "entityId"),
+		EntityId:  utils.GetStringPropOrEmpty(props, "neo4j_entityId"),
 		Mailbox:   utils.GetStringPropOrNil(props, "mailbox"),
 		UserId:    utils.GetStringPropOrNil(props, "userId"),
 	}
 	return &e
 }
 
-func MapDbNodeToFlowActionExecutionEntity(node *dbtype.Node) *entity.FlowActionExecutionEntity {
+func MapDbNodeToFlowActionExecutionEntity(node *dbtype.Node) *neo4j_entity.FlowActionExecutionEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	e := entity.FlowActionExecutionEntity{
+	e := neo4j_entity.FlowActionExecutionEntity{
 		Id:              utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		FlowId:          utils.GetStringPropOrEmpty(props, "flowId"),
 		ParticipantId:   utils.GetStringPropOrEmpty(props, "participantId"),
-		EntityId:        utils.GetStringPropOrEmpty(props, "entityId"),
-		EntityType:      model.DecodeEntityType(utils.GetStringPropOrEmpty(props, "entityType")),
+		EntityId:        utils.GetStringPropOrEmpty(props, "neo4j_entityId"),
+		EntityType:      model.DecodeEntityType(utils.GetStringPropOrEmpty(props, "neo4j_entityType")),
 		ActionId:        utils.GetStringPropOrEmpty(props, "actionId"),
 		ScheduledAt:     utils.GetTimePropOrNow(props, "scheduledAt"),
 		ExecutedAt:      utils.GetTimePropOrNil(props, "executedAt"),
 		StatusUpdatedAt: utils.GetTimePropOrNow(props, "statusUpdatedAt"),
-		Status:          entity.GetFlowActionExecutionStatus(utils.GetStringPropOrEmpty(props, "status")),
+		Status:          neo4j_entity.GetFlowActionExecutionStatus(utils.GetStringPropOrEmpty(props, "status")),
 		Error:           utils.GetStringPropOrNil(props, "error"),
 
 		Mailbox:   utils.GetStringPropOrNil(props, "mailbox"),
@@ -1180,12 +1180,12 @@ func MapDbNodeToFlowActionExecutionEntity(node *dbtype.Node) *entity.FlowActionE
 	return &e
 }
 
-func MapDbNodeToLinkedinConnectionRequestEntity(node *dbtype.Node) *entity.LinkedinConnectionRequest {
+func MapDbNodeToLinkedinConnectionRequestEntity(node *dbtype.Node) *neo4j_entity.LinkedinConnectionRequest {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	e := entity.LinkedinConnectionRequest{
+	e := neo4j_entity.LinkedinConnectionRequest{
 		Id:           utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:    utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:    utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -1194,42 +1194,42 @@ func MapDbNodeToLinkedinConnectionRequestEntity(node *dbtype.Node) *entity.Linke
 		ScheduledAt:  utils.GetTimePropOrNow(props, "scheduledAt"),
 		SocialUrl:    utils.GetStringPropOrEmpty(props, "socialUrl"),
 		UserId:       utils.GetStringPropOrEmpty(props, "userId"),
-		Status:       entity.GetLinkedinConnectionRequestStatus(utils.GetStringPropOrEmpty(props, "status")),
+		Status:       neo4j_entity.GetLinkedinConnectionRequestStatus(utils.GetStringPropOrEmpty(props, "status")),
 	}
 	return &e
 }
 
-func MapDbNodeToCustomFieldTemplateEntity(node *dbtype.Node) *entity.CustomFieldTemplateEntity {
+func MapDbNodeToCustomFieldTemplateEntity(node *dbtype.Node) *neo4j_entity.CustomFieldTemplateEntity {
 	if node == nil {
-		return &entity.CustomFieldTemplateEntity{}
+		return &neo4j_entity.CustomFieldTemplateEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	customFieldTemplateEntity := entity.CustomFieldTemplateEntity{
-		Id:          utils.GetStringPropOrEmpty(props, string(entity.CustomFieldTemplatePropertyId)),
-		Name:        utils.GetStringPropOrEmpty(props, string(entity.CustomFieldTemplatePropertyName)),
-		EntityType:  model.DecodeEntityType(utils.GetStringPropOrEmpty(props, string(entity.CustomFieldTemplatePropertyEntityType))),
-		Type:        utils.GetStringPropOrEmpty(props, string(entity.CustomFieldTemplatePropertyType)),
-		ValidValues: utils.GetListStringPropOrEmpty(props, string(entity.CustomFieldTemplatePropertyValidValues)),
-		Order:       utils.GetInt64PropOrNil(props, string(entity.CustomFieldTemplatePropertyOrder)),
-		Required:    utils.GetBoolPropOrNil(props, string(entity.CustomFieldTemplatePropertyRequired)),
-		Length:      utils.GetInt64PropOrNil(props, string(entity.CustomFieldTemplatePropertyLength)),
-		Min:         utils.GetInt64PropOrNil(props, string(entity.CustomFieldTemplatePropertyMin)),
-		Max:         utils.GetInt64PropOrNil(props, string(entity.CustomFieldTemplatePropertyMax)),
-		CreatedAt:   utils.GetTimePropOrEpochStart(props, string(entity.CustomFieldTemplatePropertyCreatedAt)),
-		UpdatedAt:   utils.GetTimePropOrEpochStart(props, string(entity.CustomFieldTemplatePropertyUpdatedAt)),
+	customFieldTemplateEntity := neo4j_entity.CustomFieldTemplateEntity{
+		Id:          utils.GetStringPropOrEmpty(props, string(neo4j_entity.CustomFieldTemplatePropertyId)),
+		Name:        utils.GetStringPropOrEmpty(props, string(neo4j_entity.CustomFieldTemplatePropertyName)),
+		EntityType:  model.DecodeEntityType(utils.GetStringPropOrEmpty(props, string(neo4j_entity.CustomFieldTemplatePropertyEntityType))),
+		Type:        utils.GetStringPropOrEmpty(props, string(neo4j_entity.CustomFieldTemplatePropertyType)),
+		ValidValues: utils.GetListStringPropOrEmpty(props, string(neo4j_entity.CustomFieldTemplatePropertyValidValues)),
+		Order:       utils.GetInt64PropOrNil(props, string(neo4j_entity.CustomFieldTemplatePropertyOrder)),
+		Required:    utils.GetBoolPropOrNil(props, string(neo4j_entity.CustomFieldTemplatePropertyRequired)),
+		Length:      utils.GetInt64PropOrNil(props, string(neo4j_entity.CustomFieldTemplatePropertyLength)),
+		Min:         utils.GetInt64PropOrNil(props, string(neo4j_entity.CustomFieldTemplatePropertyMin)),
+		Max:         utils.GetInt64PropOrNil(props, string(neo4j_entity.CustomFieldTemplatePropertyMax)),
+		CreatedAt:   utils.GetTimePropOrEpochStart(props, string(neo4j_entity.CustomFieldTemplatePropertyCreatedAt)),
+		UpdatedAt:   utils.GetTimePropOrEpochStart(props, string(neo4j_entity.CustomFieldTemplatePropertyUpdatedAt)),
 	}
 	return &customFieldTemplateEntity
 }
 
-func MapDbNodeToIndustryEntity(dbNode *dbtype.Node) *entity.IndustryEntity {
+func MapDbNodeToIndustryEntity(dbNode *dbtype.Node) *neo4j_entity.IndustryEntity {
 	if dbNode == nil {
-		return &entity.IndustryEntity{}
+		return &neo4j_entity.IndustryEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	industry := entity.IndustryEntity{
-		CreatedAt: utils.GetTimePropOrEpochStart(props, string(entity.IndustryPropertyCreatedAt)),
-		Code:      utils.GetStringPropOrEmpty(props, string(entity.IndustryPropertyCode)),
-		Name:      utils.GetStringPropOrEmpty(props, string(entity.IndustryPropertyName)),
+	industry := neo4j_entity.IndustryEntity{
+		CreatedAt: utils.GetTimePropOrEpochStart(props, string(neo4j_entity.IndustryPropertyCreatedAt)),
+		Code:      utils.GetStringPropOrEmpty(props, string(neo4j_entity.IndustryPropertyCode)),
+		Name:      utils.GetStringPropOrEmpty(props, string(neo4j_entity.IndustryPropertyName)),
 	}
 	return &industry
 }

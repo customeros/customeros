@@ -3,17 +3,18 @@ package api_oauthuser
 import (
 	"context"
 
-	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+
+	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 )
 
 type oAuthUserSettingsService struct {
 	log      logger.Logger
-	postgres *repository.Repositories
+	postgres *postgres_repository.Repositories
 }
 
-func NewUserSettingsService(log logger.Logger, postgres *repository.Repositories) cosapi_interfaces.OAuthUserSettingsService {
+func NewUserSettingsService(log logger.Logger, postgres *postgres_repository.Repositories) cosapi_interfaces.OAuthUserSettingsService {
 	return &oAuthUserSettingsService{
 		log:      log,
 		postgres: postgres,

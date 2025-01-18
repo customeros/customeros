@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/forPelevin/gomoji"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -38,7 +38,7 @@ type BetterContactData struct {
 	CompanyDomain string `json:"company_domain"`
 }
 
-func (s *enrichmentService) FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) (string, string, *entity.BetterContactResponseBody, error) {
+func (s *enrichmentService) FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) (string, string, *postgres_entity.BetterContactResponseBody, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.BetterContactFindWorkEmail")
 	defer span.Finish()
 	span.LogFields(
@@ -75,7 +75,7 @@ func (s *enrichmentService) FindWorkEmail(ctx context.Context, linkedInUrl, firs
 	companyName = gomoji.RemoveEmojis(companyName)
 	companyDomain = gomoji.RemoveEmojis(companyDomain)
 
-	var existingBetterContactData *entity.EnrichDetailsBetterContact
+	var existingBetterContactData *postgres_entity.EnrichDetailsBetterContact
 
 	if linkedInUrl != "" {
 		betterContactByLinkedInUrl, err := s.postgres.EnrichDetailsBetterContactRepository.GetByLinkedInUrl(ctx, linkedInUrl, enrichPhoneNumber)
@@ -101,7 +101,7 @@ func (s *enrichmentService) FindWorkEmail(ctx context.Context, linkedInUrl, firs
 
 	if existingBetterContactData != nil {
 		if existingBetterContactData.Response != "" {
-			var responseBody entity.BetterContactResponseBody
+			var responseBody postgres_entity.BetterContactResponseBody
 			err := json.Unmarshal([]byte(existingBetterContactData.Response), &responseBody)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -163,7 +163,7 @@ func (s *enrichmentService) FindWorkEmail(ctx context.Context, linkedInUrl, firs
 		return "", "", nil, err
 	}
 
-	dbRecord, err := s.postgres.EnrichDetailsBetterContactRepository.RegisterRequest(ctx, entity.EnrichDetailsBetterContact{
+	dbRecord, err := s.postgres.EnrichDetailsBetterContactRepository.RegisterRequest(ctx, postgres_entity.EnrichDetailsBetterContact{
 		RequestID:          responseBody.ID,
 		ContactFirstName:   firstName,
 		ContactLastName:    lastName,

@@ -1,4 +1,4 @@
-package entity
+package postgres_entity
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"

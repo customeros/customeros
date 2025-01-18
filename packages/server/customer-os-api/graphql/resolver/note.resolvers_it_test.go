@@ -6,7 +6,7 @@ import (
 
 	"github.com/99designs/gqlgen/client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 
@@ -22,7 +22,7 @@ func TestMutationResolver_AddAttachmentToNote(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", "text/plain", utils.Now())
-	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4j_entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
 		FileName:      "readme.txt",
@@ -55,7 +55,7 @@ func TestMutationResolver_RemoveAttachmentFromNote(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
 	noteId := neo4jt.CreateNoteForContact(ctx, driver, tenantName, contactId, "Note content", "text/plain", utils.Now())
-	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4j_entity.AttachmentEntity{
 		Id:            "",
 		MimeType:      "text/plain",
 		FileName:      "readme.txt",

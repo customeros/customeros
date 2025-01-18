@@ -1,11 +1,11 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -17,25 +17,25 @@ type tenantSettingsOpportunityStageRepository struct {
 }
 
 type TenantSettingsOpportunityStageRepository interface {
-	GetById(c context.Context, tenant, id string) (*entity.TenantSettingsOpportunityStage, error)
-	GetOrInitialize(c context.Context, tenant string) ([]*entity.TenantSettingsOpportunityStage, error)
+	GetById(c context.Context, tenant, id string) (*postgres_entity.TenantSettingsOpportunityStage, error)
+	GetOrInitialize(c context.Context, tenant string) ([]*postgres_entity.TenantSettingsOpportunityStage, error)
 	Init(c context.Context, tenant string) error
-	Store(c context.Context, entity entity.TenantSettingsOpportunityStage) (*entity.TenantSettingsOpportunityStage, error)
-	Update(ctx context.Context, tenant, id string, label *string, likelihoodRate *int64, visible *bool) (*entity.TenantSettingsOpportunityStage, error)
+	Store(c context.Context, postgres_entity postgres_entity.TenantSettingsOpportunityStage) (*postgres_entity.TenantSettingsOpportunityStage, error)
+	Update(ctx context.Context, tenant, id string, label *string, likelihoodRate *int64, visible *bool) (*postgres_entity.TenantSettingsOpportunityStage, error)
 }
 
 func NewTenantSettingsOpportunityStageRepository(db *gorm.DB) TenantSettingsOpportunityStageRepository {
 	return &tenantSettingsOpportunityStageRepository{gormDb: db}
 }
 
-func (r *tenantSettingsOpportunityStageRepository) GetById(c context.Context, tenant, id string) (*entity.TenantSettingsOpportunityStage, error) {
+func (r *tenantSettingsOpportunityStageRepository) GetById(c context.Context, tenant, id string) (*postgres_entity.TenantSettingsOpportunityStage, error) {
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.GetById")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.LogFields(tracingLog.String("id", id))
 
-	var result entity.TenantSettingsOpportunityStage
+	var result postgres_entity.TenantSettingsOpportunityStage
 	err := r.gormDb.
 		Where("id = ?", id).
 		First(&result).
@@ -52,13 +52,13 @@ func (r *tenantSettingsOpportunityStageRepository) GetById(c context.Context, te
 	return &result, nil
 }
 
-func (r *tenantSettingsOpportunityStageRepository) GetOrInitialize(c context.Context, tenant string) ([]*entity.TenantSettingsOpportunityStage, error) {
+func (r *tenantSettingsOpportunityStageRepository) GetOrInitialize(c context.Context, tenant string) ([]*postgres_entity.TenantSettingsOpportunityStage, error) {
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.Get")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 
-	var entities []*entity.TenantSettingsOpportunityStage
+	var entities []*postgres_entity.TenantSettingsOpportunityStage
 	err := r.gormDb.
 		Where("tenant = ?", tenant).
 		Order("idx asc").
@@ -96,7 +96,7 @@ func (r *tenantSettingsOpportunityStageRepository) Init(c context.Context, tenan
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 
-	r.Store(ctx, entity.TenantSettingsOpportunityStage{
+	r.Store(ctx, postgres_entity.TenantSettingsOpportunityStage{
 		Tenant:  tenant,
 		Value:   "STAGE1",
 		Label:   "Identified",
@@ -104,7 +104,7 @@ func (r *tenantSettingsOpportunityStageRepository) Init(c context.Context, tenan
 		Visible: true,
 	})
 
-	r.Store(ctx, entity.TenantSettingsOpportunityStage{
+	r.Store(ctx, postgres_entity.TenantSettingsOpportunityStage{
 		Tenant:  tenant,
 		Value:   "STAGE2",
 		Label:   "Qualified",
@@ -112,7 +112,7 @@ func (r *tenantSettingsOpportunityStageRepository) Init(c context.Context, tenan
 		Visible: true,
 	})
 
-	r.Store(ctx, entity.TenantSettingsOpportunityStage{
+	r.Store(ctx, postgres_entity.TenantSettingsOpportunityStage{
 		Tenant:  tenant,
 		Value:   "STAGE3",
 		Label:   "Committed",
@@ -121,7 +121,7 @@ func (r *tenantSettingsOpportunityStageRepository) Init(c context.Context, tenan
 	})
 
 	for _, idx := range []int{4, 5, 6, 7, 8, 9, 10} {
-		_, err := r.Store(ctx, entity.TenantSettingsOpportunityStage{
+		_, err := r.Store(ctx, postgres_entity.TenantSettingsOpportunityStage{
 			Tenant:  tenant,
 			Value:   fmt.Sprintf("STAGE%d", idx),
 			Label:   fmt.Sprintf("Stage %d", idx),
@@ -138,25 +138,25 @@ func (r *tenantSettingsOpportunityStageRepository) Init(c context.Context, tenan
 	return nil
 }
 
-func (r *tenantSettingsOpportunityStageRepository) Store(c context.Context, entity entity.TenantSettingsOpportunityStage) (*entity.TenantSettingsOpportunityStage, error) {
+func (r *tenantSettingsOpportunityStageRepository) Store(c context.Context, postgres_entity postgres_entity.TenantSettingsOpportunityStage) (*postgres_entity.TenantSettingsOpportunityStage, error) {
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.Store")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, entity.Tenant)
+	tracing.TagTenant(span, postgres_entity.Tenant)
 
-	err := r.gormDb.Save(&entity).Error
+	err := r.gormDb.Save(&postgres_entity).Error
 
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	span.LogFields(tracingLog.String("entity.id", entity.ID))
+	span.LogFields(tracingLog.String("postgres_entity.id", postgres_entity.ID))
 
-	return &entity, nil
+	return &postgres_entity, nil
 }
 
-func (r *tenantSettingsOpportunityStageRepository) Update(ctx context.Context, tenant, id string, label *string, likelihoodRate *int64, visible *bool) (*entity.TenantSettingsOpportunityStage, error) {
+func (r *tenantSettingsOpportunityStageRepository) Update(ctx context.Context, tenant, id string, label *string, likelihoodRate *int64, visible *bool) (*postgres_entity.TenantSettingsOpportunityStage, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsOpportunityStageRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -176,7 +176,7 @@ func (r *tenantSettingsOpportunityStageRepository) Update(ctx context.Context, t
 	}
 
 	err := r.gormDb.
-		Model(&entity.TenantSettingsOpportunityStage{}).
+		Model(&postgres_entity.TenantSettingsOpportunityStage{}).
 		Where("tenant = ? AND id = ?", tenant, id).
 		Updates(updateFields).
 		UpdateColumn("updated_at", utils.Now()).

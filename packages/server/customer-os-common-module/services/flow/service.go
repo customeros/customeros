@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -24,12 +23,12 @@ import (
 )
 
 type flowService struct {
-	neo4j         *neoRepo.Repositories
+	neo4j         *neo4j_repository.Repositories
 	events        *events.EventsService
 	flowExecution interfaces.FlowExecutionService
 }
 
-func NewFlowService(neo4j *neoRepo.Repositories, events *events.EventsService, flowExecution interfaces.FlowExecutionService) interfaces.FlowService {
+func NewFlowService(neo4j *neo4j_repository.Repositories, events *events.EventsService, flowExecution interfaces.FlowExecutionService) interfaces.FlowService {
 	return &flowService{
 		neo4j:         neo4j,
 		events:        events,
@@ -341,7 +340,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 							return nil, err
 						}
 
-						err = s.neo4j.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+						err = s.neo4j.CommonWriteRepository.Link(ctx, &tx, tenant, neo4j_repository.LinkDetails{
 							FromEntityId:   toStore.Id,
 							FromEntityType: model.FLOW,
 							Relationship:   model.HAS,
@@ -560,7 +559,7 @@ func (s *flowService) ProcessNode(ctx context.Context, tx *neo4j.ManagedTransact
 			return errors.New("internal ids not found")
 		}
 
-		err := s.neo4j.CommonWriteRepository.Link(ctx, tx, tenant, repository.LinkDetails{
+		err := s.neo4j.CommonWriteRepository.Link(ctx, tx, tenant, neo4j_repository.LinkDetails{
 			FromEntityId:   currentNodeInternalId,
 			FromEntityType: model.FLOW_ACTION,
 			Relationship:   model.NEXT,
@@ -925,7 +924,7 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 				return nil
 			})
 
-			err = s.neo4j.CommonWriteRepository.Link(ctx, txWithPostCommit.Tx, common.GetTenantFromContext(ctx), repository.LinkDetails{
+			err = s.neo4j.CommonWriteRepository.Link(ctx, txWithPostCommit.Tx, common.GetTenantFromContext(ctx), neo4j_repository.LinkDetails{
 				FromEntityId:   flowId,
 				FromEntityType: model.FLOW,
 				Relationship:   model.HAS,
@@ -936,7 +935,7 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 				return nil, errors.Wrap(err, "failed to link flow to flow participant")
 			}
 
-			err = s.neo4j.CommonWriteRepository.Link(ctx, txWithPostCommit.Tx, common.GetTenantFromContext(ctx), repository.LinkDetails{
+			err = s.neo4j.CommonWriteRepository.Link(ctx, txWithPostCommit.Tx, common.GetTenantFromContext(ctx), neo4j_repository.LinkDetails{
 				FromEntityId:   entity.Id,
 				FromEntityType: model.FLOW_PARTICIPANT,
 				Relationship:   model.HAS,
@@ -1029,7 +1028,7 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 			}
 		}
 
-		err = s.neo4j.CommonWriteRepository.Unlink(ctx, &tx, tenant, repository.LinkDetails{
+		err = s.neo4j.CommonWriteRepository.Unlink(ctx, &tx, tenant, neo4j_repository.LinkDetails{
 			FromEntityId:   flow.Id,
 			FromEntityType: model.FLOW,
 			Relationship:   model.HAS,
@@ -1040,7 +1039,7 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 			return nil, err
 		}
 
-		err = s.neo4j.CommonWriteRepository.Unlink(ctx, &tx, tenant, repository.LinkDetails{
+		err = s.neo4j.CommonWriteRepository.Unlink(ctx, &tx, tenant, neo4j_repository.LinkDetails{
 			FromEntityId:   flowParticipant.Id,
 			FromEntityType: model.FLOW_PARTICIPANT,
 			Relationship:   model.HAS,
@@ -1155,7 +1154,7 @@ func (s *flowService) FlowSenderMerge(ctx context.Context, flowId string, input 
 	}
 
 	if isNew {
-		err = s.neo4j.CommonWriteRepository.Link(ctx, nil, common.GetTenantFromContext(ctx), repository.LinkDetails{
+		err = s.neo4j.CommonWriteRepository.Link(ctx, nil, common.GetTenantFromContext(ctx), neo4j_repository.LinkDetails{
 			FromEntityId:   flowId,
 			FromEntityType: model.FLOW,
 			Relationship:   model.HAS,
@@ -1169,7 +1168,7 @@ func (s *flowService) FlowSenderMerge(ctx context.Context, flowId string, input 
 	}
 
 	// TODO LINK WITH USER and UNLINK WITH PREVIOUS IF CHANGED
-	err = s.neo4j.CommonWriteRepository.Link(ctx, nil, common.GetTenantFromContext(ctx), repository.LinkDetails{
+	err = s.neo4j.CommonWriteRepository.Link(ctx, nil, common.GetTenantFromContext(ctx), neo4j_repository.LinkDetails{
 		FromEntityId:   toStore.Id,
 		FromEntityType: model.FLOW_SENDER,
 		Relationship:   model.HAS,
@@ -1217,7 +1216,7 @@ func (s *flowService) FlowSenderDelete(ctx context.Context, flowSenderId string)
 
 	// todo use TX
 
-	err = s.neo4j.CommonWriteRepository.Unlink(ctx, nil, common.GetTenantFromContext(ctx), repository.LinkDetails{
+	err = s.neo4j.CommonWriteRepository.Unlink(ctx, nil, common.GetTenantFromContext(ctx), neo4j_repository.LinkDetails{
 		FromEntityId:   flow.Id,
 		FromEntityType: model.FLOW,
 		Relationship:   model.HAS,
@@ -1229,7 +1228,7 @@ func (s *flowService) FlowSenderDelete(ctx context.Context, flowSenderId string)
 		return err
 	}
 
-	err = s.neo4j.CommonWriteRepository.Unlink(ctx, nil, common.GetTenantFromContext(ctx), repository.LinkDetails{
+	err = s.neo4j.CommonWriteRepository.Unlink(ctx, nil, common.GetTenantFromContext(ctx), neo4j_repository.LinkDetails{
 		FromEntityId:   flowSender.Id,
 		FromEntityType: model.FLOW_SENDER,
 		Relationship:   model.HAS,

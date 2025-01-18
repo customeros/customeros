@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
@@ -28,8 +28,8 @@ type ContactService interface {
 	LinkContactWithOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId, organizationId, jobTitle, description, source string, primary bool, startedAt, endedAt *time.Time) error
 	CheckContactExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
 	CheckContactExistsWithEmail(ctx context.Context, email string) (bool, string, error)
-	GetContactById(ctx context.Context, contactId string) (*entity.ContactEntity, error)
-	GetContactsByIds(ctx context.Context, contactIds []string) ([]*entity.ContactEntity, error)
+	GetContactById(ctx context.Context, contactId string) (*neo4j_entity.ContactEntity, error)
+	GetContactsByIds(ctx context.Context, contactIds []string) ([]*neo4j_entity.ContactEntity, error)
 	SetPrimaryJobRole(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string, primaryOrganizationId *string) error
-	GetFirstContactByEmail(ctx context.Context, email string) (*entity.ContactEntity, error)
+	GetFirstContactByEmail(ctx context.Context, email string) (*neo4j_entity.ContactEntity, error)
 }

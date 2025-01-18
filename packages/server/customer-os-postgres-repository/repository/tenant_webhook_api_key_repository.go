@@ -1,10 +1,10 @@
-package repository
+package postgres_repository
 
 import (
 	"errors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -13,8 +13,8 @@ import (
 
 type TenantWebhookApiKeyRepository interface {
 	CreateApiKey(ctx context.Context, tenant string) error
-	GetTenantForApiKey(ctx context.Context, apiKey string) (*entity.TenantWebhookApiKey, error)
-	GetFirstApiKeyForTenant(ctx context.Context, tenant string) (*entity.TenantWebhookApiKey, error)
+	GetTenantForApiKey(ctx context.Context, apiKey string) (*postgres_entity.TenantWebhookApiKey, error)
+	GetFirstApiKeyForTenant(ctx context.Context, tenant string) (*postgres_entity.TenantWebhookApiKey, error)
 }
 
 type tenantWebhookApiKeyRepository struct {
@@ -32,9 +32,9 @@ func (r *tenantWebhookApiKeyRepository) CreateApiKey(ctx context.Context, tenant
 	tracing.TagTenant(span, tenant)
 
 	now := utils.Now()
-	apiKey := entity.TenantWebhookApiKey{
+	apiKey := postgres_entity.TenantWebhookApiKey{
 		Tenant:    tenant,
-		Key:       entity.KeyPrefix + utils.GenerateKey(32, false),
+		Key:       postgres_entity.KeyPrefix + utils.GenerateKey(32, false),
 		Enabled:   true,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -47,13 +47,13 @@ func (r *tenantWebhookApiKeyRepository) CreateApiKey(ctx context.Context, tenant
 	return nil
 }
 
-func (r *tenantWebhookApiKeyRepository) GetTenantForApiKey(ctx context.Context, apiKey string) (*entity.TenantWebhookApiKey, error) {
+func (r *tenantWebhookApiKeyRepository) GetTenantForApiKey(ctx context.Context, apiKey string) (*postgres_entity.TenantWebhookApiKey, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWebhookApiKeyRepository.GetTenantWithApiKey")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	// get record for api key or nil if not found
-	var apiKeyRecord entity.TenantWebhookApiKey
+	var apiKeyRecord postgres_entity.TenantWebhookApiKey
 	err := r.gormDb.
 		Where("key = ?", apiKey).
 		First(&apiKeyRecord).
@@ -67,14 +67,14 @@ func (r *tenantWebhookApiKeyRepository) GetTenantForApiKey(ctx context.Context, 
 	return &apiKeyRecord, nil
 }
 
-func (r *tenantWebhookApiKeyRepository) GetFirstApiKeyForTenant(ctx context.Context, tenant string) (*entity.TenantWebhookApiKey, error) {
+func (r *tenantWebhookApiKeyRepository) GetFirstApiKeyForTenant(ctx context.Context, tenant string) (*postgres_entity.TenantWebhookApiKey, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWebhookApiKeyRepository.GetFirstApiKeyForTenant")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 
 	// get record for tenant or nil if not found
-	var apiKeyRecord entity.TenantWebhookApiKey
+	var apiKeyRecord postgres_entity.TenantWebhookApiKey
 	err := r.gormDb.
 		Where("tenant_name = ?", tenant).
 		Order("created_at ASC").

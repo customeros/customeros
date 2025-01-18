@@ -13,7 +13,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/gin-gonic/gin"
 	pkgerrors "github.com/pkg/errors"
@@ -188,7 +188,7 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 		}
 
 		// Parse the JSON request body
-		var betterContactResponse entity.BetterContactResponseBody
+		var betterContactResponse postgres_entity.BetterContactResponseBody
 		if err = json.Unmarshal(requestBody, &betterContactResponse); err != nil {
 			tracing.TraceErr(span, err)
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
@@ -219,7 +219,7 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 					}
 				}
 				if emailFound {
-					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonEmailFound,
+					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, postgres_entity.BillableEventEnrichPersonEmailFound,
 						postgresrepository.BillableEventDetails{
 							ExternalID:    personEnrichmentRequest.BettercontactRecordId,
 							ReferenceData: "generated in webhooks",
@@ -229,7 +229,7 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 					}
 				}
 				if phoneFound {
-					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonPhoneFound,
+					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, postgres_entity.BillableEventEnrichPersonPhoneFound,
 						postgresrepository.BillableEventDetails{
 							ExternalID:    personEnrichmentRequest.BettercontactRecordId,
 							ReferenceData: "generated in webhooks",

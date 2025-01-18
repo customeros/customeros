@@ -7,13 +7,12 @@ import (
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -27,8 +26,8 @@ import (
 
 type registrationService struct {
 	events   *events.EventsService
-	postgres *repository.Repositories
-	neo4j    *neoRepo.Repositories
+	postgres *postgres_repository.Repositories
+	neo4j    *neo4j_repository.Repositories
 	contact  interfaces.ContactService
 	email    interfaces.EmailService
 	flow     interfaces.FlowService
@@ -38,7 +37,7 @@ type registrationService struct {
 	user     interfaces.UserService
 }
 
-func NewRegistrationService(events *events.EventsService, postgres *repository.Repositories, neo4j *neoRepo.Repositories, contact interfaces.ContactService, email interfaces.EmailService, flow interfaces.FlowService, mailbox interfaces.MailboxService, org interfaces.OrganizationService, postmark interfaces.PostmarkService, user interfaces.UserService) interfaces.RegistrationService {
+func NewRegistrationService(events *events.EventsService, postgres *postgres_repository.Repositories, neo4j *neo4j_repository.Repositories, contact interfaces.ContactService, email interfaces.EmailService, flow interfaces.FlowService, mailbox interfaces.MailboxService, org interfaces.OrganizationService, postmark interfaces.PostmarkService, user interfaces.UserService) interfaces.RegistrationService {
 	return &registrationService{
 		events:   events,
 		postgres: postgres,
@@ -164,7 +163,7 @@ func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, test
 		return err
 	}
 
-	err = s.contact.LinkContactWithOrganization(ctx, nil, contactId, organizationId, "Chief Testing Officer", "", constants.AppSourceUserAdminApi, true, utils.TimePtr(utils.Now()), nil)
+	err = s.contact.LinkContactWithOrganization(ctx, nil, contactId, organizationId, "Chief Testing Officer", "", "", true, utils.TimePtr(utils.Now()), nil)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error linking contact with organization during tenant onboarding"))
 		return err

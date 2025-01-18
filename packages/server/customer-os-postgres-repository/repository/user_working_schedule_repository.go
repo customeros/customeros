@@ -1,9 +1,9 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -11,8 +11,8 @@ import (
 )
 
 type UserWorkingScheduleRepository interface {
-	GetForUser(ctx context.Context, tenant, userId string) ([]*entity.UserWorkingSchedule, error)
-	Store(ctx context.Context, tenant string, input *entity.UserWorkingSchedule) error
+	GetForUser(ctx context.Context, tenant, userId string) ([]*postgres_entity.UserWorkingSchedule, error)
+	Store(ctx context.Context, tenant string, input *postgres_entity.UserWorkingSchedule) error
 }
 
 type userWorkingScheduleRepositoryImpl struct {
@@ -23,14 +23,14 @@ func NewUserWorkingScheduleRepository(gormDb *gorm.DB) UserWorkingScheduleReposi
 	return &userWorkingScheduleRepositoryImpl{gormDb: gormDb}
 }
 
-func (repo *userWorkingScheduleRepositoryImpl) GetForUser(ctx context.Context, tenant, userId string) ([]*entity.UserWorkingSchedule, error) {
+func (repo *userWorkingScheduleRepositoryImpl) GetForUser(ctx context.Context, tenant, userId string) ([]*postgres_entity.UserWorkingSchedule, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWorkingScheduleRepository.GetForUser")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	span.LogFields(log.String("tenant", tenant), log.String("userId", userId))
 
-	var e []*entity.UserWorkingSchedule
+	var e []*postgres_entity.UserWorkingSchedule
 	err := repo.gormDb.Where("tenant = ? and user_id = ?", tenant, userId).Find(&e).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -43,7 +43,7 @@ func (repo *userWorkingScheduleRepositoryImpl) GetForUser(ctx context.Context, t
 	return e, nil
 }
 
-func (repo *userWorkingScheduleRepositoryImpl) Store(ctx context.Context, tenant string, input *entity.UserWorkingSchedule) error {
+func (repo *userWorkingScheduleRepositoryImpl) Store(ctx context.Context, tenant string, input *postgres_entity.UserWorkingSchedule) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWorkingScheduleRepository.Store")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)

@@ -1,21 +1,23 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"time"
+
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"time"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type InteractionSessionWriteRepository interface {
-	CreateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionSessionId string, data entity.InteractionSessionEntity) error
+	CreateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionSessionId string, data neo4j_entity.InteractionSessionEntity) error
 	MergeByIdentifierAndChannel(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message commonmodel.SaveEmailMessage, sessionType commonenum.InteractionSessionType, channel commonenum.InteractionSessionChannel, source, appSource string) (string, error)
 }
 
@@ -31,7 +33,7 @@ func NewInteractionSessionWriteRepository(driver *neo4j.DriverWithContext, datab
 	}
 }
 
-func (r *interactionSessionWriteRepository) CreateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionSessionId string, data entity.InteractionSessionEntity) error {
+func (r *interactionSessionWriteRepository) CreateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionSessionId string, data neo4j_entity.InteractionSessionEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionWriteRepository.CreateInTx")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)

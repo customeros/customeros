@@ -3,7 +3,7 @@ package interfaces
 import (
 	"context"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	international_street "github.com/smartystreets/smartystreets-go-sdk/international-street-api"
 	extract "github.com/smartystreets/smartystreets-go-sdk/us-extract-api"
 )
@@ -15,10 +15,10 @@ type VerifyService interface {
 	ValidateEmail(ctx context.Context, email string) (*ValidateEmailMailSherpaData, error)
 	ValidateEmailWithMailSherpa(ctx context.Context, email string) (*ValidateEmailMailSherpaData, error)
 	ValidateEmailScrubby(ctx context.Context, email string) (string, error)
-	ValidateEmailWithTrueinbox(ctx context.Context, email string) (*entity.TrueInboxResponseBody, error)
+	ValidateEmailWithTrueinbox(ctx context.Context, email string) (*postgres_entity.TrueInboxResponseBody, error)
 	ValidateEmailWithEnrow(ctx context.Context, email string, extendedWaitingTimeForResponse bool) (string, error)
 
-	LookupIp(ctx context.Context, ip string) (*entity.IPDataResponseBody, error)
+	LookupIp(ctx context.Context, ip string) (*postgres_entity.IPDataResponseBody, error)
 
 	ValidateUsAddress(address string) (*extract.Lookup, error)
 	ValidateInternationalAddress(address, country string) (*international_street.Lookup, error)

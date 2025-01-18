@@ -14,7 +14,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -29,14 +29,14 @@ type OrganizationListener interface {
 
 type organizationListenerImpl struct {
 	services          *service.CommonServices
-	neo4jRepositories *repository.Repositories
+	neo4jRepositories *neo4j_repository.Repositories
 	log               logger.Logger
 	config            *config.CommonConfig
 }
 
 func NewOrganizationListener(
 	services *service.CommonServices,
-	neo4jRepositories *repository.Repositories,
+	neo4jRepositories *neo4j_repository.Repositories,
 	log logger.Logger,
 	config *config.CommonConfig,
 ) OrganizationListener {

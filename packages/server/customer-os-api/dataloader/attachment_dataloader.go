@@ -3,42 +3,43 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"github.com/graph-gophers/dataloader"
+	"reflect"
+
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"reflect"
 )
 
-func (i *Loaders) GetAttachmentsForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.AttachmentEntities, error) {
+func (i *Loaders) GetAttachmentsForInteractionEvent(ctx context.Context, interactionEventId string) (*neo4j_entity.AttachmentEntities, error) {
 	thunk := i.AttachmentsForInteractionEvent.Load(ctx, dataloader.StringKey(interactionEventId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.AttachmentEntities)
+	resultObj := result.(neo4j_entity.AttachmentEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetAttachmentsForMeeting(ctx context.Context, meetingId string) (*entity.AttachmentEntities, error) {
+func (i *Loaders) GetAttachmentsForMeeting(ctx context.Context, meetingId string) (*neo4j_entity.AttachmentEntities, error) {
 	thunk := i.AttachmentsForMeeting.Load(ctx, dataloader.StringKey(meetingId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.AttachmentEntities)
+	resultObj := result.(neo4j_entity.AttachmentEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetAttachmentsForContract(ctx context.Context, contractId string) (*entity.AttachmentEntities, error) {
+func (i *Loaders) GetAttachmentsForContract(ctx context.Context, contractId string) (*neo4j_entity.AttachmentEntities, error) {
 	thunk := i.AttachmentsForContract.Load(ctx, dataloader.StringKey(contractId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.AttachmentEntities)
+	resultObj := result.(neo4j_entity.AttachmentEntities)
 	return &resultObj, nil
 }
 
@@ -60,12 +61,12 @@ func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Conte
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	attachmentEntitiesByInteractionEventId := make(map[string]entity.AttachmentEntities)
+	attachmentEntitiesByInteractionEventId := make(map[string]neo4j_entity.AttachmentEntities)
 	for _, val := range *attachmentEntitiesPtr {
 		if list, ok := attachmentEntitiesByInteractionEventId[val.DataloaderKey]; ok {
 			attachmentEntitiesByInteractionEventId[val.DataloaderKey] = append(list, val)
 		} else {
-			attachmentEntitiesByInteractionEventId[val.DataloaderKey] = entity.AttachmentEntities{val}
+			attachmentEntitiesByInteractionEventId[val.DataloaderKey] = neo4j_entity.AttachmentEntities{val}
 		}
 	}
 
@@ -78,10 +79,10 @@ func (b *attachmentBatcher) getAttachmentsForInteractionEvents(ctx context.Conte
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.AttachmentEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4j_entity.AttachmentEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.AttachmentEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4j_entity.AttachmentEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -110,12 +111,12 @@ func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys 
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	attachmentEntitiesByMeetingId := make(map[string]entity.AttachmentEntities)
+	attachmentEntitiesByMeetingId := make(map[string]neo4j_entity.AttachmentEntities)
 	for _, val := range *attachmentEntitiesPtr {
 		if list, ok := attachmentEntitiesByMeetingId[val.DataloaderKey]; ok {
 			attachmentEntitiesByMeetingId[val.DataloaderKey] = append(list, val)
 		} else {
-			attachmentEntitiesByMeetingId[val.DataloaderKey] = entity.AttachmentEntities{val}
+			attachmentEntitiesByMeetingId[val.DataloaderKey] = neo4j_entity.AttachmentEntities{val}
 		}
 	}
 
@@ -128,10 +129,10 @@ func (b *attachmentBatcher) getAttachmentsForMeetings(ctx context.Context, keys 
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.AttachmentEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4j_entity.AttachmentEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.AttachmentEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4j_entity.AttachmentEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -159,12 +160,12 @@ func (b *attachmentBatcher) getAttachmentsForContracts(ctx context.Context, keys
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	attachmentEntitiesByContractId := make(map[string]entity.AttachmentEntities)
+	attachmentEntitiesByContractId := make(map[string]neo4j_entity.AttachmentEntities)
 	for _, val := range *attachmentEntitiesPtr {
 		if list, ok := attachmentEntitiesByContractId[val.DataloaderKey]; ok {
 			attachmentEntitiesByContractId[val.DataloaderKey] = append(list, val)
 		} else {
-			attachmentEntitiesByContractId[val.DataloaderKey] = entity.AttachmentEntities{val}
+			attachmentEntitiesByContractId[val.DataloaderKey] = neo4j_entity.AttachmentEntities{val}
 		}
 	}
 
@@ -177,10 +178,10 @@ func (b *attachmentBatcher) getAttachmentsForContracts(ctx context.Context, keys
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.AttachmentEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4j_entity.AttachmentEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.AttachmentEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4j_entity.AttachmentEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

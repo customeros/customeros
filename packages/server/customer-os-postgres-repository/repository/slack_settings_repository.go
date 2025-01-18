@@ -1,9 +1,9 @@
-package repository
+package postgres_repository
 
 import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -11,8 +11,8 @@ import (
 )
 
 type SlackSettingsRepository interface {
-	Get(ctx context.Context, tenant string) (*entity.SlackSettingsEntity, error)
-	Save(ctx context.Context, slackSettings entity.SlackSettingsEntity) (*entity.SlackSettingsEntity, error)
+	Get(ctx context.Context, tenant string) (*postgres_entity.SlackSettingsEntity, error)
+	Save(ctx context.Context, slackSettings postgres_entity.SlackSettingsEntity) (*postgres_entity.SlackSettingsEntity, error)
 	Delete(ctx context.Context, tenant string) error
 }
 
@@ -26,13 +26,13 @@ func NewSlackSettingsRepository(db *gorm.DB) SlackSettingsRepository {
 	}
 }
 
-func (repo *slackSettingsRepository) Get(ctx context.Context, tenant string) (*entity.SlackSettingsEntity, error) {
+func (repo *slackSettingsRepository) Get(ctx context.Context, tenant string) (*postgres_entity.SlackSettingsEntity, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "SlackSettingsRepository.Get")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 
-	var existing *entity.SlackSettingsEntity
+	var existing *postgres_entity.SlackSettingsEntity
 	err := repo.db.Find(&existing, "tenant_name = ?", tenant).Error
 
 	if err != nil {
@@ -55,7 +55,7 @@ func (repo *slackSettingsRepository) Get(ctx context.Context, tenant string) (*e
 	return existing, nil
 }
 
-func (repo *slackSettingsRepository) Save(ctx context.Context, slackSettings entity.SlackSettingsEntity) (*entity.SlackSettingsEntity, error) {
+func (repo *slackSettingsRepository) Save(ctx context.Context, slackSettings postgres_entity.SlackSettingsEntity) (*postgres_entity.SlackSettingsEntity, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "SlackSettingsRepository.Save")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)

@@ -1,17 +1,17 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 )
 
 type GlobalOrganizationWebsiteToProcessRepository interface {
-	GetWebsitesToProcess(ctx context.Context, limit int) ([]*entity.GlobalOrganizationWebsiteToProcess, error)
+	GetWebsitesToProcess(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganizationWebsiteToProcess, error)
 	MarkAsProcessed(ctx context.Context, id uint64, notes string) error
 	AddWebsiteToProcess(ctx context.Context, website string) error
 }
@@ -24,13 +24,13 @@ func NewGlobalOrganizationWebsiteToProcessRepository(gormDb *gorm.DB) GlobalOrga
 	return &globalOrganizationWebsiteToProcessRepository{db: gormDb}
 }
 
-func (r globalOrganizationWebsiteToProcessRepository) GetWebsitesToProcess(ctx context.Context, limit int) ([]*entity.GlobalOrganizationWebsiteToProcess, error) {
+func (r globalOrganizationWebsiteToProcessRepository) GetWebsitesToProcess(ctx context.Context, limit int) ([]*postgres_entity.GlobalOrganizationWebsiteToProcess, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationWebsiteToProcessRepository.GetWebsitesToProcess")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(tracingLog.Int("limit", limit))
 
-	var data []*entity.GlobalOrganizationWebsiteToProcess
+	var data []*postgres_entity.GlobalOrganizationWebsiteToProcess
 	err := r.db.
 		Where("processed IS NULL OR processed = ?", false).
 		Order("created_at asc").
@@ -50,7 +50,7 @@ func (r globalOrganizationWebsiteToProcessRepository) MarkAsProcessed(ctx contex
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	err := r.db.Model(&entity.GlobalOrganizationWebsiteToProcess{}).
+	err := r.db.Model(&postgres_entity.GlobalOrganizationWebsiteToProcess{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"processed":    true,
@@ -69,7 +69,7 @@ func (r globalOrganizationWebsiteToProcessRepository) AddWebsiteToProcess(ctx co
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	err := r.db.Create(&entity.GlobalOrganizationWebsiteToProcess{
+	err := r.db.Create(&postgres_entity.GlobalOrganizationWebsiteToProcess{
 		Website: website,
 	}).Error
 	if err != nil {

@@ -10,7 +10,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/novu"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -70,7 +70,7 @@ func Handle_FlowParticipantGoalAchieved(ctx context.Context, dependencies *model
 	}
 
 	for _, flowActionExecution := range flowActionExecutions {
-		if flowActionExecution.Status == entity.FlowActionExecutionStatusScheduled {
+		if flowActionExecution.Status == neo4j_entity.FlowActionExecutionStatusScheduled {
 			err = dependencies.Neo4jRepositories.FlowActionExecutionWriteRepository.Delete(ctx, nil, flowActionExecution.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)

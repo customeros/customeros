@@ -1,7 +1,7 @@
 package helper
 
 // Deprecated
-// use entity as return type
+// use postgres_entity as return type
 type QueryResult struct {
 	Result interface{}
 	Error  error

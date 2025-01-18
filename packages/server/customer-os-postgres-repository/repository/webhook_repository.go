@@ -1,4 +1,4 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
@@ -9,14 +9,14 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type WebhooksRepository interface {
-	FindAll(ctx context.Context) (*[]entity.Webhooks, error)
-	Find(ctx context.Context, webhook entity.Webhooks) (*entity.Webhooks, error)
-	Update(ctx context.Context, webhook entity.Webhooks) (*entity.Webhooks, error)
-	Create(ctx context.Context, webhook entity.Webhooks) (*entity.Webhooks, error)
+	FindAll(ctx context.Context) (*[]postgres_entity.Webhooks, error)
+	Find(ctx context.Context, webhook postgres_entity.Webhooks) (*postgres_entity.Webhooks, error)
+	Update(ctx context.Context, webhook postgres_entity.Webhooks) (*postgres_entity.Webhooks, error)
+	Create(ctx context.Context, webhook postgres_entity.Webhooks) (*postgres_entity.Webhooks, error)
 }
 
 type webhooksRepository struct {
@@ -27,12 +27,12 @@ func NewWebhooksRepository(gormDb *gorm.DB) WebhooksRepository {
 	return &webhooksRepository{gormDb: gormDb}
 }
 
-func (r *webhooksRepository) Create(ctx context.Context, webhook entity.Webhooks) (*entity.Webhooks, error) {
+func (r *webhooksRepository) Create(ctx context.Context, webhook postgres_entity.Webhooks) (*postgres_entity.Webhooks, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var created entity.Webhooks
+	var created postgres_entity.Webhooks
 	err := r.gormDb.Create(&webhook).Scan(&created).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -42,7 +42,7 @@ func (r *webhooksRepository) Create(ctx context.Context, webhook entity.Webhooks
 	return &webhook, nil
 }
 
-func (r *webhooksRepository) FindAll(ctx context.Context) (*[]entity.Webhooks, error) {
+func (r *webhooksRepository) FindAll(ctx context.Context) (*[]postgres_entity.Webhooks, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -54,7 +54,7 @@ func (r *webhooksRepository) FindAll(ctx context.Context) (*[]entity.Webhooks, e
 		return nil, err
 	}
 
-	var webhooks []entity.Webhooks
+	var webhooks []postgres_entity.Webhooks
 	err := r.gormDb.
 		Where("enabled = ? AND tenant = ?", true, tenant).
 		Order("created_at DESC").
@@ -67,7 +67,7 @@ func (r *webhooksRepository) FindAll(ctx context.Context) (*[]entity.Webhooks, e
 	return &webhooks, nil
 }
 
-func (r *webhooksRepository) Find(ctx context.Context, webhook entity.Webhooks) (*entity.Webhooks, error) {
+func (r *webhooksRepository) Find(ctx context.Context, webhook postgres_entity.Webhooks) (*postgres_entity.Webhooks, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -81,11 +81,11 @@ func (r *webhooksRepository) Find(ctx context.Context, webhook entity.Webhooks) 
 		}
 	}
 
-	var foundWebhook entity.Webhooks
+	var foundWebhook postgres_entity.Webhooks
 	query := r.gormDb.Where("enabled = ?", true)
 
 	// Add additional filters based on non-zero fields in webhook
-	if webhook != (entity.Webhooks{}) {
+	if webhook != (postgres_entity.Webhooks{}) {
 		query = query.Where(&webhook)
 	}
 
@@ -101,7 +101,7 @@ func (r *webhooksRepository) Find(ctx context.Context, webhook entity.Webhooks) 
 	return &foundWebhook, nil
 }
 
-func (r *webhooksRepository) Update(ctx context.Context, webhook entity.Webhooks) (*entity.Webhooks, error) {
+func (r *webhooksRepository) Update(ctx context.Context, webhook postgres_entity.Webhooks) (*postgres_entity.Webhooks, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebhooksRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -121,7 +121,7 @@ func (r *webhooksRepository) Update(ctx context.Context, webhook entity.Webhooks
 		return nil, err
 	}
 
-	var updatedWebhook entity.Webhooks
+	var updatedWebhook postgres_entity.Webhooks
 	err := r.gormDb.Model(&webhook).Updates(&webhook).First(&updatedWebhook).Error
 	if err != nil {
 		tracing.TraceErr(span, err)

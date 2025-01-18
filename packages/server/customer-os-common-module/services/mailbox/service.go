@@ -6,9 +6,9 @@ import (
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -25,14 +25,14 @@ import (
 
 type mailboxService struct {
 	log      logger.Logger
-	postgres *repository.Repositories
-	neo4j    *neoRepo.Repositories
+	postgres *postgres_repository.Repositories
+	neo4j    *neo4j_repository.Repositories
 	email    interfaces.EmailService
 }
 
 const TEST_MAILBOX_DOMAIN = "testcustomeros.com"
 
-func NewMailboxService(log logger.Logger, postgres *repository.Repositories, neo4j *neoRepo.Repositories, email interfaces.EmailService) interfaces.MailboxService {
+func NewMailboxService(log logger.Logger, postgres *postgres_repository.Repositories, neo4j *neo4j_repository.Repositories, email interfaces.EmailService) interfaces.MailboxService {
 	return &mailboxService{
 		log:      log,
 		postgres: postgres,
@@ -150,7 +150,7 @@ func (s *mailboxService) verifyMailboxNotExists(ctx context.Context, span opentr
 
 func (s *mailboxService) createMailbox(ctx context.Context, span opentracing.Span, tx *gorm.DB, request interfaces.CreateMailboxRequest, mailboxEmail string, userId string) error {
 	tenant := common.GetTenantFromContext(ctx)
-	tenantSettingsMailbox := entity.TenantSettingsMailbox{
+	tenantSettingsMailbox := postgres_entity.TenantSettingsMailbox{
 		Tenant:          tenant,
 		Domain:          request.Domain,
 		MailboxUsername: mailboxEmail,
@@ -159,7 +159,7 @@ func (s *mailboxService) createMailbox(ctx context.Context, span opentracing.Spa
 		UserId:          userId,
 		ForwardingTo:    strings.Join(request.ForwardingTo, ","),
 		WebmailEnabled:  request.WebmailEnabled,
-		Status:          entity.MailboxStatusPendingProvisioning,
+		Status:          postgres_entity.MailboxStatusPendingProvisioning,
 	}
 	err := s.postgres.TenantSettingsMailboxRepository.Merge(ctx, tx, &tenantSettingsMailbox)
 	if err != nil {

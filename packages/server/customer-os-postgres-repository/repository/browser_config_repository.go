@@ -1,9 +1,9 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -12,10 +12,10 @@ import (
 )
 
 type BrowserConfigRepository interface {
-	Get(ctx context.Context) ([]entity.BrowserConfig, error)
-	GetForUser(ctx context.Context, userId string) (*entity.BrowserConfig, error)
+	Get(ctx context.Context) ([]postgres_entity.BrowserConfig, error)
+	GetForUser(ctx context.Context, userId string) (*postgres_entity.BrowserConfig, error)
 
-	Merge(ctx context.Context, browserConfig *entity.BrowserConfig) error
+	Merge(ctx context.Context, browserConfig *postgres_entity.BrowserConfig) error
 }
 
 type browserConfigRepositoryImpl struct {
@@ -26,12 +26,12 @@ func NewBrowserConfigRepository(gormDb *gorm.DB) BrowserConfigRepository {
 	return &browserConfigRepositoryImpl{gormDb: gormDb}
 }
 
-func (repo *browserConfigRepositoryImpl) Get(ctx context.Context) ([]entity.BrowserConfig, error) {
+func (repo *browserConfigRepositoryImpl) Get(ctx context.Context) ([]postgres_entity.BrowserConfig, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserConfigRepository.Get")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var result []entity.BrowserConfig
+	var result []postgres_entity.BrowserConfig
 	err := repo.gormDb.Where("session_status = 'VALID'").Find(&result).Error
 
 	if err != nil {
@@ -42,14 +42,14 @@ func (repo *browserConfigRepositoryImpl) Get(ctx context.Context) ([]entity.Brow
 	return result, nil
 }
 
-func (repo *browserConfigRepositoryImpl) GetForUser(ctx context.Context, userId string) (*entity.BrowserConfig, error) {
+func (repo *browserConfigRepositoryImpl) GetForUser(ctx context.Context, userId string) (*postgres_entity.BrowserConfig, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserConfigRepository.Get")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	var result *entity.BrowserConfig
+	var result *postgres_entity.BrowserConfig
 	err := repo.gormDb.Where("tenant = ? and user_id = ? and session_status = 'VALID'", tenant, userId).First(&result).Error
 
 	if err != nil && err == gorm.ErrRecordNotFound {
@@ -64,7 +64,7 @@ func (repo *browserConfigRepositoryImpl) GetForUser(ctx context.Context, userId 
 	return result, nil
 }
 
-func (r *browserConfigRepositoryImpl) Merge(ctx context.Context, input *entity.BrowserConfig) error {
+func (r *browserConfigRepositoryImpl) Merge(ctx context.Context, input *postgres_entity.BrowserConfig) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "BrowserConfigRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
@@ -74,7 +74,7 @@ func (r *browserConfigRepositoryImpl) Merge(ctx context.Context, input *entity.B
 	span.LogFields(tracingLog.Object("input", input))
 
 	// Check if the browserConfig already exists
-	var browserConfig entity.BrowserConfig
+	var browserConfig postgres_entity.BrowserConfig
 	err := r.gormDb.
 		Where("tenant = ? AND user_id = ?", tenant, input.UserId).
 		First(&browserConfig).Error
@@ -85,7 +85,7 @@ func (r *browserConfigRepositoryImpl) Merge(ctx context.Context, input *entity.B
 	}
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		browserConfig = entity.BrowserConfig{
+		browserConfig = postgres_entity.BrowserConfig{
 			Tenant: tenant,
 			UserId: input.UserId,
 			Status: input.Status,

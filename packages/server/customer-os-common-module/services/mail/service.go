@@ -3,8 +3,8 @@ package mail
 import (
 	"context"
 
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
@@ -15,8 +15,8 @@ import (
 
 type mailService struct {
 	cache              *caches.Cache
-	postgres           *repository.Repositories
-	neo4j              *neoRepo.Repositories
+	postgres           *postgres_repository.Repositories
+	neo4j              *neo4j_repository.Repositories
 	azure              interfaces.AzureService
 	google             interfaces.GoogleService
 	interactionSession interfaces.InteractionSessionService
@@ -27,7 +27,7 @@ type mailService struct {
 	org                interfaces.OrganizationService
 }
 
-func NewMailService(cache *caches.Cache, postgres *repository.Repositories, neo4j *neoRepo.Repositories, azure interfaces.AzureService, contact interfaces.ContactService, email interfaces.EmailService, google interfaces.GoogleService, interactionEvent interfaces.InteractionEventService, interactionSession interfaces.InteractionSessionService, opensrs interfaces.OpenSrsService, org interfaces.OrganizationService) interfaces.MailService {
+func NewMailService(cache *caches.Cache, postgres *postgres_repository.Repositories, neo4j *neo4j_repository.Repositories, azure interfaces.AzureService, contact interfaces.ContactService, email interfaces.EmailService, google interfaces.GoogleService, interactionEvent interfaces.InteractionEventService, interactionSession interfaces.InteractionSessionService, opensrs interfaces.OpenSrsService, org interfaces.OrganizationService) interfaces.MailService {
 	return &mailService{
 		cache:              cache,
 		postgres:           postgres,

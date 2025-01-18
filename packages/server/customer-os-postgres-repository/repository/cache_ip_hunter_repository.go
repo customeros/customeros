@@ -1,19 +1,19 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
 	"errors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 )
 
 type CacheIpHunterRepository interface {
-	Get(ctx context.Context, ip string) (*entity.CacheIpHunter, error)
-	Save(ctx context.Context, cacheIpHunter entity.CacheIpHunter) (*entity.CacheIpHunter, error)
+	Get(ctx context.Context, ip string) (*postgres_entity.CacheIpHunter, error)
+	Save(ctx context.Context, cacheIpHunter postgres_entity.CacheIpHunter) (*postgres_entity.CacheIpHunter, error)
 }
 
 type cacheIpHunterRepository struct {
@@ -24,13 +24,13 @@ func NewCacheIpHunterRepository(gormDb *gorm.DB) CacheIpHunterRepository {
 	return &cacheIpHunterRepository{db: gormDb}
 }
 
-func (r cacheIpHunterRepository) Get(ctx context.Context, ip string) (*entity.CacheIpHunter, error) {
+func (r cacheIpHunterRepository) Get(ctx context.Context, ip string) (*postgres_entity.CacheIpHunter, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheIpHunterRepository.Register")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("ip", ip))
 
-	var cacheIpHunter entity.CacheIpHunter
+	var cacheIpHunter postgres_entity.CacheIpHunter
 	result := r.db.WithContext(ctx).Where("ip = ?", ip).First(&cacheIpHunter)
 
 	if result.Error != nil {
@@ -44,13 +44,13 @@ func (r cacheIpHunterRepository) Get(ctx context.Context, ip string) (*entity.Ca
 	return &cacheIpHunter, nil
 }
 
-func (r cacheIpHunterRepository) Save(ctx context.Context, cacheIpHunter entity.CacheIpHunter) (*entity.CacheIpHunter, error) {
+func (r cacheIpHunterRepository) Save(ctx context.Context, cacheIpHunter postgres_entity.CacheIpHunter) (*postgres_entity.CacheIpHunter, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheIpHunterRepository.Register")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.LogObjectAsJson(span, "cacheIpHunter", cacheIpHunter)
 
-	var existingHunter entity.CacheIpHunter
+	var existingHunter postgres_entity.CacheIpHunter
 	result := r.db.WithContext(ctx).Where("ip = ?", cacheIpHunter.Ip).First(&existingHunter)
 
 	if result.Error != nil {

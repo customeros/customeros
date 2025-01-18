@@ -1,8 +1,8 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -30,7 +30,7 @@ func (repo *GoogleServiceAccountKeyRepositoryImpl) GetApiKeyByTenantService(ctx 
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("tenantName", tenantName), log.String("serviceId", serviceId))
 
-	result := entity.GoogleServiceAccountKey{}
+	result := postgres_entity.GoogleServiceAccountKey{}
 	err := repo.gormDb.First(&result, "tenant_name = ? AND key = ?", tenantName, serviceId).Error
 
 	if err != nil {
@@ -61,7 +61,7 @@ func (repo *GoogleServiceAccountKeyRepositoryImpl) SaveKey(ctx context.Context, 
 		return nil
 	}
 
-	newKey := entity.GoogleServiceAccountKey{
+	newKey := postgres_entity.GoogleServiceAccountKey{
 		TenantName: tenant,
 		Key:        key,
 		Value:      value,
@@ -92,7 +92,7 @@ func (repo *GoogleServiceAccountKeyRepositoryImpl) DeleteKey(ctx context.Context
 		return nil
 	}
 
-	err = repo.gormDb.Delete(&entity.GoogleServiceAccountKey{}, "tenant_name = ? AND key = ?", tenant, key).Error
+	err = repo.gormDb.Delete(&postgres_entity.GoogleServiceAccountKey{}, "tenant_name = ? AND key = ?", tenant, key).Error
 	if err != nil {
 		return errors.Wrap(err, "DeleteKey")
 	}

@@ -1,4 +1,4 @@
-package entity
+package postgres_entity
 
 type AppKey struct {
 	ID     uint64 `gorm:"primary_key;autoIncrement:true" json:"id"`

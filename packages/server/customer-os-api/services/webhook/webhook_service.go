@@ -11,7 +11,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -61,7 +61,7 @@ func (w *webhookService) GetIntegrationFromWebhookPath(ctx context.Context, tena
 	span.LogFields(log.String("webhookPath", webhookPath))
 
 	path := strings.Trim(webhookPath, "/")
-	webhook, err := w.repositories.PostgresRepositories.WebhooksRepository.Find(ctx, entity.Webhooks{
+	webhook, err := w.repositories.PostgresRepositories.WebhooksRepository.Find(ctx, postgres_entity.Webhooks{
 		Tenant:      tenant,
 		WebhookPath: path,
 	})
@@ -86,7 +86,7 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 	span.LogFields(log.String("tenant", tenant))
 	span.LogFields(log.String("integration", integration.String()))
 
-	var newWebhook entity.Webhooks
+	var newWebhook postgres_entity.Webhooks
 
 	tenantHash, err := w.repositories.PostgresRepositories.TenantRepository.GetHashID(ctx, tenant)
 	span.LogFields(log.String("tenantHash", tenantHash))
@@ -97,7 +97,7 @@ func (w *webhookService) CreateIntegrationWebhook(ctx context.Context, tenant st
 	}
 
 	// check if webhook already exists for tenant/integration
-	query := entity.Webhooks{
+	query := postgres_entity.Webhooks{
 		Tenant:      tenant,
 		Integration: integration.String(),
 	}
@@ -168,7 +168,7 @@ func (w *webhookService) DeactivateWebhook(ctx context.Context, webhookPath stri
 		return err
 	}
 
-	query := entity.Webhooks{
+	query := postgres_entity.Webhooks{
 		Tenant:      tenant,
 		WebhookPath: webhookPath,
 		Enabled:     false,

@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/biter777/countries"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/multierr"
 
@@ -21,10 +21,10 @@ import (
 type enrichmentService struct {
 	log      logger.Logger
 	config   *config.ExternalServicesConfig
-	postgres *repository.Repositories
+	postgres *postgres_repository.Repositories
 }
 
-func NewEnrichmentService(log logger.Logger, config *config.ExternalServicesConfig, postgres *repository.Repositories) interfaces.EnrichmentService {
+func NewEnrichmentService(log logger.Logger, config *config.ExternalServicesConfig, postgres *postgres_repository.Repositories) interfaces.EnrichmentService {
 	return &enrichmentService{
 		log:      log,
 		config:   config,
@@ -32,7 +32,7 @@ func NewEnrichmentService(log logger.Logger, config *config.ExternalServicesConf
 	}
 }
 
-func (s *enrichmentService) EnrichPerson(ctx context.Context, person interfaces.PersonSearch) (*uint64, *entity.ScrapInResponseBody, error) {
+func (s *enrichmentService) EnrichPerson(ctx context.Context, person interfaces.PersonSearch) (*uint64, *postgres_entity.ScrapInResponseBody, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.EnrichPerson")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -45,7 +45,7 @@ func (s *enrichmentService) EnrichPerson(ctx context.Context, person interfaces.
 
 	var errs error
 
-	var personData *entity.ScrapInResponseBody
+	var personData *postgres_entity.ScrapInResponseBody
 	// scrapin by linkedinURL
 	if person.LinkedinURL != nil {
 		_, results, err := s.ScrapInPersonProfile(ctx, *person.LinkedinURL)
@@ -84,7 +84,7 @@ func (s *enrichmentService) EnrichOrganization(ctx context.Context, domain, link
 
 	var errs error
 	// Scrapin by linkedinURL
-	var scrapinResults *entity.ScrapInResponseBody
+	var scrapinResults *postgres_entity.ScrapInResponseBody
 	if linkedinURL != nil {
 		_, results, err := s.ScrapInCompanyProfile(ctx, *linkedinURL)
 		if err != nil {
@@ -119,7 +119,7 @@ func (s *enrichmentService) EnrichOrganization(ctx context.Context, domain, link
 	return s.combineOrganizationEnrichmentData(ctx, scrapinResults, brandfetchResults, *domain), nil
 }
 
-func (s *enrichmentService) combineOrganizationEnrichmentData(ctx context.Context, scrapin *entity.ScrapInResponseBody, brandfetch *entity.BrandfetchResponseBody, domain string) *interfaces.OrganizationData {
+func (s *enrichmentService) combineOrganizationEnrichmentData(ctx context.Context, scrapin *postgres_entity.ScrapInResponseBody, brandfetch *postgres_entity.BrandfetchResponseBody, domain string) *interfaces.OrganizationData {
 	data := interfaces.OrganizationData{}
 	s.updateResponseWithScrapinData(&data, scrapin, domain)
 	s.updateResponseWithBrandfetchData(&data, brandfetch)
@@ -146,7 +146,7 @@ func (s *enrichmentService) normalizeCountry(data *interfaces.OrganizationLocati
 	}
 }
 
-func (s *enrichmentService) updateResponseWithScrapinData(d *interfaces.OrganizationData, scrapin *entity.ScrapInResponseBody, domain string) {
+func (s *enrichmentService) updateResponseWithScrapinData(d *interfaces.OrganizationData, scrapin *postgres_entity.ScrapInResponseBody, domain string) {
 	if scrapin == nil {
 		return
 	}
@@ -224,7 +224,7 @@ func (s *enrichmentService) updateResponseWithScrapinData(d *interfaces.Organiza
 	}
 }
 
-func (s *enrichmentService) updateResponseWithBrandfetchData(d *interfaces.OrganizationData, brandfetch *entity.BrandfetchResponseBody) {
+func (s *enrichmentService) updateResponseWithBrandfetchData(d *interfaces.OrganizationData, brandfetch *postgres_entity.BrandfetchResponseBody) {
 	if brandfetch == nil {
 		return
 	}

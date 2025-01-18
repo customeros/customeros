@@ -2,12 +2,13 @@ package caches
 
 import (
 	"encoding/json"
-	"github.com/coocood/freecache"
-	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/coocood/freecache"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 const (
@@ -135,8 +136,10 @@ func (c *Cache) AddUserDetailsToCache(username, userId, tenant string, roles []s
 	_ = c.userDetailCache.Set(keyBytes, valueBytes, expire15Min)
 }
 
-var cachedPersonalEmailProviders []string
-var personalEmailProvidersMu sync.RWMutex
+var (
+	cachedPersonalEmailProviders []string
+	personalEmailProvidersMu     sync.RWMutex
+)
 
 // GetPersonalEmailProviders retrieves personal email providers from the cache with local caching
 func (c *Cache) GetPersonalEmailProviders() []string {
@@ -208,8 +211,10 @@ func (c *Cache) IsPersonalEmailProvider(domain string) bool {
 	return false
 }
 
-var cachedOrganizationUrlPatterns []string
-var organizationUrlPatternsMu sync.RWMutex
+var (
+	cachedOrganizationUrlPatterns []string
+	organizationUrlPatternsMu     sync.RWMutex
+)
 
 // GetOrganizationWebsiteHostingUrlPatters retrieves organization URL patterns from the cache with local caching
 func (c *Cache) GetOrganizationWebsiteHostingUrlPatters() []string {

@@ -1,19 +1,19 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
 	"errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 )
 
 type FlowExecutionRepository interface {
-	Create(ctx context.Context, executionRecord entity.FlowExecution) (*entity.FlowExecution, error)
-	Find(ctx context.Context, executionRecord entity.FlowExecution) (*entity.FlowExecution, error)
-	Update(ctx context.Context, executionRecord entity.FlowExecution) (*entity.FlowExecution, error)
+	Create(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*postgres_entity.FlowExecution, error)
+	Find(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*postgres_entity.FlowExecution, error)
+	Update(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*postgres_entity.FlowExecution, error)
 }
 
 type flowExecutionRepository struct {
@@ -24,7 +24,7 @@ func NewFlowExecutionRepository(gormDb *gorm.DB) FlowExecutionRepository {
 	return &flowExecutionRepository{gormDb: gormDb}
 }
 
-func (f *flowExecutionRepository) Create(ctx context.Context, executionRecord entity.FlowExecution) (*entity.FlowExecution, error) {
+func (f *flowExecutionRepository) Create(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*postgres_entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -38,12 +38,12 @@ func (f *flowExecutionRepository) Create(ctx context.Context, executionRecord en
 	return &executionRecord, nil
 }
 
-func (f *flowExecutionRepository) Find(ctx context.Context, executionRecord entity.FlowExecution) (*entity.FlowExecution, error) {
+func (f *flowExecutionRepository) Find(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*postgres_entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var foundRecord entity.FlowExecution
+	var foundRecord postgres_entity.FlowExecution
 	err := f.gormDb.
 		Where(&executionRecord).
 		First(&foundRecord).Error
@@ -57,12 +57,12 @@ func (f *flowExecutionRepository) Find(ctx context.Context, executionRecord enti
 	return &foundRecord, nil
 }
 
-func (f *flowExecutionRepository) FindAll(ctx context.Context, executionRecord entity.FlowExecution) (*[]entity.FlowExecution, error) {
+func (f *flowExecutionRepository) FindAll(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*[]postgres_entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var records []entity.FlowExecution
+	var records []postgres_entity.FlowExecution
 	err := f.gormDb.
 		Where(&executionRecord).
 		Find(&records).Error
@@ -73,7 +73,7 @@ func (f *flowExecutionRepository) FindAll(ctx context.Context, executionRecord e
 	return &records, nil
 }
 
-func (f *flowExecutionRepository) Update(ctx context.Context, executionRecord entity.FlowExecution) (*entity.FlowExecution, error) {
+func (f *flowExecutionRepository) Update(ctx context.Context, executionRecord postgres_entity.FlowExecution) (*postgres_entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -84,9 +84,9 @@ func (f *flowExecutionRepository) Update(ctx context.Context, executionRecord en
 		return nil, err
 	}
 
-	var updatedRecord entity.FlowExecution
+	var updatedRecord postgres_entity.FlowExecution
 	err := f.gormDb.
-		Model(&entity.FlowExecution{}).
+		Model(&postgres_entity.FlowExecution{}).
 		Where("id = ?", executionRecord.ID).
 		Updates(executionRecord).
 		First(&updatedRecord, "id = ?", executionRecord.ID).

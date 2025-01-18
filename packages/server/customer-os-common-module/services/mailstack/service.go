@@ -6,8 +6,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -28,14 +28,14 @@ import (
 type mailstackService struct {
 	cfg        *config.StripeConfig
 	events     *events.EventsService
-	postgres   *repository.Repositories
+	postgres   *postgres_repository.Repositories
 	cloudflare interfaces.CloudflareService
 	mailbox    interfaces.MailboxService
 	namecheap  interfaces.NamecheapService
 	opensrs    interfaces.OpenSrsService
 }
 
-func NewMailstackService(cfg *config.StripeConfig, events *events.EventsService, postgres *repository.Repositories, cloudflare interfaces.CloudflareService, namecheap interfaces.NamecheapService, mailbox interfaces.MailboxService, opensrs interfaces.OpenSrsService) interfaces.MailstackService {
+func NewMailstackService(cfg *config.StripeConfig, events *events.EventsService, postgres *postgres_repository.Repositories, cloudflare interfaces.CloudflareService, namecheap interfaces.NamecheapService, mailbox interfaces.MailboxService, opensrs interfaces.OpenSrsService) interfaces.MailstackService {
 	return &mailstackService{
 		cfg:        cfg,
 		events:     events,
@@ -141,10 +141,10 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 	mailstackBuyRequestId := ""
 
 	err = s.postgres.Db.Transaction(func(tx *gorm.DB) error {
-		mailstackBuyRequestId, err = s.postgres.MailstackBuyRequestRepository.Store(ctx, tx, &entity.MailstackBuyRequest{
+		mailstackBuyRequestId, err = s.postgres.MailstackBuyRequestRepository.Store(ctx, tx, &postgres_entity.MailstackBuyRequest{
 			Domains:         strings.Join(domains, ","),
 			Usernames:       strings.Join(usernames, ","),
-			Status:          entity.MailstackBuyRequestStatusPending,
+			Status:          postgres_entity.MailstackBuyRequestStatusPending,
 			PaymentIntentId: paymentIntentId,
 		})
 		if err != nil {
@@ -152,11 +152,11 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 		}
 
 		for _, domain := range domains {
-			err := s.postgres.MailstackBuyRequestRepository.StoreDomain(ctx, tx, &entity.MailstackBuyRequestDomain{
+			err := s.postgres.MailstackBuyRequestRepository.StoreDomain(ctx, tx, &postgres_entity.MailstackBuyRequestDomain{
 				MailstackBuyRequestId: mailstackBuyRequestId,
 				Domain:                domain,
 				RedirectWebsite:       redirectWebsite,
-				Status:                entity.MailstackBuyRequestDomainStatusPendingProvisioning,
+				Status:                postgres_entity.MailstackBuyRequestDomainStatusPendingProvisioning,
 			})
 			if err != nil {
 				return err

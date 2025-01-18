@@ -16,7 +16,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	model1 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -44608,7 +44608,7 @@ func (ec *executionContext) _Flow_status(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(entity.FlowStatus)
+	res := resTmp.(neo4j_entity.FlowStatus)
 	fc.Result = res
 	return ec.marshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx, field.Selections, res)
 }
@@ -44882,7 +44882,7 @@ func (ec *executionContext) _FlowAction_action(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(entity.FlowActionType)
+	res := resTmp.(neo4j_entity.FlowActionType)
 	fc.Result = res
 	return ec.marshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx, field.Selections, res)
 }
@@ -45036,7 +45036,7 @@ func (ec *executionContext) _FlowActionExecution_status(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(entity.FlowActionExecutionStatus)
+	res := resTmp.(neo4j_entity.FlowActionExecutionStatus)
 	fc.Result = res
 	return ec.marshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx, field.Selections, res)
 }
@@ -45375,7 +45375,7 @@ func (ec *executionContext) _FlowContact_status(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(entity.FlowParticipantStatus)
+	res := resTmp.(neo4j_entity.FlowParticipantStatus)
 	fc.Result = res
 	return ec.marshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx, field.Selections, res)
 }
@@ -45649,7 +45649,7 @@ func (ec *executionContext) _FlowParticipant_status(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(entity.FlowParticipantStatus)
+	res := resTmp.(neo4j_entity.FlowParticipantStatus)
 	fc.Result = res
 	return ec.marshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx, field.Selections, res)
 }
@@ -45693,7 +45693,7 @@ func (ec *executionContext) _FlowParticipant_requirementsUnmeet(ctx context.Cont
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]entity.FlowParticipantRequirementsUnmeet)
+	res := resTmp.([]neo4j_entity.FlowParticipantRequirementsUnmeet)
 	fc.Result = res
 	return ec.marshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx, field.Selections, res)
 }
@@ -131362,13 +131362,13 @@ func (ec *executionContext) marshalNFlowActionExecution2ᚖgithubᚗcomᚋopenli
 	return ec._FlowActionExecution(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, v any) (entity.FlowActionExecutionStatus, error) {
+func (ec *executionContext) unmarshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, v any) (neo4j_entity.FlowActionExecutionStatus, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := entity.FlowActionExecutionStatus(tmp)
+	res := neo4j_entity.FlowActionExecutionStatus(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, sel ast.SelectionSet, v entity.FlowActionExecutionStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowActionExecutionStatus) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131378,13 +131378,13 @@ func (ec *executionContext) marshalNFlowActionExecutionStatus2githubᚗcomᚋope
 	return res
 }
 
-func (ec *executionContext) unmarshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, v any) (entity.FlowActionType, error) {
+func (ec *executionContext) unmarshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, v any) (neo4j_entity.FlowActionType, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := entity.FlowActionType(tmp)
+	res := neo4j_entity.FlowActionType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, sel ast.SelectionSet, v entity.FlowActionType) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowActionType) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131473,13 +131473,13 @@ func (ec *executionContext) marshalNFlowParticipant2ᚖgithubᚗcomᚋopenline�
 	return ec._FlowParticipant(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, v any) (entity.FlowParticipantRequirementsUnmeet, error) {
+func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, v any) (neo4j_entity.FlowParticipantRequirementsUnmeet, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := entity.FlowParticipantRequirementsUnmeet(tmp)
+	res := neo4j_entity.FlowParticipantRequirementsUnmeet(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, sel ast.SelectionSet, v entity.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131489,13 +131489,13 @@ func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2githubᚗc
 	return res
 }
 
-func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, v any) ([]entity.FlowParticipantRequirementsUnmeet, error) {
+func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, v any) ([]neo4j_entity.FlowParticipantRequirementsUnmeet, error) {
 	var vSlice []any
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
 	}
 	var err error
-	res := make([]entity.FlowParticipantRequirementsUnmeet, len(vSlice))
+	res := make([]neo4j_entity.FlowParticipantRequirementsUnmeet, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
 		res[i], err = ec.unmarshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx, vSlice[i])
@@ -131506,7 +131506,7 @@ func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2ᚕgithu
 	return res, nil
 }
 
-func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, sel ast.SelectionSet, v []entity.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, sel ast.SelectionSet, v []neo4j_entity.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131550,13 +131550,13 @@ func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2ᚕgithub�
 	return ret
 }
 
-func (ec *executionContext) unmarshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, v any) (entity.FlowParticipantStatus, error) {
+func (ec *executionContext) unmarshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, v any) (neo4j_entity.FlowParticipantStatus, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := entity.FlowParticipantStatus(tmp)
+	res := neo4j_entity.FlowParticipantStatus(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, sel ast.SelectionSet, v entity.FlowParticipantStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowParticipantStatus) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131639,13 +131639,13 @@ func (ec *executionContext) marshalNFlowStatistics2ᚖgithubᚗcomᚋopenlineᚑ
 	return ec._FlowStatistics(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx context.Context, v any) (entity.FlowStatus, error) {
+func (ec *executionContext) unmarshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx context.Context, v any) (neo4j_entity.FlowStatus, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	res := entity.FlowStatus(tmp)
+	res := neo4j_entity.FlowStatus(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx context.Context, sel ast.SelectionSet, v entity.FlowStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowStatus) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {

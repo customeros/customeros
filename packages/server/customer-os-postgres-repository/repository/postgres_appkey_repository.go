@@ -1,10 +1,10 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
 	"errors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
@@ -15,20 +15,20 @@ type appKeyRepository struct {
 }
 
 type AppKeyRepository interface {
-	FindByKey(ctx context.Context, app string, key string) (*entity.AppKey, error)
+	FindByKey(ctx context.Context, app string, key string) (*postgres_entity.AppKey, error)
 }
 
 func NewAppKeyRepo(db *gorm.DB) AppKeyRepository {
 	return &appKeyRepository{db: db}
 }
 
-func (r *appKeyRepository) FindByKey(ctx context.Context, app string, key string) (*entity.AppKey, error) {
+func (r *appKeyRepository) FindByKey(ctx context.Context, app string, key string) (*postgres_entity.AppKey, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "AppKeyRepo.FindByKey")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogKV("app", app)
 
-	var appKey entity.AppKey
+	var appKey postgres_entity.AppKey
 
 	err := r.db.
 		Where("app_id = ?", app).

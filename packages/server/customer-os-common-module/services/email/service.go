@@ -6,8 +6,8 @@ import (
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -25,14 +25,14 @@ import (
 )
 
 type emailService struct {
-	neo4j         *neoRepo.Repositories
+	neo4j         *neo4j_repository.Repositories
 	events        *events.EventsService
 	contact       interfaces.ContactService
 	org           interfaces.OrganizationService
 	domainService interfaces.DomainService
 }
 
-func NewEmailService(neo4j *neoRepo.Repositories, events *events.EventsService, contact interfaces.ContactService, org interfaces.OrganizationService, domainService interfaces.DomainService) interfaces.EmailService {
+func NewEmailService(neo4j *neo4j_repository.Repositories, events *events.EventsService, contact interfaces.ContactService, org interfaces.OrganizationService, domainService interfaces.DomainService) interfaces.EmailService {
 	return &emailService{
 		neo4j:         neo4j,
 		events:        events,

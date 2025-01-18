@@ -12,7 +12,7 @@ import (
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/invoice"
 	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
@@ -39,13 +39,13 @@ type InvoiceActionMetadata struct {
 type InvoiceEventHandler struct {
 	log         logger.Logger
 	grpcClients *grpc_client.Clients
-	neo4j       *repository.Repositories
+	neo4j       *neo4j_repository.Repositories
 }
 
 func NewInvoiceEventHandler(
 	log logger.Logger,
 	grpcClients *grpc_client.Clients,
-	neo4j *repository.Repositories,
+	neo4j *neo4j_repository.Repositories,
 ) *InvoiceEventHandler {
 	return &InvoiceEventHandler{
 		log:         log,

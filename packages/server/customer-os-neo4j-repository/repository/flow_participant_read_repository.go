@@ -1,23 +1,25 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type FlowParticipantReadRepository interface {
 	GetList(ctx context.Context, flowIds []string) ([]*utils.DbNodeAndId, error)
-	CountWithStatus(ctx context.Context, flowId string, status entity.FlowParticipantStatus) (int64, error)
+	CountWithStatus(ctx context.Context, flowId string, status neo4j_entity.FlowParticipantStatus) (int64, error)
 	Identify(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*neo4j.Node, error)
 	GetById(ctx context.Context, id string) (*neo4j.Node, error)
 }
@@ -77,7 +79,7 @@ func (r flowParticipantReadRepositoryImpl) GetList(ctx context.Context, flowIds 
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r flowParticipantReadRepositoryImpl) CountWithStatus(ctx context.Context, flowId string, status entity.FlowParticipantStatus) (int64, error) {
+func (r flowParticipantReadRepositoryImpl) CountWithStatus(ctx context.Context, flowId string, status neo4j_entity.FlowParticipantStatus) (int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantReadRepository.CountWithStatus")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

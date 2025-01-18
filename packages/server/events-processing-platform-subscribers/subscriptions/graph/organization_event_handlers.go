@@ -17,7 +17,7 @@ import (
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/customeros/customeros/packages/server/events/eventstore"
@@ -37,7 +37,7 @@ type OrganizationEventHandler struct {
 	cache           caches.Cache
 	events          *eventsSrv.EventsService
 	neo4j           *neo4jrepository.Repositories
-	postgres        *repository.Repositories
+	postgres        *postgres_repository.Repositories
 	currencyService interfaces.CurrencyService
 }
 
@@ -47,7 +47,7 @@ func NewOrganizationEventHandler(
 	cache caches.Cache,
 	events *eventsSrv.EventsService,
 	neo4j *neo4jrepository.Repositories,
-	postgres *repository.Repositories,
+	postgres *postgres_repository.Repositories,
 	fx interfaces.CurrencyService,
 ) *OrganizationEventHandler {
 	return &OrganizationEventHandler{

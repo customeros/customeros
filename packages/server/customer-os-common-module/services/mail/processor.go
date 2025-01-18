@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"strings"
 
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -78,8 +78,8 @@ func (s *mailService) GetEmailsForProcessingForUser(ctx context.Context, tenant,
 	s.processRawEmails(ctx, tenant, rawEmailsIdsForProcess, span)
 }
 
-func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailId uuid.UUID) entity.UpdateRawEmailTable {
-	var db entity.UpdateRawEmailTable
+func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailId uuid.UUID) postgres_entity.UpdateRawEmailTable {
+	var db postgres_entity.UpdateRawEmailTable
 
 	span, ctx := s.initializeTracing(ctx, "MailService.ProcessEmail")
 	defer span.Finish()
@@ -175,8 +175,8 @@ func (s *mailService) ProcessEmail(ctx context.Context, tenant string, rawEmailI
 	return s.processInboundEmail(ctx, tenant, &emailMessageData, rawEmail)
 }
 
-func (s *mailService) ProcessEmailByMessageId(ctx context.Context, tenant, usernameSource, messageId string) entity.UpdateRawEmailTable {
-	var db entity.UpdateRawEmailTable
+func (s *mailService) ProcessEmailByMessageId(ctx context.Context, tenant, usernameSource, messageId string) postgres_entity.UpdateRawEmailTable {
+	var db postgres_entity.UpdateRawEmailTable
 
 	span, ctx := s.initializeTracing(ctx, "MailService.ProcessEmailByMessageId")
 	defer span.Finish()
@@ -202,7 +202,7 @@ func (s *mailService) ProcessEmailByMessageId(ctx context.Context, tenant, usern
 	return s.ProcessEmail(ctx, tenant, rawEmail.ID)
 }
 
-func (s *mailService) ProcessEmailByEmailRawId(ctx context.Context, tenant string, emailId uuid.UUID) entity.UpdateRawEmailTable {
+func (s *mailService) ProcessEmailByEmailRawId(ctx context.Context, tenant string, emailId uuid.UUID) postgres_entity.UpdateRawEmailTable {
 	return s.ProcessEmail(ctx, tenant, emailId)
 }
 
@@ -217,12 +217,12 @@ func (s *mailService) processRawEmails(ctx context.Context, tenant string, rawEm
 	}
 }
 
-func (s *mailService) processInboundEmail(ctx context.Context, tenant string, email *interfaces.EmailMessageData, rawEmail *postgresentity.RawEmail) entity.UpdateRawEmailTable {
+func (s *mailService) processInboundEmail(ctx context.Context, tenant string, email *interfaces.EmailMessageData, rawEmail *postgresentity.RawEmail) postgres_entity.UpdateRawEmailTable {
 	span, ctx := s.initializeTracing(ctx, "MailService.processInboundEmail")
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
 
-	var db entity.UpdateRawEmailTable
+	var db postgres_entity.UpdateRawEmailTable
 	var txWithPostCommit *utils.TxWithPostCommit
 
 	_, err := utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {

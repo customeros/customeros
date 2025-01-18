@@ -1,4 +1,4 @@
-package repository
+package postgres_repository
 
 import (
 	"time"
@@ -11,15 +11,15 @@ import (
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type CacheEmailEnrowRepository interface {
-	RegisterRequest(ctx context.Context, record entity.CacheEmailEnrow) (*entity.CacheEmailEnrow, error)
+	RegisterRequest(ctx context.Context, record postgres_entity.CacheEmailEnrow) (*postgres_entity.CacheEmailEnrow, error)
 	AddResponse(ctx context.Context, requestId, qualification, response string) error
-	GetLatestByEmail(ctx context.Context, email string) (*entity.CacheEmailEnrow, error)
-	GetAllByEmail(ctx context.Context, email string) ([]entity.CacheEmailEnrow, error)
-	GetWithoutResponses(ctx context.Context) ([]*entity.CacheEmailEnrow, error)
+	GetLatestByEmail(ctx context.Context, email string) (*postgres_entity.CacheEmailEnrow, error)
+	GetAllByEmail(ctx context.Context, email string) ([]postgres_entity.CacheEmailEnrow, error)
+	GetWithoutResponses(ctx context.Context) ([]*postgres_entity.CacheEmailEnrow, error)
 }
 
 type cacheEmailEnrowRepository struct {
@@ -30,7 +30,7 @@ func NewCacheEmailEnrowRepository(gormDb *gorm.DB) CacheEmailEnrowRepository {
 	return &cacheEmailEnrowRepository{db: gormDb}
 }
 
-func (r cacheEmailEnrowRepository) RegisterRequest(ctx context.Context, record entity.CacheEmailEnrow) (*entity.CacheEmailEnrow, error) {
+func (r cacheEmailEnrowRepository) RegisterRequest(ctx context.Context, record postgres_entity.CacheEmailEnrow) (*postgres_entity.CacheEmailEnrow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailEnrowRepository.RegisterRequest")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -56,7 +56,7 @@ func (r cacheEmailEnrowRepository) AddResponse(ctx context.Context, requestId, q
 
 	// Add response to the request with the given requestId, empty response and latest by created_at
 	err := r.db.
-		Model(&entity.CacheEmailEnrow{}).
+		Model(&postgres_entity.CacheEmailEnrow{}).
 		Where("request_id = ?", requestId).
 		Where("data = ?", "").
 		Order("created_at desc").
@@ -73,13 +73,13 @@ func (r cacheEmailEnrowRepository) AddResponse(ctx context.Context, requestId, q
 	return nil
 }
 
-func (r cacheEmailEnrowRepository) GetAllByEmail(ctx context.Context, email string) ([]entity.CacheEmailEnrow, error) {
+func (r cacheEmailEnrowRepository) GetAllByEmail(ctx context.Context, email string) ([]postgres_entity.CacheEmailEnrow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailEnrowRepository.GetAllByEmail")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogKV("email", email)
 
-	var records []entity.CacheEmailEnrow
+	var records []postgres_entity.CacheEmailEnrow
 	err := r.db.Where("email = ?", email).Order("created_at desc").Find(&records).Error
 	if err != nil {
 		return nil, err
@@ -90,13 +90,13 @@ func (r cacheEmailEnrowRepository) GetAllByEmail(ctx context.Context, email stri
 	return records, nil
 }
 
-func (r cacheEmailEnrowRepository) GetLatestByEmail(ctx context.Context, email string) (*entity.CacheEmailEnrow, error) {
+func (r cacheEmailEnrowRepository) GetLatestByEmail(ctx context.Context, email string) (*postgres_entity.CacheEmailEnrow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailEnrowRepository.GetLatestByEmail")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogKV("email", email)
 
-	var data entity.CacheEmailEnrow
+	var data postgres_entity.CacheEmailEnrow
 	err := r.db.Where("email = ?", email).Order("created_at desc").First(&data).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -108,17 +108,17 @@ func (r cacheEmailEnrowRepository) GetLatestByEmail(ctx context.Context, email s
 	return &data, nil
 }
 
-func (r cacheEmailEnrowRepository) GetWithoutResponses(ctx context.Context) ([]*entity.CacheEmailEnrow, error) {
+func (r cacheEmailEnrowRepository) GetWithoutResponses(ctx context.Context) ([]*postgres_entity.CacheEmailEnrow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.GetWithoutResponses")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var entity []*entity.CacheEmailEnrow
+	var postgres_entity []*postgres_entity.CacheEmailEnrow
 	err := r.db.
 		Where("data = ?", "").
 		Where("created_at < ?", utils.Now().Add(-10*time.Minute)).
 		Limit(50).
-		Find(&entity).Error
+		Find(&postgres_entity).Error
 
-	return entity, err
+	return postgres_entity, err
 }

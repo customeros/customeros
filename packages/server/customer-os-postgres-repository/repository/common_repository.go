@@ -1,4 +1,4 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
@@ -11,11 +11,11 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type CommonRepository interface {
-	UpdateProperty(ctx context.Context, tenant string, entityType interface{}, id any, propertyName string, newValue interface{}) error
+	UpdateProperty(ctx context.Context, tenant string, postgres_entityType interface{}, id any, propertyName string, newValue interface{}) error
 	PermanentlyDelete(ctx context.Context, tenant string) error
 }
 
@@ -27,35 +27,35 @@ func NewCommonRepository(postgresDB *config.PostgresDB) CommonRepository {
 	return &commonRepository{postgresDB: postgresDB}
 }
 
-func (r *commonRepository) UpdateProperty(ctx context.Context, tenant string, entityType interface{}, id any, propertyName string, newValue interface{}) error {
+func (r *commonRepository) UpdateProperty(ctx context.Context, tenant string, postgres_entityType interface{}, id any, propertyName string, newValue interface{}) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonRepository.UpdateProperty")
 	defer span.Finish()
 
 	span.LogFields(log.String("tenant", tenant))
-	span.LogFields(log.String("entityType", reflect.TypeOf(entityType).String()))
+	span.LogFields(log.String("postgres_entityType", reflect.TypeOf(postgres_entityType).String()))
 	span.LogFields(log.String("id", fmt.Sprintf("%v", id)))
 	span.LogFields(log.String("propertyName", propertyName))
 	span.LogFields(log.String("newValue", fmt.Sprintf("%v", newValue)))
 
-	// Create a new instance of the entity type
-	entity := reflect.New(reflect.TypeOf(entityType)).Interface()
+	// Create a new instance of the postgres_entity type
+	postgres_entity := reflect.New(reflect.TypeOf(postgres_entityType)).Interface()
 
-	// Fetch the entity by ID and tenant using context
-	query := r.postgresDB.GormDB.WithContext(ctx).Where("tenant = ? and id = ?", tenant, id).First(entity)
+	// Fetch the postgres_entity by ID and tenant using context
+	query := r.postgresDB.GormDB.WithContext(ctx).Where("tenant = ? and id = ?", tenant, id).First(postgres_entity)
 	if err := query.Error; err != nil {
 		tracing.TraceErr(span, err)
 		if err == gorm.ErrRecordNotFound {
-			return fmt.Errorf("entity not found for tenant %s with id %v", tenant, id)
+			return fmt.Errorf("postgres_entity not found for tenant %s with id %v", tenant, id)
 		}
-		return fmt.Errorf("failed to find entity: %w", err)
+		return fmt.Errorf("failed to find postgres_entity: %w", err)
 	}
 
 	// Use reflection to update the property
-	v := reflect.ValueOf(entity).Elem()
+	v := reflect.ValueOf(postgres_entity).Elem()
 	field := v.FieldByName(propertyName)
 
 	if !field.IsValid() {
-		err := fmt.Errorf("property %s does not exist on entity", propertyName)
+		err := fmt.Errorf("property %s does not exist on postgres_entity", propertyName)
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -69,9 +69,9 @@ func (r *commonRepository) UpdateProperty(ctx context.Context, tenant string, en
 	// Set the new value
 	field.Set(reflect.ValueOf(newValue))
 
-	// Save the updated entity with context
-	if err := r.postgresDB.GormDB.WithContext(ctx).Save(entity).Error; err != nil {
-		err := fmt.Errorf("failed to save updated entity: %w", err)
+	// Save the updated postgres_entity with context
+	if err := r.postgresDB.GormDB.WithContext(ctx).Save(postgres_entity).Error; err != nil {
+		err := fmt.Errorf("failed to save updated postgres_entity: %w", err)
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -84,50 +84,50 @@ func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string)
 	defer span.Finish()
 
 	asyncTablesWithTenantNameColumn := []string{
-		entity.GoogleServiceAccountKey{}.TableName(),
-		entity.OAuthTokenEntity{}.TableName(),
+		postgres_entity.GoogleServiceAccountKey{}.TableName(),
+		postgres_entity.OAuthTokenEntity{}.TableName(),
 	}
 
 	asyncTablesWithTenantColumn := []string{
-		entity.RawEmail{}.TableName(),
-		entity.UserEmailImportState{}.TableName(),
-		entity.UserEmailImportStateHistory{}.TableName(),
+		postgres_entity.RawEmail{}.TableName(),
+		postgres_entity.UserEmailImportState{}.TableName(),
+		postgres_entity.UserEmailImportStateHistory{}.TableName(),
 	}
 
 	tableNamesWithTenantNameColumn := []string{
-		entity.PersonalIntegration{}.TableName(),
-		entity.PostmarkApiKey{}.TableName(),
-		entity.SlackChannel{}.TableName(),
-		entity.SlackSettingsEntity{}.TableName(),
-		entity.TenantSettings{}.TableName(),
-		entity.TenantWebhook{}.TableName(),
-		entity.TenantWebhookApiKey{}.TableName(),
+		postgres_entity.PersonalIntegration{}.TableName(),
+		postgres_entity.PostmarkApiKey{}.TableName(),
+		postgres_entity.SlackChannel{}.TableName(),
+		postgres_entity.SlackSettingsEntity{}.TableName(),
+		postgres_entity.TenantSettings{}.TableName(),
+		postgres_entity.TenantWebhook{}.TableName(),
+		postgres_entity.TenantWebhookApiKey{}.TableName(),
 	}
 
 	tableNamesWithTenantColumn := []string{
-		entity.AiPromptLog{}.TableName(),
-		entity.ApiBillableEvent{}.TableName(),
-		entity.BrowserAutomationsRun{}.TableName(),
-		entity.BrowserConfig{}.TableName(),
-		entity.CosApiEnrichPersonTempResult{}.TableName(),
-		entity.CustomerOsIds{}.TableName(),
-		entity.EmailLookup{}.TableName(),
-		entity.EmailMessage{}.TableName(),
-		entity.EmailTracking{}.TableName(),
-		entity.EmailValidationRecord{}.TableName(),
-		entity.EmailValidationRequestBulk{}.TableName(),
-		entity.EventBuffer{}.TableName(),
-		entity.MailStackDomain{}.TableName(),
-		entity.SlackChannelNotification{}.TableName(),
-		entity.StatsApiCalls{}.TableName(),
-		entity.TableViewDefinition{}.TableName(),
-		entity.TenantSettingsEmailExclusion{}.TableName(),
-		entity.TenantSettingsMailbox{}.TableName(),
-		entity.TenantSettingsOpportunityStage{}.TableName(),
-		entity.TrackingAllowedOrigin{}.TableName(),
-		entity.UserWorkingSchedule{}.TableName(),
-		entity.WebSession{}.TableName(),
-		entity.WebTrackerEvents{}.TableName(),
+		postgres_entity.AiPromptLog{}.TableName(),
+		postgres_entity.ApiBillableEvent{}.TableName(),
+		postgres_entity.BrowserAutomationsRun{}.TableName(),
+		postgres_entity.BrowserConfig{}.TableName(),
+		postgres_entity.CosApiEnrichPersonTempResult{}.TableName(),
+		postgres_entity.CustomerOsIds{}.TableName(),
+		postgres_entity.EmailLookup{}.TableName(),
+		postgres_entity.EmailMessage{}.TableName(),
+		postgres_entity.EmailTracking{}.TableName(),
+		postgres_entity.EmailValidationRecord{}.TableName(),
+		postgres_entity.EmailValidationRequestBulk{}.TableName(),
+		postgres_entity.EventBuffer{}.TableName(),
+		postgres_entity.MailStackDomain{}.TableName(),
+		postgres_entity.SlackChannelNotification{}.TableName(),
+		postgres_entity.StatsApiCalls{}.TableName(),
+		postgres_entity.TableViewDefinition{}.TableName(),
+		postgres_entity.TenantSettingsEmailExclusion{}.TableName(),
+		postgres_entity.TenantSettingsMailbox{}.TableName(),
+		postgres_entity.TenantSettingsOpportunityStage{}.TableName(),
+		postgres_entity.TrackingAllowedOrigin{}.TableName(),
+		postgres_entity.UserWorkingSchedule{}.TableName(),
+		postgres_entity.WebSession{}.TableName(),
+		postgres_entity.WebTrackerEvents{}.TableName(),
 	}
 
 	for _, tableName := range asyncTablesWithTenantNameColumn {

@@ -3,6 +3,10 @@ package verify
 import (
 	"context"
 	"errors"
+
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/nyaruka/phonenumbers"
+	"github.com/opentracing/opentracing-go"
 	international_street "github.com/smartystreets/smartystreets-go-sdk/international-street-api"
 	extract "github.com/smartystreets/smartystreets-go-sdk/us-extract-api"
 	"github.com/smartystreets/smartystreets-go-sdk/wireup"
@@ -11,21 +15,23 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/nyaruka/phonenumbers"
-	"github.com/opentracing/opentracing-go"
 )
 
 type verifyService struct {
 	log        logger.Logger
-	postgres   *repository.Repositories
+	postgres   *postgres_repository.Repositories
 	cfg        *config.CommonConfig
 	enrichment interfaces.EnrichmentService
 	USClient   *extract.Client
 	IntlClient *international_street.Client
 }
 
-func NewVerifyService(log logger.Logger, postgres *repository.Repositories, config *config.CommonConfig, enrichment interfaces.EnrichmentService) interfaces.VerifyService {
+func NewVerifyService(
+	log logger.Logger,
+	postgres *postgres_repository.Repositories,
+	config *config.CommonConfig,
+	enrichment interfaces.EnrichmentService,
+) interfaces.VerifyService {
 	return &verifyService{
 		log:        log,
 		postgres:   postgres,

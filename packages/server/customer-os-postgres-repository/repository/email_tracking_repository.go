@@ -1,18 +1,18 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 type EmailTrackingRepository interface {
-	Register(ctx context.Context, emailTracking entity.EmailTracking) (*entity.EmailTracking, error)
-	Update(ctx context.Context, emailTracking entity.EmailTracking) (*entity.EmailTracking, error)
+	Register(ctx context.Context, emailTracking postgres_entity.EmailTracking) (*postgres_entity.EmailTracking, error)
+	Update(ctx context.Context, emailTracking postgres_entity.EmailTracking) (*postgres_entity.EmailTracking, error)
 }
 
 type emailTrackingRepository struct {
@@ -23,7 +23,7 @@ func NewEmailTrackingRepository(gormDb *gorm.DB) EmailTrackingRepository {
 	return &emailTrackingRepository{gormDb: gormDb}
 }
 
-func (e emailTrackingRepository) Register(ctx context.Context, emailTracking entity.EmailTracking) (*entity.EmailTracking, error) {
+func (e emailTrackingRepository) Register(ctx context.Context, emailTracking postgres_entity.EmailTracking) (*postgres_entity.EmailTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailTrackingRepository.Register")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -40,14 +40,14 @@ func (e emailTrackingRepository) Register(ctx context.Context, emailTracking ent
 	return &emailTracking, nil
 }
 
-func (e emailTrackingRepository) Update(ctx context.Context, emailTracking entity.EmailTracking) (*entity.EmailTracking, error) {
+func (e emailTrackingRepository) Update(ctx context.Context, emailTracking postgres_entity.EmailTracking) (*postgres_entity.EmailTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailTrackingRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, emailTracking.Tenant)
 
 	// Fetch the existing record
-	var existingTracking entity.EmailTracking
+	var existingTracking postgres_entity.EmailTracking
 	if err := e.gormDb.First(&existingTracking, "id = ?", emailTracking.ID).Error; err != nil {
 		tracing.TraceErr(span, err)
 		return nil, errors.Wrap(err, "failed to find email tracking record")

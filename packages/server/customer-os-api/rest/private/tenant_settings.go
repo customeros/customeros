@@ -6,14 +6,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	commonUtils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
+
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 func CreateOrganizationStage(s *cosapi_services.Services) gin.HandlerFunc {
@@ -27,7 +28,7 @@ func CreateOrganizationStage(s *cosapi_services.Services) gin.HandlerFunc {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/tenant/settings/organizationStage/"+organizationStageId, c.Request.Header)
 		defer span.Finish()
 
-		var requestData entity.TenantSettingsOpportunityStage
+		var requestData postgres_entity.TenantSettingsOpportunityStage
 		if err := c.BindJSON(&requestData); err != nil {
 			tracing.TraceErr(span, err)
 			c.JSON(http.StatusInternalServerError, gin.H{

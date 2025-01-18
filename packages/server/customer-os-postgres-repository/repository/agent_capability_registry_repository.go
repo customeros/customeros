@@ -1,4 +1,4 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
@@ -9,14 +9,14 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type AgentCapabilityRegistryRepository interface {
 	Initialize(ctx context.Context) error
-	Create(ctx context.Context, agent entity.AgentCapabilityRegistry) (*entity.AgentCapabilityRegistry, error)
-	Find(ctx context.Context, agentID enum.AgentCapabilityType) (*entity.AgentCapabilityRegistry, error)
-	FindAll(ctx context.Context) ([]entity.AgentCapabilityRegistry, error)
+	Create(ctx context.Context, agent postgres_entity.AgentCapabilityRegistry) (*postgres_entity.AgentCapabilityRegistry, error)
+	Find(ctx context.Context, agentID enum.AgentCapabilityType) (*postgres_entity.AgentCapabilityRegistry, error)
+	FindAll(ctx context.Context) ([]postgres_entity.AgentCapabilityRegistry, error)
 }
 
 type agentCapabilityRegistryRepository struct {
@@ -27,12 +27,12 @@ func NewAgentCapabilityRegistryRepository(gormDb *gorm.DB) AgentCapabilityRegist
 	return &agentCapabilityRegistryRepository{gormDb: gormDb}
 }
 
-func (r *agentCapabilityRegistryRepository) FindAll(ctx context.Context) ([]entity.AgentCapabilityRegistry, error) {
+func (r *agentCapabilityRegistryRepository) FindAll(ctx context.Context) ([]postgres_entity.AgentCapabilityRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityRegistryRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var capabilities []entity.AgentCapabilityRegistry
+	var capabilities []postgres_entity.AgentCapabilityRegistry
 	err := r.gormDb.WithContext(ctx).
 		Where("is_active = true").
 		Find(&capabilities).Error
@@ -44,12 +44,12 @@ func (r *agentCapabilityRegistryRepository) FindAll(ctx context.Context) ([]enti
 	return capabilities, nil
 }
 
-func (r *agentCapabilityRegistryRepository) Find(ctx context.Context, capability enum.AgentCapabilityType) (*entity.AgentCapabilityRegistry, error) {
+func (r *agentCapabilityRegistryRepository) Find(ctx context.Context, capability enum.AgentCapabilityType) (*postgres_entity.AgentCapabilityRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityRegistryRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var capabilities entity.AgentCapabilityRegistry
+	var capabilities postgres_entity.AgentCapabilityRegistry
 	query := r.gormDb.WithContext(ctx).
 		Where("is_active = true").
 		Where("type = ?", capability.String())
@@ -66,7 +66,7 @@ func (r *agentCapabilityRegistryRepository) Find(ctx context.Context, capability
 	return &capabilities, nil
 }
 
-func (r *agentCapabilityRegistryRepository) Create(ctx context.Context, capability entity.AgentCapabilityRegistry) (*entity.AgentCapabilityRegistry, error) {
+func (r *agentCapabilityRegistryRepository) Create(ctx context.Context, capability postgres_entity.AgentCapabilityRegistry) (*postgres_entity.AgentCapabilityRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityRegistryRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -80,7 +80,7 @@ func (r *agentCapabilityRegistryRepository) Create(ctx context.Context, capabili
 	return &capability, nil
 }
 
-func (a *agentCapabilityRegistryRepository) Update(ctx context.Context, capability entity.AgentCapabilityRegistry) (*entity.AgentCapabilityRegistry, error) {
+func (a *agentCapabilityRegistryRepository) Update(ctx context.Context, capability postgres_entity.AgentCapabilityRegistry) (*postgres_entity.AgentCapabilityRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityRegistryRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -92,15 +92,14 @@ func (a *agentCapabilityRegistryRepository) Update(ctx context.Context, capabili
 		return nil, err
 	}
 
-	var updatedCapability entity.AgentCapabilityRegistry
+	var updatedCapability postgres_entity.AgentCapabilityRegistry
 
 	err := a.gormDb.
-		Model(&entity.AgentCapabilityRegistry{}).
+		Model(&postgres_entity.AgentCapabilityRegistry{}).
 		Where("id = ?", capability.ID).
 		Updates(&capability).
 		First(&updatedCapability, "id = ?", capability.ID).
 		Error
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -114,7 +113,7 @@ func (r *agentCapabilityRegistryRepository) Initialize(ctx context.Context) erro
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	requiredCapabilities := []entity.AgentCapabilityRegistry{
+	requiredCapabilities := []postgres_entity.AgentCapabilityRegistry{
 		buildCapabilities(
 			enum.CapabilityTrackWebSession,
 			"Track and identify website visitors",
@@ -162,8 +161,8 @@ func (r *agentCapabilityRegistryRepository) Initialize(ctx context.Context) erro
 	return nil
 }
 
-func buildCapabilities(capType enum.AgentCapabilityType, desc string) entity.AgentCapabilityRegistry {
-	return entity.AgentCapabilityRegistry{
+func buildCapabilities(capType enum.AgentCapabilityType, desc string) postgres_entity.AgentCapabilityRegistry {
+	return postgres_entity.AgentCapabilityRegistry{
 		Type:        capType.String(),
 		Description: desc,
 		IsActive:    true,

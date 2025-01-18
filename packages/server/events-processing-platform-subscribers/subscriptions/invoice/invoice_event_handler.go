@@ -21,8 +21,8 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepos "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/invoice"
 	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/customeros/customeros/packages/server/events/eventstore"
@@ -55,8 +55,8 @@ type InvoiceEventHandler struct {
 	log         logger.Logger
 	cfg         config.Config
 	grpcClients *grpc_client.Clients
-	neo4j       *neoRepos.Repositories
-	postgres    *repository.Repositories
+	neo4j       *neo4j_repository.Repositories
+	postgres    *postgres_repository.Repositories
 	invoice     interfaces.InvoiceService
 	fileStore   interfaces.FileService
 	postmark    interfaces.PostmarkService
@@ -66,8 +66,8 @@ func NewInvoiceEventHandler(
 	log logger.Logger,
 	cfg config.Config,
 	grpcClients *grpc_client.Clients,
-	neo4j *neoRepos.Repositories,
-	postgres *repository.Repositories,
+	neo4j *neo4j_repository.Repositories,
+	postgres *postgres_repository.Repositories,
 	invoice interfaces.InvoiceService,
 	fileStore interfaces.FileService,
 	postmark interfaces.PostmarkService,

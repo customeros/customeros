@@ -1,24 +1,25 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type PlayerReadRepository interface {
 	GetPlayerByAuthIdProvider(ctx context.Context, authId string, provider string) (*dbtype.Node, error)
 	GetUsersForPlayer(ctx context.Context, ids []string) ([]*utils.DbNodeWithRelationIdAndTenant, error)
 	GetPlayerByIdentityId(ctx context.Context, identityId string) (*dbtype.Node, error)
-	GetPlayerForUser(ctx context.Context, userId string, relation entity.PlayerRelation) (*dbtype.Node, error)
+	GetPlayerForUser(ctx context.Context, userId string, relation neo4j_entity.PlayerRelation) (*dbtype.Node, error)
 }
 
 type playerReadRepository struct {
@@ -78,7 +79,7 @@ func (r *playerReadRepository) GetUsersForPlayer(ctx context.Context, ids []stri
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := fmt.Sprintf(`MATCH (p:Player)-[rel:%s]->(u:User)-[:USER_BELONGS_TO_TENANT]->(t:Tenant) WHERE p.id IN $ids RETURN u, rel, p.id, t.name`, entity.IDENTIFIES)
+	query := fmt.Sprintf(`MATCH (p:Player)-[rel:%s]->(u:User)-[:USER_BELONGS_TO_TENANT]->(t:Tenant) WHERE p.id IN $ids RETURN u, rel, p.id, t.name`, neo4j_entity.IDENTIFIES)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query),
@@ -105,7 +106,7 @@ func (r *playerReadRepository) GetUsersForPlayer(ctx context.Context, ids []stri
 	return data, nil
 }
 
-func (r *playerReadRepository) GetPlayerForUser(ctx context.Context, userId string, relation entity.PlayerRelation) (*dbtype.Node, error) {
+func (r *playerReadRepository) GetPlayerForUser(ctx context.Context, userId string, relation neo4j_entity.PlayerRelation) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PlayerReadRepository.GetPlayerForUser")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -133,7 +134,6 @@ func (r *playerReadRepository) GetPlayerForUser(ctx context.Context, userId stri
 	}
 
 	return result.(*dbtype.Node), nil
-
 }
 
 func (r *playerReadRepository) GetPlayerByIdentityId(ctx context.Context, identityId string) (*dbtype.Node, error) {
@@ -161,5 +161,4 @@ func (r *playerReadRepository) GetPlayerByIdentityId(ctx context.Context, identi
 	}
 
 	return result.(*dbtype.Node), nil
-
 }

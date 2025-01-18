@@ -6,7 +6,7 @@ import (
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -24,11 +24,11 @@ import (
 
 type tenantSettingsService struct {
 	log    logger.Logger
-	neo4j  *neoRepo.Repositories
+	neo4j  *neo4j_repository.Repositories
 	events *events.EventsService
 }
 
-func NewTenantSettingsService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService) interfaces.TenantSettingsService {
+func NewTenantSettingsService(log logger.Logger, neo4j *neo4j_repository.Repositories, events *events.EventsService) interfaces.TenantSettingsService {
 	return &tenantSettingsService{
 		log:    log,
 		neo4j:  neo4j,

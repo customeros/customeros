@@ -1,4 +1,4 @@
-package repository
+package neo4j_repository
 
 import (
 	context2 "context"

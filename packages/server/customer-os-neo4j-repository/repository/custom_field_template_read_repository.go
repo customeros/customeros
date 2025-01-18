@@ -1,4 +1,4 @@
-package repository
+package neo4j_repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"

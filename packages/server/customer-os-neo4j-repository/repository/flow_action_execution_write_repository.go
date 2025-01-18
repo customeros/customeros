@@ -1,20 +1,22 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type FlowActionExecutionWriteRepository interface {
-	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowActionExecutionEntity) (*dbtype.Node, error)
+	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *neo4j_entity.FlowActionExecutionEntity) (*dbtype.Node, error)
 	RelinkWithActions(ctx context.Context) error
 	Delete(ctx context.Context, tx *neo4j.ManagedTransaction, id string) error
 	DeleteScheduledForFlow(ctx context.Context, flowId string) error
@@ -29,7 +31,7 @@ func NewFlowActionExecutionWriteRepository(driver *neo4j.DriverWithContext, data
 	return &flowActionExecutionWriteRepositoryImpl{driver: driver, database: database}
 }
 
-func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowActionExecutionEntity) (*dbtype.Node, error) {
+func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *neo4j_entity.FlowActionExecutionEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -97,7 +99,6 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 		}
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, qr, err)
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -133,7 +134,6 @@ func (r *flowActionExecutionWriteRepositoryImpl) RelinkWithActions(ctx context.C
 		}
 		return nil, nil
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

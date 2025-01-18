@@ -1,4 +1,4 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
@@ -10,12 +10,12 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type CacheIPIdentifyRepository interface {
-	Create(ctx context.Context, snitcherData entity.CacheIPIdentify) error
-	Find(ctx context.Context, snitcherData entity.CacheIPIdentify, cacheLookbackInDays int) (*entity.CacheIPIdentify, error)
+	Create(ctx context.Context, snitcherData postgres_entity.CacheIPIdentify) error
+	Find(ctx context.Context, snitcherData postgres_entity.CacheIPIdentify, cacheLookbackInDays int) (*postgres_entity.CacheIPIdentify, error)
 }
 
 type cacheIPIdentifyRepository struct {
@@ -26,7 +26,7 @@ func NewCacheIPIdentifyRepository(gormDb *gorm.DB) CacheIPIdentifyRepository {
 	return &cacheIPIdentifyRepository{db: gormDb}
 }
 
-func (r *cacheIPIdentifyRepository) Create(ctx context.Context, ipData entity.CacheIPIdentify) error {
+func (r *cacheIPIdentifyRepository) Create(ctx context.Context, ipData postgres_entity.CacheIPIdentify) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CacheSnitcherRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -47,14 +47,14 @@ func (r *cacheIPIdentifyRepository) Create(ctx context.Context, ipData entity.Ca
 	return nil
 }
 
-func (r *cacheIPIdentifyRepository) Find(ctx context.Context, ipData entity.CacheIPIdentify, cacheLookbackInDays int) (*entity.CacheIPIdentify, error) {
+func (r *cacheIPIdentifyRepository) Find(ctx context.Context, ipData postgres_entity.CacheIPIdentify, cacheLookbackInDays int) (*postgres_entity.CacheIPIdentify, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CacheSnitcherRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	lookbackDate := time.Now().AddDate(0, 0, -cacheLookbackInDays)
 
-	var result entity.CacheIPIdentify
+	var result postgres_entity.CacheIPIdentify
 	err := r.db.
 		Where(&ipData).
 		Where("created_at > ?", lookbackDate).

@@ -1,4 +1,4 @@
-package entity
+package neo4j_entity
 
 import (
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"

@@ -1,4 +1,4 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
@@ -9,13 +9,13 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type AgentExecutionRepository interface {
-	Create(ctx context.Context, executionRecord entity.AgentExecution) (*entity.AgentExecution, error)
-	Find(ctx context.Context, executionRecord entity.AgentExecution) (*entity.AgentExecution, error)
-	Update(ctx context.Context, executionRecord entity.AgentExecution) (*entity.AgentExecution, error)
+	Create(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error)
+	Find(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error)
+	Update(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error)
 }
 
 type flowAgentExecutionRepository struct {
@@ -26,7 +26,7 @@ func NewAgentExecutionRepository(gormDb *gorm.DB) AgentExecutionRepository {
 	return &flowAgentExecutionRepository{gormDb: gormDb}
 }
 
-func (f *flowAgentExecutionRepository) Create(ctx context.Context, executionRecord entity.AgentExecution) (*entity.AgentExecution, error) {
+func (f *flowAgentExecutionRepository) Create(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -47,12 +47,12 @@ func (f *flowAgentExecutionRepository) Create(ctx context.Context, executionReco
 	return &executionRecord, nil
 }
 
-func (f *flowAgentExecutionRepository) Find(ctx context.Context, executionRecord entity.AgentExecution) (*entity.AgentExecution, error) {
+func (f *flowAgentExecutionRepository) Find(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var flowAgentExecution entity.AgentExecution
+	var flowAgentExecution postgres_entity.AgentExecution
 	err := f.gormDb.
 		Where(&executionRecord).
 		First(&flowAgentExecution).Error
@@ -66,7 +66,7 @@ func (f *flowAgentExecutionRepository) Find(ctx context.Context, executionRecord
 	return &flowAgentExecution, nil
 }
 
-func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionRecord entity.AgentExecution) (*entity.AgentExecution, error) {
+func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -77,9 +77,9 @@ func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionReco
 		return nil, err
 	}
 
-	var updatedRecord entity.AgentExecution
+	var updatedRecord postgres_entity.AgentExecution
 	err := f.gormDb.
-		Model(&entity.AgentExecution{}).
+		Model(&postgres_entity.AgentExecution{}).
 		Where("id = ?", executionRecord.ID).
 		Updates(executionRecord).
 		First(&updatedRecord, "id = ?", executionRecord.ID).

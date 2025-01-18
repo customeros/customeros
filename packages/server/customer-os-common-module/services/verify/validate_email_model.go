@@ -1,8 +1,9 @@
 package verify
 
 import (
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type EmailDeliverableStatus string
@@ -45,7 +46,7 @@ type ValidateEmailWithScrubbyResponse struct {
 }
 
 type ValidateEmailWithTrueinboxResponse struct {
-	Status  string                        `json:"status"`
-	Message string                        `json:"message,omitempty"`
-	Data    *entity.TrueInboxResponseBody `json:"data,omitempty"`
+	Status  string                                 `json:"status"`
+	Message string                                 `json:"message,omitempty"`
+	Data    *postgres_entity.TrueInboxResponseBody `json:"data,omitempty"`
 }

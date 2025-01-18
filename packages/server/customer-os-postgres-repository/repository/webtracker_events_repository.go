@@ -1,4 +1,4 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
@@ -8,12 +8,12 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type WebTrackerEventsRepository interface {
-	Create(ctx context.Context, webWebTrackerData entity.WebTrackerEvents) (*entity.WebTrackerEvents, error)
-	FindAll(ctx context.Context, webWebTrackerData entity.WebTrackerEvents, cacheLookbackInDays *int) ([]entity.WebTrackerEvents, error)
+	Create(ctx context.Context, webWebTrackerData postgres_entity.WebTrackerEvents) (*postgres_entity.WebTrackerEvents, error)
+	FindAll(ctx context.Context, webWebTrackerData postgres_entity.WebTrackerEvents, cacheLookbackInDays *int) ([]postgres_entity.WebTrackerEvents, error)
 }
 
 type webTrackerEventsRepository struct {
@@ -24,12 +24,12 @@ func NewWebTrackerEventsRepository(gormDb *gorm.DB) WebTrackerEventsRepository {
 	return &webTrackerEventsRepository{gormDb: gormDb}
 }
 
-func (r *webTrackerEventsRepository) Create(ctx context.Context, webTrackerData entity.WebTrackerEvents) (*entity.WebTrackerEvents, error) {
+func (r *webTrackerEventsRepository) Create(ctx context.Context, webTrackerData postgres_entity.WebTrackerEvents) (*postgres_entity.WebTrackerEvents, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebTrackerEventsRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var created entity.WebTrackerEvents
+	var created postgres_entity.WebTrackerEvents
 	err := r.gormDb.Create(&webTrackerData).Scan(&created).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -39,7 +39,7 @@ func (r *webTrackerEventsRepository) Create(ctx context.Context, webTrackerData 
 	return &created, nil
 }
 
-func (r *webTrackerEventsRepository) FindAll(ctx context.Context, webTrackerData entity.WebTrackerEvents, cacheLookbackInDays *int) ([]entity.WebTrackerEvents, error) {
+func (r *webTrackerEventsRepository) FindAll(ctx context.Context, webTrackerData postgres_entity.WebTrackerEvents, cacheLookbackInDays *int) ([]postgres_entity.WebTrackerEvents, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebTrackerEventsRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -52,7 +52,7 @@ func (r *webTrackerEventsRepository) FindAll(ctx context.Context, webTrackerData
 		query = query.Where("created_at > ?", lookbackDate)
 	}
 
-	var results []entity.WebTrackerEvents
+	var results []postgres_entity.WebTrackerEvents
 	err := query.Find(&results).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
