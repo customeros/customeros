@@ -147,7 +147,7 @@ func InitCommonServices(
 	}
 
 	// Simple - Services that depend only on base services
-	aiImpl := ai.NewAIService(&cfg.External.AnthropicConfig)
+	aiImpl := ai.NewAIService(log, &cfg.External.AnthropicConfig)
 	attachmentImpl := attachment.NewAttachmentService(neo4jRepositories)
 	azureImpl := azure.NewAzureService(&cfg.Infrastructure.AzureOAuthConfig, postgresRepositories, neo4jRepositories)
 	cloudfareImpl := cloudflare.NewCloudflareService(log, &cfg.External.CloudflareConfig, postgresRepositories)

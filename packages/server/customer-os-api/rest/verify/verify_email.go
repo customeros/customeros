@@ -9,14 +9,14 @@ import (
 	"strings"
 	"time"
 
-	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
@@ -461,7 +461,7 @@ func BulkUploadEmailsForVerification(services *cosapi_services.Services) gin.Han
 			BulkUploadResponse{
 				Message:               "File uploaded successfully",
 				JobID:                 requestID,
-				ResultURL:             fmt.Sprintf("%s/verify/v1/email/bulk/results/%s", services.Cfg.CommonServices.Internal.CustomerOsApi.ApiUrl, requestID), // Placeholder for results URL
+				ResultURL:             fmt.Sprintf("%s/verify/v1/email/bulk/results/%s", services.Cfg.Common.Internal.CustomerOsApi.ApiUrl, requestID), // Placeholder for results URL
 				EstimatedCompletionTs: float64(calculateEstimatedCompletionTs(countPendingRequests)),
 			})
 	}
@@ -534,7 +534,7 @@ func GetBulkEmailVerificationResults(services *cosapi_services.Services) gin.Han
 				TotalEmails:   bulkRequest.TotalEmails,
 				Deliverable:   bulkRequest.DeliverableEmails,
 				Undeliverable: bulkRequest.UndeliverableEmails,
-				DownloadURL:   fmt.Sprintf("%s/verify/v1/email/bulk/results/%s/download", services.Cfg.CommonServices.Internal.CustomerOsApi.ApiUrl, requestID),
+				DownloadURL:   fmt.Sprintf("%s/verify/v1/email/bulk/results/%s/download", services.Cfg.Common.Internal.CustomerOsApi.ApiUrl, requestID),
 			},
 		})
 	}

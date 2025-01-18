@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -61,6 +61,14 @@ func (s *verifyService) ValidateEmailWithMailSherpa(ctx context.Context, email s
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.ValidateEmailWithMailSherpa")
 	defer span.Finish()
 	span.LogKV("email", email)
+
+	// check if mailsherpa is configured
+	if s.cfg.Internal.MailSherpaApiConfig.MailsherpaApiUrl == "" || s.cfg.Internal.MailSherpaApiConfig.MailsherpaApiKey == "" {
+		err := errors.New("MailSherpa is not configured")
+		tracing.TraceErr(span, err)
+		s.log.Errorf("MailSherpa is not configured")
+		return nil, err
+	}
 
 	// Construct the URL with the email as a query parameter
 	requestUrl := fmt.Sprintf("%s/validateEmail", s.cfg.Internal.MailSherpaApiConfig.MailsherpaApiUrl)

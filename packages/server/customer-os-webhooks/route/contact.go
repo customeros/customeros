@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	commoncaches "github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -16,6 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/gin-gonic/gin"
 	pkgerrors "github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/config"
@@ -157,6 +157,15 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncBetterContact", c.Request.Header)
 		defer span.Finish()
+
+		// validate bettercontact is configured
+		if cfg.Common.External.BetterContactConfig.BetterContactCallbackApiKey == "" {
+			err := pkgerrors.New("bettercontact is not configured")
+			tracing.TraceErr(span, err)
+			log.Errorf("bettercontact is not configured")
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "API key not configured"})
+			return
+		}
 
 		// Read the tenant header
 		apiKeyHeader := c.Query("apiKey")

@@ -1,7 +1,6 @@
 package cosapi_services
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	api_bank_account "github.com/customeros/customeros/packages/server/customer-os-api/services/bank_account"
 	api_issue "github.com/customeros/customeros/packages/server/customer-os-api/services/issue"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
@@ -9,6 +8,7 @@ import (
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/config"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
@@ -87,13 +87,13 @@ type Services struct {
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, cfg *config.Config, grpcClients *grpc_client.Clients) *Services {
-	repositories := repository.InitRepos(driver, cfg.CommonServices.Infrastructure.Neo4jConfig.Database, postgresDB)
+	repositories := repository.InitRepos(driver, cfg.Common.Infrastructure.Neo4jConfig.Database, postgresDB)
 
 	commonServices := commonService.InitCommonServices(
 		log,
 		repositories.Neo4jRepositories,
 		repositories.PostgresRepositories,
-		&cfg.CommonServices,
+		&cfg.Common,
 		grpcClients,
 	)
 
@@ -116,7 +116,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 		EmailService:                api_email.NewEmailService(log, repositories, grpcClients),
 		ExternalSystemService:       api_external_system.NewExternalSystemService(log, repositories),
 		IssueService:                api_issue.NewIssueService(log, repositories),
-		JWTService:                  *api_jwt.NewJWTTenantUserService(&cfg.CommonServices.Internal.FileStoreConfig),
+		JWTService:                  *api_jwt.NewJWTTenantUserService(&cfg.Common.Internal.FileStoreConfig),
 		LocationService:             api_location.NewLocationService(log, repositories),
 		LogEntryService:             api_log_entry.NewLogEntryService(log, repositories),
 		NoteService:                 api_note.NewNoteService(log, repositories),

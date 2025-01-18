@@ -4,23 +4,18 @@ import (
 	"log"
 
 	"github.com/caarlos0/env/v6"
-	"github.com/joho/godotenv"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
+	"github.com/joho/godotenv"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/metrics"
 )
 
 type Config struct {
-	Server         ServerConfig
-	App            AppConfig
-	GrpcClient     config.GrpcClientConfig
-	CommonServices config.CommonConfig
+	App    AppConfig
+	Common commonconf.CommonConfig
 }
-
-// Top level Containers
 
 type AppConfig struct {
 	Admin                                  AdminConfig
@@ -30,14 +25,10 @@ type AppConfig struct {
 	TrackingPublicUrl                      string   `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
 	InvoicePaidRedirectUrl                 string   `env:"INVOICE_PAID_REDIRECT_URL" envDefault:"https://customeros.ai/payments/status/paid/"`
 	DefaultGlobalOrgPrimaryDomainsInSearch []string `env:"DEFAULT_GLOBAL_ORG_PRIMARY_DOMAINS_IN_SEARCH" envDefault:"stripe.com,zapier.com,braintreepayments.com,discord.com,airtable.com,framer.com,gocardless.com,gong.io,intercom.com,linear.app,loom.com,mailchimp.com,monday.com,notion.so,brex.com,monzo.com,mercury.com,thebrowser.company,descript.com,ramp.com,pleo.io,scale.com,perplexity.ai,runwayml.com,togetherai.com,pulley.com,pitch.com,raycast.com,height.app,tailscale.com,elevenlabs.io,hume.ai,huggingface.co,rabbit.com,figma.com,superhuman.com,vercel.com"`
-}
-
-type ServerConfig struct {
-	ApiPort       string `env:"PORT" envDefault:"10000" validate:"required"`
-	MetricsPort   string `env:"PORT_METRICS" envDefault:"10000" validate:"required"`
-	Logger        logger.Config
-	GraphQL       GraphQLConfig
-	Observability ObservabilityConfig
+	ApiPort                                string   `env:"PORT" envDefault:"10000" validate:"required"`
+	MetricsPort                            string   `env:"PORT_METRICS" envDefault:"10000" validate:"required"`
+	GraphQL                                GraphQLConfig
+	Observability                          ObservabilityConfig
 }
 
 // Config helpers
@@ -74,8 +65,7 @@ func InitConfig() (*Config, error) {
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("%+v", err)
 	}
-
-	err := validator.GetValidator().Struct(cfg)
+	err := validator.GetValidator().Struct(cfg.App)
 	if err != nil {
 		return nil, err
 	}

@@ -3,6 +3,7 @@ package ai
 import (
 	"context"
 	"errors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 
 	"github.com/opentracing/opentracing-go"
 
@@ -13,12 +14,14 @@ import (
 )
 
 type aiService struct {
-	config *config.AnthropicConfig
+	log             logger.Logger
+	anthropicConfig *config.AnthropicConfig
 }
 
-func NewAIService(config *config.AnthropicConfig) interfaces.AIService {
+func NewAIService(log logger.Logger, config *config.AnthropicConfig) interfaces.AIService {
 	return &aiService{
-		config: config,
+		log:             log,
+		anthropicConfig: config,
 	}
 }
 
@@ -45,8 +48,15 @@ func (s *aiService) askAnthropic(ctx context.Context, model enum.AIModel, prompt
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIModelService.AskAnthropic")
 	defer span.Finish()
 
+	if s.anthropicConfig.ApiKey == "" || s.anthropicConfig.ApiPath == "" {
+		err := errors.New("Anthropic API key or path not set")
+		tracing.TraceErr(span, err)
+		s.log.Error(err)
+		return nil, err
+	}
+
 	// setup client
-	client := NewAnthropicClient(s.config, model)
+	client := NewAnthropicClient(s.anthropicConfig, model)
 	response, err := client.Invoke(ctx, prompt)
 	if err != nil {
 		tracing.TraceErr(span, err)

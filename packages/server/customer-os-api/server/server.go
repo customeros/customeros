@@ -19,9 +19,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/gin-contrib/cors"
-	ginzap "github.com/gin-contrib/zap"
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
@@ -32,6 +29,9 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
 	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/gin-contrib/cors"
+	ginzap "github.com/gin-contrib/zap"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -64,7 +64,7 @@ func NewServer(cfg *config.Config, log logger.Logger) *server {
 }
 
 func CustomerOSAPIURL() string {
-	return globalConfig.CommonServices.Internal.CustomerOsApi.ApiUrl
+	return globalConfig.Common.Internal.CustomerOsApi.ApiUrl
 }
 
 func (server *server) Run(parentCtx context.Context) error {
@@ -76,7 +76,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	// Setting up tracing
-	tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.Server.Observability.Jaeger, server.log)
+	tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.App.Observability.Jaeger, server.log)
 	if err != nil {
 		server.log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 	}
@@ -86,26 +86,26 @@ func (server *server) Run(parentCtx context.Context) error {
 	registerPrometheusMetrics()
 
 	// Initialize postgres db
-	postgresDb, err := commonConfig.InitPostgres(&server.cfg.CommonServices)
+	postgresDb, err := commonConfig.InitPostgres(&server.cfg.Common)
 	if err != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
 	}
 	defer postgresDb.Close()
 
 	// Setting up Neo4j
-	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.CommonServices.Infrastructure.Neo4jConfig)
+	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Common.Infrastructure.Neo4jConfig)
 	if err != nil {
-		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.CommonServices.Infrastructure.Neo4jConfig.Target, err.Error())
+		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Common.Infrastructure.Neo4jConfig.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
 	// check neo4j connectivity
 	err = neo4jDriver.VerifyConnectivity(ctx)
 	if err != nil {
-		server.log.Fatalf("Could not verify connectivity with neo4j at: %v, error: %v", server.cfg.CommonServices.Infrastructure.Neo4jConfig.Target, err.Error())
+		server.log.Fatalf("Could not verify connectivity with neo4j at: %v, error: %v", server.cfg.Common.Infrastructure.Neo4jConfig.Target, err.Error())
 	}
 
 	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(&server.cfg.GrpcClient)
+	df := grpc_client.NewDialFactory(&server.cfg.Common.Infrastructure.GrpcClientConfig)
 	gRPCconn, err := df.GetEventsProcessingPlatformConn()
 	if err != nil {
 		server.log.Fatalf("Failed to connect: %v", err)
@@ -153,7 +153,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		server.graphqlHandler(grpcContainer, serviceContainer))
 
 	// graphql playground
-	if server.cfg.Server.GraphQL.PlaygroundEnabled {
+	if server.cfg.App.GraphQL.PlaygroundEnabled {
 		r.GET("/playground", playgroundHandler())
 		r.GET("/admin/playground",
 			tracing.TracingEnhancer(ctx, "/admin"),
@@ -163,19 +163,19 @@ func (server *server) Run(parentCtx context.Context) error {
 	// rest routes
 	RegisterRestRoutes(ctx, r, grpcContainer, serviceContainer, serviceContainer.Cache)
 
-	if server.cfg.Server.ApiPort == server.cfg.Server.MetricsPort {
-		r.GET(server.cfg.Server.Observability.Metrics.PrometheusPath, metricsHandler)
+	if server.cfg.App.ApiPort == server.cfg.App.MetricsPort {
+		r.GET(server.cfg.App.Observability.Metrics.PrometheusPath, metricsHandler)
 	} else {
 		go func() {
 			mr := gin.Default()
 			mr.Use(prometheusMiddleware())
 			mr.Use(bodyLoggerMiddleware)
-			mr.GET(server.cfg.Server.Observability.Metrics.PrometheusPath, metricsHandler)
-			mr.Run(":" + server.cfg.Server.Observability.Metrics.PrometheusPath)
+			mr.GET(server.cfg.App.Observability.Metrics.PrometheusPath, metricsHandler)
+			mr.Run(":" + server.cfg.App.Observability.Metrics.PrometheusPath)
 		}()
 	}
 
-	r.Run(":" + server.cfg.Server.ApiPort)
+	r.Run(":" + server.cfg.App.ApiPort)
 
 	<-server.doneCh
 
@@ -276,7 +276,7 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 		// Error hook place, Returned error can be customized. Check https://gqlgen.com/reference/errors/
 		return err
 	})
-	srv.Use(extension.FixedComplexityLimit(server.cfg.Server.GraphQL.FixedComplexityLimit))
+	srv.Use(extension.FixedComplexityLimit(server.cfg.App.GraphQL.FixedComplexityLimit))
 
 	return func(c *gin.Context) {
 		customCtx := &common.CustomContext{}
