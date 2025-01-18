@@ -3,6 +3,9 @@ package verify
 import (
 	"context"
 	"errors"
+	international_street "github.com/smartystreets/smartystreets-go-sdk/international-street-api"
+	extract "github.com/smartystreets/smartystreets-go-sdk/us-extract-api"
+	"github.com/smartystreets/smartystreets-go-sdk/wireup"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -18,6 +21,8 @@ type verifyService struct {
 	postgres   *repository.Repositories
 	cfg        *config.CommonConfig
 	enrichment interfaces.EnrichmentService
+	USClient   *extract.Client
+	IntlClient *international_street.Client
 }
 
 func NewVerifyService(log logger.Logger, postgres *repository.Repositories, config *config.CommonConfig, enrichment interfaces.EnrichmentService) interfaces.VerifyService {
@@ -26,6 +31,12 @@ func NewVerifyService(log logger.Logger, postgres *repository.Repositories, conf
 		postgres:   postgres,
 		cfg:        config,
 		enrichment: enrichment,
+		USClient: wireup.BuildUSExtractAPIClient(
+			wireup.SecretKeyCredential(
+				config.External.SmartyConfig.AuthId, config.External.SmartyConfig.AuthToken)),
+		IntlClient: wireup.BuildInternationalStreetAPIClient(
+			wireup.SecretKeyCredential(
+				config.External.SmartyConfig.AuthId, config.External.SmartyConfig.AuthToken)),
 	}
 }
 

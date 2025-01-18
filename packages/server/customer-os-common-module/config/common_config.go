@@ -48,8 +48,8 @@ type ExternalServicesConfig struct {
 	ScrubbyIoConfig      ScrubbyIoConfig
 	SlackConfig          SlackConfig
 	SnitcherConfig       SnitcherConfig
+	SmartyConfig         SmartyConfig
 	StripeConfig         StripeConfig
 	TemporalConfig       TemporalConfig
-
-	TrueInboxConfig TrueInboxConfig
+	TrueInboxConfig      TrueInboxConfig
 }
