@@ -126,13 +126,13 @@ func handleWebsiteVisitorEvent(c context.Context, dependencies *model.Dependency
 		}
 
 		// call agent service
-		if execution != nil {
-			err = dependencies.CommonServices.AgentService.RunAgent(ctx, &agent, eventData)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				loopErr = multierr.Append(loopErr, err)
-			}
-		}
+		// if execution != nil {
+		// 	err = dependencies.CommonServices.AgentService.RunAgent(ctx, &agent, eventData)
+		// 	if err != nil {
+		// 		tracing.TraceErr(span, err)
+		// 		loopErr = multierr.Append(loopErr, err)
+		// 	}
+		// }
 
 		// update agent execution record with results
 		if loopErr != nil {
