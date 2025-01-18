@@ -5,8 +5,6 @@ import (
 	"io"
 	"log"
 
-	"github.com/caarlos0/env/v6"
-	"github.com/joho/godotenv"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
@@ -32,9 +30,10 @@ const (
 func main() {
 	ctx := context.Background()
 
-	cfg := loadConfiguration()
+	// Config
+	cfg := config.Load()
 
-	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
+	appLogger := logger.NewExtendedAppLogger(&cfg.Common.Infrastructure.LoggerConfig)
 	appLogger.InitLogger()
 	appLogger.WithName(AppName)
 
@@ -47,8 +46,8 @@ func main() {
 
 	postgresDb, err := commonConfig.InitPostgres(&commonConfig.CommonConfig{
 		Infrastructure: commonConfig.InfrastructureConfig{
-			PostgresConfig:      cfg.PostgresConfig,
-			PostgresAsyncConfig: cfg.PostgresAsyncConfig,
+			PostgresConfig:      cfg.Common.Infrastructure.PostgresConfig,
+			PostgresAsyncConfig: cfg.Common.Infrastructure.PostgresAsyncConfig,
 		},
 	})
 	if err != nil {
@@ -56,16 +55,16 @@ func main() {
 	}
 	defer postgresDb.Close()
 
-	neo4jDriver, err := commonConfig.NewNeo4jDriver(cfg.Neo4j)
+	neo4jDriver, err := commonConfig.NewNeo4jDriver(cfg.Common.Infrastructure.Neo4jConfig)
 	if err != nil {
-		appLogger.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
+		appLogger.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Common.Infrastructure.Neo4jConfig.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
 
 	// Events processing
 	var eventsProcessingGrpcClient *grpc_client.Clients
-	if cfg.GrpcClientConfig.EventsProcessingPlatformEnabled {
-		df := grpc_client.NewDialFactory(&cfg.GrpcClientConfig)
+	if cfg.Common.Infrastructure.GrpcClientConfig.EventsProcessingPlatformEnabled {
+		df := grpc_client.NewDialFactory(&cfg.Common.Infrastructure.GrpcClientConfig)
 		gRPCconn, err := df.GetEventsProcessingPlatformConn()
 		defer df.Close(gRPCconn)
 		if err != nil {
@@ -75,13 +74,13 @@ func main() {
 	}
 
 	postgresRepositories := repository.InitRepositories(postgresDb)
-	neo4jRepositories := neo4jRepo.InitNeo4jRepositories(&neo4jDriver, cfg.Neo4j.Database)
+	neo4jRepositories := neo4jRepo.InitNeo4jRepositories(&neo4jDriver, cfg.Common.Infrastructure.Neo4jConfig.Database)
 
 	commonServices := commonService.InitCommonServices(
 		appLogger,
 		neo4jRepositories,
 		postgresRepositories,
-		&cfg.CommonConfig,
+		cfg.Common,
 		eventsProcessingGrpcClient,
 	)
 
@@ -89,7 +88,7 @@ func main() {
 	dependencies := &model.DependencyContainer{
 		Logger:               appLogger,
 		GRPCClients:          eventsProcessingGrpcClient,
-		CommonConfig:         &cfg.CommonConfig,
+		CommonConfig:         cfg.Common,
 		PostgresRepositories: postgresRepositories,
 		Neo4jRepositories:    neo4jRepositories,
 		CommonServices:       commonServices,
@@ -127,22 +126,9 @@ func main() {
 	<-forever
 }
 
-func loadConfiguration() *config.Config {
-	if err := godotenv.Load(); err != nil {
-		log.Println("[WARNING] Error loading .env file")
-	}
-
-	cfg := config.Config{}
-	if err := env.Parse(&cfg); err != nil {
-		log.Printf("%+v\n", err)
-	}
-
-	return &cfg
-}
-
 func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
-	if cfg.Jaeger.Enabled {
-		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Jaeger, appLogger)
+	if cfg.Common.Infrastructure.JaegerConfig.Enabled {
+		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Common.Infrastructure.JaegerConfig, appLogger)
 		if err != nil {
 			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
 		}
