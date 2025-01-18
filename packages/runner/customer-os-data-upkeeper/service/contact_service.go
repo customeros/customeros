@@ -1088,6 +1088,14 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
+	// validate bettercontact is configured
+	if s.cfg.Common.External.BetterContactConfig.ApiKey == "" || s.cfg.Common.External.BetterContactConfig.Url == "" {
+		err := errors.New("bettercontact is not configured")
+		tracing.TraceErr(span, err)
+		s.log.Errorf("BetterContact is not configured")
+		return
+	}
+
 	betterContactRequestsWithoutResponse, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetWithoutResponses(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)

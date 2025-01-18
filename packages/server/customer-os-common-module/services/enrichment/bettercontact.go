@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/forPelevin/gomoji"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/forPelevin/gomoji"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -48,6 +48,14 @@ func (s *enrichmentService) FindWorkEmail(ctx context.Context, linkedInUrl, firs
 		log.String("companyDomain", companyDomain),
 		log.String("companyName", companyName),
 		log.Bool("enrichPhoneNumber", enrichPhoneNumber))
+
+	// validate if bettercontact is configured
+	if s.config.BetterContactConfig.ApiKey == "" || s.config.BetterContactConfig.Url == "" {
+		err := errors.New("bettercontact is not configured")
+		tracing.TraceErr(span, err)
+		s.log.Errorf("bettercontact is not configured")
+		return "", "", nil, err
+	}
 
 	firstName = strings.TrimSpace(firstName)
 	lastName = strings.TrimSpace(lastName)
