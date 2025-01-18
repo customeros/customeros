@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/domain"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/emailing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/enrichment"
+	externalsystem "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/external_system"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/google"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/interaction_session"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/markdown_event"
@@ -190,6 +191,7 @@ func InitCommonServices(
 	actionImpl := action.NewActionService(log, neo4jRepositories, eventsImpl, orgImpl)
 	//visitorIDAgentImpl := agent.NewAgentVisitorIDService(postgresRepositories, actionImpl, enrichmentImpl, orgImpl, slackImpl, workspaceImpl)
 	locationImpl := location.NewLocationService(log, neo4jRepositories, postgresRepositories, eventsImpl, &cfg.External.AnthropicPrompts, aiImpl, contactImpl, orgImpl)
+	externalSystemImpl := externalsystem.NewExternalSystemService(log, neo4jRepositories, eventsImpl)
 
 	// resolve dependencies
 	emailImpl.SetContactService(contactImpl)
@@ -258,6 +260,7 @@ func InitCommonServices(
 		RegistrationService:        registrationImpl,
 		ActionService:              actionImpl,
 		LocationService:            locationImpl,
+		ExternalSystemService:      externalSystemImpl,
 		//VisitorIDAgentService:      visitorIDAgentImpl,
 	}
 
