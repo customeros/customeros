@@ -61,6 +61,14 @@ func (s *emailService) CheckEnrowRequestsWithoutResponse() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
+	// validate enrow is configured
+	if s.cfg.Common.External.EnrowConfig.ApiUrl == "" || s.cfg.Common.External.EnrowConfig.ApiKey == "" {
+		err := errors.New("Enrow API URL or API Key not set")
+		tracing.TraceErr(span, err)
+		s.log.Error(err)
+		return
+	}
+
 	enrowRequestsWithoutResponse, err := s.commonServices.PostgresRepositories.CacheEmailEnrowRepository.GetWithoutResponses(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -430,6 +438,14 @@ func (s *emailService) callScrubbyIo(ctx context.Context, email string) (Scrubby
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.callScrubbyIo")
 	defer span.Finish()
 	span.LogFields(log.String("email", email))
+
+	// validate if scrubby is configured
+	if s.cfg.Common.External.ScrubbyIoConfig.ApiUrl == "" || s.cfg.Common.External.ScrubbyIoConfig.ApiKey == "" {
+		err := errors.New("scrubby.io is not configured")
+		tracing.TraceErr(span, err)
+		s.log.Error(err)
+		return ScrubbyIoResponse{}, err
+	}
 
 	encodedEmail := url.QueryEscape(email)
 	req, err := http.NewRequest("GET", s.cfg.Common.External.ScrubbyIoConfig.ApiUrl+"/fetch_email/"+encodedEmail, nil)

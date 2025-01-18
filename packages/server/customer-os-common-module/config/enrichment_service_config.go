@@ -2,7 +2,7 @@ package config
 
 type ScrapinConfig struct {
 	Url     string `env:"SCRAPIN_API_URL" envDefault:"https://api.scrapin.io" required:"true"`
-	ApiKey  string `env:"SCRAPIN_API_KEY" required:"true"`
+	ApiKey  string `env:"SCRAPIN_API_KEY"`
 	TtlDays int    `env:"SCRAPIN_TTL_DAYS" envDefault:"90" required:"true"`
 }
 
@@ -21,5 +21,5 @@ type BetterContactConfig struct {
 
 type SnitcherConfig struct {
 	Url    string `env:"SNITCHER_API_URL" required:"true" envDefault:"https://app.snitcher.com/api"`
-	ApiKey string `env:"SNITCHER_API_KEY" required:"true"`
+	ApiKey string `env:"SNITCHER_API_KEY" `
 }

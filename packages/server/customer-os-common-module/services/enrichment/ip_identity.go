@@ -19,7 +19,7 @@ import (
 const CACHE_LOOKBACK = 90 // days
 
 func (s *enrichmentService) IPIdentity(c context.Context, ip string) (*interfaces.SnitcherResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "SnitcherService.GetSnitcherData")
+	span, ctx := opentracing.StartSpanFromContext(c, "EnrichmentService.GetSnitcherData")
 	defer span.Finish()
 
 	// check to see if IP mapping data already exists
@@ -70,8 +70,15 @@ func (s *enrichmentService) IPIdentity(c context.Context, ip string) (*interface
 }
 
 func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*interfaces.SnitcherResponse, *string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SnitcherService.callSnitcher")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.callSnitcher")
 	defer span.Finish()
+
+	// validate if snitcher is configured
+	if s.config.SnitcherConfig.ApiKey == "" || s.config.SnitcherConfig.Url == "" {
+		err := fmt.Errorf("snitcher is not configured")
+		tracing.TraceErr(span, err)
+		return nil, nil, err
+	}
 
 	// Create HTTP client
 	client := &http.Client{}
@@ -118,7 +125,7 @@ func (s *enrichmentService) callSnitcher(ctx context.Context, ip string) (*inter
 }
 
 func buildSnitcherResponse(ctx context.Context, responseBody []byte) (*interfaces.SnitcherResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SnitcherService.buildSnitcherResponse")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.buildSnitcherResponse")
 	defer span.Finish()
 
 	// Parse the JSON request body

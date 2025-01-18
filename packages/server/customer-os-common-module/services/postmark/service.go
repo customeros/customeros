@@ -10,9 +10,9 @@ import (
 	awsSes "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/mrz1836/postmark"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/mrz1836/postmark"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -49,14 +49,14 @@ const (
 )
 
 type postmarkService struct {
-	cfg      *config.PostmarkConfig
-	postgres *repository.Repositories
+	postmarkConfig *config.PostmarkConfig
+	postgres       *repository.Repositories
 }
 
-func NewPostmarkService(cfg *config.PostmarkConfig, postgres *repository.Repositories) interfaces.PostmarkService {
+func NewPostmarkService(postmarkConfig *config.PostmarkConfig, postgres *repository.Repositories) interfaces.PostmarkService {
 	return &postmarkService{
-		cfg:      cfg,
-		postgres: postgres,
+		postmarkConfig: postmarkConfig,
+		postgres:       postgres,
 	}
 }
 
@@ -244,6 +244,13 @@ func (s *postmarkService) CreateServerIfNotExists(ctx context.Context) error {
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	// validate postmark is configured
+	if s.postmarkConfig == nil || s.postmarkConfig.Url == "" || s.postmarkConfig.AccountApiKey == "" {
+		err := errors.New("postmark url not configured")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
@@ -253,25 +260,25 @@ func (s *postmarkService) CreateServerIfNotExists(ctx context.Context) error {
 	tenant := common.GetTenantFromContext(ctx)
 
 	// check postmark url and api key
-	if s.cfg.Url == "" {
+	if s.postmarkConfig.Url == "" {
 		err := errors.New("postmark url not configured")
 		tracing.TraceErr(span, err)
 		return err
 	}
-	if s.cfg.AccountApiKey == "" {
+	if s.postmarkConfig.AccountApiKey == "" {
 		err := errors.New("postmark api key not configured")
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	postmarkServerName := strings.ToLower(tenant)
-	inboundWebhookURL := s.cfg.DefaultInboundStreamWebhook
+	inboundWebhookURL := s.postmarkConfig.DefaultInboundStreamWebhook
 	inboundForwardingDomain := postmarkServerName + ".customeros.ai"
 	span.LogKV("postmarkServerName", postmarkServerName)
 	span.LogKV("inboundWebhookURL", inboundWebhookURL)
 	span.LogKV("inboundForwardingDomain", inboundForwardingDomain)
 
-	apiClient := NewPostmarkAPIClient(s.cfg.Url, s.cfg.AccountApiKey)
+	apiClient := NewPostmarkAPIClient(s.postmarkConfig.Url, s.postmarkConfig.AccountApiKey)
 
 	// check if server already exists
 	existingServerDetails, err := apiClient.GetServerByName(ctx, postmarkServerName)

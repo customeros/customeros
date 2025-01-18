@@ -66,6 +66,14 @@ func (s *verifyService) askIpData(ctx context.Context, ip string) (*postgresenti
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IpIntelligenceService.askIpData")
 	defer span.Finish()
 
+	// validate if IPData is configured
+	if s.cfg.External.IpDataConfig.ApiKey == "" || s.cfg.External.IpDataConfig.ApiUrl == "" {
+		err := errors.New("IPData is not configured")
+		tracing.TraceErr(span, err)
+		s.log.Errorf("IPData is not configured")
+		return nil, err
+	}
+
 	// Create HTTP client
 	client := &http.Client{}
 
