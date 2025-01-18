@@ -36,10 +36,9 @@ type DNSConfig struct {
 }
 
 type cloudflareService struct {
-	log      logger.Logger
-	cfg      *config.CloudflareConfig
-	postgres *postgres_repository.Repositories
-
+	log              logger.Logger
+	cloudflareConfig *config.CloudflareConfig
+	postgres         *postgres_repository.Repositories
 }
 
 type DNSResponse struct {

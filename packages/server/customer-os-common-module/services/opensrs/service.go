@@ -33,12 +33,12 @@ type OpenSRSResponse struct {
 }
 
 type openSRSService struct {
-	log      logger.Logger
-	cfg      *config.OpenSRSConfig
-	postgres *postgres_repository.Repositories
+	log           logger.Logger
+	openSrsConfig *config.OpenSRSConfig
+	postgres      *postgres_repository.Repositories
 }
 
-func NewOpenSRSService(log logger.Logger, cfg *config.OpenSRSConfig, postgres *postgres_repository.Repositories) interfaces.OpenSrsService {
+func NewOpenSRSService(log logger.Logger, openSrsConfig *config.OpenSRSConfig, postgres *postgres_repository.Repositories) interfaces.OpenSrsService {
 	return &openSRSService{
 		log:           log,
 		openSrsConfig: openSrsConfig,
