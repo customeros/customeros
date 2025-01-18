@@ -1,37 +1,11 @@
 package service
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/ai"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/attachment"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/azure"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/cloudflare"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/comment"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/currency"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/custom_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/domain"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/emailing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/enrichment"
-	externalsystem "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/external_system"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/google"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/interaction_session"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/markdown_event"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/namecheap"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/novu"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/opensrs"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/phone_number"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/postmark"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/reminders"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/slack"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/tags"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/tenant"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/tenant_settings"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/verify"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/workflow"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/workspace"
-	neo4jRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"log"
 	"reflect"
+
+	neo4jRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
@@ -39,15 +13,28 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/action"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/ai"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/attachment"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/azure"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/cloudflare"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/comment"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/contact"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/contract"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/currency"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/custom_fields"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/domain"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/emailing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/enrichment"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/events"
+	externalsystem "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/external_system"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/files"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/flow"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/flow_execution"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/google"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/industry"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/interaction_event"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/interaction_session"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/invoice"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/issue"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/jobrole"
@@ -56,23 +43,39 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/mail"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/mailbox"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/mailstack"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/markdown_event"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/namecheap"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/notification"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/novu"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/opensrs"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/organization"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/phone_number"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/postmark"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/registration"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/reminders"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/service_line_item"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/slack"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/social"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/tags"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/tenant"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/tenant_settings"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/user"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/verify"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/workflow"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/workspace"
 )
 
 type CommonServices struct {
+	// Core infrastructure
+	Cache                *caches.Cache
+	Events               *events.EventsService
 	Neo4jRepositories    *neo4jRepo.Repositories
 	PostgresRepositories *repository.Repositories
 
-	Cache                      *caches.Cache
-	Events                     *events.EventsService
+	// Services
 	ActionService              interfaces.ActionService
 	AIService                  interfaces.AIService
-	AgentService               interfaces.AgentService
 	AttachmentService          interfaces.AttachmentService
 	AzureService               interfaces.AzureService
 	CloudflareService          interfaces.CloudflareService
@@ -82,13 +85,13 @@ type CommonServices struct {
 	CurrencyService            interfaces.CurrencyService
 	CustomFieldTemplateService interfaces.CustomFieldTemplateService
 	DomainService              interfaces.DomainService
-	EmailService               interfaces.EmailService
 	EmailingService            interfaces.EmailingService
+	EmailService               interfaces.EmailService
 	EnrichmentService          interfaces.EnrichmentService
 	ExternalSystemService      interfaces.ExternalSystemService
 	FileService                interfaces.FileService
-	FlowService                interfaces.FlowService
 	FlowExecutionService       interfaces.FlowExecutionService
+	FlowService                interfaces.FlowService
 	GoogleService              interfaces.GoogleService
 	IndustryService            interfaces.IndustryService
 	InteractionEventService    interfaces.InteractionEventService
@@ -98,11 +101,12 @@ type CommonServices struct {
 	JobRoleService             interfaces.JobRoleService
 	LocationService            interfaces.LocationService
 	LogEntryService            interfaces.LogEntryService
-	MailService                interfaces.MailService
 	MailboxService             interfaces.MailboxService
+	MailService                interfaces.MailService
 	MailstackService           interfaces.MailstackService
 	MarkdownEventService       interfaces.MarkdownEventService
 	NamecheapService           interfaces.NamecheapService
+	NotificationService        interfaces.NotificationService
 	NovuService                interfaces.NovuService
 	OpenSRSService             interfaces.OpenSrsService
 	OpportunityService         interfaces.OpportunityService
@@ -132,6 +136,8 @@ func InitCommonServices(
 ) *CommonServices {
 	var err error
 
+	// Base services
+	cacheImpl := caches.NewCommonCache()
 	eventsImpl := &events.EventsService{}
 	if cfg.Infrastructure.RabbitMQConfig.Url != "" {
 		eventsImpl, err = events.NewEventsService(cfg.Infrastructure.RabbitMQConfig.Url, log)
@@ -140,37 +146,43 @@ func InitCommonServices(
 		}
 	}
 
-	cacheImpl := caches.NewCommonCache()
-	emailImpl := email.NewEmailService(neo4jRepositories, eventsImpl, nil, nil, nil)
+	// Simple - Services that depend only on base services
 	aiImpl := ai.NewAIService(&cfg.External.AnthropicConfig)
 	attachmentImpl := attachment.NewAttachmentService(neo4jRepositories)
 	azureImpl := azure.NewAzureService(&cfg.Infrastructure.AzureOAuthConfig, postgresRepositories, neo4jRepositories)
 	cloudfareImpl := cloudflare.NewCloudflareService(log, &cfg.External.CloudflareConfig, postgresRepositories)
+	commentImpl := comment.NewCommentService(log, neo4jRepositories, eventsImpl)
 	currencyImpl := currency.NewCurrencyService(postgresRepositories)
+	customFieldTemplateImpl := custom_fields.NewCustomFieldTemplateService(log, neo4jRepositories, eventsImpl)
+	domainImpl := domain.NewDomainService(log, cacheImpl, postgresRepositories, neo4jRepositories, eventsImpl)
 	emailingImpl := emailing.NewEmailingService(log, postgresRepositories)
 	enrichmentImpl := enrichment.NewEnrichmentService(log, &cfg.External, postgresRepositories)
+	externalSystemImpl := externalsystem.NewExternalSystemService(log, neo4jRepositories, eventsImpl)
 	googleImpl := google.NewGoogleService(&cfg.Infrastructure.GoogleOAuthConfig, postgresRepositories, neo4jRepositories)
 	industryImpl := industry.NewIndustryService(log, neo4jRepositories)
 	interactionSessionImpl := interaction_session.NewInteractionSessionService(neo4jRepositories)
+	markdownEventImpl := markdown_event.NewMarkdownEventService(log, neo4jRepositories, eventsImpl)
 	namecheapImpl := namecheap.NewNamecheapService(&cfg.External.NamecheapConfig, postgresRepositories)
+	notificationImpl := notification.NewNotificationService(log, postgresRepositories)
 	novuImpl := novu.NewNovuService(cfg.External.NovuCofig.ApiKey)
 	openSRSImpl := opensrs.NewOpenSRSService(log, &cfg.External.OpenSRSConfig, postgresRepositories)
-	postmarkImpl := postmark.NewPostmarkService(&cfg.External.PostmarkConfig, postgresRepositories)
-	slackImpl := slack.NewSlackService(log, postgresRepositories)
-	tenantImpl := tenant.NewTenantService(log, neo4jRepositories, postgresRepositories)
-	workflowImpl := workflow.NewWorkflowService(postgresRepositories)
-	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories)
-	commentImpl := comment.NewCommentService(log, neo4jRepositories, eventsImpl)
-	customFieldTemplateImpl := custom_fields.NewCustomFieldTemplateService(log, neo4jRepositories, eventsImpl)
-	markdownEventImpl := markdown_event.NewMarkdownEventService(log, neo4jRepositories, eventsImpl)
 	phoneNumberImpl := phone_number.NewPhoneNumberService(neo4jRepositories, eventsImpl)
+	postmarkImpl := postmark.NewPostmarkService(&cfg.External.PostmarkConfig, postgresRepositories)
+	slackImpl := slack.NewSlackService(postgresRepositories)
 	tagImpl := tags.NewTagService(log, neo4jRepositories, eventsImpl)
+	tenantImpl := tenant.NewTenantService(log, neo4jRepositories, postgresRepositories)
 	tenantSettingsImpl := tenant_settings.NewTenantSettingsService(log, neo4jRepositories, eventsImpl)
 	userImpl := user.NewUserService(neo4jRepositories, postgresRepositories, eventsImpl)
-	verifyImpl := verify.NewVerifyService(log, postgresRepositories, cfg, enrichmentImpl)
-	domainImpl := domain.NewDomainService(log, cacheImpl, postgresRepositories, neo4jRepositories, eventsImpl)
+	workflowImpl := workflow.NewWorkflowService(postgresRepositories)
+	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories)
+
+	// Services that only depend on Simple
 	fileImpl := files.NewFileService(log, &cfg.Internal.FileStoreConfig, neo4jRepositories, attachmentImpl)
 	reminderImpl := reminders.NewReminderService(neo4jRepositories, novuImpl)
+	verifyImpl := verify.NewVerifyService(log, postgresRepositories, cfg, enrichmentImpl)
+
+	// Complex dependencies (ordered by dependency chain)
+	emailImpl := email.NewEmailService(neo4jRepositories, eventsImpl, nil, nil, nil)
 	jobroleImpl := jobrole.NewJobRoleService(neo4jRepositories, eventsImpl, nil)
 	issueImpl := issue.NewIssueService(log, neo4jRepositories, eventsImpl, nil)
 	contactImpl := contact.NewContactService(log, neo4jRepositories, eventsImpl, domainImpl, emailImpl, nil, jobroleImpl, nil, nil)
@@ -182,18 +194,16 @@ func InitCommonServices(
 	invoiceImpl := invoice.NewInvoiceService(log, grpcClients, neo4jRepositories, contractImpl, sliImpl, tenantSettingsImpl)
 	logEntry := logentry.NewLogEntryService(log, neo4jRepositories, eventsImpl, orgImpl)
 	mailboxImpl := mailbox.NewMailboxService(log, postgresRepositories, neo4jRepositories, emailImpl)
-	mailstackImpl := mailstack.NewMailstackService(&cfg.External.StripeConfig, eventsImpl, postgresRepositories, cloudfareImpl, namecheapImpl, mailboxImpl, openSRSImpl)
 	interactionEventImpl := interaction_event.NewInteractionEventService(neo4jRepositories, emailImpl)
+	mailstackImpl := mailstack.NewMailstackService(&cfg.External.StripeConfig, eventsImpl, postgresRepositories, cloudfareImpl, namecheapImpl, mailboxImpl, openSRSImpl)
 	mailImpl := mail.NewMailService(cacheImpl, postgresRepositories, neo4jRepositories, azureImpl, contactImpl, emailImpl, googleImpl, interactionEventImpl, interactionSessionImpl, openSRSImpl, orgImpl)
 	flowExecutionImpl := flow_execution.NewFlowExecutionService(neo4jRepositories, postgresRepositories, eventsImpl, emailImpl, nil, orgImpl, socialImpl)
 	flowImpl := flow.NewFlowService(neo4jRepositories, eventsImpl, flowExecutionImpl)
-	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailboxImpl, orgImpl, postmarkImpl, userImpl)
-	actionImpl := action.NewActionService(log, neo4jRepositories, eventsImpl, orgImpl)
-	//visitorIDAgentImpl := agent.NewAgentVisitorIDService(postgresRepositories, actionImpl, enrichmentImpl, orgImpl, slackImpl, workspaceImpl)
 	locationImpl := location.NewLocationService(log, neo4jRepositories, postgresRepositories, eventsImpl, &cfg.External.AnthropicPrompts, aiImpl, contactImpl, orgImpl)
-	externalSystemImpl := externalsystem.NewExternalSystemService(log, neo4jRepositories, eventsImpl)
+	actionImpl := action.NewActionService(log, neo4jRepositories, eventsImpl, orgImpl)
+	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailboxImpl, orgImpl, postmarkImpl, userImpl)
 
-	// resolve dependencies
+	// Resolve circular dependencies
 	emailImpl.SetContactService(contactImpl)
 	emailImpl.SetOrganizationService(orgImpl)
 	emailImpl.SetDomainService(domainImpl)
@@ -205,63 +215,66 @@ func InitCommonServices(
 	flowExecutionImpl.SetFlowService(flowImpl)
 	jobroleImpl.SetOrganizationService(orgImpl)
 
-	// initialize base services
+	// Initialize CommonServices struct
 	common := CommonServices{
-		Neo4jRepositories:          neo4jRepositories,
-		PostgresRepositories:       postgresRepositories,
-		Cache:                      cacheImpl,
-		Events:                     eventsImpl,
-		EmailService:               emailImpl,
+		// Core components
+		Cache:                cacheImpl,
+		Events:               eventsImpl,
+		Neo4jRepositories:    neo4jRepositories,
+		PostgresRepositories: postgresRepositories,
+
+		// All other services (alphabetically)
+		ActionService:              actionImpl,
 		AIService:                  aiImpl,
 		AttachmentService:          attachmentImpl,
 		AzureService:               azureImpl,
 		CloudflareService:          cloudfareImpl,
+		CommentService:             commentImpl,
+		ContactService:             contactImpl,
+		ContractService:            contractImpl,
 		CurrencyService:            currencyImpl,
+		CustomFieldTemplateService: customFieldTemplateImpl,
+		DomainService:              domainImpl,
+		EmailService:               emailImpl,
 		EmailingService:            emailingImpl,
 		EnrichmentService:          enrichmentImpl,
+		ExternalSystemService:      externalSystemImpl,
+		FileService:                fileImpl,
+		FlowService:                flowImpl,
+		FlowExecutionService:       flowExecutionImpl,
 		GoogleService:              googleImpl,
 		IndustryService:            industryImpl,
+		InteractionEventService:    interactionEventImpl,
 		InteractionSessionService:  interactionSessionImpl,
+		InvoiceService:             invoiceImpl,
+		IssueService:               issueImpl,
+		JobRoleService:             jobroleImpl,
+		LocationService:            locationImpl,
+		LogEntryService:            logEntry,
+		MailService:                mailImpl,
+		MailboxService:             mailboxImpl,
+		MailstackService:           mailstackImpl,
+		MarkdownEventService:       markdownEventImpl,
 		NamecheapService:           namecheapImpl,
+		NotificationService:        notificationImpl,
 		NovuService:                novuImpl,
 		OpenSRSService:             openSRSImpl,
-		PostmarkService:            postmarkImpl,
-		SlackService:               slackImpl,
-		TenantService:              tenantImpl,
-		WorkflowService:            workflowImpl,
-		WorkspaceService:           workspaceImpl,
-		CommentService:             commentImpl,
-		CustomFieldTemplateService: customFieldTemplateImpl,
-		MarkdownEventService:       markdownEventImpl,
+		OpportunityService:         opportunityImpl,
+		OrganizationService:        orgImpl,
 		PhoneNumberService:         phoneNumberImpl,
+		PostmarkService:            postmarkImpl,
+		RegistrationService:        registrationImpl,
+		ReminderService:            reminderImpl,
+		ServiceLineItemService:     sliImpl,
+		SlackService:               slackImpl,
+		SocialService:              socialImpl,
 		TagService:                 tagImpl,
+		TenantService:              tenantImpl,
 		TenantSettingsService:      tenantSettingsImpl,
 		UserService:                userImpl,
 		VerifyService:              verifyImpl,
-		DomainService:              domainImpl,
-		FileService:                fileImpl,
-		ReminderService:            reminderImpl,
-		JobRoleService:             jobroleImpl,
-		IssueService:               issueImpl,
-		ContactService:             contactImpl,
-		SocialService:              socialImpl,
-		OrganizationService:        orgImpl,
-		ContractService:            contractImpl,
-		OpportunityService:         opportunityImpl,
-		ServiceLineItemService:     sliImpl,
-		InvoiceService:             invoiceImpl,
-		LogEntryService:            logEntry,
-		MailboxService:             mailboxImpl,
-		MailstackService:           mailstackImpl,
-		InteractionEventService:    interactionEventImpl,
-		MailService:                mailImpl,
-		FlowExecutionService:       flowExecutionImpl,
-		FlowService:                flowImpl,
-		RegistrationService:        registrationImpl,
-		ActionService:              actionImpl,
-		LocationService:            locationImpl,
-		ExternalSystemService:      externalSystemImpl,
-		//VisitorIDAgentService:      visitorIDAgentImpl,
+		WorkflowService:            workflowImpl,
+		WorkspaceService:           workspaceImpl,
 	}
 
 	// Check that all services are initialized

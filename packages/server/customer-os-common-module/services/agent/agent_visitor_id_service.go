@@ -22,12 +22,12 @@ import (
 )
 
 type agentVisitorIDService struct {
-	postgres     *repository.Repositories
-	action       interfaces.ActionService
-	enrichment   interfaces.EnrichmentService
-	organization interfaces.OrganizationService
-	slack        interfaces.SlackService
-	workspace    interfaces.WorkspaceService
+	postgresRepositories *repository.Repositories
+	actionService        interfaces.ActionService
+	enrichmentService    interfaces.EnrichmentService
+	organizationService  interfaces.OrganizationService
+	notificationService  interfaces.NotificationService
+	workspaceService     interfaces.WorkspaceService
 }
 
 func NewAgentVisitorIDService(
@@ -35,16 +35,16 @@ func NewAgentVisitorIDService(
 	action interfaces.ActionService,
 	enrichment interfaces.EnrichmentService,
 	org interfaces.OrganizationService,
-	slack interfaces.SlackService,
+	notification interfaces.NotificationService,
 	workspace interfaces.WorkspaceService,
 ) interfaces.AgentService {
 	return &agentVisitorIDService{
-		postgres:     postgres,
-		action:       action,
-		enrichment:   enrichment,
-		organization: org,
-		slack:        slack,
-		workspace:    workspace,
+		postgresRepositories: postgres,
+		actionService:        action,
+		enrichmentService:    enrichment,
+		organizationService:  org,
+		notificationService:  notification,
+		workspaceService:     workspace,
 	}
 }
 
@@ -58,11 +58,11 @@ type AgentConfig struct {
 const DefaultNotificationCooldownInHours = 12
 
 func (a *agentVisitorIDService) SetActionService(action interfaces.ActionService) {
-	a.action = action
+	a.actionService = action
 }
 
 func (a *agentVisitorIDService) SetOrganizationService(org interfaces.OrganizationService) {
-	a.organization = org
+	a.organizationService = org
 }
 
 func (a *agentVisitorIDService) IsInitialized() bool {
@@ -82,7 +82,7 @@ func (a *agentVisitorIDService) CreateAgent(ctx context.Context) (*entity.Agents
 	}
 
 	// get config from registry
-	masterAgent, err := a.postgres.AgentRegistryRepository.Find(ctx, enum.AgentVisitorID)
+	masterAgent, err := a.postgresRepositories.AgentRegistryRepository.Find(ctx, enum.AgentVisitorID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -151,7 +151,7 @@ func (a *agentVisitorIDService) RunAgent(ctx context.Context, agent *entity.Agen
 	}
 
 	// Create org if doesn't exist
-	orgID, err := a.organization.Save(ctx, nil, nil, data_fields.OrganizationFields{
+	orgID, err := a.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
 		Domains: []string{*domain},
 	})
 	if err != nil {
@@ -166,7 +166,7 @@ func (a *agentVisitorIDService) RunAgent(ctx context.Context, agent *entity.Agen
 		Domain: domain,
 	}
 
-	session, err := a.postgres.WebSessionRepository.Update(ctx, query)
+	session, err := a.postgresRepositories.WebSessionRepository.Update(ctx, query)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -206,7 +206,7 @@ func (a *agentVisitorIDService) RunAgent(ctx context.Context, agent *entity.Agen
 		ActionType: &actionType,
 		Content:    timelineMessage,
 	}
-	_, err = a.action.CreateActionForOrganization(ctx, nil, orgID, action)
+	_, err = a.actionService.CreateActionForOrganization(ctx, nil, orgID, action)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -236,7 +236,7 @@ func (a *agentVisitorIDService) RunAgent(ctx context.Context, agent *entity.Agen
 		tracing.TraceErr(span, err)
 	}
 
-	err = a.slack.Notify(ctx, tenant, agentConfig.SlackChannelID, message)
+	err = a.notificationService.NotifySlackChannel(ctx, tenant, agentConfig.SlackChannelID, message)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -266,7 +266,7 @@ func (a *agentVisitorIDService) buildTimelineMessage(ctx context.Context, eventD
 		SessionID: eventData.SessionID,
 		EventType: enum.WebTrackerPageView.String(),
 	}
-	pageViews, err := a.postgres.WebTrackerEventsRepository.FindAll(ctx, query, nil)
+	pageViews, err := a.postgresRepositories.WebTrackerEventsRepository.FindAll(ctx, query, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -319,7 +319,7 @@ func (a *agentVisitorIDService) calculateSessionDuration(ctx context.Context, se
 	defer span.Finish()
 
 	if session.EndTime.IsZero() {
-		session, err := a.postgres.WebSessionRepository.FindSession(ctx, *session, nil)
+		session, err := a.postgresRepositories.WebSessionRepository.FindSession(ctx, *session, nil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
@@ -367,7 +367,7 @@ func (a *agentVisitorIDService) identifyIP(ctx context.Context, ipAddress string
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.identifyIP")
 	defer span.Finish()
 
-	snitcherData, err := a.enrichment.IPIdentity(ctx, ipAddress)
+	snitcherData, err := a.enrichmentService.IPIdentity(ctx, ipAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, nil, err
@@ -399,7 +399,7 @@ func (a *agentVisitorIDService) isNewCompanyVisit(ctx context.Context, tenant, d
 		Domain: domain,
 	}
 
-	results, err := a.postgres.WebSessionRepository.FindAllSessions(ctx, query, nil)
+	results, err := a.postgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
@@ -420,7 +420,7 @@ func (a *agentVisitorIDService) isNewWebsiteVisitor(ctx context.Context, tenant,
 		VisitorID: visitorId,
 	}
 
-	results, err := a.postgres.WebSessionRepository.FindAllSessions(ctx, query, nil)
+	results, err := a.postgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
@@ -466,14 +466,14 @@ func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Con
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
 	// get org data from global org table
-	globalOrg, err := a.postgres.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, *session.Domain)
+	globalOrg, err := a.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, *session.Domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	if globalOrg == nil {
-		err = a.postgres.GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess(ctx, *session.Domain)
+		err = a.postgresRepositories.GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess(ctx, *session.Domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -539,7 +539,7 @@ func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Con
 		SessionID: session.ID,
 		EventType: enum.WebTrackerPageView.String(),
 	}
-	pageViews, err := a.postgres.WebTrackerEventsRepository.FindAll(ctx, query, nil)
+	pageViews, err := a.postgresRepositories.WebTrackerEventsRepository.FindAll(ctx, query, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -649,7 +649,7 @@ func (a *agentVisitorIDService) skipNotification(ctx context.Context, agentConfi
 	}
 
 	// determine last notification from this domain
-	lastNotification, err := a.postgres.WebSessionRepository.FindLastNotification(ctx, session.Tenant, *session.Domain)
+	lastNotification, err := a.postgresRepositories.WebSessionRepository.FindLastNotification(ctx, session.Tenant, *session.Domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, nil
@@ -673,7 +673,7 @@ func (a *agentVisitorIDService) isWorkspaceDomain(ctx context.Context, domain st
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
 
-	workspaceDomains, err := a.workspace.GetWorkspaceDomainsForTenant(ctx)
+	workspaceDomains, err := a.workspaceService.GetWorkspaceDomainsForTenant(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false
