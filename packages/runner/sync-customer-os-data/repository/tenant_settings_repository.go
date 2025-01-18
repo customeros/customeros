@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/entity"
 	"gorm.io/gorm"
 )
 

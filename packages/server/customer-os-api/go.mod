@@ -1,22 +1,26 @@
-module github.com/openline-ai/openline-customer-os/packages/server/customer-os-api
+module github.com/customeros/customeros/packages/server/customer-os-api
 
 go 1.23
 
 toolchain go1.23.1
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
+replace github.com/customeros/customeros/packages/server/customer-os-common-module => ../customer-os-common-module
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ../customer-os-postgres-repository
+replace github.com/customeros/customeros/packages/server/customer-os-postgres-repository => ../customer-os-postgres-repository
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
+replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
-replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../events-processing-proto
+replace github.com/customeros/customeros/packages/server/events-processing-proto => ../events-processing-proto
 
-replace github.com/openline-ai/openline-customer-os/packages/server/events => ../events
+replace github.com/customeros/customeros/packages/server/events => ../events
 
 require (
 	github.com/99designs/gqlgen v0.17.63
 	github.com/caarlos0/env/v6 v6.10.1
+	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250115192652-18b4af902e63
+	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
+	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
+	github.com/customeros/customeros/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c
 	github.com/customeros/mailsherpa v0.3.8
 	github.com/customeros/mailwatcher v0.1.6
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -30,10 +34,6 @@ require (
 	github.com/lucasepe/codename v0.2.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20250115192652-18b4af902e63
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.5

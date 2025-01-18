@@ -3,14 +3,14 @@ package api_tenant_settings
 import (
 	"fmt"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"golang.org/x/net/context"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
-	cosapi_interfaces "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-api/config"
+	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 )
 
 const (

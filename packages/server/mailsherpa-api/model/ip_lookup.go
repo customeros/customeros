@@ -1,7 +1,7 @@
 package model
 
 import (
-	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type IpLookupRequest struct {

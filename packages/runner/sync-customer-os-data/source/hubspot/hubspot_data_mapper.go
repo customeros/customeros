@@ -3,8 +3,8 @@ package hubspot
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"strings"

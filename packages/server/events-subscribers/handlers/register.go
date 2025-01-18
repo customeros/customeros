@@ -4,11 +4,11 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/listeners"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
+	"github.com/customeros/customeros/packages/server/events-subscribers/listeners"
+	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
 
 func InitHandlerRegistration(eventsService *events.EventsService, dependencies *model.DependencyContainer) {

@@ -3,8 +3,8 @@ package _registry
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/customeros/customeros/packages/server/events/event"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"reflect"
 )
 

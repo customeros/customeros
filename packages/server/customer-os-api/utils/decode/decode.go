@@ -2,7 +2,7 @@ package decode
 
 import (
 	"github.com/mitchellh/mapstructure"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"reflect"
 	"time"
 )

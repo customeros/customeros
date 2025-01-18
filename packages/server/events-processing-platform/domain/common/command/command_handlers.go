@@ -1,11 +1,11 @@
 package command
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	organizationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/command_handler"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/config"
+	organizationcmdhandler "github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/command_handler"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/logger"
+	"github.com/customeros/customeros/packages/server/events/eventbuffer"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 )
 
 type CommandHandlers struct {

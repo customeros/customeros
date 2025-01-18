@@ -6,21 +6,21 @@ import (
 	"time"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
-	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
+	invoiceevents "github.com/customeros/customeros/packages/server/events-processing-platform/domain/invoice"
+	orgevents "github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/caches"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/config"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/service"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/subscriptions"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/tracing"
 )
 
 type GraphSubscriber struct {

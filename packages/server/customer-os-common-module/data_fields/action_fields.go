@@ -1,7 +1,7 @@
 package data_fields
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"time"
 )
 

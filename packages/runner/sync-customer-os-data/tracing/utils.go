@@ -2,7 +2,7 @@ package tracing
 
 import (
 	"context"
-	local_utils "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
+	local_utils "github.com/customeros/customeros/packages/runner/sync-customer-os-data/utils"
 	"github.com/opentracing/opentracing-go"
 )
 

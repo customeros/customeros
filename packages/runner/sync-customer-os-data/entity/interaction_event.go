@@ -1,8 +1,8 @@
 package entity
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
-	common_utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/utils"
+	common_utils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type InteractionEventParticipant struct {

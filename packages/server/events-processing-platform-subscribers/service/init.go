@@ -1,14 +1,14 @@
 package service
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	commonServices "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
-	neo4jRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
+	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	commonServices "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	neo4jRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/logger"
 )
 
 type Services struct {

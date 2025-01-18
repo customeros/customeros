@@ -3,9 +3,9 @@ package mapper
 import (
 	"testing"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 func TestMapMarketFromModel(t *testing.T) {

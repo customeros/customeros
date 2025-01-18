@@ -1,7 +1,7 @@
 package entity
 
 import (
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"time"
 )
 

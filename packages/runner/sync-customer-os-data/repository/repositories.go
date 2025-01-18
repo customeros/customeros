@@ -2,10 +2,10 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/config"
+	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/logger"
+	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"gorm.io/gorm"
 )
 

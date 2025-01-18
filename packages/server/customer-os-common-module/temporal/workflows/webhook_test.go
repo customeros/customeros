@@ -6,8 +6,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/activity"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/temporal/activity"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	tempact "go.temporal.io/sdk/activity"

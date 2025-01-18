@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client/interceptor"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client/interceptor"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 )
 
 type DialFactory interface {

@@ -7,14 +7,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	commonEnum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/pkg/errors"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	integrations "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/flows_integrations"
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
+	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	integrations "github.com/customeros/customeros/packages/server/customer-os-api/rest/flows_integrations"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 type CreateWebhookRequest struct {

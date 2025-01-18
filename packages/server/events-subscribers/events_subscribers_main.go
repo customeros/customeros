@@ -7,20 +7,20 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	neo4jRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
+	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	neo4jRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/handlers"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
+	"github.com/customeros/customeros/packages/server/events-subscribers/config"
+	"github.com/customeros/customeros/packages/server/events-subscribers/handlers"
+	"github.com/customeros/customeros/packages/server/events-subscribers/logger"
+	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
 
 const (

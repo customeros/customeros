@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres/entity"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/repository/postgres/entity"
 	"gorm.io/gorm"
 )
 

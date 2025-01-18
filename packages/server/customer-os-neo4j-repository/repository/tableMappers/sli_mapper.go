@@ -3,7 +3,7 @@ package tableMappers
 import (
 	"fmt"
 	"github.com/cucumber/godog"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository/types"
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository/types"
 	"reflect"
 	"strconv"
 	"strings"

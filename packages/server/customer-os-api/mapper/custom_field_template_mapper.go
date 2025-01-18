@@ -1,11 +1,11 @@
 package mapper
 
 import (
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 func MapCustomFieldTemplateInputToSaveFields(input model.CustomFieldTemplateInput) neo4jrepository.CustomFieldTemplateSaveFields {

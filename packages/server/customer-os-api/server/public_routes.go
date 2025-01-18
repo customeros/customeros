@@ -3,14 +3,14 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/private"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/private"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/flows"
-	integrations "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/flows_integrations"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/public"
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/flows"
+	integrations "github.com/customeros/customeros/packages/server/customer-os-api/rest/flows_integrations"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/public"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {

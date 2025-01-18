@@ -2,10 +2,10 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/repository/neo4j"
-	postgresrepo "github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/repository/postgres"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	neo4jrepo "github.com/customeros/customeros/packages/runner/sync-slack/repository/neo4j"
+	postgresrepo "github.com/customeros/customeros/packages/runner/sync-slack/repository/postgres"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
 
 type Repositories struct {

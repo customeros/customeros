@@ -1,8 +1,8 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/model"
+	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 )
 
 func MapCustomFieldDataType(input organizationpb.CustomFieldDataType) model.CustomFieldDataType {

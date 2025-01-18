@@ -2,9 +2,9 @@ package invoice
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/test"
 	"os"
 	"testing"
 )

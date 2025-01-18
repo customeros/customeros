@@ -3,8 +3,8 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/repository"
+	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/config"
+	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/repository"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/calendar/v3"
 	"time"

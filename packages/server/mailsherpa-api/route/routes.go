@@ -2,12 +2,12 @@ package route
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/mailsherpa-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/mailsherpa-api/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/mailsherpa-api/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/mailsherpa-api/service"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/mailsherpa-api/config"
+	"github.com/customeros/customeros/packages/server/mailsherpa-api/logger"
+	"github.com/customeros/customeros/packages/server/mailsherpa-api/model"
+	"github.com/customeros/customeros/packages/server/mailsherpa-api/service"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"

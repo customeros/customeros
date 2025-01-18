@@ -1,15 +1,15 @@
 package service
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/caches"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/config"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/repository"
 )
 
 type Services struct {

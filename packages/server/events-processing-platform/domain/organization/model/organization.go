@@ -2,12 +2,12 @@ package model
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
+	"github.com/customeros/customeros/packages/server/events/constants"
+	"github.com/customeros/customeros/packages/server/events/event/common"
 	"reflect"
 	"time"
 
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 )
 
 type CustomFieldDataType string

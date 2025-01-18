@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository/postgres/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/repository/postgres/entity"
 	"gorm.io/gorm"
 )
 

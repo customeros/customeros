@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/cenkalti/backoff/v4"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

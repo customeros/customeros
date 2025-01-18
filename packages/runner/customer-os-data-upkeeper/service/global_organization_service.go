@@ -5,26 +5,37 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/biter777/countries"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/domaincheck"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"net/http"
-	"strings"
+
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 )
+
+type EnrichOrganizationRequest struct {
+	Domain      string `json:"domain"`
+	LinkedinUrl string `json:"linkedinUrl"`
+}
+
+func (e *EnrichOrganizationRequest) Normalize() {
+	e.LinkedinUrl = strings.TrimSpace(e.LinkedinUrl)
+	e.Domain = strings.TrimSpace(e.Domain)
+}
 
 type GlobalOrganizationService interface {
 	SyncDataIntoGlobalOrganizations()
@@ -75,7 +86,7 @@ func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
 		return
 	}
 
-	//process records
+	// process records
 	for _, record := range records {
 
 		// mark record as synced initially to not process same record again, even if error occurs
@@ -241,7 +252,7 @@ func (s *globalOrganizationService) syncBrandfetchToGlobalOrganization() {
 		return
 	}
 
-	//process records
+	// process records
 	for _, record := range records {
 
 		// mark record as synced initially to not process same record again, even if error occurs
@@ -410,7 +421,7 @@ func (s *globalOrganizationService) ScrapinCompanyByWebsite() {
 		return
 	}
 
-	//process records
+	// process records
 	for _, record := range records {
 		// identify primary domain
 		_, primaryDomain := domaincheck.PrimaryDomainCheck(record.Website)
@@ -445,7 +456,7 @@ func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Conte
 	defer span.Finish()
 	span.LogKV("domain", domain)
 
-	requestJSON, err := json.Marshal(enrichmentmodel.EnrichOrganizationRequest{
+	requestJSON, err := json.Marshal(EnrichOrganizationRequest{
 		Domain: domain,
 	})
 	if err != nil {
@@ -509,7 +520,7 @@ func (s *globalOrganizationService) EnrichIndustry() {
 		return
 	}
 
-	//process records
+	// process records
 	for _, record := range records {
 		span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichIndustry.Record")
 		defer span.Finish()
@@ -618,7 +629,7 @@ func (s *globalOrganizationService) EnrichDescription() {
 		return
 	}
 
-	//process records
+	// process records
 	for _, record := range records {
 		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichDescription.Record")
 		defer recordSpan.Finish()
@@ -697,7 +708,7 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 		return
 	}
 
-	//process records
+	// process records
 	for _, record := range records {
 		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations.Record")
 		defer recordSpan.Finish()

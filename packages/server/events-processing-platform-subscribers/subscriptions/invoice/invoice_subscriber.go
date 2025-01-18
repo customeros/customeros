@@ -5,21 +5,21 @@ import (
 	"strings"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	commonServices "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	commonServices "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/invoice"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/tracing"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/config"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/service"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/subscriptions"
 )
 
 type InvoiceSubscriber struct {

@@ -11,10 +11,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/worker"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/server"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/temporal/worker"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/config"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/server"
 )
 
 func main() {

@@ -1,7 +1,7 @@
 package event
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"time"
 )
 

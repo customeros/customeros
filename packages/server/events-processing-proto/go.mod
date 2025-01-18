@@ -1,4 +1,4 @@
-module github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto
+module github.com/customeros/customeros/packages/server/events-processing-proto
 
 go 1.22.7
 

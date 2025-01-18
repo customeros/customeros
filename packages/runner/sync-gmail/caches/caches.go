@@ -3,7 +3,7 @@ package caches
 import (
 	"encoding/json"
 	"github.com/coocood/freecache"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"strconv"
 	"sync"
 )

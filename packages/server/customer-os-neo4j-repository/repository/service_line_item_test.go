@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"github.com/cucumber/godog"
-	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
 	"testing"
 )
 

@@ -2,9 +2,9 @@ package container
 
 import (
 	"github.com/machinebox/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/repository"
+	"github.com/customeros/customeros/packages/runner/customer-os-dedup/config"
+	"github.com/customeros/customeros/packages/runner/customer-os-dedup/logger"
+	"github.com/customeros/customeros/packages/runner/customer-os-dedup/repository"
 )
 
 type Container struct {

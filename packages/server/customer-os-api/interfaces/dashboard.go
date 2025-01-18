@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
-	entityDashboard "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity/dashboard"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	entityDashboard "github.com/customeros/customeros/packages/server/customer-os-api/entity/dashboard"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 type DashboardService interface {

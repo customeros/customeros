@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/logger"
+	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 )
 

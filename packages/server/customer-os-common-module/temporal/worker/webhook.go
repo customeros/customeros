@@ -3,9 +3,9 @@ package worker
 import (
 	"fmt"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/activity"
-	temporal_client "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/workflows"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/temporal/activity"
+	temporal_client "github.com/customeros/customeros/packages/server/customer-os-common-module/temporal/client"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/temporal/workflows"
 	"go.temporal.io/sdk/worker"
 )
 

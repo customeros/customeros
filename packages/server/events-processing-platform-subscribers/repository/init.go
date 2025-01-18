@@ -2,9 +2,9 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	neo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	postgres "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	neo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgres "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
 
 type Repositories struct {

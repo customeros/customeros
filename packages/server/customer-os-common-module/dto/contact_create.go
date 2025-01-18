@@ -1,6 +1,6 @@
 package dto
 
-import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
+import "github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 
 type CreateContact struct {
 	data_fields.ContactFields

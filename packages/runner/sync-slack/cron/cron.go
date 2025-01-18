@@ -1,9 +1,9 @@
 package cron
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/container"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/service"
+	"github.com/customeros/customeros/packages/runner/sync-slack/container"
+	"github.com/customeros/customeros/packages/runner/sync-slack/logger"
+	"github.com/customeros/customeros/packages/runner/sync-slack/service"
 	"github.com/robfig/cron"
 	"sync"
 )

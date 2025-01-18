@@ -43,7 +43,7 @@ skip_validation: false
 # gqlgen will search for any type names in the schema in these go packages
 # if they match it will use them, otherwise it will generate them.
 autobind:
-  - "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+  - "github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 
 # This section declares type mapping between the GraphQL and go type systems
 #
@@ -70,40 +70,40 @@ models:
       - github.com/99designs/gqlgen/graphql.Int32
   SortBy:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model.SortBy
+      - github.com/customeros/customeros/packages/server/customer-os-common-module/model.SortBy
   SortingDirection:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model.SortingDirection
+      - github.com/customeros/customeros/packages/server/customer-os-common-module/model.SortingDirection
   ComparisonOperator:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model.ComparisonOperator
+      - github.com/customeros/customeros/packages/server/customer-os-common-module/model.ComparisonOperator
   FlowStatus:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowStatus
+      - github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity.FlowStatus
   FlowEntityType:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model.EntityType
+      - github.com/customeros/customeros/packages/server/customer-os-common-module/model.EntityType
   FlowActionStatus:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowActionStatus
+      - github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity.FlowActionStatus
   FlowParticipantStatus:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowParticipantStatus
+      - github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity.FlowParticipantStatus
   FlowActionExecutionStatus:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowActionExecutionStatus
+      - github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity.FlowActionExecutionStatus
   FlowActionType:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowActionType
+      - github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity.FlowActionType
   FlowParticipantRequirementsUnmeet:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowParticipantRequirementsUnmeet
+      - github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity.FlowParticipantRequirementsUnmeet
   MailstackBuyRequestStatus:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity.MailstackBuyRequestStatus
+      - github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity.MailstackBuyRequestStatus
   MailstackBuyRequestDomainStatus:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity.MailstackBuyRequestDomainStatus
+      - github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity.MailstackBuyRequestDomainStatus
   MailstackBuyRequestMailboxStatus:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity.MailstackBuyRequestMailboxStatus
+      - github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity.MailstackBuyRequestMailboxStatus

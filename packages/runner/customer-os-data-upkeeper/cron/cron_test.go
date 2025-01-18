@@ -4,13 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/robfig/cron"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/container"
-	cron_config "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/cron/config"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/container"
+	cron_config "github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/cron/config"
 )
 
 func getLogger() logger.Logger {

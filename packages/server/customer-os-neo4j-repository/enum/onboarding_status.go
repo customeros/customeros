@@ -1,6 +1,6 @@
 package enum
 
-import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+import "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
 type OnboardingStatus string
 

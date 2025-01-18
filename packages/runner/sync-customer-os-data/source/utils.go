@@ -2,7 +2,7 @@ package source
 
 import (
 	"encoding/json"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/entity"
+	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/entity"
 )
 
 func MapJsonToUser(jsonData, syncId, source string) (entity.UserData, error) {

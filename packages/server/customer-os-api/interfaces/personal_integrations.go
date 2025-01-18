@@ -1,6 +1,6 @@
 package cosapi_interfaces
 
-import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+import "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
 type PersonalIntegrationsService interface {
 	GetPersonalIntegration(tenantName, email, integration string) (*entity.PersonalIntegration, error)

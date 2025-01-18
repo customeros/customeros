@@ -3,7 +3,7 @@ package mapper
 import (
 	"fmt"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 )
 
 func MapFileEntityToDTO(input *interfaces.File, serviceUrl string) *interfaces.FileDTO {

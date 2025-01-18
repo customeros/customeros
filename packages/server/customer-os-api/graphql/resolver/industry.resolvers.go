@@ -8,9 +8,9 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	model1 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	model1 "github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // IndustriesInUse is the resolver for the industries_InUse field.

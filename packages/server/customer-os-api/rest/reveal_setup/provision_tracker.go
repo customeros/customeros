@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
+	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 type TrackerRequest struct {

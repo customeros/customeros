@@ -3,7 +3,7 @@ package workflows
 import (
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/activity"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/temporal/activity"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )

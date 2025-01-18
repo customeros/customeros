@@ -1,10 +1,10 @@
 package enummapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/verify"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/verify"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 var deliverableByModel = map[model.EmailDeliverable]string{

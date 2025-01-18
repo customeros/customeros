@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 )
 
 type UpdateOrganizationOwnerCommand struct {

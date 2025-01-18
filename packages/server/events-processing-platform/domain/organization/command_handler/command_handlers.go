@@ -1,11 +1,11 @@
 package command_handler
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/customeros/customeros/packages/server/events/eventbuffer"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/config"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/logger"
 )
 
 // CommandHandlers acts as a container for all command handlers.

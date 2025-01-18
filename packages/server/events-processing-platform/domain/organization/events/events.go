@@ -1,14 +1,14 @@
 package events
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
+	"github.com/customeros/customeros/packages/server/events/event/common"
 	"time"
 
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/model"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 )
 

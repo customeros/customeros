@@ -2,7 +2,7 @@
 package mailstack
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
 )
 
 // RegisterNewDomainRequest represents the domain registration request

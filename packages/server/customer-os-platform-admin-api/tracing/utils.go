@@ -2,9 +2,9 @@ package tracing
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/common"
+	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/constants"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/opentracing/opentracing-go/log"
