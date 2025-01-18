@@ -38,13 +38,13 @@ type StripeConfig struct {
 }
 
 type NovuCofig struct {
-	ApiKey      string `env:"NOVU_API_KEY" envDefault:""`
-	FronteraUrl string `env:"NOVU_FRONTERA_URL" envDefault:""`
+	ApiKey      string `env:"NOVU_API_KEY"`
+	FronteraUrl string `env:"NOVU_FRONTERA_URL"`
 }
 
 type AnthropicConfig struct {
 	ApiPath string `env:"ANTHROPIC_API_PATH" envDefault:"https://api.anthropic.com/v1/messages"`
-	ApiKey  string `env:"ANTHROPIC_API_KEY" envDefault:""`
+	ApiKey  string `env:"ANTHROPIC_API_KEY"`
 	AnthropicPrompts
 }
 

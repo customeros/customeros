@@ -1,17 +1,10 @@
 package config
 
-type SmartyConfig struct {
-	AuthId    string `env:"SMARTY_AUTH_ID"`
-	AuthToken string `env:"SMARTY_AUTH_TOKEN"`
-}
-
 type IpDataConfig struct {
 	ApiUrl             string `env:"IPDATA_API_URL"`
 	ApiKey             string `env:"IPDATA_API_KEY"`
 	IpDataCacheTtlDays int    `env:"IPDATA_CACHE_TTL_DAYS" envDefault:"90"`
 }
-
-type IpHunterConfig struct{}
 
 type EmailConfig struct {
 	EmailValidationFromDomain                  string `env:"EMAIL_VALIDATION_FROM_DOMAIN"`
