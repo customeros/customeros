@@ -32,12 +32,13 @@ type emailService struct {
 	domainService interfaces.DomainService
 }
 
-func NewEmailService(neo4j *neoRepo.Repositories, events *events.EventsService, contact interfaces.ContactService, org interfaces.OrganizationService) interfaces.EmailService {
+func NewEmailService(neo4j *neoRepo.Repositories, events *events.EventsService, contact interfaces.ContactService, org interfaces.OrganizationService, domainService interfaces.DomainService) interfaces.EmailService {
 	return &emailService{
-		neo4j:   neo4j,
-		events:  events,
-		contact: contact,
-		org:     org,
+		neo4j:         neo4j,
+		events:        events,
+		contact:       contact,
+		org:           org,
+		domainService: domainService,
 	}
 }
 
