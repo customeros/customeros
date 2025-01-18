@@ -11,13 +11,13 @@ import (
 
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commontest "github.com/customeros/customeros/packages/server/customer-os-common-module/test"
 	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"gorm.io/gorm"
@@ -110,7 +110,7 @@ func prepareClient() {
 		appLogger,
 		driver,
 		postgresDB,
-		&config.Config{CommonServices: commonConfig.CommonConfig{
+		&config.Config{Common: commonConfig.CommonConfig{
 			Infrastructure: commonConfig.InfrastructureConfig{
 				RabbitMQConfig: commonConfig.RabbitMQConfig{
 					Url: rabbitMqUrl,
