@@ -48,7 +48,7 @@ require (
 	golang.org/x/oauth2 v0.24.0
 	golang.org/x/text v0.21.0
 	google.golang.org/api v0.210.0
-	google.golang.org/grpc v1.69.2
+	google.golang.org/grpc v1.69.4
 	gorm.io/gorm v1.25.12
 )
 
