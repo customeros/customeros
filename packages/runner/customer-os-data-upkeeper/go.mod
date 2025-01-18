@@ -19,7 +19,6 @@ require (
 	github.com/customeros/mailsherpa v0.3.8
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
-	github.com/novuhq/go-novu v0.1.2
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
@@ -102,6 +101,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mrz1836/postmark v1.7.0 // indirect
+	github.com/novuhq/go-novu v0.1.2 // indirect
 	github.com/nyaruka/phonenumbers v1.4.4 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
