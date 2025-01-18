@@ -41,6 +41,13 @@ func (s *namecheapService) CheckDomainAvailability(ctx context.Context, domain s
 	defer span.Finish()
 	span.LogKV("domain", domain)
 
+	// validate if namecheap is configured
+	if s.cfg.ApiKey == "" || s.cfg.ApiUser == "" || s.cfg.ApiUsername == "" || s.cfg.ApiClientIp == "" {
+		err := errors.New("Namecheap API configuration is missing")
+		tracing.TraceErr(span, err)
+		return false, false, err
+	}
+
 	params := url.Values{}
 	params.Add("ApiKey", s.cfg.ApiKey)
 	params.Add("ApiUser", s.cfg.ApiUser)
@@ -113,6 +120,13 @@ func (s *namecheapService) PurchaseDomain(ctx context.Context, tenant, domain st
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
 	span.LogKV("domain", domain)
+
+	// validate if namecheap is configured
+	if s.cfg.ApiKey == "" || s.cfg.ApiUser == "" || s.cfg.ApiUsername == "" || s.cfg.ApiClientIp == "" {
+		err := errors.New("Namecheap API configuration is missing")
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	params := url.Values{}
 	params.Add("ApiKey", s.cfg.ApiKey)
@@ -253,6 +267,13 @@ func (s *namecheapService) GetDomainPrice(ctx context.Context, domain string) (f
 	defer span.Finish()
 	span.LogKV("domain", domain)
 
+	// validate if namecheap is configured
+	if s.cfg.ApiKey == "" || s.cfg.ApiUser == "" || s.cfg.ApiUsername == "" || s.cfg.ApiClientIp == "" {
+		err := errors.New("Namecheap API configuration is missing")
+		tracing.TraceErr(span, err)
+		return 0, err
+	}
+
 	// Extract the TLD from the domain (e.g., "com" from "example.com")
 	tld := strings.Split(domain, ".")[1]
 
@@ -358,6 +379,13 @@ func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain str
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
 	span.LogKV("domain", domain)
+
+	// validate if namecheap is configured
+	if s.cfg.ApiKey == "" || s.cfg.ApiUser == "" || s.cfg.ApiUsername == "" || s.cfg.ApiClientIp == "" {
+		err := errors.New("Namecheap API configuration is missing")
+		tracing.TraceErr(span, err)
+		return interfaces.NamecheapDomainInfo{}, err
+	}
 
 	// Check if domain belongs to the tenant in PostgreSQL and is active
 	exists, err := s.postgres.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
@@ -477,6 +505,13 @@ func (s *namecheapService) UpdateNameservers(ctx context.Context, tenant, domain
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
 	span.LogKV("domain", domain, "nameservers", nameservers)
+
+	// validate if namecheap is configured
+	if s.cfg.ApiKey == "" || s.cfg.ApiUser == "" || s.cfg.ApiUsername == "" || s.cfg.ApiClientIp == "" {
+		err := errors.New("Namecheap API configuration is missing")
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	// Check if domain belongs to the tenant in PostgreSQL and is active
 	exists, err := s.postgres.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)

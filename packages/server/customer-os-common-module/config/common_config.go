@@ -40,7 +40,6 @@ type ExternalServicesConfig struct {
 	EnrowConfig          EnrowConfig
 	IntegrationAppConfig IntegrationAppConfig
 	IpDataConfig         IpDataConfig
-	IpHunterConfig       IpHunterConfig
 	NamecheapConfig      NamecheapConfig
 	NovuCofig            NovuCofig
 	OpenSRSConfig        OpenSRSConfig
@@ -48,8 +47,8 @@ type ExternalServicesConfig struct {
 	ScrapinConfig        ScrapinConfig
 	ScrubbyIoConfig      ScrubbyIoConfig
 	SlackConfig          SlackConfig
-	SmartyConfig         SmartyConfig
 	SnitcherConfig       SnitcherConfig
+	SmartyConfig         SmartyConfig
 	StripeConfig         StripeConfig
 	TemporalConfig       TemporalConfig
 	TrueInboxConfig      TrueInboxConfig

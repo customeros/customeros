@@ -35,6 +35,14 @@ func RedirectToPayInvoice(services *cosapi_services.Services) gin.HandlerFunc {
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
+		// validate integration app is configured
+		if services.Cfg.Common.External.IntegrationAppConfig.WorkspaceKey == "" || services.Cfg.Common.External.IntegrationAppConfig.WorkspaceSecret == "" {
+			err := errors.New("Integration app not configured")
+			tracing.TraceErr(span, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to obtain payment link, please try again later"})
+			return
+		}
+
 		clientIP := getClientIP(c)
 
 		// Get invoice ID from path parameter

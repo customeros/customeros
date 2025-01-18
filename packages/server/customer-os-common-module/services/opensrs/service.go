@@ -40,9 +40,9 @@ type openSRSService struct {
 
 func NewOpenSRSService(log logger.Logger, cfg *config.OpenSRSConfig, postgres *postgres_repository.Repositories) interfaces.OpenSrsService {
 	return &openSRSService{
-		log:      log,
-		cfg:      cfg,
-		postgres: postgres,
+		log:           log,
+		openSrsConfig: openSrsConfig,
+		postgres:      postgres,
 	}
 }
 
@@ -264,14 +264,21 @@ func (s *openSRSService) setEmailDomainInOpenSRS(ctx context.Context, domain, dk
 	defer span.Finish()
 	span.LogKV("domain", domain)
 
+	// validate if open srs is configured
+	if s.openSrsConfig.Username == "" || s.openSrsConfig.ApiKey == "" {
+		tracing.TraceErr(span, errors.New("OpenSRS credentials not set"))
+		s.log.Error("OpenSRS credentials not set")
+		return errors.New("OpenSRS credentials not set")
+	}
+
 	// Define the API endpoint (replace with your environment's URL)
-	apiURL := s.cfg.Url + "/api/change_domain"
+	apiURL := s.openSrsConfig.Url + "/api/change_domain"
 
 	// Prepare the request body
 	requestBody := map[string]interface{}{
 		"credentials": map[string]string{
-			"user":     s.cfg.Username,
-			"password": s.cfg.ApiKey,
+			"user":     s.openSrsConfig.Username,
+			"password": s.openSrsConfig.ApiKey,
 		},
 		"domain": domain,
 		"attributes": map[string]interface{}{
@@ -347,10 +354,17 @@ func (s *openSRSService) SetupMailbox(ctx context.Context, tenant, username, pas
 	span.LogKV("username", username)
 	span.LogFields(log.Bool("webmailEnabled", webmailEnabled), log.Object("forwardingTo", forwardingTo))
 
-	// Define the API endpoint for adding a mailbox (replace with your environment's URL)
-	apiURL := s.cfg.Url + "/api/change_user"
+	// validate if open srs is configured
+	if s.openSrsConfig.Username == "" || s.openSrsConfig.ApiKey == "" {
+		tracing.TraceErr(span, errors.New("OpenSRS credentials not set"))
+		s.log.Error("OpenSRS credentials not set")
+		return errors.New("OpenSRS credentials not set")
+	}
 
-	if s.cfg.Username == "" || s.cfg.ApiKey == "" {
+	// Define the API endpoint for adding a mailbox (replace with your environment's URL)
+	apiURL := s.openSrsConfig.Url + "/api/change_user"
+
+	if s.openSrsConfig.Username == "" || s.openSrsConfig.ApiKey == "" {
 		tracing.TraceErr(span, errors.New("OpenSRS credentials not set"))
 		s.log.Error("OpenSRS credentials not set")
 		return errors.New("OpenSRS credentials not set")
@@ -377,8 +391,8 @@ func (s *openSRSService) SetupMailbox(ctx context.Context, tenant, username, pas
 	// Create the requestBody with the extracted attributes
 	requestBody := map[string]interface{}{
 		"credentials": map[string]string{
-			"user":     s.cfg.Username,
-			"password": s.cfg.ApiKey,
+			"user":     s.openSrsConfig.Username,
+			"password": s.openSrsConfig.ApiKey,
 		},
 		"user":       username,
 		"attributes": attributes,
@@ -455,14 +469,21 @@ func (s *openSRSService) GetMailboxDetails(ctx context.Context, email string) (i
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("email", email)
 
+	// validate if open srs config
+	if s.openSrsConfig.Username == "" || s.openSrsConfig.ApiKey == "" {
+		tracing.TraceErr(span, errors.New("OpenSRS credentials not set"))
+		s.log.Error("OpenSRS credentials not set")
+		return interfaces.MailboxDetails{}, errors.New("OpenSRS credentials not set")
+	}
+
 	// Define the API endpoint for getting mailbox information
-	apiURL := s.cfg.Url + "/api/get_user"
+	apiURL := s.openSrsConfig.Url + "/api/get_user"
 
 	// Create the request body
 	requestBody := map[string]interface{}{
 		"credentials": map[string]string{
-			"user":     s.cfg.Username,
-			"password": s.cfg.ApiKey,
+			"user":     s.openSrsConfig.Username,
+			"password": s.openSrsConfig.ApiKey,
 		},
 		"user": email,
 	}

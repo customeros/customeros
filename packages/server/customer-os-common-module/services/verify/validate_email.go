@@ -188,6 +188,14 @@ func (s *verifyService) callScrubbyIo(ctx context.Context, identifier, email str
 	defer span.Finish()
 	span.LogFields(log.String("email", email), log.String("identifier", identifier))
 
+	// validate if scrubby is configured
+	if s.cfg.External.ScrubbyIoConfig.ApiKey == "" || s.cfg.External.ScrubbyIoConfig.ApiUrl == "" {
+		err := errors.New("scrubby.io is not configured")
+		tracing.TraceErr(span, err)
+		s.log.Errorf("scrubby.io is not configured")
+		return ScrubbyIoResponse{}, err
+	}
+
 	requestJSON, err := json.Marshal(ScrubbyIoRequest{
 		Email:       email,
 		Identifier:  identifier,
@@ -287,6 +295,14 @@ func (s *verifyService) callTrueinboxToValidateEmail(ctx context.Context, email 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.callTrueinboxToValidateEmail")
 	defer span.Finish()
 	span.LogFields(log.String("email", email))
+
+	// validate trueinbox is configured
+	if s.cfg.External.TrueInboxConfig.ApiKey == "" || s.cfg.External.TrueInboxConfig.ApiUrl == "" {
+		err := errors.New("TrueInbox is not configured")
+		tracing.TraceErr(span, err)
+		s.log.Errorf("TrueInbox is not configured")
+		return postgresentity.TrueInboxResponseBody{}, err
+	}
 
 	// Construct the URL with the email as a query parameter
 	requestUrl := fmt.Sprintf("%s/v1/api/verify-single-email?email=%s", s.cfg.External.TrueInboxConfig.ApiUrl, url.QueryEscape(email))
@@ -394,6 +410,14 @@ func (s *verifyService) callEnrowToValidateEmail(ctx context.Context, email stri
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.callEnrowToValidateEmail")
 	defer span.Finish()
 	span.LogFields(log.String("email", email))
+
+	// validate enrow is configured
+	if s.cfg.External.EnrowConfig.ApiKey == "" || s.cfg.External.EnrowConfig.ApiUrl == "" {
+		err := errors.New("Enrow is not configured")
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Enrow is not configured")
+		return "", err
+	}
 
 	// Construct the URL with the email as a query parameter
 	requestUrl := fmt.Sprintf("%s/email/verify/single", s.cfg.External.EnrowConfig.ApiUrl)

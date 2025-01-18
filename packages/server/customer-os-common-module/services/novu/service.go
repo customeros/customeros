@@ -52,11 +52,13 @@ var REQUIRED_TEMPLATE_VALUES = map[string][]string{
 
 type novuService struct {
 	NovuClient *novu.APIClient
+	novuApiKey string
 }
 
 func NewNovuService(apiKey string) interfaces.NovuService {
 	return &novuService{
 		NovuClient: novu.NewAPIClient(apiKey, &novu.Config{}),
+		novuApiKey: apiKey,
 	}
 }
 
@@ -64,6 +66,13 @@ func (np *novuService) SendNotification(ctx context.Context, notification *inter
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NovuService.SendNotification")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	// validate if novu is configured
+	if np.novuApiKey == "" {
+		err := errors.New("novu is not configured")
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	payload := notification.Payload
 
