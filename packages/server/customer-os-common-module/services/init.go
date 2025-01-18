@@ -170,7 +170,7 @@ func InitCommonServices(
 	domainImpl := domain.NewDomainService(log, cacheImpl, postgresRepositories, neo4jRepositories, eventsImpl)
 	fileImpl := files.NewFileService(log, &cfg.Internal.FileStoreConfig, neo4jRepositories, attachmentImpl)
 	reminderImpl := reminders.NewReminderService(neo4jRepositories, novuImpl)
-	jobroleImpl := jobrole.NewJobRoleService(neo4jRepositories, eventsImpl)
+	jobroleImpl := jobrole.NewJobRoleService(neo4jRepositories, eventsImpl, nil)
 	issueImpl := issue.NewIssueService(log, neo4jRepositories, eventsImpl, nil)
 	contactImpl := contact.NewContactService(log, neo4jRepositories, eventsImpl, domainImpl, emailImpl, nil, jobroleImpl, nil, nil)
 	socialImpl := social.NewSocialService(log, neo4jRepositories, eventsImpl, contactImpl)
@@ -201,6 +201,7 @@ func InitCommonServices(
 	contactImpl.SetFlowService(flowImpl)
 	contractImpl.SetOpportunityService(opportunityImpl)
 	flowExecutionImpl.SetFlowService(flowImpl)
+	jobroleImpl.SetOrganizationService(orgImpl)
 
 	// initialize base services
 	common := CommonServices{
@@ -268,20 +269,26 @@ func InitCommonServices(
 
 // CheckIsInitialized iterates over all fields of a struct and calls IsInitialized if the field implements it.
 func CheckIsInitialized(common *CommonServices) {
-	v := reflect.ValueOf(common).Elem()
-	t := v.Type()
+	v := reflect.ValueOf(common).Elem() // struct value
+	t := v.Type()                       // struct type
 
 	for i := 0; i < t.NumField(); i++ {
 		field := v.Field(i)
-		if field.Kind() == reflect.Ptr && !field.IsNil() {
-			method := field.MethodByName("IsInitialized")
-			if method.IsValid() {
-				// Call IsInitialized method
-				results := method.Call(nil)
+
+		// We only care if the field is non-nil (pointer or interface)
+		if (field.Kind() == reflect.Ptr || field.Kind() == reflect.Interface) && !field.IsNil() {
+			fieldValue := field.Interface()
+			fieldType := reflect.TypeOf(fieldValue)
+
+			// Check if the underlying type has IsInitialized method
+			_, exists := fieldType.MethodByName("IsInitialized")
+			if exists {
+				// Invoke IsInitialized
+				results := reflect.ValueOf(fieldValue).MethodByName("IsInitialized").Call(nil)
 				if len(results) == 1 && results[0].Kind() == reflect.Bool {
 					isInitialized := results[0].Bool()
 					if !isInitialized {
-						log.Fatalf("Service %s not initialized", t.Field(i).Name)
+						log.Fatalf("Service %s is not initialized", t.Field(i).Name)
 					}
 				}
 			}

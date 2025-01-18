@@ -28,10 +28,11 @@ type jobRoleService struct {
 	orgService interfaces.OrganizationService
 }
 
-func NewJobRoleService(neo4j *neoRepo.Repositories, events *events.EventsService) interfaces.JobRoleService {
+func NewJobRoleService(neo4j *neoRepo.Repositories, events *events.EventsService, orgService interfaces.OrganizationService) interfaces.JobRoleService {
 	return &jobRoleService{
-		neo4j:  neo4j,
-		events: events,
+		neo4j:      neo4j,
+		events:     events,
+		orgService: orgService,
 	}
 }
 
