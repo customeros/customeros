@@ -1,11 +1,11 @@
-package repository
+package postgres_repository
 
 import (
 	"errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -17,15 +17,15 @@ type enrichDetailsTrackingRepository struct {
 }
 
 type EnrichDetailsTrackingRepository interface {
-	Save(ctx context.Context, request entity.EnrichDetailsTracking) error
-	GetByIP(ctx context.Context, IP string) (*entity.EnrichDetailsTracking, error)
+	Save(ctx context.Context, request postgres_entity.EnrichDetailsTracking) error
+	GetByIP(ctx context.Context, IP string) (*postgres_entity.EnrichDetailsTracking, error)
 }
 
 func NewEnrichDetailsTrackingRepository(gormDb *gorm.DB) EnrichDetailsTrackingRepository {
 	return &enrichDetailsTrackingRepository{gormDb: gormDb}
 }
 
-func (r enrichDetailsTrackingRepository) Save(ctx context.Context, request entity.EnrichDetailsTracking) error {
+func (r enrichDetailsTrackingRepository) Save(ctx context.Context, request postgres_entity.EnrichDetailsTracking) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichDetailsTrackingRepository.RegisterRequest")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -48,7 +48,7 @@ func (r enrichDetailsTrackingRepository) Save(ctx context.Context, request entit
 	// Update existing record
 	request.UpdatedAt = utils.Now()
 	if err := r.gormDb.WithContext(ctx).
-		Model(&entity.EnrichDetailsTracking{}).
+		Model(&postgres_entity.EnrichDetailsTracking{}).
 		Where("ip = ?", request.IP).
 		Updates(request).Error; err != nil {
 		tracing.TraceErr(span, err)
@@ -58,16 +58,16 @@ func (r enrichDetailsTrackingRepository) Save(ctx context.Context, request entit
 	return nil
 }
 
-func (r enrichDetailsTrackingRepository) GetByIP(ctx context.Context, ip string) (*entity.EnrichDetailsTracking, error) {
+func (r enrichDetailsTrackingRepository) GetByIP(ctx context.Context, ip string) (*postgres_entity.EnrichDetailsTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsTrackingRepository.GetByIP")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(tracingLog.String("ip", ip))
 
-	var entity *entity.EnrichDetailsTracking
+	var postgres_entity *postgres_entity.EnrichDetailsTracking
 	err := r.gormDb.
 		Where("ip = ?", ip).
-		First(&entity).Error
+		First(&postgres_entity).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		span.LogFields(tracingLog.Bool("result.found", false))
@@ -80,5 +80,5 @@ func (r enrichDetailsTrackingRepository) GetByIP(ctx context.Context, ip string)
 
 	span.LogFields(tracingLog.Bool("result.found", true))
 
-	return entity, err
+	return postgres_entity, err
 }

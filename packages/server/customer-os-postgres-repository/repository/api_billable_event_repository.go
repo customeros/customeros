@@ -1,13 +1,15 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type BillableEventDetails struct {
@@ -18,7 +20,7 @@ type BillableEventDetails struct {
 }
 
 type ApiBillableEventRepository interface {
-	RegisterEvent(ctx context.Context, tenant string, event entity.BillableEvent, details BillableEventDetails) (*entity.ApiBillableEvent, error)
+	RegisterEvent(ctx context.Context, tenant string, event postgres_entity.BillableEvent, details BillableEventDetails) (*postgres_entity.ApiBillableEvent, error)
 }
 
 type apiBillableEventRepository struct {
@@ -30,7 +32,7 @@ func NewApiBillableEventRepository(db *gorm.DB) ApiBillableEventRepository {
 }
 
 // Register creates a new ApiBillableEvent and stores it in the database
-func (r *apiBillableEventRepository) RegisterEvent(ctx context.Context, tenant string, event entity.BillableEvent, details BillableEventDetails) (*entity.ApiBillableEvent, error) {
+func (r *apiBillableEventRepository) RegisterEvent(ctx context.Context, tenant string, event postgres_entity.BillableEvent, details BillableEventDetails) (*postgres_entity.ApiBillableEvent, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "BillableEventRepository.RegisterEvent")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -41,8 +43,8 @@ func (r *apiBillableEventRepository) RegisterEvent(ctx context.Context, tenant s
 	span.LogKV("subtype", details.Subtype)
 	span.LogKV("source", details.Source)
 
-	// Construct the ApiBillableEvent entity
-	billableEvent := entity.ApiBillableEvent{
+	// Construct the ApiBillableEvent postgres_entity
+	billableEvent := postgres_entity.ApiBillableEvent{
 		Tenant:        tenant,
 		Event:         event,
 		CreatedAt:     utils.Now(),

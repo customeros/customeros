@@ -10,9 +10,9 @@ import (
 	awsSes "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/mrz1836/postmark"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -50,10 +50,10 @@ const (
 
 type postmarkService struct {
 	cfg      *config.PostmarkConfig
-	postgres *repository.Repositories
+	postgres *postgres_repository.Repositories
 }
 
-func NewPostmarkService(cfg *config.PostmarkConfig, postgres *repository.Repositories) interfaces.PostmarkService {
+func NewPostmarkService(cfg *config.PostmarkConfig, postgres *postgres_repository.Repositories) interfaces.PostmarkService {
 	return &postmarkService{
 		cfg:      cfg,
 		postgres: postgres,
@@ -76,7 +76,7 @@ func (s *postmarkService) getPostmarkClient(ctx context.Context, tenant string) 
 		return nil, err
 	}
 
-	serverToken := p.Result.(*entity.PostmarkApiKey).Key
+	serverToken := p.Result.(*postgres_entity.PostmarkApiKey).Key
 
 	return postmark.NewClient(serverToken, ""), nil
 }

@@ -1,8 +1,8 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository/helper"
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
@@ -14,22 +14,22 @@ type PersonalIntegrationsRepo struct {
 }
 
 type PersonalIntegrationRepository interface {
-	FindActivesByIntegration(ctx context.Context, integration string) ([]*entity.PersonalIntegration, error)
+	FindActivesByIntegration(ctx context.Context, integration string) ([]*postgres_entity.PersonalIntegration, error)
 	FindIntegration(ctx context.Context, tenant, email, integration string) helper.QueryResult
 	FindIntegrations(ctx context.Context, tenant, email string) helper.QueryResult
-	SaveIntegration(ctx context.Context, integration entity.PersonalIntegration) helper.QueryResult
+	SaveIntegration(ctx context.Context, integration postgres_entity.PersonalIntegration) helper.QueryResult
 }
 
 func NewPersonalIntegrationsRepo(db *gorm.DB) *PersonalIntegrationsRepo {
 	return &PersonalIntegrationsRepo{db: db}
 }
 
-func (r *PersonalIntegrationsRepo) FindActivesByIntegration(ctx context.Context, integration string) ([]*entity.PersonalIntegration, error) {
+func (r *PersonalIntegrationsRepo) FindActivesByIntegration(ctx context.Context, integration string) ([]*postgres_entity.PersonalIntegration, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PersonalIntegrationsRepo.FindActivesByIntegration")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var personalIntegrationEntity []*entity.PersonalIntegration
+	var personalIntegrationEntity []*postgres_entity.PersonalIntegration
 	err := r.db.
 		Where("name = ?", integration).Where("active = ?", true).
 		Find(&personalIntegrationEntity).Error
@@ -42,7 +42,7 @@ func (r *PersonalIntegrationsRepo) FindIntegration(ctx context.Context, tenant, 
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var personalIntegrationEntity entity.PersonalIntegration
+	var personalIntegrationEntity postgres_entity.PersonalIntegration
 	err := r.db.
 		Where("tenant_name = ?", tenant).
 		Where("name = ?", integration).
@@ -61,7 +61,7 @@ func (r *PersonalIntegrationsRepo) FindIntegrations(ctx context.Context, tenant,
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var personalIntegrationEntities []entity.PersonalIntegration
+	var personalIntegrationEntities []postgres_entity.PersonalIntegration
 	err := r.db.
 		Where("tenant_name = ?", tenant).
 		Where("email = ?", email).
@@ -74,12 +74,12 @@ func (r *PersonalIntegrationsRepo) FindIntegrations(ctx context.Context, tenant,
 	return helper.QueryResult{Result: &personalIntegrationEntities}
 }
 
-func (r *PersonalIntegrationsRepo) SaveIntegration(ctx context.Context, integration entity.PersonalIntegration) helper.QueryResult {
+func (r *PersonalIntegrationsRepo) SaveIntegration(ctx context.Context, integration postgres_entity.PersonalIntegration) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PersonalIntegrationsRepo.SaveIntegration")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	personalIntegrationEntity := entity.PersonalIntegration{
+	personalIntegrationEntity := postgres_entity.PersonalIntegration{
 		TenantName: integration.TenantName,
 		Name:       integration.Name,
 		Email:      integration.Email,

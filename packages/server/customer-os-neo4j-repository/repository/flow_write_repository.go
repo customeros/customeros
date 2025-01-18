@@ -1,20 +1,22 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type FlowWriteRepository interface {
-	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowEntity) (*dbtype.Node, error)
+	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *neo4j_entity.FlowEntity) (*dbtype.Node, error)
 
 	UpdateStatistics(ctx context.Context) ([]*utils.StringsWithTenant, error)
 	UpdateFlowStatistics(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string) ([]*utils.StringsWithTenant, error)
@@ -29,7 +31,7 @@ func NewFlowWriteRepository(driver *neo4j.DriverWithContext, database string) Fl
 	return &flowWriteRepositoryImpl{driver: driver, database: database}
 }
 
-func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowEntity) (*dbtype.Node, error) {
+func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *neo4j_entity.FlowEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

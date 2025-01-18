@@ -1,4 +1,4 @@
-package entity
+package neo4j_entity
 
 type DataSource string
 

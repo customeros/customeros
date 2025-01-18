@@ -1,8 +1,8 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository/helper"
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
@@ -15,7 +15,7 @@ type PostmarkApiKeyRepo struct {
 
 type PostmarkApiKeyRepository interface {
 	GetPostmarkApiKey(ctx context.Context, tenant string) helper.QueryResult
-	CreateApiKey(ctx context.Context, integration entity.PostmarkApiKey) helper.QueryResult
+	CreateApiKey(ctx context.Context, integration postgres_entity.PostmarkApiKey) helper.QueryResult
 }
 
 func NewPostmarkApiKeyRepo(db *gorm.DB) *PostmarkApiKeyRepo {
@@ -28,7 +28,7 @@ func (r *PostmarkApiKeyRepo) GetPostmarkApiKey(ctx context.Context, tenant strin
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 
-	var postmarkApiKeyEntity entity.PostmarkApiKey
+	var postmarkApiKeyEntity postgres_entity.PostmarkApiKey
 	err := r.db.
 		Where("tenant_name = ?", tenant).
 		First(&postmarkApiKeyEntity).Error
@@ -40,12 +40,12 @@ func (r *PostmarkApiKeyRepo) GetPostmarkApiKey(ctx context.Context, tenant strin
 	return helper.QueryResult{Result: &postmarkApiKeyEntity}
 }
 
-func (r *PostmarkApiKeyRepo) CreateApiKey(ctx context.Context, apiKey entity.PostmarkApiKey) helper.QueryResult {
+func (r *PostmarkApiKeyRepo) CreateApiKey(ctx context.Context, apiKey postgres_entity.PostmarkApiKey) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "PostmarkApiKeyRepo.CreateApiKey")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	postmarkApiKeyEntity := entity.PostmarkApiKey{
+	postmarkApiKeyEntity := postgres_entity.PostmarkApiKey{
 		TenantName: apiKey.TenantName,
 		Key:        apiKey.Key,
 	}

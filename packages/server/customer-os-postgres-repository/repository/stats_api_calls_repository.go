@@ -1,17 +1,17 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 )
 
 type StatsApiCallsRepository interface {
-	Increment(ctx context.Context, tenant, api string) (*entity.StatsApiCalls, error)
+	Increment(ctx context.Context, tenant, api string) (*postgres_entity.StatsApiCalls, error)
 }
 
 type statsApiCallsRepository struct {
@@ -22,7 +22,7 @@ func NewStatsApiCallsRepository(gormDb *gorm.DB) StatsApiCallsRepository {
 	return &statsApiCallsRepository{db: gormDb}
 }
 
-func (r statsApiCallsRepository) Increment(ctx context.Context, tenant, api string) (*entity.StatsApiCalls, error) {
+func (r statsApiCallsRepository) Increment(ctx context.Context, tenant, api string) (*postgres_entity.StatsApiCalls, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "StatsApiCallsRepository.Increment")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -30,7 +30,7 @@ func (r statsApiCallsRepository) Increment(ctx context.Context, tenant, api stri
 	span.LogFields(log.String("api", api))
 
 	// Check if the record already exists
-	var stats entity.StatsApiCalls
+	var stats postgres_entity.StatsApiCalls
 	err := r.db.WithContext(ctx).
 		Where("tenant = ? AND api = ? AND day = ?", tenant, api, utils.Today()).
 		First(&stats).
@@ -39,7 +39,7 @@ func (r statsApiCallsRepository) Increment(ctx context.Context, tenant, api stri
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			// Create a new record
-			newStats := &entity.StatsApiCalls{
+			newStats := &postgres_entity.StatsApiCalls{
 				Tenant: tenant,
 				Api:    api,
 				Day:    utils.Today(),

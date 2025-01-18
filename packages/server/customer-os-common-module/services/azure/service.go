@@ -13,9 +13,9 @@ import (
 
 	neoEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -37,8 +37,8 @@ const (
 
 type azureService struct {
 	cfg        *config.AzureOAuthConfig
-	postgres   *repository.Repositories
-	neo4j      *neoRepo.Repositories
+	postgres   *postgres_repository.Repositories
+	neo4j      *neo4j_repository.Repositories
 	httpClient *http.Client
 }
 
@@ -51,7 +51,7 @@ type azureApiCall struct {
 	response       interface{}
 }
 
-func NewAzureService(cfg *config.AzureOAuthConfig, postgres *repository.Repositories, neo4j *neoRepo.Repositories) interfaces.AzureService {
+func NewAzureService(cfg *config.AzureOAuthConfig, postgres *postgres_repository.Repositories, neo4j *neo4j_repository.Repositories) interfaces.AzureService {
 	return &azureService{
 		cfg:        cfg,
 		postgres:   postgres,
@@ -60,7 +60,7 @@ func NewAzureService(cfg *config.AzureOAuthConfig, postgres *repository.Reposito
 	}
 }
 
-func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *entity.UserEmailImportState) ([]*entity.EmailRawData, string, error) {
+func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *postgres_entity.UserEmailImportState) ([]*postgres_entity.EmailRawData, string, error) {
 	span, ctx := s.initializeTracing(ctx, "AzureService.ReadEmailsFromAzureAd")
 	defer span.Finish()
 
@@ -86,7 +86,7 @@ func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *e
 	return emailsWithHeaders, nextLink, nil
 }
 
-func (s *azureService) SendEmail(ctx context.Context, request *entity.EmailMessage) error {
+func (s *azureService) SendEmail(ctx context.Context, request *postgres_entity.EmailMessage) error {
 	span, ctx := s.initializeTracing(ctx, "AzureService.SendEmail")
 	defer span.Finish()
 
@@ -129,9 +129,9 @@ func (s *azureService) SendEmail(ctx context.Context, request *entity.EmailMessa
 func (s *azureService) getEmailHeaders(
 	ctx context.Context,
 	span opentracing.Span,
-	rawEmails []*entity.EmailRawData,
+	rawEmails []*postgres_entity.EmailRawData,
 	token string,
-) ([]*entity.EmailRawData, error) {
+) ([]*postgres_entity.EmailRawData, error) {
 	for _, rawEmail := range rawEmails {
 		url := fmt.Sprintf("%s/messages/%s/?$select=internetMessageHeaders",
 			graphAPIBaseURL, rawEmail.ProviderMessageId)
@@ -194,7 +194,7 @@ func (s *azureService) makeRequest(ctx context.Context, span opentracing.Span, o
 	return nil
 }
 
-func (s *azureService) fetchEmails(ctx context.Context, span opentracing.Span, reqURL string, token string) ([]*entity.EmailRawData, string, error) {
+func (s *azureService) fetchEmails(ctx context.Context, span opentracing.Span, reqURL string, token string) ([]*postgres_entity.EmailRawData, string, error) {
 	var result MicrosoftRawEmailsResponse
 	err := s.makeRequest(ctx, span, azureApiCall{
 		method:         "GET",
@@ -283,7 +283,7 @@ func (s *azureService) getValidToken(ctx context.Context, span opentracing.Span,
 	return token.AccessToken, nil
 }
 
-func (s *azureService) refreshToken(ctx context.Context, span opentracing.Span, token *entity.OAuthTokenEntity) (*entity.OAuthTokenEntity, error) {
+func (s *azureService) refreshToken(ctx context.Context, span opentracing.Span, token *postgres_entity.OAuthTokenEntity) (*postgres_entity.OAuthTokenEntity, error) {
 	data := url.Values{
 		"client_id":     {s.cfg.ClientId},
 		"client_secret": {s.cfg.ClientSecret},
@@ -334,7 +334,7 @@ func (s *azureService) buildEmailsRequestURL(cursor string) string {
 	return fmt.Sprintf("%s/messages?%s", graphAPIBaseURL, params.Encode())
 }
 
-func (s *azureService) buildMailRequest(request *entity.EmailMessage) MailRequest {
+func (s *azureService) buildMailRequest(request *postgres_entity.EmailMessage) MailRequest {
 	message := MailRequest{
 		Subject: request.Subject,
 		Body: struct {
@@ -421,10 +421,10 @@ func buildRecipients(addresses []string) []Recipient {
 	return recipients
 }
 
-func convertToEmailRawData(microsoftEmails MicrosoftRawEmailsResponse) []*entity.EmailRawData {
-	emails := make([]*entity.EmailRawData, 0, len(microsoftEmails.Value))
+func convertToEmailRawData(microsoftEmails MicrosoftRawEmailsResponse) []*postgres_entity.EmailRawData {
+	emails := make([]*postgres_entity.EmailRawData, 0, len(microsoftEmails.Value))
 	for _, me := range microsoftEmails.Value {
-		email := &entity.EmailRawData{
+		email := &postgres_entity.EmailRawData{
 			ProviderMessageId: me.Id,
 			MessageId:         me.InternetMessageId,
 			Sent:              me.SentDateTime,

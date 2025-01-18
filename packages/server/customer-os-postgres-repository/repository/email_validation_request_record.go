@@ -1,9 +1,9 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -18,8 +18,8 @@ type EmailValidationRecordRepository interface {
 	UpdateEmailRecord(ctx context.Context, id uint64, newData string) error
 	CountPendingRequests(ctx context.Context, priority int, createdBefore time.Time) (int64, error)
 	CountPendingRequestsByRequestID(ctx context.Context, requestID string) (int64, error)
-	GetUnprocessedEmailRecords(ctx context.Context, limit int) ([]entity.EmailValidationRecord, error)
-	GetEmailRecordsInChunks(ctx context.Context, requestId string, chunkSize, offset int) ([]entity.EmailValidationRecord, error)
+	GetUnprocessedEmailRecords(ctx context.Context, limit int) ([]postgres_entity.EmailValidationRecord, error)
+	GetEmailRecordsInChunks(ctx context.Context, requestId string, chunkSize, offset int) ([]postgres_entity.EmailValidationRecord, error)
 }
 
 type emailValidationRecordRepository struct {
@@ -50,9 +50,9 @@ func (r emailValidationRecordRepository) BulkInsertRecords(ctx context.Context, 
 		}
 
 		// Prepare the batch for the current chunk
-		var records []entity.EmailValidationRecord
+		var records []postgres_entity.EmailValidationRecord
 		for j := i; j < end; j++ {
-			records = append(records, entity.EmailValidationRecord{
+			records = append(records, postgres_entity.EmailValidationRecord{
 				RequestID:      requestId,
 				Tenant:         tenant,
 				Email:          emails[j],
@@ -102,7 +102,7 @@ func (r emailValidationRecordRepository) UpdateEmailRecord(ctx context.Context, 
 
 	// Find the record by email and request_id and update the data field
 	if err := r.db.WithContext(ctx).
-		Model(&entity.EmailValidationRecord{}).
+		Model(&postgres_entity.EmailValidationRecord{}).
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"data":       newData,
@@ -124,7 +124,7 @@ func (r emailValidationRecordRepository) CountPendingRequests(ctx context.Contex
 
 	// Count records with same or lower priority, created on or before with given date, and where data is empty
 	if err := r.db.WithContext(ctx).
-		Model(&entity.EmailValidationRecord{}).
+		Model(&postgres_entity.EmailValidationRecord{}).
 		Where("priority <= ? AND created_at <= ? AND data = ''", priority, createdBefore).
 		Count(&count).Error; err != nil {
 		return 0, err
@@ -133,13 +133,13 @@ func (r emailValidationRecordRepository) CountPendingRequests(ctx context.Contex
 	return count, nil
 }
 
-func (r emailValidationRecordRepository) GetUnprocessedEmailRecords(ctx context.Context, limit int) ([]entity.EmailValidationRecord, error) {
+func (r emailValidationRecordRepository) GetUnprocessedEmailRecords(ctx context.Context, limit int) ([]postgres_entity.EmailValidationRecord, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRecordRepository.GetUnprocessedEmailRecords")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.Int("limit", limit))
 
-	var records []entity.EmailValidationRecord
+	var records []postgres_entity.EmailValidationRecord
 
 	// Query to return unprocessed email records ordered by priority and creation date
 	if err := r.db.WithContext(ctx).
@@ -164,7 +164,7 @@ func (r emailValidationRecordRepository) CountPendingRequestsByRequestID(ctx con
 
 	// Count records where data is empty (unprocessed) for the specific requestID
 	if err := r.db.WithContext(ctx).
-		Model(&entity.EmailValidationRecord{}).
+		Model(&postgres_entity.EmailValidationRecord{}).
 		Where("request_id = ? AND data = ''", requestID). // Filter for unprocessed records with the given requestID
 		Count(&count).Error; err != nil {
 		return 0, err
@@ -173,13 +173,13 @@ func (r emailValidationRecordRepository) CountPendingRequestsByRequestID(ctx con
 	return count, nil
 }
 
-func (r emailValidationRecordRepository) GetEmailRecordsInChunks(ctx context.Context, requestId string, chunkSize, offset int) ([]entity.EmailValidationRecord, error) {
+func (r emailValidationRecordRepository) GetEmailRecordsInChunks(ctx context.Context, requestId string, chunkSize, offset int) ([]postgres_entity.EmailValidationRecord, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRecordRepository.GetEmailRecordsInChunks")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("requestId", requestId), log.Int("chunkSize", chunkSize), log.Int("offset", offset))
 
-	var records []entity.EmailValidationRecord
+	var records []postgres_entity.EmailValidationRecord
 
 	// Retrieve records in chunks
 	if err := r.db.WithContext(ctx).

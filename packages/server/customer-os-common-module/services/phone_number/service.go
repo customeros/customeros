@@ -4,12 +4,11 @@ import (
 	"context"
 	"strings"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -23,11 +22,11 @@ import (
 )
 
 type phoneNumberService struct {
-	neo4j  *neoRepo.Repositories
+	neo4j  *neo4j_repository.Repositories
 	events *events.EventsService
 }
 
-func NewPhoneNumberService(neo4j *neoRepo.Repositories, events *events.EventsService) interfaces.PhoneNumberService {
+func NewPhoneNumberService(neo4j *neo4j_repository.Repositories, events *events.EventsService) interfaces.PhoneNumberService {
 	return &phoneNumberService{
 		neo4j:  neo4j,
 		events: events,
@@ -58,7 +57,7 @@ func (s *phoneNumberService) Merge(ctx context.Context, phoneNumber string, sour
 			return "", err
 		}
 
-		data := neo4jrepository.PhoneNumberCreateFields{
+		data := neo4j_repository.PhoneNumberCreateFields{
 			RawPhoneNumber: phoneNumber,
 			SourceFields: neo4jmodel.SourceFields{
 				AppSource: common.GetAppSourceFromContext(ctx),

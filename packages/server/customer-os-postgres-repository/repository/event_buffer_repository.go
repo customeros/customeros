@@ -1,8 +1,8 @@
-package repository
+package postgres_repository
 
 import (
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"time"
 
 	"gorm.io/gorm"
@@ -13,28 +13,28 @@ type eventBufferRepository struct {
 }
 
 type EventBufferRepository interface {
-	Upsert(eventBuffer *entity.EventBuffer) error
-	GetByExpired(now time.Time) ([]entity.EventBuffer, error)
-	GetByUUID(uuid string) (*entity.EventBuffer, error)
-	Delete(eventBuffer *entity.EventBuffer) error
+	Upsert(eventBuffer *postgres_entity.EventBuffer) error
+	GetByExpired(now time.Time) ([]postgres_entity.EventBuffer, error)
+	GetByUUID(uuid string) (*postgres_entity.EventBuffer, error)
+	Delete(eventBuffer *postgres_entity.EventBuffer) error
 }
 
 func NewEventBufferRepository(gormDb *gorm.DB) EventBufferRepository {
 	return &eventBufferRepository{gormDb: gormDb}
 }
 
-func (repo *eventBufferRepository) Upsert(eventBuffer *entity.EventBuffer) error {
+func (repo *eventBufferRepository) Upsert(eventBuffer *postgres_entity.EventBuffer) error {
 	return repo.gormDb.Save(eventBuffer).Error
 }
 
-func (repo *eventBufferRepository) GetByExpired(now time.Time) ([]entity.EventBuffer, error) {
-	var eventBuffers []entity.EventBuffer
+func (repo *eventBufferRepository) GetByExpired(now time.Time) ([]postgres_entity.EventBuffer, error) {
+	var eventBuffers []postgres_entity.EventBuffer
 	err := repo.gormDb.Where("expiry_timestamp < ?", now).Find(&eventBuffers).Error
 	return eventBuffers, err
 }
 
-func (repo *eventBufferRepository) GetByUUID(uuid string) (*entity.EventBuffer, error) {
-	var eventBuffer entity.EventBuffer
+func (repo *eventBufferRepository) GetByUUID(uuid string) (*postgres_entity.EventBuffer, error) {
+	var eventBuffer postgres_entity.EventBuffer
 	err := repo.gormDb.Where("uuid = ?", uuid).First(&eventBuffer).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -44,6 +44,6 @@ func (repo *eventBufferRepository) GetByUUID(uuid string) (*entity.EventBuffer, 
 	return &eventBuffer, err
 }
 
-func (repo *eventBufferRepository) Delete(eventBuffer *entity.EventBuffer) error {
+func (repo *eventBufferRepository) Delete(eventBuffer *postgres_entity.EventBuffer) error {
 	return repo.gormDb.Delete(eventBuffer).Error
 }

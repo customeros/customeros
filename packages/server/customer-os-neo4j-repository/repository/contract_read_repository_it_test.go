@@ -1,15 +1,17 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
-	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/stretchr/testify/require"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
 )
 
 func TestContractReadRepository_GetContractsToGenerateCycleInvoices(t *testing.T) {
@@ -21,13 +23,13 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices(t *testing.T
 	referenceDate := utils.Now()
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled:  true,
 		InvoicingPostpaid: false,
 		BaseCurrency:      neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -35,7 +37,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices(t *testing.T
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		model.NodeLabelTenant:         1,
@@ -59,18 +61,18 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_Organization
 	referenceDate := utils.Now()
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled:  true,
 		InvoicingPostpaid: true,
 		BaseCurrency:      neo4jenum.CurrencyUSD,
 	})
 
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	organizationHidden := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	organizationHidden := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{
 		Hide: true,
 	})
 
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  3,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -78,7 +80,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_Organization
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationHidden, entity.ContractEntity{
+	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationHidden, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -86,8 +88,8 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_Organization
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, neo4j_entity.ServiceLineItemEntity{})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		model.NodeLabelTenant:         1,
@@ -112,19 +114,19 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_InvoicingNod
 	referenceDate := utils.Now()
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 
 	neo4jtest.CreateTenant(ctx, driver, tenantNok)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenantNok, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenantNok, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: false,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
 
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  12,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -133,8 +135,8 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_InvoicingNod
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
 
-	organizationIdNok := neo4jtest.CreateOrganization(ctx, driver, tenantNok, entity.OrganizationEntity{})
-	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantNok, organizationIdNok, entity.ContractEntity{
+	organizationIdNok := neo4jtest.CreateOrganization(ctx, driver, tenantNok, neo4j_entity.OrganizationEntity{})
+	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenantNok, organizationIdNok, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -142,8 +144,8 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_InvoicingNod
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, neo4j_entity.ServiceLineItemEntity{})
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
@@ -160,11 +162,11 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingCurre
 	referenceDate := utils.Now()
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		Currency:              neo4jenum.CurrencyAUD,
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
@@ -173,7 +175,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingCurre
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -181,8 +183,8 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingCurre
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, neo4j_entity.ServiceLineItemEntity{})
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
@@ -199,12 +201,12 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingBilli
 	referenceDate := utils.Now()
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -212,15 +214,15 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingBilli
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, neo4j_entity.ServiceLineItemEntity{})
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
@@ -239,12 +241,12 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByNextI
 	yesterday := referenceDate.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		NextInvoiceDate:       &yesterday,
@@ -253,7 +255,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByNextI
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	contractIdToday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdToday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		NextInvoiceDate:       &referenceDate,
@@ -262,7 +264,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByNextI
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	contractIdTomorrow := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdTomorrow := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		NextInvoiceDate:       &tomorrow,
@@ -271,9 +273,9 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByNextI
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdYesterday, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdToday, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdTomorrow, entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdYesterday, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdToday, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdTomorrow, neo4j_entity.ServiceLineItemEntity{})
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
@@ -296,12 +298,12 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByInvoi
 	yesterday := today.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &yesterday,
 		OrganizationLegalName: "organizationLegalName",
@@ -309,7 +311,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByInvoi
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	contractIdToday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdToday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &today,
 		OrganizationLegalName: "organizationLegalName",
@@ -317,7 +319,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByInvoi
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	contractIdTomorrow := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdTomorrow := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
@@ -325,17 +327,17 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByInvoi
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	contractIdNoInvoicingStartDate := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdNoInvoicingStartDate := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		OrganizationLegalName: "organizationLegalName",
 		InvoiceEmail:          "invoiceEmail",
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdYesterday, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdToday, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdTomorrow, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdNoInvoicingStartDate, entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdYesterday, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdToday, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdTomorrow, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdNoInvoicingStartDate, neo4j_entity.ServiceLineItemEntity{})
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, today, 240, 100)
 	require.NoError(t, err)
@@ -358,12 +360,12 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 	yesterday := today.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractIdYesterday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &today,
 		EndedAt:               &yesterday,
@@ -372,7 +374,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	contractIdToday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdToday := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &today,
 		EndedAt:               &today,
@@ -381,7 +383,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	contractIdTomorrow := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractIdTomorrow := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &today,
 		EndedAt:               &tomorrow,
@@ -390,9 +392,9 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdTomorrow, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdToday, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdYesterday, entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdTomorrow, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdToday, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractIdYesterday, neo4j_entity.ServiceLineItemEntity{})
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, today, 240, 100)
 	require.NoError(t, err)
@@ -411,12 +413,12 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 	referenceDate := utils.Now()
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -424,7 +426,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -432,7 +434,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusDraft,
 	})
-	contractId3 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractId3 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -440,9 +442,9 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_CheckByContr
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusOutOfContract,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId3, entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId3, neo4j_entity.ServiceLineItemEntity{})
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
@@ -459,12 +461,12 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingOrgan
 	referenceDate := utils.Now()
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -472,15 +474,15 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingOrgan
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths: 1,
 		InvoicingStartDate:   &referenceDate,
 		InvoiceEmail:         "invoiceEmail",
 		InvoicingEnabled:     true,
 		ContractStatus:       neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, neo4j_entity.ServiceLineItemEntity{})
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
@@ -497,12 +499,12 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingInvoi
 	referenceDate := utils.Now()
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -510,15 +512,15 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingInvoi
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractId2 := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId2, neo4j_entity.ServiceLineItemEntity{})
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
@@ -535,12 +537,12 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingServi
 	referenceDate := utils.Now()
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -548,7 +550,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingServi
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &referenceDate,
 		OrganizationLegalName: "organizationLegalName",
@@ -556,7 +558,7 @@ func TestContractReadRepository_GetContractsToGenerateCycleInvoices_MissingServi
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{})
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{})
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateCycleInvoices(ctx, referenceDate, 240, 100)
 	require.NoError(t, err)
@@ -576,12 +578,12 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices(t *testin
 	yesterday := today.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
@@ -589,13 +591,13 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices(t *testin
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	sliId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	sliId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		DryRun: true,
 	})
-	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, entity.InvoiceLineEntity{})
+	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, neo4j_entity.InvoiceLineEntity{})
 	neo4jtest.LinkNodes(ctx, driver, invoiceLineId, sliId, "INVOICED")
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
@@ -616,12 +618,12 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_Invoicing
 	yesterday := today.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: false,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
@@ -629,7 +631,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_Invoicing
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
 
@@ -649,14 +651,14 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_Organizat
 	yesterday := today.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{
 		Hide: true,
 	})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
@@ -664,7 +666,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_Organizat
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
 
@@ -684,11 +686,11 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_MissingCu
 	yesterday := today.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
@@ -696,7 +698,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_MissingCu
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
 
@@ -716,19 +718,19 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_MissingOr
 	yesterday := today.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths: 1,
 		NextInvoiceDate:      &tomorrow,
 		InvoiceEmail:         "invoiceEmail",
 		InvoicingEnabled:     true,
 		ContractStatus:       neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
 
@@ -748,19 +750,19 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_MissingIn
 	yesterday := today.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
 
@@ -779,12 +781,12 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_NextInvoi
 	yesterday := today.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		InvoicingStartDate:    &today,
 		OrganizationLegalName: "organizationLegalName",
@@ -792,7 +794,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_NextInvoi
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
 
@@ -812,12 +814,12 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ContractA
 	yesterday := today.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
@@ -826,7 +828,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ContractA
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
 
@@ -846,12 +848,12 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 	yesterday := today.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
@@ -859,13 +861,13 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	sliId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	sliId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		DryRun: false,
 	})
-	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, entity.InvoiceLineEntity{})
+	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, neo4j_entity.InvoiceLineEntity{})
 	neo4jtest.LinkNodes(ctx, driver, invoiceLineId, sliId, "INVOICED")
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
@@ -883,12 +885,12 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 	yesterday := today.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &today,
 		OrganizationLegalName: "organizationLegalName",
@@ -896,7 +898,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
 
@@ -915,12 +917,12 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 	tomorrow := today.Add(24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
@@ -928,7 +930,7 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_ServiceLi
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: today,
 	})
 
@@ -949,12 +951,12 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_LastServi
 	beforeYesterday := yesterday.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
@@ -962,16 +964,16 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_LastServi
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	invoicedSliId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	invoicedSliId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: beforeYesterday,
 	})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		DryRun: false,
 	})
-	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, entity.InvoiceLineEntity{})
+	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, neo4j_entity.InvoiceLineEntity{})
 	neo4jtest.LinkNodes(ctx, driver, invoiceLineId, invoicedSliId, "INVOICED")
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)
@@ -992,12 +994,12 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_LastServi
 	threeDaysAgo := beforeYesterday.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	neo4jtest.CreateTenantSettings(ctx, driver, tenant, entity.TenantSettingsEntity{
+	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4j_entity.TenantSettingsEntity{
 		InvoicingEnabled: true,
 		BaseCurrency:     neo4jenum.CurrencyUSD,
 	})
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{
 		BillingCycleInMonths:  1,
 		NextInvoiceDate:       &tomorrow,
 		OrganizationLegalName: "organizationLegalName",
@@ -1005,17 +1007,17 @@ func TestContractReadRepository_GetContractsToGenerateOffCycleInvoices_LastServi
 		InvoicingEnabled:      true,
 		ContractStatus:        neo4jenum.ContractStatusLive,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: yesterday,
 	})
-	invoicedSliId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	invoicedSliId := neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: beforeYesterday,
 	})
-	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		StartedAt: threeDaysAgo,
 	})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{})
-	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, entity.InvoiceLineEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{})
+	invoiceLineId := neo4jtest.CreateInvoiceLine(ctx, driver, tenant, invoiceId, neo4j_entity.InvoiceLineEntity{})
 	neo4jtest.LinkNodes(ctx, driver, invoiceLineId, invoicedSliId, "INVOICED")
 
 	result, err := repositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, today, 60, 100)

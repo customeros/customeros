@@ -3,7 +3,7 @@ package interfaces
 import (
 	"context"
 
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
@@ -11,10 +11,10 @@ import (
 type DomainService interface {
 	GetPrimaryDomainForOrganizationWebsite(ctx context.Context, websiteUrl string) (string, string)
 	IsKnownCompanyHostingUrl(ctx context.Context, website string) bool
-	GetAllDomainsForOrganizations(ctx context.Context, organizationIds []string) (*entity.DomainEntities, error)
+	GetAllDomainsForOrganizations(ctx context.Context, organizationIds []string) (*neo4j_entity.DomainEntities, error)
 	UpdateDomainPrimaryDetails(ctx context.Context, domain string) error
 	MergeDomain(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, domain string) error
-	GetDomain(ctx context.Context, domain string) (*entity.DomainEntity, error)
+	GetDomain(ctx context.Context, domain string) (*neo4j_entity.DomainEntity, error)
 	IsAcceptedDomainForOrganization(ctx context.Context, domain string) bool
 	CheckDomainWithMailsherpa(ctx context.Context, domain string) (bool, bool, string)
 }

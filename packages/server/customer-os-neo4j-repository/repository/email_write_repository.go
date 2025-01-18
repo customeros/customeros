@@ -1,19 +1,21 @@
-package repository
+package neo4j_repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"strings"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
-	"strings"
-	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type EmailDeliverableStatus string
@@ -25,9 +27,9 @@ const (
 )
 
 type EmailCreateFields struct {
-	RawEmail  string            `json:"rawEmail"`
-	Source    entity.DataSource `json:"source"`
-	CreatedAt time.Time         `json:"createdAt"`
+	RawEmail  string                  `json:"rawEmail"`
+	Source    neo4j_entity.DataSource `json:"source"`
+	CreatedAt time.Time               `json:"createdAt"`
 }
 
 type EmailWriteRepository interface {
@@ -160,7 +162,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 		"primaryDomain":      data.PrimaryDomain,
 		"alternateEmail":     data.AlternateEmail,
 		"retryValidation":    data.RetryValidation,
-		"source":             entity.DataSourceOpenline.String(),
+		"source":             neo4j_entity.DataSourceOpenline.String(),
 	}
 
 	span.LogFields(log.String("cypher", cypher))

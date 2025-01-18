@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -18,17 +18,17 @@ import (
 )
 
 type workflowService struct {
-	postgres *repository.Repositories
+	postgres *postgres_repository.Repositories
 }
 
-func NewWorkflowService(postgres *repository.Repositories) interfaces.WorkflowService {
+func NewWorkflowService(postgres *postgres_repository.Repositories) interfaces.WorkflowService {
 	return &workflowService{
 		postgres: postgres,
 	}
 }
 
 // Flow
-func (w *workflowService) SaveFlow(ctx context.Context, flowRecord entity.Flows) (*entity.Flows, error) {
+func (w *workflowService) SaveFlow(ctx context.Context, flowRecord postgres_entity.Flows) (*postgres_entity.Flows, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.SaveFlow")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -40,7 +40,7 @@ func (w *workflowService) SaveFlow(ctx context.Context, flowRecord entity.Flows)
 	return w.postgres.FlowsRepository.Update(ctx, flowRecord)
 }
 
-func (w *workflowService) GetFlowsByTrigger(ctx context.Context, listenerEvent enum.FlowListenerEvent) ([]entity.Flows, error) {
+func (w *workflowService) GetFlowsByTrigger(ctx context.Context, listenerEvent enum.FlowListenerEvent) ([]postgres_entity.Flows, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.GetFlowsByTrigger")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -53,7 +53,7 @@ func (w *workflowService) GetFlowsByTrigger(ctx context.Context, listenerEvent e
 
 	}
 
-	query := entity.Flows{
+	query := postgres_entity.Flows{
 		AgentID: "",
 	}
 
@@ -72,7 +72,7 @@ func (w *workflowService) GetNextStepInFlow(ctx context.Context, flowId string, 
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
 	if fromNodeId == nil {
-		query := entity.Flows{
+		query := postgres_entity.Flows{
 			ID: flowId,
 		}
 
@@ -110,7 +110,7 @@ func (w *workflowService) GetNextStepInFlow(ctx context.Context, flowId string, 
 	return nextStep, nil
 }
 
-func (w *workflowService) GetFlowsForListenerEvent(ctx context.Context, sourceEvent enum.FlowListenerEvent, eventType string, eventData any) ([]entity.Flows, error) {
+func (w *workflowService) GetFlowsForListenerEvent(ctx context.Context, sourceEvent enum.FlowListenerEvent, eventType string, eventData any) ([]postgres_entity.Flows, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.getFlowsForEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -151,7 +151,7 @@ func (w *workflowService) nextStepInFlow(ctx context.Context, flowId, fromNodeId
 		return nil, err
 	}
 
-	query := entity.FlowEdge{
+	query := postgres_entity.FlowEdge{
 		FlowID:     flowId,
 		FromNodeID: fromNodeId,
 	}
@@ -174,7 +174,7 @@ func (w *workflowService) nextStepInFlow(ctx context.Context, flowId, fromNodeId
 	// todo - handle conditions
 	edge := (edges)[0]
 
-	nextNodeQuery := entity.FlowNode{
+	nextNodeQuery := postgres_entity.FlowNode{
 		ID:     edge.ToNodeID,
 		FlowID: edge.FlowID,
 	}
@@ -212,7 +212,7 @@ func (w *workflowService) nextStepInFlow(ctx context.Context, flowId, fromNodeId
 
 // Flow Execution
 
-func (w *workflowService) GetFlowExecutionRecordById(ctx context.Context, id string) (*entity.FlowExecution, error) {
+func (w *workflowService) GetFlowExecutionRecordById(ctx context.Context, id string) (*postgres_entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.GetFlowExecutionRecordById")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -231,7 +231,7 @@ func (w *workflowService) GetFlowExecutionRecordById(ctx context.Context, id str
 		return nil, err
 	}
 
-	searchParams := entity.FlowExecution{
+	searchParams := postgres_entity.FlowExecution{
 		ID: id,
 	}
 
@@ -247,12 +247,12 @@ func (w *workflowService) BuildAndSaveFlowExecutionRecord(
 	ctx context.Context,
 	flowStatus, flowId, flowNodeId, entityId, entityType, currentStep string,
 	eventData any,
-) (*entity.FlowExecution, error) {
+) (*postgres_entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.BuildAndSaveFlowExecutionRecord")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	record := entity.FlowExecution{
+	record := postgres_entity.FlowExecution{
 		FlowID:            flowId,
 		Status:            enum.FlowExecutionRunning.String(),
 		StartedAt:         utils.NowPtr(),
@@ -285,7 +285,7 @@ func (w *workflowService) BuildAndSaveFlowExecutionRecord(
 	return flowExecutionRecord, nil
 }
 
-func (w *workflowService) SaveFlowExecutionRecord(ctx context.Context, flowExecutionRecord entity.FlowExecution) (*entity.FlowExecution, error) {
+func (w *workflowService) SaveFlowExecutionRecord(ctx context.Context, flowExecutionRecord postgres_entity.FlowExecution) (*postgres_entity.FlowExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.SaveFlowExecutionRecord")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -306,7 +306,7 @@ func (w *workflowService) SaveFlowExecutionRecord(ctx context.Context, flowExecu
 
 // Flow Agent Execution
 
-func (w *workflowService) SaveFlowAgentExecutionRecord(ctx context.Context, flowAgentExecutionRecord entity.AgentExecution) (*entity.AgentExecution, error) {
+func (w *workflowService) SaveFlowAgentExecutionRecord(ctx context.Context, flowAgentExecutionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.SaveFlowExecutionAgentRecord")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)

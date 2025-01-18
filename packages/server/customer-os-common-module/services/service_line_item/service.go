@@ -9,7 +9,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -43,11 +43,11 @@ type SLIActionMetadata struct {
 type serviceLineItemService struct {
 	log      logger.Logger
 	events   *events.EventsService
-	neo4j    *neoRepo.Repositories
+	neo4j    *neo4j_repository.Repositories
 	contract interfaces.ContractService
 }
 
-func NewServiceLineItemService(log logger.Logger, events *events.EventsService, neo4j *neoRepo.Repositories, contract interfaces.ContractService) interfaces.ServiceLineItemService {
+func NewServiceLineItemService(log logger.Logger, events *events.EventsService, neo4j *neo4j_repository.Repositories, contract interfaces.ContractService) interfaces.ServiceLineItemService {
 	return &serviceLineItemService{
 		log:      log,
 		events:   events,

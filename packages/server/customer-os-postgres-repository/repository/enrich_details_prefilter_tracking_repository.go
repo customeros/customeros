@@ -1,10 +1,10 @@
-package repository
+package postgres_repository
 
 import (
 	"errors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -16,8 +16,8 @@ type enrichDetailsPrefilterTrackingRepository struct {
 }
 
 type EnrichDetailsPrefilterTrackingRepository interface {
-	GetForSendingRequests(ctx context.Context) ([]*entity.EnrichDetailsPreFilterTracking, error)
-	GetByIP(ctx context.Context, IP string) (*entity.EnrichDetailsPreFilterTracking, error)
+	GetForSendingRequests(ctx context.Context) ([]*postgres_entity.EnrichDetailsPreFilterTracking, error)
+	GetByIP(ctx context.Context, IP string) (*postgres_entity.EnrichDetailsPreFilterTracking, error)
 
 	RegisterRequest(ctx context.Context, ip string) error
 	RegisterResponse(ctx context.Context, ip string, shouldIdentify bool, skipIdenitifyReason, response string) error
@@ -27,12 +27,12 @@ func NewEnrichDetailsPrefilterTrackingRepository(gormDb *gorm.DB) EnrichDetailsP
 	return &enrichDetailsPrefilterTrackingRepository{gormDb: gormDb}
 }
 
-func (r enrichDetailsPrefilterTrackingRepository) GetForSendingRequests(ctx context.Context) ([]*entity.EnrichDetailsPreFilterTracking, error) {
+func (r enrichDetailsPrefilterTrackingRepository) GetForSendingRequests(ctx context.Context) ([]*postgres_entity.EnrichDetailsPreFilterTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.GetForSendingRequests")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var entitites []*entity.EnrichDetailsPreFilterTracking
+	var entitites []*postgres_entity.EnrichDetailsPreFilterTracking
 	err := r.gormDb.
 		Where("response is null").
 		Limit(500).
@@ -47,16 +47,16 @@ func (r enrichDetailsPrefilterTrackingRepository) GetForSendingRequests(ctx cont
 	return entitites, err
 }
 
-func (r enrichDetailsPrefilterTrackingRepository) GetByIP(ctx context.Context, ip string) (*entity.EnrichDetailsPreFilterTracking, error) {
+func (r enrichDetailsPrefilterTrackingRepository) GetByIP(ctx context.Context, ip string) (*postgres_entity.EnrichDetailsPreFilterTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.GetByIP")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(tracingLog.String("ip", ip))
 
-	var entity *entity.EnrichDetailsPreFilterTracking
+	var postgres_entity *postgres_entity.EnrichDetailsPreFilterTracking
 	err := r.gormDb.
 		Where("ip = ?", ip).
-		First(&entity).Error
+		First(&postgres_entity).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		span.LogFields(tracingLog.Bool("result.found", false))
@@ -69,7 +69,7 @@ func (r enrichDetailsPrefilterTrackingRepository) GetByIP(ctx context.Context, i
 
 	span.LogFields(tracingLog.Bool("result.found", true))
 
-	return entity, err
+	return postgres_entity, err
 }
 
 func (r enrichDetailsPrefilterTrackingRepository) RegisterRequest(ctx context.Context, ip string) error {
@@ -78,7 +78,7 @@ func (r enrichDetailsPrefilterTrackingRepository) RegisterRequest(ctx context.Co
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(tracingLog.String("ip", ip))
 
-	request := entity.EnrichDetailsPreFilterTracking{
+	request := postgres_entity.EnrichDetailsPreFilterTracking{
 		CreatedAt: utils.Now(),
 		IP:        ip,
 	}

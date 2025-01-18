@@ -1,20 +1,22 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type FlowSenderWriteRepository interface {
-	Merge(ctx context.Context, entity *entity.FlowSenderEntity) (*dbtype.Node, error)
+	Merge(ctx context.Context, entity *neo4j_entity.FlowSenderEntity) (*dbtype.Node, error)
 	Delete(ctx context.Context, id string) error
 }
 
@@ -27,7 +29,7 @@ func NewFlowSenderWriteRepository(driver *neo4j.DriverWithContext, database stri
 	return &flowSenderWriteRepositoryImpl{driver: driver, database: database}
 }
 
-func (r *flowSenderWriteRepositoryImpl) Merge(ctx context.Context, entity *entity.FlowSenderEntity) (*dbtype.Node, error) {
+func (r *flowSenderWriteRepositoryImpl) Merge(ctx context.Context, entity *neo4j_entity.FlowSenderEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSenderWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

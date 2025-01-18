@@ -1,11 +1,11 @@
-package repository
+package postgres_repository
 
 import (
 	"errors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -13,12 +13,12 @@ import (
 )
 
 type MailstackBuyRequestRepository interface {
-	GetList(ctx context.Context) ([]*entity.MailstackBuyRequest, error)
-	GetById(ctx context.Context, id string) (*entity.MailstackBuyRequest, error)
-	Store(ctx context.Context, tx *gorm.DB, input *entity.MailstackBuyRequest) (string, error)
+	GetList(ctx context.Context) ([]*postgres_entity.MailstackBuyRequest, error)
+	GetById(ctx context.Context, id string) (*postgres_entity.MailstackBuyRequest, error)
+	Store(ctx context.Context, tx *gorm.DB, input *postgres_entity.MailstackBuyRequest) (string, error)
 
-	GetDomains(ctx context.Context, mailstackBuyRequestId string) ([]*entity.MailstackBuyRequestDomain, error)
-	StoreDomain(ctx context.Context, tx *gorm.DB, input *entity.MailstackBuyRequestDomain) error
+	GetDomains(ctx context.Context, mailstackBuyRequestId string) ([]*postgres_entity.MailstackBuyRequestDomain, error)
+	StoreDomain(ctx context.Context, tx *gorm.DB, input *postgres_entity.MailstackBuyRequestDomain) error
 }
 
 type mailstackBuyRequestRepositoryRepositoryImpl struct {
@@ -29,14 +29,14 @@ func NewMailstackBuyRequestRepository(gormDb *gorm.DB) MailstackBuyRequestReposi
 	return &mailstackBuyRequestRepositoryRepositoryImpl{gormDb: gormDb}
 }
 
-func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetList(ctx context.Context) ([]*entity.MailstackBuyRequest, error) {
+func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetList(ctx context.Context) ([]*postgres_entity.MailstackBuyRequest, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.GetList")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	var e []*entity.MailstackBuyRequest
+	var e []*postgres_entity.MailstackBuyRequest
 	err := repo.gormDb.Where("tenant = ?", tenant).Find(&e).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -46,7 +46,7 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetList(ctx context.Con
 	return e, nil
 }
 
-func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetById(ctx context.Context, id string) (*entity.MailstackBuyRequest, error) {
+func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetById(ctx context.Context, id string) (*postgres_entity.MailstackBuyRequest, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.GetById")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -55,7 +55,7 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetById(ctx context.Con
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	var e *entity.MailstackBuyRequest
+	var e *postgres_entity.MailstackBuyRequest
 	err := repo.gormDb.Where("tenant = ? and id = ?", tenant, id).First(&e).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -69,7 +69,7 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetById(ctx context.Con
 	return e, nil
 }
 
-func (repo *mailstackBuyRequestRepositoryRepositoryImpl) Store(ctx context.Context, tx *gorm.DB, input *entity.MailstackBuyRequest) (string, error) {
+func (repo *mailstackBuyRequestRepositoryRepositoryImpl) Store(ctx context.Context, tx *gorm.DB, input *postgres_entity.MailstackBuyRequest) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.Store")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -101,7 +101,7 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) Store(ctx context.Conte
 	return input.ID, nil
 }
 
-func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetDomains(ctx context.Context, mailstackBuyRequestId string) ([]*entity.MailstackBuyRequestDomain, error) {
+func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetDomains(ctx context.Context, mailstackBuyRequestId string) ([]*postgres_entity.MailstackBuyRequestDomain, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.GetDomains")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -110,7 +110,7 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetDomains(ctx context.
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	var e []*entity.MailstackBuyRequestDomain
+	var e []*postgres_entity.MailstackBuyRequestDomain
 	err := repo.gormDb.Where("tenant = ? and mailstack_buy_request_id = ?", tenant, mailstackBuyRequestId).Find(&e).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -120,7 +120,7 @@ func (repo *mailstackBuyRequestRepositoryRepositoryImpl) GetDomains(ctx context.
 	return e, nil
 }
 
-func (repo *mailstackBuyRequestRepositoryRepositoryImpl) StoreDomain(ctx context.Context, tx *gorm.DB, input *entity.MailstackBuyRequestDomain) error {
+func (repo *mailstackBuyRequestRepositoryRepositoryImpl) StoreDomain(ctx context.Context, tx *gorm.DB, input *postgres_entity.MailstackBuyRequestDomain) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackBuyRequestRepository.StoreDomain")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)

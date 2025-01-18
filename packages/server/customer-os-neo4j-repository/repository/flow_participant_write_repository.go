@@ -1,20 +1,22 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type FlowParticipantWriteRepository interface {
-	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowParticipantEntity) (*dbtype.Node, error)
+	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *neo4j_entity.FlowParticipantEntity) (*dbtype.Node, error)
 	Delete(ctx context.Context, tx *neo4j.ManagedTransaction, id string) error
 
 	MarkReadyContactsAsScheduled(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string) ([]string, error)
@@ -29,7 +31,7 @@ func NewFlowParticipantWriteRepository(driver *neo4j.DriverWithContext, database
 	return &flowParticipantWriteRepositoryImpl{driver: driver, database: database}
 }
 
-func (r *flowParticipantWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowParticipantEntity) (*dbtype.Node, error) {
+func (r *flowParticipantWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *neo4j_entity.FlowParticipantEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

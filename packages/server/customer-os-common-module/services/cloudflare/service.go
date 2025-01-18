@@ -14,7 +14,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -38,7 +38,7 @@ type DNSConfig struct {
 type cloudflareService struct {
 	log      logger.Logger
 	cfg      *config.CloudflareConfig
-	postgres *repository.Repositories
+	postgres *postgres_repository.Repositories
 }
 
 type DNSResponse struct {
@@ -47,7 +47,7 @@ type DNSResponse struct {
 }
 
 // NewCloudflareService initializes the CloudflareService
-func NewCloudflareService(log logger.Logger, cfg *config.CloudflareConfig, postgres *repository.Repositories) interfaces.CloudflareService {
+func NewCloudflareService(log logger.Logger, cfg *config.CloudflareConfig, postgres *postgres_repository.Repositories) interfaces.CloudflareService {
 	return &cloudflareService{
 		log:      log,
 		cfg:      cfg,

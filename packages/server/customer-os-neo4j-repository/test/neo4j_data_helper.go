@@ -3,13 +3,14 @@ package test
 import (
 	"context"
 	"fmt"
-	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"time"
 
+	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 )
 
@@ -17,8 +18,8 @@ func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {
 	ExecuteWriteQuery(ctx, driver, `MATCH (n) DETACH DELETE n`, map[string]any{})
 }
 
-func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, entity entity.CountryEntity) string {
-	var countryId = entity.Id
+func CreateCountry(ctx context.Context, driver *neo4j.DriverWithContext, entity neo4j_entity.CountryEntity) string {
+	countryId := entity.Id
 	if countryId == "" {
 		countryUuid, _ := uuid.NewRandom()
 		countryId = countryUuid.String()
@@ -51,7 +52,7 @@ func CreateTenant(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 	})
 }
 
-func CreateTenantSettings(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, settings entity.TenantSettingsEntity) string {
+func CreateTenantSettings(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, settings neo4j_entity.TenantSettingsEntity) string {
 	settingsId := utils.NewUUIDIfEmpty(settings.Id)
 	query := `MATCH (t:Tenant {name:$tenant}) 
 				MERGE (t)-[:HAS_SETTINGS]->(s:TenantSettings {tenant:$tenant})
@@ -78,7 +79,7 @@ func CreateTenantSettings(ctx context.Context, driver *neo4j.DriverWithContext, 
 	return settingsId
 }
 
-func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, profile entity.TenantBillingProfileEntity) string {
+func CreateTenantBillingProfile(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, profile neo4j_entity.TenantBillingProfileEntity) string {
 	profileId := utils.NewUUIDIfEmpty(profile.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
 				MERGE (t)-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile {id:$profileId})
@@ -138,7 +139,7 @@ func CreateWorkspace(ctx context.Context, driver *neo4j.DriverWithContext, works
 }
 
 func CreateDefaultUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
-	return CreateUser(ctx, driver, tenant, entity.UserEntity{
+	return CreateUser(ctx, driver, tenant, neo4j_entity.UserEntity{
 		FirstName:     "first",
 		LastName:      "last",
 		Source:        "openline",
@@ -147,7 +148,7 @@ func CreateDefaultUser(ctx context.Context, driver *neo4j.DriverWithContext, ten
 }
 
 func CreateDefaultUserAlpha(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
-	return CreateUser(ctx, driver, tenant, entity.UserEntity{
+	return CreateUser(ctx, driver, tenant, neo4j_entity.UserEntity{
 		FirstName:     "alpha",
 		LastName:      "alpha",
 		Source:        "openline",
@@ -156,7 +157,7 @@ func CreateDefaultUserAlpha(ctx context.Context, driver *neo4j.DriverWithContext
 }
 
 func CreateDefaultUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string) string {
-	return CreateUser(ctx, driver, tenant, entity.UserEntity{
+	return CreateUser(ctx, driver, tenant, neo4j_entity.UserEntity{
 		Id:            userId,
 		FirstName:     "first",
 		LastName:      "last",
@@ -165,7 +166,7 @@ func CreateDefaultUserWithId(ctx context.Context, driver *neo4j.DriverWithContex
 	})
 }
 
-func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, user entity.UserEntity) string {
+func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, user neo4j_entity.UserEntity) string {
 	now := utils.Now()
 	createdAt := user.CreatedAt
 	if createdAt.IsZero() {
@@ -213,12 +214,12 @@ func CreateUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant str
 }
 
 func CreateUserWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string) {
-	CreateUser(ctx, driver, tenant, entity.UserEntity{
+	CreateUser(ctx, driver, tenant, neo4j_entity.UserEntity{
 		Id: userId,
 	})
 }
 
-func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization entity.OrganizationEntity) string {
+func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, organization neo4j_entity.OrganizationEntity) string {
 	orgId := utils.NewUUIDIfEmpty(organization.ID)
 
 	now := utils.Now()
@@ -338,7 +339,7 @@ func CreateIndustry(ctx context.Context, driver *neo4j.DriverWithContext, code, 
 	return code
 }
 
-func CreateLogEntry(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, logEntry entity.LogEntryEntity) string {
+func CreateLogEntry(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, logEntry neo4j_entity.LogEntryEntity) string {
 	logEntryId := utils.NewUUIDIfEmpty(logEntry.Id)
 	query := fmt.Sprintf(`
 			  MERGE (l:LogEntry {id:$id})
@@ -360,13 +361,13 @@ func CreateLogEntry(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return logEntryId
 }
 
-func CreateBillingProfileForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, billingProfile entity.BillingProfileEntity) string {
+func CreateBillingProfileForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, billingProfile neo4j_entity.BillingProfileEntity) string {
 	billingProfileId := CreateBillingProfile(ctx, driver, tenant, billingProfile)
 	LinkNodes(ctx, driver, orgId, billingProfileId, "HAS_BILLING_PROFILE")
 	return billingProfileId
 }
 
-func CreateBillingProfile(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, billingProfile entity.BillingProfileEntity) string {
+func CreateBillingProfile(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, billingProfile neo4j_entity.BillingProfileEntity) string {
 	billingProfileId := utils.NewUUIDIfEmpty(billingProfile.Id)
 	query := fmt.Sprintf(`
 			  MERGE (bp:BillingProfile {id:$id})
@@ -380,7 +381,7 @@ func CreateBillingProfile(ctx context.Context, driver *neo4j.DriverWithContext, 
 	return billingProfileId
 }
 
-func CreateLogEntryForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry entity.LogEntryEntity) string {
+func CreateLogEntryForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry neo4j_entity.LogEntryEntity) string {
 	logEntryId := CreateLogEntry(ctx, driver, tenant, logEntry)
 	LinkNodes(ctx, driver, orgId, logEntryId, "LOGGED")
 	return logEntryId
@@ -403,7 +404,7 @@ func LinkNodes(ctx context.Context, driver *neo4j.DriverWithContext, fromId, toI
 	ExecuteWriteQuery(ctx, driver, query, params)
 }
 
-func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, entity entity.EmailEntity) string {
+func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, entity neo4j_entity.EmailEntity) string {
 	emailId := utils.NewUUIDIfEmpty(entity.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 								MERGE (e:Email {id:$emailId})
@@ -467,7 +468,7 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 	return emailId
 }
 
-func CreateEmailForEntity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, entityId string, emailEntity entity.EmailEntity) string {
+func CreateEmailForEntity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, entityId string, emailEntity neo4j_entity.EmailEntity) string {
 	emailId := CreateEmail(ctx, driver, tenant, emailEntity)
 	LinkNodes(ctx, driver, entityId, emailId, "HAS", map[string]any{
 		"primary": emailEntity.Primary,
@@ -475,7 +476,7 @@ func CreateEmailForEntity(ctx context.Context, driver *neo4j.DriverWithContext, 
 	return emailId
 }
 
-func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, location entity.LocationEntity) string {
+func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, location neo4j_entity.LocationEntity) string {
 	locationId := utils.NewUUIDIfEmpty(location.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)<-[:LOCATION_BELONGS_TO_TENANT]-(i:Location {id:$id})
@@ -542,7 +543,7 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return locationId
 }
 
-func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, phoneNumber entity.PhoneNumberEntity) string {
+func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, phoneNumber neo4j_entity.PhoneNumberEntity) string {
 	phoneNumberId := utils.NewUUIDIfEmpty(phoneNumber.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})
 			  MERGE (t)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(i:PhoneNumber {id:$id})
@@ -571,7 +572,7 @@ func CreatePhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, ten
 	return phoneNumberId
 }
 
-func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity) string {
+func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract neo4j_entity.ContractEntity) string {
 	contractId := utils.NewUUIDIfEmpty(contract.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (o:Organization {id:$organizationId})
 				MERGE (t)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$id})<-[:HAS_CONTRACT]-(o)
@@ -661,7 +662,7 @@ func CreateContractForOrganization(ctx context.Context, driver *neo4j.DriverWith
 	return contractId
 }
 
-func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, opportunity entity.OpportunityEntity) string {
+func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, opportunity neo4j_entity.OpportunityEntity) string {
 	opportunityId := CreateOpportunity(ctx, driver, tenant, opportunity)
 	if opportunity.InternalType == enum.OpportunityInternalTypeRenewal {
 		LinkContractWithOpportunity(ctx, driver, contractId, opportunityId, true)
@@ -671,13 +672,13 @@ func CreateOpportunityForContract(ctx context.Context, driver *neo4j.DriverWithC
 	return opportunityId
 }
 
-func CreateOpportunityForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, opportunity entity.OpportunityEntity) string {
+func CreateOpportunityForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, opportunity neo4j_entity.OpportunityEntity) string {
 	opportunityId := CreateOpportunity(ctx, driver, tenant, opportunity)
 	LinkNodes(ctx, driver, organizationId, opportunityId, "HAS_OPPORTUNITY")
 	return opportunityId
 }
 
-func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, opportunity entity.OpportunityEntity) string {
+func CreateOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, opportunity neo4j_entity.OpportunityEntity) string {
 	opportunityId := utils.NewUUIDIfEmpty(opportunity.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 				MERGE (t)<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity {id:$id})
@@ -768,7 +769,7 @@ func ActiveRenewalOpportunityForContract(ctx context.Context, driver *neo4j.Driv
 	return opportunityId
 }
 
-func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, serviceLineItem entity.ServiceLineItemEntity) string {
+func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, serviceLineItem neo4j_entity.ServiceLineItemEntity) string {
 	serviceLineItemId := utils.NewUUIDIfEmpty(serviceLineItem.ID)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 				MERGE (c)-[:HAS_SERVICE]->(sli:ServiceLineItem {id:$id})
@@ -822,13 +823,13 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 	return serviceLineItemId
 }
 
-func InsertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
+func InsertContractWithOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract neo4j_entity.ContractEntity, opportunity neo4j_entity.OpportunityEntity) string {
 	contractId := CreateContractForOrganization(ctx, driver, tenant, organizationId, contract)
 	CreateOpportunityForContract(ctx, driver, tenant, contractId, opportunity)
 	return contractId
 }
 
-func InsertContractWithActiveRenewalOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract entity.ContractEntity, opportunity entity.OpportunityEntity) string {
+func InsertContractWithActiveRenewalOpportunity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, contract neo4j_entity.ContractEntity, opportunity neo4j_entity.OpportunityEntity) string {
 	contractId := CreateContractForOrganization(ctx, driver, tenant, organizationId, contract)
 	opportunityId := CreateOpportunityForContract(ctx, driver, tenant, contractId, opportunity)
 	ActiveRenewalOpportunityForContract(ctx, driver, tenant, contractId, opportunityId)
@@ -838,7 +839,7 @@ func InsertContractWithActiveRenewalOpportunity(ctx context.Context, driver *neo
 func InsertServiceLineItem(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, billedType enum.BilledType, price float64, quantity int64, startedAt time.Time) string {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
-	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		ID:        id,
 		ParentID:  id,
 		Billed:    billedType,
@@ -852,7 +853,7 @@ func InsertServiceLineItem(ctx context.Context, driver *neo4j.DriverWithContext,
 func InsertServiceLineItemEnded(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, billedType enum.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
-	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		ID:        id,
 		ParentID:  id,
 		Billed:    billedType,
@@ -867,7 +868,7 @@ func InsertServiceLineItemEnded(ctx context.Context, driver *neo4j.DriverWithCon
 func InsertServiceLineItemCanceled(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, billedType enum.BilledType, price float64, quantity int64, startedAt, endedAt time.Time) string {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
-	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		ID:        id,
 		ParentID:  id,
 		Billed:    billedType,
@@ -883,7 +884,7 @@ func InsertServiceLineItemCanceled(ctx context.Context, driver *neo4j.DriverWith
 func InsertServiceLineItemWithParent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, billedType enum.BilledType, price float64, quantity int64, previousBilledType enum.BilledType, previousPrice float64, previousQuantity int64, startedAt time.Time, parentId string) {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
-	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		ID:               id,
 		ParentID:         parentId,
 		Billed:           billedType,
@@ -899,7 +900,7 @@ func InsertServiceLineItemWithParent(ctx context.Context, driver *neo4j.DriverWi
 func InsertServiceLineItemEndedWithParent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, billedType enum.BilledType, price float64, quantity int64, previousBilledType enum.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
-	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		ID:               id,
 		ParentID:         parentId,
 		Billed:           billedType,
@@ -916,7 +917,7 @@ func InsertServiceLineItemEndedWithParent(ctx context.Context, driver *neo4j.Dri
 func InsertServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, billedType enum.BilledType, price float64, quantity int64, previousBilledType enum.BilledType, previousPrice float64, previousQuantity int64, startedAt, endedAt time.Time, parentId string) {
 	rand, _ := uuid.NewRandom()
 	id := rand.String()
-	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, entity.ServiceLineItemEntity{
+	CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4j_entity.ServiceLineItemEntity{
 		ID:               id,
 		ParentID:         parentId,
 		Billed:           billedType,
@@ -931,7 +932,7 @@ func InsertServiceLineItemCanceledWithParent(ctx context.Context, driver *neo4j.
 	})
 }
 
-func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, invoice entity.InvoiceEntity) string {
+func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contractId string, invoice neo4j_entity.InvoiceEntity) string {
 	invoiceId := utils.NewUUIDIfEmpty(invoice.Id)
 	query := fmt.Sprintf(`
 			MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
@@ -1000,7 +1001,7 @@ func CreateInvoiceForContract(ctx context.Context, driver *neo4j.DriverWithConte
 	return invoiceId
 }
 
-func CreateInvoiceLine(ctx context.Context, driver *neo4j.DriverWithContext, tenant, invoiceId string, invoiceLine entity.InvoiceLineEntity) string {
+func CreateInvoiceLine(ctx context.Context, driver *neo4j.DriverWithContext, tenant, invoiceId string, invoiceLine neo4j_entity.InvoiceLineEntity) string {
 	invoiceLineId := utils.NewUUIDIfEmpty(invoiceLine.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_INVOICE]->(i:Invoice {id:$invoiceId})
 				MERGE (i)-[:HAS_INVOICE_LINE]->(il:InvoiceLine {id:$id})
@@ -1056,7 +1057,7 @@ func MarkInvoicingStarted(ctx context.Context, driver *neo4j.DriverWithContext, 
 	ExecuteWriteQuery(ctx, driver, query, params)
 }
 
-func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, tagEntity entity.TagEntity) string {
+func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, tagEntity neo4j_entity.TagEntity) string {
 	tagId := utils.NewUUIDIfEmpty(tagEntity.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 			MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
@@ -1082,7 +1083,7 @@ func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 	return tagId
 }
 
-func CreateReminder(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId, orgId string, createdAt time.Time, reminderEntity entity.ReminderEntity) string {
+func CreateReminder(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId, orgId string, createdAt time.Time, reminderEntity neo4j_entity.ReminderEntity) string {
 	reminderId := utils.NewUUIDIfEmpty(reminderEntity.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 				MERGE (t)<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$id})
@@ -1116,7 +1117,7 @@ func CreateReminder(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return reminderId
 }
 
-func CreateBankAccount(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, bankAccount entity.BankAccountEntity) string {
+func CreateBankAccount(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, bankAccount neo4j_entity.BankAccountEntity) string {
 	accountId := utils.NewUUIDIfEmpty(bankAccount.Id)
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
 				MERGE (t)-[:HAS_BANK_ACCOUNT]->(ba:BankAccount {id:$accountId})
@@ -1154,7 +1155,7 @@ func CreateBankAccount(ctx context.Context, driver *neo4j.DriverWithContext, ten
 	return accountId
 }
 
-func CreateExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, externalSystem entity.ExternalSystemEntity) {
+func CreateExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, externalSystem neo4j_entity.ExternalSystemEntity) {
 	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
 				MERGE (t)<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(es:ExternalSystem {id:$externalSystemId})
 				ON CREATE SET
@@ -1168,7 +1169,7 @@ func CreateExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, 
 	})
 }
 
-func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact entity.ContactEntity) string {
+func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact neo4j_entity.ContactEntity) string {
 	contactId := utils.NewUUIDIfEmpty(contact.Id)
 	createdAt := contact.CreatedAt
 	if createdAt.IsZero() {
@@ -1208,7 +1209,7 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 	return contactId
 }
 
-func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social entity.SocialEntity) string {
+func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social neo4j_entity.SocialEntity) string {
 	socialId := utils.NewUUIDIfEmpty(social.Id)
 	query := fmt.Sprintf(`MERGE (s:Social:Social_%s {id: $id})
 				SET s.url=$url,
@@ -1237,7 +1238,7 @@ func UserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, 
 	})
 }
 
-func LinkDomainToOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId string, domain entity.DomainEntity) {
+func LinkDomainToOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId string, domain neo4j_entity.DomainEntity) {
 	query := ` MERGE (d:Domain {domain:$domain})
 			ON CREATE SET
 				d.id=randomUUID(),
@@ -1259,13 +1260,13 @@ func LinkDomainToOrganization(ctx context.Context, driver *neo4j.DriverWithConte
 	})
 }
 
-func CreateCommentForIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant, issueId string, comment entity.CommentEntity) string {
+func CreateCommentForIssue(ctx context.Context, driver *neo4j.DriverWithContext, tenant, issueId string, comment neo4j_entity.CommentEntity) string {
 	commentId := CreateComment(ctx, driver, tenant, comment)
 	LinkNodes(ctx, driver, commentId, issueId, "COMMENTED")
 	return commentId
 }
 
-func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, comment entity.CommentEntity) string {
+func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, comment neo4j_entity.CommentEntity) string {
 	commentId := utils.NewUUIDIfEmpty(comment.Id)
 	query := fmt.Sprintf(`
 			  MERGE (c:Comment {id:$id})
@@ -1285,7 +1286,7 @@ func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 }
 
 func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, content, contentType string, channel string, createdAt time.Time) string {
-	return CreateInteractionEventFromEntity(ctx, driver, tenant, entity.InteractionEventEntity{
+	return CreateInteractionEventFromEntity(ctx, driver, tenant, neo4j_entity.InteractionEventEntity{
 		Identifier:  identifier,
 		Content:     content,
 		ContentType: contentType,
@@ -1294,8 +1295,8 @@ func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext
 	})
 }
 
-func CreateInteractionEventFromEntity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, ie entity.InteractionEventEntity) string {
-	var interactionEventId, _ = uuid.NewRandom()
+func CreateInteractionEventFromEntity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, ie neo4j_entity.InteractionEventEntity) string {
+	interactionEventId, _ := uuid.NewRandom()
 
 	query := "MERGE (ie:InteractionEvent {id:$id})" +
 		" ON CREATE SET " +
@@ -1325,7 +1326,7 @@ func CreateInteractionEventFromEntity(ctx context.Context, driver *neo4j.DriverW
 }
 
 func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, name, sessionType, status, channel string, createdAt time.Time, inTimeline bool) string {
-	var interactionSessionId, _ = uuid.NewRandom()
+	interactionSessionId, _ := uuid.NewRandom()
 
 	query := "MERGE (is:InteractionSession {id:$id})" +
 		" ON CREATE SET " +
@@ -1365,7 +1366,7 @@ func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithConte
 	return interactionSessionId.String()
 }
 
-func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contactId, organizationId string, jobRole entity.JobRoleEntity) {
+func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contactId, organizationId string, jobRole neo4j_entity.JobRoleEntity) {
 	jobRoleId := utils.NewUUIDIfEmpty(jobRole.Id)
 	query := fmt.Sprintf(`MATCH (c:Contact {id:$contactId}), (o:Organization {id:$organizationId})
 			MERGE (c)-[:WORKS_AS]->(jr:JobRole {id:$jobRoleId})-[:ROLE_IN]->(o)

@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -18,17 +18,17 @@ import (
 
 type industryService struct {
 	log   logger.Logger
-	neo4j *neoRepo.Repositories
+	neo4j *neo4j_repository.Repositories
 }
 
-func NewIndustryService(log logger.Logger, neo4j *neoRepo.Repositories) interfaces.IndustryService {
+func NewIndustryService(log logger.Logger, neo4j *neo4j_repository.Repositories) interfaces.IndustryService {
 	return &industryService{
 		log:   log,
 		neo4j: neo4j,
 	}
 }
 
-func (s *industryService) GetAllForOrganizationIds(ctx context.Context, organizationIds []string) (*neo4jentity.IndustryEntities, error) {
+func (s *industryService) GetAllForOrganizationIds(ctx context.Context, organizationIds []string) (*neo4j_entity.IndustryEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryService.GetAllForOrganizationIds")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -38,7 +38,7 @@ func (s *industryService) GetAllForOrganizationIds(ctx context.Context, organiza
 	if err != nil {
 		return nil, err
 	}
-	industryEntities := make(neo4jentity.IndustryEntities, 0)
+	industryEntities := make(neo4j_entity.IndustryEntities, 0)
 	for _, v := range industryDbNodes {
 		industryEntity := neo4jmapper.MapDbNodeToIndustryEntity(v.Node)
 		industryEntity.DataloaderKey = v.LinkedNodeId
@@ -48,7 +48,7 @@ func (s *industryService) GetAllForOrganizationIds(ctx context.Context, organiza
 }
 
 // Returns the industry entity by code, nil if not found
-func (s *industryService) GetByCode(ctx context.Context, code string) (*neo4jentity.IndustryEntity, error) {
+func (s *industryService) GetByCode(ctx context.Context, code string) (*neo4j_entity.IndustryEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryService.GetByCode")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -66,7 +66,7 @@ func (s *industryService) GetByCode(ctx context.Context, code string) (*neo4jent
 	return industryEntity, nil
 }
 
-func (s *industryService) GetClosestByCode(ctx context.Context, code string) (*neo4jentity.IndustryEntity, error) {
+func (s *industryService) GetClosestByCode(ctx context.Context, code string) (*neo4j_entity.IndustryEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryService.GetClosestByCode")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -92,7 +92,7 @@ func (s *industryService) GetClosestByCode(ctx context.Context, code string) (*n
 	return nil, nil
 }
 
-func (s *industryService) GetInUseIndustries(ctx context.Context) (*neo4jentity.IndustryEntities, error) {
+func (s *industryService) GetInUseIndustries(ctx context.Context) (*neo4j_entity.IndustryEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IndustryService.GetInUseIndustries")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -101,7 +101,7 @@ func (s *industryService) GetInUseIndustries(ctx context.Context) (*neo4jentity.
 	if err != nil {
 		return nil, err
 	}
-	industryEntities := make(neo4jentity.IndustryEntities, 0)
+	industryEntities := make(neo4j_entity.IndustryEntities, 0)
 	for _, v := range industryDbNodes {
 		industryEntity := neo4jmapper.MapDbNodeToIndustryEntity(v)
 		industryEntities = append(industryEntities, *industryEntity)

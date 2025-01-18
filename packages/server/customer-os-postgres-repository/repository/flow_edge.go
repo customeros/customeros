@@ -1,4 +1,4 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
@@ -9,14 +9,14 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"gorm.io/gorm"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type FlowEdgeRepository interface {
-	Create(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error)
-	FindAll(ctx context.Context, flowEdge entity.FlowEdge) ([]entity.FlowEdge, error)
-	Find(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error)
-	Update(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error)
+	Create(ctx context.Context, flowEdge postgres_entity.FlowEdge) (*postgres_entity.FlowEdge, error)
+	FindAll(ctx context.Context, flowEdge postgres_entity.FlowEdge) ([]postgres_entity.FlowEdge, error)
+	Find(ctx context.Context, flowEdge postgres_entity.FlowEdge) (*postgres_entity.FlowEdge, error)
+	Update(ctx context.Context, flowEdge postgres_entity.FlowEdge) (*postgres_entity.FlowEdge, error)
 }
 
 type flowEdgeRepository struct {
@@ -27,14 +27,14 @@ func NewFlowEdgeRepository(gormDb *gorm.DB) FlowEdgeRepository {
 	return &flowEdgeRepository{gormDb: gormDb}
 }
 
-func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error) {
+func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge postgres_entity.FlowEdge) (*postgres_entity.FlowEdge, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.CreateFlowEdge")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	flowEdge.ID = utils.GenerateNanoIdWithPrefix("edge", 16)
 
-	var created entity.FlowEdge
+	var created postgres_entity.FlowEdge
 	err := f.gormDb.Create(&flowEdge).Scan(&created).Error
 	if err != nil {
 		return nil, err
@@ -42,12 +42,12 @@ func (f *flowEdgeRepository) Create(ctx context.Context, flowEdge entity.FlowEdg
 	return &flowEdge, nil
 }
 
-func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge entity.FlowEdge) ([]entity.FlowEdge, error) {
+func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge postgres_entity.FlowEdge) ([]postgres_entity.FlowEdge, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var results []entity.FlowEdge
+	var results []postgres_entity.FlowEdge
 	err := f.gormDb.
 		Where(&flowEdge).
 		Find(&results).Error
@@ -58,12 +58,12 @@ func (f *flowEdgeRepository) FindAll(ctx context.Context, flowEdge entity.FlowEd
 	return results, nil
 }
 
-func (f *flowEdgeRepository) Find(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error) {
+func (f *flowEdgeRepository) Find(ctx context.Context, flowEdge postgres_entity.FlowEdge) (*postgres_entity.FlowEdge, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var result entity.FlowEdge
+	var result postgres_entity.FlowEdge
 	err := f.gormDb.
 		Where(&flowEdge).
 		First(&result).Error
@@ -78,7 +78,7 @@ func (f *flowEdgeRepository) Find(ctx context.Context, flowEdge entity.FlowEdge)
 	return &result, nil
 }
 
-func (f *flowEdgeRepository) Update(ctx context.Context, flowEdge entity.FlowEdge) (*entity.FlowEdge, error) {
+func (f *flowEdgeRepository) Update(ctx context.Context, flowEdge postgres_entity.FlowEdge) (*postgres_entity.FlowEdge, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowEdgeRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -89,9 +89,9 @@ func (f *flowEdgeRepository) Update(ctx context.Context, flowEdge entity.FlowEdg
 		return nil, err
 	}
 
-	var updatedEdge entity.FlowEdge
+	var updatedEdge postgres_entity.FlowEdge
 	err := f.gormDb.
-		Model(&entity.FlowEdge{}).
+		Model(&postgres_entity.FlowEdge{}).
 		Where("id = ?", flowEdge.ID).
 		Updates(flowEdge).
 		First(&updatedEdge, "id = ?", flowEdge.ID).

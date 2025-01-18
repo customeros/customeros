@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -20,10 +20,10 @@ import (
 
 type notificationService struct {
 	log                  logger.Logger
-	postgresRepositories *repository.Repositories
+	postgresRepositories *postgres_repository.Repositories
 }
 
-func NewNotificationService(log logger.Logger, postgresRepo *repository.Repositories) interfaces.NotificationService {
+func NewNotificationService(log logger.Logger, postgresRepo *postgres_repository.Repositories) interfaces.NotificationService {
 	return &notificationService{
 		log:                  log,
 		postgresRepositories: postgresRepo,

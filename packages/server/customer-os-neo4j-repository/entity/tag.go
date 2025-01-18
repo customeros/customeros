@@ -1,4 +1,4 @@
-package entity
+package neo4j_entity
 
 import (
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"

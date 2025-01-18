@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"github.com/araddon/dateparse"
-	mimemail "github.com/emersion/go-message/mail"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	mimemail "github.com/emersion/go-message/mail"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -41,10 +41,10 @@ import (
 type googleService struct {
 	cfg      *config.GoogleOAuthConfig
 	postgres *postgresRepository.Repositories
-	neo4j    *neoRepo.Repositories
+	neo4j    *neo4j_repository.Repositories
 }
 
-func NewGoogleService(cfg *config.GoogleOAuthConfig, postgresRepositories *postgresRepository.Repositories, neo4j *neoRepo.Repositories) interfaces.GoogleService {
+func NewGoogleService(cfg *config.GoogleOAuthConfig, postgresRepositories *postgresRepository.Repositories, neo4j *neo4j_repository.Repositories) interfaces.GoogleService {
 	return &googleService{
 		cfg:      cfg,
 		postgres: postgresRepositories,
@@ -546,7 +546,7 @@ func (s *googleService) SendEmail(ctx context.Context, request *postgresEntity.E
 		}
 		interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
 
-		emailChannelData := entity.EmailChannelData{}
+		emailChannelData := neo4j_entity.EmailChannelData{}
 		err = json.Unmarshal([]byte(interactionEvent.ChannelData), &emailChannelData)
 		if err != nil {
 			tracing.TraceErr(span, err)

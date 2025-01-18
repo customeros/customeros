@@ -1,11 +1,11 @@
-package repository
+package postgres_repository
 
 import (
 	"errors"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
@@ -13,11 +13,11 @@ import (
 )
 
 type UserEmailImportStateRepository interface {
-	GetEmailImportState(ctx context.Context, tenantName, provider, username string, state entity.EmailImportState) (*entity.UserEmailImportState, error)
-	CreateEmailImportState(ctx context.Context, tenantName, provider, username string, state entity.EmailImportState, startDate, stopDate *time.Time, active bool, cursor string) (*entity.UserEmailImportState, error)
-	UpdateEmailImportState(ctx context.Context, tenantName, provider, username string, state entity.EmailImportState, cursor string) (*entity.UserEmailImportState, error)
-	ActivateEmailImportState(ctx context.Context, tenantName, provider, username string, state entity.EmailImportState) error
-	DeactivateEmailImportState(ctx context.Context, tenantName, provider, username string, state entity.EmailImportState) error
+	GetEmailImportState(ctx context.Context, tenantName, provider, username string, state postgres_entity.EmailImportState) (*postgres_entity.UserEmailImportState, error)
+	CreateEmailImportState(ctx context.Context, tenantName, provider, username string, state postgres_entity.EmailImportState, startDate, stopDate *time.Time, active bool, cursor string) (*postgres_entity.UserEmailImportState, error)
+	UpdateEmailImportState(ctx context.Context, tenantName, provider, username string, state postgres_entity.EmailImportState, cursor string) (*postgres_entity.UserEmailImportState, error)
+	ActivateEmailImportState(ctx context.Context, tenantName, provider, username string, state postgres_entity.EmailImportState) error
+	DeactivateEmailImportState(ctx context.Context, tenantName, provider, username string, state postgres_entity.EmailImportState) error
 }
 
 type userEmailImportStateImpl struct {
@@ -28,13 +28,13 @@ func NewUserEmailImportStateRepository(gormDb *gorm.DB) UserEmailImportStateRepo
 	return &userEmailImportStateImpl{gormDb: gormDb}
 }
 
-func (repo *userEmailImportStateImpl) GetEmailImportState(ctx context.Context, tenantName, provider, username string, state entity.EmailImportState) (*entity.UserEmailImportState, error) {
+func (repo *userEmailImportStateImpl) GetEmailImportState(ctx context.Context, tenantName, provider, username string, state postgres_entity.EmailImportState) (*postgres_entity.UserEmailImportState, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEmailImportStateRepository.GetEmailImportState")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenantName)
 
-	result := entity.UserEmailImportState{}
+	result := postgres_entity.UserEmailImportState{}
 	err := repo.gormDb.First(&result, "tenant = ? AND provider = ? AND username = ? AND state = ?", tenantName, provider, username, state).Error
 
 	if err != nil {
@@ -48,13 +48,13 @@ func (repo *userEmailImportStateImpl) GetEmailImportState(ctx context.Context, t
 	return &result, nil
 }
 
-func (repo *userEmailImportStateImpl) CreateEmailImportState(ctx context.Context, tenantName, provider, username string, state entity.EmailImportState, startDate, stopDate *time.Time, active bool, cursor string) (*entity.UserEmailImportState, error) {
+func (repo *userEmailImportStateImpl) CreateEmailImportState(ctx context.Context, tenantName, provider, username string, state postgres_entity.EmailImportState, startDate, stopDate *time.Time, active bool, cursor string) (*postgres_entity.UserEmailImportState, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEmailImportStateRepository.CreateEmailImportState")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenantName)
 
-	result := entity.UserEmailImportState{}
+	result := postgres_entity.UserEmailImportState{}
 	err := repo.gormDb.Find(&result, "tenant = ? AND provider = ? AND username = ? AND state = ?", tenantName, provider, username, state).Error
 
 	if err != nil {
@@ -87,7 +87,7 @@ func (repo *userEmailImportStateImpl) CreateEmailImportState(ctx context.Context
 	return repo.GetEmailImportState(ctx, tenantName, provider, username, state)
 }
 
-func (repo *userEmailImportStateImpl) UpdateEmailImportState(ctx context.Context, tenantName, provider, username string, state entity.EmailImportState, cursor string) (*entity.UserEmailImportState, error) {
+func (repo *userEmailImportStateImpl) UpdateEmailImportState(ctx context.Context, tenantName, provider, username string, state postgres_entity.EmailImportState, cursor string) (*postgres_entity.UserEmailImportState, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEmailImportStateRepository.UpdateEmailImportState")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -112,7 +112,7 @@ func (repo *userEmailImportStateImpl) UpdateEmailImportState(ctx context.Context
 	return repo.GetEmailImportState(ctx, tenantName, provider, username, state)
 }
 
-func (repo *userEmailImportStateImpl) ActivateEmailImportState(ctx context.Context, tenantName, provider, username string, state entity.EmailImportState) error {
+func (repo *userEmailImportStateImpl) ActivateEmailImportState(ctx context.Context, tenantName, provider, username string, state postgres_entity.EmailImportState) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEmailImportStateRepository.ActivateEmailImportState")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -137,7 +137,7 @@ func (repo *userEmailImportStateImpl) ActivateEmailImportState(ctx context.Conte
 	return nil
 }
 
-func (repo *userEmailImportStateImpl) DeactivateEmailImportState(ctx context.Context, tenantName, provider, username string, state entity.EmailImportState) error {
+func (repo *userEmailImportStateImpl) DeactivateEmailImportState(ctx context.Context, tenantName, provider, username string, state postgres_entity.EmailImportState) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEmailImportStateRepository.DeactivateEmailImportState")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -162,12 +162,12 @@ func (repo *userEmailImportStateImpl) DeactivateEmailImportState(ctx context.Con
 	return nil
 }
 
-func (repo *userEmailImportStateImpl) InsertHistoryRecord(ctx context.Context, record *entity.UserEmailImportState) error {
+func (repo *userEmailImportStateImpl) InsertHistoryRecord(ctx context.Context, record *postgres_entity.UserEmailImportState) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEmailImportStateRepository.InsertHistoryRecord")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	history := entity.UserEmailImportStateHistory{}
+	history := postgres_entity.UserEmailImportStateHistory{}
 	history.CreatedAt = utils.Now()
 	history.Tenant = record.Tenant
 	history.Username = record.Username

@@ -3,7 +3,7 @@ package action
 import (
 	"context"
 
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -45,7 +45,7 @@ func (s *actionService) IsInitialized() bool {
 	return utils.IsInitialized(s)
 }
 
-func (s *actionService) GetActionsForNodes(ctx context.Context, entityType model.EntityType, ids []string) (*entity.ActionEntities, error) {
+func (s *actionService) GetActionsForNodes(ctx context.Context, entityType model.EntityType, ids []string) (*neo4j_entity.ActionEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionService.GetActionsForNodes")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -56,7 +56,7 @@ func (s *actionService) GetActionsForNodes(ctx context.Context, entityType model
 		return nil, err
 	}
 
-	var data entity.ActionEntities
+	var data neo4j_entity.ActionEntities
 	for _, v := range records {
 		action := mapper.MapDbNodeToActionEntity(v.Node)
 		action.DataloaderKey = v.LinkedNodeId
@@ -86,7 +86,7 @@ func (s *actionService) CreateActionForOrganization(ctx context.Context, txWithP
 		actionFields.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))
 	}
 	if actionFields.Source == nil {
-		actionFields.Source = utils.StringPtr(entity.DataSourceOpenline.String())
+		actionFields.Source = utils.StringPtr(neo4j_entity.DataSourceOpenline.String())
 	}
 	if actionFields.CreatedAt == nil {
 		actionFields.CreatedAt = utils.NowPtr()

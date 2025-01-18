@@ -1,13 +1,15 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
+	"testing"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
-	"testing"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
 )
 
 func TestTimelineEventRepository_CalculateAndGetLastTouchpoint_LastTouchpointIsLogEntry(t *testing.T) {
@@ -16,13 +18,14 @@ func TestTimelineEventRepository_CalculateAndGetLastTouchpoint_LastTouchpointIsL
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, entity.OrganizationEntity{Name: "org 1"})
-	logEntryId := neo4jtest.CreateLogEntryForOrganization(ctx, driver, tenantName, organizationId, entity.LogEntryEntity{Content: "test content", StartedAt: utils.Now()})
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4j_entity.OrganizationEntity{Name: "org 1"})
+	logEntryId := neo4jtest.CreateLogEntryForOrganization(ctx, driver, tenantName, organizationId, neo4j_entity.LogEntryEntity{Content: "test content", StartedAt: utils.Now()})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
 		model.NodeLabelOrganization:  1,
 		model.NodeLabelLogEntry:      1,
-		model.NodeLabelTimelineEvent: 1})
+		model.NodeLabelTimelineEvent: 1,
+	})
 	neo4jtest.AssertNeo4jRelationCount(ctx, t, driver, map[string]int{
 		"CREATED_BY": 0,
 		"LOGGED":     1,

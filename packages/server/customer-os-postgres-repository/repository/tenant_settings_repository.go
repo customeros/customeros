@@ -1,16 +1,16 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
 
 type TenantSettingsRepository interface {
-	FindForTenantName(ctx context.Context, tenantName string) (*entity.TenantSettings, error)
-	Save(ctx context.Context, tenantSettings *entity.TenantSettings) (*entity.TenantSettings, error)
+	FindForTenantName(ctx context.Context, tenantName string) (*postgres_entity.TenantSettings, error)
+	Save(ctx context.Context, tenantSettings *postgres_entity.TenantSettings) (*postgres_entity.TenantSettings, error)
 }
 
 type tenantSettingsRepo struct {
@@ -23,12 +23,12 @@ func NewTenantSettingsRepository(db *gorm.DB) TenantSettingsRepository {
 	}
 }
 
-func (r *tenantSettingsRepo) FindForTenantName(ctx context.Context, tenantName string) (*entity.TenantSettings, error) {
+func (r *tenantSettingsRepo) FindForTenantName(ctx context.Context, tenantName string) (*postgres_entity.TenantSettings, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsRepository.FindForTenantName")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var tenantSettings entity.TenantSettings
+	var tenantSettings postgres_entity.TenantSettings
 
 	err := r.db.
 		Where("tenant_name = ?", tenantName).
@@ -44,7 +44,7 @@ func (r *tenantSettingsRepo) FindForTenantName(ctx context.Context, tenantName s
 	return &tenantSettings, nil
 }
 
-func (r *tenantSettingsRepo) Save(ctx context.Context, tenantSettings *entity.TenantSettings) (*entity.TenantSettings, error) {
+func (r *tenantSettingsRepo) Save(ctx context.Context, tenantSettings *postgres_entity.TenantSettings) (*postgres_entity.TenantSettings, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsRepository.Save")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)

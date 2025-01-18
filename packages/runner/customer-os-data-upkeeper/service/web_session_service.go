@@ -9,7 +9,7 @@ import (
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
@@ -44,7 +44,7 @@ func (s *webSessionService) ProcessWebSessions() {
 
 	// find timed out page exit events
 	lookback := int(enum.WebSessionTimeoutPageExit)
-	query := entity.WebSession{
+	query := postgres_entity.WebSession{
 		LastEventType: enum.WebTrackerPageExit.String(),
 		IsActive:      true,
 	}
@@ -62,7 +62,7 @@ func (s *webSessionService) ProcessWebSessions() {
 	}
 
 	// find timed out page view events
-	query = entity.WebSession{
+	query = postgres_entity.WebSession{
 		LastEventType: enum.WebTrackerPageView.String(),
 		IsActive:      true,
 	}
@@ -81,7 +81,7 @@ func (s *webSessionService) ProcessWebSessions() {
 	return
 }
 
-func (s *webSessionService) closeSessions(ctx context.Context, sessions []entity.WebSession) error {
+func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgres_entity.WebSession) error {
 	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.closeSessions")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)

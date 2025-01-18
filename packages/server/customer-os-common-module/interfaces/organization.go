@@ -2,10 +2,10 @@ package interfaces
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -15,7 +15,7 @@ type OrganizationService interface {
 	SetSocialService(social SocialService)
 	IsInitialized() bool
 
-	GetById(ctx context.Context, tenant, organizationId string) (*entity.OrganizationEntity, error)
+	GetById(ctx context.Context, tenant, organizationId string) (*neo4j_entity.OrganizationEntity, error)
 
 	CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64, dataFields data_fields.OrganizationFields) (string, error)
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.OrganizationFields) (string, error)
@@ -36,6 +36,6 @@ type OrganizationService interface {
 	RefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	CheckOrganizationExistsWithEmail(ctx context.Context, email string) (bool, string, error)
 	CheckOrganizationExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
-	GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, contactIds []string) (*entity.OrganizationWithJobRoleEntities, error)
+	GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, contactIds []string) (*neo4j_entity.OrganizationWithJobRoleEntities, error)
 	ValidateOrganizationExists(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId string) error
 }

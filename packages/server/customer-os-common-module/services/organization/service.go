@@ -3,19 +3,19 @@ package organization
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"strings"
 	"time"
 
-	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -35,8 +35,8 @@ import (
 
 type organizationService struct {
 	log      logger.Logger
-	postgres *repository.Repositories
-	neo4j    *neoRepo.Repositories
+	postgres *postgres_repository.Repositories
+	neo4j    *neo4j_repository.Repositories
 	events   *events.EventsService
 	domain   interfaces.DomainService
 	industry interfaces.IndustryService
@@ -44,7 +44,7 @@ type organizationService struct {
 	social   interfaces.SocialService
 }
 
-func NewOrganizationService(log logger.Logger, postgres *repository.Repositories, neo4j *neoRepo.Repositories, events *events.EventsService, domain interfaces.DomainService, industry interfaces.IndustryService, social interfaces.SocialService, user interfaces.UserService) interfaces.OrganizationService {
+func NewOrganizationService(log logger.Logger, postgres *postgres_repository.Repositories, neo4j *neo4j_repository.Repositories, events *events.EventsService, domain interfaces.DomainService, industry interfaces.IndustryService, social interfaces.SocialService, user interfaces.UserService) interfaces.OrganizationService {
 	return &organizationService{
 		log:      log,
 		postgres: postgres,
@@ -1072,7 +1072,6 @@ func (s *organizationService) UnlinkDomain(ctx context.Context, txWithPostCommit
 	tenant := common.GetTenantFromContext(ctx)
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-
 		// validate organization exists
 		err = s.ValidateOrganizationExists(ctx, txWithPostCommit.Tx, organizationId)
 		if err != nil {

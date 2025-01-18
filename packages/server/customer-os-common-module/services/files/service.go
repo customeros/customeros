@@ -24,20 +24,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/cloudflare/cloudflare-go"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/h2non/filetype"
 	"github.com/h2non/filetype/types"
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -52,14 +51,14 @@ const (
 type fileService struct {
 	log               logger.Logger
 	cfg               *config.FileStoreConfig
-	neo4j             *repository.Repositories
+	neo4j             *neo4j_repository.Repositories
 	attachmentService interfaces.AttachmentService
 }
 
 func NewFileService(
 	log logger.Logger,
 	cfg *config.FileStoreConfig,
-	neo4j *repository.Repositories,
+	neo4j *neo4j_repository.Repositories,
 	attachment interfaces.AttachmentService,
 ) interfaces.FileService {
 	return &fileService{
@@ -152,11 +151,10 @@ func (s *fileService) UploadSingleFile(ctx context.Context, basePath, fileId str
 	}
 
 	attachmentEntity := neo4jentity.AttachmentEntity{
-		Id:        fileId,
-		FileName:  multipartFileHeader.Filename,
-		MimeType:  multipartFileHeader.Header.Get(http.CanonicalHeaderKey("Content-Type")),
-		Size:      multipartFileHeader.Size,
-		AppSource: constants.AppSourceFileStoreApi,
+		Id:       fileId,
+		FileName: multipartFileHeader.Filename,
+		MimeType: multipartFileHeader.Header.Get(http.CanonicalHeaderKey("Content-Type")),
+		Size:     multipartFileHeader.Size,
 	}
 
 	if s.cfg.CloudflareImageUploadApiKey != "" && s.cfg.CloudflareImageUploadAccountId != "" && s.cfg.CloudflareImageUploadSignKey != "" &&

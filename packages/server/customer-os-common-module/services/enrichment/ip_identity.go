@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -23,7 +23,7 @@ func (s *enrichmentService) IPIdentity(c context.Context, ip string) (*interface
 	defer span.Finish()
 
 	// check to see if IP mapping data already exists
-	query := entity.CacheIPIdentify{
+	query := postgres_entity.CacheIPIdentify{
 		IPAddress: ip,
 	}
 
@@ -53,7 +53,7 @@ func (s *enrichmentService) IPIdentity(c context.Context, ip string) (*interface
 	}
 
 	// Store response
-	snitcherData := entity.CacheIPIdentify{
+	snitcherData := postgres_entity.CacheIPIdentify{
 		IPAddress:    ip,
 		Domain:       snitcherResponse.CompanyDomain(),
 		LinkedinSlug: snitcherResponse.LinkedinSlug(),

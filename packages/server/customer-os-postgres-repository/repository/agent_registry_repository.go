@@ -1,4 +1,4 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 var (
@@ -21,10 +21,10 @@ var (
 
 type AgentRegistryRepository interface {
 	Initialize(ctx context.Context) error
-	Create(ctx context.Context, agent entity.AgentRegistry) (*entity.AgentRegistry, error)
-	Update(ctx context.Context, agent entity.AgentRegistry) (*entity.AgentRegistry, error)
-	Find(ctx context.Context, agentType enum.AgentType) (*entity.AgentRegistry, error)
-	FindAll(ctx context.Context) ([]entity.AgentRegistry, error)
+	Create(ctx context.Context, agent postgres_entity.AgentRegistry) (*postgres_entity.AgentRegistry, error)
+	Update(ctx context.Context, agent postgres_entity.AgentRegistry) (*postgres_entity.AgentRegistry, error)
+	Find(ctx context.Context, agentType enum.AgentType) (*postgres_entity.AgentRegistry, error)
+	FindAll(ctx context.Context) ([]postgres_entity.AgentRegistry, error)
 }
 
 type agentRegistryRepository struct {
@@ -38,12 +38,12 @@ func NewAgentRegistryRepository(gormDb *gorm.DB) AgentRegistryRepository {
 	return &agentRegistryRepository{gormDb: gormDb}
 }
 
-func (r *agentRegistryRepository) FindAll(ctx context.Context) ([]entity.AgentRegistry, error) {
+func (r *agentRegistryRepository) FindAll(ctx context.Context) ([]postgres_entity.AgentRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.FindAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var agents []entity.AgentRegistry
+	var agents []postgres_entity.AgentRegistry
 	err := r.gormDb.WithContext(ctx).
 		Where("is_active = ?", true).
 		Find(&agents).Error
@@ -55,16 +55,15 @@ func (r *agentRegistryRepository) FindAll(ctx context.Context) ([]entity.AgentRe
 	return agents, nil
 }
 
-func (r *agentRegistryRepository) Find(ctx context.Context, agentType enum.AgentType) (*entity.AgentRegistry, error) {
+func (r *agentRegistryRepository) Find(ctx context.Context, agentType enum.AgentType) (*postgres_entity.AgentRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var agent entity.AgentRegistry
+	var agent postgres_entity.AgentRegistry
 	err := r.gormDb.WithContext(ctx).
 		Where("is_active = ? AND type = ?", true, agentType.String()).
 		First(&agent).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -76,7 +75,7 @@ func (r *agentRegistryRepository) Find(ctx context.Context, agentType enum.Agent
 	return &agent, nil
 }
 
-func (r *agentRegistryRepository) Create(ctx context.Context, agent entity.AgentRegistry) (*entity.AgentRegistry, error) {
+func (r *agentRegistryRepository) Create(ctx context.Context, agent postgres_entity.AgentRegistry) (*postgres_entity.AgentRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -84,7 +83,7 @@ func (r *agentRegistryRepository) Create(ctx context.Context, agent entity.Agent
 	err := r.gormDb.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// Check for existing agent with same type
 		var count int64
-		if err := tx.Model(&entity.AgentRegistry{}).
+		if err := tx.Model(&postgres_entity.AgentRegistry{}).
 			Where("type = ? AND is_active = ?", agent.Type, true).
 			Count(&count).Error; err != nil {
 			return err
@@ -96,7 +95,6 @@ func (r *agentRegistryRepository) Create(ctx context.Context, agent entity.Agent
 
 		return tx.Create(&agent).Error
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("%w: %v", ErrAgentCreateFailed, err)
@@ -105,7 +103,7 @@ func (r *agentRegistryRepository) Create(ctx context.Context, agent entity.Agent
 	return &agent, nil
 }
 
-func (r *agentRegistryRepository) Update(ctx context.Context, agent entity.AgentRegistry) (*entity.AgentRegistry, error) {
+func (r *agentRegistryRepository) Update(ctx context.Context, agent postgres_entity.AgentRegistry) (*postgres_entity.AgentRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -114,10 +112,10 @@ func (r *agentRegistryRepository) Update(ctx context.Context, agent entity.Agent
 		return nil, ErrAgentIDMissing
 	}
 
-	var updatedAgent entity.AgentRegistry
+	var updatedAgent postgres_entity.AgentRegistry
 	err := r.gormDb.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// Check if agent exists
-		if err := tx.First(&entity.AgentRegistry{}, "id = ?", agent.ID).Error; err != nil {
+		if err := tx.First(&postgres_entity.AgentRegistry{}, "id = ?", agent.ID).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return ErrAgentNotFound
 			}
@@ -125,7 +123,7 @@ func (r *agentRegistryRepository) Update(ctx context.Context, agent entity.Agent
 		}
 
 		// Perform update
-		result := tx.Model(&entity.AgentRegistry{}).
+		result := tx.Model(&postgres_entity.AgentRegistry{}).
 			Where("id = ?", agent.ID).
 			Updates(&agent)
 
@@ -140,7 +138,6 @@ func (r *agentRegistryRepository) Update(ctx context.Context, agent entity.Agent
 		// Fetch updated record
 		return tx.First(&updatedAgent, "id = ?", agent.ID).Error
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("failed to update agent: %w", err)
@@ -154,8 +151,8 @@ func (r *agentRegistryRepository) Initialize(ctx context.Context) error {
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	requiredAgents := []entity.AgentRegistry{
-		registerVisitorIdentityAgent(),
+	requiredAgents := []postgres_entity.AgentRegistry{
+		registerVisitorIdpostgres_entityAgent(),
 		// Add more agents here
 	}
 
@@ -182,8 +179,8 @@ func (r *agentRegistryRepository) Initialize(ctx context.Context) error {
 	return nil
 }
 
-func registerVisitorIdentityAgent() entity.AgentRegistry {
-	return entity.AgentRegistry{
+func registerVisitorIdpostgres_entityAgent() postgres_entity.AgentRegistry {
+	return postgres_entity.AgentRegistry{
 		Type:         enum.AgentVisitorID.String(),
 		Name:         "Identify website visitors",
 		Goal:         enum.AgentGoalIdentifyVisitors.String(),
@@ -192,4 +189,3 @@ func registerVisitorIdentityAgent() entity.AgentRegistry {
 		IsActive:     true,
 	}
 }
-

@@ -3,23 +3,22 @@ package main
 import (
 	"context"
 	"io"
+	"log"
 
+	"github.com/caarlos0/env/v6"
 	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
+
 	"github.com/customeros/customeros/packages/server/mailsherpa-api/config"
 	"github.com/customeros/customeros/packages/server/mailsherpa-api/logger"
 	"github.com/customeros/customeros/packages/server/mailsherpa-api/route"
 	"github.com/customeros/customeros/packages/server/mailsherpa-api/service"
-	"github.com/opentracing/opentracing-go"
-	"github.com/sirupsen/logrus"
-
-	"log"
-
-	"github.com/caarlos0/env/v6"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -56,7 +55,7 @@ func main() {
 	corsConfig.AllowOrigins = []string{"*"}
 	r.Use(cors.New(corsConfig))
 
-	postgresRepositories := repository.InitRepositories(postgresDb)
+	postgresRepositories := postgres_repository.InitRepositories(postgresDb)
 
 	services := service.InitServices(
 		appLogger,

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 
@@ -16,10 +16,10 @@ import (
 
 type emailingService struct {
 	log      logger.Logger
-	postgres *repository.Repositories
+	postgres *postgres_repository.Repositories
 }
 
-func NewEmailingService(log logger.Logger, postgres *repository.Repositories) interfaces.EmailingService {
+func NewEmailingService(log logger.Logger, postgres *postgres_repository.Repositories) interfaces.EmailingService {
 	return &emailingService{
 		log:      log,
 		postgres: postgres,

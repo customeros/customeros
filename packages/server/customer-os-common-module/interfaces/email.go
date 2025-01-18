@@ -3,7 +3,7 @@ package interfaces
 import (
 	"context"
 
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -21,17 +21,17 @@ type EmailService interface {
 	ReplaceEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, previousEmail string, emailFields EmailFields, linkWith common_srv.LinkWith) (*string, error)
 	UnlinkEmail(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, email, appSource string, linkWith common_srv.LinkWith) error
 	DeleteOrphanEmail(ctx context.Context, emailId string) error
-	GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType model.EntityType, entityIds []string) (*entity.EmailEntities, error)
+	GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType model.EntityType, entityIds []string) (*neo4j_entity.EmailEntities, error)
 	SetPrimary(ctx context.Context, email string, forEntity common_srv.LinkWith) error
-	GetPrimaryEmailForEntityId(ctx context.Context, entityType model.EntityType, entityId string) (*entity.EmailEntity, error)
-	GetPrimaryEmailsForEntityIds(ctx context.Context, entityType model.EntityType, entityIds []string) (*entity.EmailEntities, error)
+	GetPrimaryEmailForEntityId(ctx context.Context, entityType model.EntityType, entityId string) (*neo4j_entity.EmailEntity, error)
+	GetPrimaryEmailsForEntityIds(ctx context.Context, entityType model.EntityType, entityIds []string) (*neo4j_entity.EmailEntities, error)
 	UpdateEmailValidationDetails(ctx context.Context, emailId string, validationFields data_fields.EmailValidationFields) error
 	RequestEmailValidation(ctx context.Context, emailId string) error
 }
 
 type EmailFields struct {
-	Email     string            `json:"email"`
-	Source    entity.DataSource `json:"source"`
-	AppSource string            `json:"appSource"`
-	Primary   bool              `json:"primary"`
+	Email     string                  `json:"email"`
+	Source    neo4j_entity.DataSource `json:"source"`
+	AppSource string                  `json:"appSource"`
+	Primary   bool                    `json:"primary"`
 }

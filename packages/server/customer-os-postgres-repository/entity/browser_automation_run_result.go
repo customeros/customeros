@@ -1,4 +1,4 @@
-package entity
+package postgres_entity
 
 type BrowserAutomationsRunResult struct {
 	Id         uint64 `gorm:"primary_key;autoIncrement:true"`

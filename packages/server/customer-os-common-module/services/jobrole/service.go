@@ -3,11 +3,11 @@ package jobrole
 import (
 	"context"
 
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -23,12 +23,12 @@ import (
 )
 
 type jobRoleService struct {
-	neo4j      *neoRepo.Repositories
+	neo4j      *neo4j_repository.Repositories
 	events     *events.EventsService
 	orgService interfaces.OrganizationService
 }
 
-func NewJobRoleService(neo4j *neoRepo.Repositories, events *events.EventsService, orgService interfaces.OrganizationService) interfaces.JobRoleService {
+func NewJobRoleService(neo4j *neo4j_repository.Repositories, events *events.EventsService, orgService interfaces.OrganizationService) interfaces.JobRoleService {
 	return &jobRoleService{
 		neo4j:      neo4j,
 		events:     events,
@@ -65,7 +65,7 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 
 	createFlow := false
 	jobRoleId := ""
-	var jobRoleEntity *neo4jentity.JobRoleEntity
+	var jobRoleEntity *neo4j_entity.JobRoleEntity
 
 	// identify if it is a create flow
 	if utils.IfNotNilString(id) != "" {
@@ -95,7 +95,7 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 
 		// set default values
 		if dataFields.Source == nil {
-			dataFields.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
+			dataFields.Source = utils.StringPtr(neo4j_entity.DataSourceOpenline.String())
 		}
 		if dataFields.AppSource == nil {
 			dataFields.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))
@@ -167,7 +167,7 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 	return jobRoleId, nil
 }
 
-func (s *jobRoleService) GetAllForContact(ctx context.Context, contactId string) (*neo4jentity.JobRoleEntities, error) {
+func (s *jobRoleService) GetAllForContact(ctx context.Context, contactId string) (*neo4j_entity.JobRoleEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetAllForContact")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -181,7 +181,7 @@ func (s *jobRoleService) GetAllForContact(ctx context.Context, contactId string)
 		return nil, err
 	}
 
-	jobRoleEntities := neo4jentity.JobRoleEntities{}
+	jobRoleEntities := neo4j_entity.JobRoleEntities{}
 	for _, dbNode := range dbNodes {
 		entity := neo4jmapper.MapDbNodeToJobRoleEntity(dbNode)
 		jobRoleEntities = append(jobRoleEntities, *entity)
@@ -189,7 +189,7 @@ func (s *jobRoleService) GetAllForContact(ctx context.Context, contactId string)
 	return &jobRoleEntities, nil
 }
 
-func (s *jobRoleService) GetAllForContacts(ctx context.Context, contactIds []string) (*neo4jentity.JobRoleEntities, error) {
+func (s *jobRoleService) GetAllForContacts(ctx context.Context, contactIds []string) (*neo4j_entity.JobRoleEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetAllForContacts")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -199,7 +199,7 @@ func (s *jobRoleService) GetAllForContacts(ctx context.Context, contactIds []str
 	if err != nil {
 		return nil, err
 	}
-	jobRoleEntities := neo4jentity.JobRoleEntities{}
+	jobRoleEntities := neo4j_entity.JobRoleEntities{}
 	for _, v := range jobRoles {
 		jobRoleEntity := neo4jmapper.MapDbNodeToJobRoleEntity(v.Node)
 		jobRoleEntity.DataloaderKey = v.LinkedNodeId
@@ -208,7 +208,7 @@ func (s *jobRoleService) GetAllForContacts(ctx context.Context, contactIds []str
 	return &jobRoleEntities, nil
 }
 
-func (s *jobRoleService) GetAllForUsers(ctx context.Context, userIds []string) (*neo4jentity.JobRoleEntities, error) {
+func (s *jobRoleService) GetAllForUsers(ctx context.Context, userIds []string) (*neo4j_entity.JobRoleEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetAllForUsers")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -218,7 +218,7 @@ func (s *jobRoleService) GetAllForUsers(ctx context.Context, userIds []string) (
 	if err != nil {
 		return nil, err
 	}
-	jobRoleEntities := neo4jentity.JobRoleEntities{}
+	jobRoleEntities := neo4j_entity.JobRoleEntities{}
 	for _, v := range jobRoles {
 		jobRoleEntity := neo4jmapper.MapDbNodeToJobRoleEntity(v.Node)
 		jobRoleEntity.DataloaderKey = v.LinkedNodeId
@@ -227,7 +227,7 @@ func (s *jobRoleService) GetAllForUsers(ctx context.Context, userIds []string) (
 	return &jobRoleEntities, nil
 }
 
-func (s *jobRoleService) GetAllForOrganization(ctx context.Context, organizationId string) (*neo4jentity.JobRoleEntities, error) {
+func (s *jobRoleService) GetAllForOrganization(ctx context.Context, organizationId string) (*neo4j_entity.JobRoleEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetAllForOrganization")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -241,7 +241,7 @@ func (s *jobRoleService) GetAllForOrganization(ctx context.Context, organization
 		return nil, err
 	}
 
-	jobRoleEntities := neo4jentity.JobRoleEntities{}
+	jobRoleEntities := neo4j_entity.JobRoleEntities{}
 	for _, dbNode := range dbNodes {
 		jobRoleEntity := neo4jmapper.MapDbNodeToJobRoleEntity(dbNode)
 		jobRoleEntities = append(jobRoleEntities, *jobRoleEntity)
@@ -249,7 +249,7 @@ func (s *jobRoleService) GetAllForOrganization(ctx context.Context, organization
 	return &jobRoleEntities, nil
 }
 
-func (s *jobRoleService) GetAllForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.JobRoleEntities, error) {
+func (s *jobRoleService) GetAllForOrganizations(ctx context.Context, organizationIds []string) (*neo4j_entity.JobRoleEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetAllForOrganizations")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -259,7 +259,7 @@ func (s *jobRoleService) GetAllForOrganizations(ctx context.Context, organizatio
 	if err != nil {
 		return nil, err
 	}
-	jobRoleEntities := neo4jentity.JobRoleEntities{}
+	jobRoleEntities := neo4j_entity.JobRoleEntities{}
 	for _, v := range jobRoles {
 		jobRoleEntity := neo4jmapper.MapDbNodeToJobRoleEntity(v.Node)
 		jobRoleEntity.DataloaderKey = v.LinkedNodeId
@@ -286,7 +286,7 @@ func (s *jobRoleService) DeleteJobRole(ctx context.Context, contactId, roleId st
 	return true, nil
 }
 
-func (s *jobRoleService) GetJobRolesByIds(ctx context.Context, ids []string) (*neo4jentity.JobRoleEntities, error) {
+func (s *jobRoleService) GetJobRolesByIds(ctx context.Context, ids []string) (*neo4j_entity.JobRoleEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetJobRolesByIds")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -296,14 +296,14 @@ func (s *jobRoleService) GetJobRolesByIds(ctx context.Context, ids []string) (*n
 	if err != nil {
 		return nil, err
 	}
-	jobRoleEntities := neo4jentity.JobRoleEntities{}
+	jobRoleEntities := neo4j_entity.JobRoleEntities{}
 	for _, v := range jobRoleDbNodes {
 		jobRoleEntities = append(jobRoleEntities, *neo4jmapper.MapDbNodeToJobRoleEntity(v))
 	}
 	return &jobRoleEntities, nil
 }
 
-func (s *jobRoleService) IdentifyJobRole(ctx context.Context, contactId, organizationId string) (*neo4jentity.JobRoleEntity, error) {
+func (s *jobRoleService) IdentifyJobRole(ctx context.Context, contactId, organizationId string) (*neo4j_entity.JobRoleEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.IdentifyJobRoleId")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -337,7 +337,7 @@ func (s *jobRoleService) IdentifyJobRole(ctx context.Context, contactId, organiz
 	return jobRoleEntity, nil
 }
 
-func (s *jobRoleService) GetById(ctx context.Context, jobRoleId string) (*neo4jentity.JobRoleEntity, error) {
+func (s *jobRoleService) GetById(ctx context.Context, jobRoleId string) (*neo4j_entity.JobRoleEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

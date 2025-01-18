@@ -1,18 +1,20 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 )
 
 type PlayerFields struct {
@@ -24,11 +26,11 @@ type PlayerFields struct {
 }
 
 type PlayerWriteRepository interface {
-	Merge(ctx context.Context, userId string, data entity.PlayerEntity) error
+	Merge(ctx context.Context, userId string, data neo4j_entity.PlayerEntity) error
 
-	SetDefaultUser(ctx context.Context, tenant, userId, playerId string, relation entity.PlayerRelation) error
-	LinkWithUser(ctx context.Context, tenant, userId, playerId string, relation entity.PlayerRelation) error
-	UnlinkUser(ctx context.Context, tenant, userId, playerId string, relation entity.PlayerRelation) error
+	SetDefaultUser(ctx context.Context, tenant, userId, playerId string, relation neo4j_entity.PlayerRelation) error
+	LinkWithUser(ctx context.Context, tenant, userId, playerId string, relation neo4j_entity.PlayerRelation) error
+	UnlinkUser(ctx context.Context, tenant, userId, playerId string, relation neo4j_entity.PlayerRelation) error
 }
 
 type playerWriteRepository struct {
@@ -43,7 +45,7 @@ func NewPlayerWriteRepository(driver *neo4j.DriverWithContext, database string) 
 	}
 }
 
-func (r *playerWriteRepository) Merge(c context.Context, userId string, data entity.PlayerEntity) error {
+func (r *playerWriteRepository) Merge(c context.Context, userId string, data neo4j_entity.PlayerEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "PlayerWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -86,7 +88,7 @@ func (r *playerWriteRepository) Merge(c context.Context, userId string, data ent
 	return err
 }
 
-func (r *playerWriteRepository) SetDefaultUser(c context.Context, tenant, userId, playerId string, relation entity.PlayerRelation) error {
+func (r *playerWriteRepository) SetDefaultUser(c context.Context, tenant, userId, playerId string, relation neo4j_entity.PlayerRelation) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "PlayerWriteRepository.SetDefaultUser")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -115,7 +117,7 @@ func (r *playerWriteRepository) SetDefaultUser(c context.Context, tenant, userId
 	return nil
 }
 
-func (r *playerWriteRepository) LinkWithUser(c context.Context, tenant, userId, playerId string, relation entity.PlayerRelation) error {
+func (r *playerWriteRepository) LinkWithUser(c context.Context, tenant, userId, playerId string, relation neo4j_entity.PlayerRelation) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "PlayerWriteRepository.LinkWithUser")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -145,7 +147,7 @@ func (r *playerWriteRepository) LinkWithUser(c context.Context, tenant, userId, 
 	return nil
 }
 
-func (r *playerWriteRepository) UnlinkUser(c context.Context, tenant, userId, playerId string, relation entity.PlayerRelation) error {
+func (r *playerWriteRepository) UnlinkUser(c context.Context, tenant, userId, playerId string, relation neo4j_entity.PlayerRelation) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "PlayerWriteRepository.UnlinkUser")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)

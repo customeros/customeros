@@ -8,9 +8,9 @@ import (
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -21,11 +21,11 @@ import (
 
 type tenantService struct {
 	log      logger.Logger
-	neo4j    *neoRepo.Repositories
-	postgres *repository.Repositories
+	neo4j    *neo4j_repository.Repositories
+	postgres *postgres_repository.Repositories
 }
 
-func NewTenantService(log logger.Logger, neo4j *neoRepo.Repositories, postgres *repository.Repositories) interfaces.TenantService {
+func NewTenantService(log logger.Logger, neo4j *neo4j_repository.Repositories, postgres *postgres_repository.Repositories) interfaces.TenantService {
 	return &tenantService{
 		log:      log,
 		neo4j:    neo4j,

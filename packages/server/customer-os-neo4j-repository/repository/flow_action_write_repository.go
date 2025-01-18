@@ -1,20 +1,22 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type FlowActionWriteRepository interface {
-	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowActionEntity) (*dbtype.Node, error)
+	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *neo4j_entity.FlowActionEntity) (*dbtype.Node, error)
 	DeleteForFlow(ctx context.Context, tx *neo4j.ManagedTransaction, id string) error
 	Delete(ctx context.Context, id string) error
 }
@@ -28,7 +30,7 @@ func NewFlowActionWriteRepository(driver *neo4j.DriverWithContext, database stri
 	return &flowActionWriteRepositoryImpl{driver: driver, database: database}
 }
 
-func (r *flowActionWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, input *entity.FlowActionEntity) (*dbtype.Node, error) {
+func (r *flowActionWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, input *neo4j_entity.FlowActionEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -61,7 +63,7 @@ func (r *flowActionWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.Man
 		"action":     input.Data.Action,
 	}
 
-	if input.Data.Action == entity.FlowActionTypeFlowStart {
+	if input.Data.Action == neo4j_entity.FlowActionTypeFlowStart {
 		onCreate += `,
 				fa.data_triggerType = $data_triggerType,
 				fa.data_entity = $data_entity`
@@ -72,7 +74,7 @@ func (r *flowActionWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.Man
 		params["data_triggerType"] = input.Data.TriggerType
 	}
 
-	if input.Data.Action == entity.FlowActionTypeEmailNew {
+	if input.Data.Action == neo4j_entity.FlowActionTypeEmailNew {
 		onCreate += `,
 				fa.data_subject = $data_subject,
 				fa.data_bodyTemplate = $data_bodyTemplate`
@@ -82,21 +84,21 @@ func (r *flowActionWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.Man
 		params["data_subject"] = input.Data.Subject
 		params["data_bodyTemplate"] = input.Data.BodyTemplate
 	}
-	if input.Data.Action == entity.FlowActionTypeEmailReply {
+	if input.Data.Action == neo4j_entity.FlowActionTypeEmailReply {
 		onCreate += `,
 				fa.data_bodyTemplate = $data_bodyTemplate`
 		onMatch += `,
 				fa.data_bodyTemplate = $data_bodyTemplate`
 		params["data_bodyTemplate"] = input.Data.BodyTemplate
 	}
-	if input.Data.Action == entity.FlowActionTypeLinkedinConnectionRequest {
+	if input.Data.Action == neo4j_entity.FlowActionTypeLinkedinConnectionRequest {
 		onCreate += `,
 				fa.data_messageTemplate = $data_messageTemplate`
 		onMatch += `,
 				fa.data_messageTemplate = $data_messageTemplate`
 		params["data_messageTemplate"] = input.Data.MessageTemplate
 	}
-	if input.Data.Action == entity.FlowActionTypeLinkedinMessage {
+	if input.Data.Action == neo4j_entity.FlowActionTypeLinkedinMessage {
 		onCreate += `,
 				fa.data_messageTemplate = $data_messageTemplate`
 		onMatch += `,
@@ -170,7 +172,6 @@ func (r *flowActionWriteRepositoryImpl) DeleteForFlow(ctx context.Context, tx *n
 		}
 		return nil, nil
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

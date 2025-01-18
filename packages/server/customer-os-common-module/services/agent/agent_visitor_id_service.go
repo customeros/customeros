@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/customeros/mailsherpa/domaincheck"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -22,7 +22,7 @@ import (
 )
 
 type agentVisitorIDService struct {
-	postgresRepositories *repository.Repositories
+	postgresRepositories *postgres_repository.Repositories
 	actionService        interfaces.ActionService
 	enrichmentService    interfaces.EnrichmentService
 	organizationService  interfaces.OrganizationService
@@ -31,7 +31,7 @@ type agentVisitorIDService struct {
 }
 
 func NewAgentVisitorIDService(
-	postgres *repository.Repositories,
+	postgres *postgres_repository.Repositories,
 	action interfaces.ActionService,
 	enrichment interfaces.EnrichmentService,
 	org interfaces.OrganizationService,
@@ -69,7 +69,7 @@ func (a *agentVisitorIDService) IsInitialized() bool {
 	return utils.IsInitialized(a)
 }
 
-func (a *agentVisitorIDService) CreateAgent(ctx context.Context) (*entity.Agents, error) {
+func (a *agentVisitorIDService) CreateAgent(ctx context.Context) (*postgres_entity.Agents, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.CreateAgent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -94,7 +94,7 @@ func (a *agentVisitorIDService) CreateAgent(ctx context.Context) (*entity.Agents
 	}
 
 	// build new agent
-	agent := &entity.Agents{
+	agent := &postgres_entity.Agents{
 		Type:         masterAgent.ID,
 		Tenant:       tenant,
 		Name:         masterAgent.Name,
@@ -114,7 +114,7 @@ func (a *agentVisitorIDService) CreateAgent(ctx context.Context) (*entity.Agents
 	return agent, nil
 }
 
-func (a *agentVisitorIDService) RunAgent(ctx context.Context, agent *entity.Agents, eventData any) error {
+func (a *agentVisitorIDService) RunAgent(ctx context.Context, agent *postgres_entity.Agents, eventData any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.RunAgent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -160,7 +160,7 @@ func (a *agentVisitorIDService) RunAgent(ctx context.Context, agent *entity.Agen
 	}
 
 	// update session table with ID data
-	query := entity.WebSession{
+	query := postgres_entity.WebSession{
 		ID:     event.SessionID,
 		IP:     event.IPAddress,
 		Domain: domain,
@@ -244,7 +244,7 @@ func (a *agentVisitorIDService) RunAgent(ctx context.Context, agent *entity.Agen
 	return nil
 }
 
-func (a *agentVisitorIDService) AgentCapabilities(ctx context.Context, agent *entity.Agents) (*interfaces.AgentCapabilities, error) {
+func (a *agentVisitorIDService) AgentCapabilities(ctx context.Context, agent *postgres_entity.Agents) (*interfaces.AgentCapabilities, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.AgentCapabilities")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -261,7 +261,7 @@ func (a *agentVisitorIDService) buildTimelineMessage(ctx context.Context, eventD
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.buildTimelineMessage")
 	defer span.Finish()
 
-	query := entity.WebTrackerEvents{
+	query := postgres_entity.WebTrackerEvents{
 		Tenant:    eventData.Tenant,
 		SessionID: eventData.SessionID,
 		EventType: enum.WebTrackerPageView.String(),
@@ -282,7 +282,7 @@ func (a *agentVisitorIDService) buildTimelineMessage(ctx context.Context, eventD
 		return nil, err
 	}
 
-	sessionDuration, err := a.calculateSessionDuration(ctx, &entity.WebSession{
+	sessionDuration, err := a.calculateSessionDuration(ctx, &postgres_entity.WebSession{
 		ID: eventData.SessionID,
 	})
 	if err != nil {
@@ -314,7 +314,7 @@ func (a *agentVisitorIDService) buildTimelineMessage(ctx context.Context, eventD
 	return &timelineMessage, nil
 }
 
-func (a *agentVisitorIDService) calculateSessionDuration(ctx context.Context, session *entity.WebSession) (string, error) {
+func (a *agentVisitorIDService) calculateSessionDuration(ctx context.Context, session *postgres_entity.WebSession) (string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.calculateSessionDuration")
 	defer span.Finish()
 
@@ -342,7 +342,7 @@ func (a *agentVisitorIDService) calculateSessionDuration(ctx context.Context, se
 	}
 }
 
-func (a *agentVisitorIDService) getUniquePageViews(ctx context.Context, pageViews []entity.WebTrackerEvents) ([]string, error) {
+func (a *agentVisitorIDService) getUniquePageViews(ctx context.Context, pageViews []postgres_entity.WebTrackerEvents) ([]string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.getUniquePageViews")
 	defer span.Finish()
 
@@ -394,7 +394,7 @@ func (a *agentVisitorIDService) isNewCompanyVisit(ctx context.Context, tenant, d
 		return false, err
 	}
 
-	query := entity.WebSession{
+	query := postgres_entity.WebSession{
 		Tenant: *tenant,
 		Domain: domain,
 	}
@@ -415,7 +415,7 @@ func (a *agentVisitorIDService) isNewWebsiteVisitor(ctx context.Context, tenant,
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentVisitorIDService.isNewWebsiteVisitor")
 	defer span.Finish()
 
-	query := entity.WebSession{
+	query := postgres_entity.WebSession{
 		Tenant:    tenant,
 		VisitorID: visitorId,
 	}
@@ -432,7 +432,7 @@ func (a *agentVisitorIDService) isNewWebsiteVisitor(ctx context.Context, tenant,
 	return false, nil
 }
 
-func (a *agentVisitorIDService) isSlackNotificationEnabled(ctx context.Context, agent *entity.Agents) (bool, *AgentConfig, error) {
+func (a *agentVisitorIDService) isSlackNotificationEnabled(ctx context.Context, agent *postgres_entity.Agents) (bool, *AgentConfig, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.isSlackNotificationEnabled")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -460,7 +460,7 @@ func (a *agentVisitorIDService) isSlackNotificationEnabled(ctx context.Context, 
 	//return config.SlackEnabled, &config, nil
 }
 
-func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Context, session *entity.WebSession, orgID string) (*string, error) {
+func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Context, session *postgres_entity.WebSession, orgID string) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.buildWebVisitorSlackNotification")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -535,7 +535,7 @@ func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Con
 	}
 
 	// Get page views
-	query := entity.WebTrackerEvents{
+	query := postgres_entity.WebTrackerEvents{
 		SessionID: session.ID,
 		EventType: enum.WebTrackerPageView.String(),
 	}
@@ -627,7 +627,7 @@ func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Con
 	return &layoutBlocks, nil
 }
 
-func (a *agentVisitorIDService) skipNotification(ctx context.Context, agentConfig *AgentConfig, session *entity.WebSession) (bool, error) {
+func (a *agentVisitorIDService) skipNotification(ctx context.Context, agentConfig *AgentConfig, session *postgres_entity.WebSession) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.skipNotifications")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()

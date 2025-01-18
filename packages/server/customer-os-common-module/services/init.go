@@ -4,8 +4,8 @@ import (
 	"log"
 	"reflect"
 
-	neo4jRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
@@ -70,8 +70,8 @@ type CommonServices struct {
 	// Core infrastructure
 	Cache                *caches.Cache
 	Events               *events.EventsService
-	Neo4jRepositories    *neo4jRepo.Repositories
-	PostgresRepositories *repository.Repositories
+	Neo4jRepositories    *neo4j_repository.Repositories
+	PostgresRepositories *postgres_repository.Repositories
 
 	// Services
 	ActionService              interfaces.ActionService
@@ -129,8 +129,8 @@ type CommonServices struct {
 
 func InitCommonServices(
 	log logger.Logger,
-	neo4jRepositories *neo4jRepo.Repositories,
-	postgresRepositories *repository.Repositories,
+	neo4jRepositories *neo4j_repository.Repositories,
+	postgresRepositories *postgres_repository.Repositories,
 	cfg *config.CommonConfig,
 	grpcClients *grpc_client.Clients,
 ) *CommonServices {

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/customeros/mailsherpa/domaincheck"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -28,12 +28,12 @@ import (
 type domainService struct {
 	log      logger.Logger
 	cache    *caches.Cache
-	postgres *repository.Repositories
-	neo4j    *neoRepo.Repositories
+	postgres *postgres_repository.Repositories
+	neo4j    *neo4j_repository.Repositories
 	events   *events.EventsService
 }
 
-func NewDomainService(log logger.Logger, cache *caches.Cache, postgres *repository.Repositories, neo4j *neoRepo.Repositories, events *events.EventsService) interfaces.DomainService {
+func NewDomainService(log logger.Logger, cache *caches.Cache, postgres *postgres_repository.Repositories, neo4j *neo4j_repository.Repositories, events *events.EventsService) interfaces.DomainService {
 	return &domainService{
 		log:      log,
 		cache:    cache,

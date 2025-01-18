@@ -4,8 +4,9 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+
 	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/config"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
 
 type Services struct {
@@ -17,11 +18,11 @@ type Services struct {
 }
 
 func InitServices(
-	postgresRepositories *repository.Repositories,
+	postgresRepositories *postgres_repository.Repositories,
 	cfg *config.Config,
 	grpcClients *grpc_client.Clients,
-	appLogger logger.Logger) *Services {
-
+	appLogger logger.Logger,
+) *Services {
 	services := Services{
 		cfg:         cfg,
 		GrpcClients: grpcClients,

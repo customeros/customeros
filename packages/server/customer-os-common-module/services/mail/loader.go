@@ -9,9 +9,9 @@ import (
 	"sort"
 	"strings"
 
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/emersion/go-message/mail"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 
@@ -19,7 +19,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
-func (l *mailService) LoadEmail(ctx context.Context, rawEmail *entity.RawEmail) (interfaces.EmailMessageData, error) {
+func (l *mailService) LoadEmail(ctx context.Context, rawEmail *postgres_entity.RawEmail) (interfaces.EmailMessageData, error) {
 	span, ctx := l.initializeTracing(ctx, "MailService.LoadEmail")
 	defer span.Finish()
 	span.LogFields(tracingLog.Object("rawEmail", rawEmail))
@@ -61,7 +61,7 @@ func (l *mailService) LoadEmail(ctx context.Context, rawEmail *entity.RawEmail) 
 	return email, nil
 }
 
-func (l *mailService) getRawEmailData(rawEmail *entity.RawEmail, span opentracing.Span) (interfaces.EmailRawData, error) {
+func (l *mailService) getRawEmailData(rawEmail *postgres_entity.RawEmail, span opentracing.Span) (interfaces.EmailRawData, error) {
 	rawEmailData := interfaces.EmailRawData{}
 	err := json.Unmarshal([]byte(rawEmail.Data), &rawEmailData)
 	if err != nil {

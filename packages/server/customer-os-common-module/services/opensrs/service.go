@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -35,10 +35,10 @@ type OpenSRSResponse struct {
 type openSRSService struct {
 	log      logger.Logger
 	cfg      *config.OpenSRSConfig
-	postgres *repository.Repositories
+	postgres *postgres_repository.Repositories
 }
 
-func NewOpenSRSService(log logger.Logger, cfg *config.OpenSRSConfig, postgres *repository.Repositories) interfaces.OpenSrsService {
+func NewOpenSRSService(log logger.Logger, cfg *config.OpenSRSConfig, postgres *postgres_repository.Repositories) interfaces.OpenSrsService {
 	return &openSRSService{
 		log:      log,
 		cfg:      cfg,
@@ -46,7 +46,7 @@ func NewOpenSRSService(log logger.Logger, cfg *config.OpenSRSConfig, postgres *r
 	}
 }
 
-func (s *openSRSService) SendEmail(ctx context.Context, request *entity.EmailMessage) error {
+func (s *openSRSService) SendEmail(ctx context.Context, request *postgres_entity.EmailMessage) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OpenSrsService.Reply")
 	defer span.Finish()
 

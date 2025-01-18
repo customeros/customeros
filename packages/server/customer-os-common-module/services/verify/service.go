@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/nyaruka/phonenumbers"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	international_street "github.com/smartystreets/smartystreets-go-sdk/international-street-api"
 	extract "github.com/smartystreets/smartystreets-go-sdk/us-extract-api"
@@ -19,7 +19,7 @@ import (
 
 type verifyService struct {
 	log        logger.Logger
-	postgres   *repository.Repositories
+	postgres   *postgres_repository.Repositories
 	cfg        *config.CommonConfig
 	enrichment interfaces.EnrichmentService
 	USClient   *extract.Client
@@ -28,7 +28,7 @@ type verifyService struct {
 
 func NewVerifyService(
 	log logger.Logger,
-	postgres *repository.Repositories,
+	postgres *postgres_repository.Repositories,
 	config *config.CommonConfig,
 	enrichment interfaces.EnrichmentService,
 ) interfaces.VerifyService {

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/customeros/mailsherpa/mailvalidate"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -19,10 +19,10 @@ import (
 )
 
 type workspaceService struct {
-	neo4j *neoRepo.Repositories
+	neo4j *neo4j_repository.Repositories
 }
 
-func NewWorkspaceService(neo4j *neoRepo.Repositories) interfaces.WorkspaceService {
+func NewWorkspaceService(neo4j *neo4j_repository.Repositories) interfaces.WorkspaceService {
 	return &workspaceService{
 		neo4j: neo4j,
 	}

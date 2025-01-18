@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailwatcher/blscan"
 	"github.com/customeros/mailwatcher/domainage"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -28,7 +28,7 @@ func (s *mailboxService) ReputationScore(ctx context.Context, domain, tenant str
 	// 7 day lookback on bounces
 	// 7 day lookback on dmarc and spf
 
-	dbEntity := entity.MailstackReputationEntity{
+	dbEntity := postgres_entity.MailstackReputationEntity{
 		CreatedAt:           utils.Now(),
 		Tenant:              tenant,
 		Domain:              domain,

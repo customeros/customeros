@@ -8,8 +8,7 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -29,12 +28,12 @@ import (
 
 type socialService struct {
 	log     logger.Logger
-	neo4j   *neoRepo.Repositories
+	neo4j   *neo4j_repository.Repositories
 	events  *events.EventsService
 	contact interfaces.ContactService
 }
 
-func NewSocialService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService, contact interfaces.ContactService) interfaces.SocialService {
+func NewSocialService(log logger.Logger, neo4j *neo4j_repository.Repositories, events *events.EventsService, contact interfaces.ContactService) interfaces.SocialService {
 	return &socialService{
 		log:     log,
 		neo4j:   neo4j,
@@ -301,7 +300,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 		tracing.TagEntity(span, socialId)
 
 		// save social to neo4j
-		data := neo4jrepository.SocialFields{
+		data := neo4j_repository.SocialFields{
 			SocialId:       socialId,
 			Url:            socialUrl,
 			Alias:          socialEntity.Alias,

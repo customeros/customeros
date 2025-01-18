@@ -1,14 +1,16 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
-	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/stretchr/testify/require"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
 )
 
 func TestInvoiceReadRepository_GetInvoicesForPayNotifications(t *testing.T) {
@@ -21,12 +23,12 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications(t *testing.T) {
 	yesterday := referenceDate.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
-		Customer: entity.InvoiceCustomer{
+		Customer: neo4j_entity.InvoiceCustomer{
 			Email: "email",
 		},
 		DryRun: false,
@@ -50,21 +52,21 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_InvoiceIsDryRun(t 
 	yesterday := referenceDate.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
-		Customer: entity.InvoiceCustomer{
+		Customer: neo4j_entity.InvoiceCustomer{
 			Email: "email",
 		},
 		DryRun: false,
 		Status: enum.InvoiceStatusDue,
 	})
-	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
-		Customer: entity.InvoiceCustomer{
+		Customer: neo4j_entity.InvoiceCustomer{
 			Email: "email",
 		},
 		DryRun: true,
@@ -88,21 +90,21 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_StatusIsDraft(t *t
 	yesterday := referenceDate.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
-		Customer: entity.InvoiceCustomer{
+		Customer: neo4j_entity.InvoiceCustomer{
 			Email: "email",
 		},
 		DryRun: false,
 		Status: enum.InvoiceStatusDue,
 	})
-	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
-		Customer: entity.InvoiceCustomer{
+		Customer: neo4j_entity.InvoiceCustomer{
 			Email: "email",
 		},
 		DryRun: false,
@@ -126,21 +128,21 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_StatusIsPaid(t *te
 	yesterday := referenceDate.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
-		Customer: entity.InvoiceCustomer{
+		Customer: neo4j_entity.InvoiceCustomer{
 			Email: "email",
 		},
 		DryRun: false,
 		Status: enum.InvoiceStatusDue,
 	})
-	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
-		Customer: entity.InvoiceCustomer{
+		Customer: neo4j_entity.InvoiceCustomer{
 			Email: "email",
 		},
 		DryRun: false,
@@ -164,18 +166,18 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_MissingCustomerEma
 	yesterday := referenceDate.Add(-24 * time.Hour)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
-		Customer: entity.InvoiceCustomer{
+		Customer: neo4j_entity.InvoiceCustomer{
 			Email: "email",
 		},
 		DryRun: false,
 		Status: enum.InvoiceStatusDue,
 	})
-	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		UpdatedAt: yesterday,
 		DryRun:    false,
 		Status:    enum.InvoiceStatusDue,
@@ -199,21 +201,21 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_RecentlyUpdated(t 
 	minAgo10 := referenceDate.Add(-10 * time.Minute)
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		CreatedAt: referenceDate,
 		UpdatedAt: yesterday,
-		Customer: entity.InvoiceCustomer{
+		Customer: neo4j_entity.InvoiceCustomer{
 			Email: "email",
 		},
 		DryRun: false,
 		Status: enum.InvoiceStatusDue,
 	})
-	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		CreatedAt: referenceDate,
 		UpdatedAt: minAgo10,
-		Customer: entity.InvoiceCustomer{
+		Customer: neo4j_entity.InvoiceCustomer{
 			Email: "email",
 		},
 		DryRun: false,
@@ -239,21 +241,21 @@ func TestInvoiceReadRepository_GetInvoicesForPayNotifications_LookBackWindowExce
 	lookBackWindowDays := 5
 
 	neo4jtest.CreateTenant(ctx, driver, tenant)
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, entity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, entity.ContractEntity{})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenant, neo4j_entity.OrganizationEntity{})
+	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenant, organizationId, neo4j_entity.ContractEntity{})
+	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		UpdatedAt: yesterday,
 		CreatedAt: yesterday,
-		Customer: entity.InvoiceCustomer{
+		Customer: neo4j_entity.InvoiceCustomer{
 			Email: "email",
 		},
 		DryRun: false,
 		Status: enum.InvoiceStatusDue,
 	})
-	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, entity.InvoiceEntity{
+	neo4jtest.CreateInvoiceForContract(ctx, driver, tenant, contractId, neo4j_entity.InvoiceEntity{
 		UpdatedAt: yesterday,
 		CreatedAt: weekAgo,
-		Customer: entity.InvoiceCustomer{
+		Customer: neo4j_entity.InvoiceCustomer{
 			Email: "email",
 		},
 		DryRun: false,

@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
@@ -23,11 +22,11 @@ import (
 )
 
 type interactionEventService struct {
-	neo4j *neoRepo.Repositories
+	neo4j *neo4j_repository.Repositories
 	email interfaces.EmailService
 }
 
-func NewInteractionEventService(neo4j *neoRepo.Repositories, email interfaces.EmailService) interfaces.InteractionEventService {
+func NewInteractionEventService(neo4j *neo4j_repository.Repositories, email interfaces.EmailService) interfaces.InteractionEventService {
 	return &interactionEventService{
 		neo4j: neo4j,
 		email: email,
@@ -45,7 +44,7 @@ func (s *interactionEventService) IsInitialized() bool {
 	return true
 }
 
-func (s *interactionEventService) GetById(ctx context.Context, id string) (*neo4jentity.InteractionEventEntity, error) {
+func (s *interactionEventService) GetById(ctx context.Context, id string) (*neo4j_entity.InteractionEventEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetById")
 	defer span.Finish()
 
@@ -62,7 +61,7 @@ func (s *interactionEventService) GetById(ctx context.Context, id string) (*neo4
 	return neo4jmapper.MapDbNodeToInteractionEventEntity(byId), nil
 }
 
-func (s *interactionEventService) GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string, loadContent bool) (*neo4jentity.InteractionEventEntities, error) {
+func (s *interactionEventService) GetInteractionEventsForInteractionSessions(ctx context.Context, ids []string, loadContent bool) (*neo4j_entity.InteractionEventEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetInteractionEventsForInteractionSessions")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -72,7 +71,7 @@ func (s *interactionEventService) GetInteractionEventsForInteractionSessions(ctx
 	if err != nil {
 		return nil, err
 	}
-	interactionEventEntities := neo4jentity.InteractionEventEntities{}
+	interactionEventEntities := neo4j_entity.InteractionEventEntities{}
 	for _, v := range interactionEvents {
 		interactionEventEntity := neo4jmapper.MapDbPropsToInteractionEventEntity(v.Props)
 		interactionEventEntity.DataloaderKey = v.LinkedNodeId
@@ -81,7 +80,7 @@ func (s *interactionEventService) GetInteractionEventsForInteractionSessions(ctx
 	return &interactionEventEntities, nil
 }
 
-func (s *interactionEventService) GetInteractionEventsForMeetings(ctx context.Context, ids []string, loadContent bool) (*neo4jentity.InteractionEventEntities, error) {
+func (s *interactionEventService) GetInteractionEventsForMeetings(ctx context.Context, ids []string, loadContent bool) (*neo4j_entity.InteractionEventEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetInteractionEventsForMeetings")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -91,7 +90,7 @@ func (s *interactionEventService) GetInteractionEventsForMeetings(ctx context.Co
 	if err != nil {
 		return nil, err
 	}
-	interactionEventEntities := neo4jentity.InteractionEventEntities{}
+	interactionEventEntities := neo4j_entity.InteractionEventEntities{}
 	for _, v := range interactionEvents {
 		interactionEventEntity := neo4jmapper.MapDbPropsToInteractionEventEntity(v.Props)
 		interactionEventEntity.DataloaderKey = v.LinkedNodeId
@@ -100,7 +99,7 @@ func (s *interactionEventService) GetInteractionEventsForMeetings(ctx context.Co
 	return &interactionEventEntities, nil
 }
 
-func (s *interactionEventService) GetInteractionEventsForIssues(ctx context.Context, issueIds []string, loadContent bool) (*neo4jentity.InteractionEventEntities, error) {
+func (s *interactionEventService) GetInteractionEventsForIssues(ctx context.Context, issueIds []string, loadContent bool) (*neo4j_entity.InteractionEventEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetInteractionEventsForIssues")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -111,7 +110,7 @@ func (s *interactionEventService) GetInteractionEventsForIssues(ctx context.Cont
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	interactionEventEntities := neo4jentity.InteractionEventEntities{}
+	interactionEventEntities := neo4j_entity.InteractionEventEntities{}
 	for _, v := range interactionEvents {
 		interactionEventEntity := neo4jmapper.MapDbPropsToInteractionEventEntity(v.Props)
 		interactionEventEntity.DataloaderKey = v.LinkedNodeId
@@ -121,7 +120,7 @@ func (s *interactionEventService) GetInteractionEventsForIssues(ctx context.Cont
 	return &interactionEventEntities, nil
 }
 
-func (s *interactionEventService) GetSentByParticipantsForInteractionEvents(ctx context.Context, ids []string) (*neo4jentity.InteractionEventParticipants, error) {
+func (s *interactionEventService) GetSentByParticipantsForInteractionEvents(ctx context.Context, ids []string) (*neo4j_entity.InteractionEventParticipants, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetSentByParticipantsForInteractionEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -139,7 +138,7 @@ func (s *interactionEventService) GetSentByParticipantsForInteractionEvents(ctx 
 	return &interactionEventParticipants, nil
 }
 
-func (s *interactionEventService) GetSentToParticipantsForInteractionEvents(ctx context.Context, ids []string) (*neo4jentity.InteractionEventParticipants, error) {
+func (s *interactionEventService) GetSentToParticipantsForInteractionEvents(ctx context.Context, ids []string) (*neo4j_entity.InteractionEventParticipants, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetSentToParticipantsForInteractionEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -157,7 +156,7 @@ func (s *interactionEventService) GetSentToParticipantsForInteractionEvents(ctx 
 	return &interactionEventParticipants, nil
 }
 
-func (s *interactionEventService) GetReplyToInteractionsEventForInteractionEvents(ctx context.Context, ids []string, loadContent bool) (*neo4jentity.InteractionEventEntities, error) {
+func (s *interactionEventService) GetReplyToInteractionsEventForInteractionEvents(ctx context.Context, ids []string, loadContent bool) (*neo4j_entity.InteractionEventEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.GetReplyToInteractionsEventForInteractionEvents")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -169,7 +168,7 @@ func (s *interactionEventService) GetReplyToInteractionsEventForInteractionEvent
 		return nil, err
 	}
 
-	interactionEvents := neo4jentity.InteractionEventEntities{}
+	interactionEvents := neo4j_entity.InteractionEventEntities{}
 	for _, v := range records {
 		event := neo4jmapper.MapDbPropsToInteractionEventEntity(v.Props)
 		event.DataloaderKey = v.LinkedNodeId
@@ -257,7 +256,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 			return nil, errors.New("session not found")
 		}
 
-		err = s.neo4j.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+		err = s.neo4j.CommonWriteRepository.Link(ctx, &tx, tenant, neo4j_repository.LinkDetails{
 			FromEntityId:           interactionEventId,
 			FromEntityType:         commonModel.INTERACTION_EVENT,
 			Relationship:           commonModel.PART_OF,
@@ -291,7 +290,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 			return nil, errors.New("meeting not found")
 		}
 
-		err = s.neo4j.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+		err = s.neo4j.CommonWriteRepository.Link(ctx, &tx, tenant, neo4j_repository.LinkDetails{
 			FromEntityId:           interactionEventId,
 			FromEntityType:         commonModel.INTERACTION_EVENT,
 			Relationship:           commonModel.PART_OF,
@@ -315,7 +314,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 			return nil, errors.New("parent not found")
 		}
 
-		err = s.neo4j.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+		err = s.neo4j.CommonWriteRepository.Link(ctx, &tx, tenant, neo4j_repository.LinkDetails{
 			FromEntityId:   interactionEventId,
 			FromEntityType: commonModel.INTERACTION_EVENT,
 			Relationship:   commonModel.REPLIES_TO,
@@ -439,7 +438,7 @@ func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx contex
 		}
 	}
 
-	err := s.neo4j.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+	err := s.neo4j.CommonWriteRepository.Link(ctx, &tx, tenant, neo4j_repository.LinkDetails{
 		FromEntityId:           interactionEventId,
 		FromEntityType:         commonModel.INTERACTION_EVENT,
 		Relationship:           relationship,
@@ -455,8 +454,8 @@ func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx contex
 	return nil
 }
 
-func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(records []*utils.DbNodeWithRelationAndId) neo4jentity.InteractionEventParticipants {
-	interactionEventParticipants := neo4jentity.InteractionEventParticipants{}
+func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(records []*utils.DbNodeWithRelationAndId) neo4j_entity.InteractionEventParticipants {
+	interactionEventParticipants := neo4j_entity.InteractionEventParticipants{}
 	for _, v := range records {
 		if slices.Contains(v.Node.Labels, commonModel.NodeLabelEmail) {
 			participant := neo4jmapper.MapDbNodeToEmailEntity(v.Node)
@@ -493,9 +492,9 @@ func (s *interactionEventService) convertDbNodesToInteractionEventParticipants(r
 	return interactionEventParticipants
 }
 
-func (s *interactionEventService) mapDbRelationshipToParticipantDetails(relationship dbtype.Relationship) neo4jentity.InteractionEventParticipantDetails {
+func (s *interactionEventService) mapDbRelationshipToParticipantDetails(relationship dbtype.Relationship) neo4j_entity.InteractionEventParticipantDetails {
 	props := utils.GetPropsFromRelationship(relationship)
-	details := neo4jentity.InteractionEventParticipantDetails{
+	details := neo4j_entity.InteractionEventParticipantDetails{
 		Type: utils.GetStringPropOrEmpty(props, "type"),
 	}
 	return details

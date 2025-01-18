@@ -2,9 +2,7 @@ package service
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
-	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
-	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
@@ -12,9 +10,13 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 )
 
 type FlowExecutionService interface {
@@ -65,7 +67,7 @@ func (s *flowExecutionService) RampUpMailboxes() {
 	}
 }
 
-func (s *flowExecutionService) rampUpMailbox(ctx context.Context, mailbox *entity.TenantSettingsMailbox) error {
+func (s *flowExecutionService) rampUpMailbox(ctx context.Context, mailbox *postgres_entity.TenantSettingsMailbox) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.rampUpMailbox")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -137,7 +139,6 @@ func (s *flowExecutionService) ExecuteScheduledFlowActions() {
 			continue
 		}
 	}
-
 }
 
 func (s *flowExecutionService) ComputeFlowStatistics() {
@@ -159,5 +160,4 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 			s.commonServices.Events.Publisher.PublishEventCompletedBulk(ctx, flowData.Tenant, flowData.Strings, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
-
 }

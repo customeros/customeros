@@ -1,4 +1,4 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type FlowTransitionsRegistryRepository interface {
 	Initialize(ctx context.Context) error
-	GetAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) ([]entity.FlowTransitionsRegistry, error)
-	GetAllActive(ctx context.Context, transition *entity.FlowTransitionsRegistry) ([]entity.FlowTransitionsRegistry, error)
-	Find(ctx context.Context, transition entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error)
-	Create(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error)
+	GetAll(ctx context.Context, transition *postgres_entity.FlowTransitionsRegistry) ([]postgres_entity.FlowTransitionsRegistry, error)
+	GetAllActive(ctx context.Context, transition *postgres_entity.FlowTransitionsRegistry) ([]postgres_entity.FlowTransitionsRegistry, error)
+	Find(ctx context.Context, transition postgres_entity.FlowTransitionsRegistry) (*postgres_entity.FlowTransitionsRegistry, error)
+	Create(ctx context.Context, transition *postgres_entity.FlowTransitionsRegistry) (*postgres_entity.FlowTransitionsRegistry, error)
 }
 
 type flowTransitionsRegistryRepository struct {
@@ -33,7 +33,7 @@ func NewFlowTransitionsRegistryRepository(gormDb *gorm.DB) FlowTransitionsRegist
 	return &flowTransitionsRegistryRepository{gormDb: gormDb}
 }
 
-func (r *flowTransitionsRegistryRepository) Create(ctx context.Context, transition *entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error) {
+func (r *flowTransitionsRegistryRepository) Create(ctx context.Context, transition *postgres_entity.FlowTransitionsRegistry) (*postgres_entity.FlowTransitionsRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -47,12 +47,12 @@ func (r *flowTransitionsRegistryRepository) Create(ctx context.Context, transiti
 	return transition, nil
 }
 
-func (r *flowTransitionsRegistryRepository) GetAll(ctx context.Context, transition *entity.FlowTransitionsRegistry) ([]entity.FlowTransitionsRegistry, error) {
+func (r *flowTransitionsRegistryRepository) GetAll(ctx context.Context, transition *postgres_entity.FlowTransitionsRegistry) ([]postgres_entity.FlowTransitionsRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.GetAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var transitions []entity.FlowTransitionsRegistry
+	var transitions []postgres_entity.FlowTransitionsRegistry
 	query := r.gormDb.WithContext(ctx)
 
 	// Add additional filters if transition is not nil
@@ -71,12 +71,12 @@ func (r *flowTransitionsRegistryRepository) GetAll(ctx context.Context, transiti
 	return transitions, nil
 }
 
-func (r *flowTransitionsRegistryRepository) GetAllActive(ctx context.Context, transition *entity.FlowTransitionsRegistry) ([]entity.FlowTransitionsRegistry, error) {
+func (r *flowTransitionsRegistryRepository) GetAllActive(ctx context.Context, transition *postgres_entity.FlowTransitionsRegistry) ([]postgres_entity.FlowTransitionsRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.GetAllActive")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var transitions []entity.FlowTransitionsRegistry
+	var transitions []postgres_entity.FlowTransitionsRegistry
 	query := r.gormDb.WithContext(ctx).
 		Where("status = ?", enum.FlowNodeEdgeStatusActive.String())
 
@@ -96,17 +96,17 @@ func (r *flowTransitionsRegistryRepository) GetAllActive(ctx context.Context, tr
 	return transitions, nil
 }
 
-func (r *flowTransitionsRegistryRepository) Find(ctx context.Context, transition entity.FlowTransitionsRegistry) (*entity.FlowTransitionsRegistry, error) {
+func (r *flowTransitionsRegistryRepository) Find(ctx context.Context, transition postgres_entity.FlowTransitionsRegistry) (*postgres_entity.FlowTransitionsRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowTransitionsRegistryRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var foundTransition entity.FlowTransitionsRegistry
+	var foundTransition postgres_entity.FlowTransitionsRegistry
 	query := r.gormDb.WithContext(ctx).
 		Where("status = ?", enum.FlowNodeEdgeStatusActive.String())
 
 	// Add additional filters based on non-zero fields in transition
-	if transition != (entity.FlowTransitionsRegistry{}) {
+	if transition != (postgres_entity.FlowTransitionsRegistry{}) {
 		query = query.Where(&transition)
 	}
 

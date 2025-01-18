@@ -7,7 +7,7 @@ import (
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jrepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -21,11 +21,11 @@ import (
 )
 
 type reminderService struct {
-	neo4j *neo4jrepo.Repositories
+	neo4j *neo4j_repository.Repositories
 	novu  interfaces.NovuService
 }
 
-func NewReminderService(neo4j *neo4jrepo.Repositories, novu interfaces.NovuService) interfaces.ReminderService {
+func NewReminderService(neo4j *neo4j_repository.Repositories, novu interfaces.NovuService) interfaces.ReminderService {
 	return &reminderService{
 		neo4j: neo4j,
 		novu:  novu,
@@ -67,7 +67,7 @@ func (s *reminderService) UpdateReminder(ctx context.Context, tenant, reminderId
 		return nil
 	}
 
-	updateData := neo4jrepo.ReminderUpdateFields{}
+	updateData := neo4j_repository.ReminderUpdateFields{}
 
 	if content != nil {
 		updateData.Content = content

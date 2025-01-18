@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -26,7 +26,7 @@ var (
 	knownBrandfetchErrors = []string{"Invalid Domain Name", "User is not authorized to access this resource with an explicit deny", "API key quota exceeded", "Endpoint request timed out"}
 )
 
-func (s *enrichmentService) GetBrandfetchByDomain(ctx context.Context, domain string) (*entity.BrandfetchResponseBody, error) {
+func (s *enrichmentService) GetBrandfetchByDomain(ctx context.Context, domain string) (*postgres_entity.BrandfetchResponseBody, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.GetBrandfetchByDomain")
 	defer span.Finish()
 	span.LogKV("domain", domain)
@@ -37,7 +37,7 @@ func (s *enrichmentService) GetBrandfetchByDomain(ctx context.Context, domain st
 		return nil, err
 	}
 
-	var data *entity.BrandfetchResponseBody
+	var data *postgres_entity.BrandfetchResponseBody
 
 	callBrandfetch := false
 	success := true
@@ -46,7 +46,7 @@ func (s *enrichmentService) GetBrandfetchByDomain(ctx context.Context, domain st
 		callBrandfetch = true
 	} else if latestEnrichDetailsBrandfetchRecord.Success == false {
 		// if latest record is not successful
-		unmarshalledData := entity.BrandfetchResponseBody{}
+		unmarshalledData := postgres_entity.BrandfetchResponseBody{}
 		if err = json.Unmarshal([]byte(latestEnrichDetailsBrandfetchRecord.Data), &unmarshalledData); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal brandfetch cached data"))
 		}
@@ -75,7 +75,7 @@ func (s *enrichmentService) GetBrandfetchByDomain(ctx context.Context, domain st
 			success = false
 		}
 
-		_, err = s.postgres.EnrichDetailsBrandfetchRepository.Create(ctx, entity.EnrichDetailsBrandfetch{
+		_, err = s.postgres.EnrichDetailsBrandfetchRepository.Create(ctx, postgres_entity.EnrichDetailsBrandfetch{
 			Domain:  domain,
 			Data:    string(dataAsString),
 			Success: success,
@@ -85,7 +85,7 @@ func (s *enrichmentService) GetBrandfetchByDomain(ctx context.Context, domain st
 		}
 	} else {
 		// unmarshal cached data
-		unmarshalledData := entity.BrandfetchResponseBody{}
+		unmarshalledData := postgres_entity.BrandfetchResponseBody{}
 		if err = json.Unmarshal([]byte(latestEnrichDetailsBrandfetchRecord.Data), &unmarshalledData); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal brandfetch cached data"))
 			return nil, err
@@ -102,7 +102,7 @@ func (s *enrichmentService) GetBrandfetchByDomain(ctx context.Context, domain st
 		}
 		if len(allSuccessRecords) > 0 {
 			latestEnrichDetailsBrandfetchRecord = &allSuccessRecords[0]
-			unmarshalledData := entity.BrandfetchResponseBody{}
+			unmarshalledData := postgres_entity.BrandfetchResponseBody{}
 			if err = json.Unmarshal([]byte(latestEnrichDetailsBrandfetchRecord.Data), &unmarshalledData); err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal brandfetch cached data"))
 				return nil, err
@@ -115,7 +115,7 @@ func (s *enrichmentService) GetBrandfetchByDomain(ctx context.Context, domain st
 	return data, nil
 }
 
-func (s *enrichmentService) callBrandfetch(ctx context.Context, domain string) (*entity.BrandfetchResponseBody, error) {
+func (s *enrichmentService) callBrandfetch(ctx context.Context, domain string) (*postgres_entity.BrandfetchResponseBody, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BrandfetchService.callBrandfetch")
 	defer span.Finish()
 	span.LogKV("domain", domain)
@@ -138,7 +138,7 @@ func (s *enrichmentService) callBrandfetch(ctx context.Context, domain string) (
 		s.log.Errorf("Error getting brandfetch app keys: %s", queryResult.Error)
 		return nil, queryResult.Error
 	}
-	branfetchAppKeys := queryResult.Result.([]entity.ExternalAppKeys)
+	branfetchAppKeys := queryResult.Result.([]postgres_entity.ExternalAppKeys)
 	if len(branfetchAppKeys) == 0 {
 		err := errors.New(fmt.Sprintf("no brandfetch app keys available for %s", currentMonth))
 		tracing.TraceErr(span, err)
@@ -157,7 +157,7 @@ func (s *enrichmentService) callBrandfetch(ctx context.Context, domain string) (
 		s.log.Errorf("Error incrementing app key usage count: %v", queryResult.Error)
 	}
 
-	var brandfetchResponseBody entity.BrandfetchResponseBody
+	var brandfetchResponseBody postgres_entity.BrandfetchResponseBody
 	err = json.Unmarshal(body, &brandfetchResponseBody)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal brandfetch response"))

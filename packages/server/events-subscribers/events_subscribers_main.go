@@ -6,14 +6,14 @@ import (
 	"log"
 
 	"github.com/caarlos0/env/v6"
-	"github.com/joho/godotenv"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	neo4jRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/joho/godotenv"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
@@ -74,8 +74,8 @@ func main() {
 		eventsProcessingGrpcClient = grpc_client.InitClients(gRPCconn)
 	}
 
-	postgresRepositories := repository.InitRepositories(postgresDb)
-	neo4jRepositories := neo4jRepo.InitNeo4jRepositories(&neo4jDriver, cfg.Neo4j.Database)
+	postgresRepositories := postgres_repository.InitRepositories(postgresDb)
+	neo4jRepositories := neo4j_repository.InitNeo4jRepositories(&neo4jDriver, cfg.Neo4j.Database)
 
 	commonServices := commonService.InitCommonServices(
 		appLogger,

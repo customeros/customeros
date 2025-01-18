@@ -3,12 +3,12 @@ package tags
 import (
 	"context"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -25,11 +25,11 @@ import (
 
 type tagService struct {
 	log    logger.Logger
-	neo4j  *neoRepo.Repositories
+	neo4j  *neo4j_repository.Repositories
 	events *events.EventsService
 }
 
-func NewTagService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService) interfaces.TagService {
+func NewTagService(log logger.Logger, neo4j *neo4j_repository.Repositories, events *events.EventsService) interfaces.TagService {
 	return &tagService{
 		log:    log,
 		neo4j:  neo4j,

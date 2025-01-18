@@ -1,19 +1,19 @@
-package repository
+package postgres_repository
 
 import (
 	"context"
 	"errors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 )
 
 type CacheEmailValidationDomainRepository interface {
-	Get(ctx context.Context, domain string) (*entity.CacheEmailValidationDomain, error)
-	Save(ctx context.Context, cacheEmailValidationDomain entity.CacheEmailValidationDomain) (*entity.CacheEmailValidationDomain, error)
+	Get(ctx context.Context, domain string) (*postgres_entity.CacheEmailValidationDomain, error)
+	Save(ctx context.Context, cacheEmailValidationDomain postgres_entity.CacheEmailValidationDomain) (*postgres_entity.CacheEmailValidationDomain, error)
 }
 
 type cacheEmailValidationDomainRepository struct {
@@ -24,13 +24,13 @@ func NewCacheEmailValidationDomainRepository(gormDb *gorm.DB) CacheEmailValidati
 	return &cacheEmailValidationDomainRepository{db: gormDb}
 }
 
-func (r cacheEmailValidationDomainRepository) Get(ctx context.Context, domain string) (*entity.CacheEmailValidationDomain, error) {
+func (r cacheEmailValidationDomainRepository) Get(ctx context.Context, domain string) (*postgres_entity.CacheEmailValidationDomain, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailValidationDomainRepository.Get")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("domain", domain))
 
-	var cacheEmailValidationDomain entity.CacheEmailValidationDomain
+	var cacheEmailValidationDomain postgres_entity.CacheEmailValidationDomain
 	result := r.db.WithContext(ctx).Where("domain = ?", domain).First(&cacheEmailValidationDomain)
 
 	if result.Error != nil {
@@ -44,7 +44,7 @@ func (r cacheEmailValidationDomainRepository) Get(ctx context.Context, domain st
 	return &cacheEmailValidationDomain, nil
 }
 
-func (r cacheEmailValidationDomainRepository) Save(ctx context.Context, cacheEmailValidationDomain entity.CacheEmailValidationDomain) (*entity.CacheEmailValidationDomain, error) {
+func (r cacheEmailValidationDomainRepository) Save(ctx context.Context, cacheEmailValidationDomain postgres_entity.CacheEmailValidationDomain) (*postgres_entity.CacheEmailValidationDomain, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailValidationDomainRepository.Save")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -83,7 +83,7 @@ func (r cacheEmailValidationDomainRepository) Save(ctx context.Context, cacheEma
     `
 
 	now := utils.Now()
-	var result entity.CacheEmailValidationDomain
+	var result postgres_entity.CacheEmailValidationDomain
 
 	err := r.db.WithContext(ctx).Raw(query,
 		cacheEmailValidationDomain.Domain,

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -25,10 +25,10 @@ import (
 
 type namecheapService struct {
 	cfg      *config.NamecheapConfig
-	postgres *repository.Repositories
+	postgres *postgres_repository.Repositories
 }
 
-func NewNamecheapService(cfg *config.NamecheapConfig, postgres *repository.Repositories) interfaces.NamecheapService {
+func NewNamecheapService(cfg *config.NamecheapConfig, postgres *postgres_repository.Repositories) interfaces.NamecheapService {
 	return &namecheapService{
 		cfg:      cfg,
 		postgres: postgres,

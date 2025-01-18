@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	commoncaches "github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -21,7 +20,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 
@@ -225,7 +225,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 				return
 			}
 
-			err = services.CommonServices.PostgresRepositories.RawEmailRepository.Store(ctx, externalSystem, tenantByName, username, emailRawData.ProviderMessageId, messageId, string(jsonContent), emailRawData.Sent, entity.REAL_TIME)
+			err = services.CommonServices.PostgresRepositories.RawEmailRepository.Store(ctx, externalSystem, tenantByName, username, emailRawData.ProviderMessageId, messageId, string(jsonContent), emailRawData.Sent, postgres_entity.REAL_TIME)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
@@ -323,11 +323,11 @@ func getInReplyTo(pmData model.PostmarkEmailWebhookData) (string, error) {
 	return inReplyTo, nil
 }
 
-func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookData) (entity.EmailRawData, error) {
+func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookData) (postgres_entity.EmailRawData, error) {
 	// Parse the Date field to time.Time
 	sentTime, err := utils.UnmarshalDateTime(pmData.Date)
 	if err != nil {
-		return entity.EmailRawData{}, err
+		return postgres_entity.EmailRawData{}, err
 	}
 
 	// Map headers from slice to map
@@ -360,20 +360,20 @@ func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookD
 
 	messageId, err := getMessageId(pmData)
 	if err != nil {
-		return entity.EmailRawData{}, err
+		return postgres_entity.EmailRawData{}, err
 	}
 
 	references, err := getReferences(pmData)
 	if err != nil {
-		return entity.EmailRawData{}, err
+		return postgres_entity.EmailRawData{}, err
 	}
 
 	inReplyTo, err := getInReplyTo(pmData)
 	if err != nil {
-		return entity.EmailRawData{}, err
+		return postgres_entity.EmailRawData{}, err
 	}
 
-	return entity.EmailRawData{
+	return postgres_entity.EmailRawData{
 		ProviderMessageId: messageId,
 		MessageId:         messageId,
 		Sent:              *sentTime,

@@ -1,4 +1,4 @@
-package entity
+package postgres_entity
 
 type TenantSettings struct {
 	ID         string `gorm:"primary_key;type:uuid;default:gen_random_uuid()"`

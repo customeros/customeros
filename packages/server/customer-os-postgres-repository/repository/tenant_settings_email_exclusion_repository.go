@@ -1,8 +1,8 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
@@ -11,7 +11,7 @@ import (
 )
 
 type TenantSettingsEmailExclusionRepository interface {
-	GetExclusionList(ctx context.Context) ([]entity.TenantSettingsEmailExclusion, error)
+	GetExclusionList(ctx context.Context) ([]postgres_entity.TenantSettingsEmailExclusion, error)
 }
 
 type tenantSettingsEmailExclusionRepositoryImpl struct {
@@ -22,12 +22,12 @@ func NewEmailExclusionRepository(gormDb *gorm.DB) TenantSettingsEmailExclusionRe
 	return &tenantSettingsEmailExclusionRepositoryImpl{gormDb: gormDb}
 }
 
-func (repo *tenantSettingsEmailExclusionRepositoryImpl) GetExclusionList(ctx context.Context) ([]entity.TenantSettingsEmailExclusion, error) {
+func (repo *tenantSettingsEmailExclusionRepositoryImpl) GetExclusionList(ctx context.Context) ([]postgres_entity.TenantSettingsEmailExclusion, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsEmailExclusionRepository.GetExclusionList")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	result := []entity.TenantSettingsEmailExclusion{}
+	result := []postgres_entity.TenantSettingsEmailExclusion{}
 	err := repo.gormDb.Find(&result).Limit(5000).Error
 
 	if err != nil {

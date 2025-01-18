@@ -6,8 +6,8 @@ import (
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -23,12 +23,12 @@ import (
 )
 
 type userService struct {
-	neo4j    *neoRepo.Repositories
-	postgres *repository.Repositories
+	neo4j    *neo4j_repository.Repositories
+	postgres *postgres_repository.Repositories
 	events   *events.EventsService
 }
 
-func NewUserService(neo4j *neoRepo.Repositories, postgres *repository.Repositories, events *events.EventsService) interfaces.UserService {
+func NewUserService(neo4j *neo4j_repository.Repositories, postgres *postgres_repository.Repositories, events *events.EventsService) interfaces.UserService {
 	return &userService{
 		neo4j:    neo4j,
 		postgres: postgres,

@@ -3,10 +3,10 @@ package attachment
 import (
 	"context"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -17,16 +17,16 @@ import (
 )
 
 type attachmentService struct {
-	neo4j *repository.Repositories
+	neo4j *neo4j_repository.Repositories
 }
 
-func NewAttachmentService(neo4j *repository.Repositories) interfaces.AttachmentService {
+func NewAttachmentService(neo4j *neo4j_repository.Repositories) interfaces.AttachmentService {
 	return &attachmentService{
 		neo4j: neo4j,
 	}
 }
 
-func (s *attachmentService) GetById(ctx context.Context, id string) (*entity.AttachmentEntity, error) {
+func (s *attachmentService) GetById(ctx context.Context, id string) (*neo4j_entity.AttachmentEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -48,7 +48,7 @@ func (s *attachmentService) GetById(ctx context.Context, id string) (*entity.Att
 	return mapper.MapDbNodeToAttachmentEntity(node), nil
 }
 
-func (s *attachmentService) GetFor(c context.Context, entityType model.EntityType, relation *model.EntityRelation, ids []string) (*entity.AttachmentEntities, error) {
+func (s *attachmentService) GetFor(c context.Context, entityType model.EntityType, relation *model.EntityRelation, ids []string) (*neo4j_entity.AttachmentEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "AttachmentService.GetFor")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -58,7 +58,7 @@ func (s *attachmentService) GetFor(c context.Context, entityType model.EntityTyp
 		return nil, err
 	}
 
-	attachments := entity.AttachmentEntities{}
+	attachments := neo4j_entity.AttachmentEntities{}
 	for _, v := range records {
 		attachment := mapper.MapDbNodeToAttachmentEntity(v.Node)
 		attachment.DataloaderKey = v.LinkedNodeId
@@ -68,7 +68,7 @@ func (s *attachmentService) GetFor(c context.Context, entityType model.EntityTyp
 	return &attachments, nil
 }
 
-func (s *attachmentService) Create(c context.Context, record *entity.AttachmentEntity) (*entity.AttachmentEntity, error) {
+func (s *attachmentService) Create(c context.Context, record *neo4j_entity.AttachmentEntity) (*neo4j_entity.AttachmentEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "AttachmentService.Create")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -84,7 +84,7 @@ func (s *attachmentService) Create(c context.Context, record *entity.AttachmentE
 	return mapper.MapDbNodeToAttachmentEntity(interactionEventDbNode.(*neo4j.Node)), nil
 }
 
-func (s *attachmentService) createAttachmentInDBTxWork(c context.Context, newAttachment *entity.AttachmentEntity) func(tx neo4j.ManagedTransaction) (any, error) {
+func (s *attachmentService) createAttachmentInDBTxWork(c context.Context, newAttachment *neo4j_entity.AttachmentEntity) func(tx neo4j.ManagedTransaction) (any, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "AttachmentService.createAttachmentInDBTxWork")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

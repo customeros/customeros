@@ -1,15 +1,17 @@
-package repository
+package neo4j_repository
 
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type MarkdownEventWriteRepository interface {
@@ -60,7 +62,7 @@ func (r *markdownEventWriteRepository) CreateInTx(ctx context.Context, tx *neo4j
 	if data.Source != nil {
 		params["source"] = data.Source.String()
 	} else {
-		params["source"] = entity.DataSourceOpenline.String()
+		params["source"] = neo4j_entity.DataSourceOpenline.String()
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -72,7 +74,6 @@ func (r *markdownEventWriteRepository) CreateInTx(ctx context.Context, tx *neo4j
 		}
 		return nil, nil
 	})
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}

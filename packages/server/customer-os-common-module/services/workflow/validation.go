@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -71,7 +71,7 @@ func (w *workflowService) ValidateFlowBelongsToTenant(ctx context.Context, flowI
 		return false, err
 	}
 
-	query := entity.Flows{
+	query := postgres_entity.Flows{
 		ID: flowId,
 	}
 
@@ -125,7 +125,7 @@ func (w *workflowService) ValidateTransition(ctx context.Context, fromNodeId str
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
-	fromNode, err := w.postgres.FlowNodeRepository.Find(ctx, entity.FlowNode{
+	fromNode, err := w.postgres.FlowNodeRepository.Find(ctx, postgres_entity.FlowNode{
 		ID: fromNodeId,
 	})
 	if err != nil {
@@ -133,7 +133,7 @@ func (w *workflowService) ValidateTransition(ctx context.Context, fromNodeId str
 		return false, err
 	}
 
-	toNode, err := w.postgres.FlowNodeRepository.Find(ctx, entity.FlowNode{
+	toNode, err := w.postgres.FlowNodeRepository.Find(ctx, postgres_entity.FlowNode{
 		ID: toNodeId,
 	})
 	if err != nil {
@@ -141,7 +141,7 @@ func (w *workflowService) ValidateTransition(ctx context.Context, fromNodeId str
 		return false, err
 	}
 
-	results, err := w.postgres.FlowTransitionsRegistryRepository.Find(ctx, entity.FlowTransitionsRegistry{
+	results, err := w.postgres.FlowTransitionsRegistryRepository.Find(ctx, postgres_entity.FlowTransitionsRegistry{
 		FromNodeType: fromNode.Type,
 		ToNodeType:   toNode.Type,
 	})

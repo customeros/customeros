@@ -1,9 +1,9 @@
-package repository
+package postgres_repository
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -15,21 +15,21 @@ type cosApiEnrichPersonTempResultRepository struct {
 }
 
 type CosApiEnrichPersonTempResultRepository interface {
-	Create(ctx context.Context, data entity.CosApiEnrichPersonTempResult) (*entity.CosApiEnrichPersonTempResult, error)
-	GetById(ctx context.Context, id, tenant string) (*entity.CosApiEnrichPersonTempResult, error)
-	GetByBettercontactRecordId(ctx context.Context, bettercontactRecordId string) (*entity.CosApiEnrichPersonTempResult, error)
+	Create(ctx context.Context, data postgres_entity.CosApiEnrichPersonTempResult) (*postgres_entity.CosApiEnrichPersonTempResult, error)
+	GetById(ctx context.Context, id, tenant string) (*postgres_entity.CosApiEnrichPersonTempResult, error)
+	GetByBettercontactRecordId(ctx context.Context, bettercontactRecordId string) (*postgres_entity.CosApiEnrichPersonTempResult, error)
 }
 
 func NewCosApiEnrichPersonTempResultRepository(gormDb *gorm.DB) CosApiEnrichPersonTempResultRepository {
 	return &cosApiEnrichPersonTempResultRepository{db: gormDb}
 }
 
-func (r cosApiEnrichPersonTempResultRepository) GetById(ctx context.Context, id, tenant string) (*entity.CosApiEnrichPersonTempResult, error) {
+func (r cosApiEnrichPersonTempResultRepository) GetById(ctx context.Context, id, tenant string) (*postgres_entity.CosApiEnrichPersonTempResult, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CosApiEnrichPersonTempResultRepository.GetById")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var data entity.CosApiEnrichPersonTempResult
+	var data postgres_entity.CosApiEnrichPersonTempResult
 	err := r.db.Where("id = ? AND tenant = ?", id, tenant).First(&data).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -41,7 +41,7 @@ func (r cosApiEnrichPersonTempResultRepository) GetById(ctx context.Context, id,
 	return &data, nil
 }
 
-func (r cosApiEnrichPersonTempResultRepository) Create(ctx context.Context, data entity.CosApiEnrichPersonTempResult) (*entity.CosApiEnrichPersonTempResult, error) {
+func (r cosApiEnrichPersonTempResultRepository) Create(ctx context.Context, data postgres_entity.CosApiEnrichPersonTempResult) (*postgres_entity.CosApiEnrichPersonTempResult, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CosApiEnrichPersonTempResultRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -55,12 +55,12 @@ func (r cosApiEnrichPersonTempResultRepository) Create(ctx context.Context, data
 	return &data, nil
 }
 
-func (r cosApiEnrichPersonTempResultRepository) GetByBettercontactRecordId(ctx context.Context, bettercontactRecordId string) (*entity.CosApiEnrichPersonTempResult, error) {
+func (r cosApiEnrichPersonTempResultRepository) GetByBettercontactRecordId(ctx context.Context, bettercontactRecordId string) (*postgres_entity.CosApiEnrichPersonTempResult, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CosApiEnrichPersonTempResultRepository.GetByBettercontactRecordId")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var data entity.CosApiEnrichPersonTempResult
+	var data postgres_entity.CosApiEnrichPersonTempResult
 	err := r.db.Where("bettercontact_record_id = ?", bettercontactRecordId).First(&data).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

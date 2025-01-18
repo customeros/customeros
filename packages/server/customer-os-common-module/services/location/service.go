@@ -7,9 +7,9 @@ import (
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -32,8 +32,8 @@ import (
 
 type locationService struct {
 	log      logger.Logger
-	neo4j    *neoRepo.Repositories
-	postgres *repository.Repositories
+	neo4j    *neo4j_repository.Repositories
+	postgres *postgres_repository.Repositories
 	events   *events.EventsService
 	cfg      *config.AnthropicPrompts
 	ai       interfaces.AIService
@@ -41,7 +41,7 @@ type locationService struct {
 	org      interfaces.OrganizationService
 }
 
-func NewLocationService(log logger.Logger, neo4j *neoRepo.Repositories, postgres *repository.Repositories, events *events.EventsService, cfg *config.AnthropicPrompts, ai interfaces.AIService, contact interfaces.ContactService, org interfaces.OrganizationService) interfaces.LocationService {
+func NewLocationService(log logger.Logger, neo4j *neo4j_repository.Repositories, postgres *postgres_repository.Repositories, events *events.EventsService, cfg *config.AnthropicPrompts, ai interfaces.AIService, contact interfaces.ContactService, org interfaces.OrganizationService) interfaces.LocationService {
 	return &locationService{
 		log:      log,
 		neo4j:    neo4j,
