@@ -28,7 +28,7 @@ require (
 	github.com/machinebox/graphql v0.2.2
 	github.com/matoous/go-nanoid/v2 v2.1.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/mrz1836/postmark v1.6.7
+	github.com/mrz1836/postmark v1.7.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
 	github.com/nyaruka/phonenumbers v1.4.4
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
