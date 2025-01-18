@@ -47,6 +47,6 @@ const (
 
 	EsInternalStreamPrefix = "$"
 
-	UrlFileStoreApi                     = "https://fs.customeros.ai/"
-	UrlFileStoreFileDownloadUrlTemplate = UrlFileStoreApi + "file/%s/download"
+	UrlCustomerOsApi                 = "https://customeros.ai"
+	FileStoreFileDownloadUrlTemplate = UrlCustomerOsApi + "/files/v1/files/%s/download"
 )

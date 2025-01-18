@@ -8,8 +8,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/service"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -64,10 +64,7 @@ func main() {
 		opentracing.SetGlobalTracer(tracer)
 	}
 
-	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
-		PostgresConfig:      &cfg.PostgresConfig,
-		PostgresAsyncConfig: &cfg.PostgresAsyncConfig,
-	})
+	postgresDb, err := commonConfig.InitPostgres(&cfg.CommonConfig)
 	if err != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
 	}
@@ -76,11 +73,11 @@ func main() {
 	ctx := context.Background()
 
 	// Neo4j DB
-	neo4jDriver, errNeo4j := config.NewDriver(appLogger, cfg)
+	neo4jDriver, errNeo4j := commonConfig.NewNeo4jDriver(cfg.CommonConfig.Infrastructure.Neo4jConfig)
 	if errNeo4j != nil {
 		appLogger.Fatalf("failed opening connection to neo4j: %v", errNeo4j.Error())
 	}
-	defer (*neo4jDriver).Close(ctx)
+	defer (neo4jDriver).Close(ctx)
 
 	// Airbyte DB
 	airbyteStoreDb := config.InitPoolManager(cfg)
@@ -98,7 +95,7 @@ func main() {
 
 	// Services
 	grpcContainer := grpc_client.InitClients(gRPCconn)
-	services := service.InitServices(cfg, appLogger, neo4jDriver, postgresDb, airbyteStoreDb, grpcContainer)
+	services := service.InitServices(cfg, appLogger, &neo4jDriver, postgresDb, airbyteStoreDb, grpcContainer)
 
 	services.InitService.Init()
 

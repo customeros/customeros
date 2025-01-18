@@ -11,10 +11,7 @@ import (
 )
 
 type Config struct {
-	Neo4j commonConfig.Neo4jConfig
-
-	PostgresConfig      commonConfig.PostgresConfig
-	PostgresAsyncConfig commonConfig.PostgresAsyncConfig
+	CommonConfig commonConfig.CommonConfig
 
 	Logger             logger.Config
 	Jaeger             tracing.JaegerConfig

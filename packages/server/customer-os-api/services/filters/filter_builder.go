@@ -1,0 +1,92 @@
+package api_filters
+
+import (
+	"errors"
+	"fmt"
+	"reflect"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+)
+
+func BuildFilter(modelFilter *model.Filter, T reflect.Type) (*utils.CypherFilter, error) {
+	if modelFilter == nil {
+		return nil, nil
+	}
+	cypherFilter := new(utils.CypherFilter)
+	cypherFilter.Negate = false
+
+	foundAtCurrentLevel := false
+
+	if modelFilter.Not != nil {
+		foundAtCurrentLevel = true
+		cypherFilter.Negate = true
+		innerFilter, err := BuildFilter(modelFilter.Not, T)
+		if err != nil {
+			return nil, err
+		}
+		cypherFilter.Filters = append(cypherFilter.Filters, innerFilter)
+	}
+	if modelFilter.And != nil {
+		if foundAtCurrentLevel {
+			return nil, newFilterError()
+		}
+		foundAtCurrentLevel = true
+		if len(modelFilter.And) < 2 {
+			return nil, newFilterErrorf("at least 2 filters expected in AND group")
+		}
+		cypherFilter.LogicalOperator = utils.AND
+		for _, v := range modelFilter.And {
+			innerFilter, err := BuildFilter(v, T)
+			if err != nil {
+				return nil, err
+			}
+			cypherFilter.Filters = append(cypherFilter.Filters, innerFilter)
+		}
+	}
+	if modelFilter.Or != nil {
+		if foundAtCurrentLevel {
+			return nil, newFilterError()
+		}
+		foundAtCurrentLevel = true
+		if len(modelFilter.Or) < 2 {
+			return nil, newFilterErrorf("at least 2 filters expected in OR group")
+		}
+		cypherFilter.LogicalOperator = utils.OR
+		for _, v := range modelFilter.Or {
+			innerFilter, err := BuildFilter(v, T)
+			if err != nil {
+				return nil, err
+			}
+			cypherFilter.Filters = append(cypherFilter.Filters, innerFilter)
+		}
+	}
+	if modelFilter.Filter != nil {
+		if foundAtCurrentLevel {
+			return nil, newFilterError()
+		}
+		props, err := utils.GetPropertyDetailsByLookupName(T, modelFilter.Filter.Property)
+		if err != nil {
+			return nil, err
+		}
+		cypherFilterItem := utils.CypherFilterItem{
+			NodeProperty:         props[utils.TagProperty],
+			SupportCaseSensitive: props[utils.TagSupportCaseSensitive] == "true",
+			CaseSensitive:        *modelFilter.Filter.CaseSensitive == true,
+			Value:                modelFilter.Filter.Value.RealValue(),
+			ComparisonOperator:   modelFilter.Filter.Operation,
+			DbNodePropertyProps:  props,
+		}
+		cypherFilter.Details = &cypherFilterItem
+	}
+	return cypherFilter, nil
+}
+
+func newFilterError() error {
+	return errors.New("incorrect filter formatting")
+}
+
+func newFilterErrorf(msg string) error {
+	return errors.New(fmt.Sprintf("incorrect filter formatting: %s", msg))
+}

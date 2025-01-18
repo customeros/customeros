@@ -1,26 +1,26 @@
 # Where are all the schema files located? globs are supported eg  src/**/*.graphqls
 schema:
-  - graph/schemas/*.graphqls
+  - graphql/schemas/*.graphqls
 
 # Where should the generated server code go?
 exec:
-  filename: graph/generated/generated.go
+  filename: graphql/generated/generated.go
   package: generated
 
 # Uncomment to enable federation
 # federation:
-#   filename: graph/generated/federation.go
+#   filename: graphql/generated/federation.go
 #   package: generated
 
 # Where should any generated models go?
 model:
-  filename: graph/model/models_gen.go
+  filename: graphql/model/models_gen.go
   package: model
 
 # Where should the resolver implementations go?
 resolver:
   layout: follow-schema
-  dir: graph/resolver
+  dir: graphql/resolver
   package: resolver
   filename_template: "{name}.resolvers.go"
 
@@ -43,7 +43,7 @@ skip_validation: false
 # gqlgen will search for any type names in the schema in these go packages
 # if they match it will use them, otherwise it will generate them.
 autobind:
-  - "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+  - "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
 
 # This section declares type mapping between the GraphQL and go type systems
 #
@@ -68,15 +68,6 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
-  TableViewType:
-    model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity.TableViewType
-  TableIdType:
-    model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity.TableIdType
-  ColumnViewType:
-    model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity.ColumnViewType
   SortBy:
     model:
       - github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model.SortBy

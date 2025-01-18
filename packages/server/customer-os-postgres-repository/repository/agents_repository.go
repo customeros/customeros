@@ -17,7 +17,7 @@ type AgentsRepository interface {
 	Create(ctx context.Context, agent *entity.Agents) (*entity.Agents, error)
 	Find(ctx context.Context, agent entity.Agents) (*entity.Agents, error)
 	FindAll(ctx context.Context, agent entity.Agents) ([]entity.Agents, error)
-	FindAllFromAgentsList(ctx context.Context, agents []enum.AgentID) ([]entity.Agents, error)
+	FindAllFromAgentsList(ctx context.Context, agents []enum.AgentType) ([]entity.Agents, error)
 	Update(ctx context.Context, agent entity.Agents) (*entity.Agents, error)
 }
 
@@ -68,7 +68,7 @@ func (f *agentsRepository) FindAll(ctx context.Context, agent entity.Agents) ([]
 	return agents, nil
 }
 
-func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []enum.AgentID) ([]entity.Agents, error) {
+func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []enum.AgentType) ([]entity.Agents, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentsRepository.FindAllFromAgentsList")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)

@@ -3,13 +3,14 @@ package config
 import (
 	"database/sql"
 	"fmt"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	gormLogger "gorm.io/gorm/logger"
 	"io"
 	"log"
 	"os"
 	"time"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	gormLogger "gorm.io/gorm/logger"
 )
 
 type PostgresDB struct {
@@ -20,16 +21,16 @@ type PostgresDB struct {
 	AsyncGormDB *gorm.DB
 }
 
-func InitPostgres(cfg *GlobalConfig) (*PostgresDB, error) {
+func InitPostgres(cfg *CommonConfig) (*PostgresDB, error) {
 	var err error
 	db := &PostgresDB{}
 
-	db.SqlDB, db.GormDB, err = NewPostgresDBConn(cfg.PostgresConfig.Host, cfg.PostgresConfig.Port, cfg.PostgresConfig.User, cfg.PostgresConfig.Password, cfg.PostgresConfig.Db, cfg.PostgresConfig.LogLevel, cfg.PostgresConfig.MaxConn, cfg.PostgresConfig.MaxIdleConn, cfg.PostgresConfig.ConnMaxLifetime)
+	db.SqlDB, db.GormDB, err = NewPostgresDBConn(cfg.Infrastructure.PostgresConfig.Host, cfg.Infrastructure.PostgresConfig.Port, cfg.Infrastructure.PostgresConfig.User, cfg.Infrastructure.PostgresConfig.Password, cfg.Infrastructure.PostgresConfig.Db, cfg.Infrastructure.PostgresConfig.LogLevel, cfg.Infrastructure.PostgresConfig.MaxConn, cfg.Infrastructure.PostgresConfig.MaxIdleConn, cfg.Infrastructure.PostgresConfig.ConnMaxLifetime)
 	if err != nil {
 		log.Fatalf("failed to connect to postgres: %v", err)
 		return nil, err
 	}
-	db.AsyncSqlDB, db.AsyncGormDB, err = NewPostgresDBConn(cfg.PostgresAsyncConfig.Host, cfg.PostgresAsyncConfig.Port, cfg.PostgresAsyncConfig.User, cfg.PostgresAsyncConfig.Password, cfg.PostgresAsyncConfig.Db, cfg.PostgresAsyncConfig.LogLevel, cfg.PostgresAsyncConfig.MaxConn, cfg.PostgresAsyncConfig.MaxIdleConn, cfg.PostgresAsyncConfig.ConnMaxLifetime)
+	db.AsyncSqlDB, db.AsyncGormDB, err = NewPostgresDBConn(cfg.Infrastructure.PostgresAsyncConfig.Host, cfg.Infrastructure.PostgresAsyncConfig.Port, cfg.Infrastructure.PostgresAsyncConfig.User, cfg.Infrastructure.PostgresAsyncConfig.Password, cfg.Infrastructure.PostgresAsyncConfig.Db, cfg.Infrastructure.PostgresAsyncConfig.LogLevel, cfg.Infrastructure.PostgresAsyncConfig.MaxConn, cfg.Infrastructure.PostgresAsyncConfig.MaxIdleConn, cfg.Infrastructure.PostgresAsyncConfig.ConnMaxLifetime)
 	if err != nil {
 		log.Fatalf("failed to connect to postgres: %v", err)
 		return nil, err
@@ -75,7 +76,7 @@ func initConfig(logLevel string) *gorm.Config {
 
 // initLog Connection Log Configuration
 func initLog(logLevel string) gormLogger.Interface {
-	var postgresLogLevel = gormLogger.Silent
+	postgresLogLevel := gormLogger.Silent
 	switch logLevel {
 	case "ERROR":
 		postgresLogLevel = gormLogger.Error

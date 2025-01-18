@@ -1,10 +1,11 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapEmailInputToEntity(input *model.EmailInput) *neo4jentity.EmailEntity {

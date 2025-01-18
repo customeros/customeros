@@ -4,8 +4,6 @@ WORKDIR /app
 COPY customer-os-common-module/. ./customer-os-common-module/
 COPY customer-os-neo4j-repository/. ./customer-os-neo4j-repository/
 COPY customer-os-postgres-repository/. ./customer-os-postgres-repository/
-COPY enrichment-api/. ./enrichment-api/
-COPY validation-api/. ./validation-api/
 COPY events-processing-proto/. ./events-processing-proto/
 COPY events/. ./events/
 COPY events-processing-platform/. ./events-processing-platform

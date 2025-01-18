@@ -1,0 +1,17 @@
+query global_Cache {
+  global_Cache {
+    user {
+      id
+      emails {
+        email
+        rawEmail
+        primary
+      }
+      firstName
+      lastName
+    }
+    isOwner
+    contractsExist
+    cdnLogoUrl
+  }
+}

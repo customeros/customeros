@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/server"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/server"
 )
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 	}
 
 	// Initialize logger
-	appLogger := logger.NewExtendedAppLogger(&cfg.Logger)
+	appLogger := logger.NewExtendedAppLogger(&cfg.Common.Infrastructure.LoggerConfig)
 	appLogger.InitLogger()
 	appLogger.WithName(constants.ServiceName)
 

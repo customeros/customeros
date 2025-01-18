@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	service "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/pkg/errors"
 )
@@ -16,10 +16,10 @@ type DomainService interface {
 type domainService struct {
 	cfg            *config.Config
 	log            logger.Logger
-	commonServices *commonservice.Services
+	commonServices *service.CommonServices
 }
 
-func NewDomainService(cfg *config.Config, log logger.Logger, commonServices *commonservice.Services) DomainService {
+func NewDomainService(cfg *config.Config, log logger.Logger, commonServices *service.CommonServices) DomainService {
 	return &domainService{
 		cfg:            cfg,
 		log:            log,

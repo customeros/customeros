@@ -33,8 +33,8 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 
 	eventHandler := &InvoiceEventHandler{
 		log:         testLogger,
-		services:    testDatabase.Services,
 		grpcClients: testMockedGrpcClient,
+		neo4j:       testDatabase.CommonServices.Neo4jRepositories,
 	}
 
 	now := utils.Now()
@@ -169,8 +169,8 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{
 		log:         testLogger,
-		services:    testDatabase.Services,
 		grpcClients: testMockedGrpcClient,
+		neo4j:       testDatabase.CommonServices.Neo4jRepositories,
 	}
 
 	timeNow := utils.Now()
@@ -376,8 +376,8 @@ func TestInvoiceEventHandler_OnInvoiceFillV1_GenerateNextInvoice_NotCalled(t *te
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{
 		log:         testLogger,
-		services:    testDatabase.Services,
 		grpcClients: testMockedGrpcClient,
+		neo4j:       testDatabase.CommonServices.Neo4jRepositories,
 	}
 
 	timeNow := utils.Now()
@@ -439,8 +439,8 @@ func TestInvoiceEventHandler_OnInvoicePdfGenerated(t *testing.T) {
 
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{
-		log:      testLogger,
-		services: testDatabase.Services,
+		log:   testLogger,
+		neo4j: testDatabase.CommonServices.Neo4jRepositories,
 	}
 
 	timeNow := utils.Now()
@@ -497,8 +497,8 @@ func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{
 		log:         testLogger,
-		services:    testDatabase.Services,
 		grpcClients: testMockedGrpcClient,
+		neo4j:       testDatabase.CommonServices.Neo4jRepositories,
 	}
 
 	timeNow := utils.Now()
@@ -556,8 +556,8 @@ func TestInvoiceEventHandler_OnInvoiceDeleteV1(t *testing.T) {
 
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{
-		log:      testLogger,
-		services: testDatabase.Services,
+		log:   testLogger,
+		neo4j: testDatabase.CommonServices.Neo4jRepositories,
 	}
 
 	aggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, id)

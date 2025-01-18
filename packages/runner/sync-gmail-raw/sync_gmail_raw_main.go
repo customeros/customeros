@@ -21,9 +21,11 @@ func main() {
 
 	config := loadConfiguration()
 
-	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
-		PostgresConfig:      &config.PostgresConfig,
-		PostgresAsyncConfig: &config.PostgresAsyncConfig,
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.CommonConfig{
+		Infrastructure: commonConfig.InfrastructureConfig{
+			PostgresConfig:      config.PostgresConfig,
+			PostgresAsyncConfig: config.PostgresAsyncConfig,
+		},
 	})
 	if err != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())

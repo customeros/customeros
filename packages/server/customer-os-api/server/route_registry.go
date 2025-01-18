@@ -6,12 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
 )
 
 type RouteType string
@@ -20,6 +20,7 @@ const (
 	RoutePublic   RouteType = "public"
 	RouteInternal RouteType = "internal"
 	RouteCustomer RouteType = "customer"
+	RouteFiles    RouteType = "files"
 )
 
 type RouteConfig struct {
@@ -27,15 +28,15 @@ type RouteConfig struct {
 	path       string
 	handler    gin.HandlerFunc
 	routeType  RouteType
-	services   *service.Services
+	services   *cosapi_services.Services
 	cache      *commoncaches.Cache
 	grpcClient *grpc_client.Clients
 }
 
-func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, s *service.Services, cache *commoncaches.Cache) {
+func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, s *cosapi_services.Services, cache *commoncaches.Cache) {
 	registerInternalRoutes(ctx, r, s)
-
 	registerPublicRoutes(ctx, r, s)
+	registerFileRoutes(ctx, r, s)
 
 	registerBillingRoutes(ctx, r, s, cache)
 	registerCustomerBaseRoutes(ctx, r, s, cache)
@@ -57,10 +58,10 @@ func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 	case RouteInternal:
 		middlewares = append(middlewares,
 			security.ApiKeyCheckerHTTP(
-				config.services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository,
-				config.services.CommonServices.PostgresRepositories.AppKeyRepository,
+				config.services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository,
+				config.services.Repositories.PostgresRepositories.AppKeyRepository,
 				security.PLATFORM_ADMIN_API,
-				security.WithCache(config.services.CommonServices.Cache),
+				security.WithCache(config.services.Cache),
 			))
 
 	case RouteCustomer:
@@ -74,6 +75,16 @@ func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 			enrichContextMiddleware(constants.AppSourceCustomerOsApiRest),
 			cosHandler.StatsSuccessHandler(config.method+":"+config.path, config.services),
 		)
+
+	case RouteFiles:
+		middlewares = append(middlewares,
+			config.services.JWTService.GetJWTTenantUserEnhancer(),
+			security.TenantUserContextEnhancer(
+				security.USERNAME_OR_TENANT,
+				config.services.Repositories.Neo4jRepositories,
+				security.WithCache(config.cache),
+			))
+
 	}
 
 	middlewares = append(middlewares, config.handler)

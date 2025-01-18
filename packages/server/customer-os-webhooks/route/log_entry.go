@@ -3,29 +3,31 @@ package route
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
-	"io"
-	"net/http"
-	"time"
 )
 
 func AddLogEntryRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/log-entries",
 		tracing.TracingEnhancer(ctx, "/sync/log-entries"),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
+		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.PostgresRepository.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
 		syncLogEntriesHandler(services, log))
 	route.POST("/sync/log-entry",
 		tracing.TracingEnhancer(ctx, "/sync/log-entry"),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
+		security.ApiKeyCheckerHTTP(services.PostgresRepository.TenantWebhookApiKeyRepository, services.PostgresRepository.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
 		syncLogEntryHandler(services, log))
 }
 

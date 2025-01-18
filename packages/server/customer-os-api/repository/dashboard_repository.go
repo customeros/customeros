@@ -3,11 +3,12 @@ package repository
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"strings"
+	"time"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -15,9 +16,10 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"reflect"
-	"strings"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 )
 
 const (
@@ -51,7 +53,7 @@ const (
 )
 
 type DashboardRepository interface {
-	//deprecated
+	// deprecated
 	GetDashboardViewOrganizationData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.DbNodesWithTotalCount, error)
 	GetDashboardViewRenewalData(ctx context.Context, tenant string, skip, limit int, where *model.Filter, sort *commonmodel.SortBy) (*utils.RecordsWithTotalCount, error)
 	GetDashboardNewCustomersData(ctx context.Context, tenant string, startDate, endDate time.Time) ([]map[string]interface{}, error)
@@ -112,8 +114,8 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	ownerIncludeEmpty := false
 	externalId := ""
 
-	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
-	//region organization filters
+	// ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
+	// region organization filters
 	if where != nil {
 		organizationFilter := new(utils.CypherFilter)
 		organizationFilter.Negate = false
@@ -213,7 +215,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		}
 	}
 
-	//endregion
+	// endregion
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -229,7 +231,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 	utils.MergeMapToMap(emailFilterParams, params)
 	utils.MergeMapToMap(locationFilterParams, params)
 
-	//region count query
+	// region count query
 	countQuery := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	if len(ownerId) > 0 || ownerIncludeEmpty {
 		countQuery += ` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`
@@ -285,9 +287,9 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		return nil, err
 	}
 	dbNodesWithTotalCount.Count = countRecord.(int64)
-	//end count region
+	// end count region
 
-	//region query to fetch data
+	// region query to fetch data
 	query := `MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
 	if len(ownerId) > 0 || ownerIncludeEmpty {
 		query += fmt.Sprintf(` OPTIONAL MATCH (o)<-[:OWNS]-(owner:User) WITH *`)
@@ -327,7 +329,7 @@ func (r *dashboardRepository) GetDashboardViewOrganizationData(ctx context.Conte
 		queryParts = append(queryParts, locationFilterCypher)
 	}
 
-	//endregion
+	// endregion
 	query = query + strings.Join(queryParts, " AND ")
 
 	// sort region
@@ -535,8 +537,8 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 	ownerId := []string{}
 	ownerIncludeEmpty := false
 
-	//ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
-	//region organization & contract filters
+	// ORGANIZATION, EMAIL, COUNTRY, REGION, LOCALITY
+	// region organization & contract filters
 	if where != nil {
 		organizationFilter := new(utils.CypherFilter)
 		organizationFilter.Negate = false
@@ -665,7 +667,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		}
 	}
 
-	//endregion
+	// endregion
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
@@ -683,7 +685,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		utils.MergeMapToMap(contractFilterParams, params)
 		utils.MergeMapToMap(opportunityFilterParams, params)
 
-		//region count query
+		// region count query
 		countQuery := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
 					 MATCH (o)-[:HAS_CONTRACT]->(contract:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t)
 					 MATCH (contract)-[:ACTIVE_RENEWAL]->(op:Opportunity) `
@@ -748,9 +750,9 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			return nil, err
 		}
 		dbRecordsWithTotalCount.Count = countRecord.Values[0].(int64)
-		//endregion
+		// endregion
 
-		//region query to fetch data
+		// region query to fetch data
 		query := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
 					 MATCH (o)-[:HAS_CONTRACT]->(contract:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t)
 					 MATCH (contract)-[:ACTIVE_RENEWAL]->(op:Opportunity)
@@ -787,7 +789,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 			queryParts = append(queryParts, contractFilterCypher)
 		}
 
-		//endregion
+		// endregion
 		query = query + strings.Join(queryParts, " AND ")
 
 		// sort region
@@ -923,7 +925,7 @@ func (r *dashboardRepository) GetDashboardViewRenewalData(ctx context.Context, t
 		return nil, err
 	}
 	dbRecordsWithTotalCount.Records = dbRecords.([]*db.Record)
-	//each record will contain three nodes, organization, contract and opportunity
+	// each record will contain three nodes, organization, contract and opportunity
 	return dbRecordsWithTotalCount, nil
 }
 
@@ -937,7 +939,6 @@ func (r *dashboardRepository) GetDashboardNewCustomersData(ctx context.Context, 
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					WITH $startDate AS startDate, $endDate AS endDate
@@ -1019,7 +1020,6 @@ func (r *dashboardRepository) GetDashboardCustomerMapData(ctx context.Context, t
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[r]->(op:Opportunity_%s)
@@ -1136,7 +1136,6 @@ func (r *dashboardRepository) GetDashboardRevenueAtRiskData(ctx context.Context,
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					MATCH (t:Tenant{name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization_%s)-[:HAS_CONTRACT]->(c:Contract_%s)-[:ACTIVE_RENEWAL]->(op:Opportunity_%s)
@@ -1192,7 +1191,6 @@ func (r *dashboardRepository) GetDashboardMRRPerCustomerData(ctx context.Context
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					WITH $startDate AS startDate, $endDate AS endDate
@@ -1265,7 +1263,6 @@ func (r *dashboardRepository) GetDashboardARRBreakdownData(ctx context.Context, 
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					WITH $startDate AS startDate, $endDate AS endDate
@@ -1417,7 +1414,6 @@ func (r *dashboardRepository) GetDashboardARRBreakdownUpsellsAndDowngradesData(c
 	}
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					WITH $startDate AS startDate, $endDate AS endDate
@@ -1518,7 +1514,6 @@ func (r *dashboardRepository) GetDashboardARRBreakdownRenewalsData(ctx context.C
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					WITH $startDate AS startDate, $endDate AS endDate
@@ -1638,7 +1633,6 @@ func (r *dashboardRepository) GetDashboardARRBreakdownValueData(ctx context.Cont
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					WITH $date AS date
@@ -1706,7 +1700,6 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsRenewalsData(ctx
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					WITH $startDate AS startDate, $endDate AS endDate
@@ -1803,7 +1796,6 @@ func (r *dashboardRepository) GetDashboardRetentionRateContractsChurnedData(ctx 
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					WITH $startDate AS startDate, $endDate AS endDate
@@ -2070,7 +2062,6 @@ func (r *dashboardRepository) GetDashboardGRRData(ctx context.Context, tenant st
 	defer session.Close(ctx)
 
 	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`
 					WITH $startDate AS startDate, $endDate AS endDate

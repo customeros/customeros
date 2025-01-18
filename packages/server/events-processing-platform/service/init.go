@@ -1,0 +1,49 @@
+package service
+
+import (
+	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	genericServices "github.com/openline-ai/openline-customer-os/packages/server/events/services"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+)
+
+type Services struct {
+	es eventstore.AggregateStore
+
+	EventStoreGenericService genericServices.EventStoreGenericService
+	EventStoreService        *eventStoreService
+	RequestHandler           *requestHandler // generic grpc request handler
+
+	// GRPC services
+	OrganizationService *organizationService
+	InvoiceService      *invoiceService
+}
+
+func InitServices(
+	cfg *config.Config,
+	repositories *repository.Repositories,
+	aggregateStore eventstore.AggregateStore,
+	commandHandlers *command.CommandHandlers,
+	log logger.Logger,
+) *Services {
+	services := Services{}
+
+	services.es = aggregateStore
+	services.EventStoreGenericService = genericServices.NewEventStoreGenericService(log, aggregateStore)
+	services.EventStoreService = NewEventStoreService(log, aggregateStore, services.EventStoreGenericService)
+	services.RequestHandler = NewRequestHandler(log, aggregateStore, &cfg.Utils)
+
+	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg, services.RequestHandler)
+
+	services.InvoiceService = NewInvoiceService(
+		repositories,
+		log,
+		aggregateStore,
+		services.RequestHandler,
+	)
+
+	return &services
+}

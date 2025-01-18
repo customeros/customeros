@@ -10,10 +10,7 @@ import (
 )
 
 type Config struct {
-	Neo4jDb commconf.Neo4jConfig
-
-	PostgresConfig      commconf.PostgresConfig
-	PostgresAsyncConfig commconf.PostgresAsyncConfig
+	CommonConfig commconf.CommonConfig
 
 	AirbytePostgresDb struct {
 		Host            string `env:"DB_AIRBYTE_HOST,required"`

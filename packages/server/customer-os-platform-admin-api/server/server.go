@@ -6,8 +6,8 @@ import (
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
@@ -44,7 +44,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	// Setting up tracing
-	tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.Jaeger, server.log)
+	tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.Common.Infrastructure.JaegerConfig, server.log)
 	if err != nil {
 		server.log.Fatalf("Could not initialize jaeger tracer: %s", err.Error())
 	}
@@ -54,10 +54,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	registerPrometheusMetrics()
 
 	// Initialize postgres db
-	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
-		PostgresConfig:      &server.cfg.PostgresConfig,
-		PostgresAsyncConfig: &server.cfg.PostgresAsyncConfig,
-	})
+	postgresDb, err := commonConfig.InitPostgres(&server.cfg.Common)
 	if err != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
 	}
@@ -68,14 +65,14 @@ func (server *server) Run(parentCtx context.Context) error {
 	postgresRepositories.InitData(ctx, postgresRepositories)
 
 	// Setting up Neo4j
-	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Neo4j)
+	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Common.Infrastructure.Neo4jConfig)
 	if err != nil {
-		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Neo4j.Target, err.Error())
+		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Common.Infrastructure.Neo4jConfig.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
 
 	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(&server.cfg.GrpcClientConfig)
+	df := grpc_client.NewDialFactory(&server.cfg.Common.Infrastructure.GrpcClientConfig)
 	gRPCconn, err := df.GetEventsProcessingPlatformConn()
 	if err != nil {
 		server.log.Fatalf("Failed to connect: %v", err)
@@ -102,25 +99,30 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.Use(bodyLoggerMiddleware)
 
 	// Setting up services
-	service.InitServices(&neo4jDriver, postgresDb, server.cfg, grpcContainer, server.log)
+	service.InitServices(
+		postgresRepositories,
+		server.cfg,
+		grpcContainer,
+		server.log,
+	)
 
 	r.GET("/health", HealthCheckHandler)
 	r.GET("/readiness", ReadinessHandler)
 	r.GET("/", RootHandler)
 
-	if server.cfg.ApiPort == server.cfg.MetricsPort {
-		r.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
+	if server.cfg.App.ApiPort == server.cfg.App.MetricsPort {
+		r.GET(server.cfg.App.Metrics.PrometheusPath, metricsHandler)
 	} else {
 		go func() {
 			mr := gin.Default()
 			mr.Use(prometheusMiddleware())
 			mr.Use(bodyLoggerMiddleware)
-			mr.GET(server.cfg.Metrics.PrometheusPath, metricsHandler)
-			mr.Run(":" + server.cfg.MetricsPort)
+			mr.GET(server.cfg.App.Metrics.PrometheusPath, metricsHandler)
+			mr.Run(":" + server.cfg.App.MetricsPort)
 		}()
 	}
 
-	r.Run(":" + server.cfg.ApiPort)
+	r.Run(":" + server.cfg.App.ApiPort)
 
 	<-server.doneCh
 	server.log.Infof("Application %s exited properly", constants.ServiceName)

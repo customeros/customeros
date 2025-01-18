@@ -1,15 +1,17 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
 )
 
-func MapEntityToMeeting(entity *entity.MeetingEntity) *model.Meeting {
+func MapEntityToMeeting(entity *neo4jentity.MeetingEntity) *model.Meeting {
 	if entity == nil {
 		return nil
 	}
@@ -37,12 +39,12 @@ func MapEntityToMeeting(entity *entity.MeetingEntity) *model.Meeting {
 	return &meeting
 }
 
-func MapMeetingInputToEntity(model *model.MeetingUpdateInput) *entity.MeetingEntity {
+func MapMeetingInputToEntity(model *model.MeetingUpdateInput) *neo4jentity.MeetingEntity {
 	if model == nil {
 		return nil
 	}
 
-	meetingEntity := entity.MeetingEntity{
+	meetingEntity := neo4jentity.MeetingEntity{
 		CreatedAt:          utils.Now(),
 		Name:               model.Name,
 		AppSource:          utils.IfNotNilStringWithDefault(model.AppSource, constants.AppSourceCustomerOsApi),
@@ -60,14 +62,14 @@ func MapMeetingInputToEntity(model *model.MeetingUpdateInput) *entity.MeetingEnt
 		status := MapMeetingStatusFromModel(*model.Status)
 		meetingEntity.Status = &status
 	} else {
-		status := entity.MeetingStatusUndefined
+		status := neo4jenum.MeetingStatusUndefined
 		meetingEntity.Status = &status
 	}
 
 	return &meetingEntity
 }
 
-func MapMeetingToEntity(model *model.MeetingInput) *entity.MeetingEntity {
+func MapMeetingToEntity(model *model.MeetingInput) *neo4jentity.MeetingEntity {
 	if model == nil {
 		return nil
 	}
@@ -78,7 +80,7 @@ func MapMeetingToEntity(model *model.MeetingInput) *entity.MeetingEntity {
 		createdAt = utils.Now()
 	}
 
-	meetingEntity := entity.MeetingEntity{
+	meetingEntity := neo4jentity.MeetingEntity{
 		CreatedAt:          createdAt,
 		Name:               model.Name,
 		AppSource:          utils.IfNotNilStringWithDefault(model.AppSource, constants.AppSourceCustomerOsApi),
@@ -95,14 +97,14 @@ func MapMeetingToEntity(model *model.MeetingInput) *entity.MeetingEntity {
 		status := MapMeetingStatusFromModel(*model.Status)
 		meetingEntity.Status = &status
 	} else {
-		status := entity.MeetingStatusUndefined
+		status := neo4jenum.MeetingStatusUndefined
 		meetingEntity.Status = &status
 	}
 
 	return &meetingEntity
 }
 
-func MapEntitiesToMeetings(entities *entity.MeetingEntities) []*model.Meeting {
+func MapEntitiesToMeetings(entities *neo4jentity.MeetingEntities) []*model.Meeting {
 	var meetings []*model.Meeting
 	for _, meetingEntity := range *entities {
 		meetings = append(meetings, MapEntityToMeeting(&meetingEntity))

@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
-func (i *Loaders) GetMeetingForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.MeetingEntity, error) {
+func (i *Loaders) GetMeetingForInteractionEvent(ctx context.Context, interactionEventId string) (*neo4jentity.MeetingEntity, error) {
 	thunk := i.MeetingForInteractionEvent.Load(ctx, dataloader.StringKey(interactionEventId))
 	result, err := thunk()
 	if err != nil {
@@ -20,7 +20,7 @@ func (i *Loaders) GetMeetingForInteractionEvent(ctx context.Context, interaction
 	if result == nil {
 		return nil, nil
 	}
-	resultObj := result.(*entity.MeetingEntity)
+	resultObj := result.(*neo4jentity.MeetingEntity)
 	return resultObj, nil
 }
 
@@ -42,7 +42,7 @@ func (b *meetingBatcher) getMeetingsForInteractionEvents(ctx context.Context, ke
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	meetingEntityByInteractionEventId := make(map[string]entity.MeetingEntity)
+	meetingEntityByInteractionEventId := make(map[string]neo4jentity.MeetingEntity)
 	for _, val := range *meetingEntities {
 		meetingEntityByInteractionEventId[val.DataloaderKey] = val
 	}
@@ -60,7 +60,7 @@ func (b *meetingBatcher) getMeetingsForInteractionEvents(ctx context.Context, ke
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.MeetingEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.MeetingEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

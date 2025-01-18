@@ -2,25 +2,28 @@ package service
 
 import (
 	"context"
-	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	registry "github.com/openline-ai/openline-customer-os/packages/server/events/event/_registry"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	generic "github.com/openline-ai/openline-customer-os/packages/server/events/services"
+
+	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 )
 
 type eventStoreService struct {
-	services       *Services
-	log            logger.Logger
-	aggregateStore eventstore.AggregateStore
+	log                      logger.Logger
+	aggregateStore           eventstore.AggregateStore
+	eventStoreGenericService generic.EventStoreGenericService
 }
 
-func NewEventStoreService(services *Services, log logger.Logger, aggregateStore eventstore.AggregateStore) *eventStoreService {
+func NewEventStoreService(log logger.Logger, aggregateStore eventstore.AggregateStore, genericSrv generic.EventStoreGenericService) *eventStoreService {
 	return &eventStoreService{
-		services:       services,
-		log:            log,
-		aggregateStore: aggregateStore,
+		log:                      log,
+		aggregateStore:           aggregateStore,
+		eventStoreGenericService: genericSrv,
 	}
 }
 
@@ -35,7 +38,7 @@ func (s *eventStoreService) StoreEvent(ctx context.Context, request *eventstorep
 		return nil, grpcerr.ErrResponse(err)
 	}
 
-	entityId, err := s.services.EventStoreGenericService.Store(ctx, eventPayload, eventstore.LoadAggregateOptions{})
+	entityId, err := s.eventStoreGenericService.Store(ctx, eventPayload, eventstore.LoadAggregateOptions{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, grpcerr.ErrResponse(err)

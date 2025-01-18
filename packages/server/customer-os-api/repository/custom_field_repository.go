@@ -3,13 +3,15 @@ package repository
 import (
 	"context"
 	"fmt"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
 )
 
 type CustomFieldRepository interface {
@@ -156,7 +158,8 @@ func (r *customFieldRepository) FindAll(ctx context.Context, session neo4j.Sessi
 				RETURN f ORDER BY f.name`, obj.EntityType, rel),
 			map[string]any{
 				"Id":     obj.ID,
-				"tenant": tenant})
+				"tenant": tenant,
+			})
 		if err != nil {
 			return nil, err
 		}
@@ -184,7 +187,8 @@ func (r *customFieldRepository) GetCustomFields(ctx context.Context, session neo
 		queryResult, err := tx.Run(ctx, query,
 			map[string]any{
 				"id":     obj.ID,
-				"tenant": tenant})
+				"tenant": tenant,
+			})
 		if err != nil {
 			return nil, err
 		}

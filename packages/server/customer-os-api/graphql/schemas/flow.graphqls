@@ -1,0 +1,210 @@
+extend type Query {
+    flow(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flows: [Flow!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    flowParticipant(id: ID!): FlowParticipant! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_emailVariables: [EmailVariableEntity!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_testEmailSender: String! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+    flow_ChangeName(id: ID!, name: String!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_Merge(input: FlowMergeInput!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_On(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_Off(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_Archive(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_ArchiveBulk(ids: [ID!]): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    flowParticipant_Add(flowId: ID!, entityId: ID!, entityType: FlowEntityType!): FlowParticipant! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowParticipant_AddBulk(flowId: ID!, entityIds: [ID!]!, entityType: FlowEntityType!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowParticipant_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowParticipant_DeleteBulk(id: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    flowSender_Merge(flowId: ID!, input: FlowSenderMergeInput!): FlowSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowSender_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    flowEmailActionTest(subject: String!, bodyTemplate: String!, sendToEmailAddress: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+#Flow
+type Flow implements MetadataInterface {
+    metadata:           Metadata!
+    name:               String!
+    description:        String!
+
+    nodes: String!
+    edges: String!
+
+    firstStartedAt: Time
+    status: FlowStatus!
+
+    participants: [FlowParticipant!]! @goField(forceResolver: true)
+    senders: [FlowSender!]! @goField(forceResolver: true)
+
+    statistics: FlowStatistics!
+}
+
+type FlowStatistics {
+    total: Int64!
+    onHold: Int64!
+    ready: Int64!
+    scheduled: Int64!
+    inProgress: Int64!
+    completed: Int64!
+    goalAchieved: Int64!
+}
+
+input FlowMergeInput {
+    id: ID
+    name: String!
+
+    nodes: String!
+    edges: String!
+}
+
+enum FlowStatus {
+    ON
+    OFF
+    ARCHIVED
+}
+
+#deprecated
+type FlowContact implements MetadataInterface {
+    metadata:               Metadata!
+
+    contact: Contact! @goField(forceResolver: true)
+
+    status: FlowParticipantStatus!
+
+    scheduledAction: String
+    scheduledAt: Time
+}
+
+type FlowParticipant implements MetadataInterface {
+    metadata: Metadata!
+
+    entityType: String!
+    entityId: ID!
+
+    status: FlowParticipantStatus!
+    requirementsUnmeet: [FlowParticipantRequirementsUnmeet!]!
+
+    executions: [FlowActionExecution!]! @goField(forceResolver: true)
+}
+
+type FlowActionExecution {
+    metadata: Metadata!
+    action: FlowAction! @goField(forceResolver: true)
+    status: FlowActionExecutionStatus!
+    scheduledAt: Time
+    executedAt: Time
+    error: String
+}
+
+type FlowAction {
+   metadata: Metadata!
+   action: FlowActionType!
+}
+
+type FlowSender implements MetadataInterface {
+    metadata: Metadata!
+
+    flow: Flow @goField(forceResolver: true)
+    user: User @goField(forceResolver: true)
+}
+
+input FlowSenderMergeInput {
+    id: ID
+
+    userId: ID
+}
+
+input FlowActionInputData {
+    wait: FlowActionInputDataWait
+
+    email_new: FlowActionInputDataEmail
+    email_reply: FlowActionInputDataEmail
+
+    linkedin_connection_request: FlowActionInputDataLinkedinConnectionRequest
+    linkedin_message: FlowActionInputDataLinkedinMessage
+}
+input FlowActionInputDataWait {
+    minutes: Int64!
+}
+
+input FlowActionInputDataEmail {
+    replyToId: String
+    subject: String!
+    bodyTemplate: String!
+}
+
+input FlowActionInputDataLinkedinConnectionRequest {
+    messageTemplate: String!
+}
+
+input FlowActionInputDataLinkedinMessage {
+    messageTemplate: String!
+}
+
+enum FlowActionStatus {
+    INACTIVE
+    ACTIVE
+    PAUSED
+    ARCHIVED
+}
+
+enum FlowParticipantStatus {
+    ON_HOLD
+    READY
+    SCHEDULING
+    SCHEDULED
+    IN_PROGRESS
+    COMPLETED
+    GOAL_ACHIEVED
+    ERROR
+}
+
+enum FlowParticipantRequirementsUnmeet {
+    MISSING_PRIMARY_EMAIL
+    MISSING_LINKEDIN_URL
+}
+
+type EmailVariableEntity {
+    type: EmailVariableEntityType!
+    variables: [EmailVariableName!]!
+}
+
+enum EmailVariableEntityType {
+    CONTACT
+}
+
+enum EmailVariableName {
+    SENDER_FIRST_NAME
+    SENDER_LAST_NAME
+
+    CONTACT_FIRST_NAME
+    CONTACT_LAST_NAME
+    CONTACT_FULL_NAME
+    CONTACT_EMAIL
+    ORGANIZATION_NAME
+}
+
+enum FlowActionType{
+    EMAIL_NEW
+    EMAIL_REPLY
+    LINKEDIN_CONNECTION_REQUEST
+    LINKEDIN_MESSAGE
+}
+
+enum FlowActionExecutionStatus{
+    SCHEDULED
+    IN_PROGRESS
+    SKIPPED
+    SUCCESS
+    TECH_ERROR
+    BUSINESS_ERROR
+}
+
+enum FlowEntityType {
+    CONTACT
+}

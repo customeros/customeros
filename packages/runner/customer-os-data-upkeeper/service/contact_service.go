@@ -13,9 +13,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
+	common_srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -46,11 +48,11 @@ type ContactService interface {
 type contactService struct {
 	cfg                *config.Config
 	log                logger.Logger
-	commonServices     *commonService.Services
+	commonServices     *commonService.CommonServices
 	eventBufferService *eventbuffer.EventBufferStoreService
 }
 
-func NewContactService(cfg *config.Config, log logger.Logger, commonServices *commonService.Services, eventBufferService *eventbuffer.EventBufferStoreService) ContactService {
+func NewContactService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices, eventBufferService *eventbuffer.EventBufferStoreService) ContactService {
 	return &contactService{
 		cfg:                cfg,
 		log:                log,
@@ -832,7 +834,8 @@ func (s *contactService) callEnrichmentApiFindWorkEmail(ctx context.Context, det
 		return nil, err
 	}
 	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("GET", s.cfg.EnrichmentApiConfig.Url+"/findWorkEmail", bytes.NewBuffer(requestBody))
+	// TODO alexb correct the url
+	req, err := http.NewRequest("GET", s.cfg.Common.Internal.CustomerOsApi.ApiUrl+"/findWorkEmail", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		return nil, err
@@ -841,7 +844,7 @@ func (s *contactService) callEnrichmentApiFindWorkEmail(ctx context.Context, det
 	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, s.cfg.EnrichmentApiConfig.ApiKey)
+	req.Header.Set(security.ApiKeyHeader, s.cfg.Common.Internal.CustomerOsApi.ApiKey)
 	req.Header.Set(security.TenantHeader, details.Tenant)
 
 	// Make the HTTP request
@@ -959,12 +962,12 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 			for _, item := range betterContactResponse.Data {
 				if item.ContactEmailAddress != "" && !utils.Contains(currentEmails, item.ContactEmailAddress) {
 					_, err = s.commonServices.EmailService.Merge(innerCtx, nil, record.Tenant,
-						commonService.EmailFields{
+						interfaces.EmailFields{
 							Email:     item.ContactEmailAddress,
 							AppSource: constants.AppSourceDataUpkeeper,
 							Primary:   true,
 						},
-						&commonService.LinkWith{
+						&common_srv.LinkWith{
 							Type: model.CONTACT,
 							Id:   record.ContactId,
 						})
@@ -1062,7 +1065,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 				}
 			}
 		}
-		s.commonServices.RabbitMQService.PublishEventCompleted(ctx, record.Tenant, record.ContactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+		s.commonServices.Events.Publisher.PublishEventCompleted(ctx, record.Tenant, record.ContactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 	}
 }
 
@@ -1083,7 +1086,7 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 		client := &http.Client{}
 
 		// Create POST request
-		req, err := http.NewRequest("GET", fmt.Sprintf("%s?api_key=%s", s.cfg.BetterContactApi.Url+"/"+record.RequestID, s.cfg.BetterContactApi.ApiKey), nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s?api_key=%s", s.cfg.Common.External.BetterContactConfig.Url+"/"+record.RequestID, s.cfg.Common.External.BetterContactConfig.ApiKey), nil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return
@@ -1207,7 +1210,7 @@ func (s *contactService) enrichContacts(ctx context.Context) {
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
 
-			err = s.commonServices.RabbitMQService.PublishEvent(innerCtx, record.ContactId, model.CONTACT, dto.RequestEnrichContact{})
+			err = s.commonServices.Events.Publisher.PublishEvent(innerCtx, record.ContactId, model.CONTACT, dto.RequestEnrichContact{})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RequestEnrichContact"))
 				s.log.Errorf("Error requesting enrich contact {%s}: %s", record.ContactId, err.Error())

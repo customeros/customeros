@@ -4,22 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository/helper"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/novu"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/postmark"
 	temporal_client "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/workflows"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository/helper"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 )
 
 func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, payload *InvoicePayload, postgresRepositories *postgresRepository.Repositories, cfg config.Config) error {
@@ -28,7 +31,7 @@ func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, pay
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("webhookEvent", event.String()))
 
-	if !cfg.Temporal.RunWorker {
+	if !cfg.CommonServices.External.TemporalConfig.RunWorker {
 		err := errors.New("temporal worker is not running")
 		tracing.TraceErr(span, err)
 		return err
@@ -59,7 +62,9 @@ func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, pay
 		return fmt.Errorf("(webhook.DispatchWebhook) error marshalling request body: %v", err)
 	}
 	// Start Temporal Client to queue webhook workflow
-	tClient, err := temporal_client.TemporalClient(cfg.Temporal.HostPort, cfg.Temporal.Namespace)
+	tClient, err := temporal_client.TemporalClient(
+		cfg.CommonServices.External.TemporalConfig.HostPort,
+		cfg.CommonServices.External.TemporalConfig.Namespace)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return fmt.Errorf("error creating Temporal client: %v", err)
@@ -80,8 +85,8 @@ func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, pay
 		TaskQueue:                workflows.WEBHOOK_CALLS_TASK_QUEUE, // "webhook-calls",
 	}
 
-	var notification *commonService.NovuNotification
-	if cfg.Temporal.NotifyOnFailure {
+	var notification *interfaces.NovuNotification
+	if cfg.CommonServices.External.TemporalConfig.NotifyOnFailure {
 		notification = populateNotification(tenant, event.String(), wh)
 	}
 	notificationJSON, err := json.Marshal(notification)
@@ -96,9 +101,9 @@ func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, pay
 		AuthHeaderValue:            wh.AuthHeaderValue,
 		RetryPolicy:                retryPolicy,
 		Notification:               string(notificationJSON),
-		NotificationProviderApiKey: cfg.Services.Novu.ApiKey,
-		NotifyFailure:              cfg.Temporal.NotifyOnFailure,
-		NotifyAfterAttempts:        cfg.Temporal.NotifyAfterAttempts,
+		NotificationProviderApiKey: cfg.CommonServices.External.NovuCofig.ApiKey,
+		NotifyFailure:              cfg.CommonServices.External.TemporalConfig.NotifyOnFailure,
+		NotifyAfterAttempts:        cfg.CommonServices.External.TemporalConfig.NotifyAfterAttempts,
 	}
 
 	// the workflow will run async, so we don't need to wait for it to finish
@@ -122,8 +127,8 @@ func mapResultToWebhook(result helper.QueryResult) *postgresEntity.TenantWebhook
 	return webhook
 }
 
-func populateNotification(tenant, webhookName string, wh *postgresEntity.TenantWebhook) *commonService.NovuNotification {
-	subject := fmt.Sprintf(commonService.WorkflowFailedWebhookSubject, webhookName)
+func populateNotification(tenant, webhookName string, wh *postgresEntity.TenantWebhook) *interfaces.NovuNotification {
+	subject := fmt.Sprintf(novu.WorkflowFailedWebhookSubject, webhookName)
 	payload := map[string]interface{}{
 		"subject":       subject,
 		"email":         wh.UserEmail,
@@ -132,14 +137,14 @@ func populateNotification(tenant, webhookName string, wh *postgresEntity.TenantW
 		"webhookUrl":    wh.WebhookUrl,
 	}
 
-	notification := &commonService.NovuNotification{
-		WorkflowId: commonService.WorkflowFailedWebhook,
+	notification := &interfaces.NovuNotification{
+		WorkflowId: postmark.WorkflowFailedWebhook,
 		TemplateData: map[string]string{
 			"{{userFirstName}}": wh.UserFirstName,
 			"{{webhookName}}":   webhookName,
 			"{{webhookUrl}}":    wh.WebhookUrl,
 		},
-		To: &commonService.NotifiableUser{
+		To: &interfaces.NotifiableUser{
 			FirstName:    wh.UserFirstName,
 			LastName:     wh.UserLastName,
 			Email:        wh.UserEmail,

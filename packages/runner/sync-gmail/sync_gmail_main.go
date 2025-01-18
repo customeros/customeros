@@ -9,8 +9,8 @@ import (
 	localCron "github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/cron"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
@@ -38,9 +38,11 @@ func main() {
 	}
 	defer tracing.RecoverAndLogToJaeger(appLogger)
 
-	postgresDb, err := commonConfig.InitPostgres(&commonConfig.GlobalConfig{
-		PostgresConfig:      &config.PostgresConfig,
-		PostgresAsyncConfig: &config.PostgresAsyncConfig,
+	postgresDb, err := commonConfig.InitPostgres(&commonConfig.CommonConfig{
+		Infrastructure: commonConfig.InfrastructureConfig{
+			PostgresConfig:      config.PostgresConfig,
+			PostgresAsyncConfig: config.PostgresAsyncConfig,
+		},
 	})
 	if err != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())

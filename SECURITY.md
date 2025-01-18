@@ -1,8 +1,8 @@
 <div align="center">
-  <a href="https://openline.ai">
+  <a href="https://customeros.ai">
     <img
-      src="https://www.openline.ai/TeamHero.svg"
-      alt="Openline Logo"
+      src="https://www.customeros.ai/TeamHero.svg"
+      alt="CustomerOS Logo"
       height="64"
     />
   </a>
@@ -10,7 +10,7 @@
   <p>
     <h3>
       <b>
-        Openline security policy
+        CustomerOS security policy
       </b>
     </h3>
   </p>
@@ -26,8 +26,8 @@
   <p>
     <sub>
       Built with ❤︎ by the
-      <a href="https://openline.ai">
-        Openline
+      <a href="https://customeros.ai">
+        CustomerOS
       </a>
       community!
     </sub>
@@ -36,7 +36,7 @@
 
 ## Supported Versions
 
-We always recommend using the latest version of Openline customerOS to ensure you get all security updates.
+We always recommend using the latest version of CustomerOS to ensure you get all security updates.
 
 ## Reporting a Vulnerability
 
@@ -47,5 +47,3 @@ We currently do not operate a bug bounty program, but we will generously reward 
 
 [apache2]: https://www.apache.org/licenses/LICENSE-2.0
 [customerOS-repo]: https://github.com/openline-ai/openline-customer-os/
-[slack]: https://join.slack.com/t/openline-ai/shared_invite/zt-1i6umaw6c-aaap4VwvGHeoJ1zz~ngCKQ
-[twitter]: https://twitter.com/OpenlineAI

@@ -3,24 +3,27 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	common_srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	"strings"
-	"sync"
-	"time"
 )
 
 type UserService interface {
@@ -42,7 +45,7 @@ func NewUserService(log logger.Logger, repositories *repository.Repositories, gr
 		repositories: repositories,
 		grpcClients:  grpcClients,
 		services:     services,
-		maxWorkers:   services.cfg.ConcurrencyConfig.UserSyncConcurrency,
+		maxWorkers:   services.cfg.App.ConcurrencyConfig.UserSyncConcurrency,
 	}
 }
 
@@ -123,9 +126,9 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 	span.LogFields(log.Object("syncDate", syncDate))
 	tracing.LogObjectAsJson(span, "userInput", userInput)
 
-	var tenant = common.GetTenantFromContext(ctx)
-	var failedSync = false
-	var reason = ""
+	tenant := common.GetTenantFromContext(ctx)
+	failedSync := false
+	reason := ""
 	userInput.Normalize()
 
 	err := s.services.ExternalSystemService.MergeExternalSystem(ctx, tenant, userInput.ExternalSystem)
@@ -197,13 +200,13 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 	}
 	if !failedSync && userInput.HasEmail() {
 		_, err = s.services.CommonServices.EmailService.Merge(ctx, nil, tenant,
-			commonservice.EmailFields{
+			interfaces.EmailFields{
 				Email:     userInput.Email,
 				AppSource: userInput.AppSource,
 				Source:    neo4jentity.DecodeDataSource(userInput.ExternalSystem),
 				Primary:   true,
 			},
-			&commonservice.LinkWith{
+			&common_srv.LinkWith{
 				Type: commonmodel.USER,
 				Id:   userId,
 			})

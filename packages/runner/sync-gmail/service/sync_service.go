@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"strings"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -124,7 +124,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		return "", err
 	}
 	if utils.Contains(s.services.Cache.GetPersonalEmailProviders(), domain) {
-		emailIdPtr, err := s.services.CommonServices.EmailService.Merge(ctx, nil, tenant, commonservice.EmailFields{
+		emailIdPtr, err := s.services.CommonServices.EmailService.Merge(ctx, nil, tenant, interfaces.EmailFields{
 			Email:     email,
 			Source:    neo4jentity.DecodeDataSource(source),
 			AppSource: AppSource,

@@ -3,7 +3,7 @@ package invoice
 import (
 	"bytes"
 	"fmt"
-	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/file_store_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
@@ -73,7 +73,7 @@ func FillInvoiceHtmlTemplate(ctx context.Context, tmpFile *os.File, invoiceData 
 	return nil
 }
 
-func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc fsc.FileStoreApiService, pdfConverterUrl string, tmpFile *os.File, invoiceData map[string]interface{}) (*[]byte, error) {
+func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc interfaces.FileService, pdfConverterUrl string, tmpFile *os.File, invoiceData map[string]interface{}) (*[]byte, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ConvertInvoiceHtmlToPdf")
 	defer span.Finish()
 	// This is doing a request like this:
@@ -115,7 +115,7 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc fsc.FileStoreApiService, p
 
 	//provider logo
 	if providerLogoRepositoryFileId, ok := invoiceData["ProviderLogoRepositoryFileId"].(string); ok && providerLogoRepositoryFileId != "" {
-		file, metadata, err := downloadProviderLogoAsTempFile(fsc, invoiceData["Tenant"].(string), providerLogoRepositoryFileId, span)
+		file, metadata, err := downloadProviderLogoAsTempFile(ctx, fsc, invoiceData["Tenant"].(string), providerLogoRepositoryFileId, span)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "downloadProviderLogoAsTempFile"))
 			return nil, errors.Wrap(err, "downloadProviderLogoAsTempFile")
@@ -237,10 +237,15 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc fsc.FileStoreApiService, p
 	return &pdfBytes, nil
 }
 
-func downloadProviderLogoAsTempFile(fsc fsc.FileStoreApiService, tenant, repositoryFileId string, span opentracing.Span) (*os.File, *fsc.FileDTO, error) {
-	fileMetadata, fileBytes, err := fsc.GetFile(tenant, repositoryFileId, span)
+func downloadProviderLogoAsTempFile(ctx context.Context, fileService interfaces.FileService, tenant, repositoryFileId string, span opentracing.Span) (*os.File, *interfaces.File, error) {
+	fileMetadata, err := fileService.GetById(ctx, repositoryFileId)
 	if err != nil {
-		fmt.Println("Error getting file metadata:", err)
+		tracing.TraceErr(span, errors.Wrap(err, "fileService.GetById"))
+		return nil, nil, err
+	}
+	fileBytes, err := fileService.GetFileBytes(ctx, fileMetadata.PublicUrl)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "fileService.GetFileBytes"))
 		return nil, nil, err
 	}
 
@@ -306,6 +311,9 @@ func addResourceFile(writer *multipart.Writer, basePath, fileName, partName stri
 	return nil
 }
 
-func GetFileExtensionFromMetadata(metadata *fsc.FileDTO) string {
+func GetFileExtensionFromMetadata(metadata *interfaces.File) string {
+	if metadata == nil {
+		return ""
+	}
 	return strings.Split(metadata.MimeType, "/")[1]
 }

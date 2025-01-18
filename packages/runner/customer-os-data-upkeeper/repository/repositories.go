@@ -8,15 +8,17 @@ import (
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 )
 
+// deprecated
 type Repositories struct {
 	PostgresRepositories *postgresRepository.Repositories
 	Neo4jRepositories    *neo4jRepository.Repositories
 }
 
+// deprecated
 func InitRepositories(cfg *config.Config, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB) *Repositories {
 	repositories := Repositories{
 		PostgresRepositories: postgresRepository.InitRepositories(postgresDB),
-		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, cfg.Neo4j.Database),
+		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, cfg.Common.Infrastructure.Neo4jConfig.Database),
 	}
 	return &repositories
 }

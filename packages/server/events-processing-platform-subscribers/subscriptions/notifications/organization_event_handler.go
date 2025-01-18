@@ -3,30 +3,40 @@ package notifications
 import (
 	"context"
 	"fmt"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/novu"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 )
 
 type OrganizationEventHandler struct {
-	services *service.Services
-	log      logger.Logger
-	cfg      *config.Config
+	log   logger.Logger
+	cfg   *config.Config
+	neo4j *repository.Repositories
+	novu  interfaces.NovuService
 }
 
-func NewOrganizationEventHandler(log logger.Logger, services *service.Services, cfg *config.Config) *OrganizationEventHandler {
+func NewOrganizationEventHandler(
+	log logger.Logger,
+	cfg *config.Config,
+	neo4j *repository.Repositories,
+	novu interfaces.NovuService,
+) *OrganizationEventHandler {
 	return &OrganizationEventHandler{
-		services: services,
-		log:      log,
-		cfg:      cfg,
+		log:   log,
+		cfg:   cfg,
+		neo4j: neo4j,
+		novu:  novu,
 	}
 }
 
@@ -50,13 +60,12 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 	err := h.notificationProviderSendEmail(
 		ctx,
 		span,
-		commonService.WorkflowIdOrgOwnerUpdateEmail,
+		novu.WorkflowIdOrgOwnerUpdateEmail,
 		eventData.OwnerUserId,
 		eventData.ActorUserId,
 		eventData.OrganizationId,
 		eventData.Tenant,
 	)
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -64,13 +73,12 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 	err = h.notificationProviderSendInAppNotification(
 		ctx,
 		span,
-		commonService.WorkflowIdOrgOwnerUpdateAppNotification,
+		novu.WorkflowIdOrgOwnerUpdateAppNotification,
 		eventData.OwnerUserId,
 		eventData.ActorUserId,
 		eventData.OrganizationId,
 		eventData.Tenant,
 	)
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -81,8 +89,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Context, span opentracing.Span, workflowId, userId, actorUserId, orgId, tenant string) error {
 	///////////////////////////////////       Get User, Actor, Org Content       ///////////////////////////////////
 	// target user email
-	emailDbNode, err := h.services.CommonServices.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
-
+	emailDbNode, err := h.neo4j.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.EmailRepository.GetEmailForUser")
@@ -97,8 +104,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	email = neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 
 	// actor user email
-	actorEmailDbNode, err := h.services.CommonServices.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, actorUserId)
-
+	actorEmailDbNode, err := h.neo4j.EmailReadRepository.GetEmailForUser(ctx, tenant, actorUserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.EmailRepository.GetEmailForUser")
@@ -113,8 +119,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	actorEmail = neo4jmapper.MapDbNodeToEmailEntity(actorEmailDbNode)
 
 	// target user
-	userDbNode, err := h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
-
+	userDbNode, err := h.neo4j.UserReadRepository.GetUserById(ctx, tenant, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
@@ -125,8 +130,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}
 
 	// actor user
-	actorDbNode, err := h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, actorUserId)
-
+	actorDbNode, err := h.neo4j.UserReadRepository.GetUserById(ctx, tenant, actorUserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
@@ -137,8 +141,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}
 
 	// Organization
-	orgDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, orgId)
-
+	orgDbNode, err := h.neo4j.OrganizationReadRepository.GetOrganization(ctx, tenant, orgId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.OrganizationRepository.GetOrganization")
@@ -153,7 +156,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	if orgName == "" {
 		orgName = "Unnamed"
 	}
-	subject := fmt.Sprintf(commonService.WorkflowIdOrgOwnerUpdateEmailSubject, actor.FirstName, actor.LastName)
+	subject := fmt.Sprintf(novu.WorkflowIdOrgOwnerUpdateEmailSubject, actor.FirstName, actor.LastName)
 	payload := map[string]interface{}{
 		// "html":           html, fill during send notification call
 		"subject":        subject,
@@ -172,7 +175,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}
 	payload["overrides"] = overrides
 
-	notification := &commonService.NovuNotification{
+	notification := &interfaces.NovuNotification{
 		WorkflowId: workflowId,
 		TemplateData: map[string]string{
 			"{{userFirstName}}":  user.FirstName,
@@ -181,7 +184,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 			"{{orgName}}":        orgName,
 			"{{orgLink}}":        fmt.Sprintf("%s/organization/%s", h.cfg.Subscriptions.NotificationsSubscription.RedirectUrl, orgId),
 		},
-		To: &commonService.NotifiableUser{
+		To: &interfaces.NotifiableUser{
 			FirstName:    user.FirstName,
 			LastName:     user.LastName,
 			Email:        email.Email,
@@ -192,7 +195,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}
 
 	// call notification service
-	err = h.services.CommonServices.NovuService.SendNotification(ctx, notification)
+	err = h.novu.SendNotification(ctx, notification)
 
 	return err
 }
@@ -200,8 +203,7 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx context.Context, span opentracing.Span, workflowId, userId, actorUserId, orgId, tenant string) error {
 	///////////////////////////////////       Get User, Actor, Org Content       ///////////////////////////////////
 	// target user email
-	emailDbNode, err := h.services.CommonServices.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
-
+	emailDbNode, err := h.neo4j.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.EmailRepository.GetEmailForUser")
@@ -216,8 +218,7 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	email = neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 
 	// target user
-	userDbNode, err := h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
-
+	userDbNode, err := h.neo4j.UserReadRepository.GetUserById(ctx, tenant, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
@@ -228,8 +229,7 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	}
 
 	// actor user
-	actorDbNode, err := h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, actorUserId)
-
+	actorDbNode, err := h.neo4j.UserReadRepository.GetUserById(ctx, tenant, actorUserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
@@ -240,8 +240,7 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	}
 
 	// Organization
-	orgDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, orgId)
-
+	orgDbNode, err := h.neo4j.OrganizationReadRepository.GetOrganization(ctx, tenant, orgId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "h.services.CommonServices.OrganizationRepository.GetOrganization")
@@ -251,11 +250,11 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 		org = *neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
 	}
 	/////////////////////////////////// Notification Provider Payload And Call ///////////////////////////////////
-	subject := fmt.Sprintf(commonService.WorkflowIdOrgOwnerUpdateAppNotificationSubject, actor.FirstName, actor.LastName)
-	notification := &commonService.NovuNotification{
+	subject := fmt.Sprintf(novu.WorkflowIdOrgOwnerUpdateAppNotificationSubject, actor.FirstName, actor.LastName)
+	notification := &interfaces.NovuNotification{
 		WorkflowId:   workflowId,
 		TemplateData: map[string]string{},
-		To: &commonService.NotifiableUser{
+		To: &interfaces.NotifiableUser{
 			FirstName:    user.FirstName,
 			LastName:     user.LastName,
 			Email:        email.Email,
@@ -270,7 +269,7 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	}
 
 	// call notification service
-	err = h.services.CommonServices.NovuService.SendNotification(ctx, notification)
+	err = h.novu.SendNotification(ctx, notification)
 
 	return err
 }

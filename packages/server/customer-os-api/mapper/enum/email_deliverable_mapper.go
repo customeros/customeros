@@ -1,15 +1,16 @@
 package enummapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/verify"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
 )
 
 var deliverableByModel = map[model.EmailDeliverable]string{
-	model.EmailDeliverableDeliverable:   string(validationmodel.EmailDeliverableStatusDeliverable),
-	model.EmailDeliverableUndeliverable: string(validationmodel.EmailDeliverableStatusUndeliverable),
-	model.EmailDeliverableUnknown:       string(validationmodel.EmailDeliverableStatusUnknown),
+	model.EmailDeliverableDeliverable:   string(verify.EmailDeliverableStatusDeliverable),
+	model.EmailDeliverableUndeliverable: string(verify.EmailDeliverableStatusUndeliverable),
+	model.EmailDeliverableUnknown:       string(verify.EmailDeliverableStatusUnknown),
 }
 
 var deliverableByValue = utils.ReverseMap(deliverableByModel)

@@ -58,14 +58,22 @@ services:
       start_period: 5s
 
   postgres-sidecar:
-    image: postgres:14.5  # Use the same image as Neo4j for simplicity
+    image: postgres:14.5
     container_name: postgres-sidecar
     networks:
       - openline
     depends_on:
       postgres:
         condition: service_healthy
-    command: [ "bash", "-c", "apt-get update && apt-get install -y wget && wget -O /tmp/setup.sql https://raw.githubusercontent.com/customeros/customeros/otter/deployment/provision/postgresql.sql && PGPASSWORD=password psql -U postgres -d openline -h postgres -p 5432 -W -f /tmp/setup.sql" ]
+    volumes:
+      - ./provision:/provision
+    command: >
+      bash -c "
+      until PGPASSWORD=password psql -U postgres -d openline -h postgres -c '\q'; do
+        echo 'Waiting for Postgres...'
+        sleep 2
+      done &&
+      PGPASSWORD=password psql -U postgres -d openline -h postgres -f /provision/postgresql.sql"
 
   neo4j:
     image: neo4j:latest
@@ -211,8 +219,6 @@ services:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
-      - VALIDATION_API_URL=http://host.docker.internal:10003
-      - ENRICHMENT_API_URL=http://host.docker.internal:10007
       - RABBITMQ_URL=amqp://host.docker.internal:5672
 
   events-processing-platform:
@@ -227,9 +233,6 @@ services:
       - EVENT_STORE_CONNECTION_STRING=esdb://host.docker.internal:2113
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
-      - VALIDATION_API_URL=http://host.docker.internal:10003
-      - ENRICHMENT_API_URL=http://host.docker.internal:10007
-      - FILE_STORE_API_URL=http://host.docker.internal:10001
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
       - RABBITMQ_URL=amqp://host.docker.internal:5672
 

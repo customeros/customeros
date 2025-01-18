@@ -1,0 +1,22 @@
+extend type Query {
+    global_Cache : GlobalCache!
+}
+
+type GlobalCache {
+    user:                   User!
+    isOwner:                Boolean!
+    inactiveEmailTokens:    [GlobalCacheEmailToken!]!
+    activeEmailTokens:      [GlobalCacheEmailToken!]!
+    mailboxes:              [String!]!
+#    gCliCache:              [GCliItem!]!
+    minARRForecastValue:    Float!
+    maxARRForecastValue:    Float!
+    contractsExist:         Boolean!
+    isFirstLogin:           Boolean!
+    cdnLogoUrl:             String!
+}
+
+type GlobalCacheEmailToken {
+    email: String!
+    provider: String!
+}

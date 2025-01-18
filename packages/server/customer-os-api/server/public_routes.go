@@ -5,18 +5,14 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/flows"
-	integrations "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/flows_integrations"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handlers/public"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/flows"
+	integrations "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/flows_integrations"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/public"
+	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
 )
 
-func register(ctx context.Context, r *gin.Engine, s *service.Services, cache *caches.Cache) {
-}
-
-func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *service.Services) {
+func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      "/invoice/:invoiceId/pay",

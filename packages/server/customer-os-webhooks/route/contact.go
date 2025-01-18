@@ -4,23 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	pkgerrors "github.com/pkg/errors"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
-	pkgerrors "github.com/pkg/errors"
-	"io"
-	"net/http"
-	"time"
 )
 
 func AddContactRoutes(ctx context.Context, route *gin.Engine, cfg *config.Config, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
@@ -163,7 +165,7 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 			return
 		}
 
-		if apiKeyHeader != cfg.BetterContactCallbackApiKey {
+		if apiKeyHeader != cfg.Common.External.BetterContactConfig.BetterContactCallbackApiKey {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid API key"})
 			return
 		}
