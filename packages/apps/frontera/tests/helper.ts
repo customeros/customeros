@@ -138,6 +138,7 @@ export async function clickLocatorThatIsVisible(page: Page, selector: string) {
 
   // Add stability delay after ensuring visibility
   await page.waitForTimeout(300);
+  await locator.scrollIntoViewIfNeeded({ timeout: 30000 });
 
   try {
     await locator.click({ timeout: 5000 });
