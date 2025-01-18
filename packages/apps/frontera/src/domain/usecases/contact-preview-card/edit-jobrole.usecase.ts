@@ -1,5 +1,5 @@
 import { RootStore } from '@store/root';
-import { action, observable } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import { JobRoleService } from '@domain/services/jobrole/jobRole.service';
 import { SaveJobRolesMutationVariables } from '@store/JobRoles/__service__/saveJobRole.generated';
 type SaveJobRolePayload = SaveJobRolesMutationVariables['input'];
@@ -20,7 +20,8 @@ export class EditJobRole {
     this.jobRole = jobRole;
   }
 
-  getJobRole() {
+  @computed
+  get getJobRole() {
     return (
       this.jobRole ?? this.root.jobRoles.getjobTitleByContactId(this.contactId)
     );
@@ -29,7 +30,7 @@ export class EditJobRole {
   async createJobRole(contactId: string, orgId: string) {
     try {
       await this.jobRoleService.create({
-        jobTitle: this.getJobRole(),
+        jobTitle: this.getJobRole,
         contactId: contactId,
         primary: true,
         organizationId: orgId,
@@ -62,7 +63,7 @@ export class EditJobRole {
 
     if (jobTitle) {
       await this.updateJobRole({
-        jobTitle: this.getJobRole(),
+        jobTitle: this.getJobRole,
         contactId,
         id: jobId,
       });

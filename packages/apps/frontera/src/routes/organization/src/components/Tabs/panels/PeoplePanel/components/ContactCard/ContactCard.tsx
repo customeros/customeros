@@ -270,7 +270,7 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                     onFocus={(e) => e.target.select()}
                     dataTest='org-people-contact-title'
                     onKeyDown={(e) => e.stopPropagation()}
-                    value={jobRoleUseCase.getJobRole() || ''}
+                    value={jobRoleUseCase.getJobRole || ''}
                     onBlur={() => {
                       jobRoleUseCase.submitJobRole(id, orgId);
                     }}

@@ -1,68 +1,45 @@
 import { RootStore } from '@store/root';
 import { action, runInAction } from 'mobx';
-import { JobRole } from '@store/JobRoles/JobRole.dto';
-import { JobRolesService } from '@store/JobRoles/__service__/JobRoles.service';
+import { JobRolesService as JobRoleRepo } from '@store/JobRoles/__service__/JobRoles.service';
 import { SaveJobRolesMutationVariables } from '@store/JobRoles/__service__/saveJobRole.generated';
+
+import { unwrap } from '@shared/util/unwrap';
 
 type SaveJobRolePayload = SaveJobRolesMutationVariables['input'];
 
 export class JobRoleService {
   private root = RootStore.getInstance();
-  private service = JobRolesService.getInstance();
+  private jobRoleRepo = JobRoleRepo.getInstance();
 
   constructor() {}
 
   @action
   async create(jobRole: SaveJobRolePayload) {
-    let tempId = '';
-    const contactStore = this.root.contacts.getById(jobRole.contactId || '');
+    if (!jobRole) return;
 
-    if (!contactStore) return;
+    const [res, err] = await unwrap(
+      this.jobRoleRepo.saveJobRoles({ input: jobRole }),
+    );
 
-    try {
-      const draft = new JobRole(this.root.jobRoles, JobRole.default(jobRole));
+    if (err) {
+      console.error(err);
 
-      this.root.jobRoles.value.set(draft.id, draft);
-
-      const { jobRole_Save } = await this.service.saveJobRoles({
-        input: {
-          jobTitle: jobRole.jobTitle,
-          contactId: jobRole.contactId,
-          primary: jobRole.primary,
-          organizationId: jobRole.organizationId,
-        },
-      });
-
-      runInAction(() => {
-        draft.id = jobRole_Save;
-        this.root.jobRoles.value.set(draft.id, draft);
-        this.root.jobRoles.value.delete(tempId);
-
-        tempId = draft.id;
-
-        this.root.jobRoles.sync({
-          action: 'APPEND',
-          ids: [draft.id],
-        });
-      });
-      this.root.jobRoles.version++;
-      this.root.contacts.retrieve([jobRole.contactId || '']);
-    } catch (e) {
-      runInAction(() => {
-        this.root.jobRoles.value.delete(tempId);
-        this.root.jobRoles.error = (e as Error).message;
-      });
-    } finally {
-      contactStore?.draft();
-      contactStore.value.primaryOrganizationJobRoleTitle = jobRole.jobTitle;
-      contactStore?.commit({ syncOnly: true });
+      return;
     }
+
+    if (!res) {
+      console.error('No response from saveJobRoles');
+    }
+
+    const serverId = res?.jobRole_Save;
+
+    this.root.jobRoles.createNew({ id: serverId, ...jobRole });
   }
 
   @action
   async update(jobRole: SaveJobRolePayload) {
     try {
-      await this.service.saveJobRoles({
+      await this.jobRoleRepo.saveJobRoles({
         input: {
           ...jobRole,
           id: jobRole.id,
@@ -73,8 +50,7 @@ export class JobRoleService {
         this.root.jobRoles.error = (e as Error).message;
       });
     } finally {
-      this.root.jobRoles.version++;
-      this.root.contacts.retrieve([jobRole.contactId || '']);
+      this.root.contacts.retrieve([jobRole.id || '']);
     }
   }
 }

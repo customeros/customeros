@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { EditJobRole } from '@domain/usecases/command-menu/edit-jobTitle.usecase';
+import { EditJobRoleUseCase } from '@domain/usecases/command-menu/edit-jobTitle.usecase';
 
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { useStore } from '@shared/hooks/useStore';
@@ -31,7 +31,7 @@ export const EditJobTitle = observer(() => {
     store.ui.commandMenu.setType('ContactCommands');
   };
   const jobRoleUseCase = useMemo(
-    () => new EditJobRole(String(contact?.id)),
+    () => new EditJobRoleUseCase(String(contact?.id)),
     [contact?.id],
   );
 
@@ -40,7 +40,7 @@ export const EditJobTitle = observer(() => {
       <CommandInput
         label={label}
         placeholder='Edit job title'
-        value={jobRoleUseCase.getJobRole() || ''}
+        value={jobRoleUseCase.getJobRole || ''}
         onValueChange={(value) => {
           jobRoleUseCase.setJobRole(value);
         }}
@@ -55,7 +55,7 @@ export const EditJobTitle = observer(() => {
           leftAccessory={<Edit03 />}
           onSelect={handleChangeJobTitle}
         >{`Rename job title to "${
-          jobRoleUseCase.getJobRole() || ''
+          jobRoleUseCase.getJobRole || ''
         }"`}</CommandItem>
       </Command.List>
     </Command>

@@ -15,12 +15,13 @@ export const JobTitleCell = observer(({ contactId }: JobTitleCellProps) => {
 
   const ref = useRef(null);
 
-  const contactStore = store.contacts.value.get(contactId);
-  const jobRoles = store.contacts.getById(String(contactId))?.jobRoles;
+  const contactStore = store.contacts.getById(contactId);
+  const jobRoles = store.contacts.getById(contactId)?.jobRoles;
 
   const findPrimaryJobRole = jobRoles?.find(
     (j) => j.primary && j.contact?.metadata.id === contactId,
   );
+
   const jobRolesStore = store.jobRoles.getById(findPrimaryJobRole?.id || '');
 
   const enrichingStatus = contactStore?.isEnriching;

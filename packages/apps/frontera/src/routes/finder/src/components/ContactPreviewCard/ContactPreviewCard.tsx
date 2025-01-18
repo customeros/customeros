@@ -162,7 +162,7 @@ export const ContactPreviewCard = observer(() => {
             variant='unstyled'
             placeholder='Enter title'
             onFocus={(e) => e.target.select()}
-            value={jobRoleUseCase.getJobRole() || ''}
+            value={jobRoleUseCase.getJobRole || ''}
             className='w-[290px] overflow-hidden text-ellipsis whitespace-nowrap'
             onChange={(e) => {
               jobRoleUseCase.setJobRole(e.target.value);

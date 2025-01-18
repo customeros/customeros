@@ -1,5 +1,5 @@
 import { RootStore } from '@store/root';
-import { action, observable } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import { JobRoleService } from '@domain/services/jobrole/jobRole.service';
 import { SaveJobRolesMutationVariables } from '@store/JobRoles/__service__/saveJobRole.generated';
 type SaveJobRolePayload = SaveJobRolesMutationVariables['input'];
@@ -20,35 +20,28 @@ export class AddJobRole {
     this.jobRole = jobRole;
   }
 
-  getJobRole() {
+  @computed
+  get getJobRole() {
     return (
       this.jobRole ?? this.root.jobRoles.getjobTitleByContactId(this.contactId)
     );
   }
 
   async createJobRole(contactId: string, orgId: string) {
-    try {
-      await this.jobRoleService.create({
-        jobTitle: this.getJobRole(),
-        contactId: contactId,
-        primary: true,
-        organizationId: orgId,
-      });
-    } catch (e) {
-      throw new Error(e instanceof Error ? e.message : String(e));
-    }
+    await this.jobRoleService.create({
+      jobTitle: this.getJobRole,
+      contactId,
+      primary: true,
+      company: orgId,
+    });
   }
 
   @action
   async updateJobRole(jobRole: SaveJobRolePayload) {
-    try {
-      await this.jobRoleService.update({
-        ...jobRole,
-        primary: jobRole.primary,
-      });
-    } catch (e) {
-      throw new Error(e instanceof Error ? e.message : String(e));
-    }
+    await this.jobRoleService.update({
+      primary: jobRole.primary ?? true,
+      ...jobRole,
+    });
   }
 
   @action
@@ -62,12 +55,13 @@ export class AddJobRole {
 
     if (jobTitle) {
       await this.updateJobRole({
-        jobTitle: this.getJobRole(),
+        jobTitle: this.getJobRole,
         contactId,
         id: jobId,
       });
     } else {
       await this.createJobRole(contactId, orgId);
+      this.root.contacts.getById(contactId)?.addJobRole(this.getJobRole || '');
     }
   }
 }
