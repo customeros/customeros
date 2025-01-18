@@ -1,9 +1,7 @@
 package service
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/config"
@@ -15,11 +13,11 @@ type Services struct {
 
 	GrpcClients *grpc_client.Clients
 
-	CommonServices *commonService.Services
+	CommonServices *commonService.CommonServices
 }
 
 func InitServices(
-	postgresRepositories *repository.Repositories
+	postgresRepositories *repository.Repositories,
 	cfg *config.Config,
 	grpcClients *grpc_client.Clients,
 	appLogger logger.Logger) *Services {
@@ -30,12 +28,12 @@ func InitServices(
 	}
 
 	services.CommonServices = commonService.InitCommonServices(
-        appLogger,
-        nil,
-        postgresRepositories,
-        &cfg.Common,
-        grpcClients,
-        )
+		appLogger,
+		nil,
+		postgresRepositories,
+		&cfg.Common,
+		grpcClients,
+	)
 
 	return &services
 }

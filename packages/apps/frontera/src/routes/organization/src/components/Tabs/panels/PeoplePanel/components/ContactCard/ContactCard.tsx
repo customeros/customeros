@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useMemo, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { TagDatum } from '@store/Tags/Tag.store';
@@ -48,10 +48,9 @@ interface ContactCardProps {
   expandAll: boolean;
 }
 
-const jobRoleUseCase = new AddJobRole();
-
 export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
   const store = useStore();
+
   const [isExpanded, setIsExpanded] = useState(false);
   const { dispatchEvent } = useEvent('openEmailEditor');
   const { onOpen, onClose, open } = useDisclosure();
@@ -64,8 +63,6 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
   const findPrimaryJobRole = jobRoles?.find(
     (j) => j.primary && j.contact?.metadata.id === id,
   );
-
-  const jobRoleStore = store.jobRoles.getById(findPrimaryJobRole?.id || '');
 
   const handleCreateOption = (value: string) => {
     store.tags?.create(
@@ -119,6 +116,8 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
     contactStore?.value.emails[0]?.email;
 
   const isEnriching = contactStore?.isEnriching;
+
+  const jobRoleUseCase = useMemo(() => new AddJobRole(id), [id]);
 
   if (!contactStore) return null;
 
@@ -271,24 +270,16 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                     onFocus={(e) => e.target.select()}
                     dataTest='org-people-contact-title'
                     onKeyDown={(e) => e.stopPropagation()}
+                    value={jobRoleUseCase.getJobRole || ''}
                     onBlur={() => {
                       jobRoleUseCase.submitJobRole(id, orgId);
                     }}
-                    value={
-                      findPrimaryJobRole?.jobTitle || jobRoleUseCase.jobRole
-                    }
+                    onChange={(e) => {
+                      jobRoleUseCase.setJobRole(e.target.value);
+                    }}
                     placeholder={
                       isEnriching ? 'Getting job title...' : 'No job title yet'
                     }
-                    onChange={(e) => {
-                      const newValue = e.target.value;
-
-                      jobRoleUseCase.setJobRole(newValue);
-
-                      if (jobRoleStore) {
-                        findPrimaryJobRole!.jobTitle = newValue;
-                      }
-                    }}
                   />
                 )}
               </div>

@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
@@ -36,7 +35,7 @@ func InitServices(driver *neo4j.DriverWithContext, postgresDB *commonConfig.Post
 		neo4jRepositories,
 		postgresRepositories,
 		&cfg.CommonConfig,
-		grpc_client.InitClients(nil),
+		nil,
 	)
 
 	services.EmailService = NewEmailService(cfg, services.Repositories, services)

@@ -187,6 +187,13 @@ export class Contact extends Entity<ContactDatum> {
   }
 
   @action
+  public addJobRole(jobRoleId: string) {
+    this.draft();
+    this.value.jobRoleIds.push(jobRoleId);
+    this.commit({ syncOnly: true });
+  }
+
+  @action
   public addTag(id: string) {
     this.draft();
 

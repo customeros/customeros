@@ -1,6 +1,9 @@
 package service
 
 import (
+	"log"
+	"reflect"
+
 	neo4jRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 
@@ -10,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/action"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/agent"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/ai"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/attachment"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/azure"
@@ -25,7 +27,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/emailing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/enrichment"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/external_system"
+	externalsystem "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/external_system"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/files"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/flow"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/flow_execution"
@@ -65,14 +67,15 @@ import (
 )
 
 type CommonServices struct {
+	// Core infrastructure
+	Cache                *caches.Cache
+	Events               *events.EventsService
 	Neo4jRepositories    *neo4jRepo.Repositories
 	PostgresRepositories *repository.Repositories
 
-	Cache                      *caches.Cache
-	Events                     *events.EventsService
+	// Services
 	ActionService              interfaces.ActionService
 	AIService                  interfaces.AIService
-	AgentService               interfaces.AgentService
 	AttachmentService          interfaces.AttachmentService
 	AzureService               interfaces.AzureService
 	CloudflareService          interfaces.CloudflareService
@@ -82,13 +85,13 @@ type CommonServices struct {
 	CurrencyService            interfaces.CurrencyService
 	CustomFieldTemplateService interfaces.CustomFieldTemplateService
 	DomainService              interfaces.DomainService
-	EmailService               interfaces.EmailService
 	EmailingService            interfaces.EmailingService
+	EmailService               interfaces.EmailService
 	EnrichmentService          interfaces.EnrichmentService
 	ExternalSystemService      interfaces.ExternalSystemService
 	FileService                interfaces.FileService
-	FlowService                interfaces.FlowService
 	FlowExecutionService       interfaces.FlowExecutionService
+	FlowService                interfaces.FlowService
 	GoogleService              interfaces.GoogleService
 	IndustryService            interfaces.IndustryService
 	InteractionEventService    interfaces.InteractionEventService
@@ -98,8 +101,8 @@ type CommonServices struct {
 	JobRoleService             interfaces.JobRoleService
 	LocationService            interfaces.LocationService
 	LogEntryService            interfaces.LogEntryService
-	MailService                interfaces.MailService
 	MailboxService             interfaces.MailboxService
+	MailService                interfaces.MailService
 	MailstackService           interfaces.MailstackService
 	MarkdownEventService       interfaces.MarkdownEventService
 	NamecheapService           interfaces.NamecheapService
@@ -131,390 +134,180 @@ func InitCommonServices(
 	cfg *config.CommonConfig,
 	grpcClients *grpc_client.Clients,
 ) *CommonServices {
-	// initialize base services
-	events, err := events.NewEventsService(cfg.Infrastructure.RabbitMQConfig.Url, log)
-	if err != nil {
-		log.Fatalf("Cannot start events service")
+	var err error
+
+	// Base services
+	cacheImpl := caches.NewCommonCache()
+	eventsImpl := &events.EventsService{}
+	if cfg.Infrastructure.RabbitMQConfig.Url != "" {
+		eventsImpl, err = events.NewEventsService(cfg.Infrastructure.RabbitMQConfig.Url, log)
+		if err != nil {
+			log.Fatalf("Cannot start events service")
+		}
 	}
 
-	// Directly add services that don't require others services
+	// Simple - Services that depend only on base services
+	aiImpl := ai.NewAIService(&cfg.External.AnthropicConfig)
+	attachmentImpl := attachment.NewAttachmentService(neo4jRepositories)
+	azureImpl := azure.NewAzureService(&cfg.Infrastructure.AzureOAuthConfig, postgresRepositories, neo4jRepositories)
+	cloudfareImpl := cloudflare.NewCloudflareService(log, &cfg.External.CloudflareConfig, postgresRepositories)
+	commentImpl := comment.NewCommentService(log, neo4jRepositories, eventsImpl)
+	currencyImpl := currency.NewCurrencyService(postgresRepositories)
+	customFieldTemplateImpl := custom_fields.NewCustomFieldTemplateService(log, neo4jRepositories, eventsImpl)
+	domainImpl := domain.NewDomainService(log, cacheImpl, postgresRepositories, neo4jRepositories, eventsImpl)
+	emailingImpl := emailing.NewEmailingService(log, postgresRepositories)
+	enrichmentImpl := enrichment.NewEnrichmentService(log, &cfg.External, postgresRepositories)
+	externalSystemImpl := externalsystem.NewExternalSystemService(log, neo4jRepositories, eventsImpl)
+	googleImpl := google.NewGoogleService(&cfg.Infrastructure.GoogleOAuthConfig, postgresRepositories, neo4jRepositories)
+	industryImpl := industry.NewIndustryService(log, neo4jRepositories)
+	interactionSessionImpl := interaction_session.NewInteractionSessionService(neo4jRepositories)
+	markdownEventImpl := markdown_event.NewMarkdownEventService(log, neo4jRepositories, eventsImpl)
+	namecheapImpl := namecheap.NewNamecheapService(&cfg.External.NamecheapConfig, postgresRepositories)
+	notificationImpl := notification.NewNotificationService(log, postgresRepositories)
+	novuImpl := novu.NewNovuService(cfg.External.NovuCofig.ApiKey)
+	openSRSImpl := opensrs.NewOpenSRSService(log, &cfg.External.OpenSRSConfig, postgresRepositories)
+	phoneNumberImpl := phone_number.NewPhoneNumberService(neo4jRepositories, eventsImpl)
+	postmarkImpl := postmark.NewPostmarkService(&cfg.External.PostmarkConfig, postgresRepositories)
+	slackImpl := slack.NewSlackService(postgresRepositories)
+	tagImpl := tags.NewTagService(log, neo4jRepositories, eventsImpl)
+	tenantImpl := tenant.NewTenantService(log, neo4jRepositories, postgresRepositories)
+	tenantSettingsImpl := tenant_settings.NewTenantSettingsService(log, neo4jRepositories, eventsImpl)
+	userImpl := user.NewUserService(neo4jRepositories, postgresRepositories, eventsImpl)
+	workflowImpl := workflow.NewWorkflowService(postgresRepositories)
+	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories)
+
+	// Services that only depend on Simple
+	fileImpl := files.NewFileService(log, &cfg.Internal.FileStoreConfig, neo4jRepositories, attachmentImpl)
+	reminderImpl := reminders.NewReminderService(neo4jRepositories, novuImpl)
+	verifyImpl := verify.NewVerifyService(log, postgresRepositories, cfg, enrichmentImpl)
+
+	// Complex dependencies (ordered by dependency chain)
+	emailImpl := email.NewEmailService(neo4jRepositories, eventsImpl, nil, nil, nil)
+	jobroleImpl := jobrole.NewJobRoleService(neo4jRepositories, eventsImpl, nil)
+	issueImpl := issue.NewIssueService(log, neo4jRepositories, eventsImpl, nil)
+	contactImpl := contact.NewContactService(log, neo4jRepositories, eventsImpl, domainImpl, emailImpl, nil, jobroleImpl, nil, nil)
+	socialImpl := social.NewSocialService(log, neo4jRepositories, eventsImpl, contactImpl)
+	orgImpl := organization.NewOrganizationService(log, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl)
+	contractImpl := contract.NewContractService(log, neo4jRepositories, eventsImpl, grpcClients, nil, orgImpl)
+	opportunityImpl := opportunity.NewOpportunityService(log, grpcClients, neo4jRepositories, eventsImpl, contractImpl, orgImpl, tenantSettingsImpl)
+	sliImpl := sli.NewServiceLineItemService(log, eventsImpl, neo4jRepositories, contractImpl)
+	invoiceImpl := invoice.NewInvoiceService(log, grpcClients, neo4jRepositories, contractImpl, sliImpl, tenantSettingsImpl)
+	logEntry := logentry.NewLogEntryService(log, neo4jRepositories, eventsImpl, orgImpl)
+	mailboxImpl := mailbox.NewMailboxService(log, postgresRepositories, neo4jRepositories, emailImpl)
+	interactionEventImpl := interaction_event.NewInteractionEventService(neo4jRepositories, emailImpl)
+	mailstackImpl := mailstack.NewMailstackService(&cfg.External.StripeConfig, eventsImpl, postgresRepositories, cloudfareImpl, namecheapImpl, mailboxImpl, openSRSImpl)
+	mailImpl := mail.NewMailService(cacheImpl, postgresRepositories, neo4jRepositories, azureImpl, contactImpl, emailImpl, googleImpl, interactionEventImpl, interactionSessionImpl, openSRSImpl, orgImpl)
+	flowExecutionImpl := flow_execution.NewFlowExecutionService(neo4jRepositories, postgresRepositories, eventsImpl, emailImpl, nil, orgImpl, socialImpl)
+	flowImpl := flow.NewFlowService(neo4jRepositories, eventsImpl, flowExecutionImpl)
+	locationImpl := location.NewLocationService(log, neo4jRepositories, postgresRepositories, eventsImpl, &cfg.External.AnthropicPrompts, aiImpl, contactImpl, orgImpl)
+	actionImpl := action.NewActionService(log, neo4jRepositories, eventsImpl, orgImpl)
+	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailboxImpl, orgImpl, postmarkImpl, userImpl)
+
+	// Resolve circular dependencies
+	emailImpl.SetContactService(contactImpl)
+	emailImpl.SetOrganizationService(orgImpl)
+	emailImpl.SetDomainService(domainImpl)
+	issueImpl.SetOrganizationService(orgImpl)
+	contactImpl.SetOrganizationService(orgImpl)
+	contactImpl.SetSocialService(socialImpl)
+	contactImpl.SetFlowService(flowImpl)
+	contractImpl.SetOpportunityService(opportunityImpl)
+	flowExecutionImpl.SetFlowService(flowImpl)
+	jobroleImpl.SetOrganizationService(orgImpl)
+
+	// Initialize CommonServices struct
 	common := CommonServices{
+		// Core components
+		Cache:                cacheImpl,
+		Events:               eventsImpl,
 		Neo4jRepositories:    neo4jRepositories,
 		PostgresRepositories: postgresRepositories,
 
-		Cache:                      caches.NewCommonCache(),
-		AIService:                  ai.NewAIService(&cfg.External.AnthropicConfig),
-		AttachmentService:          attachment.NewAttachmentService(neo4jRepositories),
-		AzureService:               azure.NewAzureService(&cfg.Infrastructure.AzureOAuthConfig, postgresRepositories, neo4jRepositories),
-		CloudflareService:          cloudflare.NewCloudflareService(log, &cfg.External.CloudflareConfig, postgresRepositories),
-		CommentService:             comment.NewCommentService(log, neo4jRepositories, events),
-		CurrencyService:            currency.NewCurrencyService(postgresRepositories),
-		CustomFieldTemplateService: custom_fields.NewCustomFieldTemplateService(log, neo4jRepositories, events),
-		EmailingService:            emailing.NewEmailingService(log, postgresRepositories),
-		EnrichmentService:          enrichment.NewEnrichmentService(log, &cfg.External, postgresRepositories),
-		Events:                     events,
-		ExternalSystemService:      externalsystem.NewExternalSystemService(log, neo4jRepositories, events),
-		GoogleService:              google.NewGoogleService(&cfg.Infrastructure.GoogleOAuthConfig, postgresRepositories, neo4jRepositories),
-		IndustryService:            industry.NewIndustryService(log, neo4jRepositories),
-		InteractionSessionService:  interaction_session.NewInteractionSessionService(neo4jRepositories),
-		MarkdownEventService:       markdown_event.NewMarkdownEventService(log, neo4jRepositories, events),
-		NotificationService:        notification.NewNotificationService(log, postgresRepositories),
-		NamecheapService:           namecheap.NewNamecheapService(&cfg.External.NamecheapConfig, postgresRepositories),
-		NovuService:                novu.NewNovuService(cfg.External.NovuCofig.ApiKey),
-		OpenSRSService:             opensrs.NewOpenSRSService(log, &cfg.External.OpenSRSConfig, postgresRepositories),
-		PhoneNumberService:         phone_number.NewPhoneNumberService(neo4jRepositories, events),
-		PostmarkService:            postmark.NewPostmarkService(&cfg.External.PostmarkConfig, postgresRepositories),
-		SlackService:               slack.NewSlackService(postgresRepositories),
-		TagService:                 tags.NewTagService(log, neo4jRepositories, events),
-		TenantService:              tenant.NewTenantService(log, neo4jRepositories, postgresRepositories),
-		TenantSettingsService:      tenant_settings.NewTenantSettingsService(log, neo4jRepositories, events),
-		UserService:                user.NewUserService(neo4jRepositories, postgresRepositories, events),
-		WorkflowService:            workflow.NewWorkflowService(postgresRepositories),
-		WorkspaceService:           workspace.NewWorkspaceService(neo4jRepositories),
+		// All other services (alphabetically)
+		ActionService:              actionImpl,
+		AIService:                  aiImpl,
+		AttachmentService:          attachmentImpl,
+		AzureService:               azureImpl,
+		CloudflareService:          cloudfareImpl,
+		CommentService:             commentImpl,
+		ContactService:             contactImpl,
+		ContractService:            contractImpl,
+		CurrencyService:            currencyImpl,
+		CustomFieldTemplateService: customFieldTemplateImpl,
+		DomainService:              domainImpl,
+		EmailService:               emailImpl,
+		EmailingService:            emailingImpl,
+		EnrichmentService:          enrichmentImpl,
+		ExternalSystemService:      externalSystemImpl,
+		FileService:                fileImpl,
+		FlowService:                flowImpl,
+		FlowExecutionService:       flowExecutionImpl,
+		GoogleService:              googleImpl,
+		IndustryService:            industryImpl,
+		InteractionEventService:    interactionEventImpl,
+		InteractionSessionService:  interactionSessionImpl,
+		InvoiceService:             invoiceImpl,
+		IssueService:               issueImpl,
+		JobRoleService:             jobroleImpl,
+		LocationService:            locationImpl,
+		LogEntryService:            logEntry,
+		MailService:                mailImpl,
+		MailboxService:             mailboxImpl,
+		MailstackService:           mailstackImpl,
+		MarkdownEventService:       markdownEventImpl,
+		NamecheapService:           namecheapImpl,
+		NotificationService:        notificationImpl,
+		NovuService:                novuImpl,
+		OpenSRSService:             openSRSImpl,
+		OpportunityService:         opportunityImpl,
+		OrganizationService:        orgImpl,
+		PhoneNumberService:         phoneNumberImpl,
+		PostmarkService:            postmarkImpl,
+		RegistrationService:        registrationImpl,
+		ReminderService:            reminderImpl,
+		ServiceLineItemService:     sliImpl,
+		SlackService:               slackImpl,
+		SocialService:              socialImpl,
+		TagService:                 tagImpl,
+		TenantService:              tenantImpl,
+		TenantSettingsService:      tenantSettingsImpl,
+		UserService:                userImpl,
+		VerifyService:              verifyImpl,
+		WorkflowService:            workflowImpl,
+		WorkspaceService:           workspaceImpl,
 	}
 
-	// add services where service dependecies have been added above
-	common.VerifyService = verify.NewVerifyService(
-		log,
-		postgresRepositories,
-		cfg,
-		common.EnrichmentService,
-	)
-
-	common.DomainService = domain.NewDomainService(
-		log,
-		common.Cache,
-		postgresRepositories,
-		neo4jRepositories,
-		events,
-	)
-
-	common.FileService = files.NewFileService(
-		log,
-		&cfg.Internal.FileStoreConfig,
-		neo4jRepositories,
-		common.AttachmentService,
-	)
-
-	common.ReminderService = reminders.NewReminderService(
-		neo4jRepositories,
-		common.NovuService,
-	)
-
-	// For all service with other service dependencies, create services and defer initialization
-	email := email.NewEmailService(
-		neo4jRepositories,
-		events,
-		nil, // contact
-		nil, // org
-	)
-
-	jobrole := jobrole.NewJobRoleService(
-		neo4jRepositories,
-		events,
-	)
-
-	issue := issue.NewIssueService(
-		log,
-		neo4jRepositories,
-		events,
-		nil, // org
-	)
-
-	contact := contact.NewContactService(
-		log,
-		neo4jRepositories,
-		events,
-		common.DomainService,
-		nil, // email
-		nil, // org
-		nil, // jobrole
-		nil, // social
-		nil, // flow
-	)
-
-	social := social.NewSocialService(
-		log,
-		neo4jRepositories,
-		events,
-		nil, // contact
-	)
-
-	org := organization.NewOrganizationService(
-		log,
-		postgresRepositories,
-		neo4jRepositories,
-		events,
-		common.DomainService,
-		industry.NewIndustryService(log, neo4jRepositories),
-		nil, // social
-		user.NewUserService(neo4jRepositories, postgresRepositories, events),
-	)
-
-	contract := contract.NewContractService(
-		log,
-		neo4jRepositories,
-		events,
-		grpcClients,
-		nil, // opportunity
-		nil, // org
-	)
-
-	opportunity := opportunity.NewOpportunityService(
-		log,
-		grpcClients,
-		neo4jRepositories,
-		events,
-		nil, // contract
-		nil, // organization
-		common.TenantSettingsService,
-	)
-
-	sliService := sli.NewServiceLineItemService(
-		log,
-		events,
-		neo4jRepositories,
-		nil, // contract
-	)
-
-	invoice := invoice.NewInvoiceService(
-		log,
-		grpcClients,
-		neo4jRepositories,
-		nil, // contract
-		nil, // sli
-		common.TenantSettingsService,
-	)
-
-	logEntry := logentry.NewLogEntryService(
-		log,
-		neo4jRepositories,
-		events,
-		nil, // org
-	)
-
-	email.SetContactService(contact)
-	email.SetOrganizationService(org)
-	email.SetDomainService(common.DomainService)
-	if !email.IsInitialized() {
-		log.Fatalf("Common Email Service not initialized")
-	}
-	common.EmailService = email
-
-	mailbox := mailbox.NewMailboxService(
-		log,
-		postgresRepositories,
-		neo4jRepositories,
-		common.EmailService,
-	)
-	common.MailboxService = mailbox
-
-	mailstack := mailstack.NewMailstackService(
-		&cfg.External.StripeConfig,
-		events,
-		postgresRepositories,
-		common.CloudflareService,
-		common.NamecheapService,
-		mailbox,
-		common.OpenSRSService,
-	)
-	common.MailstackService = mailstack
-
-	interactionEvent := interaction_event.NewInteractionEventService(
-		neo4jRepositories,
-		common.EmailService,
-	)
-
-	common.InteractionEventService = interactionEvent
-
-	mail := mail.NewMailService(
-		common.Cache,
-		postgresRepositories,
-		neo4jRepositories,
-		common.AzureService,
-		nil, // contact
-		common.EmailService,
-		common.GoogleService,
-		interactionEvent,
-		common.InteractionSessionService,
-		common.OpenSRSService,
-		nil, // org
-	)
-
-	flowExecution := flow_execution.NewFlowExecutionService(
-		neo4jRepositories,
-		postgresRepositories,
-		events,
-		nil, // email
-		nil, // flow
-		nil, // org
-		nil, // social
-	)
-
-	flow := flow.NewFlowService(
-		neo4jRepositories,
-		events,
-		nil, // flow execution
-	)
-
-	registration := registration.NewRegistrationService(
-		events,
-		postgresRepositories,
-		neo4jRepositories,
-		nil, // contact
-		common.EmailService,
-		nil, // flow
-		mailbox,
-		nil, // org
-		common.PostmarkService,
-		common.UserService,
-	)
-
-	action := action.NewActionService(
-		log,
-		neo4jRepositories,
-		events,
-		nil, // org
-	)
-
-	visitorIDAgent := agent.NewAgentVisitorIDService(
-		postgresRepositories,
-		nil, // action
-		common.EnrichmentService,
-		nil, // organization
-		common.NotificationService,
-		common.WorkspaceService,
-	)
-
-	location := location.NewLocationService(
-		log,
-		neo4jRepositories,
-		postgresRepositories,
-		events,
-		&cfg.External.AnthropicPrompts,
-		common.AIService,
-		nil, // contact
-		nil, // org
-	)
-
-	// resolve dependencies
-
-	jobrole.SetOrganizationService(org)
-	if !jobrole.IsInitialized() {
-		log.Fatalf("Common JobRole Service not initialized")
-	}
-	common.JobRoleService = jobrole
-
-	contact.SetEmailService(email)
-	contact.SetOrganizationService(org)
-	contact.SetJobRoleService(jobrole)
-	contact.SetSocialService(social)
-	contact.SetFlowService(flow)
-	if !contact.IsInitialized() {
-		log.Fatalf("Common Contact Service not initialized")
-	}
-	common.ContactService = contact
-
-	social.SetContactService(contact)
-	if !social.IsInitialized() {
-		log.Fatalf("Common Social Service not initialized")
-	}
-	common.SocialService = social
-
-	org.SetSocialService(social)
-	if !org.IsInitialized() {
-		log.Fatalf("Common Organization Service not initialized")
-	}
-	common.OrganizationService = org
-
-	contract.SetOpportunityService(opportunity)
-	contract.SetOrganizationService(org)
-	if !contract.IsInitialized() {
-		log.Fatalf("Common Contract Service not initialized")
-	}
-	common.ContractService = contract
-
-	opportunity.SetContractService(contract)
-	opportunity.SetOrganizationService(org)
-	if !opportunity.IsInitialized() {
-		log.Fatalf("Common Opportunity Service not initialized")
-	}
-	common.OpportunityService = opportunity
-
-	sliService.SetContractService(contract)
-	if !sliService.IsInitialized() {
-		log.Fatalf("Common ServiceLineItem Service not initialized")
-	}
-	common.ServiceLineItemService = sliService
-
-	invoice.SetContractService(contract)
-	invoice.SetServiceLineItemService(sliService)
-	if !invoice.IsInitialized() {
-		log.Fatalf("Common Invoice Service not initialized")
-	}
-	common.InvoiceService = invoice
-
-	mail.SetContactService(contact)
-	mail.SetOrganizationService(org)
-	if !mail.IsInitialized() {
-		log.Fatalf("Mail Service not initialized")
-	}
-	common.MailService = mail
-
-	flowExecution.SetEmailService(email)
-	flowExecution.SetFlowService(flow)
-	flowExecution.SetOrganizationService(org)
-	flowExecution.SetSocialService(social)
-	if !flowExecution.IsInitialized() {
-		log.Fatalf("Flow Execution Service not initialized")
-	}
-	common.FlowExecutionService = flowExecution
-
-	flow.SetFlowExecutionService(flowExecution)
-	if !flow.IsInitialized() {
-		log.Fatalf("Flow Service not initialized")
-	}
-	common.FlowService = flow
-
-	registration.SetContactService(contact)
-	registration.SetFlowService(flow)
-	registration.SetOrganizationService(org)
-	if !registration.IsInitialized() {
-		log.Fatalf("Registration Service not initialized")
-	}
-	common.RegistrationService = registration
-
-	action.SetOrganizationService(org)
-	if !action.IsInitialized() {
-		log.Fatalf("Action Service not initialized")
-	}
-	common.ActionService = action
-
-	visitorIDAgent.SetActionService(action)
-	visitorIDAgent.SetOrganizationService(org)
-	if !visitorIDAgent.IsInitialized() {
-		log.Fatalf("Visitor ID Agent Service not initialized")
-	}
-	common.AgentService = visitorIDAgent
-
-	location.SetContactService(contact)
-	location.SetOrganizationService(org)
-	if !location.IsInitialized() {
-		log.Fatalf("Location Service not initialized")
-	}
-	common.LocationService = location
-
-	logEntry.SetOrganizationService(org)
-	if !logEntry.IsInitialized() {
-		log.Fatalf("Log Entry Service not initialized")
-	}
-	common.LogEntryService = logEntry
-
-	issue.SetOrganizationService(org)
-	if !issue.IsInitialized() {
-		log.Fatalf("Issue Service not initialized")
-	}
-	common.IssueService = issue
+	// Check that all services are initialized
+	CheckIsInitialized(&common)
 
 	return &common
+}
+
+// CheckIsInitialized iterates over all fields of a struct and calls IsInitialized if the field implements it.
+func CheckIsInitialized(common *CommonServices) {
+	v := reflect.ValueOf(common).Elem() // struct value
+	t := v.Type()                       // struct type
+
+	for i := 0; i < t.NumField(); i++ {
+		field := v.Field(i)
+
+		// We only care if the field is non-nil (pointer or interface)
+		if (field.Kind() == reflect.Ptr || field.Kind() == reflect.Interface) && !field.IsNil() {
+			fieldValue := field.Interface()
+			fieldType := reflect.TypeOf(fieldValue)
+
+			// Check if the underlying type has IsInitialized method
+			_, exists := fieldType.MethodByName("IsInitialized")
+			if exists {
+				// Invoke IsInitialized
+				results := reflect.ValueOf(fieldValue).MethodByName("IsInitialized").Call(nil)
+				if len(results) == 1 && results[0].Kind() == reflect.Bool {
+					isInitialized := results[0].Bool()
+					if !isInitialized {
+						log.Fatalf("Service %s is not initialized", t.Field(i).Name)
+					}
+				}
+			}
+		}
+	}
 }
