@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
@@ -425,7 +425,7 @@ func EnrichPerson(services *cosapi_services.Services) gin.HandlerFunc {
 			if enrichPhoneNumber {
 				response.PendingFields = append(response.PendingFields, "phone number")
 			}
-			response.ResultURL = services.Cfg.CommonServices.Internal.CustomerOsApi.ApiUrl + enrichPersonAcceptedUrl + "/" + dbRecord.ID.String()
+			response.ResultURL = services.Cfg.Common.Internal.CustomerOsApi.ApiUrl + enrichPersonAcceptedUrl + "/" + dbRecord.ID.String()
 		} else {
 			response.IsComplete = true
 			emailFound, phoneFound := false, false
@@ -611,7 +611,7 @@ func EnrichPersonCallback(services *cosapi_services.Services) gin.HandlerFunc {
 			if betterContactDbRecord.EnrichPhoneNumber {
 				response.PendingFields = append(response.PendingFields, "phone number")
 			}
-			response.ResultURL = services.Cfg.CommonServices.Internal.CustomerOsApi.ApiUrl + enrichPersonAcceptedUrl + "/" + tempId
+			response.ResultURL = services.Cfg.Common.Internal.CustomerOsApi.ApiUrl + enrichPersonAcceptedUrl + "/" + tempId
 		} else {
 			response.IsComplete = true
 			for _, item := range betterContactResponseBody.Data {

@@ -7,9 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -20,6 +17,9 @@ import (
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/customeros/mailsherpa/mailvalidate"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -109,9 +109,9 @@ func RedirectToPayInvoice(services *cosapi_services.Services) gin.HandlerFunc {
 				tracing.TraceErr(span, errors.Wrap(err, "Error fetching primary stripe customer ID"))
 			}
 
-			err = callIntegrationAppWithApiRequestForNewPaymentLink(innerCtx, services.Cfg.CommonServices.External.IntegrationAppConfig.WorkspaceKey,
-				services.Cfg.CommonServices.External.IntegrationAppConfig.WorkspaceSecret, tenant,
-				services.Cfg.CommonServices.External.IntegrationAppConfig.ApiTriggerUrlCreatePaymentLinks, primaryStripeCustomerId, invoice)
+			err = callIntegrationAppWithApiRequestForNewPaymentLink(innerCtx, services.Cfg.Common.External.IntegrationAppConfig.WorkspaceKey,
+				services.Cfg.Common.External.IntegrationAppConfig.WorkspaceSecret, tenant,
+				services.Cfg.Common.External.IntegrationAppConfig.ApiTriggerUrlCreatePaymentLinks, primaryStripeCustomerId, invoice)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error calling integration app"))
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to obtain payment link, please try again later"})

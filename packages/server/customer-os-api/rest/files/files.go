@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
+	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
@@ -32,7 +32,7 @@ func UploadFile(s *cosapi_services.Services, filePath string) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, mapper.MapFileEntityToDTO(fileEntity, s.Cfg.CommonServices.Internal.CustomerOsApi.ApiUrl+filePath))
+		c.JSON(http.StatusOK, mapper.MapFileEntityToDTO(fileEntity, s.Cfg.Common.Internal.CustomerOsApi.ApiUrl+filePath))
 	}
 }
 
@@ -50,7 +50,7 @@ func GetFileByID(s *cosapi_services.Services, filePath string) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(200, mapper.MapFileEntityToDTO(byId, s.Cfg.CommonServices.Internal.CustomerOsApi.ApiUrl+filePath))
+		c.JSON(200, mapper.MapFileEntityToDTO(byId, s.Cfg.Common.Internal.CustomerOsApi.ApiUrl+filePath))
 	}
 }
 
