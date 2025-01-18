@@ -1,13 +1,13 @@
 package service
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	genericServices "github.com/openline-ai/openline-customer-os/packages/server/events/services"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
+	genericServices "github.com/customeros/customeros/packages/server/events/services"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/common/command"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/config"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/common/command"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/logger"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/repository"
 )
 
 type Services struct {

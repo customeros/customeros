@@ -1,10 +1,10 @@
 package enummapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 var invoiceStatusByModel = map[model.InvoiceStatus]neo4jenum.InvoiceStatus{

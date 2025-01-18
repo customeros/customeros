@@ -6,16 +6,16 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/slack-go/slack"
 
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/repository"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/tracing"
+	"github.com/customeros/customeros/packages/runner/sync-slack/config"
+	"github.com/customeros/customeros/packages/runner/sync-slack/logger"
+	"github.com/customeros/customeros/packages/runner/sync-slack/repository"
+	"github.com/customeros/customeros/packages/runner/sync-slack/tracing"
 )
 
 const pageSize = 200

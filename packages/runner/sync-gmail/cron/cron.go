@@ -6,17 +6,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	commonconstants "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	commonconstants "github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
 
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/config"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/entity"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/logger"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/service"
 )
 
 var (

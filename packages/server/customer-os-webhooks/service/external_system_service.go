@@ -4,19 +4,19 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/caches"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/errors"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/model"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/repository"
 )
 
 type ExternalSystemService interface {

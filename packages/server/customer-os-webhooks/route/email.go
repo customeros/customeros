@@ -7,13 +7,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/pkg/errors"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/config"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/service"
 )
 
 func AddEmailRoutes(ctx context.Context, route *gin.Engine, cfg *config.Config, services *service.Services) {

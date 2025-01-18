@@ -3,12 +3,12 @@ package service
 import (
 	"context"
 
-	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/pkg/errors"
 
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 )
 
 type MailstackService interface {

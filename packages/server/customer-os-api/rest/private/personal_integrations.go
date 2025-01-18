@@ -2,8 +2,8 @@ package private
 
 import (
 	"github.com/gin-gonic/gin"
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 func CreatePersonalIntegrations(s *cosapi_services.Services) gin.HandlerFunc {

@@ -1,6 +1,6 @@
 package common_srv
 
-import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+import "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 
 type LinkWith struct {
 	Type         model.EntityType `json:"type"`

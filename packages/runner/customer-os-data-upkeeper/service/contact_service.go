@@ -5,34 +5,52 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/customeros/packages/server/events/eventbuffer"
 	"github.com/customeros/mailsherpa/emailparser"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
-	common_srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	postgresrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"io"
-	"net/http"
+
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 )
+
+type FindWorkEmailRequest struct {
+	LinkedinUrl       string `json:"linkedinUrl"`
+	FirstName         string `json:"firstName"`
+	LastName          string `json:"lastName"`
+	CompanyName       string `json:"companyName"`
+	CompanyDomain     string `json:"companyDomain"`
+	EnrichPhoneNumber bool   `json:"enrichPhoneNumber"`
+}
+
+type FindWorkEmailResponse struct {
+	Status                 string                                    `json:"status"`
+	Message                string                                    `json:"message,omitempty"`
+	RecordId               string                                    `json:"recordId,omitempty"`
+	BetterContactRequestId string                                    `json:"betterContactRequestId,omitempty"`
+	Data                   *postgresentity.BetterContactResponseBody `json:"data,omitempty"`
+}
 
 type ContactService interface {
 	UpkeepContacts()
@@ -102,7 +120,7 @@ func (s *contactService) removeEmptySocials(ctx context.Context) {
 			return
 		}
 
-		//remove socials from contact
+		// remove socials from contact
 		for _, record := range records {
 			err := s.commonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, record.Tenant, record.LinkedEntityId, model.NodeLabelContact, record.SocialId)
 			if err != nil {
@@ -150,7 +168,7 @@ func (s *contactService) removeDuplicatedSocials(ctx context.Context) {
 			return
 		}
 
-		//remove socials from contact
+		// remove socials from contact
 		for _, record := range records {
 			err := s.commonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, record.Tenant, record.LinkedEntityId, model.NodeLabelContact, record.SocialId)
 			if err != nil {
@@ -201,7 +219,7 @@ func (s *contactService) hideContactsWithGroupOrSystemGeneratedEmail(ctx context
 			return
 		}
 
-		//hide contact
+		// hide contact
 		for _, record := range records {
 			// create new context from main one with custom context
 			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
@@ -396,7 +414,7 @@ func (s *contactService) setPrimaryJobRole(ctx context.Context) {
 		return
 	}
 
-	//remove socials from contact
+	// remove socials from contact
 	for _, record := range records {
 		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 			Tenant:    record.Tenant,
@@ -408,7 +426,6 @@ func (s *contactService) setPrimaryJobRole(ctx context.Context) {
 			continue
 		}
 	}
-
 }
 
 func (s *contactService) AskForWorkEmailOnBetterContact() {
@@ -472,7 +489,7 @@ func (s *contactService) askForLinkedInConnections(c context.Context) {
 	span.LogFields(log.Int("linkedinTokens", len(linkedinTokens)))
 
 	for _, linkedinToken := range linkedinTokens {
-		//todo check if there is already a scheduled job for this token today
+		// todo check if there is already a scheduled job for this token today
 		err := s.commonServices.PostgresRepositories.BrowserAutomationRunRepository.Add(ctx, &postgresentity.BrowserAutomationsRun{
 			BrowserConfigId: linkedinToken.Id,
 			UserId:          linkedinToken.UserId,
@@ -486,7 +503,6 @@ func (s *contactService) askForLinkedInConnections(c context.Context) {
 			break
 		}
 	}
-
 }
 
 func (s *contactService) ProcessLinkedInConnections() {
@@ -601,7 +617,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 		}
 	}
 
-	//link contacts to user
+	// link contacts to user
 	if userId != "" {
 		for _, cid := range contactIds {
 
@@ -645,7 +661,6 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 				for _, flowActionExecution := range flowActionExecutions {
 
 					_, err := utils.ExecuteWriteInTransaction(ctx, s.commonServices.Neo4jRepositories.Neo4jDriver, s.commonServices.Neo4jRepositories.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
-
 						err := s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, model.NodeLabelFlowActionExecution, flowActionExecution.Id, "status", string(neo4jentity.FlowActionExecutionStatusSuccess))
 						if err != nil {
 							return nil, errors.Wrap(err, "CommonWriteRepository.UpdateStringProperty")
@@ -663,7 +678,6 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 
 						return nil, nil
 					})
-
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "ExecuteWriteInTransaction"))
 						return err
@@ -727,9 +741,9 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 
 			organizationByDomainNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
 			if err != nil {
-				//TODO uncomment when data is fixed in DB
-				//tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
-				//return
+				// TODO uncomment when data is fixed in DB
+				// tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
+				// return
 				continue
 			}
 
@@ -818,11 +832,11 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 	}
 }
 
-func (s *contactService) callEnrichmentApiFindWorkEmail(ctx context.Context, details neo4jrepository.ContactsEnrichWorkEmail) (*enrichmentmodel.FindWorkEmailResponse, error) {
+func (s *contactService) callEnrichmentApiFindWorkEmail(ctx context.Context, details neo4jrepository.ContactsEnrichWorkEmail) (*FindWorkEmailResponse, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.callEnrichmentApiFindWorkEmail")
 	defer span.Finish()
 
-	requestJSON, err := json.Marshal(enrichmentmodel.FindWorkEmailRequest{
+	requestJSON, err := json.Marshal(FindWorkEmailRequest{
 		LinkedinUrl:   details.LinkedInUrl,
 		FirstName:     details.ContactFirstName,
 		LastName:      details.ContactLastName,
@@ -857,7 +871,7 @@ func (s *contactService) callEnrichmentApiFindWorkEmail(ctx context.Context, det
 	defer response.Body.Close()
 	span.LogFields(log.Int("response.status.findWorkEmail", response.StatusCode))
 
-	var findWorkEmailApiResponse enrichmentmodel.FindWorkEmailResponse
+	var findWorkEmailApiResponse FindWorkEmailResponse
 	err = json.NewDecoder(response.Body).Decode(&findWorkEmailApiResponse)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to decode find work email response"))
@@ -1095,7 +1109,7 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 		// Set headers
 		req.Header.Set("Content-Type", "application/json")
 
-		//Perform the request
+		// Perform the request
 		resp, err := client.Do(req)
 		if err != nil {
 			tracing.TraceErr(span, err)

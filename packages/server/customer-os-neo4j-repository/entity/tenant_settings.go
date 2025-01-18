@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 )
 
 type TenantSettingsProperty string

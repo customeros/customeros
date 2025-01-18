@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,11 +1,11 @@
 package command
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
+	"github.com/customeros/customeros/packages/server/events/event/common"
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/model"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 )
 
 type UpsertCustomFieldCommand struct {

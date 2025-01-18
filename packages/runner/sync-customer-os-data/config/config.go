@@ -3,9 +3,9 @@ package config
 import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
-	commconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/tracing"
+	commconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"log"
 )
 

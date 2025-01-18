@@ -3,14 +3,14 @@ package service
 import (
 	"context"
 
-	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
-	registry "github.com/openline-ai/openline-customer-os/packages/server/events/event/_registry"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	generic "github.com/openline-ai/openline-customer-os/packages/server/events/services"
+	eventstorepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
+	registry "github.com/customeros/customeros/packages/server/events/event/_registry"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
+	generic "github.com/customeros/customeros/packages/server/events/services"
 
-	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	grpcerr "github.com/customeros/customeros/packages/server/events-processing-platform/grpc_errors"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/logger"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/tracing"
 )
 
 type eventStoreService struct {

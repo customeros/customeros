@@ -2,9 +2,9 @@ package private
 
 import (
 	"github.com/gin-gonic/gin"
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
-	api_tenant_settings "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services/tenant_settings"
-	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
+	api_tenant_settings "github.com/customeros/customeros/packages/server/customer-os-api/services/tenant_settings"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 func GetIntegrations(s *cosapi_services.Services) gin.HandlerFunc {

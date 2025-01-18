@@ -1,6 +1,6 @@
 package dto
 
-import neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+import neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 
 type CreateCustomFieldTemplate struct {
 	Name        string   `json:"name"`

@@ -2,12 +2,12 @@ package repository
 
 import (
 	"github.com/google/uuid"
-	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/config"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/entity"
 )
 
 type RawEmailRepository interface {

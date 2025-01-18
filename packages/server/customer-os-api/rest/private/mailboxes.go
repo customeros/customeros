@@ -2,10 +2,10 @@ package private
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 func GetMailboxes(s *cosapi_services.Services) gin.HandlerFunc {

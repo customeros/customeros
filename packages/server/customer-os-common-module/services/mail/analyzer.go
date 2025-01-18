@@ -8,7 +8,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 )
 
 // TODO parse SMTP status code from message/deliver-status

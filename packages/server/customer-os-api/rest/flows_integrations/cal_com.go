@@ -11,16 +11,16 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/pkg/errors"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
+	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 func CalDotCom(c *gin.Context, s *cosapi_services.Services) {

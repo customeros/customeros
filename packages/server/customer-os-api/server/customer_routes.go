@@ -5,18 +5,18 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/billing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/customerbase"
-	restEnrich "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/enrich"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/flows"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
-	reveal "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/reveal_setup"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/billing"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/customerbase"
+	restEnrich "github.com/customeros/customeros/packages/server/customer-os-api/rest/enrich"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/flows"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/mailstack"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/outreach"
+	reveal "github.com/customeros/customeros/packages/server/customer-os-api/rest/reveal_setup"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/verify"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 const (

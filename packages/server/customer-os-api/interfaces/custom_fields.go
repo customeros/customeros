@@ -3,8 +3,8 @@ package cosapi_interfaces
 import (
 	"context"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 // TODO deprecate and remove

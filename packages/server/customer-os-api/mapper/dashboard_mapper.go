@@ -3,10 +3,10 @@ package mapper
 import (
 	"fmt"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
-	entityDashboard "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity/dashboard"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	entityDashboard "github.com/customeros/customeros/packages/server/customer-os-api/entity/dashboard"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 func MapDashboardNewCustomersData(newCustomersData *entityDashboard.DashboardNewCustomersData) *model.DashboardNewCustomers {

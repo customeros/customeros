@@ -3,14 +3,14 @@ package test
 import (
 	"context"
 	"fmt"
-	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
+	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 )
 
 func CleanupAllData(ctx context.Context, driver *neo4j.DriverWithContext) {

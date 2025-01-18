@@ -2,9 +2,9 @@ package postgres
 
 import (
 	"context"
-	entity "github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/entity/raw"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	entity "github.com/customeros/customeros/packages/runner/sync-slack/entity/raw"
+	"github.com/customeros/customeros/packages/runner/sync-slack/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 )

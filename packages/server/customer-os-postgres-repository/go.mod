@@ -1,14 +1,14 @@
-module github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository
+module github.com/customeros/customeros/packages/server/customer-os-postgres-repository
 
 go 1.23
 
 toolchain go1.23.1
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
+replace github.com/customeros/customeros/packages/server/customer-os-common-module => ../customer-os-common-module
 
 require (
+	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
 	github.com/google/uuid v1.6.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3

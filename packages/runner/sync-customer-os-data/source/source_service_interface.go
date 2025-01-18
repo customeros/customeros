@@ -2,7 +2,7 @@ package source
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/common"
+	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/common"
 )
 
 type ProcessingEntity struct {

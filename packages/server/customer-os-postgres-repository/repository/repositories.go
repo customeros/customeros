@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"gorm.io/gorm"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 type Repositories struct {

@@ -1,10 +1,10 @@
 package api_personal_integrations
 
 import (
-	cosapi_interfaces "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/interfaces"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"golang.org/x/net/context"
 )
 

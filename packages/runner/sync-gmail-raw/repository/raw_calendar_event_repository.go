@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/entity"
+	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"time"

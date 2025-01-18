@@ -1,11 +1,11 @@
 package aggregate
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	organizationEvents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	organizationEvents "github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/model"
+	"github.com/customeros/customeros/packages/server/events/event/common"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"

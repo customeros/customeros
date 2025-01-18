@@ -2,7 +2,7 @@ package repository
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 )
 
 type Repositories struct {

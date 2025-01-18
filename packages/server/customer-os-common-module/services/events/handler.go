@@ -4,7 +4,7 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 )
 
 // EventHandler represents a registered event handler

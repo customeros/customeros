@@ -2,7 +2,7 @@ package events_platform
 
 import (
 	"context"
-	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
+	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 )
 
 type MockInvoiceServiceCallbacks struct {

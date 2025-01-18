@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"golang.org/x/net/html"
 )
 

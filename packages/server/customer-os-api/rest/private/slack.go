@@ -9,11 +9,11 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 type OauthSlackResponse struct {

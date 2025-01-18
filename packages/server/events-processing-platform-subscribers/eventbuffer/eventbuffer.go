@@ -3,11 +3,11 @@ package eventbuffer
 import (
 	"context"
 	"encoding/json"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
-	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	orgaggregate "github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/aggregate"
+	orgevents "github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/pkg/errors"
 	"os"
 	"os/signal"
@@ -15,9 +15,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/logger"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/tracing"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 )
 

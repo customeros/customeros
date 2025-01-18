@@ -1,10 +1,10 @@
 package cron
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/container"
-	cron_config "github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/cron/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/runner/sync-slack/config"
+	"github.com/customeros/customeros/packages/runner/sync-slack/container"
+	cron_config "github.com/customeros/customeros/packages/runner/sync-slack/cron/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/robfig/cron"
 	"github.com/stretchr/testify/assert"
 	"testing"

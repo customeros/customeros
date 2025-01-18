@@ -3,8 +3,8 @@ package files
 import (
 	"fmt"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
-	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	neo4jEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 func MapFileEntityToDTO(input *interfaces.File, serviceUrl string) *interfaces.FileDTO {

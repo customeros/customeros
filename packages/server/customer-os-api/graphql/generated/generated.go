@@ -14,9 +14,9 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
-	model1 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	model1 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -59396,7 +59396,7 @@ func (ec *executionContext) _Mutation_bankAccount_Create(ctx context.Context, fi
 		if data, ok := tmp.(*model.BankAccount); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.BankAccount`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.BankAccount`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -59509,7 +59509,7 @@ func (ec *executionContext) _Mutation_bankAccount_Update(ctx context.Context, fi
 		if data, ok := tmp.(*model.BankAccount); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.BankAccount`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.BankAccount`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -59622,7 +59622,7 @@ func (ec *executionContext) _Mutation_bankAccount_Delete(ctx context.Context, fi
 		if data, ok := tmp.(*model.DeleteResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.DeleteResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.DeleteResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -60340,7 +60340,7 @@ func (ec *executionContext) _Mutation_removeTag(ctx context.Context, field graph
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -61152,7 +61152,7 @@ func (ec *executionContext) _Mutation_contact_Hide(ctx context.Context, field gr
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -61592,7 +61592,7 @@ func (ec *executionContext) _Mutation_contact_AddSocial(ctx context.Context, fie
 		if data, ok := tmp.(*model.Social); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Social`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Social`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -61693,7 +61693,7 @@ func (ec *executionContext) _Mutation_contact_RemoveSocial(ctx context.Context, 
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -61845,7 +61845,7 @@ func (ec *executionContext) _Mutation_contact_AddTag(ctx context.Context, field 
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -61938,7 +61938,7 @@ func (ec *executionContext) _Mutation_contact_RemoveTag(ctx context.Context, fie
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -62031,7 +62031,7 @@ func (ec *executionContext) _Mutation_contract_Create(ctx context.Context, field
 		if data, ok := tmp.(*model.Contract); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Contract`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Contract`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -62218,7 +62218,7 @@ func (ec *executionContext) _Mutation_contract_Update(ctx context.Context, field
 		if data, ok := tmp.(*model.Contract); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Contract`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Contract`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -62405,7 +62405,7 @@ func (ec *executionContext) _Mutation_contract_Delete(ctx context.Context, field
 		if data, ok := tmp.(*model.DeleteResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.DeleteResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.DeleteResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -62500,7 +62500,7 @@ func (ec *executionContext) _Mutation_contract_Renew(ctx context.Context, field 
 		if data, ok := tmp.(*model.Contract); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Contract`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Contract`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -62687,7 +62687,7 @@ func (ec *executionContext) _Mutation_contract_AddAttachment(ctx context.Context
 		if data, ok := tmp.(*model.Contract); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Contract`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Contract`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -62874,7 +62874,7 @@ func (ec *executionContext) _Mutation_contract_RemoveAttachment(ctx context.Cont
 		if data, ok := tmp.(*model.Contract); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Contract`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Contract`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -63448,7 +63448,7 @@ func (ec *executionContext) _Mutation_customFieldTemplate_Save(ctx context.Conte
 		if data, ok := tmp.(*model.CustomFieldTemplate); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.CustomFieldTemplate`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.CustomFieldTemplate`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -63649,7 +63649,7 @@ func (ec *executionContext) _Mutation_emailMergeToContact(ctx context.Context, f
 		if data, ok := tmp.(*model.Email); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Email`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Email`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -63768,7 +63768,7 @@ func (ec *executionContext) _Mutation_emailRemoveFromContact(ctx context.Context
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -63861,7 +63861,7 @@ func (ec *executionContext) _Mutation_emailReplaceForContact(ctx context.Context
 		if data, ok := tmp.(*model.Email); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Email`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Email`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -63977,7 +63977,7 @@ func (ec *executionContext) _Mutation_emailSetPrimaryForContact(ctx context.Cont
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -64070,7 +64070,7 @@ func (ec *executionContext) _Mutation_emailMergeToUser(ctx context.Context, fiel
 		if data, ok := tmp.(*model.Email); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Email`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Email`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -64189,7 +64189,7 @@ func (ec *executionContext) _Mutation_emailRemoveFromUser(ctx context.Context, f
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -64282,7 +64282,7 @@ func (ec *executionContext) _Mutation_emailReplaceForUser(ctx context.Context, f
 		if data, ok := tmp.(*model.Email); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Email`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Email`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -64398,7 +64398,7 @@ func (ec *executionContext) _Mutation_emailMergeToOrganization(ctx context.Conte
 		if data, ok := tmp.(*model.Email); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Email`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Email`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -64517,7 +64517,7 @@ func (ec *executionContext) _Mutation_emailRemoveFromOrganization(ctx context.Co
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -64610,7 +64610,7 @@ func (ec *executionContext) _Mutation_emailReplaceForOrganization(ctx context.Co
 		if data, ok := tmp.(*model.Email); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Email`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Email`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -64726,7 +64726,7 @@ func (ec *executionContext) _Mutation_email_Validate(ctx context.Context, field 
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -64908,7 +64908,7 @@ func (ec *executionContext) _Mutation_flow_ChangeName(ctx context.Context, field
 		if data, ok := tmp.(*model.Flow); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Flow`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Flow`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -65019,7 +65019,7 @@ func (ec *executionContext) _Mutation_flow_Merge(ctx context.Context, field grap
 		if data, ok := tmp.(*model.Flow); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Flow`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Flow`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -65130,7 +65130,7 @@ func (ec *executionContext) _Mutation_flow_On(ctx context.Context, field graphql
 		if data, ok := tmp.(*model.Flow); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Flow`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Flow`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -65241,7 +65241,7 @@ func (ec *executionContext) _Mutation_flow_Off(ctx context.Context, field graphq
 		if data, ok := tmp.(*model.Flow); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Flow`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Flow`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -65352,7 +65352,7 @@ func (ec *executionContext) _Mutation_flow_Archive(ctx context.Context, field gr
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -65445,7 +65445,7 @@ func (ec *executionContext) _Mutation_flow_ArchiveBulk(ctx context.Context, fiel
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -65538,7 +65538,7 @@ func (ec *executionContext) _Mutation_flowParticipant_Add(ctx context.Context, f
 		if data, ok := tmp.(*model.FlowParticipant); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.FlowParticipant`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.FlowParticipant`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -65641,7 +65641,7 @@ func (ec *executionContext) _Mutation_flowParticipant_AddBulk(ctx context.Contex
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -65734,7 +65734,7 @@ func (ec *executionContext) _Mutation_flowParticipant_Delete(ctx context.Context
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -65827,7 +65827,7 @@ func (ec *executionContext) _Mutation_flowParticipant_DeleteBulk(ctx context.Con
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -65920,7 +65920,7 @@ func (ec *executionContext) _Mutation_flowSender_Merge(ctx context.Context, fiel
 		if data, ok := tmp.(*model.FlowSender); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.FlowSender`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.FlowSender`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -66017,7 +66017,7 @@ func (ec *executionContext) _Mutation_flowSender_Delete(ctx context.Context, fie
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -66110,7 +66110,7 @@ func (ec *executionContext) _Mutation_flowEmailActionTest(ctx context.Context, f
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -66351,7 +66351,7 @@ func (ec *executionContext) _Mutation_invoice_Update(ctx context.Context, field 
 		if data, ok := tmp.(*model.Invoice); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Invoice`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Invoice`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -66502,7 +66502,7 @@ func (ec *executionContext) _Mutation_invoice_Pay(ctx context.Context, field gra
 		if data, ok := tmp.(*model.Invoice); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Invoice`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Invoice`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -66653,7 +66653,7 @@ func (ec *executionContext) _Mutation_invoice_Void(ctx context.Context, field gr
 		if data, ok := tmp.(*model.Invoice); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Invoice`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Invoice`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -66804,7 +66804,7 @@ func (ec *executionContext) _Mutation_invoice_Simulate(ctx context.Context, fiel
 		if data, ok := tmp.([]*model.InvoiceSimulate); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.InvoiceSimulate`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.InvoiceSimulate`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -67241,7 +67241,7 @@ func (ec *executionContext) _Mutation_location_RemoveFromContact(ctx context.Con
 		if data, ok := tmp.(*model.Contact); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Contact`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Contact`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -67398,7 +67398,7 @@ func (ec *executionContext) _Mutation_location_RemoveFromOrganization(ctx contex
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -68191,7 +68191,7 @@ func (ec *executionContext) _Mutation_mailstack_GetPaymentIntent(ctx context.Con
 		if data, ok := tmp.(*model.GetPaymentIntent); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.GetPaymentIntent`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.GetPaymentIntent`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -68284,7 +68284,7 @@ func (ec *executionContext) _Mutation_mailstack_RegisterBuyDomainsWithMailboxes(
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -68377,7 +68377,7 @@ func (ec *executionContext) _Mutation_mailstack_SetUser(ctx context.Context, fie
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -69750,7 +69750,7 @@ func (ec *executionContext) _Mutation_opportunity_Save(ctx context.Context, fiel
 		if data, ok := tmp.(*model.Opportunity); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Opportunity`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Opportunity`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -69903,7 +69903,7 @@ func (ec *executionContext) _Mutation_opportunity_Archive(ctx context.Context, f
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -70316,7 +70316,7 @@ func (ec *executionContext) _Mutation_organization_Save(ctx context.Context, fie
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -70551,7 +70551,7 @@ func (ec *executionContext) _Mutation_organization_SaveByGlobalOrganization(ctx 
 		if data, ok := tmp.(*model.OrganizationUIDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.OrganizationUIDetails`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.OrganizationUIDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -70833,7 +70833,7 @@ func (ec *executionContext) _Mutation_organization_HideAll(ctx context.Context, 
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -71012,7 +71012,7 @@ func (ec *executionContext) _Mutation_organization_ShowAll(ctx context.Context, 
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -71102,7 +71102,7 @@ func (ec *executionContext) _Mutation_organization_Merge(ctx context.Context, fi
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -71337,7 +71337,7 @@ func (ec *executionContext) _Mutation_organization_AddSubsidiary(ctx context.Con
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -71572,7 +71572,7 @@ func (ec *executionContext) _Mutation_organization_RemoveSubsidiary(ctx context.
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -71807,7 +71807,7 @@ func (ec *executionContext) _Mutation_organization_AddSocial(ctx context.Context
 		if data, ok := tmp.(*model.Social); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Social`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Social`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -71920,7 +71920,7 @@ func (ec *executionContext) _Mutation_organization_RemoveSocial(ctx context.Cont
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -72013,7 +72013,7 @@ func (ec *executionContext) _Mutation_organization_UpdateOnboardingStatus(ctx co
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -72248,7 +72248,7 @@ func (ec *executionContext) _Mutation_organization_UnlinkAllDomains(ctx context.
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -72483,7 +72483,7 @@ func (ec *executionContext) _Mutation_organization_AddDomain(ctx context.Context
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -72576,7 +72576,7 @@ func (ec *executionContext) _Mutation_organization_RemoveDomain(ctx context.Cont
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -72669,7 +72669,7 @@ func (ec *executionContext) _Mutation_organization_RemoveDomains(ctx context.Con
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -72762,7 +72762,7 @@ func (ec *executionContext) _Mutation_organization_Update(ctx context.Context, f
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -72997,7 +72997,7 @@ func (ec *executionContext) _Mutation_organization_SetOwner(ctx context.Context,
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -73232,7 +73232,7 @@ func (ec *executionContext) _Mutation_organization_UnsetOwner(ctx context.Contex
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -73467,7 +73467,7 @@ func (ec *executionContext) _Mutation_organization_AddTag(ctx context.Context, f
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -73560,7 +73560,7 @@ func (ec *executionContext) _Mutation_organization_RemoveTag(ctx context.Context
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -73653,7 +73653,7 @@ func (ec *executionContext) _Mutation_phoneNumberMergeToContact(ctx context.Cont
 		if data, ok := tmp.(*model.PhoneNumber); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.PhoneNumber`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.PhoneNumber`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -73772,7 +73772,7 @@ func (ec *executionContext) _Mutation_phoneNumberUpdateInContact(ctx context.Con
 		if data, ok := tmp.(*model.PhoneNumber); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.PhoneNumber`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.PhoneNumber`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -73891,7 +73891,7 @@ func (ec *executionContext) _Mutation_phoneNumberRemoveFromContactByE164(ctx con
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -73984,7 +73984,7 @@ func (ec *executionContext) _Mutation_phoneNumberRemoveFromContactById(ctx conte
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -74077,7 +74077,7 @@ func (ec *executionContext) _Mutation_phoneNumberMergeToOrganization(ctx context
 		if data, ok := tmp.(*model.PhoneNumber); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.PhoneNumber`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.PhoneNumber`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -74196,7 +74196,7 @@ func (ec *executionContext) _Mutation_phoneNumberUpdateInOrganization(ctx contex
 		if data, ok := tmp.(*model.PhoneNumber); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.PhoneNumber`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.PhoneNumber`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -74315,7 +74315,7 @@ func (ec *executionContext) _Mutation_phoneNumberRemoveFromOrganizationByE164(ct
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -74408,7 +74408,7 @@ func (ec *executionContext) _Mutation_phoneNumberRemoveFromOrganizationById(ctx 
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -74501,7 +74501,7 @@ func (ec *executionContext) _Mutation_phoneNumber_Update(ctx context.Context, fi
 		if data, ok := tmp.(*model.PhoneNumber); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.PhoneNumber`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.PhoneNumber`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -74792,7 +74792,7 @@ func (ec *executionContext) _Mutation_contractLineItem_Create(ctx context.Contex
 		if data, ok := tmp.(*model.ServiceLineItem); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ServiceLineItem`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ServiceLineItem`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -74911,7 +74911,7 @@ func (ec *executionContext) _Mutation_contractLineItem_NewVersion(ctx context.Co
 		if data, ok := tmp.(*model.ServiceLineItem); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ServiceLineItem`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ServiceLineItem`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -75030,7 +75030,7 @@ func (ec *executionContext) _Mutation_contractLineItem_Update(ctx context.Contex
 		if data, ok := tmp.(*model.ServiceLineItem); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ServiceLineItem`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ServiceLineItem`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -75238,7 +75238,7 @@ func (ec *executionContext) _Mutation_contractLineItem_Pause(ctx context.Context
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -75331,7 +75331,7 @@ func (ec *executionContext) _Mutation_contractLineItem_Resume(ctx context.Contex
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -75424,7 +75424,7 @@ func (ec *executionContext) _Mutation_serviceLineItem_Delete(ctx context.Context
 		if data, ok := tmp.(*model.DeleteResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.DeleteResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.DeleteResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -75608,7 +75608,7 @@ func (ec *executionContext) _Mutation_social_Update(ctx context.Context, field g
 		if data, ok := tmp.(*model.Social); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Social`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Social`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -75721,7 +75721,7 @@ func (ec *executionContext) _Mutation_social_Remove(ctx context.Context, field g
 		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Result`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -76017,7 +76017,7 @@ func (ec *executionContext) _Mutation_tenant_AddBillingProfile(ctx context.Conte
 		if data, ok := tmp.(*model.TenantBillingProfile); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.TenantBillingProfile`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.TenantBillingProfile`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -76164,7 +76164,7 @@ func (ec *executionContext) _Mutation_tenant_UpdateBillingProfile(ctx context.Co
 		if data, ok := tmp.(*model.TenantBillingProfile); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.TenantBillingProfile`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.TenantBillingProfile`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -76311,7 +76311,7 @@ func (ec *executionContext) _Mutation_tenant_UpdateSettings(ctx context.Context,
 		if data, ok := tmp.(*model.TenantSettings); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.TenantSettings`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.TenantSettings`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -76416,7 +76416,7 @@ func (ec *executionContext) _Mutation_tenant_UpdateSettingsOpportunityStage(ctx 
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -76598,7 +76598,7 @@ func (ec *executionContext) _Mutation_user_UpdateOnboardingDetails(ctx context.C
 		if data, ok := tmp.(*model.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -76735,7 +76735,7 @@ func (ec *executionContext) _Mutation_tableViewDef_Create(ctx context.Context, f
 		if data, ok := tmp.(*model.TableViewDef); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.TableViewDef`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.TableViewDef`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -76854,7 +76854,7 @@ func (ec *executionContext) _Mutation_tableViewDef_Update(ctx context.Context, f
 		if data, ok := tmp.(*model.TableViewDef); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.TableViewDef`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.TableViewDef`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -76973,7 +76973,7 @@ func (ec *executionContext) _Mutation_tableViewDef_UpdateShared(ctx context.Cont
 		if data, ok := tmp.(*model.TableViewDef); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.TableViewDef`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.TableViewDef`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -77092,7 +77092,7 @@ func (ec *executionContext) _Mutation_tableViewDef_Archive(ctx context.Context, 
 		if data, ok := tmp.(*model.ActionResponse); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ActionResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -78891,7 +78891,7 @@ func (ec *executionContext) _Opportunity_organization(ctx context.Context, field
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -79112,7 +79112,7 @@ func (ec *executionContext) _Opportunity_createdBy(ctx context.Context, field gr
 		if data, ok := tmp.(*model.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -79235,7 +79235,7 @@ func (ec *executionContext) _Opportunity_owner(ctx context.Context, field graphq
 		if data, ok := tmp.(*model.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -79358,7 +79358,7 @@ func (ec *executionContext) _Opportunity_externalLinks(ctx context.Context, fiel
 		if data, ok := tmp.([]*model.ExternalSystem); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ExternalSystem`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ExternalSystem`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -88631,7 +88631,7 @@ func (ec *executionContext) _Query_bankAccounts(ctx context.Context, field graph
 		if data, ok := tmp.([]*model.BankAccount); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.BankAccount`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.BankAccount`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -89105,7 +89105,7 @@ func (ec *executionContext) _Query_contact_ByEmail(ctx context.Context, field gr
 		if data, ok := tmp.(*model.Contact); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Contact`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Contact`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -89259,7 +89259,7 @@ func (ec *executionContext) _Query_contact_ByLinkedIn(ctx context.Context, field
 		if data, ok := tmp.(*model.Contact); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Contact`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Contact`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -89502,7 +89502,7 @@ func (ec *executionContext) _Query_ui_contacts(ctx context.Context, field graphq
 		if data, ok := tmp.([]*model.ContactUIDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ContactUIDetails`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ContactUIDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -89667,7 +89667,7 @@ func (ec *executionContext) _Query_ui_contacts_search(ctx context.Context, field
 		if data, ok := tmp.(*model.ContactSearchResult); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ContactSearchResult`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ContactSearchResult`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -89764,7 +89764,7 @@ func (ec *executionContext) _Query_contract(ctx context.Context, field graphql.C
 		if data, ok := tmp.(*model.Contract); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Contract`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Contract`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -89951,7 +89951,7 @@ func (ec *executionContext) _Query_contracts(ctx context.Context, field graphql.
 		if data, ok := tmp.(*model.ContractPage); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ContractPage`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ContractPage`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -90050,7 +90050,7 @@ func (ec *executionContext) _Query_customFieldTemplate_List(ctx context.Context,
 		if data, ok := tmp.([]*model.CustomFieldTemplate); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.CustomFieldTemplate`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.CustomFieldTemplate`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -90813,7 +90813,7 @@ func (ec *executionContext) _Query_checkDomain(ctx context.Context, field graphq
 		if data, ok := tmp.(*model.DomainCheckDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.DomainCheckDetails`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.DomainCheckDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -90924,7 +90924,7 @@ func (ec *executionContext) _Query_email(ctx context.Context, field graphql.Coll
 		if data, ok := tmp.(*model.Email); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Email`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Email`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -91043,7 +91043,7 @@ func (ec *executionContext) _Query_externalSystemInstances(ctx context.Context, 
 		if data, ok := tmp.([]*model.ExternalSystemInstance); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.ExternalSystemInstance`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.ExternalSystemInstance`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -91127,7 +91127,7 @@ func (ec *executionContext) _Query_flow(ctx context.Context, field graphql.Colle
 		if data, ok := tmp.(*model.Flow); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Flow`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Flow`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -91238,7 +91238,7 @@ func (ec *executionContext) _Query_flows(ctx context.Context, field graphql.Coll
 		if data, ok := tmp.([]*model.Flow); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Flow`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Flow`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -91338,7 +91338,7 @@ func (ec *executionContext) _Query_flowParticipant(ctx context.Context, field gr
 		if data, ok := tmp.(*model.FlowParticipant); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.FlowParticipant`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.FlowParticipant`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -91441,7 +91441,7 @@ func (ec *executionContext) _Query_flow_emailVariables(ctx context.Context, fiel
 		if data, ok := tmp.([]*model.EmailVariableEntity); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.EmailVariableEntity`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.EmailVariableEntity`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -91603,7 +91603,7 @@ func (ec *executionContext) _Query_globalOrganizations_Search(ctx context.Contex
 		if data, ok := tmp.([]*model.GlobalOrganization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.GlobalOrganization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.GlobalOrganization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -91710,7 +91710,7 @@ func (ec *executionContext) _Query_industries_InUse(ctx context.Context, field g
 		if data, ok := tmp.([]*model.Industry); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Industry`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Industry`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -92194,7 +92194,7 @@ func (ec *executionContext) _Query_issue(ctx context.Context, field graphql.Coll
 		if data, ok := tmp.(*model.Issue); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Issue`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Issue`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -92323,7 +92323,7 @@ func (ec *executionContext) _Query_jobRoles(ctx context.Context, field graphql.C
 		if data, ok := tmp.([]*model.JobRole); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.JobRole`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.JobRole`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -92440,7 +92440,7 @@ func (ec *executionContext) _Query_logEntry(ctx context.Context, field graphql.C
 		if data, ok := tmp.(*model.LogEntry); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.LogEntry`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.LogEntry`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -92889,7 +92889,7 @@ func (ec *executionContext) _Query_mailstack_Mailboxes(ctx context.Context, fiel
 		if data, ok := tmp.([]*model.Mailbox); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Mailbox`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Mailbox`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -93151,7 +93151,7 @@ func (ec *executionContext) _Query_opportunity(ctx context.Context, field graphq
 		if data, ok := tmp.(*model.Opportunity); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Opportunity`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Opportunity`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -93301,7 +93301,7 @@ func (ec *executionContext) _Query_opportunities_LinkedToOrganizations(ctx conte
 		if data, ok := tmp.(*model.OpportunityPage); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.OpportunityPage`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.OpportunityPage`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -93400,7 +93400,7 @@ func (ec *executionContext) _Query_organizations(ctx context.Context, field grap
 		if data, ok := tmp.(*model.OrganizationPage); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.OrganizationPage`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.OrganizationPage`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -93499,7 +93499,7 @@ func (ec *executionContext) _Query_organization(ctx context.Context, field graph
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -93731,7 +93731,7 @@ func (ec *executionContext) _Query_organization_ByCustomerOsId(ctx context.Conte
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -93963,7 +93963,7 @@ func (ec *executionContext) _Query_organization_ByCustomId(ctx context.Context, 
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -94195,7 +94195,7 @@ func (ec *executionContext) _Query_organization_DistinctOwners(ctx context.Conte
 		if data, ok := tmp.([]*model.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -94321,7 +94321,7 @@ func (ec *executionContext) _Query_organization_CheckWebsite(ctx context.Context
 		if data, ok := tmp.(*model.WebsiteCheckDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.WebsiteCheckDetails`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.WebsiteCheckDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -94511,7 +94511,7 @@ func (ec *executionContext) _Query_organization_ByLinkedIn(ctx context.Context, 
 		if data, ok := tmp.(*model.Organization); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Organization`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Organization`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -94832,7 +94832,7 @@ func (ec *executionContext) _Query_ui_organizations(ctx context.Context, field g
 		if data, ok := tmp.([]*model.OrganizationUIDetails); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.OrganizationUIDetails`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.OrganizationUIDetails`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -95025,7 +95025,7 @@ func (ec *executionContext) _Query_ui_organizations_search(ctx context.Context, 
 		if data, ok := tmp.(*model.OrganizationSearchResult); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.OrganizationSearchResult`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.OrganizationSearchResult`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -95122,7 +95122,7 @@ func (ec *executionContext) _Query_phoneNumber(ctx context.Context, field graphq
 		if data, ok := tmp.(*model.PhoneNumber); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.PhoneNumber`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.PhoneNumber`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -95241,7 +95241,7 @@ func (ec *executionContext) _Query_reminder(ctx context.Context, field graphql.C
 		if data, ok := tmp.(*model.Reminder); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Reminder`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Reminder`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -95342,7 +95342,7 @@ func (ec *executionContext) _Query_remindersForOrganization(ctx context.Context,
 		if data, ok := tmp.([]*model.Reminder); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Reminder`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Reminder`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -95528,7 +95528,7 @@ func (ec *executionContext) _Query_slack_Channels(ctx context.Context, field gra
 		if data, ok := tmp.(*model.SlackChannelPage); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.SlackChannelPage`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.SlackChannelPage`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -95627,7 +95627,7 @@ func (ec *executionContext) _Query_tags(ctx context.Context, field graphql.Colle
 		if data, ok := tmp.([]*model.Tag); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Tag`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Tag`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -95725,7 +95725,7 @@ func (ec *executionContext) _Query_tags_ByEntityType(ctx context.Context, field 
 		if data, ok := tmp.([]*model.Tag); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.Tag`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Tag`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -95878,7 +95878,7 @@ func (ec *executionContext) _Query_tenantBillingProfiles(ctx context.Context, fi
 		if data, ok := tmp.([]*model.TenantBillingProfile); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.TenantBillingProfile`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.TenantBillingProfile`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -96014,7 +96014,7 @@ func (ec *executionContext) _Query_tenantBillingProfile(ctx context.Context, fie
 		if data, ok := tmp.(*model.TenantBillingProfile); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.TenantBillingProfile`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.TenantBillingProfile`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -96161,7 +96161,7 @@ func (ec *executionContext) _Query_tenantSettings(ctx context.Context, field gra
 		if data, ok := tmp.(*model.TenantSettings); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.TenantSettings`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.TenantSettings`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -96248,7 +96248,7 @@ func (ec *executionContext) _Query_billableInfo(ctx context.Context, field graph
 		if data, ok := tmp.(*model.TenantBillableInfo); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.TenantBillableInfo`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.TenantBillableInfo`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -96557,7 +96557,7 @@ func (ec *executionContext) _Query_user_ByEmail(ctx context.Context, field graph
 		if data, ok := tmp.(*model.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -96694,7 +96694,7 @@ func (ec *executionContext) _Query_tableViewDefs(ctx context.Context, field grap
 		if data, ok := tmp.([]*model.TableViewDef); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model.TableViewDef`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.TableViewDef`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)

@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/config"
 	"strings"
 )
 

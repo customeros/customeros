@@ -1,11 +1,11 @@
 package mapper
 
 import (
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 func MapEntityToTimelineEvent(timelineEventEntity *entity.TimelineEvent) model.TimelineEvent {

@@ -1,26 +1,26 @@
-module github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail
+module github.com/customeros/customeros/packages/runner/sync-gmail
 
 go 1.23
 
 toolchain go1.23.1
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ./../../server/customer-os-common-module
+replace github.com/customeros/customeros/packages/server/customer-os-common-module => ./../../server/customer-os-common-module
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ./../../server/customer-os-postgres-repository
+replace github.com/customeros/customeros/packages/server/customer-os-postgres-repository => ./../../server/customer-os-postgres-repository
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ./../../server/customer-os-neo4j-repository
+replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repository => ./../../server/customer-os-neo4j-repository
 
-replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ./../../server/events-processing-proto
+replace github.com/customeros/customeros/packages/server/events-processing-proto => ./../../server/events-processing-proto
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/coocood/freecache v1.2.4
+	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
+	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
+	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
@@ -48,6 +48,7 @@ require (
 	github.com/cloudflare/cloudflare-go v0.114.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/customeros/customeros/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c // indirect
 	github.com/customeros/mailsherpa v0.3.8 // indirect
 	github.com/customeros/mailwatcher v0.1.6 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -94,7 +95,6 @@ require (
 	github.com/mrz1836/postmark v1.7.0 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
 	github.com/nyaruka/phonenumbers v1.4.4 // indirect
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect

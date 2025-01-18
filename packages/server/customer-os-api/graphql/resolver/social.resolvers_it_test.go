@@ -3,14 +3,14 @@ package resolver
 import (
 	"testing"
 
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/test"
+	"github.com/customeros/customeros/packages/server/customer-os-api/utils/decode"
 )
 
 func TestMutationResolver_SocialUpdate(t *testing.T) {

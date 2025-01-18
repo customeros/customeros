@@ -1,6 +1,6 @@
 package security
 
-import "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+import "github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 
 type CommonServiceOption func(*Options)
 

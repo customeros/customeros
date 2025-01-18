@@ -2,10 +2,10 @@ package integrations
 
 import (
 	"github.com/gin-gonic/gin"
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data_fields"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
 )
 

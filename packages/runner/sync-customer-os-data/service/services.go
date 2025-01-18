@@ -2,11 +2,11 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/repository"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
+	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/config"
+	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/logger"
+	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/repository"
+	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 )
 
 type Services struct {

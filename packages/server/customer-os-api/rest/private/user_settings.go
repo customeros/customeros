@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/gin-gonic/gin"
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
-	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
+	commonUtils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 func GetOAuthSettings(s *cosapi_services.Services) gin.HandlerFunc {

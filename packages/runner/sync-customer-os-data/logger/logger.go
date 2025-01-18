@@ -1,7 +1,7 @@
 package logger
 
 import (
-	common_logger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	common_logger "github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 )
 
 type ExtendedLogger struct {

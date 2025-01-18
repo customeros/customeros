@@ -2,7 +2,7 @@ package postgresrepo
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-slack/entity"
+	"github.com/customeros/customeros/packages/runner/sync-slack/entity"
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 )

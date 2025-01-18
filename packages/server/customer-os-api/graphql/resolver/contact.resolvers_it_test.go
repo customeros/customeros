@@ -6,17 +6,17 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/client"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
 	"github.com/stretchr/testify/require"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
-	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
+	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	neo4jt "github.com/customeros/customeros/packages/server/customer-os-api/test/neo4j"
+	"github.com/customeros/customeros/packages/server/customer-os-api/utils/decode"
 )
 
 func TestQueryResolver_ContactByEmail(t *testing.T) {

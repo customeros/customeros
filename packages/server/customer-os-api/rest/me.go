@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
 )
 
 type MeResponse struct {

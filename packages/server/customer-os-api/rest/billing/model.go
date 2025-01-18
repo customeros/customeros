@@ -4,7 +4,7 @@ package billing
 import (
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
 )
 
 // InvoiceResponse represents a single invoice response

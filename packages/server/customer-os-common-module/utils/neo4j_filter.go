@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"strconv"
 	"strings"
 )

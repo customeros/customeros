@@ -3,8 +3,8 @@ package grpcErrors
 import (
 	"context"
 	"database/sql"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/customeros/customeros/packages/server/events/constants"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

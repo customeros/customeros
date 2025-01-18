@@ -1,7 +1,7 @@
 package entity
 
 import (
-	utils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	utils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type OrganizationRelation string

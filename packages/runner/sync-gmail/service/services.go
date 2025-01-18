@@ -2,15 +2,15 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/caches"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/caches"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/config"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
+	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
 
 type Services struct {

@@ -5,20 +5,20 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	utils2 "github.com/openline-ai/openline-customer-os/packages/server/events/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
+	commonpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
+	utils2 "github.com/customeros/customeros/packages/server/events/constants"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
-	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository"
-	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/repository/postgres/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/invoice"
+	grpcerr "github.com/customeros/customeros/packages/server/events-processing-platform/grpc_errors"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/logger"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/repository"
+	postgresentity "github.com/customeros/customeros/packages/server/events-processing-platform/repository/postgres/entity"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/tracing"
 )
 
 type invoiceService struct {

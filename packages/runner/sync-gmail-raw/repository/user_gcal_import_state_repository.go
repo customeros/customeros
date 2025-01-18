@@ -3,7 +3,7 @@ package repository
 import (
 	"errors"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/entity"
+	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/entity"
 	"gorm.io/gorm"
 	"time"
 )

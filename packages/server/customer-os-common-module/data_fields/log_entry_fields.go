@@ -1,7 +1,7 @@
 package data_fields
 
 import (
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	"time"
 )
 

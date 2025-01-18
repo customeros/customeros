@@ -3,7 +3,7 @@ package mapper_test
 import (
 	"testing"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 )
 
 func TestMapEntityToTimelineEvent(t *testing.T) {

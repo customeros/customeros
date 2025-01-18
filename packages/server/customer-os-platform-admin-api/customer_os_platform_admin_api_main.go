@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/server"
+	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/config"
+	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/server"
 	"log"
 	"os"
 	"os/signal"

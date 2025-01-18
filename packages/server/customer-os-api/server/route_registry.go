@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/gin-gonic/gin"
-	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	commoncaches "github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
+	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
+	cosHandler "github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 type RouteType string

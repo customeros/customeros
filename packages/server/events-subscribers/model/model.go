@@ -1,12 +1,12 @@
 package model
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/clients/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	service "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services"
-	neo4jRepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	neo4jRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
 
 type DependencyContainer struct {

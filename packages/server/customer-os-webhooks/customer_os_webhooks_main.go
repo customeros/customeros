@@ -7,10 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/server"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/config"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/server"
 )
 
 func main() {

@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	commonEnum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	commonEnum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
+	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 type AskAIRequest struct {

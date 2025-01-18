@@ -2,7 +2,7 @@ package events_platform
 
 import (
 	"context"
-	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
+	eventstorepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 )
 
 type MockEventStoreServiceCallbacks struct {

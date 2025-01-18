@@ -3,14 +3,14 @@ package api_billable
 import (
 	"context"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
-	cosapi_interfaces "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/interfaces"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-api/repository"
 )
 
 type billableService struct {

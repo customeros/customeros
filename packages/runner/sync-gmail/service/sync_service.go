@@ -3,21 +3,21 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"strings"
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/pkg/errors"
 
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/tracing"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/config"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/entity"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/repository"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/tracing"
 )
 
 const AppSource = "sync-email"

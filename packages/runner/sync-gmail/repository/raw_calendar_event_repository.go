@@ -2,8 +2,8 @@ package repository
 
 import (
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
-	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/customeros/customeros/packages/runner/sync-gmail/entity"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )

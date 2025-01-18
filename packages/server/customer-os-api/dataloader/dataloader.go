@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/graph-gophers/dataloader"
-	cosapi_interfaces "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/interfaces"
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
+	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 )
 
 const defaultDataloaderWaitTime = 32 * time.Millisecond

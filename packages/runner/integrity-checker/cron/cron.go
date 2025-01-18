@@ -1,9 +1,9 @@
 package cron
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/container"
-	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/service"
+	"github.com/customeros/customeros/packages/runner/integrity-checker/container"
+	"github.com/customeros/customeros/packages/runner/integrity-checker/logger"
+	"github.com/customeros/customeros/packages/runner/integrity-checker/service"
 	"github.com/robfig/cron"
 	"sync"
 )

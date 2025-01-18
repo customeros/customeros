@@ -8,16 +8,16 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	commoncaches "github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/errors"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/model"
+	"github.com/customeros/customeros/packages/server/customer-os-webhooks/service"
 )
 
 func AddIssueRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {

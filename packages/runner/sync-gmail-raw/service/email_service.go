@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"time"
 
-	commonenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/enum"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail-raw/repository"
+	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/config"
+	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/repository"
 )
 
 type emailService struct {

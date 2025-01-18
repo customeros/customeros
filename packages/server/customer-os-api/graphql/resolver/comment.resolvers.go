@@ -8,11 +8,11 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/generated"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 

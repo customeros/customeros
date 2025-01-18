@@ -1,9 +1,9 @@
 package mapper
 
 import (
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 func MapEntityToSlackChannel(entity *postgresEntity.SlackChannel) *model.SlackChannel {

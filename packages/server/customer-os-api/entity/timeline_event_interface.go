@@ -1,9 +1,9 @@
 package entity
 
 import (
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 type LastTouchpointType string

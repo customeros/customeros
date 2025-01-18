@@ -3,11 +3,11 @@ package interfaces
 import (
 	"context"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	common_srv "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type SocialService interface {

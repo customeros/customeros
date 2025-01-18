@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	cosapi_services "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/services"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 func UploadFile(s *cosapi_services.Services, filePath string) gin.HandlerFunc {

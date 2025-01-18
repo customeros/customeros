@@ -2,7 +2,7 @@ package cosapi_interfaces
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 )
 
 type CalendarService interface {

@@ -7,22 +7,22 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/interfaces"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/novu"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/postmark"
-	temporal_client "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/workflows"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository/helper"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/novu"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/postmark"
+	temporal_client "github.com/customeros/customeros/packages/server/customer-os-common-module/temporal/client"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/temporal/workflows"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository/helper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/config"
+	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/tracing"
 )
 
 func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, payload *InvoicePayload, postgresRepositories *postgresRepository.Repositories, cfg config.Config) error {

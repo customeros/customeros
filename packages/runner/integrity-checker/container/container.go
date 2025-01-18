@@ -1,10 +1,10 @@
 package container
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/caches"
-	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/config"
-	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/integrity-checker/repository"
+	"github.com/customeros/customeros/packages/runner/integrity-checker/caches"
+	"github.com/customeros/customeros/packages/runner/integrity-checker/config"
+	"github.com/customeros/customeros/packages/runner/integrity-checker/logger"
+	"github.com/customeros/customeros/packages/runner/integrity-checker/repository"
 )
 
 type Container struct {

@@ -1,9 +1,9 @@
 package cron
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/container"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-dedup/service"
+	"github.com/customeros/customeros/packages/runner/customer-os-dedup/container"
+	"github.com/customeros/customeros/packages/runner/customer-os-dedup/logger"
+	"github.com/customeros/customeros/packages/runner/customer-os-dedup/service"
 	"github.com/robfig/cron"
 	"sync"
 )

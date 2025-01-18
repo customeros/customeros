@@ -1,8 +1,8 @@
 package common
 
 import (
-	comutils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	grpccommon "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	comutils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	grpccommon "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 )
 
 type Source struct {

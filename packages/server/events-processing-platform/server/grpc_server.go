@@ -1,12 +1,12 @@
 package server
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/interceptors"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/service"
-	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
-	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/interceptors"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/service"
+	eventstorepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
+	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
+	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	"github.com/customeros/customeros/packages/server/events/constants"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"

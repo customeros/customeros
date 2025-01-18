@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/server"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/config"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/logger"
+	"github.com/customeros/customeros/packages/server/events-processing-platform/server"
 )
 
 func main() {

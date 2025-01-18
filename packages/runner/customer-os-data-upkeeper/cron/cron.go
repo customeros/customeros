@@ -1,14 +1,14 @@
 package cron
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"sync"
 
 	"github.com/robfig/cron"
 
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/container"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/service"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/container"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/service"
 )
 
 // CONSTANTS - Group definitions

@@ -1,30 +1,29 @@
-module github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper
+module github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper
 
 go 1.23.1
 
-replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../../server/events-processing-proto
+replace github.com/customeros/customeros/packages/server/events-processing-proto => ../../server/events-processing-proto
 
-replace github.com/openline-ai/openline-customer-os/packages/server/events => ../../server/events
+replace github.com/customeros/customeros/packages/server/events => ../../server/events
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../../server/customer-os-common-module
+replace github.com/customeros/customeros/packages/server/customer-os-common-module => ../../server/customer-os-common-module
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../../server/customer-os-neo4j-repository
+replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repository => ../../server/customer-os-neo4j-repository
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ../../server/customer-os-postgres-repository
+replace github.com/customeros/customeros/packages/server/customer-os-postgres-repository => ../../server/customer-os-postgres-repository
 
 require (
 	github.com/biter777/countries v1.7.5
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cenkalti/backoff/v4 v4.3.0
+	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
+	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
+	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
+	github.com/customeros/customeros/packages/server/events v0.0.0-00010101000000-000000000000
+	github.com/customeros/customeros/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c
 	github.com/customeros/mailsherpa v0.3.8
 	github.com/joho/godotenv v1.5.1
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
-	github.com/openline-ai/openline-customer-os/packages/server/enrichment-api v0.0.0-20250117120523-730a3e97ac31
-	github.com/openline-ai/openline-customer-os/packages/server/events v0.0.0-00010101000000-000000000000
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
