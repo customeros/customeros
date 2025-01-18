@@ -6,9 +6,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/config"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -16,10 +16,10 @@ import (
 
 type AdminApiHandler struct {
 	cfg   *config.Config
-	neo4j *repository.Repositories
+	neo4j *neo4j_repository.Repositories
 }
 
-func NewAdminApiHandler(config *config.Config, neo4j *repository.Repositories) *AdminApiHandler {
+func NewAdminApiHandler(config *config.Config, neo4j *neo4j_repository.Repositories) *AdminApiHandler {
 	return &AdminApiHandler{
 		cfg:   config,
 		neo4j: neo4j,

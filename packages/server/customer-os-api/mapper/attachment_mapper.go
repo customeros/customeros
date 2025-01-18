@@ -2,12 +2,12 @@ package mapper
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
-func MapEntityToAttachment(entity *entity.AttachmentEntity) *model.Attachment {
+func MapEntityToAttachment(entity *neo4j_entity.AttachmentEntity) *model.Attachment {
 	if entity == nil {
 		return nil
 	}
@@ -26,7 +26,7 @@ func MapEntityToAttachment(entity *entity.AttachmentEntity) *model.Attachment {
 	}
 }
 
-func MapEntitiesToAttachment(entities *entity.AttachmentEntities) []*model.Attachment {
+func MapEntitiesToAttachment(entities *neo4j_entity.AttachmentEntities) []*model.Attachment {
 	var attachments []*model.Attachment
 	for _, attachmentEntity := range *entities {
 		attachments = append(attachments, MapEntityToAttachment(&attachmentEntity))
@@ -34,8 +34,8 @@ func MapEntitiesToAttachment(entities *entity.AttachmentEntities) []*model.Attac
 	return attachments
 }
 
-func MapAttachmentInputToEntity(input *model.AttachmentInput) *entity.AttachmentEntity {
-	return &entity.AttachmentEntity{
+func MapAttachmentInputToEntity(input *model.AttachmentInput) *neo4j_entity.AttachmentEntity {
+	return &neo4j_entity.AttachmentEntity{
 		Id:        utils.IfNotNilStringWithDefault(input.ID, ""),
 		CreatedAt: input.CreatedAt,
 		CdnUrl:    input.CdnURL,

@@ -9,11 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	common_enum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -26,7 +22,10 @@ import (
 	neoEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/customeros/mailsherpa/mailvalidate"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -119,7 +118,7 @@ func RML(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 
 		link := "https://app.customeros.ai/auth/success?mg=" + code
-		err = s.Repositories.PostgresRepositories.MagicLinkRepository.Create(ctx, &entity.MagicLink{
+		err = s.Repositories.PostgresRepositories.MagicLinkRepository.Create(ctx, &postgres_entity.MagicLink{
 			Email: request.Email,
 			Code:  code,
 			Url:   link,
@@ -162,7 +161,7 @@ func PML(s *cosapi_services.Services) gin.HandlerFunc {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(contextWithTimeout, "/pml", c.Request.Header)
 		defer span.Finish()
 
-		var magicLink *entity.MagicLink
+		var magicLink *postgres_entity.MagicLink
 		var signInRequest SignInRequest
 		if err := c.BindJSON(&signInRequest); err != nil {
 			tracing.TraceErr(span, err)
@@ -286,7 +285,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 	}
 }
 
-func signIn(ctx context.Context, services *cosapi_services.Services, ginContext *gin.Context, signInRequest SignInRequest, personalEmailProviders []entity.PersonalEmailProvider, config *config.Config) {
+func signIn(ctx context.Context, services *cosapi_services.Services, ginContext *gin.Context, signInRequest SignInRequest, personalEmailProviders []postgres_entity.PersonalEmailProvider, config *config.Config) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "getTenant")
 	defer span.Finish()
 
@@ -335,8 +334,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		tenantName = tn
 
 		ctx = common.WithCustomContext(ctx, &common.CustomContext{
-			Tenant:    *tenantName,
-			AppSource: constants.AppSourceUserAdminApi,
+			Tenant: *tenantName,
 		})
 		userId, err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName)
 		if err != nil {
@@ -433,7 +431,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		if isRequestEnablingOAuthSync(signInRequest) {
 			oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
 			if oauthToken == nil {
-				oauthToken = &entity.OAuthTokenEntity{}
+				oauthToken = &postgres_entity.OAuthTokenEntity{}
 			}
 			oauthToken.Provider = signInRequest.Provider
 			oauthToken.TenantName = *tenantName
@@ -464,7 +462,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 	} else if signInRequest.Provider == common_enum.WorkspaceProviderAzure.String() {
 		oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
 		if oauthToken == nil {
-			oauthToken = &entity.OAuthTokenEntity{}
+			oauthToken = &postgres_entity.OAuthTokenEntity{}
 		}
 		oauthToken.Provider = signInRequest.Provider
 		oauthToken.TenantName = *tenantName
@@ -502,7 +500,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 	})
 }
 
-func getTenant(c context.Context, services *cosapi_services.Services, personalEmailProvider []entity.PersonalEmailProvider, signInRequest SignInRequest, config *config.Config) (*string, bool, error) {
+func getTenant(c context.Context, services *cosapi_services.Services, personalEmailProvider []postgres_entity.PersonalEmailProvider, signInRequest SignInRequest, config *config.Config) (*string, bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "getTenant")
 	defer span.Finish()
 
@@ -611,9 +609,8 @@ func getTenant(c context.Context, services *cosapi_services.Services, personalEm
 
 	if !isPersonalEmail {
 		_, err := services.CommonServices.WorkspaceService.MergeToTenant(ctx, neoEntity.WorkspaceEntity{
-			Name:      domain,
-			Provider:  signInRequest.Provider,
-			AppSource: constants.AppSourceUserAdminApi,
+			Name:     domain,
+			Provider: signInRequest.Provider,
 		}, tenantEntity.Name)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -717,8 +714,7 @@ func initializeUser(c context.Context, services *cosapi_services.Services, provi
 	defer span.Finish()
 
 	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant:    tenant,
-		AppSource: constants.AppSourceUserAdminApi,
+		Tenant: tenant,
 	})
 
 	userId := ""
@@ -748,7 +744,7 @@ func initializeUser(c context.Context, services *cosapi_services.Services, provi
 		span.LogFields(tracingLog.Object("player", "not found"))
 	}
 
-	defaultWorkSchedule := entity.UserWorkingSchedule{
+	defaultWorkSchedule := postgres_entity.UserWorkingSchedule{
 		UserId:    userId,
 		DayRange:  "Mon-Fri",
 		StartHour: "09:00",
@@ -763,10 +759,9 @@ func initializeUser(c context.Context, services *cosapi_services.Services, provi
 		})
 
 		_, err = services.CommonServices.EmailService.Merge(innerCtx, nil, tenant, interfaces.EmailFields{
-			Primary:   true,
-			Email:     email,
-			Source:    neoEntity.DataSourceOpenline,
-			AppSource: constants.AppSourceUserAdminApi,
+			Primary: true,
+			Email:   email,
+			Source:  neoEntity.DataSourceOpenline,
 		}, &common_srv.LinkWith{
 			Type: model.USER,
 			Id:   userId,
@@ -808,7 +803,6 @@ func initializeUser(c context.Context, services *cosapi_services.Services, provi
 			AuthId:     email,
 			Provider:   provider,
 			IdentityId: providerAccountId,
-			AppSource:  constants.AppSourceUserAdminApi,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -819,7 +813,6 @@ func initializeUser(c context.Context, services *cosapi_services.Services, provi
 	if userId != "" {
 		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 			Tenant:    tenant,
-			AppSource: constants.AppSourceUserAdminApi,
 			UserEmail: email,
 		})
 		err = services.Repositories.Neo4jRepositories.UserWriteRepository.RegisterLogin(innerCtx, tenant, userId)
@@ -916,8 +909,7 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 	defer span.Finish()
 
 	providerTenantCtx := common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant:    config.App.AuthConfig.ProviderTenantName,
-		AppSource: constants.AppSourceUserAdminApi,
+		Tenant: config.App.AuthConfig.ProviderTenantName,
 	})
 
 	organizationId, contactId, err := createOrganizationAndContact(providerTenantCtx, services, config.App.AuthConfig.ProviderTenantName, registeredEmail, true, "Tenant Registration")
@@ -1183,7 +1175,7 @@ func saveIP(ctx context.Context, c *gin.Context, s *cosapi_services.Services, em
 
 	website := fmt.Sprintf("https://%s", validEmail.Domain)
 
-	details := entity.EnrichDetailsTracking{
+	details := postgres_entity.EnrichDetailsTracking{
 		IP:             clientIP,
 		CompanyDomain:  &validEmail.Domain,
 		CompanyWebsite: &website,

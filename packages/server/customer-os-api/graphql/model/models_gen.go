@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type InteractionEventParticipant interface {
@@ -1138,33 +1138,33 @@ type FilterItem struct {
 }
 
 type Flow struct {
-	Metadata       *Metadata          `json:"metadata"`
-	Name           string             `json:"name"`
-	Description    string             `json:"description"`
-	Nodes          string             `json:"nodes"`
-	Edges          string             `json:"edges"`
-	FirstStartedAt *time.Time         `json:"firstStartedAt,omitempty"`
-	Status         entity.FlowStatus  `json:"status"`
-	Participants   []*FlowParticipant `json:"participants"`
-	Senders        []*FlowSender      `json:"senders"`
-	Statistics     *FlowStatistics    `json:"statistics"`
+	Metadata       *Metadata               `json:"metadata"`
+	Name           string                  `json:"name"`
+	Description    string                  `json:"description"`
+	Nodes          string                  `json:"nodes"`
+	Edges          string                  `json:"edges"`
+	FirstStartedAt *time.Time              `json:"firstStartedAt,omitempty"`
+	Status         neo4j_entity.FlowStatus `json:"status"`
+	Participants   []*FlowParticipant      `json:"participants"`
+	Senders        []*FlowSender           `json:"senders"`
+	Statistics     *FlowStatistics         `json:"statistics"`
 }
 
 func (Flow) IsMetadataInterface()        {}
 func (this Flow) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowAction struct {
-	Metadata *Metadata             `json:"metadata"`
-	Action   entity.FlowActionType `json:"action"`
+	Metadata *Metadata                   `json:"metadata"`
+	Action   neo4j_entity.FlowActionType `json:"action"`
 }
 
 type FlowActionExecution struct {
-	Metadata    *Metadata                        `json:"metadata"`
-	Action      *FlowAction                      `json:"action"`
-	Status      entity.FlowActionExecutionStatus `json:"status"`
-	ScheduledAt *time.Time                       `json:"scheduledAt,omitempty"`
-	ExecutedAt  *time.Time                       `json:"executedAt,omitempty"`
-	Error       *string                          `json:"error,omitempty"`
+	Metadata    *Metadata                              `json:"metadata"`
+	Action      *FlowAction                            `json:"action"`
+	Status      neo4j_entity.FlowActionExecutionStatus `json:"status"`
+	ScheduledAt *time.Time                             `json:"scheduledAt,omitempty"`
+	ExecutedAt  *time.Time                             `json:"executedAt,omitempty"`
+	Error       *string                                `json:"error,omitempty"`
 }
 
 type FlowActionInputData struct {
@@ -1194,11 +1194,11 @@ type FlowActionInputDataWait struct {
 }
 
 type FlowContact struct {
-	Metadata        *Metadata                    `json:"metadata"`
-	Contact         *Contact                     `json:"contact"`
-	Status          entity.FlowParticipantStatus `json:"status"`
-	ScheduledAction *string                      `json:"scheduledAction,omitempty"`
-	ScheduledAt     *time.Time                   `json:"scheduledAt,omitempty"`
+	Metadata        *Metadata                          `json:"metadata"`
+	Contact         *Contact                           `json:"contact"`
+	Status          neo4j_entity.FlowParticipantStatus `json:"status"`
+	ScheduledAction *string                            `json:"scheduledAction,omitempty"`
+	ScheduledAt     *time.Time                         `json:"scheduledAt,omitempty"`
 }
 
 func (FlowContact) IsMetadataInterface()        {}
@@ -1212,12 +1212,12 @@ type FlowMergeInput struct {
 }
 
 type FlowParticipant struct {
-	Metadata           *Metadata                                  `json:"metadata"`
-	EntityType         string                                     `json:"entityType"`
-	EntityID           string                                     `json:"entityId"`
-	Status             entity.FlowParticipantStatus               `json:"status"`
-	RequirementsUnmeet []entity.FlowParticipantRequirementsUnmeet `json:"requirementsUnmeet"`
-	Executions         []*FlowActionExecution                     `json:"executions"`
+	Metadata           *Metadata                                        `json:"metadata"`
+	EntityType         string                                           `json:"entityType"`
+	EntityID           string                                           `json:"entityId"`
+	Status             neo4j_entity.FlowParticipantStatus               `json:"status"`
+	RequirementsUnmeet []neo4j_entity.FlowParticipantRequirementsUnmeet `json:"requirementsUnmeet"`
+	Executions         []*FlowActionExecution                           `json:"executions"`
 }
 
 func (FlowParticipant) IsMetadataInterface()        {}
@@ -1820,8 +1820,7 @@ func (this Metadata) GetAppSource() string         { return this.AppSource }
 func (Metadata) IsNode()            {}
 func (this Metadata) GetID() string { return this.ID }
 
-type Mutation struct {
-}
+type Mutation struct{}
 
 type Note struct {
 	ID            string        `json:"id"`
@@ -2402,8 +2401,7 @@ type PhoneNumberUpdateInput struct {
 	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 }
 
-type Query struct {
-}
+type Query struct{}
 
 type Reminder struct {
 	Metadata  *Metadata  `json:"metadata"`

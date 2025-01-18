@@ -8,11 +8,11 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/gin-gonic/gin"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
@@ -115,7 +115,7 @@ func processInboundEmail(c *gin.Context, s *cosapi_services.Services, emailData 
 	}
 
 	dbErr := s.Repositories.PostgresRepositories.RawEmailRepository.Store(
-		ctx, EXTERNAL_SYSTEM, tenant, username, dbEmailEntity.ProviderMessageId, messageId, string(jsonEmailEntity), dbEmailEntity.Sent, entity.REAL_TIME,
+		ctx, EXTERNAL_SYSTEM, tenant, username, dbEmailEntity.ProviderMessageId, messageId, string(jsonEmailEntity), dbEmailEntity.Sent, postgres_entity.REAL_TIME,
 	)
 	if dbErr != nil {
 		span.LogFields(tracingLog.Object("raw_email", jsonEmailEntity))

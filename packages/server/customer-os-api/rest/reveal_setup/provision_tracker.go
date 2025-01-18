@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
@@ -73,7 +73,7 @@ func ProvisionTracker(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 
 		// whitelist domain
-		whitelist := entity.TrackingAllowedOrigin{
+		whitelist := postgres_entity.TrackingAllowedOrigin{
 			Tenant:  tenant,
 			Origin:  payload.Domain,
 			Enabled: true,

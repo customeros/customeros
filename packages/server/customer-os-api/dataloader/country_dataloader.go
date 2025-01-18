@@ -3,15 +3,16 @@ package dataloader
 import (
 	"context"
 	"errors"
-	"github.com/graph-gophers/dataloader"
+	"reflect"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"reflect"
 )
 
-func (i *Loaders) GetCountryForPhoneNumber(ctx context.Context, phoneNumberId string) (*entity.CountryEntity, error) {
+func (i *Loaders) GetCountryForPhoneNumber(ctx context.Context, phoneNumberId string) (*neo4j_entity.CountryEntity, error) {
 	thunk := i.CountryForPhoneNumber.Load(ctx, dataloader.StringKey(phoneNumberId))
 	result, err := thunk()
 	if err != nil {
@@ -20,7 +21,7 @@ func (i *Loaders) GetCountryForPhoneNumber(ctx context.Context, phoneNumberId st
 	if result == nil {
 		return nil, nil
 	}
-	resultObj := result.(*entity.CountryEntity)
+	resultObj := result.(*neo4j_entity.CountryEntity)
 	return resultObj, nil
 }
 
@@ -42,7 +43,7 @@ func (b *countryBatcher) getCountriesForPhoneNumbers(ctx context.Context, keys d
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	countryEntityByPhoneNumberId := make(map[string]entity.CountryEntity)
+	countryEntityByPhoneNumberId := make(map[string]neo4j_entity.CountryEntity)
 	for _, val := range *countryEntities {
 		countryEntityByPhoneNumberId[val.DataloaderKey] = val
 	}
@@ -60,7 +61,7 @@ func (b *countryBatcher) getCountriesForPhoneNumbers(ctx context.Context, keys d
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.CountryEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4j_entity.CountryEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

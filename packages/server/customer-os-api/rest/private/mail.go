@@ -8,8 +8,6 @@ import (
 	"image/png"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -17,9 +15,12 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 func SendEmail(s *cosapi_services.Services) gin.HandlerFunc {
@@ -45,7 +46,7 @@ func SendEmail(s *cosapi_services.Services) gin.HandlerFunc {
 
 		ctx = common.WithCustomContext(ctx, customCtx)
 
-		var request *entity.EmailMessage
+		var request *postgres_entity.EmailMessage
 
 		if err := c.BindJSON(&request); err != nil {
 			tracing.TraceErr(span, err)

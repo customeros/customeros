@@ -11,10 +11,10 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailwatcher/dmarkstats"
 	"github.com/gin-gonic/gin"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
@@ -95,7 +95,7 @@ func processDmarcMonitoringReport(c *gin.Context, s *cosapi_services.Services, e
 	return nil
 }
 
-func buildDMARCReport(c *gin.Context, s *cosapi_services.Services, report dmarcstats.Report, provider string) entity.DMARCMonitoring {
+func buildDMARCReport(c *gin.Context, s *cosapi_services.Services, report dmarcstats.Report, provider string) postgres_entity.DMARCMonitoring {
 	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.buildDMARCReport")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
@@ -106,7 +106,7 @@ func buildDMARCReport(c *gin.Context, s *cosapi_services.Services, report dmarcs
 	}
 
 	jsonReport, _ := json.Marshal(report)
-	return entity.DMARCMonitoring{
+	return postgres_entity.DMARCMonitoring{
 		Tenant:        tenant,
 		EmailProvider: provider,
 		Domain:        report.Domain,

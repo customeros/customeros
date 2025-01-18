@@ -6,7 +6,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"golang.org/x/net/context"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/config"
@@ -111,7 +111,7 @@ type tenantSettingsService struct {
 	serviceMap map[string][]keyMapping
 	log        logger.Logger
 	cfg        *config.Config
-	postgres   *repository.Repositories
+	postgres   *postgres_repository.Repositories
 }
 
 type keyMapping struct {
@@ -119,7 +119,7 @@ type keyMapping struct {
 	DbKeyName  string
 }
 
-func NewTenantSettingsService(log logger.Logger, cfg *config.Config, postgres *repository.Repositories) cosapi_interfaces.TenantSettingsService {
+func NewTenantSettingsService(log logger.Logger, cfg *config.Config, postgres *postgres_repository.Repositories) cosapi_interfaces.TenantSettingsService {
 	return &tenantSettingsService{
 		serviceMap: map[string][]keyMapping{
 			SERVICE_GSUITE: {

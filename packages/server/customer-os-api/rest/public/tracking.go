@@ -4,15 +4,15 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 func TrackLinkRequest(s *cosapi_services.Services) gin.HandlerFunc {
@@ -42,7 +42,7 @@ func TrackLinkRequest(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 		// if email lookup is not of expected type, return 400
-		if emailLookup.Type != postgresentity.EmailLookupTypeLink {
+		if emailLookup.Type != postgres_entity.EmailLookupTypeLink {
 			tracing.TraceErr(span, errors.Wrap(err, "Email lookup is not of expected type"))
 			c.String(http.StatusNotFound, "Not found")
 			return
@@ -53,11 +53,11 @@ func TrackLinkRequest(s *cosapi_services.Services) gin.HandlerFunc {
 			ipAddress, err := saveIP(c, s, emailLookup)
 
 			// Store click data
-			_, err = s.Repositories.PostgresRepositories.EmailTrackingRepository.Register(ctx, postgresentity.EmailTracking{
+			_, err = s.Repositories.PostgresRepositories.EmailTrackingRepository.Register(ctx, postgres_entity.EmailTracking{
 				Tenant:      emailLookup.Tenant,
 				MessageId:   emailLookup.MessageId,
 				LinkId:      emailLookup.LinkId,
-				EventType:   postgresentity.EmailTrackingEventTypeLinkClick,
+				EventType:   postgres_entity.EmailTrackingEventTypeLinkClick,
 				IP:          ipAddress,
 				RecipientId: emailLookup.RecipientId,
 				Campaign:    emailLookup.Campaign,
@@ -108,7 +108,7 @@ func TrackOpenRequest(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 		// if email lookup is not of expected type, return 400
-		if emailLookup.Type != postgresentity.EmailLookupTypeSpyPixel {
+		if emailLookup.Type != postgres_entity.EmailLookupTypeSpyPixel {
 			tracing.TraceErr(span, errors.Wrap(err, "Email lookup is not of expected type"))
 			return
 		}
@@ -117,12 +117,12 @@ func TrackOpenRequest(s *cosapi_services.Services) gin.HandlerFunc {
 			ipAddress := c.ClientIP()
 
 			// Store click data
-			_, err = s.Repositories.PostgresRepositories.EmailTrackingRepository.Register(ctx, postgresentity.EmailTracking{
+			_, err = s.Repositories.PostgresRepositories.EmailTrackingRepository.Register(ctx, postgres_entity.EmailTracking{
 				Tenant:      emailLookup.Tenant,
 				MessageId:   emailLookup.MessageId,
 				RecipientId: emailLookup.RecipientId,
 				Campaign:    emailLookup.Campaign,
-				EventType:   postgresentity.EmailTrackingEventTypeOpen,
+				EventType:   postgres_entity.EmailTrackingEventTypeOpen,
 				IP:          ipAddress,
 			})
 			if err != nil {
@@ -159,7 +159,7 @@ func TrackUnsubscribeRequest(s *cosapi_services.Services) gin.HandlerFunc {
 			return
 		}
 		// if email lookup is not of expected type, return 400
-		if emailLookup.Type != postgresentity.EmailLookupTypeUnsubscribe {
+		if emailLookup.Type != postgres_entity.EmailLookupTypeUnsubscribe {
 			tracing.TraceErr(span, errors.Wrap(err, "Email lookup is not of expected type"))
 			c.String(http.StatusNotFound, "Not found")
 			return
@@ -169,11 +169,11 @@ func TrackUnsubscribeRequest(s *cosapi_services.Services) gin.HandlerFunc {
 		ipAddress := c.ClientIP()
 
 		// Store click data
-		_, err = s.Repositories.PostgresRepositories.EmailTrackingRepository.Register(ctx, postgresentity.EmailTracking{
+		_, err = s.Repositories.PostgresRepositories.EmailTrackingRepository.Register(ctx, postgres_entity.EmailTracking{
 			Tenant:      emailLookup.Tenant,
 			MessageId:   emailLookup.MessageId,
 			LinkId:      emailLookup.LinkId,
-			EventType:   postgresentity.EmailTrackingEventTypeUnsubscribe,
+			EventType:   postgres_entity.EmailTrackingEventTypeUnsubscribe,
 			IP:          ipAddress,
 			RecipientId: emailLookup.RecipientId,
 			Campaign:    emailLookup.Campaign,
@@ -187,7 +187,7 @@ func TrackUnsubscribeRequest(s *cosapi_services.Services) gin.HandlerFunc {
 	}
 }
 
-func saveIP(c *gin.Context, s *cosapi_services.Services, emailLookup *entity.EmailLookup) (string, error) {
+func saveIP(c *gin.Context, s *cosapi_services.Services, emailLookup *postgres_entity.EmailLookup) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "tracking.saveIP")
 	defer span.Finish()
 	originalIP := c.Request.Header["X-Original-Forwarded-For"][0]
@@ -211,7 +211,7 @@ func saveIP(c *gin.Context, s *cosapi_services.Services, emailLookup *entity.Ema
 
 	emailVerify := mailvalidate.ValidateEmailSyntax(emailMessage.From)
 
-	details := entity.EnrichDetailsTracking{
+	details := postgres_entity.EnrichDetailsTracking{
 		IP:             clientIP,
 		CompanyDomain:  &emailVerify.Domain,
 		CompanyWebsite: &emailVerify.Domain,

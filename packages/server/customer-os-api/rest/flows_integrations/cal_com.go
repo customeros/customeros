@@ -10,11 +10,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
@@ -64,7 +64,7 @@ func CalDotCom(c *gin.Context, s *cosapi_services.Services) {
 	})
 
 	// lookup secret
-	webhook, err := s.Repositories.PostgresRepositories.WebhooksRepository.Find(ctx, entity.Webhooks{WebhookPath: c.Request.URL.Path})
+	webhook, err := s.Repositories.PostgresRepositories.WebhooksRepository.Find(ctx, postgres_entity.Webhooks{WebhookPath: c.Request.URL.Path})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrNotFound)

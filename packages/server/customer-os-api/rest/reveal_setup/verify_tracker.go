@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/net/html"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
@@ -43,7 +43,7 @@ func VerifyTracker(s *cosapi_services.Services) gin.HandlerFunc {
 		// }
 
 		// lookup domain to ensure it exists in whitelist
-		query := entity.TrackingAllowedOrigin{
+		query := postgres_entity.TrackingAllowedOrigin{
 			Origin:  domain,
 			Enabled: true,
 		}

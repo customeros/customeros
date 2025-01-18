@@ -8,9 +8,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
-	"github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
@@ -109,7 +109,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 
 		if slackResponse.Ok {
-			_, err := s.Repositories.PostgresRepositories.SlackSettingsRepository.Save(c, entity.SlackSettingsEntity{
+			_, err := s.Repositories.PostgresRepositories.SlackSettingsRepository.Save(c, postgres_entity.SlackSettingsEntity{
 				TenantName:   tenant.(string),
 				AppId:        slackResponse.AppId,
 				AuthedUserId: slackResponse.AuthedUser.Id,
