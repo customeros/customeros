@@ -2,27 +2,28 @@ package config
 
 import (
 	"github.com/caarlos0/env/v6"
-	"github.com/joho/godotenv"
 	cronconf "github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/cron/config"
-	commconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/joho/godotenv"
 	"log"
 )
 
 type CommonConfig struct {
-	Enrow            commconf.EnrowConfig
+	Enrow            commonconf.EnrowConfig
 	Logger           logger.Config
 	Jaeger           tracing.JaegerConfig
-	GrpcClientConfig commconf.GrpcClientConfig
-	RabbitMQConfig   commconf.RabbitMQConfig
-	ScrubbyIo        commconf.ScrubbyIoConfig
-	Anthropic        commconf.AnthropicConfig
-	CustomerOsApi    commconf.CustomerOsApiConfig
-	BetterContact    commconf.BetterContactConfig
-	Postgres         commconf.PostgresConfig
-	PostgresAsync    commconf.PostgresAsyncConfig
-	Neo4j            commconf.Neo4jConfig
+	GrpcClientConfig commonconf.GrpcClientConfig
+	RabbitMQConfig   commonconf.RabbitMQConfig
+	ScrubbyIo        commonconf.ScrubbyIoConfig
+	Anthropic        commonconf.AnthropicConfig
+	CustomerOsApi    commonconf.CustomerOsApiConfig
+	BetterContact    commonconf.BetterContactConfig
+	Postgres         commonconf.PostgresConfig
+	PostgresAsync    commonconf.PostgresAsyncConfig
+	Neo4j            commonconf.Neo4jConfig
+	Mailsherpa       commonconf.MailSherpaApiConfig
 }
 
 type AppConfig struct {
@@ -33,7 +34,7 @@ type AppConfig struct {
 }
 
 type Config struct {
-	Common *commconf.CommonConfig
+	Common *commonconf.CommonConfig
 	App    AppConfig
 }
 
@@ -75,8 +76,8 @@ func Load() *Config {
 		log.Fatalf("%+v", err)
 	}
 
-	cfg.Common = &commconf.CommonConfig{
-		Infrastructure: commconf.InfrastructureConfig{
+	cfg.Common = &commonconf.CommonConfig{
+		Infrastructure: commonconf.InfrastructureConfig{
 			LoggerConfig:        cmnCfg.Logger,
 			JaegerConfig:        cmnCfg.Jaeger,
 			GrpcClientConfig:    cmnCfg.GrpcClientConfig,
@@ -85,13 +86,13 @@ func Load() *Config {
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,
 			Neo4jConfig:         cmnCfg.Neo4j,
 		},
-		External: commconf.ExternalServicesConfig{
+		External: commonconf.ExternalServicesConfig{
 			EnrowConfig:         cmnCfg.Enrow,
 			ScrubbyIoConfig:     cmnCfg.ScrubbyIo,
 			AnthropicConfig:     cmnCfg.Anthropic,
 			BetterContactConfig: cmnCfg.BetterContact,
 		},
-		Internal: commconf.InternalServicesConfig{
+		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi: cmnCfg.CustomerOsApi,
 		},
 	}

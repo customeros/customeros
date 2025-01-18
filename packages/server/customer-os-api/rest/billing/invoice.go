@@ -6,12 +6,12 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
@@ -92,7 +92,7 @@ func GetInvoicesForOrganization(services *cosapi_services.Services) gin.HandlerF
 
 			if (invoiceEntity.Status == neo4jenum.InvoiceStatusDue || invoiceEntity.Status == neo4jenum.InvoiceStatusOverdue) &&
 				(invoiceEntity.PaymentDetails.PaymentLink != "") {
-				record.PaymentLink = services.Cfg.CommonServices.Internal.CustomerOsApi.ApiUrl + "/invoice/" + invoiceEntity.Id + "/pay"
+				record.PaymentLink = services.Cfg.Common.Internal.CustomerOsApi.ApiUrl + "/invoice/" + invoiceEntity.Id + "/pay"
 			}
 
 			wg.Add(1)

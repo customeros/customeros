@@ -158,6 +158,15 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncBetterContact", c.Request.Header)
 		defer span.Finish()
 
+		// validate bettercontact is configured
+		if cfg.Common.External.BetterContactConfig.BetterContactCallbackApiKey == "" {
+			err := pkgerrors.New("bettercontact is not configured")
+			tracing.TraceErr(span, err)
+			log.Errorf("bettercontact is not configured")
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "API key not configured"})
+			return
+		}
+
 		// Read the tenant header
 		apiKeyHeader := c.Query("apiKey")
 		if apiKeyHeader == "" {

@@ -96,6 +96,9 @@ type Repositories struct {
 }
 
 func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string) *Repositories {
+	if neo4jDatabase == "" {
+		neo4jDatabase = "neo4j"
+	}
 	repositories := Repositories{
 		Neo4jDriver:                              driver,
 		Database:                                 neo4jDatabase,

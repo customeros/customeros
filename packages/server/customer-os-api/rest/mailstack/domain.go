@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -116,7 +116,7 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 	// Extract the TLD from the domain (e.g., "com" from "example.com")
 	tld := strings.Split(domain, ".")[1]
 	tldSupported := false
-	for _, supportedTld := range services.Cfg.CommonServices.Internal.MailstackConfig.SupportedTlds {
+	for _, supportedTld := range services.Cfg.Common.Internal.MailstackConfig.SupportedTlds {
 		if tld == supportedTld {
 			tldSupported = true
 			break
@@ -145,7 +145,7 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 		tracing.TraceErr(span, errors.Wrap(err, "Error getting domain price"))
 		return registerNewDomainResponse, err
 	}
-	if domainPrice > services.Cfg.CommonServices.External.NamecheapConfig.MaxPrice {
+	if domainPrice > services.Cfg.Common.External.NamecheapConfig.MaxPrice {
 		return registerNewDomainResponse, coserrors.ErrDomainPriceExceeded
 	}
 

@@ -43,7 +43,7 @@ type OauthSlackRevokeResponse struct {
 
 func RequestAccessSlack(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		slackRequestAccessUrl := "https://slack.com/oauth/v2/authorize?client_id=" + s.Cfg.CommonServices.External.SlackConfig.ClientID + "&scope=chat:write,chat:write.public,channels:history,channels:join,channels:read,files:read,groups:history,groups:read,im:history,links:read,reactions:read,team:read,usergroups:read,users.profile:read,users:read,users:read.email&user_scope="
+		slackRequestAccessUrl := "https://slack.com/oauth/v2/authorize?client_id=" + s.Cfg.Common.External.SlackConfig.ClientID + "&scope=chat:write,chat:write.public,channels:history,channels:join,channels:read,files:read,groups:history,groups:read,im:history,links:read,reactions:read,team:read,usergroups:read,users.profile:read,users:read,users:read.email&user_scope="
 
 		c.JSON(http.StatusOK, gin.H{"url": slackRequestAccessUrl})
 	}
@@ -68,8 +68,8 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 
 		requestData := url.Values{}
 		requestData.Set("code", code)
-		requestData.Set("client_id", s.Cfg.CommonServices.External.SlackConfig.ClientID)
-		requestData.Set("client_secret", s.Cfg.CommonServices.External.SlackConfig.ClientSecret)
+		requestData.Set("client_id", s.Cfg.Common.External.SlackConfig.ClientID)
+		requestData.Set("client_secret", s.Cfg.Common.External.SlackConfig.ClientSecret)
 
 		// Encode the form data
 		requestBody := requestData.Encode()

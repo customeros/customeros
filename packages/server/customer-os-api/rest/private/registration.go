@@ -618,8 +618,8 @@ func getTenant(c context.Context, services *cosapi_services.Services, personalEm
 		}
 	}
 
-	if config.CommonServices.External.SlackConfig.NotifyNewTenantRegisteredHook != "" {
-		common_utils.SendSlackMessage(ctx, config.CommonServices.External.SlackConfig.NotifyNewTenantRegisteredHook, tenantStr+" tenant registered by "+signInRequest.LoggedInEmail)
+	if config.Common.External.SlackConfig.NotifyNewTenantRegisteredHook != "" {
+		common_utils.SendSlackMessage(ctx, config.Common.External.SlackConfig.NotifyNewTenantRegisteredHook, tenantStr+" tenant registered by "+signInRequest.LoggedInEmail)
 	}
 
 	return &tenantEntity.Name, true, nil
@@ -679,8 +679,8 @@ func getUserInfoFromGoogle(c context.Context, config *config.Config, signInReque
 	defer span.Finish()
 
 	conf := &tokenOauth.Config{
-		ClientID:     config.CommonServices.Infrastructure.GoogleOAuthConfig.ClientId,
-		ClientSecret: config.CommonServices.Infrastructure.GoogleOAuthConfig.ClientSecret,
+		ClientID:     config.Common.Infrastructure.GoogleOAuthConfig.ClientId,
+		ClientSecret: config.Common.Infrastructure.GoogleOAuthConfig.ClientSecret,
 		Endpoint:     google.Endpoint,
 	}
 

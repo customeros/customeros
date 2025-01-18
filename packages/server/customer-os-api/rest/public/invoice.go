@@ -109,9 +109,9 @@ func RedirectToPayInvoice(services *cosapi_services.Services) gin.HandlerFunc {
 				tracing.TraceErr(span, errors.Wrap(err, "Error fetching primary stripe customer ID"))
 			}
 
-			err = callIntegrationAppWithApiRequestForNewPaymentLink(innerCtx, services.Cfg.CommonServices.External.IntegrationAppConfig.WorkspaceKey,
-				services.Cfg.CommonServices.External.IntegrationAppConfig.WorkspaceSecret, tenant,
-				services.Cfg.CommonServices.External.IntegrationAppConfig.ApiTriggerUrlCreatePaymentLinks, primaryStripeCustomerId, invoice)
+			err = callIntegrationAppWithApiRequestForNewPaymentLink(innerCtx, services.Cfg.Common.External.IntegrationAppConfig.WorkspaceKey,
+				services.Cfg.Common.External.IntegrationAppConfig.WorkspaceSecret, tenant,
+				services.Cfg.Common.External.IntegrationAppConfig.ApiTriggerUrlCreatePaymentLinks, primaryStripeCustomerId, invoice)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error calling integration app"))
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to obtain payment link, please try again later"})

@@ -49,6 +49,14 @@ func (s *enrichmentService) FindWorkEmail(ctx context.Context, linkedInUrl, firs
 		log.String("companyName", companyName),
 		log.Bool("enrichPhoneNumber", enrichPhoneNumber))
 
+	// validate if bettercontact is configured
+	if s.config.BetterContactConfig.ApiKey == "" || s.config.BetterContactConfig.Url == "" {
+		err := errors.New("bettercontact is not configured")
+		tracing.TraceErr(span, err)
+		s.log.Errorf("bettercontact is not configured")
+		return "", "", nil, err
+	}
+
 	firstName = strings.TrimSpace(firstName)
 	lastName = strings.TrimSpace(lastName)
 	companyName = strings.TrimSpace(companyName)
