@@ -12,9 +12,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/model"
 )
 
 func Handle_FlowParticipantGoalAchieved(ctx context.Context, dependencies *model.DependencyContainer, input any) error {
@@ -125,7 +126,7 @@ func Handle_FlowParticipantGoalAchieved(ctx context.Context, dependencies *model
 			organizationPublicLink = fmt.Sprintf("%s/organization/%s", dependencies.CommonConfig.External.NovuCofig.FronteraUrl, contactWithOrganization.Organization.ID)
 		}
 
-		//slack notification
+		// slack notification
 		slackChannel, err := dependencies.PostgresRepositories.SlackChannelNotificationRepository.GetSlackChannel(ctx, message.Event.Tenant, postgresEntity.SlackChannelNotificationWorkflowMailstackReply)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -135,7 +136,7 @@ func Handle_FlowParticipantGoalAchieved(ctx context.Context, dependencies *model
 		if slackChannel != nil && slackChannel.ChannelId != "" {
 			slackMessageText := contactName + " has replied to the email. " + organizationName + " has achieved it’s goal!"
 
-			err = dependencies.CommonServices.SlackService.Notify(ctx, message.Event.Tenant, slackChannel.ChannelId, &slackMessageText)
+			err = dependencies.CommonServices.NotificationService.NotifySlackChannel(ctx, message.Event.Tenant, slackChannel.ChannelId, &slackMessageText)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err

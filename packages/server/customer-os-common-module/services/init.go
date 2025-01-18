@@ -43,6 +43,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/mailstack"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/markdown_event"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/namecheap"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/notification"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/novu"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/opensrs"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/services/opportunity"
@@ -102,6 +103,7 @@ type CommonServices struct {
 	MailstackService           interfaces.MailstackService
 	MarkdownEventService       interfaces.MarkdownEventService
 	NamecheapService           interfaces.NamecheapService
+	NotificationService        interfaces.NotificationService
 	NovuService                interfaces.NovuService
 	OpenSRSService             interfaces.OpenSrsService
 	OpportunityService         interfaces.OpportunityService
@@ -156,12 +158,13 @@ func InitCommonServices(
 		IndustryService:            industry.NewIndustryService(log, neo4jRepositories),
 		InteractionSessionService:  interaction_session.NewInteractionSessionService(neo4jRepositories),
 		MarkdownEventService:       markdown_event.NewMarkdownEventService(log, neo4jRepositories, events),
+		NotificationService:        notification.NewNotificationService(log, postgresRepositories),
 		NamecheapService:           namecheap.NewNamecheapService(&cfg.External.NamecheapConfig, postgresRepositories),
 		NovuService:                novu.NewNovuService(cfg.External.NovuCofig.ApiKey),
 		OpenSRSService:             opensrs.NewOpenSRSService(log, &cfg.External.OpenSRSConfig, postgresRepositories),
 		PhoneNumberService:         phone_number.NewPhoneNumberService(neo4jRepositories, events),
 		PostmarkService:            postmark.NewPostmarkService(&cfg.External.PostmarkConfig, postgresRepositories),
-		SlackService:               slack.NewSlackService(log, postgresRepositories),
+		SlackService:               slack.NewSlackService(postgresRepositories),
 		TagService:                 tags.NewTagService(log, neo4jRepositories, events),
 		TenantService:              tenant.NewTenantService(log, neo4jRepositories, postgresRepositories),
 		TenantSettingsService:      tenant_settings.NewTenantSettingsService(log, neo4jRepositories, events),
@@ -379,7 +382,7 @@ func InitCommonServices(
 		nil, // action
 		common.EnrichmentService,
 		nil, // organization
-		common.SlackService,
+		common.NotificationService,
 		common.WorkspaceService,
 	)
 
