@@ -3,20 +3,19 @@ package server
 import (
 	"bytes"
 	"context"
-	"github.com/gin-contrib/cors"
-	ginzap "github.com/gin-contrib/zap"
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
+	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/config"
 	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/service"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/gin-contrib/cors"
+	ginzap "github.com/gin-contrib/zap"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -39,10 +38,6 @@ func (server *server) Run(parentCtx context.Context) error {
 	ctx, cancel := signal.NotifyContext(parentCtx, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-	if err := validator.GetValidator().Struct(server.cfg); err != nil {
-		return errors.Wrap(err, "cfg validate")
-	}
-
 	// Setting up tracing
 	tracer, closer, err := tracing.NewJaegerTracer(&server.cfg.Common.Infrastructure.JaegerConfig, server.log)
 	if err != nil {
@@ -54,7 +49,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	registerPrometheusMetrics()
 
 	// Initialize postgres db
-	postgresDb, err := commonConfig.InitPostgres(&server.cfg.Common)
+	postgresDb, err := commonConfig.InitPostgres(server.cfg.Common)
 	if err != nil {
 		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
 	}
@@ -70,6 +65,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		server.log.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.cfg.Common.Infrastructure.Neo4jConfig.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
+	neo4jRepositories := neo4jRepository.InitNeo4jRepositories(&neo4jDriver, server.cfg.Common.Infrastructure.Neo4jConfig.Database)
 
 	// Setting up gRPC client
 	df := grpc_client.NewDialFactory(&server.cfg.Common.Infrastructure.GrpcClientConfig)
@@ -101,6 +97,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	// Setting up services
 	service.InitServices(
 		postgresRepositories,
+		neo4jRepositories,
 		server.cfg,
 		grpcContainer,
 		server.log,
