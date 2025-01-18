@@ -2,11 +2,11 @@ package config
 
 import (
 	"github.com/caarlos0/env/v6"
-	"github.com/joho/godotenv"
 	cronconf "github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/cron/config"
 	commconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/joho/godotenv"
 	"log"
 )
 
@@ -23,6 +23,7 @@ type CommonConfig struct {
 	Postgres         commconf.PostgresConfig
 	PostgresAsync    commconf.PostgresAsyncConfig
 	Neo4j            commconf.Neo4jConfig
+	Mailsherpa       commconf.MailSherpaApiConfig
 }
 
 type AppConfig struct {
