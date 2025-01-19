@@ -86,7 +86,6 @@ func Load() *Config {
 			PostgresConfig:      cmnCfg.Postgres,
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,
 			Neo4jConfig:         cmnCfg.Neo4j,
-			FileStoreConfig:     cmnCfg.FileStore,
 		},
 		External: commonconf.ExternalServicesConfig{
 			EnrowConfig:         cmnCfg.Enrow,
@@ -97,6 +96,7 @@ func Load() *Config {
 		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi:       cmnCfg.CustomerOsApi,
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,
+			FileStoreConfig:     cmnCfg.FileStore,
 		},
 	}
 

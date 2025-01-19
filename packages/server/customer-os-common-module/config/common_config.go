@@ -21,7 +21,6 @@ type InfrastructureConfig struct {
 	RabbitMQConfig      RabbitMQConfig
 	JaegerConfig        tracing.JaegerConfig
 	LoggerConfig        logger.Config
-	FileStoreConfig     FileStoreConfig
 }
 
 type InternalServicesConfig struct {
@@ -29,6 +28,7 @@ type InternalServicesConfig struct {
 	MailstackConfig     MailstackConfig
 	MailSherpaApiConfig MailSherpaApiConfig
 	CustomerOsApi       CustomerOsApiConfig
+	FileStoreConfig     FileStoreConfig
 }
 
 type ExternalServicesConfig struct {
