@@ -102,6 +102,24 @@ type ComplexityRoot struct {
 		Accepted func(childComplexity int) int
 	}
 
+	Agent struct {
+		Capabilities func(childComplexity int) int
+		Color        func(childComplexity int) int
+		CreatedAt    func(childComplexity int) int
+		Error        func(childComplexity int) int
+		FlowID       func(childComplexity int) int
+		Goal         func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Icon         func(childComplexity int) int
+		IsActive     func(childComplexity int) int
+		Name         func(childComplexity int) int
+		Status       func(childComplexity int) int
+		Tenant       func(childComplexity int) int
+		Type         func(childComplexity int) int
+		UpdatedAt    func(childComplexity int) int
+		Visible      func(childComplexity int) int
+	}
+
 	Attachment struct {
 		AppSource     func(childComplexity int) int
 		BasePath      func(childComplexity int) int
@@ -175,6 +193,17 @@ type ComplexityRoot struct {
 		Source        func(childComplexity int) int
 		SourceOfTruth func(childComplexity int) int
 		UpdatedAt     func(childComplexity int) int
+	}
+
+	Capability struct {
+		Action   func(childComplexity int) int
+		Errors   func(childComplexity int) int
+		ID       func(childComplexity int) int
+		Name     func(childComplexity int) int
+		Optional func(childComplexity int) int
+		Status   func(childComplexity int) int
+		Type     func(childComplexity int) int
+		Values   func(childComplexity int) int
 	}
 
 	ColumnView struct {
@@ -1018,6 +1047,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AddTag                                     func(childComplexity int, input model.AddTagInput) int
+		AgentSave                                  func(childComplexity int, input model.AgentSaveInput) int
 		AttachmentCreate                           func(childComplexity int, input model.AttachmentInput) int
 		BankAccountCreate                          func(childComplexity int, input *model.BankAccountCreateInput) int
 		BankAccountDelete                          func(childComplexity int, id string) int
@@ -1444,6 +1474,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Agent                              func(childComplexity int, id string) int
+		Agents                             func(childComplexity int) int
 		Attachment                         func(childComplexity int, id string) int
 		BankAccounts                       func(childComplexity int) int
 		BillableInfo                       func(childComplexity int) int
@@ -1887,6 +1919,7 @@ type MeetingResolver interface {
 	ExternalSystem(ctx context.Context, obj *model.Meeting) ([]*model.ExternalSystem, error)
 }
 type MutationResolver interface {
+	AgentSave(ctx context.Context, input model.AgentSaveInput) (*model.Agent, error)
 	AttachmentCreate(ctx context.Context, input model.AttachmentInput) (*model.Attachment, error)
 	BankAccountCreate(ctx context.Context, input *model.BankAccountCreateInput) (*model.BankAccount, error)
 	BankAccountUpdate(ctx context.Context, input *model.BankAccountUpdateInput) (*model.BankAccount, error)
@@ -2103,6 +2136,8 @@ type PhoneNumberResolver interface {
 	Organizations(ctx context.Context, obj *model.PhoneNumber) ([]*model.Organization, error)
 }
 type QueryResolver interface {
+	Agents(ctx context.Context) ([]*model.Agent, error)
+	Agent(ctx context.Context, id string) (*model.Agent, error)
 	Attachment(ctx context.Context, id string) (*model.Attachment, error)
 	BankAccounts(ctx context.Context) ([]*model.BankAccount, error)
 	GlobalCache(ctx context.Context) (*model.GlobalCache, error)
@@ -2321,6 +2356,111 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ActionResponse.Accepted(childComplexity), true
+
+	case "Agent.capabilities":
+		if e.complexity.Agent.Capabilities == nil {
+			break
+		}
+
+		return e.complexity.Agent.Capabilities(childComplexity), true
+
+	case "Agent.color":
+		if e.complexity.Agent.Color == nil {
+			break
+		}
+
+		return e.complexity.Agent.Color(childComplexity), true
+
+	case "Agent.createdAt":
+		if e.complexity.Agent.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Agent.CreatedAt(childComplexity), true
+
+	case "Agent.error":
+		if e.complexity.Agent.Error == nil {
+			break
+		}
+
+		return e.complexity.Agent.Error(childComplexity), true
+
+	case "Agent.flowId":
+		if e.complexity.Agent.FlowID == nil {
+			break
+		}
+
+		return e.complexity.Agent.FlowID(childComplexity), true
+
+	case "Agent.goal":
+		if e.complexity.Agent.Goal == nil {
+			break
+		}
+
+		return e.complexity.Agent.Goal(childComplexity), true
+
+	case "Agent.id":
+		if e.complexity.Agent.ID == nil {
+			break
+		}
+
+		return e.complexity.Agent.ID(childComplexity), true
+
+	case "Agent.icon":
+		if e.complexity.Agent.Icon == nil {
+			break
+		}
+
+		return e.complexity.Agent.Icon(childComplexity), true
+
+	case "Agent.isActive":
+		if e.complexity.Agent.IsActive == nil {
+			break
+		}
+
+		return e.complexity.Agent.IsActive(childComplexity), true
+
+	case "Agent.name":
+		if e.complexity.Agent.Name == nil {
+			break
+		}
+
+		return e.complexity.Agent.Name(childComplexity), true
+
+	case "Agent.status":
+		if e.complexity.Agent.Status == nil {
+			break
+		}
+
+		return e.complexity.Agent.Status(childComplexity), true
+
+	case "Agent.tenant":
+		if e.complexity.Agent.Tenant == nil {
+			break
+		}
+
+		return e.complexity.Agent.Tenant(childComplexity), true
+
+	case "Agent.type":
+		if e.complexity.Agent.Type == nil {
+			break
+		}
+
+		return e.complexity.Agent.Type(childComplexity), true
+
+	case "Agent.updatedAt":
+		if e.complexity.Agent.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Agent.UpdatedAt(childComplexity), true
+
+	case "Agent.visible":
+		if e.complexity.Agent.Visible == nil {
+			break
+		}
+
+		return e.complexity.Agent.Visible(childComplexity), true
 
 	case "Attachment.appSource":
 		if e.complexity.Attachment.AppSource == nil {
@@ -2741,6 +2881,62 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Calendar.UpdatedAt(childComplexity), true
+
+	case "Capability.action":
+		if e.complexity.Capability.Action == nil {
+			break
+		}
+
+		return e.complexity.Capability.Action(childComplexity), true
+
+	case "Capability.errors":
+		if e.complexity.Capability.Errors == nil {
+			break
+		}
+
+		return e.complexity.Capability.Errors(childComplexity), true
+
+	case "Capability.id":
+		if e.complexity.Capability.ID == nil {
+			break
+		}
+
+		return e.complexity.Capability.ID(childComplexity), true
+
+	case "Capability.name":
+		if e.complexity.Capability.Name == nil {
+			break
+		}
+
+		return e.complexity.Capability.Name(childComplexity), true
+
+	case "Capability.optional":
+		if e.complexity.Capability.Optional == nil {
+			break
+		}
+
+		return e.complexity.Capability.Optional(childComplexity), true
+
+	case "Capability.status":
+		if e.complexity.Capability.Status == nil {
+			break
+		}
+
+		return e.complexity.Capability.Status(childComplexity), true
+
+	case "Capability.type":
+		if e.complexity.Capability.Type == nil {
+			break
+		}
+
+		return e.complexity.Capability.Type(childComplexity), true
+
+	case "Capability.values":
+		if e.complexity.Capability.Values == nil {
+			break
+		}
+
+		return e.complexity.Capability.Values(childComplexity), true
 
 	case "ColumnView.columnId":
 		if e.complexity.ColumnView.ColumnID == nil {
@@ -7025,6 +7221,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddTag(childComplexity, args["input"].(model.AddTagInput)), true
 
+	case "Mutation.agent_Save":
+		if e.complexity.Mutation.AgentSave == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_agent_Save_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AgentSave(childComplexity, args["input"].(model.AgentSaveInput)), true
+
 	case "Mutation.attachment_Create":
 		if e.complexity.Mutation.AttachmentCreate == nil {
 			break
@@ -10486,6 +10694,25 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PhoneNumberParticipant.Type(childComplexity), true
 
+	case "Query.agent":
+		if e.complexity.Query.Agent == nil {
+			break
+		}
+
+		args, err := ec.field_Query_agent_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Agent(childComplexity, args["id"].(string)), true
+
+	case "Query.agents":
+		if e.complexity.Query.Agents == nil {
+			break
+		}
+
+		return e.complexity.Query.Agents(childComplexity), true
+
 	case "Query.attachment":
 		if e.complexity.Query.Attachment == nil {
 			break
@@ -12517,6 +12744,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAddTagInput,
+		ec.unmarshalInputAgentSaveInput,
 		ec.unmarshalInputAttachmentInput,
 		ec.unmarshalInputBankAccountCreateInput,
 		ec.unmarshalInputBankAccountUpdateInput,
@@ -12525,6 +12753,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputBillingProfileLinkEmailInput,
 		ec.unmarshalInputBillingProfileLinkLocationInput,
 		ec.unmarshalInputBillingProfileUpdateInput,
+		ec.unmarshalInputCapabilitySaveInput,
 		ec.unmarshalInputColumnViewInput,
 		ec.unmarshalInputContactInput,
 		ec.unmarshalInputContactOrganizationInput,
@@ -12752,6 +12981,97 @@ enum ActionType {
     source: DataSource!
     appSource: String!
 }`, BuiltIn: false},
+	{Name: "../schemas/agent.graphqls", Input: `extend type Query {
+  agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+  agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+  agent_Save(input: AgentSaveInput!): Agent!
+    @hasRole(roles: [ADMIN, USER])
+    @hasTenant
+}
+
+enum CapabilityType {
+  WEBSITE_TRACKER
+  SEND_SLACK_NOTIFICATION
+}
+
+enum CapabilityStatus {
+  ACTIVE
+  ACTIVE_WITH_WARNINGS
+  INACTIVE
+  PENDING
+}
+
+type Capability {
+  id: ID!
+  type: CapabilityType!
+  name: String!
+  action: String!
+  optional: Boolean!
+  values: String!
+  errors: String
+  status: CapabilityStatus!
+}
+
+enum AgentStatus {
+  ON
+  OFF
+  ON_AGENT_ERROR
+  ON_CAPABILITY_ERROR
+}
+
+enum AgentType {
+  WEB_VISIT_IDENTIFIER
+}
+
+type Agent {
+  id: ID!
+  type: AgentType!
+  tenant: String!
+  name: String!
+  capabilities: [Capability!]!
+  goal: String!
+  isActive: Boolean!
+  flowId: ID
+  visible: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+  error: String
+  color: String!
+  icon: String!
+  status: AgentStatus!
+}
+
+input CapabilitySaveInput {
+  id: ID
+  type: CapabilityType
+  name: String
+  action: String
+  optional: Boolean
+  values: String
+  errors: String
+  status: CapabilityStatus
+}
+
+input AgentSaveInput {
+  id: ID
+  type: AgentType
+  tenant: String
+  name: String
+  capabilities: [CapabilitySaveInput!]
+  goal: String
+  isActive: Boolean
+  flowId: ID
+  visible: Boolean
+  createdAt: Time!
+  updatedAt: Time!
+  color: String
+  icon: String
+  status: AgentStatus
+}
+`, BuiltIn: false},
 	{Name: "../schemas/attachment.graphqls", Input: `extend type Query {
     attachment(id: ID!): Attachment!
 }
@@ -17090,7 +17410,7 @@ func (ec *executionContext) dir_hasRole_argsRoles(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("roles"))
 	if tmp, ok := rawArgs["roles"]; ok {
-		return ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, tmp)
+		return ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, tmp)
 	}
 
 	var zeroVal []model.Role
@@ -17128,7 +17448,7 @@ func (ec *executionContext) field_Contact_organizations_argsPagination(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
 	if tmp, ok := rawArgs["pagination"]; ok {
-		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 	}
 
 	var zeroVal *model.Pagination
@@ -17146,7 +17466,7 @@ func (ec *executionContext) field_Contact_organizations_argsWhere(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
 	if tmp, ok := rawArgs["where"]; ok {
-		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
 	}
 
 	var zeroVal *model.Filter
@@ -17164,7 +17484,7 @@ func (ec *executionContext) field_Contact_organizations_argsSort(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
 	var zeroVal []*model1.SortBy
@@ -17192,7 +17512,7 @@ func (ec *executionContext) field_Contact_timelineEventsTotalCount_argsTimelineE
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("timelineEventTypes"))
 	if tmp, ok := rawArgs["timelineEventTypes"]; ok {
-		return ec.unmarshalOTimelineEventType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventTypeᚄ(ctx, tmp)
+		return ec.unmarshalOTimelineEventType2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventTypeᚄ(ctx, tmp)
 	}
 
 	var zeroVal []model.TimelineEventType
@@ -17266,7 +17586,7 @@ func (ec *executionContext) field_Contact_timelineEvents_argsTimelineEventTypes(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("timelineEventTypes"))
 	if tmp, ok := rawArgs["timelineEventTypes"]; ok {
-		return ec.unmarshalOTimelineEventType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventTypeᚄ(ctx, tmp)
+		return ec.unmarshalOTimelineEventType2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventTypeᚄ(ctx, tmp)
 	}
 
 	var zeroVal []model.TimelineEventType
@@ -17294,10 +17614,38 @@ func (ec *executionContext) field_Mutation_addTag_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNAddTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAddTagInput(ctx, tmp)
+		return ec.unmarshalNAddTagInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAddTagInput(ctx, tmp)
 	}
 
 	var zeroVal model.AddTagInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_agent_Save_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_agent_Save_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_agent_Save_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.AgentSaveInput, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal model.AgentSaveInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNAgentSaveInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentSaveInput(ctx, tmp)
+	}
+
+	var zeroVal model.AgentSaveInput
 	return zeroVal, nil
 }
 
@@ -17322,7 +17670,7 @@ func (ec *executionContext) field_Mutation_attachment_Create_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNAttachmentInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentInput(ctx, tmp)
+		return ec.unmarshalNAttachmentInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentInput(ctx, tmp)
 	}
 
 	var zeroVal model.AttachmentInput
@@ -17350,7 +17698,7 @@ func (ec *executionContext) field_Mutation_bankAccount_Create_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalOBankAccountCreateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccountCreateInput(ctx, tmp)
+		return ec.unmarshalOBankAccountCreateInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccountCreateInput(ctx, tmp)
 	}
 
 	var zeroVal *model.BankAccountCreateInput
@@ -17406,7 +17754,7 @@ func (ec *executionContext) field_Mutation_bankAccount_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalOBankAccountUpdateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccountUpdateInput(ctx, tmp)
+		return ec.unmarshalOBankAccountUpdateInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccountUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal *model.BankAccountUpdateInput
@@ -17434,7 +17782,7 @@ func (ec *executionContext) field_Mutation_billingProfile_Create_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNBillingProfileInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileInput(ctx, tmp)
+		return ec.unmarshalNBillingProfileInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileInput(ctx, tmp)
 	}
 
 	var zeroVal model.BillingProfileInput
@@ -17462,7 +17810,7 @@ func (ec *executionContext) field_Mutation_billingProfile_LinkEmail_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNBillingProfileLinkEmailInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileLinkEmailInput(ctx, tmp)
+		return ec.unmarshalNBillingProfileLinkEmailInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileLinkEmailInput(ctx, tmp)
 	}
 
 	var zeroVal model.BillingProfileLinkEmailInput
@@ -17490,7 +17838,7 @@ func (ec *executionContext) field_Mutation_billingProfile_LinkLocation_argsInput
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNBillingProfileLinkLocationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileLinkLocationInput(ctx, tmp)
+		return ec.unmarshalNBillingProfileLinkLocationInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileLinkLocationInput(ctx, tmp)
 	}
 
 	var zeroVal model.BillingProfileLinkLocationInput
@@ -17518,7 +17866,7 @@ func (ec *executionContext) field_Mutation_billingProfile_UnlinkEmail_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNBillingProfileLinkEmailInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileLinkEmailInput(ctx, tmp)
+		return ec.unmarshalNBillingProfileLinkEmailInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileLinkEmailInput(ctx, tmp)
 	}
 
 	var zeroVal model.BillingProfileLinkEmailInput
@@ -17546,7 +17894,7 @@ func (ec *executionContext) field_Mutation_billingProfile_UnlinkLocation_argsInp
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNBillingProfileLinkLocationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileLinkLocationInput(ctx, tmp)
+		return ec.unmarshalNBillingProfileLinkLocationInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileLinkLocationInput(ctx, tmp)
 	}
 
 	var zeroVal model.BillingProfileLinkLocationInput
@@ -17574,7 +17922,7 @@ func (ec *executionContext) field_Mutation_billingProfile_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNBillingProfileUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileUpdateInput(ctx, tmp)
+		return ec.unmarshalNBillingProfileUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.BillingProfileUpdateInput
@@ -17630,7 +17978,7 @@ func (ec *executionContext) field_Mutation_contact_AddOrganizationById_argsInput
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNContactOrganizationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactOrganizationInput(ctx, tmp)
+		return ec.unmarshalNContactOrganizationInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactOrganizationInput(ctx, tmp)
 	}
 
 	var zeroVal model.ContactOrganizationInput
@@ -17681,7 +18029,7 @@ func (ec *executionContext) field_Mutation_contact_AddSocial_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSocialInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialInput(ctx, tmp)
+		return ec.unmarshalNSocialInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialInput(ctx, tmp)
 	}
 
 	var zeroVal model.SocialInput
@@ -17709,7 +18057,7 @@ func (ec *executionContext) field_Mutation_contact_AddTag_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNContactTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactTagInput(ctx, tmp)
+		return ec.unmarshalNContactTagInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactTagInput(ctx, tmp)
 	}
 
 	var zeroVal model.ContactTagInput
@@ -17844,7 +18192,7 @@ func (ec *executionContext) field_Mutation_contact_CreateForOrganization_argsInp
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNContactInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactInput(ctx, tmp)
+		return ec.unmarshalNContactInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactInput(ctx, tmp)
 	}
 
 	var zeroVal model.ContactInput
@@ -17890,7 +18238,7 @@ func (ec *executionContext) field_Mutation_contact_Create_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNContactInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactInput(ctx, tmp)
+		return ec.unmarshalNContactInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactInput(ctx, tmp)
 	}
 
 	var zeroVal model.ContactInput
@@ -18224,7 +18572,7 @@ func (ec *executionContext) field_Mutation_contact_RemoveTag_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNContactTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactTagInput(ctx, tmp)
+		return ec.unmarshalNContactTagInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactTagInput(ctx, tmp)
 	}
 
 	var zeroVal model.ContactTagInput
@@ -18252,7 +18600,7 @@ func (ec *executionContext) field_Mutation_contact_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNContactUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactUpdateInput(ctx, tmp)
+		return ec.unmarshalNContactUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.ContactUpdateInput
@@ -18280,7 +18628,7 @@ func (ec *executionContext) field_Mutation_contractLineItem_Close_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNServiceLineItemCloseInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemCloseInput(ctx, tmp)
+		return ec.unmarshalNServiceLineItemCloseInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemCloseInput(ctx, tmp)
 	}
 
 	var zeroVal model.ServiceLineItemCloseInput
@@ -18308,7 +18656,7 @@ func (ec *executionContext) field_Mutation_contractLineItem_Create_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNServiceLineItemInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemInput(ctx, tmp)
+		return ec.unmarshalNServiceLineItemInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemInput(ctx, tmp)
 	}
 
 	var zeroVal model.ServiceLineItemInput
@@ -18336,7 +18684,7 @@ func (ec *executionContext) field_Mutation_contractLineItem_NewVersion_argsInput
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNServiceLineItemNewVersionInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemNewVersionInput(ctx, tmp)
+		return ec.unmarshalNServiceLineItemNewVersionInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemNewVersionInput(ctx, tmp)
 	}
 
 	var zeroVal model.ServiceLineItemNewVersionInput
@@ -18420,7 +18768,7 @@ func (ec *executionContext) field_Mutation_contractLineItem_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNServiceLineItemUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemUpdateInput(ctx, tmp)
+		return ec.unmarshalNServiceLineItemUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.ServiceLineItemUpdateInput
@@ -18499,7 +18847,7 @@ func (ec *executionContext) field_Mutation_contract_Create_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNContractInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractInput(ctx, tmp)
+		return ec.unmarshalNContractInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractInput(ctx, tmp)
 	}
 
 	var zeroVal model.ContractInput
@@ -18606,7 +18954,7 @@ func (ec *executionContext) field_Mutation_contract_Renew_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNContractRenewalInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalInput(ctx, tmp)
+		return ec.unmarshalNContractRenewalInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalInput(ctx, tmp)
 	}
 
 	var zeroVal model.ContractRenewalInput
@@ -18634,7 +18982,7 @@ func (ec *executionContext) field_Mutation_contract_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNContractUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractUpdateInput(ctx, tmp)
+		return ec.unmarshalNContractUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.ContractUpdateInput
@@ -18787,7 +19135,7 @@ func (ec *executionContext) field_Mutation_customFieldMergeToContact_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNCustomFieldInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInput(ctx, tmp)
+		return ec.unmarshalNCustomFieldInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInput(ctx, tmp)
 	}
 
 	var zeroVal model.CustomFieldInput
@@ -18843,7 +19191,7 @@ func (ec *executionContext) field_Mutation_customFieldTemplate_Save_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNCustomFieldTemplateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateInput(ctx, tmp)
+		return ec.unmarshalNCustomFieldTemplateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateInput(ctx, tmp)
 	}
 
 	var zeroVal model.CustomFieldTemplateInput
@@ -18894,7 +19242,7 @@ func (ec *executionContext) field_Mutation_customFieldUpdateInContact_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNCustomFieldUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldUpdateInput(ctx, tmp)
+		return ec.unmarshalNCustomFieldUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.CustomFieldUpdateInput
@@ -18945,7 +19293,7 @@ func (ec *executionContext) field_Mutation_customFieldsMergeAndUpdateInContact_a
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
 	if tmp, ok := rawArgs["customFields"]; ok {
-		return ec.unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInputᚄ(ctx, tmp)
+		return ec.unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInputᚄ(ctx, tmp)
 	}
 
 	var zeroVal []*model.CustomFieldInput
@@ -18973,7 +19321,7 @@ func (ec *executionContext) field_Mutation_customer_contact_Create_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNCustomerContactInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerContactInput(ctx, tmp)
+		return ec.unmarshalNCustomerContactInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerContactInput(ctx, tmp)
 	}
 
 	var zeroVal model.CustomerContactInput
@@ -19024,7 +19372,7 @@ func (ec *executionContext) field_Mutation_emailMergeToContact_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNEmailInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, tmp)
+		return ec.unmarshalNEmailInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, tmp)
 	}
 
 	var zeroVal model.EmailInput
@@ -19075,7 +19423,7 @@ func (ec *executionContext) field_Mutation_emailMergeToOrganization_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNEmailInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, tmp)
+		return ec.unmarshalNEmailInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, tmp)
 	}
 
 	var zeroVal model.EmailInput
@@ -19126,7 +19474,7 @@ func (ec *executionContext) field_Mutation_emailMergeToUser_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNEmailInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, tmp)
+		return ec.unmarshalNEmailInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, tmp)
 	}
 
 	var zeroVal model.EmailInput
@@ -19353,7 +19701,7 @@ func (ec *executionContext) field_Mutation_emailReplaceForContact_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNEmailInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, tmp)
+		return ec.unmarshalNEmailInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, tmp)
 	}
 
 	var zeroVal model.EmailInput
@@ -19427,7 +19775,7 @@ func (ec *executionContext) field_Mutation_emailReplaceForOrganization_argsInput
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNEmailInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, tmp)
+		return ec.unmarshalNEmailInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, tmp)
 	}
 
 	var zeroVal model.EmailInput
@@ -19501,7 +19849,7 @@ func (ec *executionContext) field_Mutation_emailReplaceForUser_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNEmailInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, tmp)
+		return ec.unmarshalNEmailInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, tmp)
 	}
 
 	var zeroVal model.EmailInput
@@ -19608,7 +19956,7 @@ func (ec *executionContext) field_Mutation_externalSystem_Create_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNExternalSystemInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemInput(ctx, tmp)
+		return ec.unmarshalNExternalSystemInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemInput(ctx, tmp)
 	}
 
 	var zeroVal model.ExternalSystemInput
@@ -19756,7 +20104,7 @@ func (ec *executionContext) field_Mutation_flowParticipant_AddBulk_argsEntityTyp
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
 	if tmp, ok := rawArgs["entityType"]; ok {
-		return ec.unmarshalNFlowEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐEntityType(ctx, tmp)
+		return ec.unmarshalNFlowEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐEntityType(ctx, tmp)
 	}
 
 	var zeroVal model1.EntityType
@@ -19830,7 +20178,7 @@ func (ec *executionContext) field_Mutation_flowParticipant_Add_argsEntityType(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
 	if tmp, ok := rawArgs["entityType"]; ok {
-		return ec.unmarshalNFlowEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐEntityType(ctx, tmp)
+		return ec.unmarshalNFlowEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐEntityType(ctx, tmp)
 	}
 
 	var zeroVal model1.EntityType
@@ -19965,7 +20313,7 @@ func (ec *executionContext) field_Mutation_flowSender_Merge_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNFlowSenderMergeInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSenderMergeInput(ctx, tmp)
+		return ec.unmarshalNFlowSenderMergeInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSenderMergeInput(ctx, tmp)
 	}
 
 	var zeroVal model.FlowSenderMergeInput
@@ -20100,7 +20448,7 @@ func (ec *executionContext) field_Mutation_flow_Merge_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNFlowMergeInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowMergeInput(ctx, tmp)
+		return ec.unmarshalNFlowMergeInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowMergeInput(ctx, tmp)
 	}
 
 	var zeroVal model.FlowMergeInput
@@ -20291,7 +20639,7 @@ func (ec *executionContext) field_Mutation_invoice_Simulate_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNInvoiceSimulateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateInput(ctx, tmp)
+		return ec.unmarshalNInvoiceSimulateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateInput(ctx, tmp)
 	}
 
 	var zeroVal model.InvoiceSimulateInput
@@ -20319,7 +20667,7 @@ func (ec *executionContext) field_Mutation_invoice_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNInvoiceUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceUpdateInput(ctx, tmp)
+		return ec.unmarshalNInvoiceUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.InvoiceUpdateInput
@@ -20398,7 +20746,7 @@ func (ec *executionContext) field_Mutation_jobRole_Create_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNJobRoleInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleInput(ctx, tmp)
+		return ec.unmarshalNJobRoleInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleInput(ctx, tmp)
 	}
 
 	var zeroVal model.JobRoleInput
@@ -20477,7 +20825,7 @@ func (ec *executionContext) field_Mutation_jobRole_Save_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalOJobRoleSaveInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleSaveInput(ctx, tmp)
+		return ec.unmarshalOJobRoleSaveInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleSaveInput(ctx, tmp)
 	}
 
 	var zeroVal *model.JobRoleSaveInput
@@ -20528,7 +20876,7 @@ func (ec *executionContext) field_Mutation_jobRole_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNJobRoleUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleUpdateInput(ctx, tmp)
+		return ec.unmarshalNJobRoleUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.JobRoleUpdateInput
@@ -20658,7 +21006,7 @@ func (ec *executionContext) field_Mutation_location_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNLocationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationUpdateInput(ctx, tmp)
+		return ec.unmarshalNLocationUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.LocationUpdateInput
@@ -20709,7 +21057,7 @@ func (ec *executionContext) field_Mutation_logEntry_AddTag_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNTagIdOrNameInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx, tmp)
+		return ec.unmarshalNTagIdOrNameInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx, tmp)
 	}
 
 	var zeroVal model.TagIDOrNameInput
@@ -20760,7 +21108,7 @@ func (ec *executionContext) field_Mutation_logEntry_CreateForOrganization_argsIn
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNLogEntryInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntryInput(ctx, tmp)
+		return ec.unmarshalNLogEntryInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntryInput(ctx, tmp)
 	}
 
 	var zeroVal model.LogEntryInput
@@ -20811,7 +21159,7 @@ func (ec *executionContext) field_Mutation_logEntry_RemoveTag_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNTagIdOrNameInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx, tmp)
+		return ec.unmarshalNTagIdOrNameInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx, tmp)
 	}
 
 	var zeroVal model.TagIDOrNameInput
@@ -20862,7 +21210,7 @@ func (ec *executionContext) field_Mutation_logEntry_ResetTags_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalOTagIdOrNameInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInputᚄ(ctx, tmp)
+		return ec.unmarshalOTagIdOrNameInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInputᚄ(ctx, tmp)
 	}
 
 	var zeroVal []*model.TagIDOrNameInput
@@ -20913,7 +21261,7 @@ func (ec *executionContext) field_Mutation_logEntry_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNLogEntryUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntryUpdateInput(ctx, tmp)
+		return ec.unmarshalNLogEntryUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntryUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.LogEntryUpdateInput
@@ -21260,7 +21608,7 @@ func (ec *executionContext) field_Mutation_meeting_AddNote_argsNote(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
 	if tmp, ok := rawArgs["note"]; ok {
-		return ec.unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteInput(ctx, tmp)
+		return ec.unmarshalONoteInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteInput(ctx, tmp)
 	}
 
 	var zeroVal *model.NoteInput
@@ -21288,7 +21636,7 @@ func (ec *executionContext) field_Mutation_meeting_Create_argsMeeting(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("meeting"))
 	if tmp, ok := rawArgs["meeting"]; ok {
-		return ec.unmarshalNMeetingInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingInput(ctx, tmp)
+		return ec.unmarshalNMeetingInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingInput(ctx, tmp)
 	}
 
 	var zeroVal model.MeetingInput
@@ -21390,7 +21738,7 @@ func (ec *executionContext) field_Mutation_meeting_LinkAttendedBy_argsParticipan
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("participant"))
 	if tmp, ok := rawArgs["participant"]; ok {
-		return ec.unmarshalNMeetingParticipantInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInput(ctx, tmp)
+		return ec.unmarshalNMeetingParticipantInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInput(ctx, tmp)
 	}
 
 	var zeroVal model.MeetingParticipantInput
@@ -21543,7 +21891,7 @@ func (ec *executionContext) field_Mutation_meeting_UnlinkAttendedBy_argsParticip
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("participant"))
 	if tmp, ok := rawArgs["participant"]; ok {
-		return ec.unmarshalNMeetingParticipantInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInput(ctx, tmp)
+		return ec.unmarshalNMeetingParticipantInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInput(ctx, tmp)
 	}
 
 	var zeroVal model.MeetingParticipantInput
@@ -21645,7 +21993,7 @@ func (ec *executionContext) field_Mutation_meeting_Update_argsMeeting(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("meeting"))
 	if tmp, ok := rawArgs["meeting"]; ok {
-		return ec.unmarshalNMeetingUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingUpdateInput(ctx, tmp)
+		return ec.unmarshalNMeetingUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.MeetingUpdateInput
@@ -21803,7 +22151,7 @@ func (ec *executionContext) field_Mutation_note_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNNoteUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteUpdateInput(ctx, tmp)
+		return ec.unmarshalNNoteUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.NoteUpdateInput
@@ -21836,7 +22184,7 @@ func (ec *executionContext) field_Mutation_opportunityRenewalUpdate_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNOpportunityRenewalUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalUpdateInput(ctx, tmp)
+		return ec.unmarshalNOpportunityRenewalUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.OpportunityRenewalUpdateInput
@@ -21882,7 +22230,7 @@ func (ec *executionContext) field_Mutation_opportunityRenewal_UpdateAllForOrgani
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNOpportunityRenewalUpdateAllForOrganizationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalUpdateAllForOrganizationInput(ctx, tmp)
+		return ec.unmarshalNOpportunityRenewalUpdateAllForOrganizationInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalUpdateAllForOrganizationInput(ctx, tmp)
 	}
 
 	var zeroVal model.OpportunityRenewalUpdateAllForOrganizationInput
@@ -21938,7 +22286,7 @@ func (ec *executionContext) field_Mutation_opportunity_Save_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNOpportunitySaveInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunitySaveInput(ctx, tmp)
+		return ec.unmarshalNOpportunitySaveInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunitySaveInput(ctx, tmp)
 	}
 
 	var zeroVal model.OpportunitySaveInput
@@ -22040,7 +22388,7 @@ func (ec *executionContext) field_Mutation_organization_AddSocial_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSocialInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialInput(ctx, tmp)
+		return ec.unmarshalNSocialInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialInput(ctx, tmp)
 	}
 
 	var zeroVal model.SocialInput
@@ -22068,7 +22416,7 @@ func (ec *executionContext) field_Mutation_organization_AddSubsidiary_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNLinkOrganizationsInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkOrganizationsInput(ctx, tmp)
+		return ec.unmarshalNLinkOrganizationsInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkOrganizationsInput(ctx, tmp)
 	}
 
 	var zeroVal model.LinkOrganizationsInput
@@ -22096,7 +22444,7 @@ func (ec *executionContext) field_Mutation_organization_AddTag_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNOrganizationTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationTagInput(ctx, tmp)
+		return ec.unmarshalNOrganizationTagInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationTagInput(ctx, tmp)
 	}
 
 	var zeroVal model.OrganizationTagInput
@@ -22435,7 +22783,7 @@ func (ec *executionContext) field_Mutation_organization_RemoveTag_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNOrganizationTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationTagInput(ctx, tmp)
+		return ec.unmarshalNOrganizationTagInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationTagInput(ctx, tmp)
 	}
 
 	var zeroVal model.OrganizationTagInput
@@ -22486,7 +22834,7 @@ func (ec *executionContext) field_Mutation_organization_SaveByGlobalOrganization
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalOOrganizationSaveInputFromGlobalOrg2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSaveInputFromGlobalOrg(ctx, tmp)
+		return ec.unmarshalOOrganizationSaveInputFromGlobalOrg2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSaveInputFromGlobalOrg(ctx, tmp)
 	}
 
 	var zeroVal *model.OrganizationSaveInputFromGlobalOrg
@@ -22514,7 +22862,7 @@ func (ec *executionContext) field_Mutation_organization_Save_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNOrganizationSaveInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSaveInput(ctx, tmp)
+		return ec.unmarshalNOrganizationSaveInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSaveInput(ctx, tmp)
 	}
 
 	var zeroVal model.OrganizationSaveInput
@@ -22705,7 +23053,7 @@ func (ec *executionContext) field_Mutation_organization_UpdateOnboardingStatus_a
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNOnboardingStatusInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatusInput(ctx, tmp)
+		return ec.unmarshalNOnboardingStatusInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatusInput(ctx, tmp)
 	}
 
 	var zeroVal model.OnboardingStatusInput
@@ -22733,7 +23081,7 @@ func (ec *executionContext) field_Mutation_organization_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNOrganizationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUpdateInput(ctx, tmp)
+		return ec.unmarshalNOrganizationUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.OrganizationUpdateInput
@@ -22784,7 +23132,7 @@ func (ec *executionContext) field_Mutation_phoneNumberMergeToContact_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNPhoneNumberInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberInput(ctx, tmp)
+		return ec.unmarshalNPhoneNumberInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberInput(ctx, tmp)
 	}
 
 	var zeroVal model.PhoneNumberInput
@@ -22835,7 +23183,7 @@ func (ec *executionContext) field_Mutation_phoneNumberMergeToOrganization_argsIn
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNPhoneNumberInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberInput(ctx, tmp)
+		return ec.unmarshalNPhoneNumberInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberInput(ctx, tmp)
 	}
 
 	var zeroVal model.PhoneNumberInput
@@ -23090,7 +23438,7 @@ func (ec *executionContext) field_Mutation_phoneNumberUpdateInContact_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNPhoneNumberRelationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberRelationUpdateInput(ctx, tmp)
+		return ec.unmarshalNPhoneNumberRelationUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberRelationUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.PhoneNumberRelationUpdateInput
@@ -23141,7 +23489,7 @@ func (ec *executionContext) field_Mutation_phoneNumberUpdateInOrganization_argsI
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNPhoneNumberRelationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberRelationUpdateInput(ctx, tmp)
+		return ec.unmarshalNPhoneNumberRelationUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberRelationUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.PhoneNumberRelationUpdateInput
@@ -23169,7 +23517,7 @@ func (ec *executionContext) field_Mutation_phoneNumber_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNPhoneNumberUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberUpdateInput(ctx, tmp)
+		return ec.unmarshalNPhoneNumberUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.PhoneNumberUpdateInput
@@ -23197,7 +23545,7 @@ func (ec *executionContext) field_Mutation_reminder_Create_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNReminderInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminderInput(ctx, tmp)
+		return ec.unmarshalNReminderInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminderInput(ctx, tmp)
 	}
 
 	var zeroVal model.ReminderInput
@@ -23225,7 +23573,7 @@ func (ec *executionContext) field_Mutation_reminder_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNReminderUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminderUpdateInput(ctx, tmp)
+		return ec.unmarshalNReminderUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminderUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.ReminderUpdateInput
@@ -23253,7 +23601,7 @@ func (ec *executionContext) field_Mutation_removeTag_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNRemoveTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRemoveTagInput(ctx, tmp)
+		return ec.unmarshalNRemoveTagInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRemoveTagInput(ctx, tmp)
 	}
 
 	var zeroVal model.RemoveTagInput
@@ -23281,7 +23629,7 @@ func (ec *executionContext) field_Mutation_serviceLineItem_BulkUpdate_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNServiceLineItemBulkUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateInput(ctx, tmp)
+		return ec.unmarshalNServiceLineItemBulkUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.ServiceLineItemBulkUpdateInput
@@ -23365,7 +23713,7 @@ func (ec *executionContext) field_Mutation_social_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNSocialUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialUpdateInput(ctx, tmp)
+		return ec.unmarshalNSocialUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.SocialUpdateInput
@@ -23421,7 +23769,7 @@ func (ec *executionContext) field_Mutation_tableViewDef_Create_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNTableViewDefCreateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefCreateInput(ctx, tmp)
+		return ec.unmarshalNTableViewDefCreateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefCreateInput(ctx, tmp)
 	}
 
 	var zeroVal model.TableViewDefCreateInput
@@ -23449,7 +23797,7 @@ func (ec *executionContext) field_Mutation_tableViewDef_UpdateShared_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNTableViewDefUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefUpdateInput(ctx, tmp)
+		return ec.unmarshalNTableViewDefUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.TableViewDefUpdateInput
@@ -23477,7 +23825,7 @@ func (ec *executionContext) field_Mutation_tableViewDef_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNTableViewDefUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefUpdateInput(ctx, tmp)
+		return ec.unmarshalNTableViewDefUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.TableViewDefUpdateInput
@@ -23505,7 +23853,7 @@ func (ec *executionContext) field_Mutation_tag_Create_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagInput(ctx, tmp)
+		return ec.unmarshalNTagInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagInput(ctx, tmp)
 	}
 
 	var zeroVal model.TagInput
@@ -23561,7 +23909,7 @@ func (ec *executionContext) field_Mutation_tag_Update_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNTagUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagUpdateInput(ctx, tmp)
+		return ec.unmarshalNTagUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.TagUpdateInput
@@ -23589,7 +23937,7 @@ func (ec *executionContext) field_Mutation_tenant_AddBillingProfile_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNTenantBillingProfileInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfileInput(ctx, tmp)
+		return ec.unmarshalNTenantBillingProfileInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfileInput(ctx, tmp)
 	}
 
 	var zeroVal model.TenantBillingProfileInput
@@ -23617,7 +23965,7 @@ func (ec *executionContext) field_Mutation_tenant_UpdateBillingProfile_argsInput
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNTenantBillingProfileUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfileUpdateInput(ctx, tmp)
+		return ec.unmarshalNTenantBillingProfileUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfileUpdateInput(ctx, tmp)
 	}
 
 	var zeroVal model.TenantBillingProfileUpdateInput
@@ -23645,7 +23993,7 @@ func (ec *executionContext) field_Mutation_tenant_UpdateSettingsOpportunityStage
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNTenantSettingsOpportunityStageConfigurationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsOpportunityStageConfigurationInput(ctx, tmp)
+		return ec.unmarshalNTenantSettingsOpportunityStageConfigurationInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsOpportunityStageConfigurationInput(ctx, tmp)
 	}
 
 	var zeroVal model.TenantSettingsOpportunityStageConfigurationInput
@@ -23673,7 +24021,7 @@ func (ec *executionContext) field_Mutation_tenant_UpdateSettings_argsInput(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalOTenantSettingsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsInput(ctx, tmp)
+		return ec.unmarshalOTenantSettingsInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsInput(ctx, tmp)
 	}
 
 	var zeroVal *model.TenantSettingsInput
@@ -23752,7 +24100,7 @@ func (ec *executionContext) field_Mutation_user_UpdateOnboardingDetails_argsInpu
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 	if tmp, ok := rawArgs["input"]; ok {
-		return ec.unmarshalNUserOnboardingDetailsInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserOnboardingDetailsInput(ctx, tmp)
+		return ec.unmarshalNUserOnboardingDetailsInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserOnboardingDetailsInput(ctx, tmp)
 	}
 
 	var zeroVal model.UserOnboardingDetailsInput
@@ -23790,7 +24138,7 @@ func (ec *executionContext) field_Organization_contacts_argsPagination(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
 	if tmp, ok := rawArgs["pagination"]; ok {
-		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 	}
 
 	var zeroVal *model.Pagination
@@ -23808,7 +24156,7 @@ func (ec *executionContext) field_Organization_contacts_argsWhere(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
 	if tmp, ok := rawArgs["where"]; ok {
-		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
 	}
 
 	var zeroVal *model.Filter
@@ -23826,7 +24174,7 @@ func (ec *executionContext) field_Organization_contacts_argsSort(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
 	var zeroVal []*model1.SortBy
@@ -23854,7 +24202,7 @@ func (ec *executionContext) field_Organization_timelineEventsTotalCount_argsTime
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("timelineEventTypes"))
 	if tmp, ok := rawArgs["timelineEventTypes"]; ok {
-		return ec.unmarshalOTimelineEventType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventTypeᚄ(ctx, tmp)
+		return ec.unmarshalOTimelineEventType2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventTypeᚄ(ctx, tmp)
 	}
 
 	var zeroVal []model.TimelineEventType
@@ -23928,7 +24276,7 @@ func (ec *executionContext) field_Organization_timelineEvents_argsTimelineEventT
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("timelineEventTypes"))
 	if tmp, ok := rawArgs["timelineEventTypes"]; ok {
-		return ec.unmarshalOTimelineEventType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventTypeᚄ(ctx, tmp)
+		return ec.unmarshalOTimelineEventType2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventTypeᚄ(ctx, tmp)
 	}
 
 	var zeroVal []model.TimelineEventType
@@ -23957,6 +24305,34 @@ func (ec *executionContext) field_Query___type_argsName(
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 	if tmp, ok := rawArgs["name"]; ok {
 		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_agent_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_agent_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Query_agent_argsID(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["id"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
 	var zeroVal string
@@ -24190,7 +24566,7 @@ func (ec *executionContext) field_Query_contacts_argsPagination(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
 	if tmp, ok := rawArgs["pagination"]; ok {
-		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 	}
 
 	var zeroVal *model.Pagination
@@ -24208,7 +24584,7 @@ func (ec *executionContext) field_Query_contacts_argsWhere(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
 	if tmp, ok := rawArgs["where"]; ok {
-		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
 	}
 
 	var zeroVal *model.Filter
@@ -24226,7 +24602,7 @@ func (ec *executionContext) field_Query_contacts_argsSort(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
 	var zeroVal []*model1.SortBy
@@ -24282,7 +24658,7 @@ func (ec *executionContext) field_Query_contracts_argsPagination(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
 	if tmp, ok := rawArgs["pagination"]; ok {
-		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 	}
 
 	var zeroVal *model.Pagination
@@ -24320,7 +24696,7 @@ func (ec *executionContext) field_Query_dashboardView_Organizations_argsPaginati
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
 	if tmp, ok := rawArgs["pagination"]; ok {
-		return ec.unmarshalNPagination2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		return ec.unmarshalNPagination2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 	}
 
 	var zeroVal model.Pagination
@@ -24338,7 +24714,7 @@ func (ec *executionContext) field_Query_dashboardView_Organizations_argsWhere(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
 	if tmp, ok := rawArgs["where"]; ok {
-		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
 	}
 
 	var zeroVal *model.Filter
@@ -24356,7 +24732,7 @@ func (ec *executionContext) field_Query_dashboardView_Organizations_argsSort(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
 	}
 
 	var zeroVal *model1.SortBy
@@ -24394,7 +24770,7 @@ func (ec *executionContext) field_Query_dashboardView_Renewals_argsPagination(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
 	if tmp, ok := rawArgs["pagination"]; ok {
-		return ec.unmarshalNPagination2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		return ec.unmarshalNPagination2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 	}
 
 	var zeroVal model.Pagination
@@ -24412,7 +24788,7 @@ func (ec *executionContext) field_Query_dashboardView_Renewals_argsWhere(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
 	if tmp, ok := rawArgs["where"]; ok {
-		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
 	}
 
 	var zeroVal *model.Filter
@@ -24430,7 +24806,7 @@ func (ec *executionContext) field_Query_dashboardView_Renewals_argsSort(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
 	}
 
 	var zeroVal *model1.SortBy
@@ -24458,7 +24834,7 @@ func (ec *executionContext) field_Query_dashboard_ARRBreakdown_argsPeriod(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
 	if tmp, ok := rawArgs["period"]; ok {
-		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
+		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 	}
 
 	var zeroVal *model.DashboardPeriodInput
@@ -24486,7 +24862,7 @@ func (ec *executionContext) field_Query_dashboard_GrossRevenueRetention_argsPeri
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
 	if tmp, ok := rawArgs["period"]; ok {
-		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
+		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 	}
 
 	var zeroVal *model.DashboardPeriodInput
@@ -24514,7 +24890,7 @@ func (ec *executionContext) field_Query_dashboard_MRRPerCustomer_argsPeriod(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
 	if tmp, ok := rawArgs["period"]; ok {
-		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
+		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 	}
 
 	var zeroVal *model.DashboardPeriodInput
@@ -24542,7 +24918,7 @@ func (ec *executionContext) field_Query_dashboard_NewCustomers_argsPeriod(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
 	if tmp, ok := rawArgs["period"]; ok {
-		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
+		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 	}
 
 	var zeroVal *model.DashboardPeriodInput
@@ -24570,7 +24946,7 @@ func (ec *executionContext) field_Query_dashboard_OnboardingCompletion_argsPerio
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
 	if tmp, ok := rawArgs["period"]; ok {
-		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
+		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 	}
 
 	var zeroVal *model.DashboardPeriodInput
@@ -24598,7 +24974,7 @@ func (ec *executionContext) field_Query_dashboard_RetentionRate_argsPeriod(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
 	if tmp, ok := rawArgs["period"]; ok {
-		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
+		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 	}
 
 	var zeroVal *model.DashboardPeriodInput
@@ -24626,7 +25002,7 @@ func (ec *executionContext) field_Query_dashboard_RevenueAtRisk_argsPeriod(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
 	if tmp, ok := rawArgs["period"]; ok {
-		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
+		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 	}
 
 	var zeroVal *model.DashboardPeriodInput
@@ -24654,7 +25030,7 @@ func (ec *executionContext) field_Query_dashboard_TimeToOnboard_argsPeriod(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("period"))
 	if tmp, ok := rawArgs["period"]; ok {
-		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
+		return ec.unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx, tmp)
 	}
 
 	var zeroVal *model.DashboardPeriodInput
@@ -24766,7 +25142,7 @@ func (ec *executionContext) field_Query_externalMeetings_argsPagination(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
 	if tmp, ok := rawArgs["pagination"]; ok {
-		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 	}
 
 	var zeroVal *model.Pagination
@@ -24784,7 +25160,7 @@ func (ec *executionContext) field_Query_externalMeetings_argsWhere(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
 	if tmp, ok := rawArgs["where"]; ok {
-		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
 	}
 
 	var zeroVal *model.Filter
@@ -24802,7 +25178,7 @@ func (ec *executionContext) field_Query_externalMeetings_argsSort(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
 	var zeroVal []*model1.SortBy
@@ -25036,7 +25412,7 @@ func (ec *executionContext) field_Query_invoices_argsPagination(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
 	if tmp, ok := rawArgs["pagination"]; ok {
-		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 	}
 
 	var zeroVal *model.Pagination
@@ -25054,7 +25430,7 @@ func (ec *executionContext) field_Query_invoices_argsWhere(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
 	if tmp, ok := rawArgs["where"]; ok {
-		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
 	}
 
 	var zeroVal *model.Filter
@@ -25072,7 +25448,7 @@ func (ec *executionContext) field_Query_invoices_argsSort(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
 	var zeroVal []*model1.SortBy
@@ -25286,7 +25662,7 @@ func (ec *executionContext) field_Query_opportunities_LinkedToOrganizations_args
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
 	if tmp, ok := rawArgs["pagination"]; ok {
-		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 	}
 
 	var zeroVal *model.Pagination
@@ -25548,7 +25924,7 @@ func (ec *executionContext) field_Query_organizations_argsPagination(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
 	if tmp, ok := rawArgs["pagination"]; ok {
-		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 	}
 
 	var zeroVal *model.Pagination
@@ -25566,7 +25942,7 @@ func (ec *executionContext) field_Query_organizations_argsWhere(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
 	if tmp, ok := rawArgs["where"]; ok {
-		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
 	}
 
 	var zeroVal *model.Filter
@@ -25584,7 +25960,7 @@ func (ec *executionContext) field_Query_organizations_argsSort(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
 	var zeroVal []*model1.SortBy
@@ -25747,7 +26123,7 @@ func (ec *executionContext) field_Query_slack_Channels_argsPagination(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
 	if tmp, ok := rawArgs["pagination"]; ok {
-		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 	}
 
 	var zeroVal *model.Pagination
@@ -25775,7 +26151,7 @@ func (ec *executionContext) field_Query_tags_ByEntityType_argsEntityType(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
 	if tmp, ok := rawArgs["entityType"]; ok {
-		return ec.unmarshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, tmp)
+		return ec.unmarshalNEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, tmp)
 	}
 
 	var zeroVal model.EntityType
@@ -25915,7 +26291,7 @@ func (ec *executionContext) field_Query_ui_contacts_search_argsWhere(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
 	if tmp, ok := rawArgs["where"]; ok {
-		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
 	}
 
 	var zeroVal *model.Filter
@@ -25933,7 +26309,7 @@ func (ec *executionContext) field_Query_ui_contacts_search_argsSort(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
 	}
 
 	var zeroVal *model1.SortBy
@@ -26017,7 +26393,7 @@ func (ec *executionContext) field_Query_ui_organizations_search_argsWhere(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
 	if tmp, ok := rawArgs["where"]; ok {
-		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
 	}
 
 	var zeroVal *model.Filter
@@ -26035,7 +26411,7 @@ func (ec *executionContext) field_Query_ui_organizations_search_argsSort(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, tmp)
 	}
 
 	var zeroVal *model1.SortBy
@@ -26129,7 +26505,7 @@ func (ec *executionContext) field_Query_users_argsPagination(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
 	if tmp, ok := rawArgs["pagination"]; ok {
-		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
+		return ec.unmarshalOPagination2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx, tmp)
 	}
 
 	var zeroVal *model.Pagination
@@ -26147,7 +26523,7 @@ func (ec *executionContext) field_Query_users_argsWhere(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("where"))
 	if tmp, ok := rawArgs["where"]; ok {
-		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
+		return ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, tmp)
 	}
 
 	var zeroVal *model.Filter
@@ -26165,7 +26541,7 @@ func (ec *executionContext) field_Query_users_argsSort(
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("sort"))
 	if tmp, ok := rawArgs["sort"]; ok {
-		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
+		return ec.unmarshalOSortBy2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx, tmp)
 	}
 
 	var zeroVal []*model1.SortBy
@@ -26393,7 +26769,7 @@ func (ec *executionContext) _Action_source(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Action_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -26478,7 +26854,7 @@ func (ec *executionContext) _Action_createdBy(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Action_createdBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -26570,7 +26946,7 @@ func (ec *executionContext) _Action_actionType(ctx context.Context, field graphq
 	}
 	res := resTmp.(model.ActionType)
 	fc.Result = res
-	return ec.marshalNActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionType(ctx, field.Selections, res)
+	return ec.marshalNActionType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Action_actionType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -26787,7 +27163,7 @@ func (ec *executionContext) _ActionItem_source(ctx context.Context, field graphq
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ActionItem_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -26886,6 +27262,678 @@ func (ec *executionContext) fieldContext_ActionResponse_accepted(_ context.Conte
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_id(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_type(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.AgentType)
+	fc.Result = res
+	return ec.marshalNAgentType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AgentType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_tenant(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_tenant(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Tenant, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_tenant(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_name(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_capabilities(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_capabilities(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Capabilities, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Capability)
+	fc.Result = res
+	return ec.marshalNCapability2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_capabilities(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Capability_id(ctx, field)
+			case "type":
+				return ec.fieldContext_Capability_type(ctx, field)
+			case "name":
+				return ec.fieldContext_Capability_name(ctx, field)
+			case "action":
+				return ec.fieldContext_Capability_action(ctx, field)
+			case "optional":
+				return ec.fieldContext_Capability_optional(ctx, field)
+			case "values":
+				return ec.fieldContext_Capability_values(ctx, field)
+			case "errors":
+				return ec.fieldContext_Capability_errors(ctx, field)
+			case "status":
+				return ec.fieldContext_Capability_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Capability", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_goal(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_goal(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Goal, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_goal(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_isActive(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_isActive(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsActive, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_isActive(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_flowId(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_flowId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FlowID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_flowId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_visible(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_visible(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Visible, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_visible(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_createdAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_updatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_error(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_error(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Error, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_error(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_color(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_color(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Color, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_color(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_icon(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_icon(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Icon, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_icon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_status(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.AgentStatus)
+	fc.Result = res
+	return ec.marshalNAgentStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AgentStatus does not have child fields")
 		},
 	}
 	return fc, nil
@@ -27227,7 +28275,7 @@ func (ec *executionContext) _Attachment_source(ctx context.Context, field graphq
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Attachment_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -27271,7 +28319,7 @@ func (ec *executionContext) _Attachment_sourceOfTruth(ctx context.Context, field
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Attachment_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -27359,7 +28407,7 @@ func (ec *executionContext) _BankAccount_metadata(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_BankAccount_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -27457,7 +28505,7 @@ func (ec *executionContext) _BankAccount_currency(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Currency)
 	fc.Result = res
-	return ec.marshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, field.Selections, res)
+	return ec.marshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_BankAccount_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -27832,7 +28880,7 @@ func (ec *executionContext) _BillingDetails_billingCycle(ctx context.Context, fi
 	}
 	res := resTmp.(*model.ContractBillingCycle)
 	fc.Result = res
-	return ec.marshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx, field.Selections, res)
+	return ec.marshalOContractBillingCycle2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_BillingDetails_billingCycle(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -28957,7 +30005,7 @@ func (ec *executionContext) _BillingProfile_source(ctx context.Context, field gr
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_BillingProfile_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -29001,7 +30049,7 @@ func (ec *executionContext) _BillingProfile_sourceOfTruth(ctx context.Context, f
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_BillingProfile_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -29133,7 +30181,7 @@ func (ec *executionContext) _Calendar_calType(ctx context.Context, field graphql
 	}
 	res := resTmp.(model.CalendarType)
 	fc.Result = res
-	return ec.marshalNCalendarType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendarType(ctx, field.Selections, res)
+	return ec.marshalNCalendarType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendarType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Calendar_calType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -29350,7 +30398,7 @@ func (ec *executionContext) _Calendar_source(ctx context.Context, field graphql.
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Calendar_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -29394,7 +30442,7 @@ func (ec *executionContext) _Calendar_sourceOfTruth(ctx context.Context, field g
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Calendar_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -29449,6 +30497,355 @@ func (ec *executionContext) fieldContext_Calendar_appSource(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Capability_id(ctx context.Context, field graphql.CollectedField, obj *model.Capability) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Capability_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Capability_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Capability",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Capability_type(ctx context.Context, field graphql.CollectedField, obj *model.Capability) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Capability_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.CapabilityType)
+	fc.Result = res
+	return ec.marshalNCapabilityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Capability_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Capability",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type CapabilityType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Capability_name(ctx context.Context, field graphql.CollectedField, obj *model.Capability) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Capability_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Capability_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Capability",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Capability_action(ctx context.Context, field graphql.CollectedField, obj *model.Capability) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Capability_action(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Action, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Capability_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Capability",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Capability_optional(ctx context.Context, field graphql.CollectedField, obj *model.Capability) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Capability_optional(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Optional, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Capability_optional(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Capability",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Capability_values(ctx context.Context, field graphql.CollectedField, obj *model.Capability) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Capability_values(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Values, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Capability_values(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Capability",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Capability_errors(ctx context.Context, field graphql.CollectedField, obj *model.Capability) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Capability_errors(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Errors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Capability_errors(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Capability",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Capability_status(ctx context.Context, field graphql.CollectedField, obj *model.Capability) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Capability_status(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.CapabilityStatus)
+	fc.Result = res
+	return ec.marshalNCapabilityStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityStatus(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Capability_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Capability",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type CapabilityStatus does not have child fields")
 		},
 	}
 	return fc, nil
@@ -29526,7 +30923,7 @@ func (ec *executionContext) _ColumnView_columnType(ctx context.Context, field gr
 	}
 	res := resTmp.(model.ColumnViewType)
 	fc.Result = res
-	return ec.marshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewType(ctx, field.Selections, res)
+	return ec.marshalNColumnViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ColumnView_columnType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -29957,7 +31354,7 @@ func (ec *executionContext) _Comment_createdBy(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Comment_createdBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -30049,7 +31446,7 @@ func (ec *executionContext) _Comment_source(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Comment_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -30093,7 +31490,7 @@ func (ec *executionContext) _Comment_sourceOfTruth(ctx context.Context, field gr
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Comment_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -30181,7 +31578,7 @@ func (ec *executionContext) _Comment_externalLinks(ctx context.Context, field gr
 	}
 	res := resTmp.([]*model.ExternalSystem)
 	fc.Result = res
-	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Comment_externalLinks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -30237,7 +31634,7 @@ func (ec *executionContext) _Contact_metadata(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -30880,7 +32277,7 @@ func (ec *executionContext) _Contact_source(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -30962,7 +32359,7 @@ func (ec *executionContext) _Contact_tags(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.([]*model.Tag)
 	fc.Result = res
-	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_tags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31026,7 +32423,7 @@ func (ec *executionContext) _Contact_jobRoles(ctx context.Context, field graphql
 	}
 	res := resTmp.([]*model.JobRole)
 	fc.Result = res
-	return ec.marshalNJobRole2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleᚄ(ctx, field.Selections, res)
+	return ec.marshalNJobRole2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_jobRoles(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31098,7 +32495,7 @@ func (ec *executionContext) _Contact_organizations(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.OrganizationPage)
 	fc.Result = res
-	return ec.marshalNOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
+	return ec.marshalNOrganizationPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_organizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31160,7 +32557,7 @@ func (ec *executionContext) _Contact_latestOrganizationWithJobRole(ctx context.C
 	}
 	res := resTmp.(*model.OrganizationWithJobRole)
 	fc.Result = res
-	return ec.marshalOOrganizationWithJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationWithJobRole(ctx, field.Selections, res)
+	return ec.marshalOOrganizationWithJobRole2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationWithJobRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_latestOrganizationWithJobRole(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31210,7 +32607,7 @@ func (ec *executionContext) _Contact_phoneNumbers(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.PhoneNumber)
 	fc.Result = res
-	return ec.marshalNPhoneNumber2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberᚄ(ctx, field.Selections, res)
+	return ec.marshalNPhoneNumber2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_phoneNumbers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31284,7 +32681,7 @@ func (ec *executionContext) _Contact_emails(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*model.Email)
 	fc.Result = res
-	return ec.marshalNEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailᚄ(ctx, field.Selections, res)
+	return ec.marshalNEmail2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_emails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31355,7 +32752,7 @@ func (ec *executionContext) _Contact_primaryEmail(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Email)
 	fc.Result = res
-	return ec.marshalOEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
+	return ec.marshalOEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_primaryEmail(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31429,7 +32826,7 @@ func (ec *executionContext) _Contact_locations(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*model.Location)
 	fc.Result = res
-	return ec.marshalNLocation2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationᚄ(ctx, field.Selections, res)
+	return ec.marshalNLocation2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_locations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31531,7 +32928,7 @@ func (ec *executionContext) _Contact_socials(ctx context.Context, field graphql.
 	}
 	res := resTmp.([]*model.Social)
 	fc.Result = res
-	return ec.marshalNSocial2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialᚄ(ctx, field.Selections, res)
+	return ec.marshalNSocial2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_socials(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31599,7 +32996,7 @@ func (ec *executionContext) _Contact_connectedUsers(ctx context.Context, field g
 	}
 	res := resTmp.([]*model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_connectedUsers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31691,7 +33088,7 @@ func (ec *executionContext) _Contact_customFields(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.CustomField)
 	fc.Result = res
-	return ec.marshalNCustomField2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldᚄ(ctx, field.Selections, res)
+	return ec.marshalNCustomField2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_customFields(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31750,7 +33147,7 @@ func (ec *executionContext) _Contact_owner(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31842,7 +33239,7 @@ func (ec *executionContext) _Contact_flows(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.([]*model.Flow)
 	fc.Result = res
-	return ec.marshalNFlow2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowᚄ(ctx, field.Selections, res)
+	return ec.marshalNFlow2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_flows(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -31908,7 +33305,7 @@ func (ec *executionContext) _Contact_timelineEvents(ctx context.Context, field g
 	}
 	res := resTmp.([]model.TimelineEvent)
 	fc.Result = res
-	return ec.marshalNTimelineEvent2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventᚄ(ctx, field.Selections, res)
+	return ec.marshalNTimelineEvent2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_timelineEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -32018,7 +33415,7 @@ func (ec *executionContext) _Contact_enrichDetails(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.EnrichDetails)
 	fc.Result = res
-	return ec.marshalNEnrichDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEnrichDetails(ctx, field.Selections, res)
+	return ec.marshalNEnrichDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEnrichDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contact_enrichDetails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -32082,7 +33479,7 @@ func (ec *executionContext) _ContactParticipant_contactParticipant(ctx context.C
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -33633,7 +35030,7 @@ func (ec *executionContext) _ContactUiDetails_emails(ctx context.Context, field 
 	}
 	res := resTmp.([]*model.Email)
 	fc.Result = res
-	return ec.marshalNEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailᚄ(ctx, field.Selections, res)
+	return ec.marshalNEmail2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ContactUiDetails_emails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -33751,7 +35148,7 @@ func (ec *executionContext) _ContactUiDetails_tags(ctx context.Context, field gr
 	}
 	res := resTmp.([]*model.Tag)
 	fc.Result = res
-	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ContactUiDetails_tags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -33815,7 +35212,7 @@ func (ec *executionContext) _ContactUiDetails_locations(ctx context.Context, fie
 	}
 	res := resTmp.([]*model.Location)
 	fc.Result = res
-	return ec.marshalNLocation2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationᚄ(ctx, field.Selections, res)
+	return ec.marshalNLocation2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ContactUiDetails_locations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -34049,7 +35446,7 @@ func (ec *executionContext) _ContactsPage_content(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactᚄ(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ContactsPage_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -34249,7 +35646,7 @@ func (ec *executionContext) _Contract_metadata(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -34306,7 +35703,7 @@ func (ec *executionContext) _Contract_billingDetails(ctx context.Context, field 
 	}
 	res := resTmp.(*model.BillingDetails)
 	fc.Result = res
-	return ec.marshalOBillingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingDetails(ctx, field.Selections, res)
+	return ec.marshalOBillingDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_billingDetails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -34434,7 +35831,7 @@ func (ec *executionContext) _Contract_contractLineItems(ctx context.Context, fie
 	}
 	res := resTmp.([]*model.ServiceLineItem)
 	fc.Result = res
-	return ec.marshalOServiceLineItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemᚄ(ctx, field.Selections, res)
+	return ec.marshalOServiceLineItem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_contractLineItems(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -34672,7 +36069,7 @@ func (ec *executionContext) _Contract_currency(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.Currency)
 	fc.Result = res
-	return ec.marshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, field.Selections, res)
+	return ec.marshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -34713,7 +36110,7 @@ func (ec *executionContext) _Contract_createdBy(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_createdBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -34805,7 +36202,7 @@ func (ec *executionContext) _Contract_externalLinks(ctx context.Context, field g
 	}
 	res := resTmp.([]*model.ExternalSystem)
 	fc.Result = res
-	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_externalLinks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -34902,7 +36299,7 @@ func (ec *executionContext) _Contract_opportunities(ctx context.Context, field g
 	}
 	res := resTmp.([]*model.Opportunity)
 	fc.Result = res
-	return ec.marshalOOpportunity2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityᚄ(ctx, field.Selections, res)
+	return ec.marshalOOpportunity2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_opportunities(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -35007,7 +36404,7 @@ func (ec *executionContext) _Contract_owner(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -35140,7 +36537,7 @@ func (ec *executionContext) _Contract_contractStatus(ctx context.Context, field 
 	}
 	res := resTmp.(model.ContractStatus)
 	fc.Result = res
-	return ec.marshalNContractStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractStatus(ctx, field.Selections, res)
+	return ec.marshalNContractStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_contractStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -35269,7 +36666,7 @@ func (ec *executionContext) _Contract_attachments(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.Attachment)
 	fc.Result = res
-	return ec.marshalOAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+	return ec.marshalOAttachment2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_attachments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -35335,7 +36732,7 @@ func (ec *executionContext) _Contract_invoices(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*model.Invoice)
 	fc.Result = res
-	return ec.marshalNInvoice2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceᚄ(ctx, field.Selections, res)
+	return ec.marshalNInvoice2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_invoices(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -35441,7 +36838,7 @@ func (ec *executionContext) _Contract_upcomingInvoices(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.Invoice)
 	fc.Result = res
-	return ec.marshalNInvoice2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceᚄ(ctx, field.Selections, res)
+	return ec.marshalNInvoice2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_upcomingInvoices(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -35632,7 +37029,7 @@ func (ec *executionContext) _Contract_contractRenewalCycle(ctx context.Context, 
 	}
 	res := resTmp.(model.ContractRenewalCycle)
 	fc.Result = res
-	return ec.marshalNContractRenewalCycle2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx, field.Selections, res)
+	return ec.marshalNContractRenewalCycle2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_contractRenewalCycle(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -35676,7 +37073,7 @@ func (ec *executionContext) _Contract_status(ctx context.Context, field graphql.
 	}
 	res := resTmp.(model.ContractStatus)
 	fc.Result = res
-	return ec.marshalNContractStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractStatus(ctx, field.Selections, res)
+	return ec.marshalNContractStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -35846,7 +37243,7 @@ func (ec *executionContext) _Contract_renewalCycle(ctx context.Context, field gr
 	}
 	res := resTmp.(model.ContractRenewalCycle)
 	fc.Result = res
-	return ec.marshalNContractRenewalCycle2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx, field.Selections, res)
+	return ec.marshalNContractRenewalCycle2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_renewalCycle(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -36104,7 +37501,7 @@ func (ec *executionContext) _Contract_source(ctx context.Context, field graphql.
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -36148,7 +37545,7 @@ func (ec *executionContext) _Contract_sourceOfTruth(ctx context.Context, field g
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -36315,7 +37712,7 @@ func (ec *executionContext) _Contract_serviceLineItems(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.ServiceLineItem)
 	fc.Result = res
-	return ec.marshalOServiceLineItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemᚄ(ctx, field.Selections, res)
+	return ec.marshalOServiceLineItem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_serviceLineItems(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -36427,7 +37824,7 @@ func (ec *executionContext) _Contract_billingCycle(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.ContractBillingCycle)
 	fc.Result = res
-	return ec.marshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx, field.Selections, res)
+	return ec.marshalOContractBillingCycle2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Contract_billingCycle(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -36717,7 +38114,7 @@ func (ec *executionContext) _ContractPage_content(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.Contract)
 	fc.Result = res
-	return ec.marshalNContract2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractᚄ(ctx, field.Selections, res)
+	return ec.marshalNContract2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ContractPage_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -37299,7 +38696,7 @@ func (ec *executionContext) _CustomField_datatype(ctx context.Context, field gra
 	}
 	res := resTmp.(model.CustomFieldDataType)
 	fc.Result = res
-	return ec.marshalNCustomFieldDataType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx, field.Selections, res)
+	return ec.marshalNCustomFieldDataType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomField_datatype(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -37343,7 +38740,7 @@ func (ec *executionContext) _CustomField_value(ctx context.Context, field graphq
 	}
 	res := resTmp.(model.AnyTypeValue)
 	fc.Result = res
-	return ec.marshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAnyTypeValue(ctx, field.Selections, res)
+	return ec.marshalNAny2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAnyTypeValue(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomField_value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -37387,7 +38784,7 @@ func (ec *executionContext) _CustomField_source(ctx context.Context, field graph
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomField_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -37516,7 +38913,7 @@ func (ec *executionContext) _CustomField_template(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.CustomFieldTemplate)
 	fc.Result = res
-	return ec.marshalOCustomFieldTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplate(ctx, field.Selections, res)
+	return ec.marshalOCustomFieldTemplate2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplate(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomField_template(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -37762,7 +39159,7 @@ func (ec *executionContext) _CustomFieldTemplate_type(ctx context.Context, field
 	}
 	res := resTmp.(model.CustomFieldTemplateType)
 	fc.Result = res
-	return ec.marshalNCustomFieldTemplateType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateType(ctx, field.Selections, res)
+	return ec.marshalNCustomFieldTemplateType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomFieldTemplate_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -37850,7 +39247,7 @@ func (ec *executionContext) _CustomFieldTemplate_entityType(ctx context.Context,
 	}
 	res := resTmp.(model.EntityType)
 	fc.Result = res
-	return ec.marshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, field.Selections, res)
+	return ec.marshalNEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomFieldTemplate_entityType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -38143,7 +39540,7 @@ func (ec *executionContext) _CustomerContact_email(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.CustomerEmail)
 	fc.Result = res
-	return ec.marshalNCustomerEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerEmail(ctx, field.Selections, res)
+	return ec.marshalNCustomerEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomerContact_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -38323,7 +39720,7 @@ func (ec *executionContext) _CustomerUser_jobRole(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.CustomerJobRole)
 	fc.Result = res
-	return ec.marshalNCustomerJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerJobRole(ctx, field.Selections, res)
+	return ec.marshalNCustomerJobRole2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerJobRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomerUser_jobRole(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -38459,7 +39856,7 @@ func (ec *executionContext) _DashboardARRBreakdown_perMonth(ctx context.Context,
 	}
 	res := resTmp.([]*model.DashboardARRBreakdownPerMonth)
 	fc.Result = res
-	return ec.marshalNDashboardARRBreakdownPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardARRBreakdownPerMonth(ctx, field.Selections, res)
+	return ec.marshalNDashboardARRBreakdownPerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardARRBreakdownPerMonth(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardARRBreakdown_perMonth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -38917,7 +40314,7 @@ func (ec *executionContext) _DashboardCustomerMap_organization(ctx context.Conte
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -39107,7 +40504,7 @@ func (ec *executionContext) _DashboardCustomerMap_state(ctx context.Context, fie
 	}
 	res := resTmp.(model.DashboardCustomerMapState)
 	fc.Result = res
-	return ec.marshalNDashboardCustomerMapState2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMapState(ctx, field.Selections, res)
+	return ec.marshalNDashboardCustomerMapState2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMapState(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardCustomerMap_state(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -39371,7 +40768,7 @@ func (ec *executionContext) _DashboardGrossRevenueRetention_perMonth(ctx context
 	}
 	res := resTmp.([]*model.DashboardGrossRevenueRetentionPerMonth)
 	fc.Result = res
-	return ec.marshalNDashboardGrossRevenueRetentionPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardGrossRevenueRetentionPerMonth(ctx, field.Selections, res)
+	return ec.marshalNDashboardGrossRevenueRetentionPerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardGrossRevenueRetentionPerMonth(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardGrossRevenueRetention_perMonth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -39643,7 +41040,7 @@ func (ec *executionContext) _DashboardMRRPerCustomer_perMonth(ctx context.Contex
 	}
 	res := resTmp.([]*model.DashboardMRRPerCustomerPerMonth)
 	fc.Result = res
-	return ec.marshalNDashboardMRRPerCustomerPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardMRRPerCustomerPerMonth(ctx, field.Selections, res)
+	return ec.marshalNDashboardMRRPerCustomerPerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardMRRPerCustomerPerMonth(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardMRRPerCustomer_perMonth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -39915,7 +41312,7 @@ func (ec *executionContext) _DashboardNewCustomers_perMonth(ctx context.Context,
 	}
 	res := resTmp.([]*model.DashboardNewCustomersPerMonth)
 	fc.Result = res
-	return ec.marshalNDashboardNewCustomersPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardNewCustomersPerMonth(ctx, field.Selections, res)
+	return ec.marshalNDashboardNewCustomersPerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardNewCustomersPerMonth(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardNewCustomers_perMonth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -40187,7 +41584,7 @@ func (ec *executionContext) _DashboardOnboardingCompletion_perMonth(ctx context.
 	}
 	res := resTmp.([]*model.DashboardOnboardingCompletionPerMonth)
 	fc.Result = res
-	return ec.marshalNDashboardOnboardingCompletionPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardOnboardingCompletionPerMonthᚄ(ctx, field.Selections, res)
+	return ec.marshalNDashboardOnboardingCompletionPerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardOnboardingCompletionPerMonthᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardOnboardingCompletion_perMonth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -40503,7 +41900,7 @@ func (ec *executionContext) _DashboardRetentionRate_perMonth(ctx context.Context
 	}
 	res := resTmp.([]*model.DashboardRetentionRatePerMonth)
 	fc.Result = res
-	return ec.marshalNDashboardRetentionRatePerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRetentionRatePerMonth(ctx, field.Selections, res)
+	return ec.marshalNDashboardRetentionRatePerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRetentionRatePerMonth(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardRetentionRate_perMonth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -40903,7 +42300,7 @@ func (ec *executionContext) _DashboardTimeToOnboard_perMonth(ctx context.Context
 	}
 	res := resTmp.([]*model.DashboardTimeToOnboardPerMonth)
 	fc.Result = res
-	return ec.marshalNDashboardTimeToOnboardPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardTimeToOnboardPerMonthᚄ(ctx, field.Selections, res)
+	return ec.marshalNDashboardTimeToOnboardPerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardTimeToOnboardPerMonthᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_DashboardTimeToOnboard_perMonth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -41855,7 +43252,7 @@ func (ec *executionContext) _Email_emailValidationDetails(ctx context.Context, f
 	}
 	res := resTmp.(*model.EmailValidationDetails)
 	fc.Result = res
-	return ec.marshalNEmailValidationDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailValidationDetails(ctx, field.Selections, res)
+	return ec.marshalNEmailValidationDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailValidationDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Email_emailValidationDetails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -41977,7 +43374,7 @@ func (ec *executionContext) _Email_label(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(*model.EmailLabel)
 	fc.Result = res
-	return ec.marshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailLabel(ctx, field.Selections, res)
+	return ec.marshalOEmailLabel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailLabel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Email_label(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -42065,7 +43462,7 @@ func (ec *executionContext) _Email_source(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Email_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -42241,7 +43638,7 @@ func (ec *executionContext) _Email_users(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.([]*model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Email_users(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -42333,7 +43730,7 @@ func (ec *executionContext) _Email_contacts(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactᚄ(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Email_contacts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -42445,7 +43842,7 @@ func (ec *executionContext) _Email_organizations(ctx context.Context, field grap
 	}
 	res := resTmp.([]*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationᚄ(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -42635,7 +44032,7 @@ func (ec *executionContext) _EmailParticipant_emailParticipant(ctx context.Conte
 	}
 	res := resTmp.(*model.Email)
 	fc.Result = res
-	return ec.marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
+	return ec.marshalNEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_EmailParticipant_emailParticipant(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -43327,7 +44724,7 @@ func (ec *executionContext) _EmailValidationDetails_deliverable(ctx context.Cont
 	}
 	res := resTmp.(*model.EmailDeliverable)
 	fc.Result = res
-	return ec.marshalOEmailDeliverable2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailDeliverable(ctx, field.Selections, res)
+	return ec.marshalOEmailDeliverable2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailDeliverable(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_EmailValidationDetails_deliverable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -43535,7 +44932,7 @@ func (ec *executionContext) _EmailVariableEntity_type(ctx context.Context, field
 	}
 	res := resTmp.(model.EmailVariableEntityType)
 	fc.Result = res
-	return ec.marshalNEmailVariableEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntityType(ctx, field.Selections, res)
+	return ec.marshalNEmailVariableEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntityType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_EmailVariableEntity_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -43579,7 +44976,7 @@ func (ec *executionContext) _EmailVariableEntity_variables(ctx context.Context, 
 	}
 	res := resTmp.([]model.EmailVariableName)
 	fc.Result = res
-	return ec.marshalNEmailVariableName2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableNameᚄ(ctx, field.Selections, res)
+	return ec.marshalNEmailVariableName2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableNameᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_EmailVariableEntity_variables(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -43992,7 +45389,7 @@ func (ec *executionContext) _ExternalSystem_type(ctx context.Context, field grap
 	}
 	res := resTmp.(model.ExternalSystemType)
 	fc.Result = res
-	return ec.marshalNExternalSystemType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemType(ctx, field.Selections, res)
+	return ec.marshalNExternalSystemType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ExternalSystem_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -44200,7 +45597,7 @@ func (ec *executionContext) _ExternalSystemInstance_type(ctx context.Context, fi
 	}
 	res := resTmp.(model.ExternalSystemType)
 	fc.Result = res
-	return ec.marshalNExternalSystemType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemType(ctx, field.Selections, res)
+	return ec.marshalNExternalSystemType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ExternalSystemInstance_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -44241,7 +45638,7 @@ func (ec *executionContext) _ExternalSystemInstance_stripeDetails(ctx context.Co
 	}
 	res := resTmp.(*model.ExternalSystemStripeDetails)
 	fc.Result = res
-	return ec.marshalOExternalSystemStripeDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemStripeDetails(ctx, field.Selections, res)
+	return ec.marshalOExternalSystemStripeDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemStripeDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ExternalSystemInstance_stripeDetails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -44333,7 +45730,7 @@ func (ec *executionContext) _Flow_metadata(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Flow_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -44610,7 +46007,7 @@ func (ec *executionContext) _Flow_status(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(neo4j_entity.FlowStatus)
 	fc.Result = res
-	return ec.marshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx, field.Selections, res)
+	return ec.marshalNFlowStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Flow_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -44654,7 +46051,7 @@ func (ec *executionContext) _Flow_participants(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*model.FlowParticipant)
 	fc.Result = res
-	return ec.marshalNFlowParticipant2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipantᚄ(ctx, field.Selections, res)
+	return ec.marshalNFlowParticipant2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipantᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Flow_participants(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -44712,7 +46109,7 @@ func (ec *executionContext) _Flow_senders(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.([]*model.FlowSender)
 	fc.Result = res
-	return ec.marshalNFlowSender2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSenderᚄ(ctx, field.Selections, res)
+	return ec.marshalNFlowSender2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSenderᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Flow_senders(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -44764,7 +46161,7 @@ func (ec *executionContext) _Flow_statistics(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*model.FlowStatistics)
 	fc.Result = res
-	return ec.marshalNFlowStatistics2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowStatistics(ctx, field.Selections, res)
+	return ec.marshalNFlowStatistics2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowStatistics(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Flow_statistics(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -44824,7 +46221,7 @@ func (ec *executionContext) _FlowAction_metadata(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowAction_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -44884,7 +46281,7 @@ func (ec *executionContext) _FlowAction_action(ctx context.Context, field graphq
 	}
 	res := resTmp.(neo4j_entity.FlowActionType)
 	fc.Result = res
-	return ec.marshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx, field.Selections, res)
+	return ec.marshalNFlowActionType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowAction_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -44928,7 +46325,7 @@ func (ec *executionContext) _FlowActionExecution_metadata(ctx context.Context, f
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowActionExecution_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -44988,7 +46385,7 @@ func (ec *executionContext) _FlowActionExecution_action(ctx context.Context, fie
 	}
 	res := resTmp.(*model.FlowAction)
 	fc.Result = res
-	return ec.marshalNFlowAction2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowAction(ctx, field.Selections, res)
+	return ec.marshalNFlowAction2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowAction(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowActionExecution_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -45038,7 +46435,7 @@ func (ec *executionContext) _FlowActionExecution_status(ctx context.Context, fie
 	}
 	res := resTmp.(neo4j_entity.FlowActionExecutionStatus)
 	fc.Result = res
-	return ec.marshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx, field.Selections, res)
+	return ec.marshalNFlowActionExecutionStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowActionExecution_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -45205,7 +46602,7 @@ func (ec *executionContext) _FlowContact_metadata(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowContact_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -45265,7 +46662,7 @@ func (ec *executionContext) _FlowContact_contact(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowContact_contact(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -45377,7 +46774,7 @@ func (ec *executionContext) _FlowContact_status(ctx context.Context, field graph
 	}
 	res := resTmp.(neo4j_entity.FlowParticipantStatus)
 	fc.Result = res
-	return ec.marshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx, field.Selections, res)
+	return ec.marshalNFlowParticipantStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowContact_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -45503,7 +46900,7 @@ func (ec *executionContext) _FlowParticipant_metadata(ctx context.Context, field
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowParticipant_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -45651,7 +47048,7 @@ func (ec *executionContext) _FlowParticipant_status(ctx context.Context, field g
 	}
 	res := resTmp.(neo4j_entity.FlowParticipantStatus)
 	fc.Result = res
-	return ec.marshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx, field.Selections, res)
+	return ec.marshalNFlowParticipantStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowParticipant_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -45695,7 +47092,7 @@ func (ec *executionContext) _FlowParticipant_requirementsUnmeet(ctx context.Cont
 	}
 	res := resTmp.([]neo4j_entity.FlowParticipantRequirementsUnmeet)
 	fc.Result = res
-	return ec.marshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx, field.Selections, res)
+	return ec.marshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowParticipant_requirementsUnmeet(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -45739,7 +47136,7 @@ func (ec *executionContext) _FlowParticipant_executions(ctx context.Context, fie
 	}
 	res := resTmp.([]*model.FlowActionExecution)
 	fc.Result = res
-	return ec.marshalNFlowActionExecution2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionExecutionᚄ(ctx, field.Selections, res)
+	return ec.marshalNFlowActionExecution2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionExecutionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowParticipant_executions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -45797,7 +47194,7 @@ func (ec *executionContext) _FlowSender_metadata(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowSender_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -45854,7 +47251,7 @@ func (ec *executionContext) _FlowSender_flow(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*model.Flow)
 	fc.Result = res
-	return ec.marshalOFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, field.Selections, res)
+	return ec.marshalOFlow2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowSender_flow(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -45917,7 +47314,7 @@ func (ec *executionContext) _FlowSender_user(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_FlowSender_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -46361,7 +47758,7 @@ func (ec *executionContext) _GlobalCache_user(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_GlobalCache_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -46497,7 +47894,7 @@ func (ec *executionContext) _GlobalCache_inactiveEmailTokens(ctx context.Context
 	}
 	res := resTmp.([]*model.GlobalCacheEmailToken)
 	fc.Result = res
-	return ec.marshalNGlobalCacheEmailToken2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCacheEmailTokenᚄ(ctx, field.Selections, res)
+	return ec.marshalNGlobalCacheEmailToken2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCacheEmailTokenᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_GlobalCache_inactiveEmailTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -46547,7 +47944,7 @@ func (ec *executionContext) _GlobalCache_activeEmailTokens(ctx context.Context, 
 	}
 	res := resTmp.([]*model.GlobalCacheEmailToken)
 	fc.Result = res
-	return ec.marshalNGlobalCacheEmailToken2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCacheEmailTokenᚄ(ctx, field.Selections, res)
+	return ec.marshalNGlobalCacheEmailToken2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCacheEmailTokenᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_GlobalCache_activeEmailTokens(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -47720,7 +49117,7 @@ func (ec *executionContext) _InteractionEvent_interactionSession(ctx context.Con
 	}
 	res := resTmp.(*model.InteractionSession)
 	fc.Result = res
-	return ec.marshalOInteractionSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionSession(ctx, field.Selections, res)
+	return ec.marshalOInteractionSession2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionSession(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_interactionSession(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -47791,7 +49188,7 @@ func (ec *executionContext) _InteractionEvent_issue(ctx context.Context, field g
 	}
 	res := resTmp.(*model.Issue)
 	fc.Result = res
-	return ec.marshalOIssue2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssue(ctx, field.Selections, res)
+	return ec.marshalOIssue2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssue(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_issue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -47872,7 +49269,7 @@ func (ec *executionContext) _InteractionEvent_meeting(ctx context.Context, field
 	}
 	res := resTmp.(*model.Meeting)
 	fc.Result = res
-	return ec.marshalOMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
+	return ec.marshalOMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_meeting(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -47960,7 +49357,7 @@ func (ec *executionContext) _InteractionEvent_sentBy(ctx context.Context, field 
 	}
 	res := resTmp.([]model.InteractionEventParticipant)
 	fc.Result = res
-	return ec.marshalNInteractionEventParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventParticipantᚄ(ctx, field.Selections, res)
+	return ec.marshalNInteractionEventParticipant2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventParticipantᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_sentBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -48004,7 +49401,7 @@ func (ec *executionContext) _InteractionEvent_sentTo(ctx context.Context, field 
 	}
 	res := resTmp.([]model.InteractionEventParticipant)
 	fc.Result = res
-	return ec.marshalNInteractionEventParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventParticipantᚄ(ctx, field.Selections, res)
+	return ec.marshalNInteractionEventParticipant2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventParticipantᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_sentTo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -48045,7 +49442,7 @@ func (ec *executionContext) _InteractionEvent_repliesTo(ctx context.Context, fie
 	}
 	res := resTmp.(*model.InteractionEvent)
 	fc.Result = res
-	return ec.marshalOInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEvent(ctx, field.Selections, res)
+	return ec.marshalOInteractionEvent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEvent(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_repliesTo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -48135,7 +49532,7 @@ func (ec *executionContext) _InteractionEvent_includes(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.Attachment)
 	fc.Result = res
-	return ec.marshalNAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+	return ec.marshalNAttachment2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_includes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -48198,7 +49595,7 @@ func (ec *executionContext) _InteractionEvent_actions(ctx context.Context, field
 	}
 	res := resTmp.([]*model.Action)
 	fc.Result = res
-	return ec.marshalOAction2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionᚄ(ctx, field.Selections, res)
+	return ec.marshalOAction2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_actions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -48257,7 +49654,7 @@ func (ec *executionContext) _InteractionEvent_actionItems(ctx context.Context, f
 	}
 	res := resTmp.([]*model.ActionItem)
 	fc.Result = res
-	return ec.marshalOActionItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionItemᚄ(ctx, field.Selections, res)
+	return ec.marshalOActionItem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionItemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_actionItems(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -48313,7 +49710,7 @@ func (ec *executionContext) _InteractionEvent_source(ctx context.Context, field 
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -48357,7 +49754,7 @@ func (ec *executionContext) _InteractionEvent_sourceOfTruth(ctx context.Context,
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -48486,7 +49883,7 @@ func (ec *executionContext) _InteractionEvent_externalLinks(ctx context.Context,
 	}
 	res := resTmp.([]*model.ExternalSystem)
 	fc.Result = res
-	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionEvent_externalLinks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -48929,7 +50326,7 @@ func (ec *executionContext) _InteractionSession_source(ctx context.Context, fiel
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionSession_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -48973,7 +50370,7 @@ func (ec *executionContext) _InteractionSession_sourceOfTruth(ctx context.Contex
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionSession_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -49061,7 +50458,7 @@ func (ec *executionContext) _InteractionSession_events(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.InteractionEvent)
 	fc.Result = res
-	return ec.marshalNInteractionEvent2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventᚄ(ctx, field.Selections, res)
+	return ec.marshalNInteractionEvent2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionSession_events(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -49151,7 +50548,7 @@ func (ec *executionContext) _InteractionSession_attendedBy(ctx context.Context, 
 	}
 	res := resTmp.([]model.InteractionSessionParticipant)
 	fc.Result = res
-	return ec.marshalNInteractionSessionParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionSessionParticipantᚄ(ctx, field.Selections, res)
+	return ec.marshalNInteractionSessionParticipant2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionSessionParticipantᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InteractionSession_attendedBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -49195,7 +50592,7 @@ func (ec *executionContext) _Invoice_metadata(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Invoice_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -49255,7 +50652,7 @@ func (ec *executionContext) _Invoice_organization(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -49445,7 +50842,7 @@ func (ec *executionContext) _Invoice_contract(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.Contract)
 	fc.Result = res
-	return ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
+	return ec.marshalNContract2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Invoice_contract(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -50247,7 +51644,7 @@ func (ec *executionContext) _Invoice_invoiceLineItems(ctx context.Context, field
 	}
 	res := resTmp.([]*model.InvoiceLine)
 	fc.Result = res
-	return ec.marshalNInvoiceLine2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLineᚄ(ctx, field.Selections, res)
+	return ec.marshalNInvoiceLine2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLineᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Invoice_invoiceLineItems(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -50306,7 +51703,7 @@ func (ec *executionContext) _Invoice_status(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.InvoiceStatus)
 	fc.Result = res
-	return ec.marshalOInvoiceStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceStatus(ctx, field.Selections, res)
+	return ec.marshalOInvoiceStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Invoice_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -50473,7 +51870,7 @@ func (ec *executionContext) _Invoice_customer(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.InvoiceCustomer)
 	fc.Result = res
-	return ec.marshalNInvoiceCustomer2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceCustomer(ctx, field.Selections, res)
+	return ec.marshalNInvoiceCustomer2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceCustomer(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Invoice_customer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -50535,7 +51932,7 @@ func (ec *executionContext) _Invoice_provider(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.InvoiceProvider)
 	fc.Result = res
-	return ec.marshalNInvoiceProvider2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceProvider(ctx, field.Selections, res)
+	return ec.marshalNInvoiceProvider2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceProvider(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Invoice_provider(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -51144,7 +52541,7 @@ func (ec *executionContext) _InvoiceLine_metadata(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InvoiceLine_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -51468,7 +52865,7 @@ func (ec *executionContext) _InvoiceLine_contractLineItem(ctx context.Context, f
 	}
 	res := resTmp.(*model.ServiceLineItem)
 	fc.Result = res
-	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
+	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InvoiceLine_contractLineItem(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -52571,7 +53968,7 @@ func (ec *executionContext) _InvoiceSimulate_invoiceLineItems(ctx context.Contex
 	}
 	res := resTmp.([]*model.InvoiceLineSimulate)
 	fc.Result = res
-	return ec.marshalNInvoiceLineSimulate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLineSimulateᚄ(ctx, field.Selections, res)
+	return ec.marshalNInvoiceLineSimulate2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLineSimulateᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InvoiceSimulate_invoiceLineItems(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -52675,7 +54072,7 @@ func (ec *executionContext) _InvoiceSimulate_customer(ctx context.Context, field
 	}
 	res := resTmp.(*model.InvoiceCustomer)
 	fc.Result = res
-	return ec.marshalNInvoiceCustomer2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceCustomer(ctx, field.Selections, res)
+	return ec.marshalNInvoiceCustomer2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceCustomer(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InvoiceSimulate_customer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -52737,7 +54134,7 @@ func (ec *executionContext) _InvoiceSimulate_provider(ctx context.Context, field
 	}
 	res := resTmp.(*model.InvoiceProvider)
 	fc.Result = res
-	return ec.marshalNInvoiceProvider2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceProvider(ctx, field.Selections, res)
+	return ec.marshalNInvoiceProvider2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceProvider(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InvoiceSimulate_provider(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -52977,7 +54374,7 @@ func (ec *executionContext) _InvoicesPage_content(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.Invoice)
 	fc.Result = res
-	return ec.marshalNInvoice2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceᚄ(ctx, field.Selections, res)
+	return ec.marshalNInvoice2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InvoicesPage_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -53511,7 +54908,7 @@ func (ec *executionContext) _Issue_tags(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.([]*model.Tag)
 	fc.Result = res
-	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx, field.Selections, res)
+	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Issue_tags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -53575,7 +54972,7 @@ func (ec *executionContext) _Issue_interactionEvents(ctx context.Context, field 
 	}
 	res := resTmp.([]*model.InteractionEvent)
 	fc.Result = res
-	return ec.marshalNInteractionEvent2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventᚄ(ctx, field.Selections, res)
+	return ec.marshalNInteractionEvent2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Issue_interactionEvents(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -53665,7 +55062,7 @@ func (ec *executionContext) _Issue_comments(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*model.Comment)
 	fc.Result = res
-	return ec.marshalNComment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCommentᚄ(ctx, field.Selections, res)
+	return ec.marshalNComment2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCommentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Issue_comments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -53731,7 +55128,7 @@ func (ec *executionContext) _Issue_externalLinks(ctx context.Context, field grap
 	}
 	res := resTmp.([]*model.ExternalSystem)
 	fc.Result = res
-	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Issue_externalLinks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -53784,7 +55181,7 @@ func (ec *executionContext) _Issue_submittedBy(ctx context.Context, field graphq
 	}
 	res := resTmp.(model.IssueParticipant)
 	fc.Result = res
-	return ec.marshalOIssueParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipant(ctx, field.Selections, res)
+	return ec.marshalOIssueParticipant2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipant(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Issue_submittedBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -53825,7 +55222,7 @@ func (ec *executionContext) _Issue_reportedBy(ctx context.Context, field graphql
 	}
 	res := resTmp.(model.IssueParticipant)
 	fc.Result = res
-	return ec.marshalOIssueParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipant(ctx, field.Selections, res)
+	return ec.marshalOIssueParticipant2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipant(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Issue_reportedBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -53869,7 +55266,7 @@ func (ec *executionContext) _Issue_assignedTo(ctx context.Context, field graphql
 	}
 	res := resTmp.([]model.IssueParticipant)
 	fc.Result = res
-	return ec.marshalNIssueParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipantᚄ(ctx, field.Selections, res)
+	return ec.marshalNIssueParticipant2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipantᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Issue_assignedTo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -53913,7 +55310,7 @@ func (ec *executionContext) _Issue_followedBy(ctx context.Context, field graphql
 	}
 	res := resTmp.([]model.IssueParticipant)
 	fc.Result = res
-	return ec.marshalNIssueParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipantᚄ(ctx, field.Selections, res)
+	return ec.marshalNIssueParticipant2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipantᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Issue_followedBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -53957,7 +55354,7 @@ func (ec *executionContext) _Issue_source(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Issue_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -54001,7 +55398,7 @@ func (ec *executionContext) _Issue_sourceOfTruth(ctx context.Context, field grap
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Issue_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -54350,7 +55747,7 @@ func (ec *executionContext) _JobRole_organization(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -54537,7 +55934,7 @@ func (ec *executionContext) _JobRole_contact(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalOContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobRole_contact(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -54898,7 +56295,7 @@ func (ec *executionContext) _JobRole_source(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobRole_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -54986,7 +56383,7 @@ func (ec *executionContext) _JobRoleParticipant_jobRoleParticipant(ctx context.C
 	}
 	res := resTmp.(*model.JobRole)
 	fc.Result = res
-	return ec.marshalNJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx, field.Selections, res)
+	return ec.marshalNJobRole2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_JobRoleParticipant_jobRoleParticipant(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -55137,7 +56534,7 @@ func (ec *executionContext) _LastTouchpoint_lastTouchPointType(ctx context.Conte
 	}
 	res := resTmp.(*model.LastTouchpointType)
 	fc.Result = res
-	return ec.marshalOLastTouchpointType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpointType(ctx, field.Selections, res)
+	return ec.marshalOLastTouchpointType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpointType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LastTouchpoint_lastTouchPointType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -55219,7 +56616,7 @@ func (ec *executionContext) _LastTouchpoint_lastTouchPointTimelineEvent(ctx cont
 	}
 	res := resTmp.(model.TimelineEvent)
 	fc.Result = res
-	return ec.marshalOTimelineEvent2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEvent(ctx, field.Selections, res)
+	return ec.marshalOTimelineEvent2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEvent(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LastTouchpoint_lastTouchPointTimelineEvent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -55263,7 +56660,7 @@ func (ec *executionContext) _LinkedOrganization_organization(ctx context.Context
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -55626,7 +57023,7 @@ func (ec *executionContext) _Location_source(ctx context.Context, field graphql.
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Location_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -55670,7 +57067,7 @@ func (ec *executionContext) _Location_sourceOfTruth(ctx context.Context, field g
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Location_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -56915,7 +58312,7 @@ func (ec *executionContext) _LogEntry_createdBy(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LogEntry_createdBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -57007,7 +58404,7 @@ func (ec *executionContext) _LogEntry_tags(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.([]*model.Tag)
 	fc.Result = res
-	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LogEntry_tags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -57071,7 +58468,7 @@ func (ec *executionContext) _LogEntry_source(ctx context.Context, field graphql.
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LogEntry_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -57115,7 +58512,7 @@ func (ec *executionContext) _LogEntry_sourceOfTruth(ctx context.Context, field g
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LogEntry_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -57203,7 +58600,7 @@ func (ec *executionContext) _LogEntry_externalLinks(ctx context.Context, field g
 	}
 	res := resTmp.([]*model.ExternalSystem)
 	fc.Result = res
-	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_LogEntry_externalLinks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -57693,7 +59090,7 @@ func (ec *executionContext) _MarkdownEvent_metadata(ctx context.Context, field g
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_MarkdownEvent_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -58131,7 +59528,7 @@ func (ec *executionContext) _Meeting_attendedBy(ctx context.Context, field graph
 	}
 	res := resTmp.([]model.MeetingParticipant)
 	fc.Result = res
-	return ec.marshalNMeetingParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantᚄ(ctx, field.Selections, res)
+	return ec.marshalNMeetingParticipant2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_attendedBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -58175,7 +59572,7 @@ func (ec *executionContext) _Meeting_createdBy(ctx context.Context, field graphq
 	}
 	res := resTmp.([]model.MeetingParticipant)
 	fc.Result = res
-	return ec.marshalNMeetingParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantᚄ(ctx, field.Selections, res)
+	return ec.marshalNMeetingParticipant2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_createdBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -58219,7 +59616,7 @@ func (ec *executionContext) _Meeting_includes(ctx context.Context, field graphql
 	}
 	res := resTmp.([]*model.Attachment)
 	fc.Result = res
-	return ec.marshalNAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+	return ec.marshalNAttachment2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_includes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -58285,7 +59682,7 @@ func (ec *executionContext) _Meeting_note(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.([]*model.Note)
 	fc.Result = res
-	return ec.marshalNNote2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteᚄ(ctx, field.Selections, res)
+	return ec.marshalNNote2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_note(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -58351,7 +59748,7 @@ func (ec *executionContext) _Meeting_events(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*model.InteractionEvent)
 	fc.Result = res
-	return ec.marshalNInteractionEvent2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventᚄ(ctx, field.Selections, res)
+	return ec.marshalNInteractionEvent2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_events(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -58438,7 +59835,7 @@ func (ec *executionContext) _Meeting_recording(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.Attachment)
 	fc.Result = res
-	return ec.marshalOAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx, field.Selections, res)
+	return ec.marshalOAttachment2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_recording(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -58548,7 +59945,7 @@ func (ec *executionContext) _Meeting_source(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -58592,7 +59989,7 @@ func (ec *executionContext) _Meeting_sourceOfTruth(ctx context.Context, field gr
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -58718,7 +60115,7 @@ func (ec *executionContext) _Meeting_externalSystem(ctx context.Context, field g
 	}
 	res := resTmp.([]*model.ExternalSystem)
 	fc.Result = res
-	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_externalSystem(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -58774,7 +60171,7 @@ func (ec *executionContext) _Meeting_status(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(model.MeetingStatus)
 	fc.Result = res
-	return ec.marshalNMeetingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx, field.Selections, res)
+	return ec.marshalNMeetingStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Meeting_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -58818,7 +60215,7 @@ func (ec *executionContext) _MeetingsPage_content(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.Meeting)
 	fc.Result = res
-	return ec.marshalNMeeting2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingᚄ(ctx, field.Selections, res)
+	return ec.marshalNMeeting2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_MeetingsPage_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -59126,7 +60523,7 @@ func (ec *executionContext) _Metadata_source(ctx context.Context, field graphql.
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Metadata_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -59170,7 +60567,7 @@ func (ec *executionContext) _Metadata_sourceOfTruth(ctx context.Context, field g
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Metadata_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -59271,6 +60668,127 @@ func (ec *executionContext) fieldContext_Metadata_version(_ context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_agent_Save(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_agent_Save(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AgentSave(rctx, fc.Args["input"].(model.AgentSaveInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.Agent
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.Agent
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.Agent
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Agent); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Agent`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Agent)
+	fc.Result = res
+	return ec.marshalNAgent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_agent_Save(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Agent_id(ctx, field)
+			case "type":
+				return ec.fieldContext_Agent_type(ctx, field)
+			case "tenant":
+				return ec.fieldContext_Agent_tenant(ctx, field)
+			case "name":
+				return ec.fieldContext_Agent_name(ctx, field)
+			case "capabilities":
+				return ec.fieldContext_Agent_capabilities(ctx, field)
+			case "goal":
+				return ec.fieldContext_Agent_goal(ctx, field)
+			case "isActive":
+				return ec.fieldContext_Agent_isActive(ctx, field)
+			case "flowId":
+				return ec.fieldContext_Agent_flowId(ctx, field)
+			case "visible":
+				return ec.fieldContext_Agent_visible(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Agent_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Agent_updatedAt(ctx, field)
+			case "error":
+				return ec.fieldContext_Agent_error(ctx, field)
+			case "color":
+				return ec.fieldContext_Agent_color(ctx, field)
+			case "icon":
+				return ec.fieldContext_Agent_icon(ctx, field)
+			case "status":
+				return ec.fieldContext_Agent_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Agent", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_agent_Save_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_attachment_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_attachment_Create(ctx, field)
 	if err != nil {
@@ -59299,7 +60817,7 @@ func (ec *executionContext) _Mutation_attachment_Create(ctx context.Context, fie
 	}
 	res := resTmp.(*model.Attachment)
 	fc.Result = res
-	return ec.marshalNAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx, field.Selections, res)
+	return ec.marshalNAttachment2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_attachment_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -59367,7 +60885,7 @@ func (ec *executionContext) _Mutation_bankAccount_Create(ctx context.Context, fi
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.BankAccount
 				return zeroVal, err
@@ -59410,7 +60928,7 @@ func (ec *executionContext) _Mutation_bankAccount_Create(ctx context.Context, fi
 	}
 	res := resTmp.(*model.BankAccount)
 	fc.Result = res
-	return ec.marshalNBankAccount2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccount(ctx, field.Selections, res)
+	return ec.marshalNBankAccount2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccount(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_bankAccount_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -59480,7 +60998,7 @@ func (ec *executionContext) _Mutation_bankAccount_Update(ctx context.Context, fi
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.BankAccount
 				return zeroVal, err
@@ -59523,7 +61041,7 @@ func (ec *executionContext) _Mutation_bankAccount_Update(ctx context.Context, fi
 	}
 	res := resTmp.(*model.BankAccount)
 	fc.Result = res
-	return ec.marshalNBankAccount2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccount(ctx, field.Selections, res)
+	return ec.marshalNBankAccount2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccount(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_bankAccount_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -59593,7 +61111,7 @@ func (ec *executionContext) _Mutation_bankAccount_Delete(ctx context.Context, fi
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.DeleteResponse
 				return zeroVal, err
@@ -59636,7 +61154,7 @@ func (ec *executionContext) _Mutation_bankAccount_Delete(ctx context.Context, fi
 	}
 	res := resTmp.(*model.DeleteResponse)
 	fc.Result = res
-	return ec.marshalNDeleteResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDeleteResponse(ctx, field.Selections, res)
+	return ec.marshalNDeleteResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDeleteResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_bankAccount_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -59688,7 +61206,7 @@ func (ec *executionContext) _Mutation_billingProfile_Create(ctx context.Context,
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -59777,7 +61295,7 @@ func (ec *executionContext) _Mutation_billingProfile_Update(ctx context.Context,
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -59866,7 +61384,7 @@ func (ec *executionContext) _Mutation_billingProfile_LinkEmail(ctx context.Conte
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -59955,7 +61473,7 @@ func (ec *executionContext) _Mutation_billingProfile_UnlinkEmail(ctx context.Con
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -60044,7 +61562,7 @@ func (ec *executionContext) _Mutation_billingProfile_LinkLocation(ctx context.Co
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -60133,7 +61651,7 @@ func (ec *executionContext) _Mutation_billingProfile_UnlinkLocation(ctx context.
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -60222,7 +61740,7 @@ func (ec *executionContext) _Mutation_addTag(ctx context.Context, field graphql.
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -60311,7 +61829,7 @@ func (ec *executionContext) _Mutation_removeTag(ctx context.Context, field graph
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -60351,7 +61869,7 @@ func (ec *executionContext) _Mutation_removeTag(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalOResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_removeTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -60465,7 +61983,7 @@ func (ec *executionContext) _Mutation_contact_CreateForOrganization(ctx context.
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_CreateForOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -60588,7 +62106,7 @@ func (ec *executionContext) _Mutation_customer_contact_Create(ctx context.Contex
 	}
 	res := resTmp.(*model.CustomerContact)
 	fc.Result = res
-	return ec.marshalNCustomerContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerContact(ctx, field.Selections, res)
+	return ec.marshalNCustomerContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_customer_contact_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -60640,7 +62158,7 @@ func (ec *executionContext) _Mutation_contact_CreateBulkByLinkedIn(ctx context.C
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []string
 				return zeroVal, err
@@ -60729,7 +62247,7 @@ func (ec *executionContext) _Mutation_contact_CreateBulkByEmail(ctx context.Cont
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []string
 				return zeroVal, err
@@ -60827,7 +62345,7 @@ func (ec *executionContext) _Mutation_contact_Update(ctx context.Context, field 
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -60950,7 +62468,7 @@ func (ec *executionContext) _Mutation_contact_HardDelete(ctx context.Context, fi
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_HardDelete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -61009,7 +62527,7 @@ func (ec *executionContext) _Mutation_contact_Merge(ctx context.Context, field g
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -61123,7 +62641,7 @@ func (ec *executionContext) _Mutation_contact_Hide(ctx context.Context, field gr
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -61166,7 +62684,7 @@ func (ec *executionContext) _Mutation_contact_Hide(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_Hide(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -61225,7 +62743,7 @@ func (ec *executionContext) _Mutation_contact_AddOrganizationById(ctx context.Co
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -61348,7 +62866,7 @@ func (ec *executionContext) _Mutation_contact_AddNewLocation(ctx context.Context
 	}
 	res := resTmp.(*model.Location)
 	fc.Result = res
-	return ec.marshalNLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocation(ctx, field.Selections, res)
+	return ec.marshalNLocation2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocation(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_AddNewLocation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -61461,7 +62979,7 @@ func (ec *executionContext) _Mutation_contact_RemoveLocation(ctx context.Context
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_RemoveLocation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -61606,7 +63124,7 @@ func (ec *executionContext) _Mutation_contact_AddSocial(ctx context.Context, fie
 	}
 	res := resTmp.(*model.Social)
 	fc.Result = res
-	return ec.marshalNSocial2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocial(ctx, field.Selections, res)
+	return ec.marshalNSocial2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocial(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_AddSocial(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -61707,7 +63225,7 @@ func (ec *executionContext) _Mutation_contact_RemoveSocial(ctx context.Context, 
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_RemoveSocial(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -61766,7 +63284,7 @@ func (ec *executionContext) _Mutation_contact_FindWorkEmail(ctx context.Context,
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_FindWorkEmail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -61816,7 +63334,7 @@ func (ec *executionContext) _Mutation_contact_AddTag(ctx context.Context, field 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -61859,7 +63377,7 @@ func (ec *executionContext) _Mutation_contact_AddTag(ctx context.Context, field 
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_AddTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -61909,7 +63427,7 @@ func (ec *executionContext) _Mutation_contact_RemoveTag(ctx context.Context, fie
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -61952,7 +63470,7 @@ func (ec *executionContext) _Mutation_contact_RemoveTag(ctx context.Context, fie
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contact_RemoveTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -62002,7 +63520,7 @@ func (ec *executionContext) _Mutation_contract_Create(ctx context.Context, field
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Contract
 				return zeroVal, err
@@ -62045,7 +63563,7 @@ func (ec *executionContext) _Mutation_contract_Create(ctx context.Context, field
 	}
 	res := resTmp.(*model.Contract)
 	fc.Result = res
-	return ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
+	return ec.marshalNContract2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -62189,7 +63707,7 @@ func (ec *executionContext) _Mutation_contract_Update(ctx context.Context, field
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Contract
 				return zeroVal, err
@@ -62232,7 +63750,7 @@ func (ec *executionContext) _Mutation_contract_Update(ctx context.Context, field
 	}
 	res := resTmp.(*model.Contract)
 	fc.Result = res
-	return ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
+	return ec.marshalNContract2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -62376,7 +63894,7 @@ func (ec *executionContext) _Mutation_contract_Delete(ctx context.Context, field
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.DeleteResponse
 				return zeroVal, err
@@ -62419,7 +63937,7 @@ func (ec *executionContext) _Mutation_contract_Delete(ctx context.Context, field
 	}
 	res := resTmp.(*model.DeleteResponse)
 	fc.Result = res
-	return ec.marshalNDeleteResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDeleteResponse(ctx, field.Selections, res)
+	return ec.marshalNDeleteResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDeleteResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contract_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -62471,7 +63989,7 @@ func (ec *executionContext) _Mutation_contract_Renew(ctx context.Context, field 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Contract
 				return zeroVal, err
@@ -62514,7 +64032,7 @@ func (ec *executionContext) _Mutation_contract_Renew(ctx context.Context, field 
 	}
 	res := resTmp.(*model.Contract)
 	fc.Result = res
-	return ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
+	return ec.marshalNContract2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contract_Renew(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -62658,7 +64176,7 @@ func (ec *executionContext) _Mutation_contract_AddAttachment(ctx context.Context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Contract
 				return zeroVal, err
@@ -62701,7 +64219,7 @@ func (ec *executionContext) _Mutation_contract_AddAttachment(ctx context.Context
 	}
 	res := resTmp.(*model.Contract)
 	fc.Result = res
-	return ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
+	return ec.marshalNContract2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contract_AddAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -62845,7 +64363,7 @@ func (ec *executionContext) _Mutation_contract_RemoveAttachment(ctx context.Cont
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Contract
 				return zeroVal, err
@@ -62888,7 +64406,7 @@ func (ec *executionContext) _Mutation_contract_RemoveAttachment(ctx context.Cont
 	}
 	res := resTmp.(*model.Contract)
 	fc.Result = res
-	return ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
+	return ec.marshalNContract2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contract_RemoveAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -63041,7 +64559,7 @@ func (ec *executionContext) _Mutation_customFieldsMergeAndUpdateInContact(ctx co
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -63164,7 +64682,7 @@ func (ec *executionContext) _Mutation_customFieldMergeToContact(ctx context.Cont
 	}
 	res := resTmp.(*model.CustomField)
 	fc.Result = res
-	return ec.marshalNCustomField2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomField(ctx, field.Selections, res)
+	return ec.marshalNCustomField2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomField(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_customFieldMergeToContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -63237,7 +64755,7 @@ func (ec *executionContext) _Mutation_customFieldUpdateInContact(ctx context.Con
 	}
 	res := resTmp.(*model.CustomField)
 	fc.Result = res
-	return ec.marshalNCustomField2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomField(ctx, field.Selections, res)
+	return ec.marshalNCustomField2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomField(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_customFieldUpdateInContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -63310,7 +64828,7 @@ func (ec *executionContext) _Mutation_customFieldDeleteFromContactByName(ctx con
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_customFieldDeleteFromContactByName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -63369,7 +64887,7 @@ func (ec *executionContext) _Mutation_customFieldDeleteFromContactById(ctx conte
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_customFieldDeleteFromContactById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -63419,7 +64937,7 @@ func (ec *executionContext) _Mutation_customFieldTemplate_Save(ctx context.Conte
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.CustomFieldTemplate
 				return zeroVal, err
@@ -63462,7 +64980,7 @@ func (ec *executionContext) _Mutation_customFieldTemplate_Save(ctx context.Conte
 	}
 	res := resTmp.(*model.CustomFieldTemplate)
 	fc.Result = res
-	return ec.marshalNCustomFieldTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplate(ctx, field.Selections, res)
+	return ec.marshalNCustomFieldTemplate2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplate(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_customFieldTemplate_Save(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -63534,7 +65052,7 @@ func (ec *executionContext) _Mutation_customFieldTemplate_Delete(ctx context.Con
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *bool
 				return zeroVal, err
@@ -63620,7 +65138,7 @@ func (ec *executionContext) _Mutation_emailMergeToContact(ctx context.Context, f
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Email
 				return zeroVal, err
@@ -63663,7 +65181,7 @@ func (ec *executionContext) _Mutation_emailMergeToContact(ctx context.Context, f
 	}
 	res := resTmp.(*model.Email)
 	fc.Result = res
-	return ec.marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
+	return ec.marshalNEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailMergeToContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -63739,7 +65257,7 @@ func (ec *executionContext) _Mutation_emailRemoveFromContact(ctx context.Context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -63782,7 +65300,7 @@ func (ec *executionContext) _Mutation_emailRemoveFromContact(ctx context.Context
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailRemoveFromContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -63832,7 +65350,7 @@ func (ec *executionContext) _Mutation_emailReplaceForContact(ctx context.Context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Email
 				return zeroVal, err
@@ -63872,7 +65390,7 @@ func (ec *executionContext) _Mutation_emailReplaceForContact(ctx context.Context
 	}
 	res := resTmp.(*model.Email)
 	fc.Result = res
-	return ec.marshalOEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
+	return ec.marshalOEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailReplaceForContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -63948,7 +65466,7 @@ func (ec *executionContext) _Mutation_emailSetPrimaryForContact(ctx context.Cont
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -63991,7 +65509,7 @@ func (ec *executionContext) _Mutation_emailSetPrimaryForContact(ctx context.Cont
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailSetPrimaryForContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -64041,7 +65559,7 @@ func (ec *executionContext) _Mutation_emailMergeToUser(ctx context.Context, fiel
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Email
 				return zeroVal, err
@@ -64084,7 +65602,7 @@ func (ec *executionContext) _Mutation_emailMergeToUser(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.Email)
 	fc.Result = res
-	return ec.marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
+	return ec.marshalNEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailMergeToUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -64160,7 +65678,7 @@ func (ec *executionContext) _Mutation_emailRemoveFromUser(ctx context.Context, f
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -64203,7 +65721,7 @@ func (ec *executionContext) _Mutation_emailRemoveFromUser(ctx context.Context, f
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailRemoveFromUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -64253,7 +65771,7 @@ func (ec *executionContext) _Mutation_emailReplaceForUser(ctx context.Context, f
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Email
 				return zeroVal, err
@@ -64293,7 +65811,7 @@ func (ec *executionContext) _Mutation_emailReplaceForUser(ctx context.Context, f
 	}
 	res := resTmp.(*model.Email)
 	fc.Result = res
-	return ec.marshalOEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
+	return ec.marshalOEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailReplaceForUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -64369,7 +65887,7 @@ func (ec *executionContext) _Mutation_emailMergeToOrganization(ctx context.Conte
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Email
 				return zeroVal, err
@@ -64412,7 +65930,7 @@ func (ec *executionContext) _Mutation_emailMergeToOrganization(ctx context.Conte
 	}
 	res := resTmp.(*model.Email)
 	fc.Result = res
-	return ec.marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
+	return ec.marshalNEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailMergeToOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -64488,7 +66006,7 @@ func (ec *executionContext) _Mutation_emailRemoveFromOrganization(ctx context.Co
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -64531,7 +66049,7 @@ func (ec *executionContext) _Mutation_emailRemoveFromOrganization(ctx context.Co
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailRemoveFromOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -64581,7 +66099,7 @@ func (ec *executionContext) _Mutation_emailReplaceForOrganization(ctx context.Co
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Email
 				return zeroVal, err
@@ -64621,7 +66139,7 @@ func (ec *executionContext) _Mutation_emailReplaceForOrganization(ctx context.Co
 	}
 	res := resTmp.(*model.Email)
 	fc.Result = res
-	return ec.marshalOEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
+	return ec.marshalOEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailReplaceForOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -64697,7 +66215,7 @@ func (ec *executionContext) _Mutation_email_Validate(ctx context.Context, field 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -64740,7 +66258,7 @@ func (ec *executionContext) _Mutation_email_Validate(ctx context.Context, field 
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_email_Validate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -64790,7 +66308,7 @@ func (ec *executionContext) _Mutation_externalSystem_Create(ctx context.Context,
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -64879,7 +66397,7 @@ func (ec *executionContext) _Mutation_flow_ChangeName(ctx context.Context, field
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Flow
 				return zeroVal, err
@@ -64922,7 +66440,7 @@ func (ec *executionContext) _Mutation_flow_ChangeName(ctx context.Context, field
 	}
 	res := resTmp.(*model.Flow)
 	fc.Result = res
-	return ec.marshalNFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, field.Selections, res)
+	return ec.marshalNFlow2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_flow_ChangeName(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -64990,7 +66508,7 @@ func (ec *executionContext) _Mutation_flow_Merge(ctx context.Context, field grap
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Flow
 				return zeroVal, err
@@ -65033,7 +66551,7 @@ func (ec *executionContext) _Mutation_flow_Merge(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Flow)
 	fc.Result = res
-	return ec.marshalNFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, field.Selections, res)
+	return ec.marshalNFlow2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_flow_Merge(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65101,7 +66619,7 @@ func (ec *executionContext) _Mutation_flow_On(ctx context.Context, field graphql
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Flow
 				return zeroVal, err
@@ -65144,7 +66662,7 @@ func (ec *executionContext) _Mutation_flow_On(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.Flow)
 	fc.Result = res
-	return ec.marshalNFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, field.Selections, res)
+	return ec.marshalNFlow2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_flow_On(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65212,7 +66730,7 @@ func (ec *executionContext) _Mutation_flow_Off(ctx context.Context, field graphq
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Flow
 				return zeroVal, err
@@ -65255,7 +66773,7 @@ func (ec *executionContext) _Mutation_flow_Off(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.Flow)
 	fc.Result = res
-	return ec.marshalNFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, field.Selections, res)
+	return ec.marshalNFlow2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_flow_Off(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65323,7 +66841,7 @@ func (ec *executionContext) _Mutation_flow_Archive(ctx context.Context, field gr
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -65366,7 +66884,7 @@ func (ec *executionContext) _Mutation_flow_Archive(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_flow_Archive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65416,7 +66934,7 @@ func (ec *executionContext) _Mutation_flow_ArchiveBulk(ctx context.Context, fiel
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -65459,7 +66977,7 @@ func (ec *executionContext) _Mutation_flow_ArchiveBulk(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_flow_ArchiveBulk(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65509,7 +67027,7 @@ func (ec *executionContext) _Mutation_flowParticipant_Add(ctx context.Context, f
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.FlowParticipant
 				return zeroVal, err
@@ -65552,7 +67070,7 @@ func (ec *executionContext) _Mutation_flowParticipant_Add(ctx context.Context, f
 	}
 	res := resTmp.(*model.FlowParticipant)
 	fc.Result = res
-	return ec.marshalNFlowParticipant2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipant(ctx, field.Selections, res)
+	return ec.marshalNFlowParticipant2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipant(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_flowParticipant_Add(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65612,7 +67130,7 @@ func (ec *executionContext) _Mutation_flowParticipant_AddBulk(ctx context.Contex
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -65655,7 +67173,7 @@ func (ec *executionContext) _Mutation_flowParticipant_AddBulk(ctx context.Contex
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_flowParticipant_AddBulk(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65705,7 +67223,7 @@ func (ec *executionContext) _Mutation_flowParticipant_Delete(ctx context.Context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -65748,7 +67266,7 @@ func (ec *executionContext) _Mutation_flowParticipant_Delete(ctx context.Context
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_flowParticipant_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65798,7 +67316,7 @@ func (ec *executionContext) _Mutation_flowParticipant_DeleteBulk(ctx context.Con
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -65841,7 +67359,7 @@ func (ec *executionContext) _Mutation_flowParticipant_DeleteBulk(ctx context.Con
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_flowParticipant_DeleteBulk(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65891,7 +67409,7 @@ func (ec *executionContext) _Mutation_flowSender_Merge(ctx context.Context, fiel
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.FlowSender
 				return zeroVal, err
@@ -65934,7 +67452,7 @@ func (ec *executionContext) _Mutation_flowSender_Merge(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.FlowSender)
 	fc.Result = res
-	return ec.marshalNFlowSender2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSender(ctx, field.Selections, res)
+	return ec.marshalNFlowSender2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSender(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_flowSender_Merge(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -65988,7 +67506,7 @@ func (ec *executionContext) _Mutation_flowSender_Delete(ctx context.Context, fie
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -66031,7 +67549,7 @@ func (ec *executionContext) _Mutation_flowSender_Delete(ctx context.Context, fie
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_flowSender_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -66081,7 +67599,7 @@ func (ec *executionContext) _Mutation_flowEmailActionTest(ctx context.Context, f
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -66124,7 +67642,7 @@ func (ec *executionContext) _Mutation_flowEmailActionTest(ctx context.Context, f
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_flowEmailActionTest(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -66183,7 +67701,7 @@ func (ec *executionContext) _Mutation_interactionEvent_LinkAttachment(ctx contex
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_interactionEvent_LinkAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -66233,7 +67751,7 @@ func (ec *executionContext) _Mutation_invoice_NextDryRunForContract(ctx context.
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -66322,7 +67840,7 @@ func (ec *executionContext) _Mutation_invoice_Update(ctx context.Context, field 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Invoice
 				return zeroVal, err
@@ -66365,7 +67883,7 @@ func (ec *executionContext) _Mutation_invoice_Update(ctx context.Context, field 
 	}
 	res := resTmp.(*model.Invoice)
 	fc.Result = res
-	return ec.marshalNInvoice2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx, field.Selections, res)
+	return ec.marshalNInvoice2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_invoice_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -66473,7 +67991,7 @@ func (ec *executionContext) _Mutation_invoice_Pay(ctx context.Context, field gra
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Invoice
 				return zeroVal, err
@@ -66516,7 +68034,7 @@ func (ec *executionContext) _Mutation_invoice_Pay(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Invoice)
 	fc.Result = res
-	return ec.marshalNInvoice2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx, field.Selections, res)
+	return ec.marshalNInvoice2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_invoice_Pay(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -66624,7 +68142,7 @@ func (ec *executionContext) _Mutation_invoice_Void(ctx context.Context, field gr
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Invoice
 				return zeroVal, err
@@ -66667,7 +68185,7 @@ func (ec *executionContext) _Mutation_invoice_Void(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.Invoice)
 	fc.Result = res
-	return ec.marshalNInvoice2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx, field.Selections, res)
+	return ec.marshalNInvoice2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_invoice_Void(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -66775,7 +68293,7 @@ func (ec *executionContext) _Mutation_invoice_Simulate(ctx context.Context, fiel
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.InvoiceSimulate
 				return zeroVal, err
@@ -66818,7 +68336,7 @@ func (ec *executionContext) _Mutation_invoice_Simulate(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.InvoiceSimulate)
 	fc.Result = res
-	return ec.marshalNInvoiceSimulate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateᚄ(ctx, field.Selections, res)
+	return ec.marshalNInvoiceSimulate2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_invoice_Simulate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -66907,7 +68425,7 @@ func (ec *executionContext) _Mutation_jobRole_Delete(ctx context.Context, field 
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_jobRole_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -66966,7 +68484,7 @@ func (ec *executionContext) _Mutation_jobRole_Create(ctx context.Context, field 
 	}
 	res := resTmp.(*model.JobRole)
 	fc.Result = res
-	return ec.marshalNJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx, field.Selections, res)
+	return ec.marshalNJobRole2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_jobRole_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -67049,7 +68567,7 @@ func (ec *executionContext) _Mutation_jobRole_Update(ctx context.Context, field 
 	}
 	res := resTmp.(*model.JobRole)
 	fc.Result = res
-	return ec.marshalNJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx, field.Selections, res)
+	return ec.marshalNJobRole2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_jobRole_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -67123,7 +68641,7 @@ func (ec *executionContext) _Mutation_jobRole_Save(ctx context.Context, field gr
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -67212,7 +68730,7 @@ func (ec *executionContext) _Mutation_location_RemoveFromContact(ctx context.Con
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Contact
 				return zeroVal, err
@@ -67255,7 +68773,7 @@ func (ec *executionContext) _Mutation_location_RemoveFromContact(ctx context.Con
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_location_RemoveFromContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -67369,7 +68887,7 @@ func (ec *executionContext) _Mutation_location_RemoveFromOrganization(ctx contex
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -67412,7 +68930,7 @@ func (ec *executionContext) _Mutation_location_RemoveFromOrganization(ctx contex
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -67613,7 +69131,7 @@ func (ec *executionContext) _Mutation_location_Update(ctx context.Context, field
 	}
 	res := resTmp.(*model.Location)
 	fc.Result = res
-	return ec.marshalNLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocation(ctx, field.Selections, res)
+	return ec.marshalNLocation2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocation(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_location_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -67717,7 +69235,7 @@ func (ec *executionContext) _Mutation_logEntry_CreateForOrganization(ctx context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -67806,7 +69324,7 @@ func (ec *executionContext) _Mutation_logEntry_Update(ctx context.Context, field
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -67895,7 +69413,7 @@ func (ec *executionContext) _Mutation_logEntry_ResetTags(ctx context.Context, fi
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -67984,7 +69502,7 @@ func (ec *executionContext) _Mutation_logEntry_AddTag(ctx context.Context, field
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -68073,7 +69591,7 @@ func (ec *executionContext) _Mutation_logEntry_RemoveTag(ctx context.Context, fi
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -68162,7 +69680,7 @@ func (ec *executionContext) _Mutation_mailstack_GetPaymentIntent(ctx context.Con
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.GetPaymentIntent
 				return zeroVal, err
@@ -68205,7 +69723,7 @@ func (ec *executionContext) _Mutation_mailstack_GetPaymentIntent(ctx context.Con
 	}
 	res := resTmp.(*model.GetPaymentIntent)
 	fc.Result = res
-	return ec.marshalNGetPaymentIntent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGetPaymentIntent(ctx, field.Selections, res)
+	return ec.marshalNGetPaymentIntent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGetPaymentIntent(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_mailstack_GetPaymentIntent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -68255,7 +69773,7 @@ func (ec *executionContext) _Mutation_mailstack_RegisterBuyDomainsWithMailboxes(
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -68298,7 +69816,7 @@ func (ec *executionContext) _Mutation_mailstack_RegisterBuyDomainsWithMailboxes(
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_mailstack_RegisterBuyDomainsWithMailboxes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -68348,7 +69866,7 @@ func (ec *executionContext) _Mutation_mailstack_SetUser(ctx context.Context, fie
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -68391,7 +69909,7 @@ func (ec *executionContext) _Mutation_mailstack_SetUser(ctx context.Context, fie
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_mailstack_SetUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -68450,7 +69968,7 @@ func (ec *executionContext) _Mutation_meeting_Create(ctx context.Context, field 
 	}
 	res := resTmp.(*model.Meeting)
 	fc.Result = res
-	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_meeting_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -68549,7 +70067,7 @@ func (ec *executionContext) _Mutation_meeting_Update(ctx context.Context, field 
 	}
 	res := resTmp.(*model.Meeting)
 	fc.Result = res
-	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_meeting_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -68648,7 +70166,7 @@ func (ec *executionContext) _Mutation_meeting_LinkAttendedBy(ctx context.Context
 	}
 	res := resTmp.(*model.Meeting)
 	fc.Result = res
-	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttendedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -68747,7 +70265,7 @@ func (ec *executionContext) _Mutation_meeting_UnlinkAttendedBy(ctx context.Conte
 	}
 	res := resTmp.(*model.Meeting)
 	fc.Result = res
-	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttendedBy(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -68846,7 +70364,7 @@ func (ec *executionContext) _Mutation_meeting_LinkAttachment(ctx context.Context
 	}
 	res := resTmp.(*model.Meeting)
 	fc.Result = res
-	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_meeting_LinkAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -68945,7 +70463,7 @@ func (ec *executionContext) _Mutation_meeting_UnlinkAttachment(ctx context.Conte
 	}
 	res := resTmp.(*model.Meeting)
 	fc.Result = res
-	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -69044,7 +70562,7 @@ func (ec *executionContext) _Mutation_meeting_LinkRecording(ctx context.Context,
 	}
 	res := resTmp.(*model.Meeting)
 	fc.Result = res
-	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_meeting_LinkRecording(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -69143,7 +70661,7 @@ func (ec *executionContext) _Mutation_meeting_UnlinkRecording(ctx context.Contex
 	}
 	res := resTmp.(*model.Meeting)
 	fc.Result = res
-	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_meeting_UnlinkRecording(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -69242,7 +70760,7 @@ func (ec *executionContext) _Mutation_meeting_AddNewLocation(ctx context.Context
 	}
 	res := resTmp.(*model.Meeting)
 	fc.Result = res
-	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_meeting_AddNewLocation(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -69341,7 +70859,7 @@ func (ec *executionContext) _Mutation_meeting_AddNote(ctx context.Context, field
 	}
 	res := resTmp.(*model.Meeting)
 	fc.Result = res
-	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_meeting_AddNote(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -69440,7 +70958,7 @@ func (ec *executionContext) _Mutation_note_Update(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Note)
 	fc.Result = res
-	return ec.marshalNNote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNote(ctx, field.Selections, res)
+	return ec.marshalNNote2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNote(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_note_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -69517,7 +71035,7 @@ func (ec *executionContext) _Mutation_note_Delete(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_note_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -69576,7 +71094,7 @@ func (ec *executionContext) _Mutation_note_LinkAttachment(ctx context.Context, f
 	}
 	res := resTmp.(*model.Note)
 	fc.Result = res
-	return ec.marshalNNote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNote(ctx, field.Selections, res)
+	return ec.marshalNNote2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNote(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_note_LinkAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -69653,7 +71171,7 @@ func (ec *executionContext) _Mutation_note_UnlinkAttachment(ctx context.Context,
 	}
 	res := resTmp.(*model.Note)
 	fc.Result = res
-	return ec.marshalNNote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNote(ctx, field.Selections, res)
+	return ec.marshalNNote2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNote(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_note_UnlinkAttachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -69721,7 +71239,7 @@ func (ec *executionContext) _Mutation_opportunity_Save(ctx context.Context, fiel
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Opportunity
 				return zeroVal, err
@@ -69764,7 +71282,7 @@ func (ec *executionContext) _Mutation_opportunity_Save(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.Opportunity)
 	fc.Result = res
-	return ec.marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx, field.Selections, res)
+	return ec.marshalNOpportunity2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_opportunity_Save(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -69874,7 +71392,7 @@ func (ec *executionContext) _Mutation_opportunity_Archive(ctx context.Context, f
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -69917,7 +71435,7 @@ func (ec *executionContext) _Mutation_opportunity_Archive(ctx context.Context, f
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_opportunity_Archive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -69976,7 +71494,7 @@ func (ec *executionContext) _Mutation_opportunityRenewalUpdate(ctx context.Conte
 	}
 	res := resTmp.(*model.Opportunity)
 	fc.Result = res
-	return ec.marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx, field.Selections, res)
+	return ec.marshalNOpportunity2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_opportunityRenewalUpdate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -70095,7 +71613,7 @@ func (ec *executionContext) _Mutation_opportunityRenewal_UpdateAllForOrganizatio
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllForOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -70287,7 +71805,7 @@ func (ec *executionContext) _Mutation_organization_Save(ctx context.Context, fie
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -70330,7 +71848,7 @@ func (ec *executionContext) _Mutation_organization_Save(ctx context.Context, fie
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_Save(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -70522,7 +72040,7 @@ func (ec *executionContext) _Mutation_organization_SaveByGlobalOrganization(ctx 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.OrganizationUIDetails
 				return zeroVal, err
@@ -70565,7 +72083,7 @@ func (ec *executionContext) _Mutation_organization_SaveByGlobalOrganization(ctx 
 	}
 	res := resTmp.(*model.OrganizationUIDetails)
 	fc.Result = res
-	return ec.marshalNOrganizationUiDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUIDetails(ctx, field.Selections, res)
+	return ec.marshalNOrganizationUiDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUIDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_SaveByGlobalOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -70715,7 +72233,7 @@ func (ec *executionContext) _Mutation_organization_Hide(ctx context.Context, fie
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -70804,7 +72322,7 @@ func (ec *executionContext) _Mutation_organization_HideAll(ctx context.Context, 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -70844,7 +72362,7 @@ func (ec *executionContext) _Mutation_organization_HideAll(ctx context.Context, 
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalOResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_HideAll(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -70894,7 +72412,7 @@ func (ec *executionContext) _Mutation_organization_Show(ctx context.Context, fie
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -70983,7 +72501,7 @@ func (ec *executionContext) _Mutation_organization_ShowAll(ctx context.Context, 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -71023,7 +72541,7 @@ func (ec *executionContext) _Mutation_organization_ShowAll(ctx context.Context, 
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalOResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_ShowAll(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -71073,7 +72591,7 @@ func (ec *executionContext) _Mutation_organization_Merge(ctx context.Context, fi
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -71116,7 +72634,7 @@ func (ec *executionContext) _Mutation_organization_Merge(ctx context.Context, fi
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -71308,7 +72826,7 @@ func (ec *executionContext) _Mutation_organization_AddSubsidiary(ctx context.Con
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -71351,7 +72869,7 @@ func (ec *executionContext) _Mutation_organization_AddSubsidiary(ctx context.Con
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -71543,7 +73061,7 @@ func (ec *executionContext) _Mutation_organization_RemoveSubsidiary(ctx context.
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -71586,7 +73104,7 @@ func (ec *executionContext) _Mutation_organization_RemoveSubsidiary(ctx context.
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -71778,7 +73296,7 @@ func (ec *executionContext) _Mutation_organization_AddSocial(ctx context.Context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Social
 				return zeroVal, err
@@ -71821,7 +73339,7 @@ func (ec *executionContext) _Mutation_organization_AddSocial(ctx context.Context
 	}
 	res := resTmp.(*model.Social)
 	fc.Result = res
-	return ec.marshalNSocial2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocial(ctx, field.Selections, res)
+	return ec.marshalNSocial2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocial(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_AddSocial(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -71891,7 +73409,7 @@ func (ec *executionContext) _Mutation_organization_RemoveSocial(ctx context.Cont
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -71934,7 +73452,7 @@ func (ec *executionContext) _Mutation_organization_RemoveSocial(ctx context.Cont
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_RemoveSocial(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -71984,7 +73502,7 @@ func (ec *executionContext) _Mutation_organization_UpdateOnboardingStatus(ctx co
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -72027,7 +73545,7 @@ func (ec *executionContext) _Mutation_organization_UpdateOnboardingStatus(ctx co
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingStatus(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -72219,7 +73737,7 @@ func (ec *executionContext) _Mutation_organization_UnlinkAllDomains(ctx context.
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -72262,7 +73780,7 @@ func (ec *executionContext) _Mutation_organization_UnlinkAllDomains(ctx context.
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -72454,7 +73972,7 @@ func (ec *executionContext) _Mutation_organization_AddDomain(ctx context.Context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -72497,7 +74015,7 @@ func (ec *executionContext) _Mutation_organization_AddDomain(ctx context.Context
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_AddDomain(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -72547,7 +74065,7 @@ func (ec *executionContext) _Mutation_organization_RemoveDomain(ctx context.Cont
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -72590,7 +74108,7 @@ func (ec *executionContext) _Mutation_organization_RemoveDomain(ctx context.Cont
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_RemoveDomain(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -72640,7 +74158,7 @@ func (ec *executionContext) _Mutation_organization_RemoveDomains(ctx context.Con
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -72683,7 +74201,7 @@ func (ec *executionContext) _Mutation_organization_RemoveDomains(ctx context.Con
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_RemoveDomains(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -72733,7 +74251,7 @@ func (ec *executionContext) _Mutation_organization_Update(ctx context.Context, f
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -72776,7 +74294,7 @@ func (ec *executionContext) _Mutation_organization_Update(ctx context.Context, f
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -72968,7 +74486,7 @@ func (ec *executionContext) _Mutation_organization_SetOwner(ctx context.Context,
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -73011,7 +74529,7 @@ func (ec *executionContext) _Mutation_organization_SetOwner(ctx context.Context,
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -73203,7 +74721,7 @@ func (ec *executionContext) _Mutation_organization_UnsetOwner(ctx context.Contex
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -73246,7 +74764,7 @@ func (ec *executionContext) _Mutation_organization_UnsetOwner(ctx context.Contex
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -73438,7 +74956,7 @@ func (ec *executionContext) _Mutation_organization_AddTag(ctx context.Context, f
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -73481,7 +74999,7 @@ func (ec *executionContext) _Mutation_organization_AddTag(ctx context.Context, f
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_AddTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -73531,7 +75049,7 @@ func (ec *executionContext) _Mutation_organization_RemoveTag(ctx context.Context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -73574,7 +75092,7 @@ func (ec *executionContext) _Mutation_organization_RemoveTag(ctx context.Context
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_organization_RemoveTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -73624,7 +75142,7 @@ func (ec *executionContext) _Mutation_phoneNumberMergeToContact(ctx context.Cont
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.PhoneNumber
 				return zeroVal, err
@@ -73667,7 +75185,7 @@ func (ec *executionContext) _Mutation_phoneNumberMergeToContact(ctx context.Cont
 	}
 	res := resTmp.(*model.PhoneNumber)
 	fc.Result = res
-	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
+	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -73743,7 +75261,7 @@ func (ec *executionContext) _Mutation_phoneNumberUpdateInContact(ctx context.Con
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.PhoneNumber
 				return zeroVal, err
@@ -73786,7 +75304,7 @@ func (ec *executionContext) _Mutation_phoneNumberUpdateInContact(ctx context.Con
 	}
 	res := resTmp.(*model.PhoneNumber)
 	fc.Result = res
-	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
+	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -73862,7 +75380,7 @@ func (ec *executionContext) _Mutation_phoneNumberRemoveFromContactByE164(ctx con
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -73905,7 +75423,7 @@ func (ec *executionContext) _Mutation_phoneNumberRemoveFromContactByE164(ctx con
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromContactByE164(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -73955,7 +75473,7 @@ func (ec *executionContext) _Mutation_phoneNumberRemoveFromContactById(ctx conte
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -73998,7 +75516,7 @@ func (ec *executionContext) _Mutation_phoneNumberRemoveFromContactById(ctx conte
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromContactById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -74048,7 +75566,7 @@ func (ec *executionContext) _Mutation_phoneNumberMergeToOrganization(ctx context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.PhoneNumber
 				return zeroVal, err
@@ -74091,7 +75609,7 @@ func (ec *executionContext) _Mutation_phoneNumberMergeToOrganization(ctx context
 	}
 	res := resTmp.(*model.PhoneNumber)
 	fc.Result = res
-	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
+	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_phoneNumberMergeToOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -74167,7 +75685,7 @@ func (ec *executionContext) _Mutation_phoneNumberUpdateInOrganization(ctx contex
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.PhoneNumber
 				return zeroVal, err
@@ -74210,7 +75728,7 @@ func (ec *executionContext) _Mutation_phoneNumberUpdateInOrganization(ctx contex
 	}
 	res := resTmp.(*model.PhoneNumber)
 	fc.Result = res
-	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
+	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_phoneNumberUpdateInOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -74286,7 +75804,7 @@ func (ec *executionContext) _Mutation_phoneNumberRemoveFromOrganizationByE164(ct
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -74329,7 +75847,7 @@ func (ec *executionContext) _Mutation_phoneNumberRemoveFromOrganizationByE164(ct
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromOrganizationByE164(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -74379,7 +75897,7 @@ func (ec *executionContext) _Mutation_phoneNumberRemoveFromOrganizationById(ctx 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -74422,7 +75940,7 @@ func (ec *executionContext) _Mutation_phoneNumberRemoveFromOrganizationById(ctx 
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_phoneNumberRemoveFromOrganizationById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -74472,7 +75990,7 @@ func (ec *executionContext) _Mutation_phoneNumber_Update(ctx context.Context, fi
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.PhoneNumber
 				return zeroVal, err
@@ -74515,7 +76033,7 @@ func (ec *executionContext) _Mutation_phoneNumber_Update(ctx context.Context, fi
 	}
 	res := resTmp.(*model.PhoneNumber)
 	fc.Result = res
-	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
+	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_phoneNumber_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -74591,7 +76109,7 @@ func (ec *executionContext) _Mutation_reminder_Create(ctx context.Context, field
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *string
 				return zeroVal, err
@@ -74677,7 +76195,7 @@ func (ec *executionContext) _Mutation_reminder_Update(ctx context.Context, field
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *string
 				return zeroVal, err
@@ -74763,7 +76281,7 @@ func (ec *executionContext) _Mutation_contractLineItem_Create(ctx context.Contex
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ServiceLineItem
 				return zeroVal, err
@@ -74806,7 +76324,7 @@ func (ec *executionContext) _Mutation_contractLineItem_Create(ctx context.Contex
 	}
 	res := resTmp.(*model.ServiceLineItem)
 	fc.Result = res
-	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
+	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contractLineItem_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -74882,7 +76400,7 @@ func (ec *executionContext) _Mutation_contractLineItem_NewVersion(ctx context.Co
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ServiceLineItem
 				return zeroVal, err
@@ -74925,7 +76443,7 @@ func (ec *executionContext) _Mutation_contractLineItem_NewVersion(ctx context.Co
 	}
 	res := resTmp.(*model.ServiceLineItem)
 	fc.Result = res
-	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
+	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contractLineItem_NewVersion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -75001,7 +76519,7 @@ func (ec *executionContext) _Mutation_contractLineItem_Update(ctx context.Contex
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ServiceLineItem
 				return zeroVal, err
@@ -75044,7 +76562,7 @@ func (ec *executionContext) _Mutation_contractLineItem_Update(ctx context.Contex
 	}
 	res := resTmp.(*model.ServiceLineItem)
 	fc.Result = res
-	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
+	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contractLineItem_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -75120,7 +76638,7 @@ func (ec *executionContext) _Mutation_contractLineItem_Close(ctx context.Context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -75209,7 +76727,7 @@ func (ec *executionContext) _Mutation_contractLineItem_Pause(ctx context.Context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -75252,7 +76770,7 @@ func (ec *executionContext) _Mutation_contractLineItem_Pause(ctx context.Context
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contractLineItem_Pause(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -75302,7 +76820,7 @@ func (ec *executionContext) _Mutation_contractLineItem_Resume(ctx context.Contex
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -75345,7 +76863,7 @@ func (ec *executionContext) _Mutation_contractLineItem_Resume(ctx context.Contex
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_contractLineItem_Resume(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -75395,7 +76913,7 @@ func (ec *executionContext) _Mutation_serviceLineItem_Delete(ctx context.Context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.DeleteResponse
 				return zeroVal, err
@@ -75438,7 +76956,7 @@ func (ec *executionContext) _Mutation_serviceLineItem_Delete(ctx context.Context
 	}
 	res := resTmp.(*model.DeleteResponse)
 	fc.Result = res
-	return ec.marshalNDeleteResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDeleteResponse(ctx, field.Selections, res)
+	return ec.marshalNDeleteResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDeleteResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_serviceLineItem_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -75490,7 +77008,7 @@ func (ec *executionContext) _Mutation_serviceLineItem_BulkUpdate(ctx context.Con
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []string
 				return zeroVal, err
@@ -75579,7 +77097,7 @@ func (ec *executionContext) _Mutation_social_Update(ctx context.Context, field g
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Social
 				return zeroVal, err
@@ -75622,7 +77140,7 @@ func (ec *executionContext) _Mutation_social_Update(ctx context.Context, field g
 	}
 	res := resTmp.(*model.Social)
 	fc.Result = res
-	return ec.marshalNSocial2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocial(ctx, field.Selections, res)
+	return ec.marshalNSocial2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocial(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_social_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -75692,7 +77210,7 @@ func (ec *executionContext) _Mutation_social_Remove(ctx context.Context, field g
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Result
 				return zeroVal, err
@@ -75735,7 +77253,7 @@ func (ec *executionContext) _Mutation_social_Remove(ctx context.Context, field g
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_social_Remove(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -75794,7 +77312,7 @@ func (ec *executionContext) _Mutation_tag_Create(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Tag)
 	fc.Result = res
-	return ec.marshalNTag2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx, field.Selections, res)
+	return ec.marshalNTag2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_tag_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -75866,7 +77384,7 @@ func (ec *executionContext) _Mutation_tag_Update(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Tag)
 	fc.Result = res
-	return ec.marshalOTag2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx, field.Selections, res)
+	return ec.marshalOTag2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_tag_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -75938,7 +77456,7 @@ func (ec *executionContext) _Mutation_tag_Delete(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+	return ec.marshalOResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_tag_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -75988,7 +77506,7 @@ func (ec *executionContext) _Mutation_tenant_AddBillingProfile(ctx context.Conte
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.TenantBillingProfile
 				return zeroVal, err
@@ -76031,7 +77549,7 @@ func (ec *executionContext) _Mutation_tenant_AddBillingProfile(ctx context.Conte
 	}
 	res := resTmp.(*model.TenantBillingProfile)
 	fc.Result = res
-	return ec.marshalNTenantBillingProfile2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfile(ctx, field.Selections, res)
+	return ec.marshalNTenantBillingProfile2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfile(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_tenant_AddBillingProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -76135,7 +77653,7 @@ func (ec *executionContext) _Mutation_tenant_UpdateBillingProfile(ctx context.Co
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.TenantBillingProfile
 				return zeroVal, err
@@ -76178,7 +77696,7 @@ func (ec *executionContext) _Mutation_tenant_UpdateBillingProfile(ctx context.Co
 	}
 	res := resTmp.(*model.TenantBillingProfile)
 	fc.Result = res
-	return ec.marshalNTenantBillingProfile2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfile(ctx, field.Selections, res)
+	return ec.marshalNTenantBillingProfile2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfile(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_tenant_UpdateBillingProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -76282,7 +77800,7 @@ func (ec *executionContext) _Mutation_tenant_UpdateSettings(ctx context.Context,
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.TenantSettings
 				return zeroVal, err
@@ -76325,7 +77843,7 @@ func (ec *executionContext) _Mutation_tenant_UpdateSettings(ctx context.Context,
 	}
 	res := resTmp.(*model.TenantSettings)
 	fc.Result = res
-	return ec.marshalNTenantSettings2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettings(ctx, field.Selections, res)
+	return ec.marshalNTenantSettings2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettings(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_tenant_UpdateSettings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -76387,7 +77905,7 @@ func (ec *executionContext) _Mutation_tenant_UpdateSettingsOpportunityStage(ctx 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -76430,7 +77948,7 @@ func (ec *executionContext) _Mutation_tenant_UpdateSettingsOpportunityStage(ctx 
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_tenant_UpdateSettingsOpportunityStage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -76480,7 +77998,7 @@ func (ec *executionContext) _Mutation_tenant_hardDelete(ctx context.Context, fie
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"PLATFORM_OWNER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"PLATFORM_OWNER"})
 			if err != nil {
 				var zeroVal bool
 				return zeroVal, err
@@ -76569,7 +78087,7 @@ func (ec *executionContext) _Mutation_user_UpdateOnboardingDetails(ctx context.C
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "OWNER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "OWNER"})
 			if err != nil {
 				var zeroVal *model.User
 				return zeroVal, err
@@ -76612,7 +78130,7 @@ func (ec *executionContext) _Mutation_user_UpdateOnboardingDetails(ctx context.C
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_user_UpdateOnboardingDetails(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -76706,7 +78224,7 @@ func (ec *executionContext) _Mutation_tableViewDef_Create(ctx context.Context, f
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.TableViewDef
 				return zeroVal, err
@@ -76749,7 +78267,7 @@ func (ec *executionContext) _Mutation_tableViewDef_Create(ctx context.Context, f
 	}
 	res := resTmp.(*model.TableViewDef)
 	fc.Result = res
-	return ec.marshalNTableViewDef2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDef(ctx, field.Selections, res)
+	return ec.marshalNTableViewDef2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDef(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_tableViewDef_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -76825,7 +78343,7 @@ func (ec *executionContext) _Mutation_tableViewDef_Update(ctx context.Context, f
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.TableViewDef
 				return zeroVal, err
@@ -76868,7 +78386,7 @@ func (ec *executionContext) _Mutation_tableViewDef_Update(ctx context.Context, f
 	}
 	res := resTmp.(*model.TableViewDef)
 	fc.Result = res
-	return ec.marshalNTableViewDef2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDef(ctx, field.Selections, res)
+	return ec.marshalNTableViewDef2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDef(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_tableViewDef_Update(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -76944,7 +78462,7 @@ func (ec *executionContext) _Mutation_tableViewDef_UpdateShared(ctx context.Cont
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.TableViewDef
 				return zeroVal, err
@@ -76987,7 +78505,7 @@ func (ec *executionContext) _Mutation_tableViewDef_UpdateShared(ctx context.Cont
 	}
 	res := resTmp.(*model.TableViewDef)
 	fc.Result = res
-	return ec.marshalNTableViewDef2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDef(ctx, field.Selections, res)
+	return ec.marshalNTableViewDef2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDef(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_tableViewDef_UpdateShared(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -77063,7 +78581,7 @@ func (ec *executionContext) _Mutation_tableViewDef_Archive(ctx context.Context, 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ActionResponse
 				return zeroVal, err
@@ -77106,7 +78624,7 @@ func (ec *executionContext) _Mutation_tableViewDef_Archive(ctx context.Context, 
 	}
 	res := resTmp.(*model.ActionResponse)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_tableViewDef_Archive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -77376,7 +78894,7 @@ func (ec *executionContext) _Note_createdBy(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Note_createdBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -77468,7 +78986,7 @@ func (ec *executionContext) _Note_includes(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.([]*model.Attachment)
 	fc.Result = res
-	return ec.marshalNAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
+	return ec.marshalNAttachment2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Note_includes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -77534,7 +79052,7 @@ func (ec *executionContext) _Note_source(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Note_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -77578,7 +79096,7 @@ func (ec *executionContext) _Note_sourceOfTruth(ctx context.Context, field graph
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Note_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -77666,7 +79184,7 @@ func (ec *executionContext) _NotePage_content(ctx context.Context, field graphql
 	}
 	res := resTmp.([]*model.Note)
 	fc.Result = res
-	return ec.marshalNNote2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteᚄ(ctx, field.Selections, res)
+	return ec.marshalNNote2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_NotePage_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -77820,7 +79338,7 @@ func (ec *executionContext) _OnboardingDetails_status(ctx context.Context, field
 	}
 	res := resTmp.(model.OnboardingStatus)
 	fc.Result = res
-	return ec.marshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatus(ctx, field.Selections, res)
+	return ec.marshalNOnboardingStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OnboardingDetails_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -77946,7 +79464,7 @@ func (ec *executionContext) _Opportunity_metadata(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -78135,7 +79653,7 @@ func (ec *executionContext) _Opportunity_currency(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.Currency)
 	fc.Result = res
-	return ec.marshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, field.Selections, res)
+	return ec.marshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_currency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -78223,7 +79741,7 @@ func (ec *executionContext) _Opportunity_internalType(ctx context.Context, field
 	}
 	res := resTmp.(model.InternalType)
 	fc.Result = res
-	return ec.marshalNInternalType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx, field.Selections, res)
+	return ec.marshalNInternalType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_internalType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -78311,7 +79829,7 @@ func (ec *executionContext) _Opportunity_internalStage(ctx context.Context, fiel
 	}
 	res := resTmp.(model.InternalStage)
 	fc.Result = res
-	return ec.marshalNInternalStage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx, field.Selections, res)
+	return ec.marshalNInternalStage2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_internalStage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -78613,7 +80131,7 @@ func (ec *executionContext) _Opportunity_renewalLikelihood(ctx context.Context, 
 	}
 	res := resTmp.(model.OpportunityRenewalLikelihood)
 	fc.Result = res
-	return ec.marshalNOpportunityRenewalLikelihood2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx, field.Selections, res)
+	return ec.marshalNOpportunityRenewalLikelihood2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_renewalLikelihood(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -78862,7 +80380,7 @@ func (ec *executionContext) _Opportunity_organization(ctx context.Context, field
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -78902,7 +80420,7 @@ func (ec *executionContext) _Opportunity_organization(ctx context.Context, field
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_organization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -79083,7 +80601,7 @@ func (ec *executionContext) _Opportunity_createdBy(ctx context.Context, field gr
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.User
 				return zeroVal, err
@@ -79123,7 +80641,7 @@ func (ec *executionContext) _Opportunity_createdBy(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_createdBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -79206,7 +80724,7 @@ func (ec *executionContext) _Opportunity_owner(ctx context.Context, field graphq
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.User
 				return zeroVal, err
@@ -79246,7 +80764,7 @@ func (ec *executionContext) _Opportunity_owner(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -79329,7 +80847,7 @@ func (ec *executionContext) _Opportunity_externalLinks(ctx context.Context, fiel
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.ExternalSystem
 				return zeroVal, err
@@ -79372,7 +80890,7 @@ func (ec *executionContext) _Opportunity_externalLinks(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.ExternalSystem)
 	fc.Result = res
-	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_externalLinks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -79551,7 +81069,7 @@ func (ec *executionContext) _Opportunity_source(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.DataSource)
 	fc.Result = res
-	return ec.marshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalODataSource2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -79592,7 +81110,7 @@ func (ec *executionContext) _Opportunity_sourceOfTruth(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.DataSource)
 	fc.Result = res
-	return ec.marshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalODataSource2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Opportunity_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -79677,7 +81195,7 @@ func (ec *executionContext) _OpportunityPage_content(ctx context.Context, field 
 	}
 	res := resTmp.([]*model.Opportunity)
 	fc.Result = res
-	return ec.marshalNOpportunity2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityᚄ(ctx, field.Selections, res)
+	return ec.marshalNOpportunity2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OpportunityPage_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -79914,7 +81432,7 @@ func (ec *executionContext) _OrgAccountDetails_renewalSummary(ctx context.Contex
 	}
 	res := resTmp.(*model.RenewalSummary)
 	fc.Result = res
-	return ec.marshalORenewalSummary2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalSummary(ctx, field.Selections, res)
+	return ec.marshalORenewalSummary2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalSummary(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrgAccountDetails_renewalSummary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -79965,7 +81483,7 @@ func (ec *executionContext) _OrgAccountDetails_onboarding(ctx context.Context, f
 	}
 	res := resTmp.(*model.OnboardingDetails)
 	fc.Result = res
-	return ec.marshalOOnboardingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingDetails(ctx, field.Selections, res)
+	return ec.marshalOOnboardingDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrgAccountDetails_onboarding(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -80096,7 +81614,7 @@ func (ec *executionContext) _OrgAccountDetails_ltvCurrency(ctx context.Context, 
 	}
 	res := resTmp.(*model.Currency)
 	fc.Result = res
-	return ec.marshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, field.Selections, res)
+	return ec.marshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrgAccountDetails_ltvCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -80140,7 +81658,7 @@ func (ec *executionContext) _Organization_metadata(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -80197,7 +81715,7 @@ func (ec *executionContext) _Organization_accountDetails(ctx context.Context, fi
 	}
 	res := resTmp.(*model.OrgAccountDetails)
 	fc.Result = res
-	return ec.marshalOOrgAccountDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrgAccountDetails(ctx, field.Selections, res)
+	return ec.marshalOOrgAccountDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrgAccountDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_accountDetails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -80250,7 +81768,7 @@ func (ec *executionContext) _Organization_contracts(ctx context.Context, field g
 	}
 	res := resTmp.([]*model.Contract)
 	fc.Result = res
-	return ec.marshalOContract2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractᚄ(ctx, field.Selections, res)
+	return ec.marshalOContract2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_contracts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -80389,7 +81907,7 @@ func (ec *executionContext) _Organization_opportunities(ctx context.Context, fie
 	}
 	res := resTmp.([]*model.Opportunity)
 	fc.Result = res
-	return ec.marshalOOpportunity2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityᚄ(ctx, field.Selections, res)
+	return ec.marshalOOpportunity2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_opportunities(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -80541,7 +82059,7 @@ func (ec *executionContext) _Organization_customFields(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.CustomField)
 	fc.Result = res
-	return ec.marshalNCustomField2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldᚄ(ctx, field.Selections, res)
+	return ec.marshalNCustomField2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_customFields(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -81013,7 +82531,7 @@ func (ec *executionContext) _Organization_lastFundingRound(ctx context.Context, 
 	}
 	res := resTmp.(*model.FundingRound)
 	fc.Result = res
-	return ec.marshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFundingRound(ctx, field.Selections, res)
+	return ec.marshalOFundingRound2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFundingRound(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_lastFundingRound(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -81054,7 +82572,7 @@ func (ec *executionContext) _Organization_lastTouchpoint(ctx context.Context, fi
 	}
 	res := resTmp.(*model.LastTouchpoint)
 	fc.Result = res
-	return ec.marshalOLastTouchpoint2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpoint(ctx, field.Selections, res)
+	return ec.marshalOLastTouchpoint2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpoint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_lastTouchpoint(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -81108,7 +82626,7 @@ func (ec *executionContext) _Organization_locations(ctx context.Context, field g
 	}
 	res := resTmp.([]*model.Location)
 	fc.Result = res
-	return ec.marshalNLocation2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationᚄ(ctx, field.Selections, res)
+	return ec.marshalNLocation2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_locations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -81371,7 +82889,7 @@ func (ec *executionContext) _Organization_market(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Market)
 	fc.Result = res
-	return ec.marshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx, field.Selections, res)
+	return ec.marshalOMarket2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_market(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -81497,7 +83015,7 @@ func (ec *executionContext) _Organization_owner(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -81589,7 +83107,7 @@ func (ec *executionContext) _Organization_parentCompanies(ctx context.Context, f
 	}
 	res := resTmp.([]*model.LinkedOrganization)
 	fc.Result = res
-	return ec.marshalNLinkedOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkedOrganizationᚄ(ctx, field.Selections, res)
+	return ec.marshalNLinkedOrganization2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkedOrganizationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_parentCompanies(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -81680,7 +83198,7 @@ func (ec *executionContext) _Organization_socialMedia(ctx context.Context, field
 	}
 	res := resTmp.([]*model.Social)
 	fc.Result = res
-	return ec.marshalNSocial2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialᚄ(ctx, field.Selections, res)
+	return ec.marshalNSocial2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_socialMedia(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -81748,7 +83266,7 @@ func (ec *executionContext) _Organization_subsidiaries(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.LinkedOrganization)
 	fc.Result = res
-	return ec.marshalNLinkedOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkedOrganizationᚄ(ctx, field.Selections, res)
+	return ec.marshalNLinkedOrganization2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkedOrganizationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_subsidiaries(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -81795,7 +83313,7 @@ func (ec *executionContext) _Organization_tags(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*model.Tag)
 	fc.Result = res
-	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalOTag2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_tags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -81900,7 +83418,7 @@ func (ec *executionContext) _Organization_timelineEvents(ctx context.Context, fi
 	}
 	res := resTmp.([]model.TimelineEvent)
 	fc.Result = res
-	return ec.marshalNTimelineEvent2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventᚄ(ctx, field.Selections, res)
+	return ec.marshalNTimelineEvent2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_timelineEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -82075,7 +83593,7 @@ func (ec *executionContext) _Organization_stage(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.OrganizationStage)
 	fc.Result = res
-	return ec.marshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx, field.Selections, res)
+	return ec.marshalOOrganizationStage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_stage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -82157,7 +83675,7 @@ func (ec *executionContext) _Organization_relationship(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.OrganizationRelationship)
 	fc.Result = res
-	return ec.marshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx, field.Selections, res)
+	return ec.marshalOOrganizationRelationship2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_relationship(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -82330,7 +83848,7 @@ func (ec *executionContext) _Organization_contacts(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.ContactsPage)
 	fc.Result = res
-	return ec.marshalNContactsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactsPage(ctx, field.Selections, res)
+	return ec.marshalNContactsPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactsPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_contacts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -82393,7 +83911,7 @@ func (ec *executionContext) _Organization_jobRoles(ctx context.Context, field gr
 	}
 	res := resTmp.([]*model.JobRole)
 	fc.Result = res
-	return ec.marshalNJobRole2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleᚄ(ctx, field.Selections, res)
+	return ec.marshalNJobRole2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_jobRoles(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -82465,7 +83983,7 @@ func (ec *executionContext) _Organization_emails(ctx context.Context, field grap
 	}
 	res := resTmp.([]*model.Email)
 	fc.Result = res
-	return ec.marshalNEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailᚄ(ctx, field.Selections, res)
+	return ec.marshalNEmail2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_emails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -82539,7 +84057,7 @@ func (ec *executionContext) _Organization_phoneNumbers(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.PhoneNumber)
 	fc.Result = res
-	return ec.marshalNPhoneNumber2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberᚄ(ctx, field.Selections, res)
+	return ec.marshalNPhoneNumber2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_phoneNumbers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -82613,7 +84131,7 @@ func (ec *executionContext) _Organization_suggestedMergeTo(ctx context.Context, 
 	}
 	res := resTmp.([]*model.SuggestedMergeOrganization)
 	fc.Result = res
-	return ec.marshalNSuggestedMergeOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSuggestedMergeOrganizationᚄ(ctx, field.Selections, res)
+	return ec.marshalNSuggestedMergeOrganization2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSuggestedMergeOrganizationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_suggestedMergeTo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -82722,7 +84240,7 @@ func (ec *executionContext) _Organization_externalLinks(ctx context.Context, fie
 	}
 	res := resTmp.([]*model.ExternalSystem)
 	fc.Result = res
-	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_externalLinks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -82778,7 +84296,7 @@ func (ec *executionContext) _Organization_issueSummaryByStatus(ctx context.Conte
 	}
 	res := resTmp.([]*model.IssueSummaryByStatus)
 	fc.Result = res
-	return ec.marshalNIssueSummaryByStatus2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueSummaryByStatusᚄ(ctx, field.Selections, res)
+	return ec.marshalNIssueSummaryByStatus2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueSummaryByStatusᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_issueSummaryByStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -82960,7 +84478,7 @@ func (ec *executionContext) _Organization_enrichDetails(ctx context.Context, fie
 	}
 	res := resTmp.(*model.EnrichDetails)
 	fc.Result = res
-	return ec.marshalNEnrichDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEnrichDetails(ctx, field.Selections, res)
+	return ec.marshalNEnrichDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEnrichDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_enrichDetails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -83065,7 +84583,7 @@ func (ec *executionContext) _Organization_socials(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.Social)
 	fc.Result = res
-	return ec.marshalNSocial2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialᚄ(ctx, field.Selections, res)
+	return ec.marshalNSocial2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_socials(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -83347,7 +84865,7 @@ func (ec *executionContext) _Organization_source(ctx context.Context, field grap
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -83391,7 +84909,7 @@ func (ec *executionContext) _Organization_sourceOfTruth(ctx context.Context, fie
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -83558,7 +85076,7 @@ func (ec *executionContext) _Organization_lastTouchPointType(ctx context.Context
 	}
 	res := resTmp.(*model.LastTouchpointType)
 	fc.Result = res
-	return ec.marshalOLastTouchpointType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpointType(ctx, field.Selections, res)
+	return ec.marshalOLastTouchpointType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpointType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_lastTouchPointType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -83640,7 +85158,7 @@ func (ec *executionContext) _Organization_lastTouchPointTimelineEvent(ctx contex
 	}
 	res := resTmp.(model.TimelineEvent)
 	fc.Result = res
-	return ec.marshalOTimelineEvent2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEvent(ctx, field.Selections, res)
+	return ec.marshalOTimelineEvent2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEvent(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_lastTouchPointTimelineEvent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -83684,7 +85202,7 @@ func (ec *executionContext) _Organization_subsidiaryOf(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.LinkedOrganization)
 	fc.Result = res
-	return ec.marshalNLinkedOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkedOrganizationᚄ(ctx, field.Selections, res)
+	return ec.marshalNLinkedOrganization2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkedOrganizationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_subsidiaryOf(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -83775,7 +85293,7 @@ func (ec *executionContext) _OrganizationPage_content(ctx context.Context, field
 	}
 	res := resTmp.([]*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationᚄ(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -84097,7 +85615,7 @@ func (ec *executionContext) _OrganizationParticipant_organizationParticipant(ctx
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationParticipant_organizationParticipant(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -84970,7 +86488,7 @@ func (ec *executionContext) _OrganizationUiDetails_market(ctx context.Context, f
 	}
 	res := resTmp.(*model.Market)
 	fc.Result = res
-	return ec.marshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx, field.Selections, res)
+	return ec.marshalOMarket2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationUiDetails_market(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -85134,7 +86652,7 @@ func (ec *executionContext) _OrganizationUiDetails_stage(ctx context.Context, fi
 	}
 	res := resTmp.(*model.OrganizationStage)
 	fc.Result = res
-	return ec.marshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx, field.Selections, res)
+	return ec.marshalOOrganizationStage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationUiDetails_stage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -85175,7 +86693,7 @@ func (ec *executionContext) _OrganizationUiDetails_relationship(ctx context.Cont
 	}
 	res := resTmp.(*model.OrganizationRelationship)
 	fc.Result = res
-	return ec.marshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx, field.Selections, res)
+	return ec.marshalOOrganizationRelationship2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationUiDetails_relationship(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -85216,7 +86734,7 @@ func (ec *executionContext) _OrganizationUiDetails_lastFundingRound(ctx context.
 	}
 	res := resTmp.(*model.FundingRound)
 	fc.Result = res
-	return ec.marshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFundingRound(ctx, field.Selections, res)
+	return ec.marshalOFundingRound2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFundingRound(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationUiDetails_lastFundingRound(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -85790,7 +87308,7 @@ func (ec *executionContext) _OrganizationUiDetails_renewalSummaryRenewalLikeliho
 	}
 	res := resTmp.(*model.OpportunityRenewalLikelihood)
 	fc.Result = res
-	return ec.marshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx, field.Selections, res)
+	return ec.marshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationUiDetails_renewalSummaryRenewalLikelihood(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -85875,7 +87393,7 @@ func (ec *executionContext) _OrganizationUiDetails_onboardingStatus(ctx context.
 	}
 	res := resTmp.(model.OnboardingStatus)
 	fc.Result = res
-	return ec.marshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatus(ctx, field.Selections, res)
+	return ec.marshalNOnboardingStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationUiDetails_onboardingStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -86039,7 +87557,7 @@ func (ec *executionContext) _OrganizationUiDetails_lastTouchPointType(ctx contex
 	}
 	res := resTmp.(*model.LastTouchpointType)
 	fc.Result = res
-	return ec.marshalOLastTouchpointType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpointType(ctx, field.Selections, res)
+	return ec.marshalOLastTouchpointType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpointType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationUiDetails_lastTouchPointType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -86127,7 +87645,7 @@ func (ec *executionContext) _OrganizationUiDetails_domainsDetails(ctx context.Co
 	}
 	res := resTmp.([]*model.Domain)
 	fc.Result = res
-	return ec.marshalNDomain2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomainᚄ(ctx, field.Selections, res)
+	return ec.marshalNDomain2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomainᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationUiDetails_domainsDetails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -86308,7 +87826,7 @@ func (ec *executionContext) _OrganizationUiDetails_socialMedia(ctx context.Conte
 	}
 	res := resTmp.([]*model.Social)
 	fc.Result = res
-	return ec.marshalNSocial2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialᚄ(ctx, field.Selections, res)
+	return ec.marshalNSocial2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationUiDetails_socialMedia(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -86376,7 +87894,7 @@ func (ec *executionContext) _OrganizationUiDetails_tags(ctx context.Context, fie
 	}
 	res := resTmp.([]*model.Tag)
 	fc.Result = res
-	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationUiDetails_tags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -86440,7 +87958,7 @@ func (ec *executionContext) _OrganizationUiDetails_locations(ctx context.Context
 	}
 	res := resTmp.([]*model.Location)
 	fc.Result = res
-	return ec.marshalNLocation2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationᚄ(ctx, field.Selections, res)
+	return ec.marshalNLocation2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationUiDetails_locations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -86539,7 +88057,7 @@ func (ec *executionContext) _OrganizationUiDetails_owner(ctx context.Context, fi
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationUiDetails_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -86757,7 +88275,7 @@ func (ec *executionContext) _OrganizationWithJobRole_organization(ctx context.Co
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationWithJobRole_organization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -86947,7 +88465,7 @@ func (ec *executionContext) _OrganizationWithJobRole_jobRole(ctx context.Context
 	}
 	res := resTmp.(*model.JobRole)
 	fc.Result = res
-	return ec.marshalNJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx, field.Selections, res)
+	return ec.marshalNJobRole2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_OrganizationWithJobRole_jobRole(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -87415,7 +88933,7 @@ func (ec *executionContext) _PageView_source(ctx context.Context, field graphql.
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PageView_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -87459,7 +88977,7 @@ func (ec *executionContext) _PageView_sourceOfTruth(ctx context.Context, field g
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PageView_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -87711,7 +89229,7 @@ func (ec *executionContext) _PhoneNumber_country(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Country)
 	fc.Result = res
-	return ec.marshalOCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCountry(ctx, field.Selections, res)
+	return ec.marshalOCountry2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCountry(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PhoneNumber_country(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -87764,7 +89282,7 @@ func (ec *executionContext) _PhoneNumber_label(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.PhoneNumberLabel)
 	fc.Result = res
-	return ec.marshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberLabel(ctx, field.Selections, res)
+	return ec.marshalOPhoneNumberLabel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberLabel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PhoneNumber_label(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -87940,7 +89458,7 @@ func (ec *executionContext) _PhoneNumber_source(ctx context.Context, field graph
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PhoneNumber_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -88025,7 +89543,7 @@ func (ec *executionContext) _PhoneNumber_users(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PhoneNumber_users(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -88117,7 +89635,7 @@ func (ec *executionContext) _PhoneNumber_contacts(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactᚄ(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PhoneNumber_contacts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -88229,7 +89747,7 @@ func (ec *executionContext) _PhoneNumber_organizations(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationᚄ(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -88419,7 +89937,7 @@ func (ec *executionContext) _PhoneNumberParticipant_phoneNumberParticipant(ctx c
 	}
 	res := resTmp.(*model.PhoneNumber)
 	fc.Result = res
-	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
+	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PhoneNumberParticipant_phoneNumberParticipant(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -88506,6 +90024,234 @@ func (ec *executionContext) fieldContext_PhoneNumberParticipant_type(_ context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_agents(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_agents(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Agents(rctx)
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal []*model.Agent
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal []*model.Agent
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal []*model.Agent
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.Agent); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Agent`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Agent)
+	fc.Result = res
+	return ec.marshalNAgent2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_agents(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Agent_id(ctx, field)
+			case "type":
+				return ec.fieldContext_Agent_type(ctx, field)
+			case "tenant":
+				return ec.fieldContext_Agent_tenant(ctx, field)
+			case "name":
+				return ec.fieldContext_Agent_name(ctx, field)
+			case "capabilities":
+				return ec.fieldContext_Agent_capabilities(ctx, field)
+			case "goal":
+				return ec.fieldContext_Agent_goal(ctx, field)
+			case "isActive":
+				return ec.fieldContext_Agent_isActive(ctx, field)
+			case "flowId":
+				return ec.fieldContext_Agent_flowId(ctx, field)
+			case "visible":
+				return ec.fieldContext_Agent_visible(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Agent_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Agent_updatedAt(ctx, field)
+			case "error":
+				return ec.fieldContext_Agent_error(ctx, field)
+			case "color":
+				return ec.fieldContext_Agent_color(ctx, field)
+			case "icon":
+				return ec.fieldContext_Agent_icon(ctx, field)
+			case "status":
+				return ec.fieldContext_Agent_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Agent", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_agent(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_agent(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Agent(rctx, fc.Args["id"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.Agent
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.Agent
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.Agent
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Agent); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Agent`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Agent)
+	fc.Result = res
+	return ec.marshalOAgent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_agent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Agent_id(ctx, field)
+			case "type":
+				return ec.fieldContext_Agent_type(ctx, field)
+			case "tenant":
+				return ec.fieldContext_Agent_tenant(ctx, field)
+			case "name":
+				return ec.fieldContext_Agent_name(ctx, field)
+			case "capabilities":
+				return ec.fieldContext_Agent_capabilities(ctx, field)
+			case "goal":
+				return ec.fieldContext_Agent_goal(ctx, field)
+			case "isActive":
+				return ec.fieldContext_Agent_isActive(ctx, field)
+			case "flowId":
+				return ec.fieldContext_Agent_flowId(ctx, field)
+			case "visible":
+				return ec.fieldContext_Agent_visible(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Agent_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Agent_updatedAt(ctx, field)
+			case "error":
+				return ec.fieldContext_Agent_error(ctx, field)
+			case "color":
+				return ec.fieldContext_Agent_color(ctx, field)
+			case "icon":
+				return ec.fieldContext_Agent_icon(ctx, field)
+			case "status":
+				return ec.fieldContext_Agent_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Agent", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_agent_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_attachment(ctx, field)
 	if err != nil {
@@ -88534,7 +90280,7 @@ func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.Attachment)
 	fc.Result = res
-	return ec.marshalNAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx, field.Selections, res)
+	return ec.marshalNAttachment2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_attachment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -88602,7 +90348,7 @@ func (ec *executionContext) _Query_bankAccounts(ctx context.Context, field graph
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.BankAccount
 				return zeroVal, err
@@ -88645,7 +90391,7 @@ func (ec *executionContext) _Query_bankAccounts(ctx context.Context, field graph
 	}
 	res := resTmp.([]*model.BankAccount)
 	fc.Result = res
-	return ec.marshalNBankAccount2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccountᚄ(ctx, field.Selections, res)
+	return ec.marshalNBankAccount2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccountᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_bankAccounts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -88713,7 +90459,7 @@ func (ec *executionContext) _Query_global_Cache(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.GlobalCache)
 	fc.Result = res
-	return ec.marshalNGlobalCache2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCache(ctx, field.Selections, res)
+	return ec.marshalNGlobalCache2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCache(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_global_Cache(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -88776,7 +90522,7 @@ func (ec *executionContext) _Query_contact(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalOContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -88899,7 +90645,7 @@ func (ec *executionContext) _Query_contacts(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.ContactsPage)
 	fc.Result = res
-	return ec.marshalNContactsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactsPage(ctx, field.Selections, res)
+	return ec.marshalNContactsPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactsPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_contacts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -88962,7 +90708,7 @@ func (ec *executionContext) _Query_contact_ByPhone(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -89076,7 +90822,7 @@ func (ec *executionContext) _Query_contact_ByEmail(ctx context.Context, field gr
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Contact
 				return zeroVal, err
@@ -89116,7 +90862,7 @@ func (ec *executionContext) _Query_contact_ByEmail(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalOContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -89230,7 +90976,7 @@ func (ec *executionContext) _Query_contact_ByLinkedIn(ctx context.Context, field
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Contact
 				return zeroVal, err
@@ -89270,7 +91016,7 @@ func (ec *executionContext) _Query_contact_ByLinkedIn(ctx context.Context, field
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalOContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_contact_ByLinkedIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -89384,7 +91130,7 @@ func (ec *executionContext) _Query_contact_ExistsByLinkedIn(ctx context.Context,
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal bool
 				return zeroVal, err
@@ -89473,7 +91219,7 @@ func (ec *executionContext) _Query_ui_contacts(ctx context.Context, field graphq
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.ContactUIDetails
 				return zeroVal, err
@@ -89516,7 +91262,7 @@ func (ec *executionContext) _Query_ui_contacts(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*model.ContactUIDetails)
 	fc.Result = res
-	return ec.marshalNContactUiDetails2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactUIDetailsᚄ(ctx, field.Selections, res)
+	return ec.marshalNContactUiDetails2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactUIDetailsᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_ui_contacts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -89638,7 +91384,7 @@ func (ec *executionContext) _Query_ui_contacts_search(ctx context.Context, field
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ContactSearchResult
 				return zeroVal, err
@@ -89681,7 +91427,7 @@ func (ec *executionContext) _Query_ui_contacts_search(ctx context.Context, field
 	}
 	res := resTmp.(*model.ContactSearchResult)
 	fc.Result = res
-	return ec.marshalNContactSearchResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactSearchResult(ctx, field.Selections, res)
+	return ec.marshalNContactSearchResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactSearchResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_ui_contacts_search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -89735,7 +91481,7 @@ func (ec *executionContext) _Query_contract(ctx context.Context, field graphql.C
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Contract
 				return zeroVal, err
@@ -89778,7 +91524,7 @@ func (ec *executionContext) _Query_contract(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.Contract)
 	fc.Result = res
-	return ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
+	return ec.marshalNContract2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -89922,7 +91668,7 @@ func (ec *executionContext) _Query_contracts(ctx context.Context, field graphql.
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.ContractPage
 				return zeroVal, err
@@ -89965,7 +91711,7 @@ func (ec *executionContext) _Query_contracts(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*model.ContractPage)
 	fc.Result = res
-	return ec.marshalNContractPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractPage(ctx, field.Selections, res)
+	return ec.marshalNContractPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_contracts(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90021,7 +91767,7 @@ func (ec *executionContext) _Query_customFieldTemplate_List(ctx context.Context,
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.CustomFieldTemplate
 				return zeroVal, err
@@ -90064,7 +91810,7 @@ func (ec *executionContext) _Query_customFieldTemplate_List(ctx context.Context,
 	}
 	res := resTmp.([]*model.CustomFieldTemplate)
 	fc.Result = res
-	return ec.marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateᚄ(ctx, field.Selections, res)
+	return ec.marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_customFieldTemplate_List(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90131,7 +91877,7 @@ func (ec *executionContext) _Query_dashboardView_Organizations(ctx context.Conte
 	}
 	res := resTmp.(*model.OrganizationPage)
 	fc.Result = res
-	return ec.marshalOOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
+	return ec.marshalOOrganizationPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboardView_Organizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90193,7 +91939,7 @@ func (ec *executionContext) _Query_dashboardView_Renewals(ctx context.Context, f
 	}
 	res := resTmp.(*model.RenewalsPage)
 	fc.Result = res
-	return ec.marshalORenewalsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalsPage(ctx, field.Selections, res)
+	return ec.marshalORenewalsPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalsPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboardView_Renewals(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90255,7 +92001,7 @@ func (ec *executionContext) _Query_dashboard_CustomerMap(ctx context.Context, fi
 	}
 	res := resTmp.([]*model.DashboardCustomerMap)
 	fc.Result = res
-	return ec.marshalODashboardCustomerMap2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMapᚄ(ctx, field.Selections, res)
+	return ec.marshalODashboardCustomerMap2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMapᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_CustomerMap(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90308,7 +92054,7 @@ func (ec *executionContext) _Query_dashboard_MRRPerCustomer(ctx context.Context,
 	}
 	res := resTmp.(*model.DashboardMRRPerCustomer)
 	fc.Result = res
-	return ec.marshalODashboardMRRPerCustomer2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardMRRPerCustomer(ctx, field.Selections, res)
+	return ec.marshalODashboardMRRPerCustomer2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardMRRPerCustomer(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_MRRPerCustomer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90368,7 +92114,7 @@ func (ec *executionContext) _Query_dashboard_GrossRevenueRetention(ctx context.C
 	}
 	res := resTmp.(*model.DashboardGrossRevenueRetention)
 	fc.Result = res
-	return ec.marshalODashboardGrossRevenueRetention2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardGrossRevenueRetention(ctx, field.Selections, res)
+	return ec.marshalODashboardGrossRevenueRetention2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardGrossRevenueRetention(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_GrossRevenueRetention(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90430,7 +92176,7 @@ func (ec *executionContext) _Query_dashboard_ARRBreakdown(ctx context.Context, f
 	}
 	res := resTmp.(*model.DashboardARRBreakdown)
 	fc.Result = res
-	return ec.marshalODashboardARRBreakdown2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardARRBreakdown(ctx, field.Selections, res)
+	return ec.marshalODashboardARRBreakdown2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardARRBreakdown(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_ARRBreakdown(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90490,7 +92236,7 @@ func (ec *executionContext) _Query_dashboard_RevenueAtRisk(ctx context.Context, 
 	}
 	res := resTmp.(*model.DashboardRevenueAtRisk)
 	fc.Result = res
-	return ec.marshalODashboardRevenueAtRisk2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRevenueAtRisk(ctx, field.Selections, res)
+	return ec.marshalODashboardRevenueAtRisk2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRevenueAtRisk(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_RevenueAtRisk(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90548,7 +92294,7 @@ func (ec *executionContext) _Query_dashboard_RetentionRate(ctx context.Context, 
 	}
 	res := resTmp.(*model.DashboardRetentionRate)
 	fc.Result = res
-	return ec.marshalODashboardRetentionRate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRetentionRate(ctx, field.Selections, res)
+	return ec.marshalODashboardRetentionRate2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRetentionRate(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_RetentionRate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90610,7 +92356,7 @@ func (ec *executionContext) _Query_dashboard_NewCustomers(ctx context.Context, f
 	}
 	res := resTmp.(*model.DashboardNewCustomers)
 	fc.Result = res
-	return ec.marshalODashboardNewCustomers2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardNewCustomers(ctx, field.Selections, res)
+	return ec.marshalODashboardNewCustomers2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardNewCustomers(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_NewCustomers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90670,7 +92416,7 @@ func (ec *executionContext) _Query_dashboard_TimeToOnboard(ctx context.Context, 
 	}
 	res := resTmp.(*model.DashboardTimeToOnboard)
 	fc.Result = res
-	return ec.marshalODashboardTimeToOnboard2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardTimeToOnboard(ctx, field.Selections, res)
+	return ec.marshalODashboardTimeToOnboard2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardTimeToOnboard(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_TimeToOnboard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90730,7 +92476,7 @@ func (ec *executionContext) _Query_dashboard_OnboardingCompletion(ctx context.Co
 	}
 	res := resTmp.(*model.DashboardOnboardingCompletion)
 	fc.Result = res
-	return ec.marshalODashboardOnboardingCompletion2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardOnboardingCompletion(ctx, field.Selections, res)
+	return ec.marshalODashboardOnboardingCompletion2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardOnboardingCompletion(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_dashboard_OnboardingCompletion(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90784,7 +92530,7 @@ func (ec *executionContext) _Query_checkDomain(ctx context.Context, field graphq
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.DomainCheckDetails
 				return zeroVal, err
@@ -90827,7 +92573,7 @@ func (ec *executionContext) _Query_checkDomain(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.DomainCheckDetails)
 	fc.Result = res
-	return ec.marshalNDomainCheckDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomainCheckDetails(ctx, field.Selections, res)
+	return ec.marshalNDomainCheckDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomainCheckDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_checkDomain(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -90895,7 +92641,7 @@ func (ec *executionContext) _Query_email(ctx context.Context, field graphql.Coll
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Email
 				return zeroVal, err
@@ -90938,7 +92684,7 @@ func (ec *executionContext) _Query_email(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(*model.Email)
 	fc.Result = res
-	return ec.marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
+	return ec.marshalNEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_email(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -91014,7 +92760,7 @@ func (ec *executionContext) _Query_externalSystemInstances(ctx context.Context, 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.ExternalSystemInstance
 				return zeroVal, err
@@ -91057,7 +92803,7 @@ func (ec *executionContext) _Query_externalSystemInstances(ctx context.Context, 
 	}
 	res := resTmp.([]*model.ExternalSystemInstance)
 	fc.Result = res
-	return ec.marshalNExternalSystemInstance2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemInstanceᚄ(ctx, field.Selections, res)
+	return ec.marshalNExternalSystemInstance2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemInstanceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_externalSystemInstances(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -91098,7 +92844,7 @@ func (ec *executionContext) _Query_flow(ctx context.Context, field graphql.Colle
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Flow
 				return zeroVal, err
@@ -91141,7 +92887,7 @@ func (ec *executionContext) _Query_flow(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(*model.Flow)
 	fc.Result = res
-	return ec.marshalNFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, field.Selections, res)
+	return ec.marshalNFlow2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_flow(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -91209,7 +92955,7 @@ func (ec *executionContext) _Query_flows(ctx context.Context, field graphql.Coll
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.Flow
 				return zeroVal, err
@@ -91252,7 +92998,7 @@ func (ec *executionContext) _Query_flows(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.([]*model.Flow)
 	fc.Result = res
-	return ec.marshalNFlow2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowᚄ(ctx, field.Selections, res)
+	return ec.marshalNFlow2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_flows(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -91309,7 +93055,7 @@ func (ec *executionContext) _Query_flowParticipant(ctx context.Context, field gr
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.FlowParticipant
 				return zeroVal, err
@@ -91352,7 +93098,7 @@ func (ec *executionContext) _Query_flowParticipant(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.FlowParticipant)
 	fc.Result = res
-	return ec.marshalNFlowParticipant2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipant(ctx, field.Selections, res)
+	return ec.marshalNFlowParticipant2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipant(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_flowParticipant(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -91412,7 +93158,7 @@ func (ec *executionContext) _Query_flow_emailVariables(ctx context.Context, fiel
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.EmailVariableEntity
 				return zeroVal, err
@@ -91455,7 +93201,7 @@ func (ec *executionContext) _Query_flow_emailVariables(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.EmailVariableEntity)
 	fc.Result = res
-	return ec.marshalNEmailVariableEntity2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntityᚄ(ctx, field.Selections, res)
+	return ec.marshalNEmailVariableEntity2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntityᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_flow_emailVariables(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -91496,7 +93242,7 @@ func (ec *executionContext) _Query_flow_testEmailSender(ctx context.Context, fie
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal string
 				return zeroVal, err
@@ -91574,7 +93320,7 @@ func (ec *executionContext) _Query_globalOrganizations_Search(ctx context.Contex
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.GlobalOrganization
 				return zeroVal, err
@@ -91617,7 +93363,7 @@ func (ec *executionContext) _Query_globalOrganizations_Search(ctx context.Contex
 	}
 	res := resTmp.([]*model.GlobalOrganization)
 	fc.Result = res
-	return ec.marshalNGlobalOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalOrganizationᚄ(ctx, field.Selections, res)
+	return ec.marshalNGlobalOrganization2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalOrganizationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_globalOrganizations_Search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -91681,7 +93427,7 @@ func (ec *executionContext) _Query_industries_InUse(ctx context.Context, field g
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.Industry
 				return zeroVal, err
@@ -91724,7 +93470,7 @@ func (ec *executionContext) _Query_industries_InUse(ctx context.Context, field g
 	}
 	res := resTmp.([]*model.Industry)
 	fc.Result = res
-	return ec.marshalNIndustry2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIndustryᚄ(ctx, field.Selections, res)
+	return ec.marshalNIndustry2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIndustryᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_industries_InUse(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -91774,7 +93520,7 @@ func (ec *executionContext) _Query_interactionEvent(ctx context.Context, field g
 	}
 	res := resTmp.(*model.InteractionEvent)
 	fc.Result = res
-	return ec.marshalNInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEvent(ctx, field.Selections, res)
+	return ec.marshalNInteractionEvent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEvent(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_interactionEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -91875,7 +93621,7 @@ func (ec *executionContext) _Query_invoice(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*model.Invoice)
 	fc.Result = res
-	return ec.marshalNInvoice2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx, field.Selections, res)
+	return ec.marshalNInvoice2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_invoice(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -91992,7 +93738,7 @@ func (ec *executionContext) _Query_invoices(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.InvoicesPage)
 	fc.Result = res
-	return ec.marshalNInvoicesPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoicesPage(ctx, field.Selections, res)
+	return ec.marshalNInvoicesPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoicesPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_invoices(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -92057,7 +93803,7 @@ func (ec *executionContext) _Query_invoice_ByNumber(ctx context.Context, field g
 	}
 	res := resTmp.(*model.Invoice)
 	fc.Result = res
-	return ec.marshalNInvoice2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx, field.Selections, res)
+	return ec.marshalNInvoice2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_invoice_ByNumber(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -92165,7 +93911,7 @@ func (ec *executionContext) _Query_issue(ctx context.Context, field graphql.Coll
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Issue
 				return zeroVal, err
@@ -92208,7 +93954,7 @@ func (ec *executionContext) _Query_issue(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(*model.Issue)
 	fc.Result = res
-	return ec.marshalNIssue2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssue(ctx, field.Selections, res)
+	return ec.marshalNIssue2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssue(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_issue(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -92294,7 +94040,7 @@ func (ec *executionContext) _Query_jobRoles(ctx context.Context, field graphql.C
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.JobRole
 				return zeroVal, err
@@ -92337,7 +94083,7 @@ func (ec *executionContext) _Query_jobRoles(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*model.JobRole)
 	fc.Result = res
-	return ec.marshalNJobRole2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleᚄ(ctx, field.Selections, res)
+	return ec.marshalNJobRole2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_jobRoles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -92411,7 +94157,7 @@ func (ec *executionContext) _Query_logEntry(ctx context.Context, field graphql.C
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.LogEntry
 				return zeroVal, err
@@ -92454,7 +94200,7 @@ func (ec *executionContext) _Query_logEntry(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.LogEntry)
 	fc.Result = res
-	return ec.marshalNLogEntry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntry(ctx, field.Selections, res)
+	return ec.marshalNLogEntry2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntry(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_logEntry(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -92526,7 +94272,7 @@ func (ec *executionContext) _Query_mailstack_DomainPurchaseSuggestions(ctx conte
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []string
 				return zeroVal, err
@@ -92615,7 +94361,7 @@ func (ec *executionContext) _Query_mailstack_Domains(ctx context.Context, field 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []string
 				return zeroVal, err
@@ -92693,7 +94439,7 @@ func (ec *executionContext) _Query_mailstack_CheckUnavailableDomains(ctx context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []string
 				return zeroVal, err
@@ -92782,7 +94528,7 @@ func (ec *executionContext) _Query_mailstack_UniqueUsernames(ctx context.Context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []string
 				return zeroVal, err
@@ -92860,7 +94606,7 @@ func (ec *executionContext) _Query_mailstack_Mailboxes(ctx context.Context, fiel
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.Mailbox
 				return zeroVal, err
@@ -92903,7 +94649,7 @@ func (ec *executionContext) _Query_mailstack_Mailboxes(ctx context.Context, fiel
 	}
 	res := resTmp.([]*model.Mailbox)
 	fc.Result = res
-	return ec.marshalNMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailboxᚄ(ctx, field.Selections, res)
+	return ec.marshalNMailbox2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailboxᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_mailstack_Mailboxes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -92969,7 +94715,7 @@ func (ec *executionContext) _Query_meeting(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*model.Meeting)
 	fc.Result = res
-	return ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
+	return ec.marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_meeting(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -93068,7 +94814,7 @@ func (ec *executionContext) _Query_externalMeetings(ctx context.Context, field g
 	}
 	res := resTmp.(*model.MeetingsPage)
 	fc.Result = res
-	return ec.marshalNMeetingsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingsPage(ctx, field.Selections, res)
+	return ec.marshalNMeetingsPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingsPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_externalMeetings(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -93122,7 +94868,7 @@ func (ec *executionContext) _Query_opportunity(ctx context.Context, field graphq
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Opportunity
 				return zeroVal, err
@@ -93162,7 +94908,7 @@ func (ec *executionContext) _Query_opportunity(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.Opportunity)
 	fc.Result = res
-	return ec.marshalOOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx, field.Selections, res)
+	return ec.marshalOOpportunity2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_opportunity(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -93272,7 +95018,7 @@ func (ec *executionContext) _Query_opportunities_LinkedToOrganizations(ctx conte
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.OpportunityPage
 				return zeroVal, err
@@ -93315,7 +95061,7 @@ func (ec *executionContext) _Query_opportunities_LinkedToOrganizations(ctx conte
 	}
 	res := resTmp.(*model.OpportunityPage)
 	fc.Result = res
-	return ec.marshalNOpportunityPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityPage(ctx, field.Selections, res)
+	return ec.marshalNOpportunityPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_opportunities_LinkedToOrganizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -93371,7 +95117,7 @@ func (ec *executionContext) _Query_organizations(ctx context.Context, field grap
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.OrganizationPage
 				return zeroVal, err
@@ -93414,7 +95160,7 @@ func (ec *executionContext) _Query_organizations(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.OrganizationPage)
 	fc.Result = res
-	return ec.marshalNOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
+	return ec.marshalNOrganizationPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_organizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -93470,7 +95216,7 @@ func (ec *executionContext) _Query_organization(ctx context.Context, field graph
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -93510,7 +95256,7 @@ func (ec *executionContext) _Query_organization(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_organization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -93702,7 +95448,7 @@ func (ec *executionContext) _Query_organization_ByCustomerOsId(ctx context.Conte
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -93742,7 +95488,7 @@ func (ec *executionContext) _Query_organization_ByCustomerOsId(ctx context.Conte
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -93934,7 +95680,7 @@ func (ec *executionContext) _Query_organization_ByCustomId(ctx context.Context, 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -93974,7 +95720,7 @@ func (ec *executionContext) _Query_organization_ByCustomId(ctx context.Context, 
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -94166,7 +95912,7 @@ func (ec *executionContext) _Query_organization_DistinctOwners(ctx context.Conte
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.User
 				return zeroVal, err
@@ -94209,7 +95955,7 @@ func (ec *executionContext) _Query_organization_DistinctOwners(ctx context.Conte
 	}
 	res := resTmp.([]*model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_organization_DistinctOwners(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -94292,7 +96038,7 @@ func (ec *executionContext) _Query_organization_CheckWebsite(ctx context.Context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.WebsiteCheckDetails
 				return zeroVal, err
@@ -94335,7 +96081,7 @@ func (ec *executionContext) _Query_organization_CheckWebsite(ctx context.Context
 	}
 	res := resTmp.(*model.WebsiteCheckDetails)
 	fc.Result = res
-	return ec.marshalNWebsiteCheckDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐWebsiteCheckDetails(ctx, field.Selections, res)
+	return ec.marshalNWebsiteCheckDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐWebsiteCheckDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_organization_CheckWebsite(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -94393,7 +96139,7 @@ func (ec *executionContext) _Query_organizations_HiddenAfter(ctx context.Context
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []string
 				return zeroVal, err
@@ -94482,7 +96228,7 @@ func (ec *executionContext) _Query_organization_ByLinkedIn(ctx context.Context, 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Organization
 				return zeroVal, err
@@ -94522,7 +96268,7 @@ func (ec *executionContext) _Query_organization_ByLinkedIn(ctx context.Context, 
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_organization_ByLinkedIn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -94714,7 +96460,7 @@ func (ec *executionContext) _Query_organization_ExistsByLinkedIn(ctx context.Con
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal bool
 				return zeroVal, err
@@ -94803,7 +96549,7 @@ func (ec *executionContext) _Query_ui_organizations(ctx context.Context, field g
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.OrganizationUIDetails
 				return zeroVal, err
@@ -94846,7 +96592,7 @@ func (ec *executionContext) _Query_ui_organizations(ctx context.Context, field g
 	}
 	res := resTmp.([]*model.OrganizationUIDetails)
 	fc.Result = res
-	return ec.marshalNOrganizationUiDetails2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUIDetailsᚄ(ctx, field.Selections, res)
+	return ec.marshalNOrganizationUiDetails2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUIDetailsᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_ui_organizations(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -94996,7 +96742,7 @@ func (ec *executionContext) _Query_ui_organizations_search(ctx context.Context, 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.OrganizationSearchResult
 				return zeroVal, err
@@ -95039,7 +96785,7 @@ func (ec *executionContext) _Query_ui_organizations_search(ctx context.Context, 
 	}
 	res := resTmp.(*model.OrganizationSearchResult)
 	fc.Result = res
-	return ec.marshalNOrganizationSearchResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSearchResult(ctx, field.Selections, res)
+	return ec.marshalNOrganizationSearchResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSearchResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_ui_organizations_search(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -95093,7 +96839,7 @@ func (ec *executionContext) _Query_phoneNumber(ctx context.Context, field graphq
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.PhoneNumber
 				return zeroVal, err
@@ -95136,7 +96882,7 @@ func (ec *executionContext) _Query_phoneNumber(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.PhoneNumber)
 	fc.Result = res
-	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
+	return ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_phoneNumber(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -95212,7 +96958,7 @@ func (ec *executionContext) _Query_reminder(ctx context.Context, field graphql.C
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.Reminder
 				return zeroVal, err
@@ -95255,7 +97001,7 @@ func (ec *executionContext) _Query_reminder(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.Reminder)
 	fc.Result = res
-	return ec.marshalNReminder2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminder(ctx, field.Selections, res)
+	return ec.marshalNReminder2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminder(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_reminder(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -95313,7 +97059,7 @@ func (ec *executionContext) _Query_remindersForOrganization(ctx context.Context,
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.Reminder
 				return zeroVal, err
@@ -95356,7 +97102,7 @@ func (ec *executionContext) _Query_remindersForOrganization(ctx context.Context,
 	}
 	res := resTmp.([]*model.Reminder)
 	fc.Result = res
-	return ec.marshalNReminder2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminderᚄ(ctx, field.Selections, res)
+	return ec.marshalNReminder2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminderᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_remindersForOrganization(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -95423,7 +97169,7 @@ func (ec *executionContext) _Query_serviceLineItem(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.ServiceLineItem)
 	fc.Result = res
-	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
+	return ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_serviceLineItem(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -95499,7 +97245,7 @@ func (ec *executionContext) _Query_slack_Channels(ctx context.Context, field gra
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.SlackChannelPage
 				return zeroVal, err
@@ -95542,7 +97288,7 @@ func (ec *executionContext) _Query_slack_Channels(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.SlackChannelPage)
 	fc.Result = res
-	return ec.marshalNSlackChannelPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannelPage(ctx, field.Selections, res)
+	return ec.marshalNSlackChannelPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannelPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_slack_Channels(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -95598,7 +97344,7 @@ func (ec *executionContext) _Query_tags(ctx context.Context, field graphql.Colle
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.Tag
 				return zeroVal, err
@@ -95641,7 +97387,7 @@ func (ec *executionContext) _Query_tags(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.([]*model.Tag)
 	fc.Result = res
-	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_tags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -95696,7 +97442,7 @@ func (ec *executionContext) _Query_tags_ByEntityType(ctx context.Context, field 
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.Tag
 				return zeroVal, err
@@ -95739,7 +97485,7 @@ func (ec *executionContext) _Query_tags_ByEntityType(ctx context.Context, field 
 	}
 	res := resTmp.([]*model.Tag)
 	fc.Result = res
-	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalNTag2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_tags_ByEntityType(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -95849,7 +97595,7 @@ func (ec *executionContext) _Query_tenantBillingProfiles(ctx context.Context, fi
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.TenantBillingProfile
 				return zeroVal, err
@@ -95892,7 +97638,7 @@ func (ec *executionContext) _Query_tenantBillingProfiles(ctx context.Context, fi
 	}
 	res := resTmp.([]*model.TenantBillingProfile)
 	fc.Result = res
-	return ec.marshalNTenantBillingProfile2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfileᚄ(ctx, field.Selections, res)
+	return ec.marshalNTenantBillingProfile2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfileᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_tenantBillingProfiles(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -95985,7 +97731,7 @@ func (ec *executionContext) _Query_tenantBillingProfile(ctx context.Context, fie
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.TenantBillingProfile
 				return zeroVal, err
@@ -96028,7 +97774,7 @@ func (ec *executionContext) _Query_tenantBillingProfile(ctx context.Context, fie
 	}
 	res := resTmp.(*model.TenantBillingProfile)
 	fc.Result = res
-	return ec.marshalNTenantBillingProfile2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfile(ctx, field.Selections, res)
+	return ec.marshalNTenantBillingProfile2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfile(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_tenantBillingProfile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -96132,7 +97878,7 @@ func (ec *executionContext) _Query_tenantSettings(ctx context.Context, field gra
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal *model.TenantSettings
 				return zeroVal, err
@@ -96175,7 +97921,7 @@ func (ec *executionContext) _Query_tenantSettings(ctx context.Context, field gra
 	}
 	res := resTmp.(*model.TenantSettings)
 	fc.Result = res
-	return ec.marshalNTenantSettings2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettings(ctx, field.Selections, res)
+	return ec.marshalNTenantSettings2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettings(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_tenantSettings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -96226,7 +97972,7 @@ func (ec *executionContext) _Query_billableInfo(ctx context.Context, field graph
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"USER", "ADMIN"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"USER", "ADMIN"})
 			if err != nil {
 				var zeroVal *model.TenantBillableInfo
 				return zeroVal, err
@@ -96262,7 +98008,7 @@ func (ec *executionContext) _Query_billableInfo(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.TenantBillableInfo)
 	fc.Result = res
-	return ec.marshalNTenantBillableInfo2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillableInfo(ctx, field.Selections, res)
+	return ec.marshalNTenantBillableInfo2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillableInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_billableInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -96316,7 +98062,7 @@ func (ec *executionContext) _Query_timelineEvents(ctx context.Context, field gra
 	}
 	res := resTmp.([]model.TimelineEvent)
 	fc.Result = res
-	return ec.marshalNTimelineEvent2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventᚄ(ctx, field.Selections, res)
+	return ec.marshalNTimelineEvent2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_timelineEvents(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -96371,7 +98117,7 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(*model.UserPage)
 	fc.Result = res
-	return ec.marshalNUserPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserPage(ctx, field.Selections, res)
+	return ec.marshalNUserPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserPage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -96434,7 +98180,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -96528,7 +98274,7 @@ func (ec *executionContext) _Query_user_ByEmail(ctx context.Context, field graph
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "PLATFORM_OWNER", "OWNER", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "PLATFORM_OWNER", "OWNER", "USER"})
 			if err != nil {
 				var zeroVal *model.User
 				return zeroVal, err
@@ -96571,7 +98317,7 @@ func (ec *executionContext) _Query_user_ByEmail(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_user_ByEmail(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -96665,7 +98411,7 @@ func (ec *executionContext) _Query_tableViewDefs(ctx context.Context, field grap
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
 			if err != nil {
 				var zeroVal []*model.TableViewDef
 				return zeroVal, err
@@ -96708,7 +98454,7 @@ func (ec *executionContext) _Query_tableViewDefs(ctx context.Context, field grap
 	}
 	res := resTmp.([]*model.TableViewDef)
 	fc.Result = res
-	return ec.marshalNTableViewDef2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefᚄ(ctx, field.Selections, res)
+	return ec.marshalNTableViewDef2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_tableViewDefs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -96911,7 +98657,7 @@ func (ec *executionContext) _Reminder_metadata(ctx context.Context, field graphq
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Reminder_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -97009,7 +98755,7 @@ func (ec *executionContext) _Reminder_owner(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Reminder_owner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -97183,7 +98929,7 @@ func (ec *executionContext) _RenewalRecord_organization(ctx context.Context, fie
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -97373,7 +99119,7 @@ func (ec *executionContext) _RenewalRecord_contract(ctx context.Context, field g
 	}
 	res := resTmp.(*model.Contract)
 	fc.Result = res
-	return ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
+	return ec.marshalNContract2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RenewalRecord_contract(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -97512,7 +99258,7 @@ func (ec *executionContext) _RenewalRecord_opportunity(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.Opportunity)
 	fc.Result = res
-	return ec.marshalOOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx, field.Selections, res)
+	return ec.marshalOOpportunity2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RenewalRecord_opportunity(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -97699,7 +99445,7 @@ func (ec *executionContext) _RenewalSummary_renewalLikelihood(ctx context.Contex
 	}
 	res := resTmp.(*model.OpportunityRenewalLikelihood)
 	fc.Result = res
-	return ec.marshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx, field.Selections, res)
+	return ec.marshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RenewalSummary_renewalLikelihood(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -97784,7 +99530,7 @@ func (ec *executionContext) _RenewalsPage_content(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.RenewalRecord)
 	fc.Result = res
-	return ec.marshalNRenewalRecord2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalRecordᚄ(ctx, field.Selections, res)
+	return ec.marshalNRenewalRecord2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalRecordᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_RenewalsPage_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -98012,7 +99758,7 @@ func (ec *executionContext) _ServiceLineItem_metadata(ctx context.Context, field
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ServiceLineItem_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -98072,7 +99818,7 @@ func (ec *executionContext) _ServiceLineItem_billingCycle(ctx context.Context, f
 	}
 	res := resTmp.(model.BilledType)
 	fc.Result = res
-	return ec.marshalNBilledType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx, field.Selections, res)
+	return ec.marshalNBilledType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ServiceLineItem_billingCycle(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -98421,7 +100167,7 @@ func (ec *executionContext) _ServiceLineItem_tax(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Tax)
 	fc.Result = res
-	return ec.marshalNTax2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTax(ctx, field.Selections, res)
+	return ec.marshalNTax2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTax(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ServiceLineItem_tax(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -98470,7 +100216,7 @@ func (ec *executionContext) _ServiceLineItem_createdBy(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ServiceLineItem_createdBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -98562,7 +100308,7 @@ func (ec *executionContext) _ServiceLineItem_externalLinks(ctx context.Context, 
 	}
 	res := resTmp.([]*model.ExternalSystem)
 	fc.Result = res
-	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
+	return ec.marshalNExternalSystem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ServiceLineItem_externalLinks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -98706,7 +100452,7 @@ func (ec *executionContext) _SlackChannel_metadata(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SlackChannel_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -98763,7 +100509,7 @@ func (ec *executionContext) _SlackChannel_organization(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalOOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -99041,7 +100787,7 @@ func (ec *executionContext) _SlackChannelPage_content(ctx context.Context, field
 	}
 	res := resTmp.([]*model.SlackChannel)
 	fc.Result = res
-	return ec.marshalNSlackChannel2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannelᚄ(ctx, field.Selections, res)
+	return ec.marshalNSlackChannel2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannelᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SlackChannelPage_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -99227,7 +100973,7 @@ func (ec *executionContext) _Social_metadata(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Social_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -99595,7 +101341,7 @@ func (ec *executionContext) _Social_source(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Social_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -99639,7 +101385,7 @@ func (ec *executionContext) _Social_sourceOfTruth(ctx context.Context, field gra
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Social_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -99771,7 +101517,7 @@ func (ec *executionContext) _State_country(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*model.Country)
 	fc.Result = res
-	return ec.marshalNCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCountry(ctx, field.Selections, res)
+	return ec.marshalNCountry2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCountry(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_State_country(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -99915,7 +101661,7 @@ func (ec *executionContext) _SuggestedMergeOrganization_organization(ctx context
 	}
 	res := resTmp.(*model.Organization)
 	fc.Result = res
-	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -100316,7 +102062,7 @@ func (ec *executionContext) _TableViewDef_tableType(ctx context.Context, field g
 	}
 	res := resTmp.(model.TableViewType)
 	fc.Result = res
-	return ec.marshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewType(ctx, field.Selections, res)
+	return ec.marshalNTableViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_tableType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -100360,7 +102106,7 @@ func (ec *executionContext) _TableViewDef_tableId(ctx context.Context, field gra
 	}
 	res := resTmp.(model.TableIDType)
 	fc.Result = res
-	return ec.marshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableIDType(ctx, field.Selections, res)
+	return ec.marshalNTableIdType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableIDType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_tableId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -100492,7 +102238,7 @@ func (ec *executionContext) _TableViewDef_columns(ctx context.Context, field gra
 	}
 	res := resTmp.([]*model.ColumnView)
 	fc.Result = res
-	return ec.marshalNColumnView2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewᚄ(ctx, field.Selections, res)
+	return ec.marshalNColumnView2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_columns(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -100858,7 +102604,7 @@ func (ec *executionContext) _Tag_metadata(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(*model.Metadata)
 	fc.Result = res
-	return ec.marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
+	return ec.marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Tag_metadata(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -100962,7 +102708,7 @@ func (ec *executionContext) _Tag_entityType(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(model.EntityType)
 	fc.Result = res
-	return ec.marshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, field.Selections, res)
+	return ec.marshalNEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Tag_entityType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -101170,7 +102916,7 @@ func (ec *executionContext) _Tag_source(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(*model.DataSource)
 	fc.Result = res
-	return ec.marshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalODataSource2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Tag_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -101695,7 +103441,7 @@ func (ec *executionContext) _TenantBillingProfile_source(ctx context.Context, fi
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TenantBillingProfile_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -101739,7 +103485,7 @@ func (ec *executionContext) _TenantBillingProfile_sourceOfTruth(ctx context.Cont
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TenantBillingProfile_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -102815,7 +104561,7 @@ func (ec *executionContext) _TenantSettings_baseCurrency(ctx context.Context, fi
 	}
 	res := resTmp.(*model.Currency)
 	fc.Result = res
-	return ec.marshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, field.Selections, res)
+	return ec.marshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TenantSettings_baseCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -102903,7 +104649,7 @@ func (ec *executionContext) _TenantSettings_opportunityStages(ctx context.Contex
 	}
 	res := resTmp.([]*model.TenantSettingsOpportunityStageConfiguration)
 	fc.Result = res
-	return ec.marshalNTenantSettingsOpportunityStageConfiguration2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsOpportunityStageConfigurationᚄ(ctx, field.Selections, res)
+	return ec.marshalNTenantSettingsOpportunityStageConfiguration2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsOpportunityStageConfigurationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TenantSettings_opportunityStages(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -103738,7 +105484,7 @@ func (ec *executionContext) _User_roles(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.([]model.Role)
 	fc.Result = res
-	return ec.marshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, field.Selections, res)
+	return ec.marshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_roles(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -103779,7 +105525,7 @@ func (ec *executionContext) _User_emails(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.([]*model.Email)
 	fc.Result = res
-	return ec.marshalOEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailᚄ(ctx, field.Selections, res)
+	return ec.marshalOEmail2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_emails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -103853,7 +105599,7 @@ func (ec *executionContext) _User_phoneNumbers(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*model.PhoneNumber)
 	fc.Result = res
-	return ec.marshalNPhoneNumber2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberᚄ(ctx, field.Selections, res)
+	return ec.marshalNPhoneNumber2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_phoneNumbers(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -103971,7 +105717,7 @@ func (ec *executionContext) _User_mailboxesV2(ctx context.Context, field graphql
 	}
 	res := resTmp.([]*model.Mailbox)
 	fc.Result = res
-	return ec.marshalNMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailboxᚄ(ctx, field.Selections, res)
+	return ec.marshalNMailbox2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailboxᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_mailboxesV2(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -104081,7 +105827,7 @@ func (ec *executionContext) _User_onboarding(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*model.UserOnboardingDetails)
 	fc.Result = res
-	return ec.marshalNUserOnboardingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserOnboardingDetails(ctx, field.Selections, res)
+	return ec.marshalNUserOnboardingDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserOnboardingDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_onboarding(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -104225,7 +105971,7 @@ func (ec *executionContext) _User_jobRoles(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.([]*model.JobRole)
 	fc.Result = res
-	return ec.marshalNJobRole2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleᚄ(ctx, field.Selections, res)
+	return ec.marshalNJobRole2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_jobRoles(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -104297,7 +106043,7 @@ func (ec *executionContext) _User_calendars(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*model.Calendar)
 	fc.Result = res
-	return ec.marshalNCalendar2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendarᚄ(ctx, field.Selections, res)
+	return ec.marshalNCalendar2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendarᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_calendars(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -104361,7 +106107,7 @@ func (ec *executionContext) _User_source(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -104405,7 +106151,7 @@ func (ec *executionContext) _User_sourceOfTruth(ctx context.Context, field graph
 	}
 	res := resTmp.(model.DataSource)
 	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
+	return ec.marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_User_sourceOfTruth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -104713,7 +106459,7 @@ func (ec *executionContext) _UserPage_content(ctx context.Context, field graphql
 	}
 	res := resTmp.([]*model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserᚄ(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UserPage_content(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -104893,7 +106639,7 @@ func (ec *executionContext) _UserParticipant_userParticipant(ctx context.Context
 	}
 	res := resTmp.(*model.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UserParticipant_userParticipant(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -105199,7 +106945,7 @@ func (ec *executionContext) _WebsiteCheckDetails_globalOrganization(ctx context.
 	}
 	res := resTmp.(*model.GlobalOrganization)
 	fc.Result = res
-	return ec.marshalOGlobalOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalOrganization(ctx, field.Selections, res)
+	return ec.marshalOGlobalOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalOrganization(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_WebsiteCheckDetails_globalOrganization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -107029,18 +108775,136 @@ func (ec *executionContext) unmarshalInputAddTagInput(ctx context.Context, obj a
 			it.EntityID = data
 		case "entityType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
-			data, err := ec.unmarshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, v)
+			data, err := ec.unmarshalNEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.EntityType = data
 		case "tag":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tag"))
-			data, err := ec.unmarshalNTagIdOrNameInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx, v)
+			data, err := ec.unmarshalNTagIdOrNameInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Tag = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, obj any) (model.AgentSaveInput, error) {
+	var it model.AgentSaveInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "type", "tenant", "name", "capabilities", "goal", "isActive", "flowId", "visible", "createdAt", "updatedAt", "color", "icon", "status"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalOAgentType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "tenant":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tenant"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Tenant = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "capabilities":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capabilities"))
+			data, err := ec.unmarshalOCapabilitySaveInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilitySaveInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Capabilities = data
+		case "goal":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("goal"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Goal = data
+		case "isActive":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isActive"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsActive = data
+		case "flowId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("flowId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FlowID = data
+		case "visible":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("visible"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Visible = data
+		case "createdAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedAt = data
+		case "updatedAt":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UpdatedAt = data
+		case "color":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("color"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Color = data
+		case "icon":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Icon = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOAgentStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
 		}
 	}
 
@@ -107139,7 +109003,7 @@ func (ec *executionContext) unmarshalInputBankAccountCreateInput(ctx context.Con
 		switch k {
 		case "currency":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
-			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
+			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -107236,7 +109100,7 @@ func (ec *executionContext) unmarshalInputBankAccountUpdateInput(ctx context.Con
 			it.ID = data
 		case "currency":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
-			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
+			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -107326,7 +109190,7 @@ func (ec *executionContext) unmarshalInputBillingDetailsInput(ctx context.Contex
 		switch k {
 		case "billingCycle":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycle"))
-			data, err := ec.unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx, v)
+			data, err := ec.unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -107669,6 +109533,82 @@ func (ec *executionContext) unmarshalInputBillingProfileUpdateInput(ctx context.
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCapabilitySaveInput(ctx context.Context, obj any) (model.CapabilitySaveInput, error) {
+	var it model.CapabilitySaveInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "type", "name", "action", "optional", "values", "errors", "status"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalOCapabilityType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "action":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("action"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Action = data
+		case "optional":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("optional"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Optional = data
+		case "values":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("values"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Values = data
+		case "errors":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errors"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Errors = data
+		case "status":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
+			data, err := ec.unmarshalOCapabilityStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityStatus(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Status = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputColumnViewInput(ctx context.Context, obj any) (model.ColumnViewInput, error) {
 	var it model.ColumnViewInput
 	asMap := map[string]any{}
@@ -107692,7 +109632,7 @@ func (ec *executionContext) unmarshalInputColumnViewInput(ctx context.Context, o
 			it.ColumnID = data
 		case "columnType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("columnType"))
-			data, err := ec.unmarshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewType(ctx, v)
+			data, err := ec.unmarshalNColumnViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -107817,21 +109757,21 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			it.CreatedAt = data
 		case "customFields":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
-			data, err := ec.unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInputᚄ(ctx, v)
+			data, err := ec.unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.CustomFields = data
 		case "email":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-			data, err := ec.unmarshalOEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, v)
+			data, err := ec.unmarshalOEmailInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Email = data
 		case "phoneNumber":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phoneNumber"))
-			data, err := ec.unmarshalOPhoneNumberInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberInput(ctx, v)
+			data, err := ec.unmarshalOPhoneNumberInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -107845,7 +109785,7 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 			it.OwnerID = data
 		case "externalReference":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
-			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemReferenceInput(ctx, v)
+			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemReferenceInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -107927,7 +109867,7 @@ func (ec *executionContext) unmarshalInputContactTagInput(ctx context.Context, o
 			it.ContactID = data
 		case "tag":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tag"))
-			data, err := ec.unmarshalNTagIdOrNameInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx, v)
+			data, err := ec.unmarshalNTagIdOrNameInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108093,7 +110033,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 			it.ContractSigned = data
 		case "currency":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
-			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
+			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108128,7 +110068,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 			it.Approved = data
 		case "contractRenewalCycle":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractRenewalCycle"))
-			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx, v)
+			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108149,14 +110089,14 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 			it.InvoicingStartDate = data
 		case "externalReference":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalReference"))
-			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemReferenceInput(ctx, v)
+			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemReferenceInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.ExternalReference = data
 		case "billingCycle":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycle"))
-			data, err := ec.unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx, v)
+			data, err := ec.unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108170,7 +110110,7 @@ func (ec *executionContext) unmarshalInputContractInput(ctx context.Context, obj
 			it.RenewalPeriods = data
 		case "renewalCycle":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalCycle"))
-			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx, v)
+			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108308,14 +110248,14 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 			it.ContractEnded = data
 		case "currency":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
-			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
+			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Currency = data
 		case "billingDetails":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingDetails"))
-			data, err := ec.unmarshalOBillingDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingDetailsInput(ctx, v)
+			data, err := ec.unmarshalOBillingDetailsInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingDetailsInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108350,7 +110290,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 			it.Approved = data
 		case "contractRenewalCycle":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contractRenewalCycle"))
-			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx, v)
+			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108427,7 +110367,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 			it.Zip = data
 		case "billingCycle":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycle"))
-			data, err := ec.unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx, v)
+			data, err := ec.unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108469,7 +110409,7 @@ func (ec *executionContext) unmarshalInputContractUpdateInput(ctx context.Contex
 			it.OrganizationLegalName = data
 		case "renewalCycle":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalCycle"))
-			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx, v)
+			data, err := ec.unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108524,7 +110464,7 @@ func (ec *executionContext) unmarshalInputCustomFieldEntityType(ctx context.Cont
 			it.ID = data
 		case "entityType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
-			data, err := ec.unmarshalNCustomEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomEntityType(ctx, v)
+			data, err := ec.unmarshalNCustomEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomEntityType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108565,14 +110505,14 @@ func (ec *executionContext) unmarshalInputCustomFieldInput(ctx context.Context, 
 			it.Name = data
 		case "datatype":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("datatype"))
-			data, err := ec.unmarshalOCustomFieldDataType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx, v)
+			data, err := ec.unmarshalOCustomFieldDataType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Datatype = data
 		case "value":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
-			data, err := ec.unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAnyTypeValue(ctx, v)
+			data, err := ec.unmarshalNAny2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAnyTypeValue(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108620,7 +110560,7 @@ func (ec *executionContext) unmarshalInputCustomFieldTemplateInput(ctx context.C
 			it.Name = data
 		case "type":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			data, err := ec.unmarshalOCustomFieldTemplateType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateType(ctx, v)
+			data, err := ec.unmarshalOCustomFieldTemplateType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108634,7 +110574,7 @@ func (ec *executionContext) unmarshalInputCustomFieldTemplateInput(ctx context.C
 			it.ValidValues = data
 		case "entityType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
-			data, err := ec.unmarshalOEntityType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, v)
+			data, err := ec.unmarshalOEntityType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108710,14 +110650,14 @@ func (ec *executionContext) unmarshalInputCustomFieldUpdateInput(ctx context.Con
 			it.Name = data
 		case "datatype":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("datatype"))
-			data, err := ec.unmarshalNCustomFieldDataType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx, v)
+			data, err := ec.unmarshalNCustomFieldDataType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Datatype = data
 		case "value":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
-			data, err := ec.unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAnyTypeValue(ctx, v)
+			data, err := ec.unmarshalNAny2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAnyTypeValue(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108786,7 +110726,7 @@ func (ec *executionContext) unmarshalInputCustomerContactInput(ctx context.Conte
 			it.Timezone = data
 		case "email":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-			data, err := ec.unmarshalOEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, v)
+			data, err := ec.unmarshalOEmailInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108868,7 +110808,7 @@ func (ec *executionContext) unmarshalInputEmailInput(ctx context.Context, obj an
 			it.Email = data
 		case "label":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
-			data, err := ec.unmarshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailLabel(ctx, v)
+			data, err := ec.unmarshalOEmailLabel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -108916,7 +110856,7 @@ func (ec *executionContext) unmarshalInputEmailRelationUpdateInput(ctx context.C
 			it.ID = data
 		case "label":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
-			data, err := ec.unmarshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailLabel(ctx, v)
+			data, err := ec.unmarshalOEmailLabel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -109032,7 +110972,7 @@ func (ec *executionContext) unmarshalInputExternalSystemReferenceInput(ctx conte
 			it.SyncDate = data
 		case "type":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			data, err := ec.unmarshalNExternalSystemType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemType(ctx, v)
+			data, err := ec.unmarshalNExternalSystemType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -109073,28 +111013,28 @@ func (ec *executionContext) unmarshalInputFilter(ctx context.Context, obj any) (
 		switch k {
 		case "NOT":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("NOT"))
-			data, err := ec.unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, v)
+			data, err := ec.unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Not = data
 		case "AND":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("AND"))
-			data, err := ec.unmarshalOFilter2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilterᚄ(ctx, v)
+			data, err := ec.unmarshalOFilter2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilterᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.And = data
 		case "OR":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("OR"))
-			data, err := ec.unmarshalOFilter2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilterᚄ(ctx, v)
+			data, err := ec.unmarshalOFilter2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilterᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Or = data
 		case "filter":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-			data, err := ec.unmarshalOFilterItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilterItem(ctx, v)
+			data, err := ec.unmarshalOFilterItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilterItem(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -109138,14 +111078,14 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj an
 			it.Property = data
 		case "operation":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("operation"))
-			data, err := ec.unmarshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐComparisonOperator(ctx, v)
+			data, err := ec.unmarshalNComparisonOperator2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐComparisonOperator(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Operation = data
 		case "value":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
-			data, err := ec.unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAnyTypeValue(ctx, v)
+			data, err := ec.unmarshalNAny2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAnyTypeValue(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -109186,35 +111126,35 @@ func (ec *executionContext) unmarshalInputFlowActionInputData(ctx context.Contex
 		switch k {
 		case "wait":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("wait"))
-			data, err := ec.unmarshalOFlowActionInputDataWait2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataWait(ctx, v)
+			data, err := ec.unmarshalOFlowActionInputDataWait2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataWait(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Wait = data
 		case "email_new":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email_new"))
-			data, err := ec.unmarshalOFlowActionInputDataEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataEmail(ctx, v)
+			data, err := ec.unmarshalOFlowActionInputDataEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataEmail(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.EmailNew = data
 		case "email_reply":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email_reply"))
-			data, err := ec.unmarshalOFlowActionInputDataEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataEmail(ctx, v)
+			data, err := ec.unmarshalOFlowActionInputDataEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataEmail(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.EmailReply = data
 		case "linkedin_connection_request":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedin_connection_request"))
-			data, err := ec.unmarshalOFlowActionInputDataLinkedinConnectionRequest2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataLinkedinConnectionRequest(ctx, v)
+			data, err := ec.unmarshalOFlowActionInputDataLinkedinConnectionRequest2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataLinkedinConnectionRequest(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.LinkedinConnectionRequest = data
 		case "linkedin_message":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("linkedin_message"))
-			data, err := ec.unmarshalOFlowActionInputDataLinkedinMessage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataLinkedinMessage(ctx, v)
+			data, err := ec.unmarshalOFlowActionInputDataLinkedinMessage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataLinkedinMessage(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -109452,7 +111392,7 @@ func (ec *executionContext) unmarshalInputInvoiceSimulateInput(ctx context.Conte
 			it.ContractID = data
 		case "serviceLines":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceLines"))
-			data, err := ec.unmarshalNInvoiceSimulateServiceLineInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateServiceLineInputᚄ(ctx, v)
+			data, err := ec.unmarshalNInvoiceSimulateServiceLineInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateServiceLineInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -109507,7 +111447,7 @@ func (ec *executionContext) unmarshalInputInvoiceSimulateServiceLineInput(ctx co
 			it.Description = data
 		case "billingCycle":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycle"))
-			data, err := ec.unmarshalNBilledType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx, v)
+			data, err := ec.unmarshalNBilledType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -109576,7 +111516,7 @@ func (ec *executionContext) unmarshalInputInvoiceUpdateInput(ctx context.Context
 			it.ID = data
 		case "status":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalOInvoiceStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceStatus(ctx, v)
+			data, err := ec.unmarshalOInvoiceStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceStatus(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110074,7 +112014,7 @@ func (ec *executionContext) unmarshalInputLogEntryInput(ctx context.Context, obj
 			it.ContentType = data
 		case "tags":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tags"))
-			data, err := ec.unmarshalOTagIdOrNameInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInputᚄ(ctx, v)
+			data, err := ec.unmarshalOTagIdOrNameInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110163,14 +112103,14 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			it.Name = data
 		case "attendedBy":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attendedBy"))
-			data, err := ec.unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInputᚄ(ctx, v)
+			data, err := ec.unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.AttendedBy = data
 		case "createdBy":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdBy"))
-			data, err := ec.unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInputᚄ(ctx, v)
+			data, err := ec.unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110226,7 +112166,7 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			it.AgendaContentType = data
 		case "note":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
-			data, err := ec.unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteInput(ctx, v)
+			data, err := ec.unmarshalONoteInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110240,14 +112180,14 @@ func (ec *executionContext) unmarshalInputMeetingInput(ctx context.Context, obj 
 			it.AppSource = data
 		case "externalSystem":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystem"))
-			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemReferenceInput(ctx, v)
+			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemReferenceInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.ExternalSystem = data
 		case "status":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalOMeetingStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx, v)
+			data, err := ec.unmarshalOMeetingStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110364,7 +112304,7 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 			it.AgendaContentType = data
 		case "note":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("note"))
-			data, err := ec.unmarshalONoteUpdateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteUpdateInput(ctx, v)
+			data, err := ec.unmarshalONoteUpdateInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteUpdateInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110378,14 +112318,14 @@ func (ec *executionContext) unmarshalInputMeetingUpdateInput(ctx context.Context
 			it.AppSource = data
 		case "status":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalOMeetingStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx, v)
+			data, err := ec.unmarshalOMeetingStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Status = data
 		case "externalSystem":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalSystem"))
-			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemReferenceInput(ctx, v)
+			data, err := ec.unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemReferenceInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110501,7 +112441,7 @@ func (ec *executionContext) unmarshalInputOnboardingStatusInput(ctx context.Cont
 			it.OrganizationID = data
 		case "status":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatus(ctx, v)
+			data, err := ec.unmarshalNOnboardingStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatus(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110549,7 +112489,7 @@ func (ec *executionContext) unmarshalInputOpportunityCreateInput(ctx context.Con
 			it.Name = data
 		case "internalType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("internalType"))
-			data, err := ec.unmarshalOInternalType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx, v)
+			data, err := ec.unmarshalOInternalType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110605,7 +112545,7 @@ func (ec *executionContext) unmarshalInputOpportunityCreateInput(ctx context.Con
 			it.MaxAmount = data
 		case "currency":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
-			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
+			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110646,7 +112586,7 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateAllForOrganiza
 			it.OrganizationID = data
 		case "renewalLikelihood":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalLikelihood"))
-			data, err := ec.unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx, v)
+			data, err := ec.unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110715,7 +112655,7 @@ func (ec *executionContext) unmarshalInputOpportunityRenewalUpdateInput(ctx cont
 			it.OwnerUserID = data
 		case "renewalLikelihood":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renewalLikelihood"))
-			data, err := ec.unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx, v)
+			data, err := ec.unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110784,14 +112724,14 @@ func (ec *executionContext) unmarshalInputOpportunitySaveInput(ctx context.Conte
 			it.Amount = data
 		case "internalType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("internalType"))
-			data, err := ec.unmarshalOInternalType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx, v)
+			data, err := ec.unmarshalOInternalType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.InternalType = data
 		case "internalStage":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("internalStage"))
-			data, err := ec.unmarshalOInternalStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx, v)
+			data, err := ec.unmarshalOInternalStage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110840,7 +112780,7 @@ func (ec *executionContext) unmarshalInputOpportunitySaveInput(ctx context.Conte
 			it.MaxAmount = data
 		case "currency":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
-			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
+			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110895,7 +112835,7 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 			it.Amount = data
 		case "internalStage":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("internalStage"))
-			data, err := ec.unmarshalOInternalStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx, v)
+			data, err := ec.unmarshalOInternalStage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -110944,7 +112884,7 @@ func (ec *executionContext) unmarshalInputOpportunityUpdateInput(ctx context.Con
 			it.MaxAmount = data
 		case "currency":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
-			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
+			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111041,14 +112981,14 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			it.Public = data
 		case "customFields":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
-			data, err := ec.unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInputᚄ(ctx, v)
+			data, err := ec.unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.CustomFields = data
 		case "market":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("market"))
-			data, err := ec.unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx, v)
+			data, err := ec.unmarshalOMarket2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111111,14 +113051,14 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 			it.AppSource = data
 		case "stage":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stage"))
-			data, err := ec.unmarshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx, v)
+			data, err := ec.unmarshalOOrganizationStage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Stage = data
 		case "relationship":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
-			data, err := ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx, v)
+			data, err := ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111271,7 +113211,7 @@ func (ec *executionContext) unmarshalInputOrganizationSaveInput(ctx context.Cont
 			it.Public = data
 		case "market":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("market"))
-			data, err := ec.unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx, v)
+			data, err := ec.unmarshalOMarket2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111299,7 +113239,7 @@ func (ec *executionContext) unmarshalInputOrganizationSaveInput(ctx context.Cont
 			it.ValueProposition = data
 		case "lastFundingRound":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastFundingRound"))
-			data, err := ec.unmarshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFundingRound(ctx, v)
+			data, err := ec.unmarshalOFundingRound2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFundingRound(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111355,14 +113295,14 @@ func (ec *executionContext) unmarshalInputOrganizationSaveInput(ctx context.Cont
 			it.SlackChannelID = data
 		case "stage":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stage"))
-			data, err := ec.unmarshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx, v)
+			data, err := ec.unmarshalOOrganizationStage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Stage = data
 		case "relationship":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
-			data, err := ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx, v)
+			data, err := ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111410,14 +113350,14 @@ func (ec *executionContext) unmarshalInputOrganizationSaveInputFromGlobalOrg(ctx
 		switch k {
 		case "stage":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stage"))
-			data, err := ec.unmarshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx, v)
+			data, err := ec.unmarshalOOrganizationStage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Stage = data
 		case "relationship":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
-			data, err := ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx, v)
+			data, err := ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111451,7 +113391,7 @@ func (ec *executionContext) unmarshalInputOrganizationTagInput(ctx context.Conte
 			it.OrganizationID = data
 		case "tag":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tag"))
-			data, err := ec.unmarshalNTagIdOrNameInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx, v)
+			data, err := ec.unmarshalNTagIdOrNameInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111555,7 +113495,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			it.Public = data
 		case "market":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("market"))
-			data, err := ec.unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx, v)
+			data, err := ec.unmarshalOMarket2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111583,7 +113523,7 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			it.ValueProposition = data
 		case "lastFundingRound":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastFundingRound"))
-			data, err := ec.unmarshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFundingRound(ctx, v)
+			data, err := ec.unmarshalOFundingRound2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFundingRound(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111639,14 +113579,14 @@ func (ec *executionContext) unmarshalInputOrganizationUpdateInput(ctx context.Co
 			it.SlackChannelID = data
 		case "stage":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stage"))
-			data, err := ec.unmarshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx, v)
+			data, err := ec.unmarshalOOrganizationStage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Stage = data
 		case "relationship":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
-			data, err := ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx, v)
+			data, err := ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111770,7 +113710,7 @@ func (ec *executionContext) unmarshalInputPhoneNumberInput(ctx context.Context, 
 			it.CountryCodeA2 = data
 		case "label":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
-			data, err := ec.unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberLabel(ctx, v)
+			data, err := ec.unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111811,7 +113751,7 @@ func (ec *executionContext) unmarshalInputPhoneNumberRelationUpdateInput(ctx con
 			it.ID = data
 		case "label":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("label"))
-			data, err := ec.unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberLabel(ctx, v)
+			data, err := ec.unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -111989,7 +113929,7 @@ func (ec *executionContext) unmarshalInputRemoveTagInput(ctx context.Context, ob
 			it.EntityID = data
 		case "entityType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
-			data, err := ec.unmarshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, v)
+			data, err := ec.unmarshalNEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112023,7 +113963,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateInput(ctx con
 		switch k {
 		case "serviceLineItems":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("serviceLineItems"))
-			data, err := ec.unmarshalNServiceLineItemBulkUpdateItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateItem(ctx, v)
+			data, err := ec.unmarshalNServiceLineItemBulkUpdateItem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateItem(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112078,7 +114018,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemBulkUpdateItem(ctx cont
 			it.Name = data
 		case "billed":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billed"))
-			data, err := ec.unmarshalOBilledType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx, v)
+			data, err := ec.unmarshalOBilledType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112216,7 +114156,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 			it.Description = data
 		case "billingCycle":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycle"))
-			data, err := ec.unmarshalOBilledType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx, v)
+			data, err := ec.unmarshalOBilledType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112237,7 +114177,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 			it.Quantity = data
 		case "tax":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tax"))
-			data, err := ec.unmarshalOTaxInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaxInput(ctx, v)
+			data, err := ec.unmarshalOTaxInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaxInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112313,7 +114253,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemNewVersionInput(ctx con
 			it.Quantity = data
 		case "tax":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tax"))
-			data, err := ec.unmarshalOTaxInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaxInput(ctx, v)
+			data, err := ec.unmarshalOTaxInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaxInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112375,7 +114315,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 			it.Description = data
 		case "billingCycle":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("billingCycle"))
-			data, err := ec.unmarshalOBilledType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx, v)
+			data, err := ec.unmarshalOBilledType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112396,7 +114336,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 			it.Quantity = data
 		case "tax":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tax"))
-			data, err := ec.unmarshalOTaxInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaxInput(ctx, v)
+			data, err := ec.unmarshalOTaxInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaxInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112540,7 +114480,7 @@ func (ec *executionContext) unmarshalInputSortBy(ctx context.Context, obj any) (
 			it.By = data
 		case "direction":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
-			data, err := ec.unmarshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortingDirection(ctx, v)
+			data, err := ec.unmarshalNSortingDirection2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortingDirection(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112574,14 +114514,14 @@ func (ec *executionContext) unmarshalInputTableViewDefCreateInput(ctx context.Co
 		switch k {
 		case "tableType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tableType"))
-			data, err := ec.unmarshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewType(ctx, v)
+			data, err := ec.unmarshalNTableViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewType(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.TableType = data
 		case "tableId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tableId"))
-			data, err := ec.unmarshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableIDType(ctx, v)
+			data, err := ec.unmarshalNTableIdType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableIDType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112609,7 +114549,7 @@ func (ec *executionContext) unmarshalInputTableViewDefCreateInput(ctx context.Co
 			it.Icon = data
 		case "columns":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("columns"))
-			data, err := ec.unmarshalNColumnViewInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewInputᚄ(ctx, v)
+			data, err := ec.unmarshalNColumnViewInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112699,7 +114639,7 @@ func (ec *executionContext) unmarshalInputTableViewDefUpdateInput(ctx context.Co
 			it.Icon = data
 		case "columns":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("columns"))
-			data, err := ec.unmarshalNColumnViewInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewInputᚄ(ctx, v)
+			data, err := ec.unmarshalNColumnViewInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112761,7 +114701,7 @@ func (ec *executionContext) unmarshalInputTagIdOrNameInput(ctx context.Context, 
 			it.Name = data
 		case "entityType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
-			data, err := ec.unmarshalOEntityType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, v)
+			data, err := ec.unmarshalOEntityType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -112806,7 +114746,7 @@ func (ec *executionContext) unmarshalInputTagInput(ctx context.Context, obj any)
 			it.AppSource = data
 		case "entityType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
-			data, err := ec.unmarshalOEntityType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, v)
+			data, err := ec.unmarshalOEntityType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -113325,7 +115265,7 @@ func (ec *executionContext) unmarshalInputTenantSettingsInput(ctx context.Contex
 			it.LogoRepositoryFileID = data
 		case "baseCurrency":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseCurrency"))
-			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
+			data, err := ec.unmarshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -113490,7 +115430,7 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj any
 			it.ProfilePhotoURL = data
 		case "email":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
-			data, err := ec.unmarshalNEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, v)
+			data, err := ec.unmarshalNEmailInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -113504,7 +115444,7 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj any
 			it.AppSource = data
 		case "jobRoles":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("jobRoles"))
-			data, err := ec.unmarshalOJobRoleInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleInputᚄ(ctx, v)
+			data, err := ec.unmarshalOJobRoleInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -114402,6 +116342,109 @@ func (ec *executionContext) _ActionResponse(ctx context.Context, sel ast.Selecti
 	return out
 }
 
+var agentImplementors = []string{"Agent"}
+
+func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, obj *model.Agent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, agentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Agent")
+		case "id":
+			out.Values[i] = ec._Agent_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._Agent_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "tenant":
+			out.Values[i] = ec._Agent_tenant(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Agent_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "capabilities":
+			out.Values[i] = ec._Agent_capabilities(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "goal":
+			out.Values[i] = ec._Agent_goal(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isActive":
+			out.Values[i] = ec._Agent_isActive(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "flowId":
+			out.Values[i] = ec._Agent_flowId(ctx, field, obj)
+		case "visible":
+			out.Values[i] = ec._Agent_visible(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Agent_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Agent_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "error":
+			out.Values[i] = ec._Agent_error(ctx, field, obj)
+		case "color":
+			out.Values[i] = ec._Agent_color(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "icon":
+			out.Values[i] = ec._Agent_icon(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._Agent_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var attachmentImplementors = []string{"Attachment", "Node"}
 
 func (ec *executionContext) _Attachment(ctx context.Context, sel ast.SelectionSet, obj *model.Attachment) graphql.Marshaler {
@@ -114753,6 +116796,77 @@ func (ec *executionContext) _Calendar(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "appSource":
 			out.Values[i] = ec._Calendar_appSource(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var capabilityImplementors = []string{"Capability"}
+
+func (ec *executionContext) _Capability(ctx context.Context, sel ast.SelectionSet, obj *model.Capability) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, capabilityImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Capability")
+		case "id":
+			out.Values[i] = ec._Capability_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._Capability_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Capability_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "action":
+			out.Values[i] = ec._Capability_action(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "optional":
+			out.Values[i] = ec._Capability_optional(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "values":
+			out.Values[i] = ec._Capability_values(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "errors":
+			out.Values[i] = ec._Capability_errors(ctx, field, obj)
+		case "status":
+			out.Values[i] = ec._Capability_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -122127,6 +124241,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "agent_Save":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_agent_Save(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "attachment_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_attachment_Create(ctx, field)
@@ -125599,6 +127720,47 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "agents":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_agents(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "agent":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_agent(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "attachment":
 			field := field
 
@@ -129518,7 +131680,7 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAction2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAction(ctx context.Context, sel ast.SelectionSet, v *model.Action) graphql.Marshaler {
+func (ec *executionContext) marshalNAction2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAction(ctx context.Context, sel ast.SelectionSet, v *model.Action) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -129528,7 +131690,7 @@ func (ec *executionContext) marshalNAction2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 	return ec._Action(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNActionItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionItem(ctx context.Context, sel ast.SelectionSet, v *model.ActionItem) graphql.Marshaler {
+func (ec *executionContext) marshalNActionItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionItem(ctx context.Context, sel ast.SelectionSet, v *model.ActionItem) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -129538,11 +131700,11 @@ func (ec *executionContext) marshalNActionItem2ᚖgithubᚗcomᚋopenlineᚑai�
 	return ec._ActionItem(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNActionResponse2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx context.Context, sel ast.SelectionSet, v model.ActionResponse) graphql.Marshaler {
+func (ec *executionContext) marshalNActionResponse2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx context.Context, sel ast.SelectionSet, v model.ActionResponse) graphql.Marshaler {
 	return ec._ActionResponse(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx context.Context, sel ast.SelectionSet, v *model.ActionResponse) graphql.Marshaler {
+func (ec *executionContext) marshalNActionResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionResponse(ctx context.Context, sel ast.SelectionSet, v *model.ActionResponse) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -129552,27 +131714,110 @@ func (ec *executionContext) marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑ
 	return ec._ActionResponse(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionType(ctx context.Context, v any) (model.ActionType, error) {
+func (ec *executionContext) unmarshalNActionType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionType(ctx context.Context, v any) (model.ActionType, error) {
 	var res model.ActionType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionType(ctx context.Context, sel ast.SelectionSet, v model.ActionType) graphql.Marshaler {
+func (ec *executionContext) marshalNActionType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionType(ctx context.Context, sel ast.SelectionSet, v model.ActionType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNAddTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAddTagInput(ctx context.Context, v any) (model.AddTagInput, error) {
+func (ec *executionContext) unmarshalNAddTagInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAddTagInput(ctx context.Context, v any) (model.AddTagInput, error) {
 	res, err := ec.unmarshalInputAddTagInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAnyTypeValue(ctx context.Context, v any) (model.AnyTypeValue, error) {
+func (ec *executionContext) marshalNAgent2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgent(ctx context.Context, sel ast.SelectionSet, v model.Agent) graphql.Marshaler {
+	return ec._Agent(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAgent2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Agent) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAgent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgent(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAgent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgent(ctx context.Context, sel ast.SelectionSet, v *model.Agent) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Agent(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNAgentSaveInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentSaveInput(ctx context.Context, v any) (model.AgentSaveInput, error) {
+	res, err := ec.unmarshalInputAgentSaveInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNAgentStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentStatus(ctx context.Context, v any) (model.AgentStatus, error) {
+	var res model.AgentStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAgentStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentStatus(ctx context.Context, sel ast.SelectionSet, v model.AgentStatus) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNAgentType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentType(ctx context.Context, v any) (model.AgentType, error) {
+	var res model.AgentType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAgentType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentType(ctx context.Context, sel ast.SelectionSet, v model.AgentType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNAny2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAnyTypeValue(ctx context.Context, v any) (model.AnyTypeValue, error) {
 	res, err := model.UnmarshalAnyTypeValue(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAnyTypeValue(ctx context.Context, sel ast.SelectionSet, v model.AnyTypeValue) graphql.Marshaler {
+func (ec *executionContext) marshalNAny2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAnyTypeValue(ctx context.Context, sel ast.SelectionSet, v model.AnyTypeValue) graphql.Marshaler {
 	res := model.MarshalAnyTypeValue(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -129582,11 +131827,11 @@ func (ec *executionContext) marshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenline�
 	return res
 }
 
-func (ec *executionContext) marshalNAttachment2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v model.Attachment) graphql.Marshaler {
+func (ec *executionContext) marshalNAttachment2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v model.Attachment) graphql.Marshaler {
 	return ec._Attachment(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Attachment) graphql.Marshaler {
+func (ec *executionContext) marshalNAttachment2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Attachment) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -129610,7 +131855,7 @@ func (ec *executionContext) marshalNAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑa
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx, sel, v[i])
+			ret[i] = ec.marshalNAttachment2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -129630,7 +131875,7 @@ func (ec *executionContext) marshalNAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑa
 	return ret
 }
 
-func (ec *executionContext) marshalNAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {
+func (ec *executionContext) marshalNAttachment2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -129640,16 +131885,16 @@ func (ec *executionContext) marshalNAttachment2ᚖgithubᚗcomᚋopenlineᚑai�
 	return ec._Attachment(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNAttachmentInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentInput(ctx context.Context, v any) (model.AttachmentInput, error) {
+func (ec *executionContext) unmarshalNAttachmentInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentInput(ctx context.Context, v any) (model.AttachmentInput, error) {
 	res, err := ec.unmarshalInputAttachmentInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNBankAccount2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccount(ctx context.Context, sel ast.SelectionSet, v model.BankAccount) graphql.Marshaler {
+func (ec *executionContext) marshalNBankAccount2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccount(ctx context.Context, sel ast.SelectionSet, v model.BankAccount) graphql.Marshaler {
 	return ec._BankAccount(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNBankAccount2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccountᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.BankAccount) graphql.Marshaler {
+func (ec *executionContext) marshalNBankAccount2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccountᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.BankAccount) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -129673,7 +131918,7 @@ func (ec *executionContext) marshalNBankAccount2ᚕᚖgithubᚗcomᚋopenlineᚑ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNBankAccount2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccount(ctx, sel, v[i])
+			ret[i] = ec.marshalNBankAccount2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccount(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -129693,7 +131938,7 @@ func (ec *executionContext) marshalNBankAccount2ᚕᚖgithubᚗcomᚋopenlineᚑ
 	return ret
 }
 
-func (ec *executionContext) marshalNBankAccount2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccount(ctx context.Context, sel ast.SelectionSet, v *model.BankAccount) graphql.Marshaler {
+func (ec *executionContext) marshalNBankAccount2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccount(ctx context.Context, sel ast.SelectionSet, v *model.BankAccount) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -129703,32 +131948,32 @@ func (ec *executionContext) marshalNBankAccount2ᚖgithubᚗcomᚋopenlineᚑai�
 	return ec._BankAccount(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNBilledType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx context.Context, v any) (model.BilledType, error) {
+func (ec *executionContext) unmarshalNBilledType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx context.Context, v any) (model.BilledType, error) {
 	var res model.BilledType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNBilledType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx context.Context, sel ast.SelectionSet, v model.BilledType) graphql.Marshaler {
+func (ec *executionContext) marshalNBilledType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx context.Context, sel ast.SelectionSet, v model.BilledType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNBillingProfileInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileInput(ctx context.Context, v any) (model.BillingProfileInput, error) {
+func (ec *executionContext) unmarshalNBillingProfileInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileInput(ctx context.Context, v any) (model.BillingProfileInput, error) {
 	res, err := ec.unmarshalInputBillingProfileInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNBillingProfileLinkEmailInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileLinkEmailInput(ctx context.Context, v any) (model.BillingProfileLinkEmailInput, error) {
+func (ec *executionContext) unmarshalNBillingProfileLinkEmailInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileLinkEmailInput(ctx context.Context, v any) (model.BillingProfileLinkEmailInput, error) {
 	res, err := ec.unmarshalInputBillingProfileLinkEmailInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNBillingProfileLinkLocationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileLinkLocationInput(ctx context.Context, v any) (model.BillingProfileLinkLocationInput, error) {
+func (ec *executionContext) unmarshalNBillingProfileLinkLocationInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileLinkLocationInput(ctx context.Context, v any) (model.BillingProfileLinkLocationInput, error) {
 	res, err := ec.unmarshalInputBillingProfileLinkLocationInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNBillingProfileUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileUpdateInput(ctx context.Context, v any) (model.BillingProfileUpdateInput, error) {
+func (ec *executionContext) unmarshalNBillingProfileUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingProfileUpdateInput(ctx context.Context, v any) (model.BillingProfileUpdateInput, error) {
 	res, err := ec.unmarshalInputBillingProfileUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -129748,7 +131993,7 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCalendar2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendarᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Calendar) graphql.Marshaler {
+func (ec *executionContext) marshalNCalendar2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendarᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Calendar) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -129772,7 +132017,7 @@ func (ec *executionContext) marshalNCalendar2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCalendar2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendar(ctx, sel, v[i])
+			ret[i] = ec.marshalNCalendar2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendar(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -129792,7 +132037,7 @@ func (ec *executionContext) marshalNCalendar2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalNCalendar2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendar(ctx context.Context, sel ast.SelectionSet, v *model.Calendar) graphql.Marshaler {
+func (ec *executionContext) marshalNCalendar2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendar(ctx context.Context, sel ast.SelectionSet, v *model.Calendar) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -129802,17 +132047,17 @@ func (ec *executionContext) marshalNCalendar2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return ec._Calendar(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNCalendarType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendarType(ctx context.Context, v any) (model.CalendarType, error) {
+func (ec *executionContext) unmarshalNCalendarType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendarType(ctx context.Context, v any) (model.CalendarType, error) {
 	var res model.CalendarType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCalendarType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendarType(ctx context.Context, sel ast.SelectionSet, v model.CalendarType) graphql.Marshaler {
+func (ec *executionContext) marshalNCalendarType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCalendarType(ctx context.Context, sel ast.SelectionSet, v model.CalendarType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNColumnView2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ColumnView) graphql.Marshaler {
+func (ec *executionContext) marshalNCapability2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Capability) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -129836,7 +132081,7 @@ func (ec *executionContext) marshalNColumnView2ᚕᚖgithubᚗcomᚋopenlineᚑa
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNColumnView2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnView(ctx, sel, v[i])
+			ret[i] = ec.marshalNCapability2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapability(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -129856,7 +132101,86 @@ func (ec *executionContext) marshalNColumnView2ᚕᚖgithubᚗcomᚋopenlineᚑa
 	return ret
 }
 
-func (ec *executionContext) marshalNColumnView2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnView(ctx context.Context, sel ast.SelectionSet, v *model.ColumnView) graphql.Marshaler {
+func (ec *executionContext) marshalNCapability2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapability(ctx context.Context, sel ast.SelectionSet, v *model.Capability) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Capability(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCapabilitySaveInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilitySaveInput(ctx context.Context, v any) (*model.CapabilitySaveInput, error) {
+	res, err := ec.unmarshalInputCapabilitySaveInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCapabilityStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityStatus(ctx context.Context, v any) (model.CapabilityStatus, error) {
+	var res model.CapabilityStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCapabilityStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityStatus(ctx context.Context, sel ast.SelectionSet, v model.CapabilityStatus) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNCapabilityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityType(ctx context.Context, v any) (model.CapabilityType, error) {
+	var res model.CapabilityType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCapabilityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityType(ctx context.Context, sel ast.SelectionSet, v model.CapabilityType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNColumnView2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ColumnView) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNColumnView2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnView(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNColumnView2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnView(ctx context.Context, sel ast.SelectionSet, v *model.ColumnView) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -129866,7 +132190,7 @@ func (ec *executionContext) marshalNColumnView2ᚖgithubᚗcomᚋopenlineᚑai�
 	return ec._ColumnView(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNColumnViewInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewInputᚄ(ctx context.Context, v any) ([]*model.ColumnViewInput, error) {
+func (ec *executionContext) unmarshalNColumnViewInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewInputᚄ(ctx context.Context, v any) ([]*model.ColumnViewInput, error) {
 	var vSlice []any
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -129875,7 +132199,7 @@ func (ec *executionContext) unmarshalNColumnViewInput2ᚕᚖgithubᚗcomᚋopenl
 	res := make([]*model.ColumnViewInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNColumnViewInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNColumnViewInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -129883,22 +132207,22 @@ func (ec *executionContext) unmarshalNColumnViewInput2ᚕᚖgithubᚗcomᚋopenl
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNColumnViewInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewInput(ctx context.Context, v any) (*model.ColumnViewInput, error) {
+func (ec *executionContext) unmarshalNColumnViewInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewInput(ctx context.Context, v any) (*model.ColumnViewInput, error) {
 	res, err := ec.unmarshalInputColumnViewInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewType(ctx context.Context, v any) (model.ColumnViewType, error) {
+func (ec *executionContext) unmarshalNColumnViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewType(ctx context.Context, v any) (model.ColumnViewType, error) {
 	var res model.ColumnViewType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNColumnViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewType(ctx context.Context, sel ast.SelectionSet, v model.ColumnViewType) graphql.Marshaler {
+func (ec *executionContext) marshalNColumnViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewType(ctx context.Context, sel ast.SelectionSet, v model.ColumnViewType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNComment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCommentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Comment) graphql.Marshaler {
+func (ec *executionContext) marshalNComment2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCommentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Comment) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -129922,7 +132246,7 @@ func (ec *executionContext) marshalNComment2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNComment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐComment(ctx, sel, v[i])
+			ret[i] = ec.marshalNComment2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐComment(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -129942,7 +132266,7 @@ func (ec *executionContext) marshalNComment2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalNComment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐComment(ctx context.Context, sel ast.SelectionSet, v *model.Comment) graphql.Marshaler {
+func (ec *executionContext) marshalNComment2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐComment(ctx context.Context, sel ast.SelectionSet, v *model.Comment) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -129952,13 +132276,13 @@ func (ec *executionContext) marshalNComment2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ec._Comment(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐComparisonOperator(ctx context.Context, v any) (model1.ComparisonOperator, error) {
+func (ec *executionContext) unmarshalNComparisonOperator2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐComparisonOperator(ctx context.Context, v any) (model1.ComparisonOperator, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := model1.ComparisonOperator(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNComparisonOperator2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐComparisonOperator(ctx context.Context, sel ast.SelectionSet, v model1.ComparisonOperator) graphql.Marshaler {
+func (ec *executionContext) marshalNComparisonOperator2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐComparisonOperator(ctx context.Context, sel ast.SelectionSet, v model1.ComparisonOperator) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -129968,11 +132292,11 @@ func (ec *executionContext) marshalNComparisonOperator2githubᚗcomᚋopenline�
 	return res
 }
 
-func (ec *executionContext) marshalNContact2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v model.Contact) graphql.Marshaler {
+func (ec *executionContext) marshalNContact2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v model.Contact) graphql.Marshaler {
 	return ec._Contact(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNContact2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Contact) graphql.Marshaler {
+func (ec *executionContext) marshalNContact2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Contact) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -129996,7 +132320,7 @@ func (ec *executionContext) marshalNContact2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, sel, v[i])
+			ret[i] = ec.marshalNContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130016,7 +132340,7 @@ func (ec *executionContext) marshalNContact2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v *model.Contact) graphql.Marshaler {
+func (ec *executionContext) marshalNContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v *model.Contact) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130026,21 +132350,21 @@ func (ec *executionContext) marshalNContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ec._Contact(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNContactInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactInput(ctx context.Context, v any) (model.ContactInput, error) {
+func (ec *executionContext) unmarshalNContactInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactInput(ctx context.Context, v any) (model.ContactInput, error) {
 	res, err := ec.unmarshalInputContactInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNContactOrganizationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactOrganizationInput(ctx context.Context, v any) (model.ContactOrganizationInput, error) {
+func (ec *executionContext) unmarshalNContactOrganizationInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactOrganizationInput(ctx context.Context, v any) (model.ContactOrganizationInput, error) {
 	res, err := ec.unmarshalInputContactOrganizationInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNContactSearchResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactSearchResult(ctx context.Context, sel ast.SelectionSet, v model.ContactSearchResult) graphql.Marshaler {
+func (ec *executionContext) marshalNContactSearchResult2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactSearchResult(ctx context.Context, sel ast.SelectionSet, v model.ContactSearchResult) graphql.Marshaler {
 	return ec._ContactSearchResult(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNContactSearchResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactSearchResult(ctx context.Context, sel ast.SelectionSet, v *model.ContactSearchResult) graphql.Marshaler {
+func (ec *executionContext) marshalNContactSearchResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactSearchResult(ctx context.Context, sel ast.SelectionSet, v *model.ContactSearchResult) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130050,12 +132374,12 @@ func (ec *executionContext) marshalNContactSearchResult2ᚖgithubᚗcomᚋopenli
 	return ec._ContactSearchResult(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNContactTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactTagInput(ctx context.Context, v any) (model.ContactTagInput, error) {
+func (ec *executionContext) unmarshalNContactTagInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactTagInput(ctx context.Context, v any) (model.ContactTagInput, error) {
 	res, err := ec.unmarshalInputContactTagInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNContactUiDetails2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactUIDetailsᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ContactUIDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNContactUiDetails2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactUIDetailsᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ContactUIDetails) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130079,7 +132403,7 @@ func (ec *executionContext) marshalNContactUiDetails2ᚕᚖgithubᚗcomᚋopenli
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNContactUiDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactUIDetails(ctx, sel, v[i])
+			ret[i] = ec.marshalNContactUiDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactUIDetails(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130099,7 +132423,7 @@ func (ec *executionContext) marshalNContactUiDetails2ᚕᚖgithubᚗcomᚋopenli
 	return ret
 }
 
-func (ec *executionContext) marshalNContactUiDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactUIDetails(ctx context.Context, sel ast.SelectionSet, v *model.ContactUIDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNContactUiDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactUIDetails(ctx context.Context, sel ast.SelectionSet, v *model.ContactUIDetails) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130109,16 +132433,16 @@ func (ec *executionContext) marshalNContactUiDetails2ᚖgithubᚗcomᚋopenline�
 	return ec._ContactUiDetails(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNContactUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactUpdateInput(ctx context.Context, v any) (model.ContactUpdateInput, error) {
+func (ec *executionContext) unmarshalNContactUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactUpdateInput(ctx context.Context, v any) (model.ContactUpdateInput, error) {
 	res, err := ec.unmarshalInputContactUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNContactsPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactsPage(ctx context.Context, sel ast.SelectionSet, v model.ContactsPage) graphql.Marshaler {
+func (ec *executionContext) marshalNContactsPage2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactsPage(ctx context.Context, sel ast.SelectionSet, v model.ContactsPage) graphql.Marshaler {
 	return ec._ContactsPage(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNContactsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactsPage(ctx context.Context, sel ast.SelectionSet, v *model.ContactsPage) graphql.Marshaler {
+func (ec *executionContext) marshalNContactsPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContactsPage(ctx context.Context, sel ast.SelectionSet, v *model.ContactsPage) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130128,11 +132452,11 @@ func (ec *executionContext) marshalNContactsPage2ᚖgithubᚗcomᚋopenlineᚑai
 	return ec._ContactsPage(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNContract2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx context.Context, sel ast.SelectionSet, v model.Contract) graphql.Marshaler {
+func (ec *executionContext) marshalNContract2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx context.Context, sel ast.SelectionSet, v model.Contract) graphql.Marshaler {
 	return ec._Contract(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNContract2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Contract) graphql.Marshaler {
+func (ec *executionContext) marshalNContract2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Contract) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130156,7 +132480,7 @@ func (ec *executionContext) marshalNContract2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, sel, v[i])
+			ret[i] = ec.marshalNContract2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130176,7 +132500,7 @@ func (ec *executionContext) marshalNContract2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx context.Context, sel ast.SelectionSet, v *model.Contract) graphql.Marshaler {
+func (ec *executionContext) marshalNContract2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx context.Context, sel ast.SelectionSet, v *model.Contract) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130186,16 +132510,16 @@ func (ec *executionContext) marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return ec._Contract(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNContractInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractInput(ctx context.Context, v any) (model.ContractInput, error) {
+func (ec *executionContext) unmarshalNContractInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractInput(ctx context.Context, v any) (model.ContractInput, error) {
 	res, err := ec.unmarshalInputContractInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNContractPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractPage(ctx context.Context, sel ast.SelectionSet, v model.ContractPage) graphql.Marshaler {
+func (ec *executionContext) marshalNContractPage2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractPage(ctx context.Context, sel ast.SelectionSet, v model.ContractPage) graphql.Marshaler {
 	return ec._ContractPage(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNContractPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractPage(ctx context.Context, sel ast.SelectionSet, v *model.ContractPage) graphql.Marshaler {
+func (ec *executionContext) marshalNContractPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractPage(ctx context.Context, sel ast.SelectionSet, v *model.ContractPage) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130205,37 +132529,37 @@ func (ec *executionContext) marshalNContractPage2ᚖgithubᚗcomᚋopenlineᚑai
 	return ec._ContractPage(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNContractRenewalCycle2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx context.Context, v any) (model.ContractRenewalCycle, error) {
+func (ec *executionContext) unmarshalNContractRenewalCycle2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx context.Context, v any) (model.ContractRenewalCycle, error) {
 	var res model.ContractRenewalCycle
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNContractRenewalCycle2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx context.Context, sel ast.SelectionSet, v model.ContractRenewalCycle) graphql.Marshaler {
+func (ec *executionContext) marshalNContractRenewalCycle2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx context.Context, sel ast.SelectionSet, v model.ContractRenewalCycle) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNContractRenewalInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalInput(ctx context.Context, v any) (model.ContractRenewalInput, error) {
+func (ec *executionContext) unmarshalNContractRenewalInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalInput(ctx context.Context, v any) (model.ContractRenewalInput, error) {
 	res, err := ec.unmarshalInputContractRenewalInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNContractStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractStatus(ctx context.Context, v any) (model.ContractStatus, error) {
+func (ec *executionContext) unmarshalNContractStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractStatus(ctx context.Context, v any) (model.ContractStatus, error) {
 	var res model.ContractStatus
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNContractStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractStatus(ctx context.Context, sel ast.SelectionSet, v model.ContractStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNContractStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractStatus(ctx context.Context, sel ast.SelectionSet, v model.ContractStatus) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNContractUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractUpdateInput(ctx context.Context, v any) (model.ContractUpdateInput, error) {
+func (ec *executionContext) unmarshalNContractUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractUpdateInput(ctx context.Context, v any) (model.ContractUpdateInput, error) {
 	res, err := ec.unmarshalInputContractUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {
+func (ec *executionContext) marshalNCountry2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130245,21 +132569,21 @@ func (ec *executionContext) marshalNCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ec._Country(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNCustomEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomEntityType(ctx context.Context, v any) (model.CustomEntityType, error) {
+func (ec *executionContext) unmarshalNCustomEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomEntityType(ctx context.Context, v any) (model.CustomEntityType, error) {
 	var res model.CustomEntityType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCustomEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomEntityType(ctx context.Context, sel ast.SelectionSet, v model.CustomEntityType) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomEntityType(ctx context.Context, sel ast.SelectionSet, v model.CustomEntityType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNCustomField2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomField(ctx context.Context, sel ast.SelectionSet, v model.CustomField) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomField2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomField(ctx context.Context, sel ast.SelectionSet, v model.CustomField) graphql.Marshaler {
 	return ec._CustomField(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCustomField2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CustomField) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomField2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CustomField) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130283,7 +132607,7 @@ func (ec *executionContext) marshalNCustomField2ᚕᚖgithubᚗcomᚋopenlineᚑ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCustomField2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomField(ctx, sel, v[i])
+			ret[i] = ec.marshalNCustomField2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomField(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130303,7 +132627,7 @@ func (ec *executionContext) marshalNCustomField2ᚕᚖgithubᚗcomᚋopenlineᚑ
 	return ret
 }
 
-func (ec *executionContext) marshalNCustomField2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomField(ctx context.Context, sel ast.SelectionSet, v *model.CustomField) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomField2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomField(ctx context.Context, sel ast.SelectionSet, v *model.CustomField) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130313,31 +132637,31 @@ func (ec *executionContext) marshalNCustomField2ᚖgithubᚗcomᚋopenlineᚑai�
 	return ec._CustomField(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNCustomFieldDataType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx context.Context, v any) (model.CustomFieldDataType, error) {
+func (ec *executionContext) unmarshalNCustomFieldDataType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx context.Context, v any) (model.CustomFieldDataType, error) {
 	var res model.CustomFieldDataType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCustomFieldDataType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx context.Context, sel ast.SelectionSet, v model.CustomFieldDataType) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomFieldDataType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx context.Context, sel ast.SelectionSet, v model.CustomFieldDataType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNCustomFieldInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInput(ctx context.Context, v any) (model.CustomFieldInput, error) {
+func (ec *executionContext) unmarshalNCustomFieldInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInput(ctx context.Context, v any) (model.CustomFieldInput, error) {
 	res, err := ec.unmarshalInputCustomFieldInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCustomFieldInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInput(ctx context.Context, v any) (*model.CustomFieldInput, error) {
+func (ec *executionContext) unmarshalNCustomFieldInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInput(ctx context.Context, v any) (*model.CustomFieldInput, error) {
 	res, err := ec.unmarshalInputCustomFieldInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCustomFieldTemplate2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplate(ctx context.Context, sel ast.SelectionSet, v model.CustomFieldTemplate) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomFieldTemplate2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplate(ctx context.Context, sel ast.SelectionSet, v model.CustomFieldTemplate) graphql.Marshaler {
 	return ec._CustomFieldTemplate(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CustomFieldTemplate) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CustomFieldTemplate) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130361,7 +132685,7 @@ func (ec *executionContext) marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋope
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCustomFieldTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplate(ctx, sel, v[i])
+			ret[i] = ec.marshalNCustomFieldTemplate2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplate(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130381,7 +132705,7 @@ func (ec *executionContext) marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋope
 	return ret
 }
 
-func (ec *executionContext) marshalNCustomFieldTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplate(ctx context.Context, sel ast.SelectionSet, v *model.CustomFieldTemplate) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomFieldTemplate2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplate(ctx context.Context, sel ast.SelectionSet, v *model.CustomFieldTemplate) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130391,31 +132715,31 @@ func (ec *executionContext) marshalNCustomFieldTemplate2ᚖgithubᚗcomᚋopenli
 	return ec._CustomFieldTemplate(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNCustomFieldTemplateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateInput(ctx context.Context, v any) (model.CustomFieldTemplateInput, error) {
+func (ec *executionContext) unmarshalNCustomFieldTemplateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateInput(ctx context.Context, v any) (model.CustomFieldTemplateInput, error) {
 	res, err := ec.unmarshalInputCustomFieldTemplateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCustomFieldTemplateType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateType(ctx context.Context, v any) (model.CustomFieldTemplateType, error) {
+func (ec *executionContext) unmarshalNCustomFieldTemplateType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateType(ctx context.Context, v any) (model.CustomFieldTemplateType, error) {
 	var res model.CustomFieldTemplateType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCustomFieldTemplateType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateType(ctx context.Context, sel ast.SelectionSet, v model.CustomFieldTemplateType) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomFieldTemplateType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateType(ctx context.Context, sel ast.SelectionSet, v model.CustomFieldTemplateType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNCustomFieldUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldUpdateInput(ctx context.Context, v any) (model.CustomFieldUpdateInput, error) {
+func (ec *executionContext) unmarshalNCustomFieldUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldUpdateInput(ctx context.Context, v any) (model.CustomFieldUpdateInput, error) {
 	res, err := ec.unmarshalInputCustomFieldUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCustomerContact2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerContact(ctx context.Context, sel ast.SelectionSet, v model.CustomerContact) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomerContact2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerContact(ctx context.Context, sel ast.SelectionSet, v model.CustomerContact) graphql.Marshaler {
 	return ec._CustomerContact(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCustomerContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerContact(ctx context.Context, sel ast.SelectionSet, v *model.CustomerContact) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomerContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerContact(ctx context.Context, sel ast.SelectionSet, v *model.CustomerContact) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130425,12 +132749,12 @@ func (ec *executionContext) marshalNCustomerContact2ᚖgithubᚗcomᚋopenline�
 	return ec._CustomerContact(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNCustomerContactInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerContactInput(ctx context.Context, v any) (model.CustomerContactInput, error) {
+func (ec *executionContext) unmarshalNCustomerContactInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerContactInput(ctx context.Context, v any) (model.CustomerContactInput, error) {
 	res, err := ec.unmarshalInputCustomerContactInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCustomerEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerEmail(ctx context.Context, sel ast.SelectionSet, v *model.CustomerEmail) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomerEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerEmail(ctx context.Context, sel ast.SelectionSet, v *model.CustomerEmail) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130440,7 +132764,7 @@ func (ec *executionContext) marshalNCustomerEmail2ᚖgithubᚗcomᚋopenlineᚑa
 	return ec._CustomerEmail(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNCustomerJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerJobRole(ctx context.Context, sel ast.SelectionSet, v *model.CustomerJobRole) graphql.Marshaler {
+func (ec *executionContext) marshalNCustomerJobRole2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomerJobRole(ctx context.Context, sel ast.SelectionSet, v *model.CustomerJobRole) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130450,7 +132774,7 @@ func (ec *executionContext) marshalNCustomerJobRole2ᚖgithubᚗcomᚋopenline�
 	return ec._CustomerJobRole(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDashboardARRBreakdownPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardARRBreakdownPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardARRBreakdownPerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalNDashboardARRBreakdownPerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardARRBreakdownPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardARRBreakdownPerMonth) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130474,7 +132798,7 @@ func (ec *executionContext) marshalNDashboardARRBreakdownPerMonth2ᚕᚖgithub�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalODashboardARRBreakdownPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardARRBreakdownPerMonth(ctx, sel, v[i])
+			ret[i] = ec.marshalODashboardARRBreakdownPerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardARRBreakdownPerMonth(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130488,7 +132812,7 @@ func (ec *executionContext) marshalNDashboardARRBreakdownPerMonth2ᚕᚖgithub�
 	return ret
 }
 
-func (ec *executionContext) marshalNDashboardCustomerMap2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMap(ctx context.Context, sel ast.SelectionSet, v *model.DashboardCustomerMap) graphql.Marshaler {
+func (ec *executionContext) marshalNDashboardCustomerMap2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMap(ctx context.Context, sel ast.SelectionSet, v *model.DashboardCustomerMap) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130498,17 +132822,17 @@ func (ec *executionContext) marshalNDashboardCustomerMap2ᚖgithubᚗcomᚋopenl
 	return ec._DashboardCustomerMap(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNDashboardCustomerMapState2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMapState(ctx context.Context, v any) (model.DashboardCustomerMapState, error) {
+func (ec *executionContext) unmarshalNDashboardCustomerMapState2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMapState(ctx context.Context, v any) (model.DashboardCustomerMapState, error) {
 	var res model.DashboardCustomerMapState
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNDashboardCustomerMapState2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMapState(ctx context.Context, sel ast.SelectionSet, v model.DashboardCustomerMapState) graphql.Marshaler {
+func (ec *executionContext) marshalNDashboardCustomerMapState2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMapState(ctx context.Context, sel ast.SelectionSet, v model.DashboardCustomerMapState) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNDashboardGrossRevenueRetentionPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardGrossRevenueRetentionPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardGrossRevenueRetentionPerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalNDashboardGrossRevenueRetentionPerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardGrossRevenueRetentionPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardGrossRevenueRetentionPerMonth) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130532,7 +132856,7 @@ func (ec *executionContext) marshalNDashboardGrossRevenueRetentionPerMonth2ᚕ�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalODashboardGrossRevenueRetentionPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardGrossRevenueRetentionPerMonth(ctx, sel, v[i])
+			ret[i] = ec.marshalODashboardGrossRevenueRetentionPerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardGrossRevenueRetentionPerMonth(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130546,7 +132870,7 @@ func (ec *executionContext) marshalNDashboardGrossRevenueRetentionPerMonth2ᚕ�
 	return ret
 }
 
-func (ec *executionContext) marshalNDashboardMRRPerCustomerPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardMRRPerCustomerPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardMRRPerCustomerPerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalNDashboardMRRPerCustomerPerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardMRRPerCustomerPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardMRRPerCustomerPerMonth) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130570,7 +132894,7 @@ func (ec *executionContext) marshalNDashboardMRRPerCustomerPerMonth2ᚕᚖgithub
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalODashboardMRRPerCustomerPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardMRRPerCustomerPerMonth(ctx, sel, v[i])
+			ret[i] = ec.marshalODashboardMRRPerCustomerPerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardMRRPerCustomerPerMonth(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130584,7 +132908,7 @@ func (ec *executionContext) marshalNDashboardMRRPerCustomerPerMonth2ᚕᚖgithub
 	return ret
 }
 
-func (ec *executionContext) marshalNDashboardNewCustomersPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardNewCustomersPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardNewCustomersPerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalNDashboardNewCustomersPerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardNewCustomersPerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardNewCustomersPerMonth) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130608,7 +132932,7 @@ func (ec *executionContext) marshalNDashboardNewCustomersPerMonth2ᚕᚖgithub�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalODashboardNewCustomersPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardNewCustomersPerMonth(ctx, sel, v[i])
+			ret[i] = ec.marshalODashboardNewCustomersPerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardNewCustomersPerMonth(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130622,7 +132946,7 @@ func (ec *executionContext) marshalNDashboardNewCustomersPerMonth2ᚕᚖgithub�
 	return ret
 }
 
-func (ec *executionContext) marshalNDashboardOnboardingCompletionPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardOnboardingCompletionPerMonthᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardOnboardingCompletionPerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalNDashboardOnboardingCompletionPerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardOnboardingCompletionPerMonthᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardOnboardingCompletionPerMonth) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130646,7 +132970,7 @@ func (ec *executionContext) marshalNDashboardOnboardingCompletionPerMonth2ᚕᚖ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDashboardOnboardingCompletionPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardOnboardingCompletionPerMonth(ctx, sel, v[i])
+			ret[i] = ec.marshalNDashboardOnboardingCompletionPerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardOnboardingCompletionPerMonth(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130666,7 +132990,7 @@ func (ec *executionContext) marshalNDashboardOnboardingCompletionPerMonth2ᚕᚖ
 	return ret
 }
 
-func (ec *executionContext) marshalNDashboardOnboardingCompletionPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardOnboardingCompletionPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardOnboardingCompletionPerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalNDashboardOnboardingCompletionPerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardOnboardingCompletionPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardOnboardingCompletionPerMonth) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130676,7 +133000,7 @@ func (ec *executionContext) marshalNDashboardOnboardingCompletionPerMonth2ᚖgit
 	return ec._DashboardOnboardingCompletionPerMonth(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDashboardRetentionRatePerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRetentionRatePerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardRetentionRatePerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalNDashboardRetentionRatePerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRetentionRatePerMonth(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardRetentionRatePerMonth) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130700,7 +133024,7 @@ func (ec *executionContext) marshalNDashboardRetentionRatePerMonth2ᚕᚖgithub�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalODashboardRetentionRatePerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRetentionRatePerMonth(ctx, sel, v[i])
+			ret[i] = ec.marshalODashboardRetentionRatePerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRetentionRatePerMonth(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130714,7 +133038,7 @@ func (ec *executionContext) marshalNDashboardRetentionRatePerMonth2ᚕᚖgithub�
 	return ret
 }
 
-func (ec *executionContext) marshalNDashboardTimeToOnboardPerMonth2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardTimeToOnboardPerMonthᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardTimeToOnboardPerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalNDashboardTimeToOnboardPerMonth2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardTimeToOnboardPerMonthᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardTimeToOnboardPerMonth) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130738,7 +133062,7 @@ func (ec *executionContext) marshalNDashboardTimeToOnboardPerMonth2ᚕᚖgithub�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDashboardTimeToOnboardPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardTimeToOnboardPerMonth(ctx, sel, v[i])
+			ret[i] = ec.marshalNDashboardTimeToOnboardPerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardTimeToOnboardPerMonth(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130758,7 +133082,7 @@ func (ec *executionContext) marshalNDashboardTimeToOnboardPerMonth2ᚕᚖgithub�
 	return ret
 }
 
-func (ec *executionContext) marshalNDashboardTimeToOnboardPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardTimeToOnboardPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardTimeToOnboardPerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalNDashboardTimeToOnboardPerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardTimeToOnboardPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardTimeToOnboardPerMonth) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130768,21 +133092,21 @@ func (ec *executionContext) marshalNDashboardTimeToOnboardPerMonth2ᚖgithubᚗc
 	return ec._DashboardTimeToOnboardPerMonth(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx context.Context, v any) (model.DataSource, error) {
+func (ec *executionContext) unmarshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx context.Context, v any) (model.DataSource, error) {
 	var res model.DataSource
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v model.DataSource) graphql.Marshaler {
+func (ec *executionContext) marshalNDataSource2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v model.DataSource) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNDeleteResponse2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDeleteResponse(ctx context.Context, sel ast.SelectionSet, v model.DeleteResponse) graphql.Marshaler {
+func (ec *executionContext) marshalNDeleteResponse2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDeleteResponse(ctx context.Context, sel ast.SelectionSet, v model.DeleteResponse) graphql.Marshaler {
 	return ec._DeleteResponse(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNDeleteResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDeleteResponse(ctx context.Context, sel ast.SelectionSet, v *model.DeleteResponse) graphql.Marshaler {
+func (ec *executionContext) marshalNDeleteResponse2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDeleteResponse(ctx context.Context, sel ast.SelectionSet, v *model.DeleteResponse) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130792,7 +133116,7 @@ func (ec *executionContext) marshalNDeleteResponse2ᚖgithubᚗcomᚋopenlineᚑ
 	return ec._DeleteResponse(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDomain2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomainᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Domain) graphql.Marshaler {
+func (ec *executionContext) marshalNDomain2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomainᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Domain) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130816,7 +133140,7 @@ func (ec *executionContext) marshalNDomain2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDomain2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomain(ctx, sel, v[i])
+			ret[i] = ec.marshalNDomain2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomain(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130836,7 +133160,7 @@ func (ec *executionContext) marshalNDomain2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNDomain2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomain(ctx context.Context, sel ast.SelectionSet, v *model.Domain) graphql.Marshaler {
+func (ec *executionContext) marshalNDomain2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomain(ctx context.Context, sel ast.SelectionSet, v *model.Domain) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130846,11 +133170,11 @@ func (ec *executionContext) marshalNDomain2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 	return ec._Domain(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDomainCheckDetails2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomainCheckDetails(ctx context.Context, sel ast.SelectionSet, v model.DomainCheckDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNDomainCheckDetails2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomainCheckDetails(ctx context.Context, sel ast.SelectionSet, v model.DomainCheckDetails) graphql.Marshaler {
 	return ec._DomainCheckDetails(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNDomainCheckDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomainCheckDetails(ctx context.Context, sel ast.SelectionSet, v *model.DomainCheckDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNDomainCheckDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDomainCheckDetails(ctx context.Context, sel ast.SelectionSet, v *model.DomainCheckDetails) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130860,11 +133184,11 @@ func (ec *executionContext) marshalNDomainCheckDetails2ᚖgithubᚗcomᚋopenlin
 	return ec._DomainCheckDetails(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNEmail2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx context.Context, sel ast.SelectionSet, v model.Email) graphql.Marshaler {
+func (ec *executionContext) marshalNEmail2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx context.Context, sel ast.SelectionSet, v model.Email) graphql.Marshaler {
 	return ec._Email(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Email) graphql.Marshaler {
+func (ec *executionContext) marshalNEmail2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Email) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130888,7 +133212,7 @@ func (ec *executionContext) marshalNEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, sel, v[i])
+			ret[i] = ec.marshalNEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130908,7 +133232,7 @@ func (ec *executionContext) marshalNEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return ret
 }
 
-func (ec *executionContext) marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx context.Context, sel ast.SelectionSet, v *model.Email) graphql.Marshaler {
+func (ec *executionContext) marshalNEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx context.Context, sel ast.SelectionSet, v *model.Email) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130918,17 +133242,17 @@ func (ec *executionContext) marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopen
 	return ec._Email(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNEmailInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx context.Context, v any) (model.EmailInput, error) {
+func (ec *executionContext) unmarshalNEmailInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx context.Context, v any) (model.EmailInput, error) {
 	res, err := ec.unmarshalInputEmailInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx context.Context, v any) (*model.EmailInput, error) {
+func (ec *executionContext) unmarshalNEmailInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx context.Context, v any) (*model.EmailInput, error) {
 	res, err := ec.unmarshalInputEmailInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNEmailValidationDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailValidationDetails(ctx context.Context, sel ast.SelectionSet, v *model.EmailValidationDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNEmailValidationDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailValidationDetails(ctx context.Context, sel ast.SelectionSet, v *model.EmailValidationDetails) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130938,7 +133262,7 @@ func (ec *executionContext) marshalNEmailValidationDetails2ᚖgithubᚗcomᚋope
 	return ec._EmailValidationDetails(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNEmailVariableEntity2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EmailVariableEntity) graphql.Marshaler {
+func (ec *executionContext) marshalNEmailVariableEntity2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EmailVariableEntity) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -130962,7 +133286,7 @@ func (ec *executionContext) marshalNEmailVariableEntity2ᚕᚖgithubᚗcomᚋope
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNEmailVariableEntity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntity(ctx, sel, v[i])
+			ret[i] = ec.marshalNEmailVariableEntity2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntity(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -130982,7 +133306,7 @@ func (ec *executionContext) marshalNEmailVariableEntity2ᚕᚖgithubᚗcomᚋope
 	return ret
 }
 
-func (ec *executionContext) marshalNEmailVariableEntity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntity(ctx context.Context, sel ast.SelectionSet, v *model.EmailVariableEntity) graphql.Marshaler {
+func (ec *executionContext) marshalNEmailVariableEntity2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntity(ctx context.Context, sel ast.SelectionSet, v *model.EmailVariableEntity) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -130992,27 +133316,27 @@ func (ec *executionContext) marshalNEmailVariableEntity2ᚖgithubᚗcomᚋopenli
 	return ec._EmailVariableEntity(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNEmailVariableEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntityType(ctx context.Context, v any) (model.EmailVariableEntityType, error) {
+func (ec *executionContext) unmarshalNEmailVariableEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntityType(ctx context.Context, v any) (model.EmailVariableEntityType, error) {
 	var res model.EmailVariableEntityType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNEmailVariableEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntityType(ctx context.Context, sel ast.SelectionSet, v model.EmailVariableEntityType) graphql.Marshaler {
+func (ec *executionContext) marshalNEmailVariableEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableEntityType(ctx context.Context, sel ast.SelectionSet, v model.EmailVariableEntityType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNEmailVariableName2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableName(ctx context.Context, v any) (model.EmailVariableName, error) {
+func (ec *executionContext) unmarshalNEmailVariableName2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableName(ctx context.Context, v any) (model.EmailVariableName, error) {
 	var res model.EmailVariableName
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNEmailVariableName2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableName(ctx context.Context, sel ast.SelectionSet, v model.EmailVariableName) graphql.Marshaler {
+func (ec *executionContext) marshalNEmailVariableName2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableName(ctx context.Context, sel ast.SelectionSet, v model.EmailVariableName) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNEmailVariableName2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableNameᚄ(ctx context.Context, v any) ([]model.EmailVariableName, error) {
+func (ec *executionContext) unmarshalNEmailVariableName2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableNameᚄ(ctx context.Context, v any) ([]model.EmailVariableName, error) {
 	var vSlice []any
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -131021,7 +133345,7 @@ func (ec *executionContext) unmarshalNEmailVariableName2ᚕgithubᚗcomᚋopenli
 	res := make([]model.EmailVariableName, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNEmailVariableName2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableName(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNEmailVariableName2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableName(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -131029,7 +133353,7 @@ func (ec *executionContext) unmarshalNEmailVariableName2ᚕgithubᚗcomᚋopenli
 	return res, nil
 }
 
-func (ec *executionContext) marshalNEmailVariableName2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableNameᚄ(ctx context.Context, sel ast.SelectionSet, v []model.EmailVariableName) graphql.Marshaler {
+func (ec *executionContext) marshalNEmailVariableName2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableNameᚄ(ctx context.Context, sel ast.SelectionSet, v []model.EmailVariableName) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131053,7 +133377,7 @@ func (ec *executionContext) marshalNEmailVariableName2ᚕgithubᚗcomᚋopenline
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNEmailVariableName2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableName(ctx, sel, v[i])
+			ret[i] = ec.marshalNEmailVariableName2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailVariableName(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -131073,7 +133397,7 @@ func (ec *executionContext) marshalNEmailVariableName2ᚕgithubᚗcomᚋopenline
 	return ret
 }
 
-func (ec *executionContext) marshalNEnrichDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEnrichDetails(ctx context.Context, sel ast.SelectionSet, v *model.EnrichDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNEnrichDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEnrichDetails(ctx context.Context, sel ast.SelectionSet, v *model.EnrichDetails) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131083,17 +133407,17 @@ func (ec *executionContext) marshalNEnrichDetails2ᚖgithubᚗcomᚋopenlineᚑa
 	return ec._EnrichDetails(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx context.Context, v any) (model.EntityType, error) {
+func (ec *executionContext) unmarshalNEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx context.Context, v any) (model.EntityType, error) {
 	var res model.EntityType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx context.Context, sel ast.SelectionSet, v model.EntityType) graphql.Marshaler {
+func (ec *executionContext) marshalNEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx context.Context, sel ast.SelectionSet, v model.EntityType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExternalSystem) graphql.Marshaler {
+func (ec *executionContext) marshalNExternalSystem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExternalSystem) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131117,7 +133441,7 @@ func (ec *executionContext) marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenline
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNExternalSystem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystem(ctx, sel, v[i])
+			ret[i] = ec.marshalNExternalSystem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystem(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -131137,7 +133461,7 @@ func (ec *executionContext) marshalNExternalSystem2ᚕᚖgithubᚗcomᚋopenline
 	return ret
 }
 
-func (ec *executionContext) marshalNExternalSystem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystem(ctx context.Context, sel ast.SelectionSet, v *model.ExternalSystem) graphql.Marshaler {
+func (ec *executionContext) marshalNExternalSystem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystem(ctx context.Context, sel ast.SelectionSet, v *model.ExternalSystem) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131147,12 +133471,12 @@ func (ec *executionContext) marshalNExternalSystem2ᚖgithubᚗcomᚋopenlineᚑ
 	return ec._ExternalSystem(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNExternalSystemInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemInput(ctx context.Context, v any) (model.ExternalSystemInput, error) {
+func (ec *executionContext) unmarshalNExternalSystemInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemInput(ctx context.Context, v any) (model.ExternalSystemInput, error) {
 	res, err := ec.unmarshalInputExternalSystemInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNExternalSystemInstance2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemInstanceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExternalSystemInstance) graphql.Marshaler {
+func (ec *executionContext) marshalNExternalSystemInstance2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemInstanceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExternalSystemInstance) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131176,7 +133500,7 @@ func (ec *executionContext) marshalNExternalSystemInstance2ᚕᚖgithubᚗcomᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNExternalSystemInstance2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemInstance(ctx, sel, v[i])
+			ret[i] = ec.marshalNExternalSystemInstance2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemInstance(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -131196,7 +133520,7 @@ func (ec *executionContext) marshalNExternalSystemInstance2ᚕᚖgithubᚗcomᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNExternalSystemInstance2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemInstance(ctx context.Context, sel ast.SelectionSet, v *model.ExternalSystemInstance) graphql.Marshaler {
+func (ec *executionContext) marshalNExternalSystemInstance2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemInstance(ctx context.Context, sel ast.SelectionSet, v *model.ExternalSystemInstance) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131206,17 +133530,17 @@ func (ec *executionContext) marshalNExternalSystemInstance2ᚖgithubᚗcomᚋope
 	return ec._ExternalSystemInstance(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNExternalSystemType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemType(ctx context.Context, v any) (model.ExternalSystemType, error) {
+func (ec *executionContext) unmarshalNExternalSystemType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemType(ctx context.Context, v any) (model.ExternalSystemType, error) {
 	var res model.ExternalSystemType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNExternalSystemType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemType(ctx context.Context, sel ast.SelectionSet, v model.ExternalSystemType) graphql.Marshaler {
+func (ec *executionContext) marshalNExternalSystemType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemType(ctx context.Context, sel ast.SelectionSet, v model.ExternalSystemType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx context.Context, v any) (*model.Filter, error) {
+func (ec *executionContext) unmarshalNFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx context.Context, v any) (*model.Filter, error) {
 	res, err := ec.unmarshalInputFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
@@ -131236,11 +133560,11 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
-func (ec *executionContext) marshalNFlow2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx context.Context, sel ast.SelectionSet, v model.Flow) graphql.Marshaler {
+func (ec *executionContext) marshalNFlow2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx context.Context, sel ast.SelectionSet, v model.Flow) graphql.Marshaler {
 	return ec._Flow(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNFlow2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Flow) graphql.Marshaler {
+func (ec *executionContext) marshalNFlow2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Flow) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131264,7 +133588,7 @@ func (ec *executionContext) marshalNFlow2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋop
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, sel, v[i])
+			ret[i] = ec.marshalNFlow2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -131284,7 +133608,7 @@ func (ec *executionContext) marshalNFlow2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ret
 }
 
-func (ec *executionContext) marshalNFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx context.Context, sel ast.SelectionSet, v *model.Flow) graphql.Marshaler {
+func (ec *executionContext) marshalNFlow2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx context.Context, sel ast.SelectionSet, v *model.Flow) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131294,11 +133618,11 @@ func (ec *executionContext) marshalNFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenl
 	return ec._Flow(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNFlowAction2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowAction(ctx context.Context, sel ast.SelectionSet, v model.FlowAction) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowAction2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowAction(ctx context.Context, sel ast.SelectionSet, v model.FlowAction) graphql.Marshaler {
 	return ec._FlowAction(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNFlowAction2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowAction(ctx context.Context, sel ast.SelectionSet, v *model.FlowAction) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowAction2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowAction(ctx context.Context, sel ast.SelectionSet, v *model.FlowAction) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131308,7 +133632,7 @@ func (ec *executionContext) marshalNFlowAction2ᚖgithubᚗcomᚋopenlineᚑai�
 	return ec._FlowAction(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNFlowActionExecution2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionExecutionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FlowActionExecution) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowActionExecution2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionExecutionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FlowActionExecution) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131332,7 +133656,7 @@ func (ec *executionContext) marshalNFlowActionExecution2ᚕᚖgithubᚗcomᚋope
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNFlowActionExecution2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionExecution(ctx, sel, v[i])
+			ret[i] = ec.marshalNFlowActionExecution2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionExecution(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -131352,7 +133676,7 @@ func (ec *executionContext) marshalNFlowActionExecution2ᚕᚖgithubᚗcomᚋope
 	return ret
 }
 
-func (ec *executionContext) marshalNFlowActionExecution2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionExecution(ctx context.Context, sel ast.SelectionSet, v *model.FlowActionExecution) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowActionExecution2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionExecution(ctx context.Context, sel ast.SelectionSet, v *model.FlowActionExecution) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131362,13 +133686,13 @@ func (ec *executionContext) marshalNFlowActionExecution2ᚖgithubᚗcomᚋopenli
 	return ec._FlowActionExecution(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, v any) (neo4j_entity.FlowActionExecutionStatus, error) {
+func (ec *executionContext) unmarshalNFlowActionExecutionStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, v any) (neo4j_entity.FlowActionExecutionStatus, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := neo4j_entity.FlowActionExecutionStatus(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowActionExecutionStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowActionExecutionStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowActionExecutionStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionExecutionStatus(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowActionExecutionStatus) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131378,13 +133702,13 @@ func (ec *executionContext) marshalNFlowActionExecutionStatus2githubᚗcomᚋope
 	return res
 }
 
-func (ec *executionContext) unmarshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, v any) (neo4j_entity.FlowActionType, error) {
+func (ec *executionContext) unmarshalNFlowActionType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, v any) (neo4j_entity.FlowActionType, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := neo4j_entity.FlowActionType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowActionType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowActionType) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowActionType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowActionType(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowActionType) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131394,13 +133718,13 @@ func (ec *executionContext) marshalNFlowActionType2githubᚗcomᚋopenlineᚑai�
 	return res
 }
 
-func (ec *executionContext) unmarshalNFlowEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐEntityType(ctx context.Context, v any) (model1.EntityType, error) {
+func (ec *executionContext) unmarshalNFlowEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐEntityType(ctx context.Context, v any) (model1.EntityType, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := model1.EntityType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐEntityType(ctx context.Context, sel ast.SelectionSet, v model1.EntityType) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐEntityType(ctx context.Context, sel ast.SelectionSet, v model1.EntityType) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131410,16 +133734,16 @@ func (ec *executionContext) marshalNFlowEntityType2githubᚗcomᚋopenlineᚑai�
 	return res
 }
 
-func (ec *executionContext) unmarshalNFlowMergeInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowMergeInput(ctx context.Context, v any) (model.FlowMergeInput, error) {
+func (ec *executionContext) unmarshalNFlowMergeInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowMergeInput(ctx context.Context, v any) (model.FlowMergeInput, error) {
 	res, err := ec.unmarshalInputFlowMergeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipant(ctx context.Context, sel ast.SelectionSet, v model.FlowParticipant) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowParticipant2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipant(ctx context.Context, sel ast.SelectionSet, v model.FlowParticipant) graphql.Marshaler {
 	return ec._FlowParticipant(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNFlowParticipant2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FlowParticipant) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowParticipant2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FlowParticipant) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131443,7 +133767,7 @@ func (ec *executionContext) marshalNFlowParticipant2ᚕᚖgithubᚗcomᚋopenlin
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNFlowParticipant2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipant(ctx, sel, v[i])
+			ret[i] = ec.marshalNFlowParticipant2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipant(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -131463,7 +133787,7 @@ func (ec *executionContext) marshalNFlowParticipant2ᚕᚖgithubᚗcomᚋopenlin
 	return ret
 }
 
-func (ec *executionContext) marshalNFlowParticipant2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipant(ctx context.Context, sel ast.SelectionSet, v *model.FlowParticipant) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowParticipant2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowParticipant(ctx context.Context, sel ast.SelectionSet, v *model.FlowParticipant) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131473,13 +133797,13 @@ func (ec *executionContext) marshalNFlowParticipant2ᚖgithubᚗcomᚋopenline�
 	return ec._FlowParticipant(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, v any) (neo4j_entity.FlowParticipantRequirementsUnmeet, error) {
+func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, v any) (neo4j_entity.FlowParticipantRequirementsUnmeet, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := neo4j_entity.FlowParticipantRequirementsUnmeet(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131489,7 +133813,7 @@ func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2githubᚗc
 	return res
 }
 
-func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, v any) ([]neo4j_entity.FlowParticipantRequirementsUnmeet, error) {
+func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, v any) ([]neo4j_entity.FlowParticipantRequirementsUnmeet, error) {
 	var vSlice []any
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -131498,7 +133822,7 @@ func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2ᚕgithu
 	res := make([]neo4j_entity.FlowParticipantRequirementsUnmeet, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -131506,7 +133830,7 @@ func (ec *executionContext) unmarshalNFlowParticipantRequirementsUnmeet2ᚕgithu
 	return res, nil
 }
 
-func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, sel ast.SelectionSet, v []neo4j_entity.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeetᚄ(ctx context.Context, sel ast.SelectionSet, v []neo4j_entity.FlowParticipantRequirementsUnmeet) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131530,7 +133854,7 @@ func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2ᚕgithub�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx, sel, v[i])
+			ret[i] = ec.marshalNFlowParticipantRequirementsUnmeet2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantRequirementsUnmeet(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -131550,13 +133874,13 @@ func (ec *executionContext) marshalNFlowParticipantRequirementsUnmeet2ᚕgithub�
 	return ret
 }
 
-func (ec *executionContext) unmarshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, v any) (neo4j_entity.FlowParticipantStatus, error) {
+func (ec *executionContext) unmarshalNFlowParticipantStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, v any) (neo4j_entity.FlowParticipantStatus, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := neo4j_entity.FlowParticipantStatus(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowParticipantStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowParticipantStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowParticipantStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowParticipantStatus(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowParticipantStatus) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131566,11 +133890,11 @@ func (ec *executionContext) marshalNFlowParticipantStatus2githubᚗcomᚋopenlin
 	return res
 }
 
-func (ec *executionContext) marshalNFlowSender2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSender(ctx context.Context, sel ast.SelectionSet, v model.FlowSender) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowSender2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSender(ctx context.Context, sel ast.SelectionSet, v model.FlowSender) graphql.Marshaler {
 	return ec._FlowSender(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNFlowSender2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSenderᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FlowSender) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowSender2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSenderᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FlowSender) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131594,7 +133918,7 @@ func (ec *executionContext) marshalNFlowSender2ᚕᚖgithubᚗcomᚋopenlineᚑa
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNFlowSender2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSender(ctx, sel, v[i])
+			ret[i] = ec.marshalNFlowSender2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSender(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -131614,7 +133938,7 @@ func (ec *executionContext) marshalNFlowSender2ᚕᚖgithubᚗcomᚋopenlineᚑa
 	return ret
 }
 
-func (ec *executionContext) marshalNFlowSender2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSender(ctx context.Context, sel ast.SelectionSet, v *model.FlowSender) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowSender2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSender(ctx context.Context, sel ast.SelectionSet, v *model.FlowSender) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131624,12 +133948,12 @@ func (ec *executionContext) marshalNFlowSender2ᚖgithubᚗcomᚋopenlineᚑai�
 	return ec._FlowSender(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFlowSenderMergeInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSenderMergeInput(ctx context.Context, v any) (model.FlowSenderMergeInput, error) {
+func (ec *executionContext) unmarshalNFlowSenderMergeInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowSenderMergeInput(ctx context.Context, v any) (model.FlowSenderMergeInput, error) {
 	res, err := ec.unmarshalInputFlowSenderMergeInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowStatistics2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowStatistics(ctx context.Context, sel ast.SelectionSet, v *model.FlowStatistics) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowStatistics2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowStatistics(ctx context.Context, sel ast.SelectionSet, v *model.FlowStatistics) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131639,13 +133963,13 @@ func (ec *executionContext) marshalNFlowStatistics2ᚖgithubᚗcomᚋopenlineᚑ
 	return ec._FlowStatistics(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx context.Context, v any) (neo4j_entity.FlowStatus, error) {
+func (ec *executionContext) unmarshalNFlowStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx context.Context, v any) (neo4j_entity.FlowStatus, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := neo4j_entity.FlowStatus(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNFlowStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑneo4jᚑrepositoryᚋentityᚐFlowStatus(ctx context.Context, sel ast.SelectionSet, v neo4j_entity.FlowStatus) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -131655,11 +133979,11 @@ func (ec *executionContext) marshalNFlowStatus2githubᚗcomᚋopenlineᚑaiᚋop
 	return res
 }
 
-func (ec *executionContext) marshalNGetPaymentIntent2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGetPaymentIntent(ctx context.Context, sel ast.SelectionSet, v model.GetPaymentIntent) graphql.Marshaler {
+func (ec *executionContext) marshalNGetPaymentIntent2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGetPaymentIntent(ctx context.Context, sel ast.SelectionSet, v model.GetPaymentIntent) graphql.Marshaler {
 	return ec._GetPaymentIntent(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNGetPaymentIntent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGetPaymentIntent(ctx context.Context, sel ast.SelectionSet, v *model.GetPaymentIntent) graphql.Marshaler {
+func (ec *executionContext) marshalNGetPaymentIntent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGetPaymentIntent(ctx context.Context, sel ast.SelectionSet, v *model.GetPaymentIntent) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131669,11 +133993,11 @@ func (ec *executionContext) marshalNGetPaymentIntent2ᚖgithubᚗcomᚋopenline�
 	return ec._GetPaymentIntent(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNGlobalCache2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCache(ctx context.Context, sel ast.SelectionSet, v model.GlobalCache) graphql.Marshaler {
+func (ec *executionContext) marshalNGlobalCache2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCache(ctx context.Context, sel ast.SelectionSet, v model.GlobalCache) graphql.Marshaler {
 	return ec._GlobalCache(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNGlobalCache2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCache(ctx context.Context, sel ast.SelectionSet, v *model.GlobalCache) graphql.Marshaler {
+func (ec *executionContext) marshalNGlobalCache2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCache(ctx context.Context, sel ast.SelectionSet, v *model.GlobalCache) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131683,7 +134007,7 @@ func (ec *executionContext) marshalNGlobalCache2ᚖgithubᚗcomᚋopenlineᚑai�
 	return ec._GlobalCache(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNGlobalCacheEmailToken2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCacheEmailTokenᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GlobalCacheEmailToken) graphql.Marshaler {
+func (ec *executionContext) marshalNGlobalCacheEmailToken2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCacheEmailTokenᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GlobalCacheEmailToken) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131707,7 +134031,7 @@ func (ec *executionContext) marshalNGlobalCacheEmailToken2ᚕᚖgithubᚗcomᚋo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNGlobalCacheEmailToken2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCacheEmailToken(ctx, sel, v[i])
+			ret[i] = ec.marshalNGlobalCacheEmailToken2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCacheEmailToken(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -131727,7 +134051,7 @@ func (ec *executionContext) marshalNGlobalCacheEmailToken2ᚕᚖgithubᚗcomᚋo
 	return ret
 }
 
-func (ec *executionContext) marshalNGlobalCacheEmailToken2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCacheEmailToken(ctx context.Context, sel ast.SelectionSet, v *model.GlobalCacheEmailToken) graphql.Marshaler {
+func (ec *executionContext) marshalNGlobalCacheEmailToken2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalCacheEmailToken(ctx context.Context, sel ast.SelectionSet, v *model.GlobalCacheEmailToken) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131737,7 +134061,7 @@ func (ec *executionContext) marshalNGlobalCacheEmailToken2ᚖgithubᚗcomᚋopen
 	return ec._GlobalCacheEmailToken(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNGlobalOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalOrganizationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GlobalOrganization) graphql.Marshaler {
+func (ec *executionContext) marshalNGlobalOrganization2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalOrganizationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.GlobalOrganization) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131761,7 +134085,7 @@ func (ec *executionContext) marshalNGlobalOrganization2ᚕᚖgithubᚗcomᚋopen
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNGlobalOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalOrganization(ctx, sel, v[i])
+			ret[i] = ec.marshalNGlobalOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalOrganization(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -131781,7 +134105,7 @@ func (ec *executionContext) marshalNGlobalOrganization2ᚕᚖgithubᚗcomᚋopen
 	return ret
 }
 
-func (ec *executionContext) marshalNGlobalOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalOrganization(ctx context.Context, sel ast.SelectionSet, v *model.GlobalOrganization) graphql.Marshaler {
+func (ec *executionContext) marshalNGlobalOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalOrganization(ctx context.Context, sel ast.SelectionSet, v *model.GlobalOrganization) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131838,7 +134162,7 @@ func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast
 	return ret
 }
 
-func (ec *executionContext) marshalNIndustry2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIndustryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Industry) graphql.Marshaler {
+func (ec *executionContext) marshalNIndustry2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIndustryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Industry) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131862,7 +134186,7 @@ func (ec *executionContext) marshalNIndustry2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNIndustry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIndustry(ctx, sel, v[i])
+			ret[i] = ec.marshalNIndustry2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIndustry(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -131882,7 +134206,7 @@ func (ec *executionContext) marshalNIndustry2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalNIndustry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIndustry(ctx context.Context, sel ast.SelectionSet, v *model.Industry) graphql.Marshaler {
+func (ec *executionContext) marshalNIndustry2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIndustry(ctx context.Context, sel ast.SelectionSet, v *model.Industry) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131922,11 +134246,11 @@ func (ec *executionContext) marshalNInt642int64(ctx context.Context, sel ast.Sel
 	return res
 }
 
-func (ec *executionContext) marshalNInteractionEvent2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEvent(ctx context.Context, sel ast.SelectionSet, v model.InteractionEvent) graphql.Marshaler {
+func (ec *executionContext) marshalNInteractionEvent2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEvent(ctx context.Context, sel ast.SelectionSet, v model.InteractionEvent) graphql.Marshaler {
 	return ec._InteractionEvent(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNInteractionEvent2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.InteractionEvent) graphql.Marshaler {
+func (ec *executionContext) marshalNInteractionEvent2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.InteractionEvent) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -131950,7 +134274,7 @@ func (ec *executionContext) marshalNInteractionEvent2ᚕᚖgithubᚗcomᚋopenli
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEvent(ctx, sel, v[i])
+			ret[i] = ec.marshalNInteractionEvent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEvent(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -131970,7 +134294,7 @@ func (ec *executionContext) marshalNInteractionEvent2ᚕᚖgithubᚗcomᚋopenli
 	return ret
 }
 
-func (ec *executionContext) marshalNInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEvent(ctx context.Context, sel ast.SelectionSet, v *model.InteractionEvent) graphql.Marshaler {
+func (ec *executionContext) marshalNInteractionEvent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEvent(ctx context.Context, sel ast.SelectionSet, v *model.InteractionEvent) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131980,7 +134304,7 @@ func (ec *executionContext) marshalNInteractionEvent2ᚖgithubᚗcomᚋopenline�
 	return ec._InteractionEvent(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNInteractionEventParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventParticipant(ctx context.Context, sel ast.SelectionSet, v model.InteractionEventParticipant) graphql.Marshaler {
+func (ec *executionContext) marshalNInteractionEventParticipant2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventParticipant(ctx context.Context, sel ast.SelectionSet, v model.InteractionEventParticipant) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -131990,7 +134314,7 @@ func (ec *executionContext) marshalNInteractionEventParticipant2githubᚗcomᚋo
 	return ec._InteractionEventParticipant(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNInteractionEventParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.InteractionEventParticipant) graphql.Marshaler {
+func (ec *executionContext) marshalNInteractionEventParticipant2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.InteractionEventParticipant) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132014,7 +134338,7 @@ func (ec *executionContext) marshalNInteractionEventParticipant2ᚕgithubᚗcom�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNInteractionEventParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventParticipant(ctx, sel, v[i])
+			ret[i] = ec.marshalNInteractionEventParticipant2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEventParticipant(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132034,7 +134358,7 @@ func (ec *executionContext) marshalNInteractionEventParticipant2ᚕgithubᚗcom�
 	return ret
 }
 
-func (ec *executionContext) marshalNInteractionSessionParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionSessionParticipant(ctx context.Context, sel ast.SelectionSet, v model.InteractionSessionParticipant) graphql.Marshaler {
+func (ec *executionContext) marshalNInteractionSessionParticipant2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionSessionParticipant(ctx context.Context, sel ast.SelectionSet, v model.InteractionSessionParticipant) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132044,7 +134368,7 @@ func (ec *executionContext) marshalNInteractionSessionParticipant2githubᚗcom�
 	return ec._InteractionSessionParticipant(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNInteractionSessionParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionSessionParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.InteractionSessionParticipant) graphql.Marshaler {
+func (ec *executionContext) marshalNInteractionSessionParticipant2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionSessionParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.InteractionSessionParticipant) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132068,7 +134392,7 @@ func (ec *executionContext) marshalNInteractionSessionParticipant2ᚕgithubᚗco
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNInteractionSessionParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionSessionParticipant(ctx, sel, v[i])
+			ret[i] = ec.marshalNInteractionSessionParticipant2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionSessionParticipant(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132088,31 +134412,31 @@ func (ec *executionContext) marshalNInteractionSessionParticipant2ᚕgithubᚗco
 	return ret
 }
 
-func (ec *executionContext) unmarshalNInternalStage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx context.Context, v any) (model.InternalStage, error) {
+func (ec *executionContext) unmarshalNInternalStage2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx context.Context, v any) (model.InternalStage, error) {
 	var res model.InternalStage
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNInternalStage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx context.Context, sel ast.SelectionSet, v model.InternalStage) graphql.Marshaler {
+func (ec *executionContext) marshalNInternalStage2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx context.Context, sel ast.SelectionSet, v model.InternalStage) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNInternalType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx context.Context, v any) (model.InternalType, error) {
+func (ec *executionContext) unmarshalNInternalType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx context.Context, v any) (model.InternalType, error) {
 	var res model.InternalType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNInternalType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx context.Context, sel ast.SelectionSet, v model.InternalType) graphql.Marshaler {
+func (ec *executionContext) marshalNInternalType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx context.Context, sel ast.SelectionSet, v model.InternalType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNInvoice2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx context.Context, sel ast.SelectionSet, v model.Invoice) graphql.Marshaler {
+func (ec *executionContext) marshalNInvoice2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx context.Context, sel ast.SelectionSet, v model.Invoice) graphql.Marshaler {
 	return ec._Invoice(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNInvoice2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Invoice) graphql.Marshaler {
+func (ec *executionContext) marshalNInvoice2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Invoice) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132136,7 +134460,7 @@ func (ec *executionContext) marshalNInvoice2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNInvoice2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx, sel, v[i])
+			ret[i] = ec.marshalNInvoice2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132156,7 +134480,7 @@ func (ec *executionContext) marshalNInvoice2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalNInvoice2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx context.Context, sel ast.SelectionSet, v *model.Invoice) graphql.Marshaler {
+func (ec *executionContext) marshalNInvoice2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoice(ctx context.Context, sel ast.SelectionSet, v *model.Invoice) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132166,7 +134490,7 @@ func (ec *executionContext) marshalNInvoice2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ec._Invoice(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNInvoiceCustomer2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceCustomer(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceCustomer) graphql.Marshaler {
+func (ec *executionContext) marshalNInvoiceCustomer2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceCustomer(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceCustomer) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132176,7 +134500,7 @@ func (ec *executionContext) marshalNInvoiceCustomer2ᚖgithubᚗcomᚋopenline�
 	return ec._InvoiceCustomer(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNInvoiceLine2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLineᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.InvoiceLine) graphql.Marshaler {
+func (ec *executionContext) marshalNInvoiceLine2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLineᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.InvoiceLine) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132200,7 +134524,7 @@ func (ec *executionContext) marshalNInvoiceLine2ᚕᚖgithubᚗcomᚋopenlineᚑ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNInvoiceLine2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLine(ctx, sel, v[i])
+			ret[i] = ec.marshalNInvoiceLine2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLine(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132220,7 +134544,7 @@ func (ec *executionContext) marshalNInvoiceLine2ᚕᚖgithubᚗcomᚋopenlineᚑ
 	return ret
 }
 
-func (ec *executionContext) marshalNInvoiceLine2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLine(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceLine) graphql.Marshaler {
+func (ec *executionContext) marshalNInvoiceLine2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLine(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceLine) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132230,7 +134554,7 @@ func (ec *executionContext) marshalNInvoiceLine2ᚖgithubᚗcomᚋopenlineᚑai�
 	return ec._InvoiceLine(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNInvoiceLineSimulate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLineSimulateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.InvoiceLineSimulate) graphql.Marshaler {
+func (ec *executionContext) marshalNInvoiceLineSimulate2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLineSimulateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.InvoiceLineSimulate) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132254,7 +134578,7 @@ func (ec *executionContext) marshalNInvoiceLineSimulate2ᚕᚖgithubᚗcomᚋope
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNInvoiceLineSimulate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLineSimulate(ctx, sel, v[i])
+			ret[i] = ec.marshalNInvoiceLineSimulate2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLineSimulate(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132274,7 +134598,7 @@ func (ec *executionContext) marshalNInvoiceLineSimulate2ᚕᚖgithubᚗcomᚋope
 	return ret
 }
 
-func (ec *executionContext) marshalNInvoiceLineSimulate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLineSimulate(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceLineSimulate) graphql.Marshaler {
+func (ec *executionContext) marshalNInvoiceLineSimulate2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceLineSimulate(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceLineSimulate) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132284,7 +134608,7 @@ func (ec *executionContext) marshalNInvoiceLineSimulate2ᚖgithubᚗcomᚋopenli
 	return ec._InvoiceLineSimulate(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNInvoiceProvider2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceProvider(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceProvider) graphql.Marshaler {
+func (ec *executionContext) marshalNInvoiceProvider2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceProvider(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceProvider) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132294,7 +134618,7 @@ func (ec *executionContext) marshalNInvoiceProvider2ᚖgithubᚗcomᚋopenline�
 	return ec._InvoiceProvider(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNInvoiceSimulate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.InvoiceSimulate) graphql.Marshaler {
+func (ec *executionContext) marshalNInvoiceSimulate2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.InvoiceSimulate) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132318,7 +134642,7 @@ func (ec *executionContext) marshalNInvoiceSimulate2ᚕᚖgithubᚗcomᚋopenlin
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNInvoiceSimulate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulate(ctx, sel, v[i])
+			ret[i] = ec.marshalNInvoiceSimulate2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulate(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132338,7 +134662,7 @@ func (ec *executionContext) marshalNInvoiceSimulate2ᚕᚖgithubᚗcomᚋopenlin
 	return ret
 }
 
-func (ec *executionContext) marshalNInvoiceSimulate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulate(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceSimulate) graphql.Marshaler {
+func (ec *executionContext) marshalNInvoiceSimulate2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulate(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceSimulate) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132348,12 +134672,12 @@ func (ec *executionContext) marshalNInvoiceSimulate2ᚖgithubᚗcomᚋopenline�
 	return ec._InvoiceSimulate(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNInvoiceSimulateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateInput(ctx context.Context, v any) (model.InvoiceSimulateInput, error) {
+func (ec *executionContext) unmarshalNInvoiceSimulateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateInput(ctx context.Context, v any) (model.InvoiceSimulateInput, error) {
 	res, err := ec.unmarshalInputInvoiceSimulateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNInvoiceSimulateServiceLineInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateServiceLineInputᚄ(ctx context.Context, v any) ([]*model.InvoiceSimulateServiceLineInput, error) {
+func (ec *executionContext) unmarshalNInvoiceSimulateServiceLineInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateServiceLineInputᚄ(ctx context.Context, v any) ([]*model.InvoiceSimulateServiceLineInput, error) {
 	var vSlice []any
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -132362,7 +134686,7 @@ func (ec *executionContext) unmarshalNInvoiceSimulateServiceLineInput2ᚕᚖgith
 	res := make([]*model.InvoiceSimulateServiceLineInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNInvoiceSimulateServiceLineInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateServiceLineInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNInvoiceSimulateServiceLineInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateServiceLineInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -132370,21 +134694,21 @@ func (ec *executionContext) unmarshalNInvoiceSimulateServiceLineInput2ᚕᚖgith
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNInvoiceSimulateServiceLineInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateServiceLineInput(ctx context.Context, v any) (*model.InvoiceSimulateServiceLineInput, error) {
+func (ec *executionContext) unmarshalNInvoiceSimulateServiceLineInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceSimulateServiceLineInput(ctx context.Context, v any) (*model.InvoiceSimulateServiceLineInput, error) {
 	res, err := ec.unmarshalInputInvoiceSimulateServiceLineInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNInvoiceUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceUpdateInput(ctx context.Context, v any) (model.InvoiceUpdateInput, error) {
+func (ec *executionContext) unmarshalNInvoiceUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceUpdateInput(ctx context.Context, v any) (model.InvoiceUpdateInput, error) {
 	res, err := ec.unmarshalInputInvoiceUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNInvoicesPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoicesPage(ctx context.Context, sel ast.SelectionSet, v model.InvoicesPage) graphql.Marshaler {
+func (ec *executionContext) marshalNInvoicesPage2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoicesPage(ctx context.Context, sel ast.SelectionSet, v model.InvoicesPage) graphql.Marshaler {
 	return ec._InvoicesPage(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNInvoicesPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoicesPage(ctx context.Context, sel ast.SelectionSet, v *model.InvoicesPage) graphql.Marshaler {
+func (ec *executionContext) marshalNInvoicesPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoicesPage(ctx context.Context, sel ast.SelectionSet, v *model.InvoicesPage) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132394,11 +134718,11 @@ func (ec *executionContext) marshalNInvoicesPage2ᚖgithubᚗcomᚋopenlineᚑai
 	return ec._InvoicesPage(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNIssue2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssue(ctx context.Context, sel ast.SelectionSet, v model.Issue) graphql.Marshaler {
+func (ec *executionContext) marshalNIssue2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssue(ctx context.Context, sel ast.SelectionSet, v model.Issue) graphql.Marshaler {
 	return ec._Issue(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNIssue2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssue(ctx context.Context, sel ast.SelectionSet, v *model.Issue) graphql.Marshaler {
+func (ec *executionContext) marshalNIssue2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssue(ctx context.Context, sel ast.SelectionSet, v *model.Issue) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132408,7 +134732,7 @@ func (ec *executionContext) marshalNIssue2ᚖgithubᚗcomᚋopenlineᚑaiᚋopen
 	return ec._Issue(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNIssueParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipant(ctx context.Context, sel ast.SelectionSet, v model.IssueParticipant) graphql.Marshaler {
+func (ec *executionContext) marshalNIssueParticipant2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipant(ctx context.Context, sel ast.SelectionSet, v model.IssueParticipant) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132418,7 +134742,7 @@ func (ec *executionContext) marshalNIssueParticipant2githubᚗcomᚋopenlineᚑa
 	return ec._IssueParticipant(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNIssueParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.IssueParticipant) graphql.Marshaler {
+func (ec *executionContext) marshalNIssueParticipant2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.IssueParticipant) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132442,7 +134766,7 @@ func (ec *executionContext) marshalNIssueParticipant2ᚕgithubᚗcomᚋopenline�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNIssueParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipant(ctx, sel, v[i])
+			ret[i] = ec.marshalNIssueParticipant2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipant(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132462,7 +134786,7 @@ func (ec *executionContext) marshalNIssueParticipant2ᚕgithubᚗcomᚋopenline�
 	return ret
 }
 
-func (ec *executionContext) marshalNIssueSummaryByStatus2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueSummaryByStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IssueSummaryByStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNIssueSummaryByStatus2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueSummaryByStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IssueSummaryByStatus) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132486,7 +134810,7 @@ func (ec *executionContext) marshalNIssueSummaryByStatus2ᚕᚖgithubᚗcomᚋop
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNIssueSummaryByStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueSummaryByStatus(ctx, sel, v[i])
+			ret[i] = ec.marshalNIssueSummaryByStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueSummaryByStatus(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132506,7 +134830,7 @@ func (ec *executionContext) marshalNIssueSummaryByStatus2ᚕᚖgithubᚗcomᚋop
 	return ret
 }
 
-func (ec *executionContext) marshalNIssueSummaryByStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueSummaryByStatus(ctx context.Context, sel ast.SelectionSet, v *model.IssueSummaryByStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNIssueSummaryByStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueSummaryByStatus(ctx context.Context, sel ast.SelectionSet, v *model.IssueSummaryByStatus) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132516,11 +134840,11 @@ func (ec *executionContext) marshalNIssueSummaryByStatus2ᚖgithubᚗcomᚋopenl
 	return ec._IssueSummaryByStatus(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNJobRole2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx context.Context, sel ast.SelectionSet, v model.JobRole) graphql.Marshaler {
+func (ec *executionContext) marshalNJobRole2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx context.Context, sel ast.SelectionSet, v model.JobRole) graphql.Marshaler {
 	return ec._JobRole(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNJobRole2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.JobRole) graphql.Marshaler {
+func (ec *executionContext) marshalNJobRole2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.JobRole) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132544,7 +134868,7 @@ func (ec *executionContext) marshalNJobRole2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx, sel, v[i])
+			ret[i] = ec.marshalNJobRole2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132564,7 +134888,7 @@ func (ec *executionContext) marshalNJobRole2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalNJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx context.Context, sel ast.SelectionSet, v *model.JobRole) graphql.Marshaler {
+func (ec *executionContext) marshalNJobRole2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRole(ctx context.Context, sel ast.SelectionSet, v *model.JobRole) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132574,27 +134898,27 @@ func (ec *executionContext) marshalNJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ec._JobRole(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNJobRoleInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleInput(ctx context.Context, v any) (model.JobRoleInput, error) {
+func (ec *executionContext) unmarshalNJobRoleInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleInput(ctx context.Context, v any) (model.JobRoleInput, error) {
 	res, err := ec.unmarshalInputJobRoleInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNJobRoleInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleInput(ctx context.Context, v any) (*model.JobRoleInput, error) {
+func (ec *executionContext) unmarshalNJobRoleInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleInput(ctx context.Context, v any) (*model.JobRoleInput, error) {
 	res, err := ec.unmarshalInputJobRoleInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNJobRoleUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleUpdateInput(ctx context.Context, v any) (model.JobRoleUpdateInput, error) {
+func (ec *executionContext) unmarshalNJobRoleUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleUpdateInput(ctx context.Context, v any) (model.JobRoleUpdateInput, error) {
 	res, err := ec.unmarshalInputJobRoleUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNLinkOrganizationsInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkOrganizationsInput(ctx context.Context, v any) (model.LinkOrganizationsInput, error) {
+func (ec *executionContext) unmarshalNLinkOrganizationsInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkOrganizationsInput(ctx context.Context, v any) (model.LinkOrganizationsInput, error) {
 	res, err := ec.unmarshalInputLinkOrganizationsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNLinkedOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkedOrganizationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.LinkedOrganization) graphql.Marshaler {
+func (ec *executionContext) marshalNLinkedOrganization2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkedOrganizationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.LinkedOrganization) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132618,7 +134942,7 @@ func (ec *executionContext) marshalNLinkedOrganization2ᚕᚖgithubᚗcomᚋopen
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNLinkedOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkedOrganization(ctx, sel, v[i])
+			ret[i] = ec.marshalNLinkedOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkedOrganization(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132638,7 +134962,7 @@ func (ec *executionContext) marshalNLinkedOrganization2ᚕᚖgithubᚗcomᚋopen
 	return ret
 }
 
-func (ec *executionContext) marshalNLinkedOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkedOrganization(ctx context.Context, sel ast.SelectionSet, v *model.LinkedOrganization) graphql.Marshaler {
+func (ec *executionContext) marshalNLinkedOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLinkedOrganization(ctx context.Context, sel ast.SelectionSet, v *model.LinkedOrganization) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132648,11 +134972,11 @@ func (ec *executionContext) marshalNLinkedOrganization2ᚖgithubᚗcomᚋopenlin
 	return ec._LinkedOrganization(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNLocation2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v model.Location) graphql.Marshaler {
+func (ec *executionContext) marshalNLocation2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v model.Location) graphql.Marshaler {
 	return ec._Location(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNLocation2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Location) graphql.Marshaler {
+func (ec *executionContext) marshalNLocation2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Location) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132676,7 +135000,7 @@ func (ec *executionContext) marshalNLocation2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocation(ctx, sel, v[i])
+			ret[i] = ec.marshalNLocation2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocation(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132696,7 +135020,7 @@ func (ec *executionContext) marshalNLocation2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalNLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v *model.Location) graphql.Marshaler {
+func (ec *executionContext) marshalNLocation2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v *model.Location) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132706,16 +135030,16 @@ func (ec *executionContext) marshalNLocation2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return ec._Location(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNLocationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationUpdateInput(ctx context.Context, v any) (model.LocationUpdateInput, error) {
+func (ec *executionContext) unmarshalNLocationUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLocationUpdateInput(ctx context.Context, v any) (model.LocationUpdateInput, error) {
 	res, err := ec.unmarshalInputLocationUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNLogEntry2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntry(ctx context.Context, sel ast.SelectionSet, v model.LogEntry) graphql.Marshaler {
+func (ec *executionContext) marshalNLogEntry2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntry(ctx context.Context, sel ast.SelectionSet, v model.LogEntry) graphql.Marshaler {
 	return ec._LogEntry(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNLogEntry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntry(ctx context.Context, sel ast.SelectionSet, v *model.LogEntry) graphql.Marshaler {
+func (ec *executionContext) marshalNLogEntry2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntry(ctx context.Context, sel ast.SelectionSet, v *model.LogEntry) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132725,17 +135049,17 @@ func (ec *executionContext) marshalNLogEntry2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return ec._LogEntry(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNLogEntryInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntryInput(ctx context.Context, v any) (model.LogEntryInput, error) {
+func (ec *executionContext) unmarshalNLogEntryInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntryInput(ctx context.Context, v any) (model.LogEntryInput, error) {
 	res, err := ec.unmarshalInputLogEntryInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNLogEntryUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntryUpdateInput(ctx context.Context, v any) (model.LogEntryUpdateInput, error) {
+func (ec *executionContext) unmarshalNLogEntryUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLogEntryUpdateInput(ctx context.Context, v any) (model.LogEntryUpdateInput, error) {
 	res, err := ec.unmarshalInputLogEntryUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailboxᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Mailbox) graphql.Marshaler {
+func (ec *executionContext) marshalNMailbox2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailboxᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Mailbox) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132759,7 +135083,7 @@ func (ec *executionContext) marshalNMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMailbox2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailbox(ctx, sel, v[i])
+			ret[i] = ec.marshalNMailbox2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailbox(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132779,7 +135103,7 @@ func (ec *executionContext) marshalNMailbox2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalNMailbox2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailbox(ctx context.Context, sel ast.SelectionSet, v *model.Mailbox) graphql.Marshaler {
+func (ec *executionContext) marshalNMailbox2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMailbox(ctx context.Context, sel ast.SelectionSet, v *model.Mailbox) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132789,11 +135113,11 @@ func (ec *executionContext) marshalNMailbox2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ec._Mailbox(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMeeting2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v model.Meeting) graphql.Marshaler {
+func (ec *executionContext) marshalNMeeting2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v model.Meeting) graphql.Marshaler {
 	return ec._Meeting(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMeeting2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Meeting) graphql.Marshaler {
+func (ec *executionContext) marshalNMeeting2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Meeting) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132817,7 +135141,7 @@ func (ec *executionContext) marshalNMeeting2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, sel, v[i])
+			ret[i] = ec.marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132837,7 +135161,7 @@ func (ec *executionContext) marshalNMeeting2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v *model.Meeting) graphql.Marshaler {
+func (ec *executionContext) marshalNMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v *model.Meeting) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132847,12 +135171,12 @@ func (ec *executionContext) marshalNMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ec._Meeting(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNMeetingInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingInput(ctx context.Context, v any) (model.MeetingInput, error) {
+func (ec *executionContext) unmarshalNMeetingInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingInput(ctx context.Context, v any) (model.MeetingInput, error) {
 	res, err := ec.unmarshalInputMeetingInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNMeetingParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipant(ctx context.Context, sel ast.SelectionSet, v model.MeetingParticipant) graphql.Marshaler {
+func (ec *executionContext) marshalNMeetingParticipant2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipant(ctx context.Context, sel ast.SelectionSet, v model.MeetingParticipant) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132862,7 +135186,7 @@ func (ec *executionContext) marshalNMeetingParticipant2githubᚗcomᚋopenline�
 	return ec._MeetingParticipant(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMeetingParticipant2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MeetingParticipant) graphql.Marshaler {
+func (ec *executionContext) marshalNMeetingParticipant2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantᚄ(ctx context.Context, sel ast.SelectionSet, v []model.MeetingParticipant) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132886,7 +135210,7 @@ func (ec *executionContext) marshalNMeetingParticipant2ᚕgithubᚗcomᚋopenlin
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMeetingParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipant(ctx, sel, v[i])
+			ret[i] = ec.marshalNMeetingParticipant2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipant(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -132906,36 +135230,36 @@ func (ec *executionContext) marshalNMeetingParticipant2ᚕgithubᚗcomᚋopenlin
 	return ret
 }
 
-func (ec *executionContext) unmarshalNMeetingParticipantInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInput(ctx context.Context, v any) (model.MeetingParticipantInput, error) {
+func (ec *executionContext) unmarshalNMeetingParticipantInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInput(ctx context.Context, v any) (model.MeetingParticipantInput, error) {
 	res, err := ec.unmarshalInputMeetingParticipantInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNMeetingParticipantInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInput(ctx context.Context, v any) (*model.MeetingParticipantInput, error) {
+func (ec *executionContext) unmarshalNMeetingParticipantInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInput(ctx context.Context, v any) (*model.MeetingParticipantInput, error) {
 	res, err := ec.unmarshalInputMeetingParticipantInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNMeetingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx context.Context, v any) (model.MeetingStatus, error) {
+func (ec *executionContext) unmarshalNMeetingStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx context.Context, v any) (model.MeetingStatus, error) {
 	var res model.MeetingStatus
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNMeetingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx context.Context, sel ast.SelectionSet, v model.MeetingStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNMeetingStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx context.Context, sel ast.SelectionSet, v model.MeetingStatus) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNMeetingUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingUpdateInput(ctx context.Context, v any) (model.MeetingUpdateInput, error) {
+func (ec *executionContext) unmarshalNMeetingUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingUpdateInput(ctx context.Context, v any) (model.MeetingUpdateInput, error) {
 	res, err := ec.unmarshalInputMeetingUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNMeetingsPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingsPage(ctx context.Context, sel ast.SelectionSet, v model.MeetingsPage) graphql.Marshaler {
+func (ec *executionContext) marshalNMeetingsPage2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingsPage(ctx context.Context, sel ast.SelectionSet, v model.MeetingsPage) graphql.Marshaler {
 	return ec._MeetingsPage(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMeetingsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingsPage(ctx context.Context, sel ast.SelectionSet, v *model.MeetingsPage) graphql.Marshaler {
+func (ec *executionContext) marshalNMeetingsPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingsPage(ctx context.Context, sel ast.SelectionSet, v *model.MeetingsPage) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132945,7 +135269,7 @@ func (ec *executionContext) marshalNMeetingsPage2ᚖgithubᚗcomᚋopenlineᚑai
 	return ec._MeetingsPage(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx context.Context, sel ast.SelectionSet, v *model.Metadata) graphql.Marshaler {
+func (ec *executionContext) marshalNMetadata2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMetadata(ctx context.Context, sel ast.SelectionSet, v *model.Metadata) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -132955,11 +135279,11 @@ func (ec *executionContext) marshalNMetadata2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return ec._Metadata(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNNote2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v model.Note) graphql.Marshaler {
+func (ec *executionContext) marshalNNote2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v model.Note) graphql.Marshaler {
 	return ec._Note(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNNote2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Note) graphql.Marshaler {
+func (ec *executionContext) marshalNNote2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Note) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -132983,7 +135307,7 @@ func (ec *executionContext) marshalNNote2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋop
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNNote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNote(ctx, sel, v[i])
+			ret[i] = ec.marshalNNote2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNote(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -133003,7 +135327,7 @@ func (ec *executionContext) marshalNNote2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ret
 }
 
-func (ec *executionContext) marshalNNote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v *model.Note) graphql.Marshaler {
+func (ec *executionContext) marshalNNote2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNote(ctx context.Context, sel ast.SelectionSet, v *model.Note) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133013,31 +135337,31 @@ func (ec *executionContext) marshalNNote2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenl
 	return ec._Note(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNNoteUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteUpdateInput(ctx context.Context, v any) (model.NoteUpdateInput, error) {
+func (ec *executionContext) unmarshalNNoteUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteUpdateInput(ctx context.Context, v any) (model.NoteUpdateInput, error) {
 	res, err := ec.unmarshalInputNoteUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatus(ctx context.Context, v any) (model.OnboardingStatus, error) {
+func (ec *executionContext) unmarshalNOnboardingStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatus(ctx context.Context, v any) (model.OnboardingStatus, error) {
 	var res model.OnboardingStatus
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNOnboardingStatus2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatus(ctx context.Context, sel ast.SelectionSet, v model.OnboardingStatus) graphql.Marshaler {
+func (ec *executionContext) marshalNOnboardingStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatus(ctx context.Context, sel ast.SelectionSet, v model.OnboardingStatus) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNOnboardingStatusInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatusInput(ctx context.Context, v any) (model.OnboardingStatusInput, error) {
+func (ec *executionContext) unmarshalNOnboardingStatusInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingStatusInput(ctx context.Context, v any) (model.OnboardingStatusInput, error) {
 	res, err := ec.unmarshalInputOnboardingStatusInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNOpportunity2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx context.Context, sel ast.SelectionSet, v model.Opportunity) graphql.Marshaler {
+func (ec *executionContext) marshalNOpportunity2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx context.Context, sel ast.SelectionSet, v model.Opportunity) graphql.Marshaler {
 	return ec._Opportunity(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNOpportunity2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Opportunity) graphql.Marshaler {
+func (ec *executionContext) marshalNOpportunity2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Opportunity) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -133061,7 +135385,7 @@ func (ec *executionContext) marshalNOpportunity2ᚕᚖgithubᚗcomᚋopenlineᚑ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx, sel, v[i])
+			ret[i] = ec.marshalNOpportunity2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -133081,7 +135405,7 @@ func (ec *executionContext) marshalNOpportunity2ᚕᚖgithubᚗcomᚋopenlineᚑ
 	return ret
 }
 
-func (ec *executionContext) marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx context.Context, sel ast.SelectionSet, v *model.Opportunity) graphql.Marshaler {
+func (ec *executionContext) marshalNOpportunity2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx context.Context, sel ast.SelectionSet, v *model.Opportunity) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133091,11 +135415,11 @@ func (ec *executionContext) marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑai�
 	return ec._Opportunity(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNOpportunityPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityPage(ctx context.Context, sel ast.SelectionSet, v model.OpportunityPage) graphql.Marshaler {
+func (ec *executionContext) marshalNOpportunityPage2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityPage(ctx context.Context, sel ast.SelectionSet, v model.OpportunityPage) graphql.Marshaler {
 	return ec._OpportunityPage(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNOpportunityPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityPage(ctx context.Context, sel ast.SelectionSet, v *model.OpportunityPage) graphql.Marshaler {
+func (ec *executionContext) marshalNOpportunityPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityPage(ctx context.Context, sel ast.SelectionSet, v *model.OpportunityPage) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133105,36 +135429,36 @@ func (ec *executionContext) marshalNOpportunityPage2ᚖgithubᚗcomᚋopenline�
 	return ec._OpportunityPage(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNOpportunityRenewalLikelihood2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, v any) (model.OpportunityRenewalLikelihood, error) {
+func (ec *executionContext) unmarshalNOpportunityRenewalLikelihood2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, v any) (model.OpportunityRenewalLikelihood, error) {
 	var res model.OpportunityRenewalLikelihood
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNOpportunityRenewalLikelihood2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, sel ast.SelectionSet, v model.OpportunityRenewalLikelihood) graphql.Marshaler {
+func (ec *executionContext) marshalNOpportunityRenewalLikelihood2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, sel ast.SelectionSet, v model.OpportunityRenewalLikelihood) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNOpportunityRenewalUpdateAllForOrganizationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalUpdateAllForOrganizationInput(ctx context.Context, v any) (model.OpportunityRenewalUpdateAllForOrganizationInput, error) {
+func (ec *executionContext) unmarshalNOpportunityRenewalUpdateAllForOrganizationInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalUpdateAllForOrganizationInput(ctx context.Context, v any) (model.OpportunityRenewalUpdateAllForOrganizationInput, error) {
 	res, err := ec.unmarshalInputOpportunityRenewalUpdateAllForOrganizationInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNOpportunityRenewalUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalUpdateInput(ctx context.Context, v any) (model.OpportunityRenewalUpdateInput, error) {
+func (ec *executionContext) unmarshalNOpportunityRenewalUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalUpdateInput(ctx context.Context, v any) (model.OpportunityRenewalUpdateInput, error) {
 	res, err := ec.unmarshalInputOpportunityRenewalUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNOpportunitySaveInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunitySaveInput(ctx context.Context, v any) (model.OpportunitySaveInput, error) {
+func (ec *executionContext) unmarshalNOpportunitySaveInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunitySaveInput(ctx context.Context, v any) (model.OpportunitySaveInput, error) {
 	res, err := ec.unmarshalInputOpportunitySaveInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNOrganization2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx context.Context, sel ast.SelectionSet, v model.Organization) graphql.Marshaler {
+func (ec *executionContext) marshalNOrganization2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx context.Context, sel ast.SelectionSet, v model.Organization) graphql.Marshaler {
 	return ec._Organization(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Organization) graphql.Marshaler {
+func (ec *executionContext) marshalNOrganization2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Organization) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -133158,7 +135482,7 @@ func (ec *executionContext) marshalNOrganization2ᚕᚖgithubᚗcomᚋopenline�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, sel, v[i])
+			ret[i] = ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -133178,7 +135502,7 @@ func (ec *executionContext) marshalNOrganization2ᚕᚖgithubᚗcomᚋopenline�
 	return ret
 }
 
-func (ec *executionContext) marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx context.Context, sel ast.SelectionSet, v *model.Organization) graphql.Marshaler {
+func (ec *executionContext) marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx context.Context, sel ast.SelectionSet, v *model.Organization) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133188,11 +135512,11 @@ func (ec *executionContext) marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑai
 	return ec._Organization(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNOrganizationPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationPage(ctx context.Context, sel ast.SelectionSet, v model.OrganizationPage) graphql.Marshaler {
+func (ec *executionContext) marshalNOrganizationPage2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationPage(ctx context.Context, sel ast.SelectionSet, v model.OrganizationPage) graphql.Marshaler {
 	return ec._OrganizationPage(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationPage(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationPage) graphql.Marshaler {
+func (ec *executionContext) marshalNOrganizationPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationPage(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationPage) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133202,16 +135526,16 @@ func (ec *executionContext) marshalNOrganizationPage2ᚖgithubᚗcomᚋopenline�
 	return ec._OrganizationPage(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNOrganizationSaveInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSaveInput(ctx context.Context, v any) (model.OrganizationSaveInput, error) {
+func (ec *executionContext) unmarshalNOrganizationSaveInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSaveInput(ctx context.Context, v any) (model.OrganizationSaveInput, error) {
 	res, err := ec.unmarshalInputOrganizationSaveInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNOrganizationSearchResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSearchResult(ctx context.Context, sel ast.SelectionSet, v model.OrganizationSearchResult) graphql.Marshaler {
+func (ec *executionContext) marshalNOrganizationSearchResult2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSearchResult(ctx context.Context, sel ast.SelectionSet, v model.OrganizationSearchResult) graphql.Marshaler {
 	return ec._OrganizationSearchResult(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNOrganizationSearchResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSearchResult(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationSearchResult) graphql.Marshaler {
+func (ec *executionContext) marshalNOrganizationSearchResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSearchResult(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationSearchResult) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133221,16 +135545,16 @@ func (ec *executionContext) marshalNOrganizationSearchResult2ᚖgithubᚗcomᚋo
 	return ec._OrganizationSearchResult(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNOrganizationTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationTagInput(ctx context.Context, v any) (model.OrganizationTagInput, error) {
+func (ec *executionContext) unmarshalNOrganizationTagInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationTagInput(ctx context.Context, v any) (model.OrganizationTagInput, error) {
 	res, err := ec.unmarshalInputOrganizationTagInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNOrganizationUiDetails2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUIDetails(ctx context.Context, sel ast.SelectionSet, v model.OrganizationUIDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNOrganizationUiDetails2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUIDetails(ctx context.Context, sel ast.SelectionSet, v model.OrganizationUIDetails) graphql.Marshaler {
 	return ec._OrganizationUiDetails(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNOrganizationUiDetails2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUIDetailsᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.OrganizationUIDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNOrganizationUiDetails2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUIDetailsᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.OrganizationUIDetails) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -133254,7 +135578,7 @@ func (ec *executionContext) marshalNOrganizationUiDetails2ᚕᚖgithubᚗcomᚋo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNOrganizationUiDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUIDetails(ctx, sel, v[i])
+			ret[i] = ec.marshalNOrganizationUiDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUIDetails(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -133274,7 +135598,7 @@ func (ec *executionContext) marshalNOrganizationUiDetails2ᚕᚖgithubᚗcomᚋo
 	return ret
 }
 
-func (ec *executionContext) marshalNOrganizationUiDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUIDetails(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationUIDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNOrganizationUiDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUIDetails(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationUIDetails) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133284,21 +135608,21 @@ func (ec *executionContext) marshalNOrganizationUiDetails2ᚖgithubᚗcomᚋopen
 	return ec._OrganizationUiDetails(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNOrganizationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUpdateInput(ctx context.Context, v any) (model.OrganizationUpdateInput, error) {
+func (ec *executionContext) unmarshalNOrganizationUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationUpdateInput(ctx context.Context, v any) (model.OrganizationUpdateInput, error) {
 	res, err := ec.unmarshalInputOrganizationUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNPagination2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx context.Context, v any) (model.Pagination, error) {
+func (ec *executionContext) unmarshalNPagination2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx context.Context, v any) (model.Pagination, error) {
 	res, err := ec.unmarshalInputPagination(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNPhoneNumber2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx context.Context, sel ast.SelectionSet, v model.PhoneNumber) graphql.Marshaler {
+func (ec *executionContext) marshalNPhoneNumber2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx context.Context, sel ast.SelectionSet, v model.PhoneNumber) graphql.Marshaler {
 	return ec._PhoneNumber(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPhoneNumber2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PhoneNumber) graphql.Marshaler {
+func (ec *executionContext) marshalNPhoneNumber2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PhoneNumber) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -133322,7 +135646,7 @@ func (ec *executionContext) marshalNPhoneNumber2ᚕᚖgithubᚗcomᚋopenlineᚑ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, sel, v[i])
+			ret[i] = ec.marshalNPhoneNumber2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -133342,7 +135666,7 @@ func (ec *executionContext) marshalNPhoneNumber2ᚕᚖgithubᚗcomᚋopenlineᚑ
 	return ret
 }
 
-func (ec *executionContext) marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx context.Context, sel ast.SelectionSet, v *model.PhoneNumber) graphql.Marshaler {
+func (ec *executionContext) marshalNPhoneNumber2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumber(ctx context.Context, sel ast.SelectionSet, v *model.PhoneNumber) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133352,26 +135676,26 @@ func (ec *executionContext) marshalNPhoneNumber2ᚖgithubᚗcomᚋopenlineᚑai�
 	return ec._PhoneNumber(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNPhoneNumberInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberInput(ctx context.Context, v any) (model.PhoneNumberInput, error) {
+func (ec *executionContext) unmarshalNPhoneNumberInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberInput(ctx context.Context, v any) (model.PhoneNumberInput, error) {
 	res, err := ec.unmarshalInputPhoneNumberInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNPhoneNumberRelationUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberRelationUpdateInput(ctx context.Context, v any) (model.PhoneNumberRelationUpdateInput, error) {
+func (ec *executionContext) unmarshalNPhoneNumberRelationUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberRelationUpdateInput(ctx context.Context, v any) (model.PhoneNumberRelationUpdateInput, error) {
 	res, err := ec.unmarshalInputPhoneNumberRelationUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNPhoneNumberUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberUpdateInput(ctx context.Context, v any) (model.PhoneNumberUpdateInput, error) {
+func (ec *executionContext) unmarshalNPhoneNumberUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberUpdateInput(ctx context.Context, v any) (model.PhoneNumberUpdateInput, error) {
 	res, err := ec.unmarshalInputPhoneNumberUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNReminder2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminder(ctx context.Context, sel ast.SelectionSet, v model.Reminder) graphql.Marshaler {
+func (ec *executionContext) marshalNReminder2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminder(ctx context.Context, sel ast.SelectionSet, v model.Reminder) graphql.Marshaler {
 	return ec._Reminder(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNReminder2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminderᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Reminder) graphql.Marshaler {
+func (ec *executionContext) marshalNReminder2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminderᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Reminder) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -133395,7 +135719,7 @@ func (ec *executionContext) marshalNReminder2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNReminder2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminder(ctx, sel, v[i])
+			ret[i] = ec.marshalNReminder2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminder(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -133415,7 +135739,7 @@ func (ec *executionContext) marshalNReminder2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
-func (ec *executionContext) marshalNReminder2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminder(ctx context.Context, sel ast.SelectionSet, v *model.Reminder) graphql.Marshaler {
+func (ec *executionContext) marshalNReminder2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminder(ctx context.Context, sel ast.SelectionSet, v *model.Reminder) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133425,22 +135749,22 @@ func (ec *executionContext) marshalNReminder2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return ec._Reminder(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNReminderInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminderInput(ctx context.Context, v any) (model.ReminderInput, error) {
+func (ec *executionContext) unmarshalNReminderInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminderInput(ctx context.Context, v any) (model.ReminderInput, error) {
 	res, err := ec.unmarshalInputReminderInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNReminderUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminderUpdateInput(ctx context.Context, v any) (model.ReminderUpdateInput, error) {
+func (ec *executionContext) unmarshalNReminderUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐReminderUpdateInput(ctx context.Context, v any) (model.ReminderUpdateInput, error) {
 	res, err := ec.unmarshalInputReminderUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNRemoveTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRemoveTagInput(ctx context.Context, v any) (model.RemoveTagInput, error) {
+func (ec *executionContext) unmarshalNRemoveTagInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRemoveTagInput(ctx context.Context, v any) (model.RemoveTagInput, error) {
 	res, err := ec.unmarshalInputRemoveTagInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNRenewalRecord2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalRecordᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RenewalRecord) graphql.Marshaler {
+func (ec *executionContext) marshalNRenewalRecord2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalRecordᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RenewalRecord) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -133464,7 +135788,7 @@ func (ec *executionContext) marshalNRenewalRecord2ᚕᚖgithubᚗcomᚋopenline�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNRenewalRecord2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalRecord(ctx, sel, v[i])
+			ret[i] = ec.marshalNRenewalRecord2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalRecord(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -133484,7 +135808,7 @@ func (ec *executionContext) marshalNRenewalRecord2ᚕᚖgithubᚗcomᚋopenline�
 	return ret
 }
 
-func (ec *executionContext) marshalNRenewalRecord2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalRecord(ctx context.Context, sel ast.SelectionSet, v *model.RenewalRecord) graphql.Marshaler {
+func (ec *executionContext) marshalNRenewalRecord2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalRecord(ctx context.Context, sel ast.SelectionSet, v *model.RenewalRecord) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133494,11 +135818,11 @@ func (ec *executionContext) marshalNRenewalRecord2ᚖgithubᚗcomᚋopenlineᚑa
 	return ec._RenewalRecord(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNResult2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx context.Context, sel ast.SelectionSet, v model.Result) graphql.Marshaler {
+func (ec *executionContext) marshalNResult2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx context.Context, sel ast.SelectionSet, v model.Result) graphql.Marshaler {
 	return ec._Result(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx context.Context, sel ast.SelectionSet, v *model.Result) graphql.Marshaler {
+func (ec *executionContext) marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx context.Context, sel ast.SelectionSet, v *model.Result) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133508,17 +135832,17 @@ func (ec *executionContext) marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 	return ec._Result(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNRole2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRole(ctx context.Context, v any) (model.Role, error) {
+func (ec *executionContext) unmarshalNRole2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRole(ctx context.Context, v any) (model.Role, error) {
 	var res model.Role
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNRole2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRole(ctx context.Context, sel ast.SelectionSet, v model.Role) graphql.Marshaler {
+func (ec *executionContext) marshalNRole2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRole(ctx context.Context, sel ast.SelectionSet, v model.Role) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx context.Context, v any) ([]model.Role, error) {
+func (ec *executionContext) unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx context.Context, v any) ([]model.Role, error) {
 	var vSlice []any
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -133527,7 +135851,7 @@ func (ec *executionContext) unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋope
 	res := make([]model.Role, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNRole2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRole(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNRole2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRole(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -133535,7 +135859,7 @@ func (ec *executionContext) unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋope
 	return res, nil
 }
 
-func (ec *executionContext) marshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Role) graphql.Marshaler {
+func (ec *executionContext) marshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Role) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -133559,7 +135883,7 @@ func (ec *executionContext) marshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenl
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNRole2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRole(ctx, sel, v[i])
+			ret[i] = ec.marshalNRole2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRole(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -133579,11 +135903,11 @@ func (ec *executionContext) marshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenl
 	return ret
 }
 
-func (ec *executionContext) marshalNServiceLineItem2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx context.Context, sel ast.SelectionSet, v model.ServiceLineItem) graphql.Marshaler {
+func (ec *executionContext) marshalNServiceLineItem2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx context.Context, sel ast.SelectionSet, v model.ServiceLineItem) graphql.Marshaler {
 	return ec._ServiceLineItem(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx context.Context, sel ast.SelectionSet, v *model.ServiceLineItem) graphql.Marshaler {
+func (ec *executionContext) marshalNServiceLineItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx context.Context, sel ast.SelectionSet, v *model.ServiceLineItem) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133593,12 +135917,12 @@ func (ec *executionContext) marshalNServiceLineItem2ᚖgithubᚗcomᚋopenline�
 	return ec._ServiceLineItem(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNServiceLineItemBulkUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateInput(ctx context.Context, v any) (model.ServiceLineItemBulkUpdateInput, error) {
+func (ec *executionContext) unmarshalNServiceLineItemBulkUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateInput(ctx context.Context, v any) (model.ServiceLineItemBulkUpdateInput, error) {
 	res, err := ec.unmarshalInputServiceLineItemBulkUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNServiceLineItemBulkUpdateItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateItem(ctx context.Context, v any) ([]*model.ServiceLineItemBulkUpdateItem, error) {
+func (ec *executionContext) unmarshalNServiceLineItemBulkUpdateItem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateItem(ctx context.Context, v any) ([]*model.ServiceLineItemBulkUpdateItem, error) {
 	var vSlice []any
 	if v != nil {
 		vSlice = graphql.CoerceList(v)
@@ -133607,7 +135931,7 @@ func (ec *executionContext) unmarshalNServiceLineItemBulkUpdateItem2ᚕᚖgithub
 	res := make([]*model.ServiceLineItemBulkUpdateItem, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOServiceLineItemBulkUpdateItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateItem(ctx, vSlice[i])
+		res[i], err = ec.unmarshalOServiceLineItemBulkUpdateItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateItem(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -133615,27 +135939,27 @@ func (ec *executionContext) unmarshalNServiceLineItemBulkUpdateItem2ᚕᚖgithub
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNServiceLineItemCloseInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemCloseInput(ctx context.Context, v any) (model.ServiceLineItemCloseInput, error) {
+func (ec *executionContext) unmarshalNServiceLineItemCloseInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemCloseInput(ctx context.Context, v any) (model.ServiceLineItemCloseInput, error) {
 	res, err := ec.unmarshalInputServiceLineItemCloseInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNServiceLineItemInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemInput(ctx context.Context, v any) (model.ServiceLineItemInput, error) {
+func (ec *executionContext) unmarshalNServiceLineItemInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemInput(ctx context.Context, v any) (model.ServiceLineItemInput, error) {
 	res, err := ec.unmarshalInputServiceLineItemInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNServiceLineItemNewVersionInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemNewVersionInput(ctx context.Context, v any) (model.ServiceLineItemNewVersionInput, error) {
+func (ec *executionContext) unmarshalNServiceLineItemNewVersionInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemNewVersionInput(ctx context.Context, v any) (model.ServiceLineItemNewVersionInput, error) {
 	res, err := ec.unmarshalInputServiceLineItemNewVersionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNServiceLineItemUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemUpdateInput(ctx context.Context, v any) (model.ServiceLineItemUpdateInput, error) {
+func (ec *executionContext) unmarshalNServiceLineItemUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemUpdateInput(ctx context.Context, v any) (model.ServiceLineItemUpdateInput, error) {
 	res, err := ec.unmarshalInputServiceLineItemUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSlackChannel2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannelᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SlackChannel) graphql.Marshaler {
+func (ec *executionContext) marshalNSlackChannel2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannelᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SlackChannel) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -133659,7 +135983,7 @@ func (ec *executionContext) marshalNSlackChannel2ᚕᚖgithubᚗcomᚋopenline�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSlackChannel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannel(ctx, sel, v[i])
+			ret[i] = ec.marshalNSlackChannel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannel(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -133679,7 +136003,7 @@ func (ec *executionContext) marshalNSlackChannel2ᚕᚖgithubᚗcomᚋopenline�
 	return ret
 }
 
-func (ec *executionContext) marshalNSlackChannel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannel(ctx context.Context, sel ast.SelectionSet, v *model.SlackChannel) graphql.Marshaler {
+func (ec *executionContext) marshalNSlackChannel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannel(ctx context.Context, sel ast.SelectionSet, v *model.SlackChannel) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133689,11 +136013,11 @@ func (ec *executionContext) marshalNSlackChannel2ᚖgithubᚗcomᚋopenlineᚑai
 	return ec._SlackChannel(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSlackChannelPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannelPage(ctx context.Context, sel ast.SelectionSet, v model.SlackChannelPage) graphql.Marshaler {
+func (ec *executionContext) marshalNSlackChannelPage2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannelPage(ctx context.Context, sel ast.SelectionSet, v model.SlackChannelPage) graphql.Marshaler {
 	return ec._SlackChannelPage(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSlackChannelPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannelPage(ctx context.Context, sel ast.SelectionSet, v *model.SlackChannelPage) graphql.Marshaler {
+func (ec *executionContext) marshalNSlackChannelPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannelPage(ctx context.Context, sel ast.SelectionSet, v *model.SlackChannelPage) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133703,11 +136027,11 @@ func (ec *executionContext) marshalNSlackChannelPage2ᚖgithubᚗcomᚋopenline�
 	return ec._SlackChannelPage(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSocial2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocial(ctx context.Context, sel ast.SelectionSet, v model.Social) graphql.Marshaler {
+func (ec *executionContext) marshalNSocial2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocial(ctx context.Context, sel ast.SelectionSet, v model.Social) graphql.Marshaler {
 	return ec._Social(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSocial2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Social) graphql.Marshaler {
+func (ec *executionContext) marshalNSocial2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Social) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -133731,7 +136055,7 @@ func (ec *executionContext) marshalNSocial2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSocial2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocial(ctx, sel, v[i])
+			ret[i] = ec.marshalNSocial2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocial(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -133751,7 +136075,7 @@ func (ec *executionContext) marshalNSocial2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNSocial2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocial(ctx context.Context, sel ast.SelectionSet, v *model.Social) graphql.Marshaler {
+func (ec *executionContext) marshalNSocial2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocial(ctx context.Context, sel ast.SelectionSet, v *model.Social) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133761,28 +136085,28 @@ func (ec *executionContext) marshalNSocial2ᚖgithubᚗcomᚋopenlineᚑaiᚋope
 	return ec._Social(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSocialInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialInput(ctx context.Context, v any) (model.SocialInput, error) {
+func (ec *executionContext) unmarshalNSocialInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialInput(ctx context.Context, v any) (model.SocialInput, error) {
 	res, err := ec.unmarshalInputSocialInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNSocialUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialUpdateInput(ctx context.Context, v any) (model.SocialUpdateInput, error) {
+func (ec *executionContext) unmarshalNSocialUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSocialUpdateInput(ctx context.Context, v any) (model.SocialUpdateInput, error) {
 	res, err := ec.unmarshalInputSocialUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx context.Context, v any) (*model1.SortBy, error) {
+func (ec *executionContext) unmarshalNSortBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx context.Context, v any) (*model1.SortBy, error) {
 	res, err := ec.unmarshalInputSortBy(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortingDirection(ctx context.Context, v any) (model1.SortingDirection, error) {
+func (ec *executionContext) unmarshalNSortingDirection2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortingDirection(ctx context.Context, v any) (model1.SortingDirection, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	res := model1.SortingDirection(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSortingDirection2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortingDirection(ctx context.Context, sel ast.SelectionSet, v model1.SortingDirection) graphql.Marshaler {
+func (ec *executionContext) marshalNSortingDirection2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortingDirection(ctx context.Context, sel ast.SelectionSet, v model1.SortingDirection) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -133839,7 +136163,7 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	return ret
 }
 
-func (ec *executionContext) marshalNSuggestedMergeOrganization2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSuggestedMergeOrganizationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SuggestedMergeOrganization) graphql.Marshaler {
+func (ec *executionContext) marshalNSuggestedMergeOrganization2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSuggestedMergeOrganizationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SuggestedMergeOrganization) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -133863,7 +136187,7 @@ func (ec *executionContext) marshalNSuggestedMergeOrganization2ᚕᚖgithubᚗco
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSuggestedMergeOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSuggestedMergeOrganization(ctx, sel, v[i])
+			ret[i] = ec.marshalNSuggestedMergeOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSuggestedMergeOrganization(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -133883,7 +136207,7 @@ func (ec *executionContext) marshalNSuggestedMergeOrganization2ᚕᚖgithubᚗco
 	return ret
 }
 
-func (ec *executionContext) marshalNSuggestedMergeOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSuggestedMergeOrganization(ctx context.Context, sel ast.SelectionSet, v *model.SuggestedMergeOrganization) graphql.Marshaler {
+func (ec *executionContext) marshalNSuggestedMergeOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSuggestedMergeOrganization(ctx context.Context, sel ast.SelectionSet, v *model.SuggestedMergeOrganization) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133893,21 +136217,21 @@ func (ec *executionContext) marshalNSuggestedMergeOrganization2ᚖgithubᚗcom�
 	return ec._SuggestedMergeOrganization(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableIDType(ctx context.Context, v any) (model.TableIDType, error) {
+func (ec *executionContext) unmarshalNTableIdType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableIDType(ctx context.Context, v any) (model.TableIDType, error) {
 	var res model.TableIDType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTableIdType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableIDType(ctx context.Context, sel ast.SelectionSet, v model.TableIDType) graphql.Marshaler {
+func (ec *executionContext) marshalNTableIdType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableIDType(ctx context.Context, sel ast.SelectionSet, v model.TableIDType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNTableViewDef2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDef(ctx context.Context, sel ast.SelectionSet, v model.TableViewDef) graphql.Marshaler {
+func (ec *executionContext) marshalNTableViewDef2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDef(ctx context.Context, sel ast.SelectionSet, v model.TableViewDef) graphql.Marshaler {
 	return ec._TableViewDef(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTableViewDef2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TableViewDef) graphql.Marshaler {
+func (ec *executionContext) marshalNTableViewDef2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TableViewDef) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -133931,7 +136255,7 @@ func (ec *executionContext) marshalNTableViewDef2ᚕᚖgithubᚗcomᚋopenline�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTableViewDef2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDef(ctx, sel, v[i])
+			ret[i] = ec.marshalNTableViewDef2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDef(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -133951,7 +136275,7 @@ func (ec *executionContext) marshalNTableViewDef2ᚕᚖgithubᚗcomᚋopenline�
 	return ret
 }
 
-func (ec *executionContext) marshalNTableViewDef2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDef(ctx context.Context, sel ast.SelectionSet, v *model.TableViewDef) graphql.Marshaler {
+func (ec *executionContext) marshalNTableViewDef2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDef(ctx context.Context, sel ast.SelectionSet, v *model.TableViewDef) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -133961,31 +136285,31 @@ func (ec *executionContext) marshalNTableViewDef2ᚖgithubᚗcomᚋopenlineᚑai
 	return ec._TableViewDef(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNTableViewDefCreateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefCreateInput(ctx context.Context, v any) (model.TableViewDefCreateInput, error) {
+func (ec *executionContext) unmarshalNTableViewDefCreateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefCreateInput(ctx context.Context, v any) (model.TableViewDefCreateInput, error) {
 	res, err := ec.unmarshalInputTableViewDefCreateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNTableViewDefUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefUpdateInput(ctx context.Context, v any) (model.TableViewDefUpdateInput, error) {
+func (ec *executionContext) unmarshalNTableViewDefUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDefUpdateInput(ctx context.Context, v any) (model.TableViewDefUpdateInput, error) {
 	res, err := ec.unmarshalInputTableViewDefUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewType(ctx context.Context, v any) (model.TableViewType, error) {
+func (ec *executionContext) unmarshalNTableViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewType(ctx context.Context, v any) (model.TableViewType, error) {
 	var res model.TableViewType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTableViewType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewType(ctx context.Context, sel ast.SelectionSet, v model.TableViewType) graphql.Marshaler {
+func (ec *executionContext) marshalNTableViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewType(ctx context.Context, sel ast.SelectionSet, v model.TableViewType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNTag2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalNTag2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {
 	return ec._Tag(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -134009,7 +136333,7 @@ func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋope
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTag2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx, sel, v[i])
+			ret[i] = ec.marshalNTag2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -134029,7 +136353,7 @@ func (ec *executionContext) marshalNTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋope
 	return ret
 }
 
-func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v *model.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v *model.Tag) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -134039,27 +136363,27 @@ func (ec *executionContext) marshalNTag2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenli
 	return ec._Tag(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNTagIdOrNameInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx context.Context, v any) (model.TagIDOrNameInput, error) {
+func (ec *executionContext) unmarshalNTagIdOrNameInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx context.Context, v any) (model.TagIDOrNameInput, error) {
 	res, err := ec.unmarshalInputTagIdOrNameInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNTagIdOrNameInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx context.Context, v any) (*model.TagIDOrNameInput, error) {
+func (ec *executionContext) unmarshalNTagIdOrNameInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx context.Context, v any) (*model.TagIDOrNameInput, error) {
 	res, err := ec.unmarshalInputTagIdOrNameInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagInput(ctx context.Context, v any) (model.TagInput, error) {
+func (ec *executionContext) unmarshalNTagInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagInput(ctx context.Context, v any) (model.TagInput, error) {
 	res, err := ec.unmarshalInputTagInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNTagUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagUpdateInput(ctx context.Context, v any) (model.TagUpdateInput, error) {
+func (ec *executionContext) unmarshalNTagUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagUpdateInput(ctx context.Context, v any) (model.TagUpdateInput, error) {
 	res, err := ec.unmarshalInputTagUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTax2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTax(ctx context.Context, sel ast.SelectionSet, v *model.Tax) graphql.Marshaler {
+func (ec *executionContext) marshalNTax2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTax(ctx context.Context, sel ast.SelectionSet, v *model.Tax) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -134069,11 +136393,11 @@ func (ec *executionContext) marshalNTax2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenli
 	return ec._Tax(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNTenantBillableInfo2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillableInfo(ctx context.Context, sel ast.SelectionSet, v model.TenantBillableInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNTenantBillableInfo2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillableInfo(ctx context.Context, sel ast.SelectionSet, v model.TenantBillableInfo) graphql.Marshaler {
 	return ec._TenantBillableInfo(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTenantBillableInfo2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillableInfo(ctx context.Context, sel ast.SelectionSet, v *model.TenantBillableInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNTenantBillableInfo2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillableInfo(ctx context.Context, sel ast.SelectionSet, v *model.TenantBillableInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -134083,11 +136407,11 @@ func (ec *executionContext) marshalNTenantBillableInfo2ᚖgithubᚗcomᚋopenlin
 	return ec._TenantBillableInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNTenantBillingProfile2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfile(ctx context.Context, sel ast.SelectionSet, v model.TenantBillingProfile) graphql.Marshaler {
+func (ec *executionContext) marshalNTenantBillingProfile2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfile(ctx context.Context, sel ast.SelectionSet, v model.TenantBillingProfile) graphql.Marshaler {
 	return ec._TenantBillingProfile(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTenantBillingProfile2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfileᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TenantBillingProfile) graphql.Marshaler {
+func (ec *executionContext) marshalNTenantBillingProfile2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfileᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TenantBillingProfile) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -134111,7 +136435,7 @@ func (ec *executionContext) marshalNTenantBillingProfile2ᚕᚖgithubᚗcomᚋop
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTenantBillingProfile2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfile(ctx, sel, v[i])
+			ret[i] = ec.marshalNTenantBillingProfile2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfile(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -134131,7 +136455,7 @@ func (ec *executionContext) marshalNTenantBillingProfile2ᚕᚖgithubᚗcomᚋop
 	return ret
 }
 
-func (ec *executionContext) marshalNTenantBillingProfile2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfile(ctx context.Context, sel ast.SelectionSet, v *model.TenantBillingProfile) graphql.Marshaler {
+func (ec *executionContext) marshalNTenantBillingProfile2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfile(ctx context.Context, sel ast.SelectionSet, v *model.TenantBillingProfile) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -134141,21 +136465,21 @@ func (ec *executionContext) marshalNTenantBillingProfile2ᚖgithubᚗcomᚋopenl
 	return ec._TenantBillingProfile(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNTenantBillingProfileInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfileInput(ctx context.Context, v any) (model.TenantBillingProfileInput, error) {
+func (ec *executionContext) unmarshalNTenantBillingProfileInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfileInput(ctx context.Context, v any) (model.TenantBillingProfileInput, error) {
 	res, err := ec.unmarshalInputTenantBillingProfileInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNTenantBillingProfileUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfileUpdateInput(ctx context.Context, v any) (model.TenantBillingProfileUpdateInput, error) {
+func (ec *executionContext) unmarshalNTenantBillingProfileUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfileUpdateInput(ctx context.Context, v any) (model.TenantBillingProfileUpdateInput, error) {
 	res, err := ec.unmarshalInputTenantBillingProfileUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTenantSettings2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettings(ctx context.Context, sel ast.SelectionSet, v model.TenantSettings) graphql.Marshaler {
+func (ec *executionContext) marshalNTenantSettings2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettings(ctx context.Context, sel ast.SelectionSet, v model.TenantSettings) graphql.Marshaler {
 	return ec._TenantSettings(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTenantSettings2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettings(ctx context.Context, sel ast.SelectionSet, v *model.TenantSettings) graphql.Marshaler {
+func (ec *executionContext) marshalNTenantSettings2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettings(ctx context.Context, sel ast.SelectionSet, v *model.TenantSettings) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -134165,7 +136489,7 @@ func (ec *executionContext) marshalNTenantSettings2ᚖgithubᚗcomᚋopenlineᚑ
 	return ec._TenantSettings(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNTenantSettingsOpportunityStageConfiguration2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsOpportunityStageConfigurationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TenantSettingsOpportunityStageConfiguration) graphql.Marshaler {
+func (ec *executionContext) marshalNTenantSettingsOpportunityStageConfiguration2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsOpportunityStageConfigurationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TenantSettingsOpportunityStageConfiguration) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -134189,7 +136513,7 @@ func (ec *executionContext) marshalNTenantSettingsOpportunityStageConfiguration2
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTenantSettingsOpportunityStageConfiguration2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsOpportunityStageConfiguration(ctx, sel, v[i])
+			ret[i] = ec.marshalNTenantSettingsOpportunityStageConfiguration2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsOpportunityStageConfiguration(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -134209,7 +136533,7 @@ func (ec *executionContext) marshalNTenantSettingsOpportunityStageConfiguration2
 	return ret
 }
 
-func (ec *executionContext) marshalNTenantSettingsOpportunityStageConfiguration2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsOpportunityStageConfiguration(ctx context.Context, sel ast.SelectionSet, v *model.TenantSettingsOpportunityStageConfiguration) graphql.Marshaler {
+func (ec *executionContext) marshalNTenantSettingsOpportunityStageConfiguration2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsOpportunityStageConfiguration(ctx context.Context, sel ast.SelectionSet, v *model.TenantSettingsOpportunityStageConfiguration) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -134219,7 +136543,7 @@ func (ec *executionContext) marshalNTenantSettingsOpportunityStageConfiguration2
 	return ec._TenantSettingsOpportunityStageConfiguration(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNTenantSettingsOpportunityStageConfigurationInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsOpportunityStageConfigurationInput(ctx context.Context, v any) (model.TenantSettingsOpportunityStageConfigurationInput, error) {
+func (ec *executionContext) unmarshalNTenantSettingsOpportunityStageConfigurationInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsOpportunityStageConfigurationInput(ctx context.Context, v any) (model.TenantSettingsOpportunityStageConfigurationInput, error) {
 	res, err := ec.unmarshalInputTenantSettingsOpportunityStageConfigurationInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -134239,7 +136563,7 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalNTimelineEvent2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEvent(ctx context.Context, sel ast.SelectionSet, v model.TimelineEvent) graphql.Marshaler {
+func (ec *executionContext) marshalNTimelineEvent2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEvent(ctx context.Context, sel ast.SelectionSet, v model.TimelineEvent) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -134249,7 +136573,7 @@ func (ec *executionContext) marshalNTimelineEvent2githubᚗcomᚋopenlineᚑai�
 	return ec._TimelineEvent(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNTimelineEvent2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventᚄ(ctx context.Context, sel ast.SelectionSet, v []model.TimelineEvent) graphql.Marshaler {
+func (ec *executionContext) marshalNTimelineEvent2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventᚄ(ctx context.Context, sel ast.SelectionSet, v []model.TimelineEvent) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -134273,7 +136597,7 @@ func (ec *executionContext) marshalNTimelineEvent2ᚕgithubᚗcomᚋopenlineᚑa
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTimelineEvent2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEvent(ctx, sel, v[i])
+			ret[i] = ec.marshalNTimelineEvent2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEvent(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -134293,21 +136617,21 @@ func (ec *executionContext) marshalNTimelineEvent2ᚕgithubᚗcomᚋopenlineᚑa
 	return ret
 }
 
-func (ec *executionContext) unmarshalNTimelineEventType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventType(ctx context.Context, v any) (model.TimelineEventType, error) {
+func (ec *executionContext) unmarshalNTimelineEventType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventType(ctx context.Context, v any) (model.TimelineEventType, error) {
 	var res model.TimelineEventType
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTimelineEventType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventType(ctx context.Context, sel ast.SelectionSet, v model.TimelineEventType) graphql.Marshaler {
+func (ec *executionContext) marshalNTimelineEventType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventType(ctx context.Context, sel ast.SelectionSet, v model.TimelineEventType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNUser2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -134331,7 +136655,7 @@ func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋop
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, sel, v[i])
+			ret[i] = ec.marshalNUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -134351,7 +136675,7 @@ func (ec *executionContext) marshalNUser2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋop
 	return ret
 }
 
-func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -134361,7 +136685,7 @@ func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenl
 	return ec._User(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNUserOnboardingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserOnboardingDetails(ctx context.Context, sel ast.SelectionSet, v *model.UserOnboardingDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNUserOnboardingDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserOnboardingDetails(ctx context.Context, sel ast.SelectionSet, v *model.UserOnboardingDetails) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -134371,16 +136695,16 @@ func (ec *executionContext) marshalNUserOnboardingDetails2ᚖgithubᚗcomᚋopen
 	return ec._UserOnboardingDetails(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNUserOnboardingDetailsInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserOnboardingDetailsInput(ctx context.Context, v any) (model.UserOnboardingDetailsInput, error) {
+func (ec *executionContext) unmarshalNUserOnboardingDetailsInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserOnboardingDetailsInput(ctx context.Context, v any) (model.UserOnboardingDetailsInput, error) {
 	res, err := ec.unmarshalInputUserOnboardingDetailsInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNUserPage2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserPage(ctx context.Context, sel ast.SelectionSet, v model.UserPage) graphql.Marshaler {
+func (ec *executionContext) marshalNUserPage2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserPage(ctx context.Context, sel ast.SelectionSet, v model.UserPage) graphql.Marshaler {
 	return ec._UserPage(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNUserPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserPage(ctx context.Context, sel ast.SelectionSet, v *model.UserPage) graphql.Marshaler {
+func (ec *executionContext) marshalNUserPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUserPage(ctx context.Context, sel ast.SelectionSet, v *model.UserPage) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -134390,11 +136714,11 @@ func (ec *executionContext) marshalNUserPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return ec._UserPage(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNWebsiteCheckDetails2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐWebsiteCheckDetails(ctx context.Context, sel ast.SelectionSet, v model.WebsiteCheckDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNWebsiteCheckDetails2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐWebsiteCheckDetails(ctx context.Context, sel ast.SelectionSet, v model.WebsiteCheckDetails) graphql.Marshaler {
 	return ec._WebsiteCheckDetails(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNWebsiteCheckDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐWebsiteCheckDetails(ctx context.Context, sel ast.SelectionSet, v *model.WebsiteCheckDetails) graphql.Marshaler {
+func (ec *executionContext) marshalNWebsiteCheckDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐWebsiteCheckDetails(ctx context.Context, sel ast.SelectionSet, v *model.WebsiteCheckDetails) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -134657,7 +136981,7 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAction2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Action) graphql.Marshaler {
+func (ec *executionContext) marshalOAction2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Action) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -134684,7 +137008,7 @@ func (ec *executionContext) marshalOAction2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNAction2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAction(ctx, sel, v[i])
+			ret[i] = ec.marshalNAction2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAction(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -134704,7 +137028,7 @@ func (ec *executionContext) marshalOAction2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalOActionItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ActionItem) graphql.Marshaler {
+func (ec *executionContext) marshalOActionItem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ActionItem) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -134731,7 +137055,7 @@ func (ec *executionContext) marshalOActionItem2ᚕᚖgithubᚗcomᚋopenlineᚑa
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNActionItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionItem(ctx, sel, v[i])
+			ret[i] = ec.marshalNActionItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐActionItem(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -134751,7 +137075,46 @@ func (ec *executionContext) marshalOActionItem2ᚕᚖgithubᚗcomᚋopenlineᚑa
 	return ret
 }
 
-func (ec *executionContext) marshalOAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Attachment) graphql.Marshaler {
+func (ec *executionContext) marshalOAgent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgent(ctx context.Context, sel ast.SelectionSet, v *model.Agent) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Agent(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOAgentStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentStatus(ctx context.Context, v any) (*model.AgentStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.AgentStatus)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAgentStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentStatus(ctx context.Context, sel ast.SelectionSet, v *model.AgentStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOAgentType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentType(ctx context.Context, v any) (*model.AgentType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.AgentType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAgentType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentType(ctx context.Context, sel ast.SelectionSet, v *model.AgentType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) marshalOAttachment2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Attachment) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -134778,7 +137141,7 @@ func (ec *executionContext) marshalOAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑa
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx, sel, v[i])
+			ret[i] = ec.marshalNAttachment2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -134798,14 +137161,14 @@ func (ec *executionContext) marshalOAttachment2ᚕᚖgithubᚗcomᚋopenlineᚑa
 	return ret
 }
 
-func (ec *executionContext) marshalOAttachment2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {
+func (ec *executionContext) marshalOAttachment2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Attachment(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOBankAccountCreateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccountCreateInput(ctx context.Context, v any) (*model.BankAccountCreateInput, error) {
+func (ec *executionContext) unmarshalOBankAccountCreateInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccountCreateInput(ctx context.Context, v any) (*model.BankAccountCreateInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -134813,7 +137176,7 @@ func (ec *executionContext) unmarshalOBankAccountCreateInput2ᚖgithubᚗcomᚋo
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOBankAccountUpdateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccountUpdateInput(ctx context.Context, v any) (*model.BankAccountUpdateInput, error) {
+func (ec *executionContext) unmarshalOBankAccountUpdateInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBankAccountUpdateInput(ctx context.Context, v any) (*model.BankAccountUpdateInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -134821,7 +137184,7 @@ func (ec *executionContext) unmarshalOBankAccountUpdateInput2ᚖgithubᚗcomᚋo
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOBilledType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx context.Context, v any) (*model.BilledType, error) {
+func (ec *executionContext) unmarshalOBilledType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx context.Context, v any) (*model.BilledType, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -134830,21 +137193,21 @@ func (ec *executionContext) unmarshalOBilledType2ᚖgithubᚗcomᚋopenlineᚑai
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOBilledType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx context.Context, sel ast.SelectionSet, v *model.BilledType) graphql.Marshaler {
+func (ec *executionContext) marshalOBilledType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBilledType(ctx context.Context, sel ast.SelectionSet, v *model.BilledType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOBillingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingDetails(ctx context.Context, sel ast.SelectionSet, v *model.BillingDetails) graphql.Marshaler {
+func (ec *executionContext) marshalOBillingDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingDetails(ctx context.Context, sel ast.SelectionSet, v *model.BillingDetails) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._BillingDetails(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOBillingDetailsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingDetailsInput(ctx context.Context, v any) (*model.BillingDetailsInput, error) {
+func (ec *executionContext) unmarshalOBillingDetailsInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐBillingDetailsInput(ctx context.Context, v any) (*model.BillingDetailsInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -134878,14 +137241,66 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOContact2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v *model.Contact) graphql.Marshaler {
+func (ec *executionContext) unmarshalOCapabilitySaveInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilitySaveInputᚄ(ctx context.Context, v any) ([]*model.CapabilitySaveInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.CapabilitySaveInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNCapabilitySaveInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilitySaveInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOCapabilityStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityStatus(ctx context.Context, v any) (*model.CapabilityStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.CapabilityStatus)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOCapabilityStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityStatus(ctx context.Context, sel ast.SelectionSet, v *model.CapabilityStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOCapabilityType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityType(ctx context.Context, v any) (*model.CapabilityType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.CapabilityType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOCapabilityType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityType(ctx context.Context, sel ast.SelectionSet, v *model.CapabilityType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) marshalOContact2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v *model.Contact) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Contact(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOContract2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Contract) graphql.Marshaler {
+func (ec *executionContext) marshalOContract2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Contract) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -134912,7 +137327,7 @@ func (ec *executionContext) marshalOContract2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNContract2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, sel, v[i])
+			ret[i] = ec.marshalNContract2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContract(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -134932,7 +137347,7 @@ func (ec *executionContext) marshalOContract2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return ret
 }
 
-func (ec *executionContext) unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx context.Context, v any) (*model.ContractBillingCycle, error) {
+func (ec *executionContext) unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx context.Context, v any) (*model.ContractBillingCycle, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -134941,14 +137356,14 @@ func (ec *executionContext) unmarshalOContractBillingCycle2ᚖgithubᚗcomᚋope
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOContractBillingCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx context.Context, sel ast.SelectionSet, v *model.ContractBillingCycle) graphql.Marshaler {
+func (ec *executionContext) marshalOContractBillingCycle2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractBillingCycle(ctx context.Context, sel ast.SelectionSet, v *model.ContractBillingCycle) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx context.Context, v any) (*model.ContractRenewalCycle, error) {
+func (ec *executionContext) unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx context.Context, v any) (*model.ContractRenewalCycle, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -134957,21 +137372,21 @@ func (ec *executionContext) unmarshalOContractRenewalCycle2ᚖgithubᚗcomᚋope
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOContractRenewalCycle2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx context.Context, sel ast.SelectionSet, v *model.ContractRenewalCycle) graphql.Marshaler {
+func (ec *executionContext) marshalOContractRenewalCycle2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐContractRenewalCycle(ctx context.Context, sel ast.SelectionSet, v *model.ContractRenewalCycle) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {
+func (ec *executionContext) marshalOCountry2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCountry(ctx context.Context, sel ast.SelectionSet, v *model.Country) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Country(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx context.Context, v any) (*model.Currency, error) {
+func (ec *executionContext) unmarshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx context.Context, v any) (*model.Currency, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -134980,14 +137395,14 @@ func (ec *executionContext) unmarshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑai�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOCurrency2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx context.Context, sel ast.SelectionSet, v *model.Currency) graphql.Marshaler {
+func (ec *executionContext) marshalOCurrency2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCurrency(ctx context.Context, sel ast.SelectionSet, v *model.Currency) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOCustomFieldDataType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx context.Context, v any) (*model.CustomFieldDataType, error) {
+func (ec *executionContext) unmarshalOCustomFieldDataType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx context.Context, v any) (*model.CustomFieldDataType, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -134996,14 +137411,14 @@ func (ec *executionContext) unmarshalOCustomFieldDataType2ᚖgithubᚗcomᚋopen
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOCustomFieldDataType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx context.Context, sel ast.SelectionSet, v *model.CustomFieldDataType) graphql.Marshaler {
+func (ec *executionContext) marshalOCustomFieldDataType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldDataType(ctx context.Context, sel ast.SelectionSet, v *model.CustomFieldDataType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInputᚄ(ctx context.Context, v any) ([]*model.CustomFieldInput, error) {
+func (ec *executionContext) unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInputᚄ(ctx context.Context, v any) ([]*model.CustomFieldInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135015,7 +137430,7 @@ func (ec *executionContext) unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopen
 	res := make([]*model.CustomFieldInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNCustomFieldInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNCustomFieldInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -135023,14 +137438,14 @@ func (ec *executionContext) unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopen
 	return res, nil
 }
 
-func (ec *executionContext) marshalOCustomFieldTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplate(ctx context.Context, sel ast.SelectionSet, v *model.CustomFieldTemplate) graphql.Marshaler {
+func (ec *executionContext) marshalOCustomFieldTemplate2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplate(ctx context.Context, sel ast.SelectionSet, v *model.CustomFieldTemplate) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._CustomFieldTemplate(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOCustomFieldTemplateType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateType(ctx context.Context, v any) (*model.CustomFieldTemplateType, error) {
+func (ec *executionContext) unmarshalOCustomFieldTemplateType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateType(ctx context.Context, v any) (*model.CustomFieldTemplateType, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135039,28 +137454,28 @@ func (ec *executionContext) unmarshalOCustomFieldTemplateType2ᚖgithubᚗcomᚋ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOCustomFieldTemplateType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateType(ctx context.Context, sel ast.SelectionSet, v *model.CustomFieldTemplateType) graphql.Marshaler {
+func (ec *executionContext) marshalOCustomFieldTemplateType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCustomFieldTemplateType(ctx context.Context, sel ast.SelectionSet, v *model.CustomFieldTemplateType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalODashboardARRBreakdown2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardARRBreakdown(ctx context.Context, sel ast.SelectionSet, v *model.DashboardARRBreakdown) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardARRBreakdown2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardARRBreakdown(ctx context.Context, sel ast.SelectionSet, v *model.DashboardARRBreakdown) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardARRBreakdown(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODashboardARRBreakdownPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardARRBreakdownPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardARRBreakdownPerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardARRBreakdownPerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardARRBreakdownPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardARRBreakdownPerMonth) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardARRBreakdownPerMonth(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODashboardCustomerMap2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMapᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardCustomerMap) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardCustomerMap2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMapᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DashboardCustomerMap) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -135087,7 +137502,7 @@ func (ec *executionContext) marshalODashboardCustomerMap2ᚕᚖgithubᚗcomᚋop
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDashboardCustomerMap2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMap(ctx, sel, v[i])
+			ret[i] = ec.marshalNDashboardCustomerMap2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardCustomerMap(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -135107,56 +137522,56 @@ func (ec *executionContext) marshalODashboardCustomerMap2ᚕᚖgithubᚗcomᚋop
 	return ret
 }
 
-func (ec *executionContext) marshalODashboardGrossRevenueRetention2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardGrossRevenueRetention(ctx context.Context, sel ast.SelectionSet, v *model.DashboardGrossRevenueRetention) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardGrossRevenueRetention2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardGrossRevenueRetention(ctx context.Context, sel ast.SelectionSet, v *model.DashboardGrossRevenueRetention) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardGrossRevenueRetention(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODashboardGrossRevenueRetentionPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardGrossRevenueRetentionPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardGrossRevenueRetentionPerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardGrossRevenueRetentionPerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardGrossRevenueRetentionPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardGrossRevenueRetentionPerMonth) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardGrossRevenueRetentionPerMonth(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODashboardMRRPerCustomer2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardMRRPerCustomer(ctx context.Context, sel ast.SelectionSet, v *model.DashboardMRRPerCustomer) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardMRRPerCustomer2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardMRRPerCustomer(ctx context.Context, sel ast.SelectionSet, v *model.DashboardMRRPerCustomer) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardMRRPerCustomer(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODashboardMRRPerCustomerPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardMRRPerCustomerPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardMRRPerCustomerPerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardMRRPerCustomerPerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardMRRPerCustomerPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardMRRPerCustomerPerMonth) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardMRRPerCustomerPerMonth(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODashboardNewCustomers2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardNewCustomers(ctx context.Context, sel ast.SelectionSet, v *model.DashboardNewCustomers) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardNewCustomers2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardNewCustomers(ctx context.Context, sel ast.SelectionSet, v *model.DashboardNewCustomers) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardNewCustomers(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODashboardNewCustomersPerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardNewCustomersPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardNewCustomersPerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardNewCustomersPerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardNewCustomersPerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardNewCustomersPerMonth) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardNewCustomersPerMonth(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODashboardOnboardingCompletion2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardOnboardingCompletion(ctx context.Context, sel ast.SelectionSet, v *model.DashboardOnboardingCompletion) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardOnboardingCompletion2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardOnboardingCompletion(ctx context.Context, sel ast.SelectionSet, v *model.DashboardOnboardingCompletion) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardOnboardingCompletion(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx context.Context, v any) (*model.DashboardPeriodInput, error) {
+func (ec *executionContext) unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardPeriodInput(ctx context.Context, v any) (*model.DashboardPeriodInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135164,35 +137579,35 @@ func (ec *executionContext) unmarshalODashboardPeriodInput2ᚖgithubᚗcomᚋope
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalODashboardRetentionRate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRetentionRate(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRetentionRate) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardRetentionRate2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRetentionRate(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRetentionRate) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardRetentionRate(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODashboardRetentionRatePerMonth2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRetentionRatePerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRetentionRatePerMonth) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardRetentionRatePerMonth2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRetentionRatePerMonth(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRetentionRatePerMonth) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardRetentionRatePerMonth(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODashboardRevenueAtRisk2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRevenueAtRisk(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRevenueAtRisk) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardRevenueAtRisk2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardRevenueAtRisk(ctx context.Context, sel ast.SelectionSet, v *model.DashboardRevenueAtRisk) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardRevenueAtRisk(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODashboardTimeToOnboard2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardTimeToOnboard(ctx context.Context, sel ast.SelectionSet, v *model.DashboardTimeToOnboard) graphql.Marshaler {
+func (ec *executionContext) marshalODashboardTimeToOnboard2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDashboardTimeToOnboard(ctx context.Context, sel ast.SelectionSet, v *model.DashboardTimeToOnboard) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DashboardTimeToOnboard(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx context.Context, v any) (*model.DataSource, error) {
+func (ec *executionContext) unmarshalODataSource2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx context.Context, v any) (*model.DataSource, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135201,14 +137616,14 @@ func (ec *executionContext) unmarshalODataSource2ᚖgithubᚗcomᚋopenlineᚑai
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalODataSource2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v *model.DataSource) graphql.Marshaler {
+func (ec *executionContext) marshalODataSource2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐDataSource(ctx context.Context, sel ast.SelectionSet, v *model.DataSource) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Email) graphql.Marshaler {
+func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Email) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -135235,7 +137650,7 @@ func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋo
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, sel, v[i])
+			ret[i] = ec.marshalNEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -135255,14 +137670,14 @@ func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return ret
 }
 
-func (ec *executionContext) marshalOEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx context.Context, sel ast.SelectionSet, v *model.Email) graphql.Marshaler {
+func (ec *executionContext) marshalOEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmail(ctx context.Context, sel ast.SelectionSet, v *model.Email) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Email(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOEmailDeliverable2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailDeliverable(ctx context.Context, v any) (*model.EmailDeliverable, error) {
+func (ec *executionContext) unmarshalOEmailDeliverable2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailDeliverable(ctx context.Context, v any) (*model.EmailDeliverable, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135271,14 +137686,14 @@ func (ec *executionContext) unmarshalOEmailDeliverable2ᚖgithubᚗcomᚋopenlin
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOEmailDeliverable2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailDeliverable(ctx context.Context, sel ast.SelectionSet, v *model.EmailDeliverable) graphql.Marshaler {
+func (ec *executionContext) marshalOEmailDeliverable2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailDeliverable(ctx context.Context, sel ast.SelectionSet, v *model.EmailDeliverable) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx context.Context, v any) (*model.EmailInput, error) {
+func (ec *executionContext) unmarshalOEmailInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailInput(ctx context.Context, v any) (*model.EmailInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135286,7 +137701,7 @@ func (ec *executionContext) unmarshalOEmailInput2ᚖgithubᚗcomᚋopenlineᚑai
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailLabel(ctx context.Context, v any) (*model.EmailLabel, error) {
+func (ec *executionContext) unmarshalOEmailLabel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailLabel(ctx context.Context, v any) (*model.EmailLabel, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135295,14 +137710,14 @@ func (ec *executionContext) unmarshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑai
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailLabel(ctx context.Context, sel ast.SelectionSet, v *model.EmailLabel) graphql.Marshaler {
+func (ec *executionContext) marshalOEmailLabel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEmailLabel(ctx context.Context, sel ast.SelectionSet, v *model.EmailLabel) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOEntityType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx context.Context, v any) (*model.EntityType, error) {
+func (ec *executionContext) unmarshalOEntityType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx context.Context, v any) (*model.EntityType, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135311,14 +137726,14 @@ func (ec *executionContext) unmarshalOEntityType2ᚖgithubᚗcomᚋopenlineᚑai
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOEntityType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx context.Context, sel ast.SelectionSet, v *model.EntityType) graphql.Marshaler {
+func (ec *executionContext) marshalOEntityType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx context.Context, sel ast.SelectionSet, v *model.EntityType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemReferenceInput(ctx context.Context, v any) (*model.ExternalSystemReferenceInput, error) {
+func (ec *executionContext) unmarshalOExternalSystemReferenceInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemReferenceInput(ctx context.Context, v any) (*model.ExternalSystemReferenceInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135326,14 +137741,14 @@ func (ec *executionContext) unmarshalOExternalSystemReferenceInput2ᚖgithubᚗc
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOExternalSystemStripeDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemStripeDetails(ctx context.Context, sel ast.SelectionSet, v *model.ExternalSystemStripeDetails) graphql.Marshaler {
+func (ec *executionContext) marshalOExternalSystemStripeDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐExternalSystemStripeDetails(ctx context.Context, sel ast.SelectionSet, v *model.ExternalSystemStripeDetails) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._ExternalSystemStripeDetails(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOFilter2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilterᚄ(ctx context.Context, v any) ([]*model.Filter, error) {
+func (ec *executionContext) unmarshalOFilter2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilterᚄ(ctx context.Context, v any) ([]*model.Filter, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135345,7 +137760,7 @@ func (ec *executionContext) unmarshalOFilter2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	res := make([]*model.Filter, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -135353,7 +137768,7 @@ func (ec *executionContext) unmarshalOFilter2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx context.Context, v any) (*model.Filter, error) {
+func (ec *executionContext) unmarshalOFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx context.Context, v any) (*model.Filter, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135361,7 +137776,7 @@ func (ec *executionContext) unmarshalOFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOFilterItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilterItem(ctx context.Context, v any) (*model.FilterItem, error) {
+func (ec *executionContext) unmarshalOFilterItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilterItem(ctx context.Context, v any) (*model.FilterItem, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135385,14 +137800,14 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	return graphql.WrapContextMarshaler(ctx, res)
 }
 
-func (ec *executionContext) marshalOFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx context.Context, sel ast.SelectionSet, v *model.Flow) graphql.Marshaler {
+func (ec *executionContext) marshalOFlow2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlow(ctx context.Context, sel ast.SelectionSet, v *model.Flow) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Flow(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOFlowActionInputDataEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataEmail(ctx context.Context, v any) (*model.FlowActionInputDataEmail, error) {
+func (ec *executionContext) unmarshalOFlowActionInputDataEmail2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataEmail(ctx context.Context, v any) (*model.FlowActionInputDataEmail, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135400,7 +137815,7 @@ func (ec *executionContext) unmarshalOFlowActionInputDataEmail2ᚖgithubᚗcom�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOFlowActionInputDataLinkedinConnectionRequest2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataLinkedinConnectionRequest(ctx context.Context, v any) (*model.FlowActionInputDataLinkedinConnectionRequest, error) {
+func (ec *executionContext) unmarshalOFlowActionInputDataLinkedinConnectionRequest2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataLinkedinConnectionRequest(ctx context.Context, v any) (*model.FlowActionInputDataLinkedinConnectionRequest, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135408,7 +137823,7 @@ func (ec *executionContext) unmarshalOFlowActionInputDataLinkedinConnectionReque
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOFlowActionInputDataLinkedinMessage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataLinkedinMessage(ctx context.Context, v any) (*model.FlowActionInputDataLinkedinMessage, error) {
+func (ec *executionContext) unmarshalOFlowActionInputDataLinkedinMessage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataLinkedinMessage(ctx context.Context, v any) (*model.FlowActionInputDataLinkedinMessage, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135416,7 +137831,7 @@ func (ec *executionContext) unmarshalOFlowActionInputDataLinkedinMessage2ᚖgith
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOFlowActionInputDataWait2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataWait(ctx context.Context, v any) (*model.FlowActionInputDataWait, error) {
+func (ec *executionContext) unmarshalOFlowActionInputDataWait2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlowActionInputDataWait(ctx context.Context, v any) (*model.FlowActionInputDataWait, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135424,7 +137839,7 @@ func (ec *executionContext) unmarshalOFlowActionInputDataWait2ᚖgithubᚗcomᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFundingRound(ctx context.Context, v any) (*model.FundingRound, error) {
+func (ec *executionContext) unmarshalOFundingRound2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFundingRound(ctx context.Context, v any) (*model.FundingRound, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135433,14 +137848,14 @@ func (ec *executionContext) unmarshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFundingRound(ctx context.Context, sel ast.SelectionSet, v *model.FundingRound) graphql.Marshaler {
+func (ec *executionContext) marshalOFundingRound2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFundingRound(ctx context.Context, sel ast.SelectionSet, v *model.FundingRound) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOGlobalOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalOrganization(ctx context.Context, sel ast.SelectionSet, v *model.GlobalOrganization) graphql.Marshaler {
+func (ec *executionContext) marshalOGlobalOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐGlobalOrganization(ctx context.Context, sel ast.SelectionSet, v *model.GlobalOrganization) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -135533,21 +137948,21 @@ func (ec *executionContext) marshalOInt642ᚖint64(ctx context.Context, sel ast.
 	return res
 }
 
-func (ec *executionContext) marshalOInteractionEvent2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEvent(ctx context.Context, sel ast.SelectionSet, v *model.InteractionEvent) graphql.Marshaler {
+func (ec *executionContext) marshalOInteractionEvent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionEvent(ctx context.Context, sel ast.SelectionSet, v *model.InteractionEvent) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._InteractionEvent(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOInteractionSession2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionSession(ctx context.Context, sel ast.SelectionSet, v *model.InteractionSession) graphql.Marshaler {
+func (ec *executionContext) marshalOInteractionSession2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInteractionSession(ctx context.Context, sel ast.SelectionSet, v *model.InteractionSession) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._InteractionSession(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOInternalStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx context.Context, v any) (*model.InternalStage, error) {
+func (ec *executionContext) unmarshalOInternalStage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx context.Context, v any) (*model.InternalStage, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135556,14 +137971,14 @@ func (ec *executionContext) unmarshalOInternalStage2ᚖgithubᚗcomᚋopenline�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOInternalStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx context.Context, sel ast.SelectionSet, v *model.InternalStage) graphql.Marshaler {
+func (ec *executionContext) marshalOInternalStage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalStage(ctx context.Context, sel ast.SelectionSet, v *model.InternalStage) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOInternalType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx context.Context, v any) (*model.InternalType, error) {
+func (ec *executionContext) unmarshalOInternalType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx context.Context, v any) (*model.InternalType, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135572,14 +137987,14 @@ func (ec *executionContext) unmarshalOInternalType2ᚖgithubᚗcomᚋopenlineᚑ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOInternalType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx context.Context, sel ast.SelectionSet, v *model.InternalType) graphql.Marshaler {
+func (ec *executionContext) marshalOInternalType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInternalType(ctx context.Context, sel ast.SelectionSet, v *model.InternalType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOInvoiceStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceStatus(ctx context.Context, v any) (*model.InvoiceStatus, error) {
+func (ec *executionContext) unmarshalOInvoiceStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceStatus(ctx context.Context, v any) (*model.InvoiceStatus, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135588,28 +138003,28 @@ func (ec *executionContext) unmarshalOInvoiceStatus2ᚖgithubᚗcomᚋopenline�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOInvoiceStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceStatus(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceStatus) graphql.Marshaler {
+func (ec *executionContext) marshalOInvoiceStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐInvoiceStatus(ctx context.Context, sel ast.SelectionSet, v *model.InvoiceStatus) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOIssue2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssue(ctx context.Context, sel ast.SelectionSet, v *model.Issue) graphql.Marshaler {
+func (ec *executionContext) marshalOIssue2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssue(ctx context.Context, sel ast.SelectionSet, v *model.Issue) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Issue(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOIssueParticipant2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipant(ctx context.Context, sel ast.SelectionSet, v model.IssueParticipant) graphql.Marshaler {
+func (ec *executionContext) marshalOIssueParticipant2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIssueParticipant(ctx context.Context, sel ast.SelectionSet, v model.IssueParticipant) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._IssueParticipant(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOJobRoleInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleInputᚄ(ctx context.Context, v any) ([]*model.JobRoleInput, error) {
+func (ec *executionContext) unmarshalOJobRoleInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleInputᚄ(ctx context.Context, v any) ([]*model.JobRoleInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135621,7 +138036,7 @@ func (ec *executionContext) unmarshalOJobRoleInput2ᚕᚖgithubᚗcomᚋopenline
 	res := make([]*model.JobRoleInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNJobRoleInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNJobRoleInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -135629,7 +138044,7 @@ func (ec *executionContext) unmarshalOJobRoleInput2ᚕᚖgithubᚗcomᚋopenline
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOJobRoleSaveInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleSaveInput(ctx context.Context, v any) (*model.JobRoleSaveInput, error) {
+func (ec *executionContext) unmarshalOJobRoleSaveInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐJobRoleSaveInput(ctx context.Context, v any) (*model.JobRoleSaveInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135637,14 +138052,14 @@ func (ec *executionContext) unmarshalOJobRoleSaveInput2ᚖgithubᚗcomᚋopenlin
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOLastTouchpoint2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpoint(ctx context.Context, sel ast.SelectionSet, v *model.LastTouchpoint) graphql.Marshaler {
+func (ec *executionContext) marshalOLastTouchpoint2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpoint(ctx context.Context, sel ast.SelectionSet, v *model.LastTouchpoint) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._LastTouchpoint(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOLastTouchpointType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpointType(ctx context.Context, v any) (*model.LastTouchpointType, error) {
+func (ec *executionContext) unmarshalOLastTouchpointType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpointType(ctx context.Context, v any) (*model.LastTouchpointType, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135653,14 +138068,14 @@ func (ec *executionContext) unmarshalOLastTouchpointType2ᚖgithubᚗcomᚋopenl
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOLastTouchpointType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpointType(ctx context.Context, sel ast.SelectionSet, v *model.LastTouchpointType) graphql.Marshaler {
+func (ec *executionContext) marshalOLastTouchpointType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐLastTouchpointType(ctx context.Context, sel ast.SelectionSet, v *model.LastTouchpointType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx context.Context, v any) (*model.Market, error) {
+func (ec *executionContext) unmarshalOMarket2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx context.Context, v any) (*model.Market, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135669,21 +138084,21 @@ func (ec *executionContext) unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx context.Context, sel ast.SelectionSet, v *model.Market) graphql.Marshaler {
+func (ec *executionContext) marshalOMarket2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMarket(ctx context.Context, sel ast.SelectionSet, v *model.Market) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOMeeting2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v *model.Meeting) graphql.Marshaler {
+func (ec *executionContext) marshalOMeeting2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeeting(ctx context.Context, sel ast.SelectionSet, v *model.Meeting) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Meeting(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInputᚄ(ctx context.Context, v any) ([]*model.MeetingParticipantInput, error) {
+func (ec *executionContext) unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInputᚄ(ctx context.Context, v any) ([]*model.MeetingParticipantInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135695,7 +138110,7 @@ func (ec *executionContext) unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcom
 	res := make([]*model.MeetingParticipantInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNMeetingParticipantInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNMeetingParticipantInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingParticipantInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -135703,7 +138118,7 @@ func (ec *executionContext) unmarshalOMeetingParticipantInput2ᚕᚖgithubᚗcom
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOMeetingStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx context.Context, v any) (*model.MeetingStatus, error) {
+func (ec *executionContext) unmarshalOMeetingStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx context.Context, v any) (*model.MeetingStatus, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135712,14 +138127,14 @@ func (ec *executionContext) unmarshalOMeetingStatus2ᚖgithubᚗcomᚋopenline�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOMeetingStatus2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx context.Context, sel ast.SelectionSet, v *model.MeetingStatus) graphql.Marshaler {
+func (ec *executionContext) marshalOMeetingStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐMeetingStatus(ctx context.Context, sel ast.SelectionSet, v *model.MeetingStatus) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteInput(ctx context.Context, v any) (*model.NoteInput, error) {
+func (ec *executionContext) unmarshalONoteInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteInput(ctx context.Context, v any) (*model.NoteInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135727,7 +138142,7 @@ func (ec *executionContext) unmarshalONoteInput2ᚖgithubᚗcomᚋopenlineᚑai�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalONoteUpdateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteUpdateInput(ctx context.Context, v any) (*model.NoteUpdateInput, error) {
+func (ec *executionContext) unmarshalONoteUpdateInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐNoteUpdateInput(ctx context.Context, v any) (*model.NoteUpdateInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135735,14 +138150,14 @@ func (ec *executionContext) unmarshalONoteUpdateInput2ᚖgithubᚗcomᚋopenline
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOOnboardingDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingDetails(ctx context.Context, sel ast.SelectionSet, v *model.OnboardingDetails) graphql.Marshaler {
+func (ec *executionContext) marshalOOnboardingDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOnboardingDetails(ctx context.Context, sel ast.SelectionSet, v *model.OnboardingDetails) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._OnboardingDetails(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOOpportunity2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Opportunity) graphql.Marshaler {
+func (ec *executionContext) marshalOOpportunity2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Opportunity) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -135769,7 +138184,7 @@ func (ec *executionContext) marshalOOpportunity2ᚕᚖgithubᚗcomᚋopenlineᚑ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx, sel, v[i])
+			ret[i] = ec.marshalNOpportunity2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -135789,14 +138204,14 @@ func (ec *executionContext) marshalOOpportunity2ᚕᚖgithubᚗcomᚋopenlineᚑ
 	return ret
 }
 
-func (ec *executionContext) marshalOOpportunity2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx context.Context, sel ast.SelectionSet, v *model.Opportunity) graphql.Marshaler {
+func (ec *executionContext) marshalOOpportunity2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunity(ctx context.Context, sel ast.SelectionSet, v *model.Opportunity) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Opportunity(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, v any) (*model.OpportunityRenewalLikelihood, error) {
+func (ec *executionContext) unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, v any) (*model.OpportunityRenewalLikelihood, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135805,35 +138220,35 @@ func (ec *executionContext) unmarshalOOpportunityRenewalLikelihood2ᚖgithubᚗc
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, sel ast.SelectionSet, v *model.OpportunityRenewalLikelihood) graphql.Marshaler {
+func (ec *executionContext) marshalOOpportunityRenewalLikelihood2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOpportunityRenewalLikelihood(ctx context.Context, sel ast.SelectionSet, v *model.OpportunityRenewalLikelihood) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOOrgAccountDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrgAccountDetails(ctx context.Context, sel ast.SelectionSet, v *model.OrgAccountDetails) graphql.Marshaler {
+func (ec *executionContext) marshalOOrgAccountDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrgAccountDetails(ctx context.Context, sel ast.SelectionSet, v *model.OrgAccountDetails) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._OrgAccountDetails(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx context.Context, sel ast.SelectionSet, v *model.Organization) graphql.Marshaler {
+func (ec *executionContext) marshalOOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx context.Context, sel ast.SelectionSet, v *model.Organization) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Organization(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOOrganizationPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationPage(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationPage) graphql.Marshaler {
+func (ec *executionContext) marshalOOrganizationPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationPage(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationPage) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._OrganizationPage(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx context.Context, v any) (*model.OrganizationRelationship, error) {
+func (ec *executionContext) unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx context.Context, v any) (*model.OrganizationRelationship, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135842,14 +138257,14 @@ func (ec *executionContext) unmarshalOOrganizationRelationship2ᚖgithubᚗcom�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationRelationship) graphql.Marshaler {
+func (ec *executionContext) marshalOOrganizationRelationship2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationRelationship(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationRelationship) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOOrganizationSaveInputFromGlobalOrg2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSaveInputFromGlobalOrg(ctx context.Context, v any) (*model.OrganizationSaveInputFromGlobalOrg, error) {
+func (ec *executionContext) unmarshalOOrganizationSaveInputFromGlobalOrg2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationSaveInputFromGlobalOrg(ctx context.Context, v any) (*model.OrganizationSaveInputFromGlobalOrg, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135857,7 +138272,7 @@ func (ec *executionContext) unmarshalOOrganizationSaveInputFromGlobalOrg2ᚖgith
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx context.Context, v any) (*model.OrganizationStage, error) {
+func (ec *executionContext) unmarshalOOrganizationStage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx context.Context, v any) (*model.OrganizationStage, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135866,21 +138281,21 @@ func (ec *executionContext) unmarshalOOrganizationStage2ᚖgithubᚗcomᚋopenli
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationStage) graphql.Marshaler {
+func (ec *executionContext) marshalOOrganizationStage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationStage(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationStage) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOOrganizationWithJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationWithJobRole(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationWithJobRole) graphql.Marshaler {
+func (ec *executionContext) marshalOOrganizationWithJobRole2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganizationWithJobRole(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationWithJobRole) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._OrganizationWithJobRole(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx context.Context, v any) (*model.Pagination, error) {
+func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPagination(ctx context.Context, v any) (*model.Pagination, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135888,7 +138303,7 @@ func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑai
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOPhoneNumberInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberInput(ctx context.Context, v any) (*model.PhoneNumberInput, error) {
+func (ec *executionContext) unmarshalOPhoneNumberInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberInput(ctx context.Context, v any) (*model.PhoneNumberInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135896,7 +138311,7 @@ func (ec *executionContext) unmarshalOPhoneNumberInput2ᚖgithubᚗcomᚋopenlin
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberLabel(ctx context.Context, v any) (*model.PhoneNumberLabel, error) {
+func (ec *executionContext) unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberLabel(ctx context.Context, v any) (*model.PhoneNumberLabel, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135905,35 +138320,35 @@ func (ec *executionContext) unmarshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlin
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOPhoneNumberLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberLabel(ctx context.Context, sel ast.SelectionSet, v *model.PhoneNumberLabel) graphql.Marshaler {
+func (ec *executionContext) marshalOPhoneNumberLabel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐPhoneNumberLabel(ctx context.Context, sel ast.SelectionSet, v *model.PhoneNumberLabel) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalORenewalSummary2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalSummary(ctx context.Context, sel ast.SelectionSet, v *model.RenewalSummary) graphql.Marshaler {
+func (ec *executionContext) marshalORenewalSummary2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalSummary(ctx context.Context, sel ast.SelectionSet, v *model.RenewalSummary) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._RenewalSummary(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalORenewalsPage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalsPage(ctx context.Context, sel ast.SelectionSet, v *model.RenewalsPage) graphql.Marshaler {
+func (ec *executionContext) marshalORenewalsPage2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRenewalsPage(ctx context.Context, sel ast.SelectionSet, v *model.RenewalsPage) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._RenewalsPage(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx context.Context, sel ast.SelectionSet, v *model.Result) graphql.Marshaler {
+func (ec *executionContext) marshalOResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx context.Context, sel ast.SelectionSet, v *model.Result) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Result(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOServiceLineItem2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ServiceLineItem) graphql.Marshaler {
+func (ec *executionContext) marshalOServiceLineItem2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ServiceLineItem) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -135960,7 +138375,7 @@ func (ec *executionContext) marshalOServiceLineItem2ᚕᚖgithubᚗcomᚋopenlin
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx, sel, v[i])
+			ret[i] = ec.marshalNServiceLineItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItem(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -135980,7 +138395,7 @@ func (ec *executionContext) marshalOServiceLineItem2ᚕᚖgithubᚗcomᚋopenlin
 	return ret
 }
 
-func (ec *executionContext) unmarshalOServiceLineItemBulkUpdateItem2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateItem(ctx context.Context, v any) (*model.ServiceLineItemBulkUpdateItem, error) {
+func (ec *executionContext) unmarshalOServiceLineItemBulkUpdateItem2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐServiceLineItemBulkUpdateItem(ctx context.Context, v any) (*model.ServiceLineItemBulkUpdateItem, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -135988,7 +138403,7 @@ func (ec *executionContext) unmarshalOServiceLineItemBulkUpdateItem2ᚖgithubᚗ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx context.Context, v any) ([]*model1.SortBy, error) {
+func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx context.Context, v any) ([]*model1.SortBy, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -136000,7 +138415,7 @@ func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	res := make([]*model1.SortBy, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNSortBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -136008,7 +138423,7 @@ func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋopenlineᚑai�
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOSortBy2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx context.Context, v any) (*model1.SortBy, error) {
+func (ec *executionContext) unmarshalOSortBy2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortBy(ctx context.Context, v any) (*model1.SortBy, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -136070,7 +138485,7 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -136097,7 +138512,7 @@ func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋope
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalOTag2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx, sel, v[i])
+			ret[i] = ec.marshalOTag2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -136111,7 +138526,7 @@ func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋope
 	return ret
 }
 
-func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Tag) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -136138,7 +138553,7 @@ func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋope
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTag2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx, sel, v[i])
+			ret[i] = ec.marshalNTag2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -136158,14 +138573,14 @@ func (ec *executionContext) marshalOTag2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋope
 	return ret
 }
 
-func (ec *executionContext) marshalOTag2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v *model.Tag) graphql.Marshaler {
+func (ec *executionContext) marshalOTag2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v *model.Tag) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Tag(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOTagIdOrNameInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInputᚄ(ctx context.Context, v any) ([]*model.TagIDOrNameInput, error) {
+func (ec *executionContext) unmarshalOTagIdOrNameInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInputᚄ(ctx context.Context, v any) ([]*model.TagIDOrNameInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -136177,7 +138592,7 @@ func (ec *executionContext) unmarshalOTagIdOrNameInput2ᚕᚖgithubᚗcomᚋopen
 	res := make([]*model.TagIDOrNameInput, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNTagIdOrNameInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNTagIdOrNameInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTagIDOrNameInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -136185,7 +138600,7 @@ func (ec *executionContext) unmarshalOTagIdOrNameInput2ᚕᚖgithubᚗcomᚋopen
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalOTaxInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaxInput(ctx context.Context, v any) (*model.TaxInput, error) {
+func (ec *executionContext) unmarshalOTaxInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTaxInput(ctx context.Context, v any) (*model.TaxInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -136193,7 +138608,7 @@ func (ec *executionContext) unmarshalOTaxInput2ᚖgithubᚗcomᚋopenlineᚑai�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOTenantSettingsInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsInput(ctx context.Context, v any) (*model.TenantSettingsInput, error) {
+func (ec *executionContext) unmarshalOTenantSettingsInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettingsInput(ctx context.Context, v any) (*model.TenantSettingsInput, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -136217,14 +138632,14 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	return res
 }
 
-func (ec *executionContext) marshalOTimelineEvent2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEvent(ctx context.Context, sel ast.SelectionSet, v model.TimelineEvent) graphql.Marshaler {
+func (ec *executionContext) marshalOTimelineEvent2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEvent(ctx context.Context, sel ast.SelectionSet, v model.TimelineEvent) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._TimelineEvent(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOTimelineEventType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventTypeᚄ(ctx context.Context, v any) ([]model.TimelineEventType, error) {
+func (ec *executionContext) unmarshalOTimelineEventType2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventTypeᚄ(ctx context.Context, v any) ([]model.TimelineEventType, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -136236,7 +138651,7 @@ func (ec *executionContext) unmarshalOTimelineEventType2ᚕgithubᚗcomᚋopenli
 	res := make([]model.TimelineEventType, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNTimelineEventType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventType(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNTimelineEventType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventType(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -136244,7 +138659,7 @@ func (ec *executionContext) unmarshalOTimelineEventType2ᚕgithubᚗcomᚋopenli
 	return res, nil
 }
 
-func (ec *executionContext) marshalOTimelineEventType2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []model.TimelineEventType) graphql.Marshaler {
+func (ec *executionContext) marshalOTimelineEventType2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []model.TimelineEventType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -136271,7 +138686,7 @@ func (ec *executionContext) marshalOTimelineEventType2ᚕgithubᚗcomᚋopenline
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTimelineEventType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventType(ctx, sel, v[i])
+			ret[i] = ec.marshalNTimelineEventType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTimelineEventType(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -136291,7 +138706,7 @@ func (ec *executionContext) marshalOTimelineEventType2ᚕgithubᚗcomᚋopenline
 	return ret
 }
 
-func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
+func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
