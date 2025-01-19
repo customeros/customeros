@@ -14,7 +14,7 @@ import (
 func InitHandlerRegistration(eventsService *events.EventsService, dependencies *model.DependencyContainer) {
 
 	// Register Flow handlers
-	eventsService.RegisterHandler(dto.FlowOn{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.FlowOn{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.Handle_FlowOn(ctx, dependencies.CommonServices, event)
 		},
@@ -22,7 +22,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 		DataType:  reflect.TypeOf(dto.FlowOn{}),
 	})
 
-	eventsService.RegisterHandler(dto.FlowParticipantSchedule{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.FlowParticipantSchedule{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.Handle_FlowParticipantSchedule(ctx, dependencies.CommonServices, event)
 		},
@@ -30,7 +30,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 		DataType:  reflect.TypeOf(dto.FlowParticipantSchedule{}),
 	})
 
-	eventsService.RegisterHandler(dto.FlowComputeParticipantsRequirements{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.FlowComputeParticipantsRequirements{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.Handle_FlowComputeParticipantsRequirements(ctx, dependencies, event)
 		},
@@ -38,7 +38,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 		DataType:  reflect.TypeOf(dto.FlowComputeParticipantsRequirements{}),
 	})
 
-	eventsService.RegisterHandler(dto.FlowParticipantGoalAchieved{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.FlowParticipantGoalAchieved{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.Handle_FlowParticipantGoalAchieved(ctx, dependencies, event)
 		},
@@ -47,7 +47,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 	})
 
 	// Mailstack handlers
-	eventsService.RegisterHandler(dto.MailstackProvisionBuyRequest{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.MailstackProvisionBuyRequest{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.Handle_MailstackProvisionBuyRequest(ctx, dependencies, event)
 		},
@@ -55,7 +55,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 		DataType:  reflect.TypeOf(dto.MailstackProvisionBuyRequest{}),
 	})
 
-	eventsService.RegisterHandler(dto.MailstackProvisionMailbox{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.MailstackProvisionMailbox{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.Handle_MailstackProvisionMailbox(ctx, dependencies, event)
 		},
@@ -64,7 +64,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 	})
 
 	// Contact handlers
-	eventsService.RegisterHandler(dto.AddSocialToContact{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.AddSocialToContact{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.OnSocialAddedToContact(ctx, dependencies, event)
 		},
@@ -72,7 +72,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 		DataType:  reflect.TypeOf(dto.AddSocialToContact{}),
 	})
 
-	eventsService.RegisterHandler(dto.RequestEnrichContact{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.RequestEnrichContact{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.OnRequestedEnrichContact(ctx, dependencies, event)
 		},
@@ -80,7 +80,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 		DataType:  reflect.TypeOf(dto.RequestEnrichContact{}),
 	})
 
-	eventsService.RegisterHandler(dto.HideContact{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.HideContact{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.OnContactHidden(ctx, dependencies, event)
 		},
@@ -89,7 +89,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 	})
 
 	// Organization handlers
-	eventsService.RegisterHandler(dto.RequestRefreshLastTouchpoint{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.RequestRefreshLastTouchpoint{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.OnRequestLastTouchpointRefresh(ctx, dependencies.CommonServices, event)
 		},
@@ -97,7 +97,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 		DataType:  reflect.TypeOf(dto.RequestRefreshLastTouchpoint{}),
 	})
 
-	eventsService.RegisterHandler(dto.RequestEnrichOrganization{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.RequestEnrichOrganization{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.OnRequestedEnrichOrganization(ctx, dependencies, event)
 		},
@@ -106,7 +106,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 	})
 
 	// Automation Engine
-	eventsService.RegisterHandler(dto.WebhookEvent{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.WebhookEvent{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.OnWebhookEventCreated(ctx, dependencies, event)
 		},
@@ -117,7 +117,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 	// Flow Engine
 
 	// Email handlers
-	eventsService.RegisterHandler(dto.RequestValidateEmail{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.RequestValidateEmail{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.OnRequestedValidateEmail(ctx, dependencies, event)
 		},
@@ -126,7 +126,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 	})
 
 	// Flow Engine handlers
-	eventsService.RegisterHandler(dto.WebhookEvent{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.WebhookEvent{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.OnWebhookEventCreated(ctx, dependencies, event)
 		},
@@ -134,7 +134,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 		DataType:  reflect.TypeOf(dto.WebhookEvent{}),
 	})
 
-	eventsService.RegisterHandler(dto.FlowAgentEvent{}, interfaces.EventHandler{
+	eventsService.Subscriber.RegisterHandler(dto.FlowAgentEvent{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
 			return listeners.OnFlowAgentEventCreated(ctx, dependencies.CommonServices, event)
 		},
