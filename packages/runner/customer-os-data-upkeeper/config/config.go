@@ -35,8 +35,8 @@ type AppConfig struct {
 }
 
 type Config struct {
-	Common *commonconf.CommonConfig
-	App    AppConfig
+	Common *commonconf.CommonConfig // Common shared configurations
+	App    AppConfig                // Application-specific configurations
 }
 
 type ProcessConfig struct {
@@ -65,16 +65,16 @@ type EventNotifications struct {
 
 func Load() *Config {
 	if err := godotenv.Load(); err != nil {
-		log.Print("Failed loading .env file")
+		log.Printf("No .env file found. Proceeding with system environment variables. Error: %v", err)
 	}
 
 	cfg := Config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("%+v", err)
+		log.Fatalf("Error loading app configuration: %+v", err)
 	}
 	cmnCfg := CommonConfig{}
 	if err := env.Parse(&cmnCfg); err != nil {
-		log.Fatalf("%+v", err)
+		log.Fatalf("Error loading app configuration: %+v", err)
 	}
 
 	cfg.Common = &commonconf.CommonConfig{
