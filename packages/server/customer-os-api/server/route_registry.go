@@ -3,14 +3,15 @@ package server
 import (
 	"context"
 
-	"github.com/gin-gonic/gin"
 	commoncaches "github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	cosHandler "github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
@@ -33,20 +34,20 @@ type RouteConfig struct {
 	grpcClient *grpc_client.Clients
 }
 
-func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, s *cosapi_services.Services, cache *commoncaches.Cache) {
+func RegisterRestRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *handlers.RestHandlers) {
 	registerInternalRoutes(ctx, r, s)
-	registerPublicRoutes(ctx, r, s)
+	registerPublicRoutes(ctx, r, s, h)
 	registerFileRoutes(ctx, r, s)
 
-	registerBillingRoutes(ctx, r, s, cache)
-	registerCustomerBaseRoutes(ctx, r, s, cache)
-	registerEnrichRoutes(ctx, r, s, cache)
-	registerFlowRoutes(ctx, r, s, cache)
+	registerBillingRoutes(ctx, r, s)
+	registerCustomerBaseRoutes(ctx, r, s)
+	registerEnrichRoutes(ctx, r, s)
+	registerFlowRoutes(ctx, r, s)
 	registerIDRoutes(ctx, r, s)
-	registerMailstackRoutes(ctx, r, s, cache)
-	registerOutreachRoutes(ctx, r, s, cache)
-	registerRevealRoutes(ctx, r, s, cache)
-	registerVerifyRoutes(ctx, r, s, cache)
+	registerMailstackRoutes(ctx, r, s)
+	registerOutreachRoutes(ctx, r, s)
+	registerRevealRoutes(ctx, r, s)
+	registerVerifyRoutes(ctx, r, s)
 }
 
 func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {

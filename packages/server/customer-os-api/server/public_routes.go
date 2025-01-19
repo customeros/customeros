@@ -3,17 +3,18 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest/private"
 
 	"github.com/gin-gonic/gin"
 
+	handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/flows"
 	integrations "github.com/customeros/customeros/packages/server/customer-os-api/rest/flows_integrations"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/private"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/public"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
-func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
+func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      "/rml",
@@ -90,7 +91,7 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      "/reveal",
-		handler:   public.RevealWebsiteEvents(s),
+		handler:   h.WebsiteTrackerEvents.Handle(),
 		routeType: RoutePublic,
 	})
 }

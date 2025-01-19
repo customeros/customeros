@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/billing"
@@ -31,18 +30,18 @@ const (
 	WebhooksPath     = "/webhooks/v1"
 )
 
-func registerBillingRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerBillingRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/organizations/:id/invoices", BillingPath),
 		handler:   billing.GetInvoicesForOrganization(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
 
-func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
 	// Organization Routes
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
@@ -50,7 +49,7 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *cosapi_se
 		handler:   customerbase.CreateOrganization(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -59,7 +58,7 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *cosapi_se
 		handler:   customerbase.GetOrganization(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -68,7 +67,7 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *cosapi_se
 		handler:   customerbase.SetPrimaryExternalSystemId(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	// Contact Routes
@@ -78,7 +77,7 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *cosapi_se
 		handler:   customerbase.CreateContact(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -87,7 +86,7 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *cosapi_se
 		handler:   customerbase.CreateBulkContacts(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -96,18 +95,18 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *cosapi_se
 		handler:   customerbase.ImportContacts(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
 
-func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/person", EnrichPath),
 		handler:   restEnrich.EnrichPerson(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -116,7 +115,7 @@ func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 		handler:   restEnrich.EnrichPersonCallback(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -125,12 +124,11 @@ func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 		handler:   restEnrich.EnrichOrganization(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
 
-func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
-
+func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
 	// webhook admin
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
@@ -138,7 +136,7 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 		handler:   flows.GetActiveWebhooks(s, CustomerOSAPIURL(), FlowsPath),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -147,7 +145,7 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 		handler:   flows.CreateWebhook(s, CustomerOSAPIURL(), FlowsPath),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -156,7 +154,7 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 		handler:   flows.RotateWebhook(s, CustomerOSAPIURL(), FlowsPath),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -165,7 +163,7 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 		handler:   flows.DeactivateWebhook(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
 
@@ -179,14 +177,14 @@ func registerIDRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Ser
 	})
 }
 
-func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/domains", MailstackPath),
 		handler:   mailstack.RegisterNewDomain(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -195,7 +193,7 @@ func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servi
 		handler:   mailstack.GetDomains(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -204,7 +202,7 @@ func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servi
 		handler:   mailstack.RecommendDomain(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -213,7 +211,7 @@ func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servi
 		handler:   mailstack.ConfigureDomain(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -222,7 +220,7 @@ func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servi
 		handler:   mailstack.RegisterNewMailbox(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -231,7 +229,7 @@ func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servi
 		handler:   mailstack.GetMailboxes(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -240,7 +238,7 @@ func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servi
 		handler:   mailstack.DNS(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -249,7 +247,7 @@ func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servi
 		handler:   mailstack.AddDNSRecord(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -258,29 +256,29 @@ func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servi
 		handler:   mailstack.DeleteDNSRecord(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
 
-func registerOutreachRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerOutreachRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/track/email", OutreachPath),
 		handler:   outreach.GenerateEmailTrackingUrls(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
 
-func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/trackers", RevealPath),
 		handler:   reveal.ProvisionTracker(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -289,18 +287,18 @@ func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 		handler:   reveal.VerifyTracker(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
 
-func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/email", VerifyPath),
 		handler:   verify.VerifyEmailAddress(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -309,7 +307,7 @@ func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 		handler:   verify.BulkUploadEmailsForVerification(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -318,7 +316,7 @@ func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 		handler:   verify.GetBulkEmailVerificationResults(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -327,7 +325,7 @@ func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 		handler:   verify.DownloadBulkEmailVerificationResults(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -336,6 +334,6 @@ func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 		handler:   verify.IpIntelligence(s),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
