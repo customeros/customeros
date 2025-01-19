@@ -177,7 +177,7 @@ func InitCommonServices(
 	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories)
 
 	// Services that only depend on Simple
-	fileImpl := files.NewFileService(log, &cfg.Internal.FileStoreConfig, neo4jRepositories, attachmentImpl)
+	fileImpl := files.NewFileService(log, &cfg.Infrastructure.FileStoreConfig, neo4jRepositories, attachmentImpl)
 	reminderImpl := reminders.NewReminderService(neo4jRepositories, novuImpl)
 	verifyImpl := verify.NewVerifyService(log, postgresRepositories, cfg, enrichmentImpl)
 

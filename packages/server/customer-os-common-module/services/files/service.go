@@ -589,6 +589,8 @@ func (s *fileService) UploadSingleFileBytes(ctx context.Context, basePath, fileI
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.UploadSingleFileBytes")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("basePath", basePath), log.String("fileId", fileID), log.String("fileName", fileName))
+	span.LogFields(log.Int("contentSize", len(*content)))
 
 	// Create a new form with buffer
 	body := &bytes.Buffer{}
@@ -629,4 +631,166 @@ func (s *fileService) UploadSingleFileBytes(ctx context.Context, basePath, fileI
 	}
 
 	return result, nil
+}
+
+func (s *fileService) UploadSingleFileBytesDirect(
+	ctx context.Context,
+	basePath, fileID, fileName string,
+	content *[]byte,
+	cdn bool,
+) (*interfaces.File, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.UploadSingleFileBytesDirect")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("basePath", basePath), log.String("fileId", fileID), log.String("fileName", fileName))
+	span.LogFields(log.Int("contentSize", len(*content)))
+
+	// validate aws s3 configuration
+	if s.cfg.AWS.Region == "" || s.cfg.AWS.Bucket == "" {
+		err := errors.New("AWS S3 configuration is missing")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// 1) Generate a file ID if not provided
+	if fileID == "" {
+		fileID = uuid.New().String()
+	}
+	s.log.Infof("Uploading file with ID %s and name %s", fileID, fileName)
+
+	// If no base path provided, set a default
+	if basePath == "" {
+		basePath = "/GLOBAL"
+	}
+
+	// 2) Detect file type from memory, for validation or later use
+	//    Read a small “head” portion of the file bytes
+	headLen := 261
+	if len(*content) < headLen {
+		headLen = len(*content)
+	}
+	headBytes := (*content)[:headLen]
+
+	fileType, err := utils.GetFileType(headBytes)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error detecting file type"))
+		return nil, err
+	}
+	if fileType == filetype.Unknown {
+		err := errors.New("Unknown file type")
+		tracing.TraceErr(span, err)
+		s.log.Error(err)
+		return nil, err
+	}
+	mimeType := http.DetectContentType(headBytes)
+
+	// 3) Build an internal "attachment" entity for the DB
+	attachmentEntity := neo4jentity.AttachmentEntity{
+		Id:       fileID,
+		FileName: fileName,
+		MimeType: mimeType,
+		Size:     int64(len(*content)),
+		BasePath: basePath,
+	}
+
+	// 4) Optional: If `cdn` is true and file is a supported image, upload to Cloudflare (CDN)
+	if cdn && s.canUploadToCDN(fileType) {
+		cdnURL, err := s.uploadToCloudflareCDN(ctx, fileID, *content)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Error uploading file to CDN"))
+			return nil, err
+		}
+		// If you need signed URLs:
+		// cdnURL = generateSignedURL(cdnURL, s.cfg.CloudflareImageUploadSignKey)
+		attachmentEntity.CdnUrl = cdnURL
+	}
+
+	// 5) Upload to S3 using the AWS SDK
+	//    (No temp file needed, just wrap your bytes in an io.Reader)
+	awsSession, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating AWS session"))
+		return nil, err
+	}
+
+	s3Client := s3.New(awsSession)
+	tenant := common.GetTenantFromContext(ctx)
+
+	// Derive file extension from either the file name or fileType
+	extension := utils.FirstNotEmptyString(filepath.Ext(fileName), fileType.Extension)
+	if strings.HasPrefix(extension, ".") {
+		extension = extension[1:]
+	}
+	s3Key := tenant + basePath + "/" + fileID + "." + extension
+
+	// Perform the S3 PutObject
+	_, err = s3Client.PutObject(&s3.PutObjectInput{
+		Bucket:               aws.String(s.cfg.AWS.Bucket),
+		Key:                  aws.String(s3Key),
+		ACL:                  aws.String("private"),
+		Body:                 bytes.NewReader(*content),       // pass the bytes
+		ContentLength:        aws.Int64(int64(len(*content))), // let S3 know size
+		ContentType:          aws.String(mimeType),
+		ContentDisposition:   aws.String("attachment"),
+		ServerSideEncryption: aws.String("AES256"),
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error putting object to S3"))
+		return nil, err
+	}
+	s.log.Infof("Successfully uploaded file to S3 key: %s", s3Key)
+
+	// 7) Create the attachment record in Neo4j / Postgres (via `attachmentService`)
+	createdAttachment, err := s.attachmentService.Create(ctx, &attachmentEntity)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating attachment DB record"))
+		return nil, err
+	}
+
+	// 8) Return the final `interfaces.File` representation
+	return MapAttachmentResponseToFileEntity(createdAttachment), nil
+}
+
+func (s *fileService) canUploadToCDN(fileType types.Type) bool {
+	switch fileType.Extension {
+	case "png", "jpg", "jpeg", "gif":
+		return true
+	}
+	return false
+}
+
+func (s *fileService) uploadToCloudflareCDN(ctx context.Context, fileID string, data []byte) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.uploadToCloudflareCDN")
+	defer span.Finish()
+
+	// validate cloudflare configuration
+	if s.cfg.CloudflareImageUploadApiKey == "" || s.cfg.CloudflareImageUploadAccountId == "" || s.cfg.CloudflareImageUploadSignKey == "" {
+		err := errors.New("Cloudflare configuration is missing")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	// Create Cloudflare client
+	cloudflareApi, err := cloudflare.NewWithAPIToken(s.cfg.CloudflareImageUploadApiKey)
+	if err != nil {
+		return "", err
+	}
+
+	// Prepare the data as io.ReadCloser
+	r := io.NopCloser(bytes.NewReader(data))
+
+	// Upload
+	uploadedFile, err := cloudflareApi.UploadImage(
+		ctx,
+		cloudflare.AccountIdentifier(s.cfg.CloudflareImageUploadAccountId),
+		cloudflare.UploadImageParams{
+			File:              r,
+			Name:              fileID,
+			RequireSignedURLs: true,
+		},
+	)
+	if err != nil {
+		return "", err
+	}
+	return uploadedFile.Variants[0], nil
 }

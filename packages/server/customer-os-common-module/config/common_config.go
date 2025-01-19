@@ -21,11 +21,11 @@ type InfrastructureConfig struct {
 	RabbitMQConfig      RabbitMQConfig
 	JaegerConfig        tracing.JaegerConfig
 	LoggerConfig        logger.Config
+	FileStoreConfig     FileStoreConfig
 }
 
 type InternalServicesConfig struct {
 	EmailConfig         EmailConfig
-	FileStoreConfig     FileStoreConfig
 	MailstackConfig     MailstackConfig
 	MailSherpaApiConfig MailSherpaApiConfig
 	CustomerOsApi       CustomerOsApiConfig

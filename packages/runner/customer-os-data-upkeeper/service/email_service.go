@@ -347,7 +347,7 @@ func (s *emailService) checkAndUpdateBulkRequests(ctx context.Context, requestsT
 			// Upload result file to S3
 			basePath := fmt.Sprintf("/EMAIL_VALIDATION/BULK/%d", utils.Now().Year())
 
-			fileDTO, err := s.commonServices.FileService.UploadSingleFileBytes(ctx, basePath, requestID, requestID+".csv", &csvContent, false)
+			fileDTO, err := s.commonServices.FileService.UploadSingleFileBytesDirect(ctx, basePath, requestID, requestID+".csv", &csvContent, false)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "UploadSingleFileBytes"))
 				continue

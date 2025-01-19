@@ -24,6 +24,7 @@ type CommonConfig struct {
 	PostgresAsync    commonconf.PostgresAsyncConfig
 	Neo4j            commonconf.Neo4jConfig
 	Mailsherpa       commonconf.MailSherpaApiConfig
+	FileStore        commonconf.FileStoreConfig
 }
 
 type AppConfig struct {
@@ -85,6 +86,7 @@ func Load() *Config {
 			PostgresConfig:      cmnCfg.Postgres,
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,
 			Neo4jConfig:         cmnCfg.Neo4j,
+			FileStoreConfig:     cmnCfg.FileStore,
 		},
 		External: commonconf.ExternalServicesConfig{
 			EnrowConfig:         cmnCfg.Enrow,

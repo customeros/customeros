@@ -67,7 +67,7 @@ type Config struct {
 
 	// Email
 	CronScheduleValidateEmails                 string `env:"CRON_SCHEDULE_VALIDATE_EMAILS" envDefault:"0,30 * * * * *"`
-	CronScheduleValidateEmailsFromBulkRequests string `env:"CRON_SCHEDULE_VALIDATE_EMAILS_BULK_REQUEST" envDefault:"*/10 * * * * *"`
+	CronScheduleValidateEmailsFromBulkRequests string `env:"CRON_SCHEDULE_VALIDATE_EMAILS_BULK_REQUEST" envDefault:"*/30 * * * * *"`
 	CronScheduleCheckScrubbyResult             string `env:"CRON_SCHEDULE_CHECK_SCRUBBY_RESULT" envDefault:"0 45 * * * *"`
 	CronScheduleCheckEnrowResults              string `env:"CRON_SCHEDULE_CHECK_ENROW_RESULTS" envDefault:"0 */5 * * * *"`
 	CronScheduleCleanEmails                    string `env:"CRON_SCHEDULE_CLEAN_EMAILS" envDefault:"0 0 */6 * * *"`
