@@ -36,6 +36,7 @@ func InitServices(
 		postgresRepositories,
 		cfg.Common,
 		grpcClients,
+		&commonService.InitOptions{},
 	)
 
 	return &services

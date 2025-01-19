@@ -11,12 +11,9 @@ import (
 const (
 	KB       = 1024
 	cache5MB = 5 * 1024 * KB
-	cache1MB = 1 * 1024 * KB
 )
 const (
 	expire9999Days = 9999 * 24 * 60 * 60
-	expire30Days   = 30 * 24 * 60 * 60
-	expire1Day     = 24 * 60 * 60
 )
 const delimiter = "--"
 

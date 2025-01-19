@@ -95,6 +95,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 		repositories.PostgresRepositories,
 		&cfg.Common,
 		grpcClients,
+		&commonService.InitOptions{LoadPersonalEmailProviders: true},
 	)
 
 	services := Services{

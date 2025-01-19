@@ -82,6 +82,7 @@ func main() {
 		postgresRepositories,
 		cfg.Common,
 		eventsProcessingGrpcClient,
+		&commonService.InitOptions{},
 	)
 
 	// Create dependencies for event handlers
