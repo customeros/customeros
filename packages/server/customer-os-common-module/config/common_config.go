@@ -25,10 +25,10 @@ type InfrastructureConfig struct {
 
 type InternalServicesConfig struct {
 	EmailConfig         EmailConfig
-	FileStoreConfig     FileStoreConfig
 	MailstackConfig     MailstackConfig
 	MailSherpaApiConfig MailSherpaApiConfig
 	CustomerOsApi       CustomerOsApiConfig
+	FileStoreConfig     FileStoreConfig
 }
 
 type ExternalServicesConfig struct {

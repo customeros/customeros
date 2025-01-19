@@ -2,6 +2,14 @@ package main
 
 import (
 	"context"
+	"io"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/robfig/cron"
+	"github.com/sirupsen/logrus"
+
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/container"
@@ -14,12 +22,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/events/eventbuffer"
 	"github.com/opentracing/opentracing-go"
-	"github.com/robfig/cron"
-	"github.com/sirupsen/logrus"
-	"io"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
@@ -81,9 +83,16 @@ func main() {
 		EventBufferStoreService:       eventBufferStoreService,
 	}
 
-	cronJub := localcron.StartCron(cntnr)
+	crons := localcron.StartCron(cntnr)
 
-	if err := run(appLogger, cronJub); err != nil {
+	if err = run(appLogger, crons,
+		func() error {
+			return localcron.StopCron(appLogger, crons) // Stop cron jobs
+		},
+		func() error {
+			eventBufferProcessService.Stop() // Stop event buffer service
+			return nil
+		}); err != nil {
 		appLogger.Fatal(err)
 	}
 
@@ -91,8 +100,8 @@ func main() {
 	appLogger.Sync()
 }
 
-func run(log logger.Logger, cron *cron.Cron) error {
-	defer cron.Stop()
+func run(log logger.Logger, cron *cron.Cron, cleanupTasks ...func() error) error {
+	defer cron.Stop() // Stop cron jobs first
 
 	// Shutdown handling
 	shutdown := make(chan os.Signal, 1)
@@ -101,12 +110,14 @@ func run(log logger.Logger, cron *cron.Cron) error {
 	sig := <-shutdown
 	log.Infof("Received shutdown signal %v", sig)
 
-	// Gracefully stop
-	if err := localcron.StopCron(log, cron); err != nil {
-		return err
+	// Run cleanup tasks
+	for _, task := range cleanupTasks {
+		if err := task(); err != nil {
+			log.Errorf("Cleanup task failed: %v", err)
+		}
 	}
-	log.Info("Graceful shutdown complete")
 
+	log.Info("Graceful shutdown complete")
 	return nil
 }
 

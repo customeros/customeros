@@ -791,7 +791,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		basePath = basePath + "/DRY_RUN"
 	}
 
-	fileDTO, err := h.fileStore.UploadSingleFileBytes(ctx, basePath, invoiceEntity.Id, "Invoice - "+invoiceEntity.Number+".pdf", pdfBytes, true)
+	fileDTO, err := h.fileStore.UploadSingleFileBytesDirect(ctx, basePath, invoiceEntity.Id, "Invoice - "+invoiceEntity.Number+".pdf", pdfBytes, true)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "UploadSingleFileBytes"))
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.UploadSingleFileBytes")

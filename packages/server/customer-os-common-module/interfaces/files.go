@@ -14,7 +14,7 @@ type FileService interface {
 	Base64Image(ctx context.Context, id string) (*string, error)
 	GetFilePublicUrl(ctx context.Context, id string) (string, error)
 	GetFileBytes(ctx context.Context, fileURL string) (*[]byte, error)
-	UploadSingleFileBytes(ctx context.Context, basePath, fileID, fileName string, content *[]byte, cdn bool) (*File, error)
+	UploadSingleFileBytesDirect(ctx context.Context, basePath, fileID, fileName string, content *[]byte, cdn bool) (*File, error)
 }
 
 type File struct {
