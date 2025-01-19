@@ -113,7 +113,9 @@ func (r *RabbitMQSubscriber) processMessage(d amqp091.Delivery) error {
 	data, ok := event.Event.Data.(map[string]interface{})
 	if !ok {
 		r.logger.Errorf("Data not found in message: %s", d.Body)
-		return errors.New("data not found in message")
+		err := errors.New("data not found in message")
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	// Find the appropriate handler
@@ -126,12 +128,14 @@ func (r *RabbitMQSubscriber) processMessage(d amqp091.Delivery) error {
 	}
 
 	if data == nil {
-		return errors.New("data not found in message")
+		tracing.TraceErr(span, errors.New("data is nil in message"))
+		return errors.New("data is nil in message")
 	}
 
 	// Decode the data into the specific event type
 	eventDataPtr := reflect.New(handlerReg.DataType).Interface()
 	if err := mapstructure.Decode(data, eventDataPtr); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Failed to decode data"))
 		return err
 	}
 
