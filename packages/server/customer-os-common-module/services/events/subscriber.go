@@ -124,6 +124,7 @@ func (r *RabbitMQSubscriber) processMessage(d amqp091.Delivery) error {
 	r.handlerRegistryMutex.RUnlock()
 
 	if !found {
+		r.logger.Infof("No handler found for event type: %s", event.Event.EventType)
 		return nil // No handler found, ignore the message
 	}
 

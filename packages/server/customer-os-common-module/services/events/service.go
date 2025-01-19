@@ -3,14 +3,12 @@ package events
 import (
 	"fmt"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 )
 
 type EventsService struct {
 	Publisher  *RabbitMQPublisher
 	Subscriber *RabbitMQSubscriber
-	Handlers   *HandlerRegistry
 }
 
 func NewEventsService(rabbitmqURL string, log logger.Logger) (*EventsService, error) {
@@ -27,17 +25,7 @@ func NewEventsService(rabbitmqURL string, log logger.Logger) (*EventsService, er
 	return &EventsService{
 		Publisher:  publisher,
 		Subscriber: subscriber,
-		Handlers:   NewHandlerRegistry(),
 	}, nil
-}
-
-func (s *EventsService) RegisterHandler(eventType interface{}, handler interfaces.EventHandler) {
-	s.Handlers.handlers[handler.EventType] = handler
-}
-
-func (s *EventsService) GetHandler(eventTypeName string) (interfaces.EventHandler, bool) {
-	handler, exists := s.Handlers.handlers[eventTypeName]
-	return handler, exists
 }
 
 func (s *EventsService) Close() error {
