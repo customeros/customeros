@@ -9,6 +9,11 @@ import (
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailbox"
@@ -17,12 +22,6 @@ import (
 	"github.com/google/uuid"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // Participants is the resolver for the participants field.
@@ -596,10 +595,8 @@ func (r *Resolver) FlowParticipant() generated.FlowParticipantResolver {
 // FlowSender returns generated.FlowSenderResolver implementation.
 func (r *Resolver) FlowSender() generated.FlowSenderResolver { return &flowSenderResolver{r} }
 
-type (
-	flowResolver                struct{ *Resolver }
-	flowActionExecutionResolver struct{ *Resolver }
-	flowContactResolver         struct{ *Resolver }
-	flowParticipantResolver     struct{ *Resolver }
-	flowSenderResolver          struct{ *Resolver }
-)
+type flowResolver struct{ *Resolver }
+type flowActionExecutionResolver struct{ *Resolver }
+type flowContactResolver struct{ *Resolver }
+type flowParticipantResolver struct{ *Resolver }
+type flowSenderResolver struct{ *Resolver }

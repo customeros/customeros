@@ -1,0 +1,90 @@
+extend type Query {
+  agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+  agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+  agent_Save(input: AgentSaveInput!): Agent!
+    @hasRole(roles: [ADMIN, USER])
+    @hasTenant
+}
+
+enum CapabilityType {
+  WEBSITE_TRACKER
+  SEND_SLACK_NOTIFICATION
+}
+
+enum CapabilityStatus {
+  ACTIVE
+  ACTIVE_WITH_WARNINGS
+  INACTIVE
+  PENDING
+}
+
+type Capability {
+  id: ID!
+  type: CapabilityType!
+  name: String!
+  action: String!
+  optional: Boolean!
+  values: String!
+  errors: String
+  status: CapabilityStatus!
+}
+
+enum AgentStatus {
+  ON
+  OFF
+  ON_AGENT_ERROR
+  ON_CAPABILITY_ERROR
+}
+
+enum AgentType {
+  WEB_VISIT_IDENTIFIER
+}
+
+type Agent {
+  id: ID!
+  type: AgentType!
+  tenant: String!
+  name: String!
+  capabilities: [Capability!]!
+  goal: String!
+  isActive: Boolean!
+  flowId: ID
+  visible: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+  error: String
+  color: String!
+  icon: String!
+  status: AgentStatus!
+}
+
+input CapabilitySaveInput {
+  id: ID
+  type: CapabilityType
+  name: String
+  action: String
+  optional: Boolean
+  values: String
+  errors: String
+  status: CapabilityStatus
+}
+
+input AgentSaveInput {
+  id: ID
+  type: AgentType
+  tenant: String
+  name: String
+  capabilities: [CapabilitySaveInput!]
+  goal: String
+  isActive: Boolean
+  flowId: ID
+  visible: Boolean
+  createdAt: Time!
+  updatedAt: Time!
+  color: String
+  icon: String
+  status: AgentStatus
+}

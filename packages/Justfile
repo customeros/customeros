@@ -89,6 +89,9 @@ clean:
 	rm -rf *.log
 	rm -rf *.pid
 
+generate-api:
+    cd ./server/customer-os-api && go run github.com/99designs/gqlgen generate
+
 logs:
     tail -f admin-api.log api.log events-subscribers.log
 
