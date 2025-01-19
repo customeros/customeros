@@ -70,6 +70,7 @@ func SetupTestDatabase() (TestDatabase, func()) {
 		postgresRepositories,
 		cfg,
 		testDBs.GrpcClients,
+		&commonServices.InitOptions{},
 	)
 
 	testDBs.Services = &service.Services{

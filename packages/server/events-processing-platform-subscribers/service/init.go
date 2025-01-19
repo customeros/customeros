@@ -37,6 +37,7 @@ func InitServices(
 		postgresRepositories,
 		&config,
 		grpcClients,
+		&commonServices.InitOptions{LoadPersonalEmailProviders: true},
 	)
 
 	return &services

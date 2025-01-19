@@ -78,7 +78,7 @@ func main() {
 		Cfg:                           cfg,
 		Log:                           appLogger,
 		Repositories:                  repositories,
-		CommonServices:                commonService.InitCommonServices(appLogger, repositories.Neo4jRepositories, repositories.PostgresRepositories, cfg.Common, epClient),
+		CommonServices:                commonService.InitCommonServices(appLogger, repositories.Neo4jRepositories, repositories.PostgresRepositories, cfg.Common, epClient, &commonService.InitOptions{LoadPersonalEmailProviders: true}),
 		EventProcessingServicesClient: epClient,
 		EventBufferStoreService:       eventBufferStoreService,
 	}

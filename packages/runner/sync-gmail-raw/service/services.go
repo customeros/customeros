@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/config"
 	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/logger"
 	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/repository"
@@ -10,6 +9,7 @@ import (
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type Services struct {
@@ -37,6 +37,7 @@ func InitServices(driver *neo4j.DriverWithContext, postgresDB *commonConfig.Post
 		postgresRepositories,
 		&cfg.CommonConfig,
 		grpc_client.InitClients(nil),
+		&commonService.InitOptions{},
 	)
 
 	services.EmailService = NewEmailService(cfg, services.Repositories, services)

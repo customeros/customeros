@@ -8,15 +8,15 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-contrib/cors"
-	ginzap "github.com/gin-contrib/zap"
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
+	"github.com/gin-contrib/cors"
+	ginzap "github.com/gin-contrib/zap"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -90,6 +90,7 @@ func (server *server) Run(parentCtx context.Context) error {
 		repos.PostgresRepositories,
 		&server.cfg.Common,
 		grpcContainer,
+		&commonservice.InitOptions{LoadPersonalEmailProviders: true},
 	)
 
 	// Setting up Gin

@@ -127,12 +127,17 @@ type CommonServices struct {
 	WorkspaceService           interfaces.WorkspaceService
 }
 
+type InitOptions struct {
+	LoadPersonalEmailProviders bool
+}
+
 func InitCommonServices(
 	log logger.Logger,
 	neo4jRepositories *neo4j_repository.Repositories,
 	postgresRepositories *postgres_repository.Repositories,
 	cfg *config.CommonConfig,
 	grpcClients *grpc_client.Clients,
+	options *InitOptions,
 ) *CommonServices {
 	var err error
 
@@ -279,6 +284,22 @@ func InitCommonServices(
 
 	// Check that all services are initialized
 	CheckIsInitialized(&common)
+
+	// Process options
+	if options != nil {
+		if options.LoadPersonalEmailProviders {
+			//init app cache
+			personalEmailProviderEntities, err := postgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+			if err != nil {
+				log.Fatalf("Error getting personal email providers: %s", err.Error())
+			}
+			personalEmailProviders := make([]string, 0)
+			for _, personalEmailProvider := range personalEmailProviderEntities {
+				personalEmailProviders = append(personalEmailProviders, personalEmailProvider.ProviderDomain)
+			}
+			common.Cache.SetPersonalEmailProviders(personalEmailProviders)
+		}
+	}
 
 	return &common
 }
