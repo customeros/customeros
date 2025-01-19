@@ -230,15 +230,17 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 			CompanyName: &companyName,
 		}
 
-		recordID, srvResponse, err := c.dependencies.CommonServices.EnrichmentService.EnrichPerson(ctx, query)
+		recordID, scrapinResponseBody, err := c.dependencies.CommonServices.EnrichmentService.EnrichPerson(ctx, query)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "callApiEnrichPerson"))
 			err = c.dependencies.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonModel.NodeLabelContact, contactEntity.Id, string(neo4jentity.ContactPropertyEnrichFailedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich failed at"))
 			}
+		} else if recordID == nil {
+			tracing.TraceErr(span, errors.New("scrapin recordID is nil"))
 		} else {
-			err = c.enrichContactWithScrapInEnrichDetails(ctx, tenant, contactEntity, srvResponse, *recordID)
+			err = c.enrichContactWithScrapInEnrichDetails(ctx, tenant, contactEntity, scrapinResponseBody, *recordID)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "enrichContactWithScrapInEnrichDetails"))
 			}
