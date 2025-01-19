@@ -180,7 +180,7 @@ func (r *RabbitMQSubscriber) listenQueueWithExclusive(queueName string, exclusiv
 			)
 			if err != nil {
 				if exclusive && strings.Contains(err.Error(), "ACCESS_REFUSED") && strings.Contains(err.Error(), "exclusive") {
-					r.logger.Warn("Exclusive consumer conflict for queue %s. Only one instance can consume exclusively.", queueName)
+					r.logger.Warnf("Exclusive consumer conflict for queue %s. Only one instance can consume exclusively.", queueName)
 					time.Sleep(10 * time.Second)
 					continue
 				}
