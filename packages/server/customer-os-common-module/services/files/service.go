@@ -11,7 +11,6 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
-	"net/textproto"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -55,12 +54,7 @@ type fileService struct {
 	attachmentService interfaces.AttachmentService
 }
 
-func NewFileService(
-	log logger.Logger,
-	cfg *config.FileStoreConfig,
-	neo4j *neo4j_repository.Repositories,
-	attachment interfaces.AttachmentService,
-) interfaces.FileService {
+func NewFileService(log logger.Logger, cfg *config.FileStoreConfig, neo4j *neo4j_repository.Repositories, attachment interfaces.AttachmentService) interfaces.FileService {
 	return &fileService{
 		log:               log,
 		cfg:               cfg,
@@ -585,60 +579,7 @@ func (s *fileService) GetFileBytes(ctx context.Context, fileURL string) (*[]byte
 	return &data, nil
 }
 
-func (s *fileService) UploadSingleFileBytes(ctx context.Context, basePath, fileID, fileName string, content *[]byte, cdn bool) (*interfaces.File, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.UploadSingleFileBytes")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("basePath", basePath), log.String("fileId", fileID), log.String("fileName", fileName))
-	span.LogFields(log.Int("contentSize", len(*content)))
-
-	// Create a new form with buffer
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-
-	// Create form file
-	part, err := writer.CreateFormFile("file", fileName)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	// Write bytes to the form file
-	if _, err := part.Write(*content); err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	// Close writer
-	if err := writer.Close(); err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	// Create FileHeader with content type
-	fileHeader := &multipart.FileHeader{
-		Filename: fileName,
-		Size:     int64(len(*content)),
-		Header: textproto.MIMEHeader{
-			"Content-Type": []string{"application/octet-stream"},
-		},
-	}
-
-	result, err := s.UploadSingleFile(ctx, basePath, fileID, fileHeader, cdn)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return result, nil
-}
-
-func (s *fileService) UploadSingleFileBytesDirect(
-	ctx context.Context,
-	basePath, fileID, fileName string,
-	content *[]byte,
-	cdn bool,
-) (*interfaces.File, error) {
+func (s *fileService) UploadSingleFileBytesDirect(ctx context.Context, basePath, fileID, fileName string, content *[]byte, cdn bool) (*interfaces.File, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.UploadSingleFileBytesDirect")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

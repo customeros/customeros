@@ -15,8 +15,6 @@ type FileService interface {
 	GetFilePublicUrl(ctx context.Context, id string) (string, error)
 	GetFileBytes(ctx context.Context, fileURL string) (*[]byte, error)
 	UploadSingleFileBytesDirect(ctx context.Context, basePath, fileID, fileName string, content *[]byte, cdn bool) (*File, error)
-	// Deprecated, use UploadSingleFileBytesDirect
-	UploadSingleFileBytes(ctx context.Context, basePath, fileID, fileName string, content *[]byte, cdn bool) (*File, error)
 }
 
 type File struct {
