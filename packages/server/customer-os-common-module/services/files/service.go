@@ -612,18 +612,36 @@ func (s *fileService) UploadSingleFileBytesDirect(ctx context.Context, basePath,
 	}
 	headBytes := (*content)[:headLen]
 
-	fileType, err := utils.GetFileType(headBytes)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error detecting file type"))
-		return nil, err
-	}
-	if fileType == filetype.Unknown {
-		err := errors.New("Unknown file type")
-		tracing.TraceErr(span, err)
-		s.log.Error(err)
-		return nil, err
-	}
+	fileType := filetype.Unknown
+	var err error
 	mimeType := http.DetectContentType(headBytes)
+	span.LogFields(log.String("result.mimeType", mimeType))
+
+	// check if file type is csv from file name
+	if strings.HasSuffix(strings.ToLower(fileName), ".csv") {
+		acceptedMimeTypesForCsv := []string{"text/csv", "application/octet-stream", "text/plain; charset=utf-8", "text/plain; charset=us-ascii", "text/plain"}
+		// Validate if the detected MIME type is "text/csv"
+		if !utils.Contains(acceptedMimeTypesForCsv, mimeType) {
+			err = errors.New("Invalid mime type for CSV")
+			tracing.TraceErr(span, errors.Wrap(err, "Unexpected file type"))
+			s.log.Error("Unexpected file type")
+			// return nil, err
+		}
+		fileType = types.NewType("csv", "text/csv")
+	} else {
+		fileType, err = utils.GetFileType(headBytes)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Error getting file type"))
+			return nil, err
+		}
+	}
+
+	if fileType == filetype.Unknown {
+		err = errors.New("Unknown file type")
+		tracing.TraceErr(span, errors.Wrap(err, "Unknown file type"))
+		s.log.Error("Unknown multipartFile type")
+		return nil, err
+	}
 
 	// 3) Build an internal "attachment" entity for the DB
 	attachmentEntity := neo4jentity.AttachmentEntity{
