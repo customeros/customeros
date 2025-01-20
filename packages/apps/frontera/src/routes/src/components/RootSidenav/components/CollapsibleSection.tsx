@@ -18,7 +18,7 @@ export const CollapsibleSection = ({
 }: CollapsibleSectionProps) => {
   return (
     <div>
-      <div
+      <button
         onClick={onToggle}
         className='w-full gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors'
       >
@@ -29,7 +29,7 @@ export const CollapsibleSection = ({
             'transform -rotate-90': !isOpen,
           })}
         />
-      </div>
+      </button>
       {isOpen && <div className='mt-1'>{children}</div>}
     </div>
   );
