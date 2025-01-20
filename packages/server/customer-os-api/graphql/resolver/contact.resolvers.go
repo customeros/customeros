@@ -887,7 +887,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	// Call events platform to find work email
 	firstName, lastName := contactEntity.DeriveFirstAndLastNames()
 
-	_, betterComtactRequestID, enrichmentResponse, err := r.Services.CommonServices.EnrichmentService.FindWorkEmail(ctx, linkedInUrl, firstName, lastName, orgName, *domain, false)
+	_, betterComtactRequestID, enrichmentResponse, err := r.Services.CommonServices.EnrichmentService.FindWorkEmail(ctx, linkedInUrl, firstName, lastName, orgName, utils.IfNotNilString(domain), false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to find work email for contact %s", contactID)

@@ -37,6 +37,7 @@ type CommonConfig struct {
 	Cloudflare    commonconf.CloudflareConfig
 	TrueInbox     commonconf.TrueInboxConfig
 	Brandfetch    commonconf.BrandfetchConfig
+	Enrow         commonconf.EnrowConfig
 }
 
 func Load() *Config {
@@ -77,6 +78,7 @@ func Load() *Config {
 			CloudflareConfig:    cmnCfg.Cloudflare,
 			TrueInboxConfig:     cmnCfg.TrueInbox,
 			BrandfetchConfig:    cmnCfg.Brandfetch,
+			EnrowConfig:         cmnCfg.Enrow,
 		},
 	}
 
