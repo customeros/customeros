@@ -391,7 +391,13 @@ func getWebhookEvent(input any) (commonenum.FlowListenerEvent, *dto.WebhookEvent
 		return commonenum.NotSet, nil, err
 	}
 
-	webhookDataPtr := reflect.New(eventDataTypes[webhookEvent.DataType]).Interface()
+	eventDataType, ok := eventDataTypes[webhookEvent.DataType]
+	if !ok {
+		err := fmt.Errorf("event data type %s is not supported", webhookEvent.DataType)
+		return commonenum.NotSet, nil, err
+	}
+
+	webhookDataPtr := reflect.New(eventDataType).Interface()
 	err := utils.Decode(webhookData, webhookDataPtr)
 	if err != nil {
 		return commonenum.NotSet, nil, err
