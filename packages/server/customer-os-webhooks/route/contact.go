@@ -113,6 +113,7 @@ func syncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing or empty tenant header"})
 			return
 		}
+		tracing.TagTenant(span, tenant)
 		ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: tenant})
 
 		// Limit the size of the request body
