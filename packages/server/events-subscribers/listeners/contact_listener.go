@@ -222,12 +222,12 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 		c.dependencies.CommonServices.Events.Publisher.PublishEventCompleted(ctx, tenant, contactId, commonModel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 
 		query := interfaces.PersonSearch{
-			LinkedinURL: &linkedInUrl,
-			FirstName:   &firstName,
-			LastName:    &lastName,
-			Email:       &emailAddress,
-			Domain:      &domain,
-			CompanyName: &companyName,
+			LinkedinURL: linkedInUrl,
+			FirstName:   firstName,
+			LastName:    lastName,
+			Email:       emailAddress,
+			Domain:      domain,
+			CompanyName: companyName,
 		}
 
 		recordID, scrapinResponseBody, err := c.dependencies.CommonServices.EnrichmentService.EnrichPerson(ctx, query)

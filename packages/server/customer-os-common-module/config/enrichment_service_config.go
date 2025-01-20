@@ -7,8 +7,8 @@ type ScrapinConfig struct {
 }
 
 type BrandfetchConfig struct {
-	Url     string `env:"BRANDFETCH_API_URL"`
-	Limit   int    `env:"BRANDFETCH_LIMIT" envDefault:"250"`
+	Url     string `env:"BRANDFETCH_API_URL" envDefault:"https://api.brandfetch.io/v2/brands" required:"true"`
+	Limit   int    `env:"BRANDFETCH_LIMIT" envDefault:"250" required:"true"`
 	TtlDays int    `env:"BRANDFETCH_TTL_DAYS" envDefault:"180" required:"true"`
 }
 
