@@ -10,14 +10,15 @@ import (
 	"strconv"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/service"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/table_view"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // TableViewDefCreate is the resolver for the tableViewDef_Create field.
@@ -279,9 +280,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 
 	if ok && len(tableViewDefinitions) <= 1 {
 		// check if shared presets exist
-		hasSharedPreset := service.CheckSharedPresetsExist(tableViewDefinitions)
+		hasSharedPreset := table_view.CheckSharedPresetsExist(tableViewDefinitions)
 
-		for _, def := range service.DefaultTableViewDefinitions(hasSharedPreset, span) {
+		for _, def := range table_view.DefaultTableViewDefinitions(hasSharedPreset, span) {
 			def.Tenant = tenant
 			def.UserId = userId
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, def)
@@ -342,7 +343,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	viewsUpdated := false
 	if !organizationFound {
-		tvDef, err := service.DefaultTableViewDefinitionOrganization(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionOrganization(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -351,7 +352,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !customersFound {
-		tvDef, err := service.DefaultTableViewDefinitionCustomers(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionCustomers(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -360,7 +361,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !targetsFound {
-		tvDef, err := service.DefaultTableViewDefinitionTargets(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionTargets(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -369,7 +370,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !contactsFound {
-		tvDef, err := service.DefaultTableViewDefinitionContacts(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionContacts(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -378,7 +379,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !contactsForTargetOrganizationsFound {
-		tvDef, err := service.DefaultTableViewDefinitionTargetOrganizationsContacts(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionTargetOrganizationsContacts(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -387,7 +388,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !opportunitiesFound {
-		tvDef, err := service.DefaultTableViewDefinitionOpportunities(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionOpportunities(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -395,7 +396,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !opportunitiesRecordsFound {
-		tvDef, err := service.DefaultTableViewDefinitionOpportunitiesRecords(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionOpportunitiesRecords(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -404,7 +405,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !contractsFound {
-		tvDef, err := service.DefaultTableViewDefinitionContracts(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionContracts(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -413,7 +414,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !flowSequencesFound {
-		tvDef, err := service.DefaultTableViewDefinitionFlows(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionFlows(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -422,7 +423,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !flowContactsFound {
-		tvDef, err := service.DefaultTableViewDefinitionFlowContacts(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionFlowContacts(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -431,7 +432,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !pastInvoicesFound {
-		tvDef, err := service.DefaultTableViewDefinitionPastInvoices(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionPastInvoices(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -440,7 +441,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !upcomingInvoiceFound {
-		tvDef, err := service.DefaultTableViewDefinitionUpcomingInvoices(span)
+		tvDef, err := table_view.DefaultTableViewDefinitionUpcomingInvoices(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -462,7 +463,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	// add default columns if not present
 	for i := range tableViewDefinitions {
 		def := &tableViewDefinitions[i]
-		defaultColumns := service.DefaultColumns(postgresEntity.TableIdType(def.TableId))
+		defaultColumns := table_view.DefaultColumns(postgresEntity.TableIdType(def.TableId))
 
 		var currentColumns postgresEntity.Columns
 		if def.ColumnsJson != "" {

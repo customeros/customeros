@@ -7,7 +7,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -20,6 +19,7 @@ import (
 	"go.uber.org/multierr"
 	"golang.org/x/net/context"
 
+	"github.com/customeros/customeros/packages/server/events-subscribers/listeners/website_visit_event"
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
 
@@ -64,6 +64,7 @@ func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyCo
 		if !ok {
 			return fmt.Errorf("failed to cast to MeetingSummaryEvent, got type: %T", webhookEvent.Data)
 		}
+
 		err = handleMeetingSummaryEvent(ctx, dependencies.CommonServices, eventName, eventData)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -75,11 +76,13 @@ func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyCo
 		if !ok {
 			return fmt.Errorf("failed to cast to WebsiteVisitEvent, got type: %T", webhookEvent.Data)
 		}
-		err = handleWebsiteVisitorEvent(ctx, dependencies, eventName, eventData)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
+
+		websiteVisitEvent := website_visit_event.NewWebsiteVisitEventHandler(
+			dependencies,
+			eventData,
+		)
+
+		return websiteVisitEvent.Handle(ctx)
 
 	default:
 		err = fmt.Errorf("Unsupported event %s", webhookEvent.Name)
@@ -88,78 +91,6 @@ func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyCo
 	}
 
 	return nil
-}
-
-func handleWebsiteVisitorEvent(c context.Context, dependencies *model.DependencyContainer, sourceEvent commonenum.FlowListenerEvent, eventData *data_fields.WebsiteVisitEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "EventHandlers.HandleWebsiteVisitorEvent")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "eventData", eventData)
-
-	ctx = common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant: eventData.Tenant,
-	})
-
-	// find list of active agents that listen on event
-	agents, err := dependencies.PostgresRepositories.AgentsRepository.FindAllFromAgentsList(ctx, SubscribedAgents[:])
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	if agents == nil {
-		return nil
-	}
-
-	var errs error
-	for _, agent := range agents {
-		var loopErr error
-		// create agent execution record
-		agentExecutionRecord := postgres_entity.AgentExecution{
-			AgentID:      &agent.ID,
-			TriggerEvent: eventData.Type(),
-			Status:       enum.AgentExecutionRunning.String(),
-			StartedAt:    utils.NowPtr(),
-		}
-		execution, err := dependencies.PostgresRepositories.AgentExecutionRepository.Create(ctx, agentExecutionRecord)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			loopErr = multierr.Append(loopErr, err)
-		}
-		if execution == nil {
-			err := errors.New("unable to create agent execution record")
-			tracing.TraceErr(span, err)
-			loopErr = multierr.Append(loopErr, err)
-		}
-
-		// call agent service
-		// if execution != nil {
-		// 	err = dependencies.CommonServices.AgentService.RunAgent(ctx, &agent, eventData)
-		// 	if err != nil {
-		// 		tracing.TraceErr(span, err)
-		// 		loopErr = multierr.Append(loopErr, err)
-		// 	}
-		// }
-
-		// update agent execution record with results
-		if loopErr != nil {
-			errorMessage := loopErr.Error()
-			agentExecutionRecord.ErrorMessage = &errorMessage
-			agentExecutionRecord.Status = enum.AgentExecutionFail.String()
-		} else {
-			agentExecutionRecord.Status = enum.AgentExecutionSuccess.String()
-			agentExecutionRecord.CompletedAt = utils.NowPtr()
-		}
-
-		execution, err = dependencies.PostgresRepositories.AgentExecutionRepository.Update(ctx, agentExecutionRecord)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			loopErr = multierr.Append(loopErr, err)
-		}
-
-		errs = multierr.Append(errs, loopErr)
-	}
-
-	return errs
 }
 
 func handleMeetingSummaryEvent(ctx context.Context, s *service.CommonServices, sourceEvent commonenum.FlowListenerEvent, eventData *data_fields.MeetingSummaryEvent) error {

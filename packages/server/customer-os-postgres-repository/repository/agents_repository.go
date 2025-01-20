@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -73,18 +74,23 @@ func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []e
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var records []postgres_entity.Agents
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("Tenant not set")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
 
+	var records []postgres_entity.Agents
 	// Convert enum array to []string
 	agentIds := make([]string, len(agents))
 	for i, agent := range agents {
 		agentIds[i] = agent.String()
 	}
 
-	query := f.gormDb.Where("is_active = ? AND (flow_id = ? OR flow_id IS NULL)", true, "")
-
+	query := f.gormDb.Where("tenant = ? AND is_active = ? AND flow_id IS NULL", tenant, true)
 	if len(agentIds) > 0 {
-		query = query.Where("registry_id IN (?)", agentIds)
+		query = query.Where("type IN (?)", agentIds)
 	}
 
 	err := query.Find(&records).Error
@@ -92,7 +98,6 @@ func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []e
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-
 	return records, nil
 }
 

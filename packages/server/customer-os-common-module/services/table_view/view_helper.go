@@ -1,12 +1,14 @@
-package service
+package table_view
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 // ColumnView represents a column in a table view with type and width.
