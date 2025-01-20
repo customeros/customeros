@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func TestBuildTrackerDbData(t *testing.T) {
+func (h *WebsiteTrackerEventsHandler) TestBuildTrackerDbData(t *testing.T) {
 	// 1) Prepare a test JSON body. Include some fields from your sample data.
 	sampleJSON := `{
         "ip": "127.0.0.1",
@@ -45,7 +45,7 @@ func TestBuildTrackerDbData(t *testing.T) {
 
 	// 3) Call the function under test
 	tenant := "testTenant"
-	trackerData := buildTrackerDbData(c, tenant)
+	trackerData := h.buildTrackerDbData(c, tenant)
 	if trackerData == nil {
 		t.Fatalf("expected non-nil trackerData, got nil")
 	}
