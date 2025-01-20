@@ -3,10 +3,10 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -28,6 +28,7 @@ type CommonWriteRepository interface {
 	Link(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, details LinkDetails) error
 	Unlink(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, details LinkDetails) error
 	Delete(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, id, label string) error
+	UpdateProperties(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, nodeLabel, entityId string, properties map[string]interface{}) error
 	UpdateTimeProperty(ctx context.Context, tenant, nodeLabel, entityId, property string, value *time.Time) error
 	UpdateInt64Property(ctx context.Context, tenant, nodeLabel, entityId, property string, value int64) error
 	UpdateBoolProperty(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, nodeLabel, entityId, property string, value bool) error
@@ -163,6 +164,45 @@ func (r *commonWriteRepository) Delete(ctx context.Context, tx *neo4j.ManagedTra
 			tracing.TraceErr(span, err)
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (r *commonWriteRepository) UpdateProperties(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, nodeLabel, entityId string, properties map[string]interface{}) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.UpdateProperties")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, entityId)
+	span.LogFields(log.String("nodeLabel", nodeLabel), log.Object("properties", properties))
+
+	// Build the dynamic Cypher query
+	setClauses := make([]string, 0, len(properties))
+	params := map[string]any{
+		"entityId": entityId,
+	}
+	for prop, value := range properties {
+		paramKey := fmt.Sprintf("prop_%s", prop) // Unique key for each property
+		setClauses = append(setClauses, fmt.Sprintf("n.%s = $%s", prop, paramKey))
+		params[paramKey] = value
+	}
+	setClauses = append(setClauses, "n.updatedAt = datetime()") // Ensure updatedAt is always updated
+
+	cypher := fmt.Sprintf(
+		`MATCH (n:%s:%s_%s {id: $entityId}) SET %s`,
+		nodeLabel, nodeLabel, tenant, strings.Join(setClauses, ", "),
+	)
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	return nil

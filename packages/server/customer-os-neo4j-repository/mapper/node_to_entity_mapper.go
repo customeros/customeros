@@ -262,6 +262,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *neo4j_entity.Organizati
 		StageUpdatedAt:     utils.GetTimePropOrNil(props, "stageUpdatedAt"),
 		LeadSource:         utils.GetStringPropOrEmpty(props, "leadSource"),
 		IcpFit:             utils.GetBoolPropOrFalse(props, string(neo4j_entity.OrganizationPropertyIcpFit)),
+		WrongIndustry:      utils.GetBoolPropOrFalse(props, string(neo4j_entity.OrganizationPropertyWrongIndustry)),
 		RenewalSummary: neo4j_entity.RenewalSummary{
 			ArrForecast:            utils.GetFloatPropOrNil(props, "renewalForecastArr"),
 			MaxArrForecast:         utils.GetFloatPropOrNil(props, "renewalForecastMaxArr"),

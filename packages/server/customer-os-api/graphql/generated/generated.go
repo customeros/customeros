@@ -1108,6 +1108,7 @@ type ComplexityRoot struct {
 		EmailSetPrimaryForContact                  func(childComplexity int, contactID string, email string) int
 		EmailValidate                              func(childComplexity int, id string) int
 		ExternalSystemCreate                       func(childComplexity int, input model.ExternalSystemInput) int
+		FlagWrongField                             func(childComplexity int, input model.FlagWrongFieldInput) int
 		FlowArchive                                func(childComplexity int, id string) int
 		FlowArchiveBulk                            func(childComplexity int, ids []string) int
 		FlowChangeName                             func(childComplexity int, id string, name string) int
@@ -1358,6 +1359,7 @@ type ComplexityRoot struct {
 		UpdatedAt                     func(childComplexity int) int
 		ValueProposition              func(childComplexity int) int
 		Website                       func(childComplexity int) int
+		WrongIndustry                 func(childComplexity int) int
 		YearFounded                   func(childComplexity int) int
 	}
 
@@ -1430,6 +1432,7 @@ type ComplexityRoot struct {
 		UpdatedAt                       func(childComplexity int) int
 		ValueProposition                func(childComplexity int) int
 		Website                         func(childComplexity int) int
+		WrongIndustry                   func(childComplexity int) int
 		YearFounded                     func(childComplexity int) int
 	}
 
@@ -1934,6 +1937,7 @@ type MutationResolver interface {
 	BillingProfileUnlinkLocation(ctx context.Context, input model.BillingProfileLinkLocationInput) (string, error)
 	AddTag(ctx context.Context, input model.AddTagInput) (string, error)
 	RemoveTag(ctx context.Context, input model.RemoveTagInput) (*model.Result, error)
+	FlagWrongField(ctx context.Context, input model.FlagWrongFieldInput) (*model.Result, error)
 	ContactCreate(ctx context.Context, input model.ContactInput) (string, error)
 	ContactCreateForOrganization(ctx context.Context, input model.ContactInput, organizationID string) (*model.Contact, error)
 	CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (*model.CustomerContact, error)
@@ -7938,6 +7942,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ExternalSystemCreate(childComplexity, args["input"].(model.ExternalSystemInput)), true
 
+	case "Mutation.flagWrongField":
+		if e.complexity.Mutation.FlagWrongField == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_flagWrongField_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.FlagWrongField(childComplexity, args["input"].(model.FlagWrongFieldInput)), true
+
 	case "Mutation.flow_Archive":
 		if e.complexity.Mutation.FlowArchive == nil {
 			break
@@ -10066,6 +10082,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Website(childComplexity), true
 
+	case "Organization.wrongIndustry":
+		if e.complexity.Organization.WrongIndustry == nil {
+			break
+		}
+
+		return e.complexity.Organization.WrongIndustry(childComplexity), true
+
 	case "Organization.yearFounded":
 		if e.complexity.Organization.YearFounded == nil {
 			break
@@ -10485,6 +10508,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OrganizationUiDetails.Website(childComplexity), true
+
+	case "OrganizationUiDetails.wrongIndustry":
+		if e.complexity.OrganizationUiDetails.WrongIndustry == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.WrongIndustry(childComplexity), true
 
 	case "OrganizationUiDetails.yearFounded":
 		if e.complexity.OrganizationUiDetails.YearFounded == nil {
@@ -12784,6 +12814,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputExternalSystemReferenceInput,
 		ec.unmarshalInputFilter,
 		ec.unmarshalInputFilterItem,
+		ec.unmarshalInputFlagWrongFieldInput,
 		ec.unmarshalInputFlowActionInputData,
 		ec.unmarshalInputFlowActionInputDataEmail,
 		ec.unmarshalInputFlowActionInputDataLinkedinConnectionRequest,
@@ -13272,6 +13303,8 @@ type Query
 extend type Mutation {
     addTag(input: AddTagInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     removeTag(input: RemoveTagInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    flagWrongField(input: FlagWrongFieldInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 input AddTagInput {
@@ -13293,6 +13326,16 @@ enum EntityType {
     LOG_ENTRY
     ISSUE
     CONTRACT
+}
+
+input FlagWrongFieldInput {
+    entityId: ID!
+    entityType: EntityType!
+    field: FlagWrongFields!
+}
+
+enum FlagWrongFields {
+    ORGANIZATION_INDUSTRY
 }`, BuiltIn: false},
 	{Name: "../schemas/contact.graphqls", Input: `extend type Query {
     contact(id: ID!) :Contact
@@ -15919,6 +15962,7 @@ type Organization implements MetadataInterface {
     employeeGrowthRate:     String
     employees:              Int64
     headquarters:           String
+    wrongIndustry:          Boolean!
     industry:               String @deprecated
     industryGroup:          String @deprecated
     lastFundingAmount:      String
@@ -16346,6 +16390,7 @@ type OrganizationUiDetails {
     industry:               String @deprecated(reason: "Use industryCode")
     industryCode:           String
     industryName:           String
+    wrongIndustry:          Boolean!
     market:                 Market
     website:                String
     logoUrl:                String
@@ -19971,6 +20016,34 @@ func (ec *executionContext) field_Mutation_externalSystem_Create_argsInput(
 	}
 
 	var zeroVal model.ExternalSystemInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_flagWrongField_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_flagWrongField_argsInput(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_flagWrongField_argsInput(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (model.FlagWrongFieldInput, error) {
+	if _, ok := rawArgs["input"]; !ok {
+		var zeroVal model.FlagWrongFieldInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+	if tmp, ok := rawArgs["input"]; ok {
+		return ec.unmarshalNFlagWrongFieldInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlagWrongFieldInput(ctx, tmp)
+	}
+
+	var zeroVal model.FlagWrongFieldInput
 	return zeroVal, nil
 }
 
@@ -40364,6 +40437,8 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(_ con
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -43892,6 +43967,8 @@ func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, 
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -50748,6 +50825,8 @@ func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context,
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -55843,6 +55922,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context,
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -56756,6 +56837,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ conte
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -61953,6 +62036,96 @@ func (ec *executionContext) fieldContext_Mutation_removeTag(ctx context.Context,
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_removeTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_flagWrongField(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_flagWrongField(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().FlagWrongField(rctx, fc.Args["input"].(model.FlagWrongFieldInput))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal *model.Result
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal *model.Result
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal *model.Result
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Result); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.Result`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Result)
+	fc.Result = res
+	return ec.marshalOResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_flagWrongField(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_flagWrongField_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -69034,6 +69207,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -71717,6 +71892,8 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -71952,6 +72129,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Save(ctx context.
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -72185,6 +72364,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SaveByGlobalOrgan
 				return ec.fieldContext_OrganizationUiDetails_industryCode(ctx, field)
 			case "industryName":
 				return ec.fieldContext_OrganizationUiDetails_industryName(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_OrganizationUiDetails_wrongIndustry(ctx, field)
 			case "market":
 				return ec.fieldContext_OrganizationUiDetails_market(ctx, field)
 			case "website":
@@ -72738,6 +72919,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -72973,6 +73156,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -73208,6 +73393,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -73649,6 +73836,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -73884,6 +74073,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -74398,6 +74589,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -74633,6 +74826,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -74868,6 +75063,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -80524,6 +80721,8 @@ func (ec *executionContext) fieldContext_Opportunity_organization(_ context.Cont
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -82445,6 +82644,50 @@ func (ec *executionContext) fieldContext_Organization_headquarters(_ context.Con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_wrongIndustry(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_wrongIndustry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WrongIndustry, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_wrongIndustry(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -85397,6 +85640,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Cont
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -85719,6 +85964,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -86525,6 +86772,50 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_industryName(_ co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_wrongIndustry(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_wrongIndustry(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.WrongIndustry, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_wrongIndustry(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -88379,6 +88670,8 @@ func (ec *executionContext) fieldContext_OrganizationWithJobRole_organization(_ 
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -89851,6 +90144,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Con
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -95364,6 +95659,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -95596,6 +95893,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -95828,6 +96127,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -96376,6 +96677,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByLinkedIn(ctx conte
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -96698,6 +97001,8 @@ func (ec *executionContext) fieldContext_Query_ui_organizations(ctx context.Cont
 				return ec.fieldContext_OrganizationUiDetails_industryCode(ctx, field)
 			case "industryName":
 				return ec.fieldContext_OrganizationUiDetails_industryName(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_OrganizationUiDetails_wrongIndustry(ctx, field)
 			case "market":
 				return ec.fieldContext_OrganizationUiDetails_market(ctx, field)
 			case "website":
@@ -99037,6 +99342,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Co
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -100617,6 +100924,8 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Con
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -101769,6 +102078,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_employees(ctx, field)
 			case "headquarters":
 				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
 			case "industry":
 				return ec.fieldContext_Organization_industry(ctx, field)
 			case "industryGroup":
@@ -111175,6 +111486,47 @@ func (ec *executionContext) unmarshalInputFilterItem(ctx context.Context, obj an
 				return it, err
 			}
 			it.IncludeEmpty = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputFlagWrongFieldInput(ctx context.Context, obj any) (model.FlagWrongFieldInput, error) {
+	var it model.FlagWrongFieldInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"entityId", "entityType", "field"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "entityId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EntityID = data
+		case "entityType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
+			data, err := ec.unmarshalNEntityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐEntityType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EntityType = data
+		case "field":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("field"))
+			data, err := ec.unmarshalNFlagWrongFields2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlagWrongFields(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Field = data
 		}
 	}
 
@@ -124405,6 +124757,10 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_removeTag(ctx, field)
 			})
+		case "flagWrongField":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_flagWrongField(ctx, field)
+			})
 		case "contact_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contact_Create(ctx, field)
@@ -126215,6 +126571,11 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_employees(ctx, field, obj)
 		case "headquarters":
 			out.Values[i] = ec._Organization_headquarters(ctx, field, obj)
+		case "wrongIndustry":
+			out.Values[i] = ec._Organization_wrongIndustry(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "industry":
 			out.Values[i] = ec._Organization_industry(ctx, field, obj)
 		case "industryGroup":
@@ -127260,6 +127621,11 @@ func (ec *executionContext) _OrganizationUiDetails(ctx context.Context, sel ast.
 			out.Values[i] = ec._OrganizationUiDetails_industryCode(ctx, field, obj)
 		case "industryName":
 			out.Values[i] = ec._OrganizationUiDetails_industryName(ctx, field, obj)
+		case "wrongIndustry":
+			out.Values[i] = ec._OrganizationUiDetails_wrongIndustry(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "market":
 			out.Values[i] = ec._OrganizationUiDetails_market(ctx, field, obj)
 		case "website":
@@ -133625,6 +133991,21 @@ func (ec *executionContext) marshalNExternalSystemType2githubᚗcomᚋcustomeros
 func (ec *executionContext) unmarshalNFilter2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFilter(ctx context.Context, v any) (*model.Filter, error) {
 	res, err := ec.unmarshalInputFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNFlagWrongFieldInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlagWrongFieldInput(ctx context.Context, v any) (model.FlagWrongFieldInput, error) {
+	res, err := ec.unmarshalInputFlagWrongFieldInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNFlagWrongFields2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlagWrongFields(ctx context.Context, v any) (model.FlagWrongFields, error) {
+	var res model.FlagWrongFields
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFlagWrongFields2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐFlagWrongFields(ctx context.Context, sel ast.SelectionSet, v model.FlagWrongFields) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v any) (float64, error) {

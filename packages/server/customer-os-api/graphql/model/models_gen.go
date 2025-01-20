@@ -1195,6 +1195,12 @@ type FilterItem struct {
 	IncludeEmpty  *bool                    `json:"includeEmpty,omitempty"`
 }
 
+type FlagWrongFieldInput struct {
+	EntityID   string          `json:"entityId"`
+	EntityType EntityType      `json:"entityType"`
+	Field      FlagWrongFields `json:"field"`
+}
+
 type Flow struct {
 	Metadata       *Metadata               `json:"metadata"`
 	Name           string                  `json:"name"`
@@ -2083,6 +2089,7 @@ type Organization struct {
 	EmployeeGrowthRate       *string                       `json:"employeeGrowthRate,omitempty"`
 	Employees                *int64                        `json:"employees,omitempty"`
 	Headquarters             *string                       `json:"headquarters,omitempty"`
+	WrongIndustry            bool                          `json:"wrongIndustry"`
 	Industry                 *string                       `json:"industry,omitempty"`
 	IndustryGroup            *string                       `json:"industryGroup,omitempty"`
 	LastFundingAmount        *string                       `json:"lastFundingAmount,omitempty"`
@@ -2291,6 +2298,7 @@ type OrganizationUIDetails struct {
 	Industry                        *string                       `json:"industry,omitempty"`
 	IndustryCode                    *string                       `json:"industryCode,omitempty"`
 	IndustryName                    *string                       `json:"industryName,omitempty"`
+	WrongIndustry                   bool                          `json:"wrongIndustry"`
 	Market                          *Market                       `json:"market,omitempty"`
 	Website                         *string                       `json:"website,omitempty"`
 	LogoURL                         *string                       `json:"logoUrl,omitempty"`
@@ -4189,6 +4197,45 @@ func (e *ExternalSystemType) UnmarshalGQL(v any) error {
 }
 
 func (e ExternalSystemType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type FlagWrongFields string
+
+const (
+	FlagWrongFieldsOrganizationIndustry FlagWrongFields = "ORGANIZATION_INDUSTRY"
+)
+
+var AllFlagWrongFields = []FlagWrongFields{
+	FlagWrongFieldsOrganizationIndustry,
+}
+
+func (e FlagWrongFields) IsValid() bool {
+	switch e {
+	case FlagWrongFieldsOrganizationIndustry:
+		return true
+	}
+	return false
+}
+
+func (e FlagWrongFields) String() string {
+	return string(e)
+}
+
+func (e *FlagWrongFields) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FlagWrongFields(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FlagWrongFields", str)
+	}
+	return nil
+}
+
+func (e FlagWrongFields) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

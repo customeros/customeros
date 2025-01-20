@@ -28,6 +28,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		CustomID:           utils.StringPtrNillable(entity.ReferenceId),
 		CustomerOsID:       entity.CustomerOsId,
 		Name:               entity.Name,
+		WrongIndustry:      entity.WrongIndustry,
 		Description:        utils.StringPtr(entity.Description),
 		Website:            utils.StringPtr(entity.Website),
 		Public:             utils.BoolPtr(entity.IsPublic),

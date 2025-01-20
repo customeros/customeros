@@ -14,6 +14,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -50,6 +51,36 @@ func (r *mutationResolver) RemoveTag(ctx context.Context, input model.RemoveTagI
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error adding tag to entity")
 		return nil, nil
+	}
+
+	return &model.Result{Result: true}, nil
+}
+
+// FlagWrongField is the resolver for the flagWrongField field.
+func (r *mutationResolver) FlagWrongField(ctx context.Context, input model.FlagWrongFieldInput) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "CommonResolver.FlagWrongField", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request", input))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	switch input.Field {
+	case model.FlagWrongFieldsOrganizationIndustry:
+		err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateProperties(ctx, nil, tenant, commonModel.NodeLabelOrganization, input.EntityID,
+			map[string]interface{}{
+				string(neo4j_entity.OrganizationPropertyWrongIndustry):   true,
+				string(neo4j_entity.OrganizationPropertyWrongIndustryAt): utils.TimePtrAsAny(utils.TimePtr(utils.Now())),
+			})
+
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Error flagging wrong industry")
+			return nil, err
+		}
+
+	default:
+		return &model.Result{Result: false}, nil
 	}
 
 	return &model.Result{Result: true}, nil
