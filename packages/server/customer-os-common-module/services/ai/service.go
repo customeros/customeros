@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
 	"github.com/opentracing/opentracing-go"
 
@@ -29,19 +30,29 @@ func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, prompt *strin
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIModelService.AskAI")
 	defer span.Finish()
 	span.LogKV("model", model)
-	span.LogKV("prompt", prompt)
+	span.LogKV("prompt", utils.IfNotNilString(prompt))
+
+	var result *string
+	var err error
 
 	switch model {
 	case
 		enum.AIModelAnthropicHaiku,
 		enum.AIModelAnthropicSonnet:
 
-		return s.askAnthropic(ctx, model, prompt)
+		result, err = s.askAnthropic(ctx, model, prompt)
 
 	default:
 		err := errors.New("Unsupported model")
 		return nil, err
 	}
+
+	span.LogKV("result", utils.IfNotNilString(result))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return result, nil
 }
 
 func (s *aiService) askAnthropic(ctx context.Context, model enum.AIModel, prompt *string) (*string, error) {

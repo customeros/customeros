@@ -35,6 +35,7 @@ type CommonConfig struct {
 	IpData           commonconf.IpDataConfig
 	Stripe           commonconf.StripeConfig
 	BetterContact    commonconf.BetterContactConfig
+	Scrapin          commonconf.ScrapinConfig
 }
 
 type AppConfig struct {

@@ -10,7 +10,7 @@ const (
 )
 
 type EmailValidationRequestBulk struct {
-	RequestID           string                           `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"requestId"`
+	RequestID           string                           `gorm:"primary_key;type:varchar(21);" json:"requestId"`
 	Tenant              string                           `gorm:"column:tenant;type:varchar(255);NOT NULL" json:"tenantId"`
 	TotalEmails         int                              `gorm:"column:total_emails;type:int;NOT NULL" json:"totalEmails"`
 	DeliverableEmails   int                              `gorm:"column:deliverable_emails;type:int;DEFAULT:0" json:"deliverableEmails"`
