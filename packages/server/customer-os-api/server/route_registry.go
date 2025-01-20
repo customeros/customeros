@@ -34,19 +34,19 @@ type RouteConfig struct {
 }
 
 func RegisterRestRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
-	registerInternalRoutes(ctx, r, s)
+	registerInternalRoutes(ctx, r, s, h)
 	registerPublicRoutes(ctx, r, s, h)
-	registerFileRoutes(ctx, r, s)
+	registerFileRoutes(ctx, r, s, h)
 
-	registerBillingRoutes(ctx, r, s)
-	registerCustomerBaseRoutes(ctx, r, s)
-	registerEnrichRoutes(ctx, r, s)
-	registerFlowRoutes(ctx, r, s)
-	registerIDRoutes(ctx, r, s)
-	registerMailstackRoutes(ctx, r, s)
-	registerOutreachRoutes(ctx, r, s)
-	registerRevealRoutes(ctx, r, s)
-	registerVerifyRoutes(ctx, r, s)
+	registerBillingRoutes(ctx, r, s, h)
+	registerCustomerBaseRoutes(ctx, r, s, h)
+	registerEnrichRoutes(ctx, r, s, h)
+	registerFlowRoutes(ctx, r, s, h)
+	registerIDRoutes(ctx, r, s, h)
+	registerMailstackRoutes(ctx, r, s, h)
+	registerOutreachRoutes(ctx, r, s, h)
+	registerRevealRoutes(ctx, r, s, h)
+	registerVerifyRoutes(ctx, r, s, h)
 }
 
 func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {

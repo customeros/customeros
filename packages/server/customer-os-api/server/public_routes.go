@@ -6,15 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	handlers rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest/flows"
-	integrations "github.com/customeros/customeros/packages/server/customer-os-api/rest/flows_integrations"
+	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/private"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/public"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
-func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *handlers.RestHandlers) {
+func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      "/rml",
@@ -56,14 +54,14 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/dmarc", WebhooksPath),
-		handler:   integrations.PostmarkDMARCMonitor(s),
+		handler:   h.Integrations.PostmarkDMARCMonitor(),
 		routeType: RoutePublic,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/:tenantId/i/:integrationId", FlowsPath),
-		handler:   flows.HandleWebhook(s, FlowsPath),
+		handler:   h.Webhooks.HandleWebhook(FlowsPath),
 		routeType: RoutePublic,
 	})
 

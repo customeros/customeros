@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -13,24 +12,23 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
-func FathomZapier(c *gin.Context, s *cosapi_services.Services) {
+func (h *IntegrationHandler) FathomZapier(c *gin.Context) {
 	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.FathomZapier", c.Request.Header)
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
-	tenant, err := s.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
+	tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
 	if err != nil {
 		err := errors.Wrap(err, "Unable to identify tenant")
 		tracing.TraceErr(span, err)
-		handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+
+		h.responseHandler.HandleError(c, http.StatusUnauthorized, nil)
 		return
 	}
 
@@ -41,12 +39,13 @@ func FathomZapier(c *gin.Context, s *cosapi_services.Services) {
 	})
 
 	if !strings.HasPrefix(c.ContentType(), "application/json") {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrUnsupportedContentType)
+		message := "Unsupported Content-Type"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		return
 	}
 
 	if c.Request.UserAgent() == "" {
-		handlers.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
+		h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 		return
 	}
 
@@ -55,10 +54,10 @@ func FathomZapier(c *gin.Context, s *cosapi_services.Services) {
 	// 	return
 	// }
 
-	handleFathomAISummaryZapier(c, ctx, s)
+	h.handleFathomAISummaryZapier(c, ctx)
 }
 
-func handleFathomAISummaryZapier(c *gin.Context, ctx context.Context, s *cosapi_services.Services) {
+func (h *IntegrationHandler) handleFathomAISummaryZapier(c *gin.Context, ctx context.Context) {
 	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.handleFathomAISummaryZapier")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
@@ -66,33 +65,36 @@ func handleFathomAISummaryZapier(c *gin.Context, ctx context.Context, s *cosapi_
 	var aiSummaryDataPayload FathomZapierPayload
 	err := c.BindJSON(&aiSummaryDataPayload)
 	if err != nil {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
+		message := "Unable to parse payload from Zapier"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		return
 	}
 
 	aiSummaryData := &aiSummaryDataPayload
 	err = aiSummaryData.toCleanPayload()
 	if err != nil {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
+		message := "Unable to normalize payload from Zapier"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		return
 	}
 
 	if aiSummaryData.AISummary.HTMLFormatted == "" {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No Fathom summary data"))
+		message := "No Fathom data"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		return
 	}
 
-	c.JSON(http.StatusAccepted, enum.BuildBaseResponse(enum.StatusProcessing))
+	h.responseHandler.HandleAccepted(c)
 
 	go func() {
-		if err := publishFathomMeetingSummaryCreatedEvent(c, ctx, s, aiSummaryData); err != nil {
+		if err := h.publishFathomMeetingSummaryCreatedEvent(c, ctx, aiSummaryData); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to process Fathom AI summary from zapier"))
 		}
 	}()
 	return
 }
 
-func publishFathomMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, s *cosapi_services.Services, aiSummaryData *FathomZapierPayload) error {
+func (h *IntegrationHandler) publishFathomMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, aiSummaryData *FathomZapierPayload) error {
 	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.publishFathomMeetingSummaryCreatedEvent")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
@@ -125,7 +127,7 @@ func publishFathomMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context
 		Data:             meetingSummary,
 	}
 
-	pubErr := s.CommonServices.Events.Publisher.PublishWebhookEvent(ctx, event)
+	pubErr := h.services.CommonServices.Events.Publisher.PublishWebhookEvent(ctx, event)
 	if pubErr != nil {
 		tracing.TraceErr(span, errors.Wrap(pubErr, "failed to publish event"))
 	}

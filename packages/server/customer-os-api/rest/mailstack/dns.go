@@ -5,14 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go/log"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 type DNSRecord struct {
@@ -23,16 +19,14 @@ type DNSRecord struct {
 }
 
 type DNSResponse struct {
-	enum.BaseResponse
 	Records []DNSRecord `json:"dnsRecords"`
 }
 
 type DNSRecordResponse struct {
-	enum.BaseResponse
 	Record DNSRecord `json:"dnsRecord"`
 }
 
-func DNS(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *MailstackHandler) DNS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "mailstack.DNS", c.Request.Header)
 		defer span.Finish()
@@ -44,31 +38,35 @@ func DNS(s *cosapi_services.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			span.LogFields(log.String("result", "Missing tenant in context"))
 			return
 		}
 
 		// validate domain belongs to tenant
 		domain := c.Param("domain")
-		mailboxTenant, err := s.CommonServices.MailstackService.GetTenantForMailstackDomain(ctx, domain)
+		mailboxTenant, err := h.services.CommonServices.MailstackService.GetTenantForMailstackDomain(ctx, domain)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("unable to validate domain ownership"))
+			message := "Unable to validate domain ownership"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+
 			return
 		}
 		if !strings.EqualFold(tenant, mailboxTenant) {
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
 		// get dns records
-		dns, err := s.CommonServices.CloudflareService.GetDNSRecords(ctx, domain)
+		dns, err := h.services.CommonServices.CloudflareService.GetDNSRecords(ctx, domain)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("unable to get DNS records"))
+			message := "Unable to get DNS records"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 		if dns == nil {
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("unable to locate DNS records for domain"))
+			message := "Unable to loacate DNS records for domain"
+			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
 
@@ -80,14 +78,13 @@ func DNS(s *cosapi_services.Services) gin.HandlerFunc {
 			})
 		}
 
-		c.JSON(http.StatusOK, DNSResponse{
-			enum.BuildBaseResponse(enum.StatusSuccess),
+		h.responseHandler.HandleSuccess(c, DNSResponse{
 			records,
 		})
 	}
 }
 
-func AddDNSRecord(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *MailstackHandler) AddDNSRecord() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "mailstack.AddDNSRecord", c.Request.Header)
 		defer span.Finish()
@@ -97,53 +94,58 @@ func AddDNSRecord(s *cosapi_services.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			span.LogFields(log.String("result", "Missing tenant in context"))
 			return
 		}
 
 		// validate domain belongs to tenant
 		domain := c.Param("domain")
-		mailboxTenant, err := s.CommonServices.MailstackService.GetTenantForMailstackDomain(ctx, domain)
+		mailboxTenant, err := h.services.CommonServices.MailstackService.GetTenantForMailstackDomain(ctx, domain)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("unable to validate domain ownership"))
+			message := "Unable to validate domain ownership"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 		if !strings.EqualFold(tenant, mailboxTenant) {
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("domain not found"))
+			message := "domain not found"
+			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
 
-		domainExists, zoneId, err := s.CommonServices.CloudflareService.CheckDomainExists(ctx, domain)
+		domainExists, zoneId, err := h.services.CommonServices.CloudflareService.CheckDomainExists(ctx, domain)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("unable to verify domain"))
+			message := "Unable to verify domain"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 		if !domainExists {
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("domain not found"))
+			message := "domain not found"
+			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
 
 		// get dns record payload
-		record, err := getDNSRequestPayload(c)
+		record, err := h.getDNSRequestPayload(c)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("unable to parse request"))
+			message := "Unable to parse request"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
-		err = s.CommonServices.CloudflareService.AddDNSRecord(ctx, zoneId, record.Type, record.Name, record.Content, 1, false, nil)
+		err = h.services.CommonServices.CloudflareService.AddDNSRecord(ctx, zoneId, record.Type, record.Name, record.Content, 1, false, nil)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("unable to create DNS record"))
+			message := "Unable to create DNS record"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
-		c.JSON(http.StatusCreated, DNSRecordResponse{
-			enum.BuildBaseResponse(enum.StatusSuccess),
+		h.responseHandler.HandleSuccess(c, DNSRecordResponse{
 			record,
 		})
 	}
 }
 
-func DeleteDNSRecord(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *MailstackHandler) DeleteDNSRecord() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "mailstack.DeleteDNSRecord", c.Request.Header)
 		defer span.Finish()
@@ -153,49 +155,52 @@ func DeleteDNSRecord(s *cosapi_services.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			span.LogFields(log.String("result", "Missing tenant in context"))
 			return
 		}
 
 		// validate domain belongs to tenant
 		domain := c.Param("domain")
-		mailboxTenant, err := s.CommonServices.MailstackService.GetTenantForMailstackDomain(ctx, domain)
+		mailboxTenant, err := h.services.CommonServices.MailstackService.GetTenantForMailstackDomain(ctx, domain)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("unable to validate domain ownership"))
+			message := "Unable to validate domain ownership"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 		if !strings.EqualFold(tenant, mailboxTenant) {
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("domain not found"))
+			message := "domain not found"
+			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
 
-		domainExists, zoneId, err := s.CommonServices.CloudflareService.CheckDomainExists(ctx, domain)
+		domainExists, zoneId, err := h.services.CommonServices.CloudflareService.CheckDomainExists(ctx, domain)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("unable to verify domain"))
+			message := "Unable to verify domain"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 		if !domainExists {
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("domain not found"))
+			message := "domain not found"
+			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
 
 		// delete dns record
 		dnsRecordId := c.Param("dnsId")
 		dnsRecordId = strings.TrimPrefix(dnsRecordId, "dns_")
-		err = s.CommonServices.CloudflareService.DeleteDNSRecord(ctx, zoneId, dnsRecordId)
+		err = h.services.CommonServices.CloudflareService.DeleteDNSRecord(ctx, zoneId, dnsRecordId)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("unable to delete dns record"))
+			message := "Unable to delete DNS record"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
-		c.JSON(http.StatusNoContent,
-			enum.BuildBaseResponse(enum.StatusSuccess),
-		)
+		h.responseHandler.HandleSuccess(c, nil)
 	}
 }
 
-func getDNSRequestPayload(c *gin.Context) (DNSRecord, error) {
+func (h *MailstackHandler) getDNSRequestPayload(c *gin.Context) (DNSRecord, error) {
 	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Flows.getDNSRequestPayload")
 	defer span.Finish()
 	tracing.TagComponentRest(span)

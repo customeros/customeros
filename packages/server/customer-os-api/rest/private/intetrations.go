@@ -1,26 +1,41 @@
 package private
 
 import (
-	"github.com/gin-gonic/gin"
+	"net/http"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	api_tenant_settings "github.com/customeros/customeros/packages/server/customer-os-api/services/tenant_settings"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/gin-gonic/gin"
 )
 
-func GetIntegrations(s *cosapi_services.Services) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tenantName := c.Keys["TenantName"].(string)
-		tenantIntegrationSettings, activeServices, err := s.TenantSettingsService.GetForTenant(tenantName)
-		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
+type PrivateIntegrationHandler struct {
+	services        *cosapi_services.Services
+	responseHandler *response.Response
+}
 
-		c.JSON(200, mapTenantSettingsEntityToDTO(tenantIntegrationSettings, activeServices))
+func NewPrivateIntegrationHandler(services *cosapi_services.Services, responseHandler *response.Response) *PrivateIntegrationHandler {
+	return &PrivateIntegrationHandler{
+		services:        services,
+		responseHandler: responseHandler,
 	}
 }
 
-func CreateIntegration(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *PrivateIntegrationHandler) GetIntegrations() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tenantName := c.Keys["TenantName"].(string)
+		tenantIntegrationSettings, activeServices, err := h.services.TenantSettingsService.GetForTenant(tenantName)
+		if err != nil {
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
+
+		h.responseHandler.HandleSuccess(c, h.mapTenantSettingsEntityToDTO(tenantIntegrationSettings, activeServices))
+	}
+}
+
+func (h *PrivateIntegrationHandler) CreateIntegration() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request map[string]interface{}
 
@@ -32,17 +47,17 @@ func CreateIntegration(s *cosapi_services.Services) gin.HandlerFunc {
 
 		tenantName := c.Keys["TenantName"].(string)
 
-		tenantIntegrationSettings, activeServices, err := s.TenantSettingsService.SaveIntegrationData(tenantName, request)
+		tenantIntegrationSettings, activeServices, err := h.services.TenantSettingsService.SaveIntegrationData(tenantName, request)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(200, mapTenantSettingsEntityToDTO(tenantIntegrationSettings, activeServices))
+		h.responseHandler.HandleSuccess(c, h.mapTenantSettingsEntityToDTO(tenantIntegrationSettings, activeServices))
 	}
 }
 
-func DeleteIntegrations(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *PrivateIntegrationHandler) DeleteIntegrations() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		identifier := c.Param("identifier")
 		if identifier == "" {
@@ -51,17 +66,17 @@ func DeleteIntegrations(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 		tenantName := c.Keys["TenantName"].(string)
 
-		data, activeServices, err := s.TenantSettingsService.ClearIntegrationData(tenantName, identifier)
+		data, activeServices, err := h.services.TenantSettingsService.ClearIntegrationData(tenantName, identifier)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(200, mapTenantSettingsEntityToDTO(data, activeServices))
+		h.responseHandler.HandleSuccess(c, h.mapTenantSettingsEntityToDTO(data, activeServices))
 	}
 }
 
-func mapTenantSettingsEntityToDTO(tenantSettings *postgresentity.TenantSettings, activeServices map[string]bool) *map[string]interface{} {
+func (h *PrivateIntegrationHandler) mapTenantSettingsEntityToDTO(tenantSettings *postgresentity.TenantSettings, activeServices map[string]bool) *map[string]interface{} {
 	responseMap := make(map[string]interface{})
 
 	for service, isActive := range activeServices {
@@ -515,7 +530,7 @@ func mapTenantSettingsEntityToDTO(tenantSettings *postgresentity.TenantSettings,
 		responseMap[api_tenant_settings.SERVICE_ZENEFITS].(map[string]interface{})["state"] = "ACTIVE"
 	}
 
-	if tenantSettings != nil && hasMixpanelKeys(tenantSettings) {
+	if tenantSettings != nil && h.hasMixpanelKeys(tenantSettings) {
 		responseMap[api_tenant_settings.SERVICE_MIXPANEL] = make(map[string]interface{})
 		responseMap[api_tenant_settings.SERVICE_MIXPANEL].(map[string]interface{})["state"] = "ACTIVE"
 	}
@@ -528,6 +543,6 @@ func mapTenantSettingsEntityToDTO(tenantSettings *postgresentity.TenantSettings,
 	return &responseMap
 }
 
-func hasMixpanelKeys(tenantSettings *postgresentity.TenantSettings) bool {
+func (h *PrivateIntegrationHandler) hasMixpanelKeys(tenantSettings *postgresentity.TenantSettings) bool {
 	return tenantSettings.MixpanelUsername != nil || tenantSettings.MixpanelSecret != nil || tenantSettings.MixpanelProjectId != nil || tenantSettings.MixpanelProjectSecret != nil || tenantSettings.MixpanelProjectTimezone != nil || tenantSettings.MixpanelRegion != nil
 }

@@ -25,7 +25,7 @@ func AuthorizeMe(h *rest_handlers.RestHandlers) gin.HandlerFunc {
 			h.Response.HandleError(c, http.StatusNotFound, nil)
 		}
 
-		h.Response.HandleSuccess(c, "me", MeResponse{
+		h.Response.HandleSuccess(c, MeResponse{
 			Tenant: tenant,
 		})
 		return

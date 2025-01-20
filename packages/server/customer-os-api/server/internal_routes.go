@@ -6,17 +6,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/private"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 const InternalPath = "/internal/v1"
 
-func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
+func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/askAI", InternalPath),
-		handler:   private.AskAI(s),
+		handler:   h.AskAI.AskAI(),
 		routeType: RouteInternal,
 		services:  s,
 	})
@@ -24,7 +25,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/settings/intergrations", InternalPath),
-		handler:   private.GetIntegrations(s),
+		handler:   h.PrivateIntegrations.GetIntegrations(),
 		routeType: RouteInternal,
 		services:  s,
 	})
@@ -32,7 +33,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/settings/intergrations", InternalPath),
-		handler:   private.CreateIntegration(s),
+		handler:   h.PrivateIntegrations.CreateIntegration(),
 		routeType: RouteInternal,
 		services:  s,
 	})
@@ -40,7 +41,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 	registerRoute(ctx, r, RouteConfig{
 		method:    "DELETE",
 		path:      fmt.Sprintf("%s/settings/intergrations/:identifier", InternalPath),
-		handler:   private.DeleteIntegrations(s),
+		handler:   h.PrivateIntegrations.DeleteIntegrations(),
 		routeType: RouteInternal,
 		services:  s,
 	})
@@ -112,7 +113,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/mail/send", InternalPath),
-		handler:   private.SendEmail(s),
+		handler:   h.Mail.SendEmail(),
 		routeType: RouteInternal,
 		services:  s,
 	})
@@ -120,7 +121,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/mail/:customerOSInternalIdentifier/track", InternalPath),
-		handler:   private.TrackEmail(s),
+		handler:   h.Mail.TrackEmail(),
 		routeType: RouteInternal,
 		services:  s,
 	})

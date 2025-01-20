@@ -20,10 +20,23 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
-func SendEmail(s *cosapi_services.Services) gin.HandlerFunc {
+type MailHandler struct {
+	services        *cosapi_services.Services
+	responseHandler *response.Response
+}
+
+func NewMailHandler(services *cosapi_services.Services, responseHandler *response.Response) *MailHandler {
+	return &MailHandler{
+		services:        services,
+		responseHandler: responseHandler,
+	}
+}
+
+func (h *MailHandler) SendEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "mail/send", c.Request.Header)
 		defer span.Finish()
@@ -50,7 +63,7 @@ func SendEmail(s *cosapi_services.Services) gin.HandlerFunc {
 
 		if err := c.BindJSON(&request); err != nil {
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}
 
@@ -60,18 +73,19 @@ func SendEmail(s *cosapi_services.Services) gin.HandlerFunc {
 
 		span.LogFields(log.Object("request", request))
 
-		err := s.CommonServices.MailService.SendMail(ctx, request)
+		err := h.services.CommonServices.MailService.SendMail(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{})
+		h.responseHandler.HandleSuccess(c, gin.H{})
+
 	}
 }
 
-func TrackEmail(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *MailHandler) TrackEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		customerOSInternalIdentifier := c.Param("customerOSInternalIdentifier")
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(context.Background(), "/mail/"+customerOSInternalIdentifier+"/track", c.Request.Header)
@@ -88,7 +102,8 @@ func TrackEmail(s *cosapi_services.Services) gin.HandlerFunc {
 		spyPixelBytes := spyPixel.Bytes()
 
 		if customerOSInternalIdentifier == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "missing customerOSInternalIdentifier"})
+			message := "Missing customerOSInternalIdentifier"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
@@ -101,16 +116,16 @@ func TrackEmail(s *cosapi_services.Services) gin.HandlerFunc {
 			}
 		}
 
-		interactionEventNode, err := s.Repositories.Neo4jRepositories.InteractionEventReadRepository.GetInteractionEventByCustomerOSIdentifier(ctx, customerOSInternalIdentifier)
+		interactionEventNode, err := h.services.Repositories.Neo4jRepositories.InteractionEventReadRepository.GetInteractionEventByCustomerOSIdentifier(ctx, customerOSInternalIdentifier)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
 
 		if interactionEventNode == nil {
 			span.LogFields(log.String("interactionEventId", "not found"))
-			c.JSON(http.StatusBadRequest, gin.H{})
+			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}
 
@@ -121,7 +136,7 @@ func TrackEmail(s *cosapi_services.Services) gin.HandlerFunc {
 		tenant := model.GetTenantFromLabels(interactionEventNode.Labels, model.NodeLabelInteractionEvent)
 		if tenant == "" {
 			span.LogFields(log.String("tenant", "not identified"))
-			c.JSON(http.StatusBadRequest, gin.H{})
+			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}
 
@@ -132,18 +147,19 @@ func TrackEmail(s *cosapi_services.Services) gin.HandlerFunc {
 			"Cf-Connecting-Ip": c.GetHeader("Cf-Connecting-Ip"),
 		})
 		if err != nil {
+			message := "Error while converting metadata to json"
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "error while converting metadata to json"})
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
-		_, err = s.Repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, interactionEvent.Id, model.INTERACTION_EVENT, enum.ActionInteractionEventRead, "", metadata, utils.Now(), "user-admin-api")
+		_, err = h.services.Repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, interactionEvent.Id, model.INTERACTION_EVENT, enum.ActionInteractionEventRead, "", metadata, utils.Now(), "user-admin-api")
 		if err != nil {
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusBadRequest, gin.H{})
+			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}
 
-		c.Data(http.StatusOK, "image/png", spyPixelBytes)
+		h.responseHandler.HandleDataStream(c, "image/png", spyPixelBytes)
 	}
 }

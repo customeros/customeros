@@ -4,15 +4,26 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	commonEnum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
+
+type AskAIHandler struct {
+	services        *cosapi_services.Services
+	responseHandler *response.Response
+}
+
+func NewAskAIHandler(services *cosapi_services.Services, responseHandler *response.Response) *AskAIHandler {
+	return &AskAIHandler{
+		services:        services,
+		responseHandler: responseHandler,
+	}
+}
 
 type AskAIRequest struct {
 	Model   string
@@ -21,59 +32,63 @@ type AskAIRequest struct {
 }
 
 type AskAIResponse struct {
-	enum.BaseResponse
 	Model  string `json:"model"`
 	Answer string `json:"answer"`
 }
 
 // AskAI handles AI requests
-func AskAI(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "AskAI")
 		defer span.Finish()
 
 		// parse request
-		request, err := parseRequest(c)
+		request, err := h.parseRequest(c)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("unable to parse request"))
+			message := "Unable to parse request"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 		if request == nil {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("empty request"))
+			message := "Empty request"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 		if request.Model == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("model missing"))
+			message := "model missing"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 		if request.Prompt == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("prompt missing"))
+			message := "prompt missing"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
 		// call appropriate model
-		answer, err := services.CommonServices.AIService.AskAI(ctx, request.AIModel, &request.Prompt)
+		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, &request.Prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to ask AI"))
+			message := "Unable to ask AI"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 		if answer == nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Empty response from AI"))
+			message := "Empty response from AI"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
-		c.JSON(http.StatusOK, AskAIResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Model:        request.AIModel.String(),
-			Answer:       *answer,
+		h.responseHandler.HandleSuccess(c, AskAIResponse{
+			Model:  request.AIModel.String(),
+			Answer: *answer,
 		})
 
 		return
 	}
 }
 
-func parseRequest(c *gin.Context) (*AskAIRequest, error) {
+func (h *AskAIHandler) parseRequest(c *gin.Context) (*AskAIRequest, error) {
 	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "parseRequest")
 	defer span.Finish()
 

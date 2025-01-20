@@ -47,7 +47,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/resolver"
 	"github.com/customeros/customeros/packages/server/customer-os-api/metrics"
-	rest_handlers rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 

@@ -16,14 +16,16 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 type WebsiteTrackerEventsHandler struct {
-	services *cosapi_services.Services
+	services        *cosapi_services.Services
+	responseHandler *response.Response
 }
 
-func NewWebsiteTrackerEventsHandler(services *cosapi_services.Services) *WebsiteTrackerEventsHandler {
+func NewWebsiteTrackerEventsHandler(services *cosapi_services.Services, responseHandler *response.Response) *WebsiteTrackerEventsHandler {
 	return &WebsiteTrackerEventsHandler{
 		services: services,
 	}
@@ -41,14 +43,14 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 		tracing.TagComponentRest(span)
 
 		if err := h.validateHeaders(c); err != nil {
-			c.JSON(http.StatusForbidden, gin.H{})
+			h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 			return
 		}
 
 		tenant, err := h.validateTrackingAllowed(ctx, c.GetHeader("Origin"))
 		if err != nil {
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusForbidden, gin.H{})
+			h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 			return
 		}
 		span.SetTag(tracing.SpanTagTenant, tenant)
@@ -57,14 +59,12 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 		if trackerData == nil {
 			err = fmt.Errorf("unable to build tracking record")
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("%v", err.Error()),
-			})
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
 
 		// return early, continue processing
-		c.JSON(http.StatusAccepted, gin.H{})
+		h.responseHandler.HandleAccepted(c)
 
 		if !h.isTrustedIP(ctx, trackerData.IP) {
 			return

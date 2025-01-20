@@ -15,7 +15,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
@@ -166,7 +165,7 @@ type EnrichOrganizationLocation struct {
 // @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /enrich/v1/organization [get]
 // @Security ApiKeyAuth
-func (h *EnrichHandler) EnrichOrganization(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *EnrichHandler) EnrichOrganization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichOrganization", c.Request.Header)
 		defer span.Finish()
@@ -194,7 +193,7 @@ func (h *EnrichHandler) EnrichOrganization(services *cosapi_services.Services) g
 			log.String("request.linkedinUrl", linkedinUrl))
 
 		// Call enrichOrg
-		enrichOrganizationResponse, err := services.CommonServices.EnrichmentService.EnrichOrganization(
+		enrichOrganizationResponse, err := h.services.CommonServices.EnrichmentService.EnrichOrganization(
 			ctx, &domain, &linkedinUrl)
 
 		if enrichOrganizationResponse == nil {
@@ -238,7 +237,7 @@ func (h *EnrichHandler) EnrichOrganization(services *cosapi_services.Services) g
 		}
 
 		if enrichOrganizationResponse != nil {
-			_, err = services.Repositories.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichOrganizationSuccess,
+			_, err = h.services.Repositories.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichOrganizationSuccess,
 				postgresrepository.BillableEventDetails{
 					ReferenceData: fmt.Sprintf("LinkedIn URL: %s, Domain: %s", linkedinUrl, domain),
 				})

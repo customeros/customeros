@@ -26,8 +26,33 @@ func NewRestResponseHandler() *Response {
 
 // HandleSuccess handles successful responses with optional data
 func (h *Response) HandleSuccess(c *gin.Context, data any) {
+	c.Header("Content-Type", "application/json")
+
 	response := gin.H{
 		"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
+		"status":    string(APIStatusSuccess),
+	}
+
+	if data != nil {
+		// Convert data struct to map
+		b, _ := json.Marshal(data)
+		var dataMap map[string]interface{}
+		json.Unmarshal(b, &dataMap)
+
+		// Append all fields from data to response
+		for k, v := range dataMap {
+			response[k] = v
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *Response) HandleSuccessWithCustomRequstID(c *gin.Context, requestId string, data any) {
+	c.Header("Content-Type", "application/json")
+
+	response := gin.H{
+		"requestId": requestId,
 		"status":    string(APIStatusSuccess),
 	}
 
@@ -123,4 +148,12 @@ func (h *Response) HandlePartialSuccess(c *gin.Context, responseObjectName strin
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *Response) HandleDataStream(c *gin.Context, contentType string, data []byte) {
+	c.Header("Content-Description", "File Transfer")
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Header("Content-Type", contentType)
+
+	c.Data(http.StatusOK, contentType, data)
 }

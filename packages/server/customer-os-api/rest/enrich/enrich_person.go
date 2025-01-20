@@ -17,7 +17,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
@@ -516,7 +515,7 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 // @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /enrich/v1/person/results/{id} [get]
 // @Security ApiKeyAuth
-func (h *EnrichHandler) EnrichPersonCallback(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *EnrichHandler) EnrichPersonCallback() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichPerson", c.Request.Header)
 		defer span.Finish()
@@ -532,7 +531,7 @@ func (h *EnrichHandler) EnrichPersonCallback(services *cosapi_services.Services)
 		tempId := c.Param("id")
 		span.LogFields(log.String("request.tempId", tempId))
 
-		getTempRecord, err := services.Repositories.PostgresRepositories.CosApiEnrichPersonTempResultRepository.GetById(ctx, tempId, tenant)
+		getTempRecord, err := h.services.Repositories.PostgresRepositories.CosApiEnrichPersonTempResultRepository.GetById(ctx, tempId, tenant)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get temp record"))
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
@@ -544,7 +543,7 @@ func (h *EnrichHandler) EnrichPersonCallback(services *cosapi_services.Services)
 		}
 
 		// Enrich person data
-		scrapInDbRecord, err := services.Repositories.PostgresRepositories.EnrichDetailsScrapInRepository.GetById(ctx, getTempRecord.ScrapinRecordId)
+		scrapInDbRecord, err := h.services.Repositories.PostgresRepositories.EnrichDetailsScrapInRepository.GetById(ctx, getTempRecord.ScrapinRecordId)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin record"))
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
@@ -557,7 +556,7 @@ func (h *EnrichHandler) EnrichPersonCallback(services *cosapi_services.Services)
 			return
 		}
 
-		betterContactDbRecord, err := services.Repositories.PostgresRepositories.EnrichDetailsBetterContactRepository.GetById(ctx, getTempRecord.BettercontactRecordId)
+		betterContactDbRecord, err := h.services.Repositories.PostgresRepositories.EnrichDetailsBetterContactRepository.GetById(ctx, getTempRecord.BettercontactRecordId)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get bettercontact record"))
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
@@ -603,7 +602,7 @@ func (h *EnrichHandler) EnrichPersonCallback(services *cosapi_services.Services)
 			if betterContactDbRecord.EnrichPhoneNumber {
 				response.PendingFields = append(response.PendingFields, "phone number")
 			}
-			response.ResultURL = services.Cfg.Common.Internal.CustomerOsApi.ApiUrl + enrichPersonAcceptedUrl + "/" + tempId
+			response.ResultURL = h.services.Cfg.Common.Internal.CustomerOsApi.ApiUrl + enrichPersonAcceptedUrl + "/" + tempId
 		} else {
 			response.IsComplete = true
 			for _, item := range betterContactResponseBody.Data {
@@ -625,7 +624,7 @@ func (h *EnrichHandler) EnrichPersonCallback(services *cosapi_services.Services)
 		for i := range response.Data.Emails {
 			email := &response.Data.Emails[i] // Get a pointer to the email in the slice
 			if email.Address != "" {
-				emailValidationResult, err := services.CommonServices.VerifyService.ValidateEmail(ctx, email.Address)
+				emailValidationResult, err := h.services.CommonServices.VerifyService.ValidateEmail(ctx, email.Address)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
 					continue

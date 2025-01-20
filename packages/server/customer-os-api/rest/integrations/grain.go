@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -13,24 +12,22 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
-func GrainZapier(c *gin.Context, s *cosapi_services.Services) {
+func (h *IntegrationHandler) GrainZapier(c *gin.Context) {
 	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.Grain", c.Request.Header)
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
-	tenant, err := s.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
+	tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
 	if err != nil {
 		err := errors.Wrap(err, "Unable to identify tenant")
 		tracing.TraceErr(span, err)
-		handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+		h.responseHandler.HandleError(c, http.StatusUnauthorized, nil)
 		return
 	}
 
@@ -41,21 +38,22 @@ func GrainZapier(c *gin.Context, s *cosapi_services.Services) {
 	})
 
 	if !strings.HasPrefix(c.ContentType(), "application/json") {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrUnsupportedContentType)
+		message := "Unsupported Content-Type"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 	}
 
 	if c.Request.UserAgent() == "" {
-		handlers.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
+		h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 	}
 
 	// if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
 	// 	handlers.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
 	// }
 
-	handleGrainNewRecordingEventZapier(c, ctx, s)
+	h.handleGrainNewRecordingEventZapier(c, ctx)
 }
 
-func handleGrainNewRecordingEventZapier(c *gin.Context, ctx context.Context, s *cosapi_services.Services) {
+func (h *IntegrationHandler) handleGrainNewRecordingEventZapier(c *gin.Context, ctx context.Context) {
 	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.handleGrainNewRecorderEventZapier")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
@@ -63,32 +61,35 @@ func handleGrainNewRecordingEventZapier(c *gin.Context, ctx context.Context, s *
 	var grainDataPayload GrainRecordingData
 	err := c.BindJSON(&grainDataPayload)
 	if err != nil {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
+		message := "Unable to parse payload from Zapier"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		return
 	}
 
 	grainData := &grainDataPayload
 	err = grainData.cleanPayload()
 	if err != nil {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
+		message := "Unable to normalize payload from Zapier"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		return
 	}
 
 	if grainData.RecordingData.IntelligenceNotesMD == "" {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No Grain meeting in payload"))
+		message := "No Grain meeting in payload"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 	}
 
-	c.JSON(http.StatusAccepted, enum.BuildBaseResponse(enum.StatusProcessing))
+	h.responseHandler.HandleAccepted(c)
 
 	go func() {
-		if err := publishGrainMeetingSummaryCreatedEvent(c, ctx, s, grainData); err != nil {
+		if err := h.publishGrainMeetingSummaryCreatedEvent(c, ctx, grainData); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to process Grain AI summary from zapier"))
 		}
 	}()
 	return
 }
 
-func publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, s *cosapi_services.Services, grainData *GrainRecordingData) error {
+func (h *IntegrationHandler) publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, grainData *GrainRecordingData) error {
 	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.publishGrainMeetingSummaryEvent")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
@@ -116,7 +117,7 @@ func publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context,
 		Data:             &meeting,
 	}
 
-	pubErr := s.CommonServices.Events.Publisher.PublishWebhookEvent(ctx, event)
+	pubErr := h.services.CommonServices.Events.Publisher.PublishWebhookEvent(ctx, event)
 
 	if pubErr != nil {
 		tracing.TraceErr(span, errors.Wrap(pubErr, "failed to publish event"))

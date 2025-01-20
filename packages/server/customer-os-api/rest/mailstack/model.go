@@ -1,9 +1,7 @@
 // @openapi 3.0.0
 package mailstack
 
-import (
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-)
+import ()
 
 // RegisterNewDomainRequest represents the domain registration request
 // @Description Request payload for registering a new domain for mail services
@@ -40,8 +38,6 @@ type ConfigureDomainRequest struct {
 // DomainResponse represents a single domain response
 // @Description Response containing domain details and status
 type DomainResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// Domain information
 	// required: true
 	Domain DomainRecord `json:"domain"`
@@ -50,8 +46,6 @@ type DomainResponse struct {
 // DomainsResponse represents multiple domains response
 // @Description Response containing list of domains and status
 type DomainsResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// List of domains
 	// required: true
 	Domains []DomainRecord `json:"domains"`
@@ -123,8 +117,6 @@ type MailboxRequest struct {
 // MailboxResponse represents single mailbox response
 // @Description Response containing mailbox details and status
 type MailboxResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// Mailbox information
 	// required: false
 	Mailbox MailboxRecord `json:"mailbox,omitempty"`
@@ -133,8 +125,6 @@ type MailboxResponse struct {
 // MailboxesResponse represents multiple mailboxes response
 // @Description Response containing list of mailboxes and status
 type MailboxesResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// List of mailboxes
 	// required: false
 	Mailboxes []MailboxRecord `json:"mailboxes,omitempty"`
@@ -172,6 +162,5 @@ type MailboxRecord struct {
 }
 
 type DomainRecommendationResponse struct {
-	enum.BaseResponse
 	Domains []string `json:"domains"`
 }

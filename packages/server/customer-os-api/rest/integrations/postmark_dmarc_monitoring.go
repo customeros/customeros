@@ -16,13 +16,9 @@ import (
 	"github.com/customeros/mailwatcher/dmarkstats"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
-func PostmarkDMARCMonitor(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *IntegrationHandler) PostmarkDMARCMonitor() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		_, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.PostmarkDMARCMonitor", c.Request.Header)
 		defer span.Finish()
@@ -31,21 +27,21 @@ func PostmarkDMARCMonitor(s *cosapi_services.Services) gin.HandlerFunc {
 		// Validate Postmark User-Agent
 		if c.Request.UserAgent() == "" || !strings.EqualFold(c.Request.UserAgent(), "Postmark") {
 			tracing.TraceErr(span, fmt.Errorf("Invalid user agent %s", c.Request.UserAgent()))
-			handlers.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
+			h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 			return
 		}
 
 		// Parse email data
-		emailData, err := parseInboundEmail(c)
+		emailData, err := h.parseInboundEmail(c)
 		if err != nil {
 			tracing.LogObjectAsJson(span, "body", c.Request.Body)
 			tracing.TraceErr(span, err)
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
+			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}
 
 		// Return accepted response immediately
-		c.JSON(http.StatusAccepted, enum.BuildBaseResponse(enum.StatusProcessing))
+		h.responseHandler.HandleAccepted(c)
 
 		// Process email asynchronously
 		go func() {
@@ -59,7 +55,7 @@ func PostmarkDMARCMonitor(s *cosapi_services.Services) gin.HandlerFunc {
 
 			var err error
 			if emailData.IsMonitorEmail() {
-				err = processDmarcMonitoringReport(c, s, &emailData)
+				err = h.processDmarcMonitoringReport(c, &emailData)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to process DMARC report"))
 				}
@@ -68,7 +64,7 @@ func PostmarkDMARCMonitor(s *cosapi_services.Services) gin.HandlerFunc {
 	}
 }
 
-func processDmarcMonitoringReport(c *gin.Context, s *cosapi_services.Services, emailData *PostmarkInboundEmailData) error {
+func (h *IntegrationHandler) processDmarcMonitoringReport(c *gin.Context, emailData *PostmarkInboundEmailData) error {
 	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.processDmarcMonitoringReport")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
@@ -86,21 +82,21 @@ func processDmarcMonitoringReport(c *gin.Context, s *cosapi_services.Services, e
 		return fmt.Errorf("cannot parse dmarc report %s from attachment: %v", attachment.Name, err)
 	}
 	for _, report := range reports {
-		dbReport := buildDMARCReport(c, s, report, provider)
+		dbReport := h.buildDMARCReport(c, report, provider)
 		// todo - if tenant is empty, don't send report to database
 		// leaving this in for now to verify everything is working as expected
-		s.Repositories.PostgresRepositories.MailStackDomainRepository.CreateDMARCReport(
+		h.services.Repositories.PostgresRepositories.MailStackDomainRepository.CreateDMARCReport(
 			ctx, dbReport.Tenant, &dbReport)
 	}
 	return nil
 }
 
-func buildDMARCReport(c *gin.Context, s *cosapi_services.Services, report dmarcstats.Report, provider string) postgres_entity.DMARCMonitoring {
+func (h *IntegrationHandler) buildDMARCReport(c *gin.Context, report dmarcstats.Report, provider string) postgres_entity.DMARCMonitoring {
 	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.buildDMARCReport")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
-	tenant, err := s.CommonServices.MailstackService.GetTenantForMailstackDomain(ctx, report.Domain)
+	tenant, err := h.services.CommonServices.MailstackService.GetTenantForMailstackDomain(ctx, report.Domain)
 	if err != nil {
 		tracing.TraceErr(span, fmt.Errorf("Unable to get tenant for domain %s: %v", report.Domain, err))
 	}

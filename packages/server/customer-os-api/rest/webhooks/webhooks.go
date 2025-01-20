@@ -12,21 +12,26 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	integrations "github.com/customeros/customeros/packages/server/customer-os-api/rest/flows_integrations"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/integrations"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 type WebhookHandler struct {
-	services        *cosapi_services.Services
-	responseHandler *response.Response
+	services            *cosapi_services.Services
+	responseHandler     *response.Response
+	integrationsHandler *integrations.IntegrationHandler
 }
 
-func NewWebhookHandler(services *cosapi_services.Services, responseHandler *response.Response) *WebhookHandler {
+func NewWebhookHandler(
+	services *cosapi_services.Services,
+	responseHandler *response.Response,
+	integrationsHandler *integrations.IntegrationHandler,
+) *WebhookHandler {
 	return &WebhookHandler{
-		services:        services,
-		responseHandler: responseHandler,
+		services:            services,
+		responseHandler:     responseHandler,
+		integrationsHandler: integrationsHandler,
 	}
 }
 
@@ -41,7 +46,6 @@ type CreateWebhookRecord struct {
 }
 
 type CreateWebhookResponse struct {
-	enum.BaseResponse
 	Hook CreateWebhookRecord `json:"hook"`
 }
 
@@ -274,14 +278,14 @@ func (h *WebhookHandler) HandleWebhook(flowsPath string) gin.HandlerFunc {
 
 		switch integration {
 		case commonEnum.SourceCalCom:
-			integrations.CalDotCom(c)
+			h.integrationsHandler.CalDotCom(c)
 		// todo
 		case commonEnum.SourceFathom:
-			integrations.FathomZapier(c)
+			h.integrationsHandler.FathomZapier(c)
 		case commonEnum.SourceGrain:
-			integrations.GrainZapier(c)
+			h.integrationsHandler.GrainZapier(c)
 		case commonEnum.SourcePostmark:
-			integrations.PostmarkInboundEmail(c)
+			h.integrationsHandler.PostmarkInboundEmail(c)
 		// todo
 		default:
 			err := errors.New("Unsupported integration")
