@@ -58,6 +58,7 @@ type Organization implements MetadataInterface {
     employeeGrowthRate:     String
     employees:              Int64
     headquarters:           String
+    wrongIndustry:          Boolean!
     industry:               String @deprecated
     industryGroup:          String @deprecated
     lastFundingAmount:      String

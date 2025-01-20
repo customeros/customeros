@@ -18,6 +18,8 @@ const (
 	OrganizationPropertyHide                      OrganizationProperty = "hide"
 	OrganizationPropertyStage                     OrganizationProperty = "stage"
 	OrganizationPropertyIndustry                  OrganizationProperty = "industry"
+	OrganizationPropertyWrongIndustry             OrganizationProperty = "wrongIndustry"
+	OrganizationPropertyWrongIndustryAt           OrganizationProperty = "wrongIndustryAt"
 	OrganizationPropertyIsPublic                  OrganizationProperty = "isPublic"
 	OrganizationPropertyDomainCheckedAt           OrganizationProperty = "techDomainCheckedAt"
 	OrganizationPropertyLastTouchpointRequestedAt OrganizationProperty = "techLastTouchpointRequestedAt"
@@ -69,6 +71,7 @@ type OrganizationEntity struct {
 	StageUpdatedAt     *time.Time
 	LeadSource         string `neo4jDb:"property:leadSource;lookupName:LEAD_SOURCE;supportCaseSensitive:true"`
 	IcpFit             bool
+	WrongIndustry      bool
 
 	LinkedOrganizationType *string
 
