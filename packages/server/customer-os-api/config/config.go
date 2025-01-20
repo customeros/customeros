@@ -33,6 +33,7 @@ type CommonConfig struct {
 	OpenSRS          commonconf.OpenSRSConfig
 	Cloudflare       commonconf.CloudflareConfig
 	IpData           commonconf.IpDataConfig
+	Stripe           commonconf.StripeConfig
 }
 
 type AppConfig struct {
@@ -109,6 +110,7 @@ func InitConfig() (*Config, error) {
 			OpenSRSConfig:    cmnCfg.OpenSRS,
 			CloudflareConfig: cmnCfg.Cloudflare,
 			IpDataConfig:     cmnCfg.IpData,
+			StripeConfig:     cmnCfg.Stripe,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,
