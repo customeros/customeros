@@ -97,8 +97,14 @@ export class AddOrganizationDomainCase {
         return;
       }
 
-      if (!checkDomain.accessible || !checkDomain.validSyntax) {
+      if (!checkDomain.validSyntax) {
         this.error = 'This domain appears to be invalid';
+
+        return;
+      }
+
+      if (!checkDomain.accessible) {
+        this.error = 'This domain is not reachable';
 
         return;
       }

@@ -51,23 +51,21 @@ export const Domains = observer(() => {
   if (!formattedData.length) {
     return (
       <div className='flex flex-col mt-1 h-6'>
-        <div
-          tabIndex={0}
-          role={'button'}
-          className='flex items-center w-full gap-2 group h-full'
-          onClick={() => {
-            store.ui.commandMenu.setOpen(true);
-            store.ui.commandMenu.setType('AddNewDomain');
-            store.ui.commandMenu.setContext({
-              ids: [id],
-              entity: 'Organization',
-            });
-          }}
-        >
+        <div className='flex items-center w-full gap-2 group h-full'>
           <Globe01 className='text-gray-500' />
           <span
+            tabIndex={0}
+            role={'button'}
             className='text-sm text-gray-400'
             data-test='org-about-domain-empty'
+            onClick={() => {
+              store.ui.commandMenu.setOpen(true);
+              store.ui.commandMenu.setType('AddNewDomain');
+              store.ui.commandMenu.setContext({
+                ids: [id],
+                entity: 'Organization',
+              });
+            }}
           >
             Add domain
           </span>
@@ -80,19 +78,22 @@ export const Domains = observer(() => {
     <div className='flex flex-col mt-1'>
       {formattedData.map((domainGroup, index) => (
         <div className='flex flex-col' key={domainGroup.primaryDomain.domain}>
-          <div className='flex items-center w-full gap-2 group'>
+          <div
+            className={cn('flex items-center w-full gap-2 group', {
+              'ml-6': index !== 0,
+            })}
+          >
+            {index === 0 && <Globe01 className='text-gray-500' />}
+
             <a
               target='_blank'
               rel='noreferrer noopener'
               href={getExternalUrl(domainGroup.primaryDomain.domain || '/')}
               className='w-fit cursor-pointer text-sm flex items-center no-underline hover:no-underline text-gray-700'
             >
-              {index === 0 && <Globe01 className='mr-2 text-gray-500' />}
               <span
+                className='hover:underline'
                 data-test='org-about-domain-filled'
-                className={cn({
-                  'ml-6': index !== 0,
-                })}
               >
                 {domainGroup.primaryDomain.domain}
               </span>

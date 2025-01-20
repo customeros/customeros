@@ -24,13 +24,13 @@ import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { TruncatedText } from '@ui/presentation/TruncatedText/TruncatedText.tsx';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import {
   EntityType,
   OrganizationStage,
   OrganizationRelationship,
 } from '@graphql/types';
-import { BusinessTypeInput } from '@organization/components/Tabs/panels/AboutPanel/components/businessType';
 
 import { Tags } from './components/tags';
 import { Domains } from './components/Domains';
@@ -160,9 +160,12 @@ export const AboutPanel = observer(() => {
 
         <div className='flex flex-col w-full flex-1 items-start justify-start gap-3 mt-3'>
           {!!organization?.value?.description && (
-            <p className='text-sm' data-test='org-about-description'>
-              {organization.value.description}
-            </p>
+            <TruncatedText
+              maxLines={5}
+              className={'text-sm'}
+              data-test='org-about-description'
+              text={organization.value.description}
+            />
           )}
 
           <Tags
@@ -307,8 +310,6 @@ export const AboutPanel = observer(() => {
               {organization.country}
             </p>
           )}
-
-          <BusinessTypeInput id={id} />
 
           {typeof organization.value!.employees === 'number' && (
             <p className='text-sm flex items-center cursor-default '>
