@@ -168,7 +168,7 @@ func (r *webSessionEventsRepository) UpdateSessionEnd(ctx context.Context, sessi
 }
 
 func (r *webSessionEventsRepository) UpdateSessionWithDomain(ctx context.Context, sessionID, domain string) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionEnd")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionWithDomain")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
