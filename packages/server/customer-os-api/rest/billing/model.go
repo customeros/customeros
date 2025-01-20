@@ -3,15 +3,11 @@ package billing
 
 import (
 	"time"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
 )
 
 // InvoiceResponse represents a single invoice response
 // @Description Response containing a single invoice's details
 type InvoiceResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// The invoice information
 	// required: false
 	Invoice InvoiceRecord `json:"invoice,omitempty"`
@@ -20,8 +16,6 @@ type InvoiceResponse struct {
 // InvoicesResponse represents a collection of invoices
 // @Description Response containing multiple invoices
 type InvoicesResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// List of invoices
 	// required: false
 	Invoices []InvoiceRecord `json:"invoices,omitempty"`

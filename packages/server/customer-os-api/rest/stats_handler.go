@@ -1,9 +1,10 @@
-package handlers
+package rest_handlers
 
 import (
-	"github.com/gin-gonic/gin"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/gin-gonic/gin"
+
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 func StatsSuccessHandler(api string, services *cosapi_services.Services) gin.HandlerFunc {

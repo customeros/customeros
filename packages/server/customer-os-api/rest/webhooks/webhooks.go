@@ -1,4 +1,4 @@
-package flows
+package webhooks
 
 import (
 	"fmt"
@@ -6,16 +6,29 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonEnum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	integrations "github.com/customeros/customeros/packages/server/customer-os-api/rest/flows_integrations"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
+
+type WebhookHandler struct {
+	services        *cosapi_services.Services
+	responseHandler *response.Response
+}
+
+func NewWebhookHandler(services *cosapi_services.Services, responseHandler *response.Response) *WebhookHandler {
+	return &WebhookHandler{
+		services:        services,
+		responseHandler: responseHandler,
+	}
+}
 
 type CreateWebhookRequest struct {
 	Integration string `json:"integration"`
@@ -32,33 +45,36 @@ type CreateWebhookResponse struct {
 	Hook CreateWebhookRecord `json:"hook"`
 }
 
-func CreateWebhook(s *cosapi_services.Services, baseURL, flowsPath string) gin.HandlerFunc {
+func (h *WebhookHandler) CreateWebhook(baseURL, flowsPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateWebhook", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant := handlers.ValidateTenant(c, ctx, span)
+		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
 		var req CreateWebhookRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing parameter: integration"))
+			message := "Missing parameter: intergration"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
-		integration, err := s.WebhookService.GetIntegration(strings.ToLower(req.Integration))
+		integration, err := h.services.WebhookService.GetIntegration(strings.ToLower(req.Integration))
 		if err != nil {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("please provide a valid integration value"))
+			message := "Invalid integration value"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
-		webhookPath, secret, err := s.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
+		webhookPath, secret, err := h.services.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to create webhook"))
+			message := "Unable to create webhook"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
@@ -68,25 +84,21 @@ func CreateWebhook(s *cosapi_services.Services, baseURL, flowsPath string) gin.H
 			Secret:      secret,
 		}
 
-		c.JSON(http.StatusCreated, CreateWebhookResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Hook:         record,
+		h.responseHandler.HandleSuccess(c, CreateWebhookResponse{
+			Hook: record,
 		})
 	}
 }
 
 type NoActiveWebhooks struct {
-	enum.BaseResponse
 	Message string `json:"message"`
 }
 
 type OneActiveWebhook struct {
-	enum.BaseResponse
 	Hook ActiveWebhookRecord `json:"hook"`
 }
 
 type ActiveWebhooksResponse struct {
-	enum.BaseResponse
 	Hooks []ActiveWebhookRecord `json:"hooks"`
 }
 
@@ -97,30 +109,29 @@ type ActiveWebhookRecord struct {
 	Active      bool      `json:"active"`
 }
 
-func GetActiveWebhooks(s *cosapi_services.Services, baseURL, flowsPath string) gin.HandlerFunc {
+func (h *WebhookHandler) GetActiveWebhooks(baseURL, flowsPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetActiveWebhooks", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant := handlers.ValidateTenant(c, ctx, span)
+		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
-		webhooks, err := s.Repositories.PostgresRepositories.WebhooksRepository.FindAll(ctx)
+		webhooks, err := h.services.Repositories.PostgresRepositories.WebhooksRepository.FindAll(ctx)
 		if err != nil {
 			err = fmt.Errorf("Unable to lookup active webhooks for %s: %v", tenant, err)
 			tracing.TraceErr(span, err)
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
 
 		if len(*webhooks) == 0 {
-			c.JSON(http.StatusOK, NoActiveWebhooks{
-				BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-				Message:      "No active webhooks",
+			h.responseHandler.HandleSuccess(c, NoActiveWebhooks{
+				Message: "No active webhooks",
 			})
 			return
 		}
@@ -138,56 +149,56 @@ func GetActiveWebhooks(s *cosapi_services.Services, baseURL, flowsPath string) g
 		}
 
 		if len(*webhooks) == 1 {
-			c.JSON(http.StatusOK, OneActiveWebhook{
-				BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-				Hook:         results[0],
+			h.responseHandler.HandleSuccess(c, OneActiveWebhook{
+				Hook: results[0],
 			})
 			return
 		}
 
-		c.JSON(http.StatusOK, ActiveWebhooksResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Hooks:        results,
+		h.responseHandler.HandleSuccess(c, ActiveWebhooksResponse{
+			Hooks: results,
 		})
 	}
 }
 
-func RotateWebhook(s *cosapi_services.Services, baseURL, flowsPath string) gin.HandlerFunc {
+func (h *WebhookHandler) RotateWebhook(baseURL, flowsPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RotateWebhook", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		// Validate tenant owns webhook
-		tenant := handlers.ValidateTenant(c, ctx, span)
+		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 		tenantId := c.Param("tenantId")
-		validTenant, err := s.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
+		validTenant, err := h.services.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to verify webhook ownership"))
+			message := "Unable to verify webhook ownership"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 		if !validTenant {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusUnauthorized, nil)
 			return
 		}
 
 		// Lookup integration
 		webhookPath := strings.TrimSuffix(c.Request.URL.Path, "/rotate")
 		webhookPath = strings.TrimPrefix(webhookPath, flowsPath)
-		integration, err := s.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
+		integration, err := h.services.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
 		if err != nil || integration == commonEnum.SourceUnknown {
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("Unable to identify webhook"))
+			message := "Unable to identify webhook"
+			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
 
 		// Call create to rotate webhook as it will automatically handle rotation
-		webhookPath, secret, err := s.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
+		webhookPath, secret, err := h.services.WebhookService.CreateIntegrationWebhook(ctx, tenant, integration)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to rotate webhook"))
+			message := "Unable to rotate webhook"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
@@ -197,84 +208,85 @@ func RotateWebhook(s *cosapi_services.Services, baseURL, flowsPath string) gin.H
 			Secret:      secret,
 		}
 
-		c.JSON(http.StatusCreated, CreateWebhookResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Hook:         record,
+		h.responseHandler.HandleSuccess(c, CreateWebhookResponse{
+			Hook: record,
 		})
 	}
 }
 
-func DeactivateWebhook(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *WebhookHandler) DeactivateWebhook() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RotateWebhook", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		// Validate tenant owns webhook
-		tenant := handlers.ValidateTenant(c, ctx, span)
+		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 		tenantId := c.Param("tenantId")
-		validTenant, err := s.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
+		validTenant, err := h.services.WebhookService.ValidateTenantId(ctx, tenant, tenantId)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to verify webhook ownership"))
+			message := "Unable to verify webhook ownership"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 		if !validTenant {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusUnauthorized, nil)
 			return
 		}
 
 		// Call to deactivate webhook
-		deactErr := s.WebhookService.DeactivateWebhook(ctx, strings.TrimSuffix(c.Request.URL.Path, "/rotate"))
+		deactErr := h.services.WebhookService.DeactivateWebhook(ctx, strings.TrimSuffix(c.Request.URL.Path, "/rotate"))
 		if deactErr != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
 
-		c.JSON(http.StatusOK, NoActiveWebhooks{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Message:      "Webhook successfully deactivated",
+		h.responseHandler.HandleSuccess(c, NoActiveWebhooks{
+			Message: "Webhook successfully deactivated",
 		})
 	}
 }
 
-func HandleWebhook(s *cosapi_services.Services, flowsPath string) gin.HandlerFunc {
+func (h *WebhookHandler) HandleWebhook(flowsPath string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Webhooks", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant, err := s.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
+		tenant, err := h.services.Repositories.PostgresRepositories.TenantRepository.GetTenant(ctx, c.Param("tenantId"))
 		if err != nil {
 			err := errors.Wrap(err, "Unable to identify tenant")
 			tracing.TraceErr(span, err)
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusUnauthorized, nil)
 			return
 		}
 
 		webhookPath := strings.TrimPrefix(c.Request.URL.Path, flowsPath)
-		integration, err := s.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
+		integration, err := h.services.WebhookService.GetIntegrationFromWebhookPath(ctx, tenant, webhookPath)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("Webhook not found"))
+			message := "Webhook not found"
+			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
 
 		switch integration {
 		case commonEnum.SourceCalCom:
-			integrations.CalDotCom(c, s)
+			integrations.CalDotCom(c)
 		// todo
 		case commonEnum.SourceFathom:
-			integrations.FathomZapier(c, s)
+			integrations.FathomZapier(c)
 		case commonEnum.SourceGrain:
-			integrations.GrainZapier(c, s)
+			integrations.GrainZapier(c)
 		case commonEnum.SourcePostmark:
-			integrations.PostmarkInboundEmail(c, s)
+			integrations.PostmarkInboundEmail(c)
 		// todo
 		default:
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound)
+			err := errors.New("Unsupported integration")
+			tracing.TraceErr(span, err)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 	}

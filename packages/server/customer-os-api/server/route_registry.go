@@ -10,8 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
-	cosHandler "github.com/customeros/customeros/packages/server/customer-os-api/rest"
-	handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
@@ -34,7 +33,7 @@ type RouteConfig struct {
 	grpcClient *grpc_client.Clients
 }
 
-func RegisterRestRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *handlers.RestHandlers) {
+func RegisterRestRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerInternalRoutes(ctx, r, s)
 	registerPublicRoutes(ctx, r, s, h)
 	registerFileRoutes(ctx, r, s)
@@ -74,7 +73,7 @@ func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 				security.WithCache(config.cache),
 			),
 			enrichContextMiddleware(constants.AppSourceCustomerOsApiRest),
-			cosHandler.StatsSuccessHandler(config.method+":"+config.path, config.services),
+			rest_handlers.StatsSuccessHandler(config.method+":"+config.path, config.services),
 		)
 
 	case RouteFiles:

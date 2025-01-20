@@ -10,7 +10,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 

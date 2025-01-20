@@ -47,7 +47,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/resolver"
 	"github.com/customeros/customeros/packages/server/customer-os-api/metrics"
-	handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	rest_handlers rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
@@ -128,7 +128,7 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	// Set up handlers
 	adminApiHandler := graphHandler.NewAdminApiHandler(server.cfg, serviceContainer.Repositories.Neo4jRepositories)
-	restHandlers := handlers.InitRestHandlers(serviceContainer)
+	restHandlers := rest_handlers.InitRestHandlers(serviceContainer)
 
 	r.Use(cors.New(corsConfig))
 	r.Use(tracing.RecoveryWithJaeger(opentracing.GlobalTracer()))
@@ -166,7 +166,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	// rest routes
-	RegisterRestRoutes(ctx, r, grpcContainer, serviceContainer, serviceContainer.Cache)
+	RegisterRestRoutes(ctx, r, serviceContainer, restHandlers)
 
 	if server.cfg.App.ApiPort == server.cfg.App.MetricsPort {
 		r.GET(server.cfg.App.Observability.Metrics.PrometheusPath, metricsHandler)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	handlers rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/flows"
 	integrations "github.com/customeros/customeros/packages/server/customer-os-api/rest/flows_integrations"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/private"

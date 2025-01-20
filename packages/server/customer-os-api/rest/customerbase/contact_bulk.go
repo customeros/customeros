@@ -5,23 +5,20 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 // BulkResponse represents the response for bulk operations with single error
 // @Description Response structure for bulk operations with single error detail
 type BulkResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// Summary of the bulk operation
 	Summary BulkSummary `json:"summary,omitempty"`
 	// Error details if any
@@ -31,8 +28,6 @@ type BulkResponse struct {
 // BulkResponseMultipleErrors represents the response for bulk operations with multiple errors
 // @Description Response structure for bulk operations with multiple error details
 type BulkResponseMultipleErrors struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// Summary of the bulk operation
 	Summary BulkSummary `json:"summary,omitempty"`
 	// List of error details
@@ -80,19 +75,19 @@ type BulkSummary struct {
 // @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /customerbase/v1/contacts/bulk [post]
 // @Security ApiKeyAuth
-func CreateBulkContacts(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *ContactHandler) CreateBulkContacts() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.CreateBulkContacts", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant := handlers.ValidateTenant(c, ctx, span)
+		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
-		handleBulkJSONRequest(c, s)
+		h.handleBulkJSONRequest(c)
 	}
 }
 
@@ -110,40 +105,45 @@ func CreateBulkContacts(s *cosapi_services.Services) gin.HandlerFunc {
 // @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /customerbase/v1/contacts/import [post]
 // @Security ApiKeyAutl
-func ImportContacts(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *ContactHandler) ImportContacts() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.ImportContacts", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant := handlers.ValidateTenant(c, ctx, span)
+		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			return
-		}
-		contentType := c.GetHeader("Content-Type")
-		if !strings.HasPrefix(contentType, "multipart/form-data") {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrUnsupportedContentType)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
-		handleCSVUpload(c, s)
+		contentType := c.GetHeader("Content-Type")
+		if !strings.HasPrefix(contentType, "multipart/form-data") {
+			message := "Unsupported Content-Type"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
+			return
+		}
+
+		h.handleCSVUpload(c)
 	}
 }
 
-func handleBulkJSONRequest(c *gin.Context, s *cosapi_services.Services) {
-	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.handleBulkJSONRequest")
+func (h *ContactHandler) handleBulkJSONRequest(c *gin.Context) {
+	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Customerbase.handleBulkJSONRequest")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
 	var multipleContacts []ContactRecord
 	if err := c.ShouldBindJSON(&multipleContacts); err != nil {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
+		message := "Unable to parse request"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		tracing.TraceErr(span, err)
 		return
 	}
 
 	if len(multipleContacts) == 0 {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No contacts provided"))
+		message := "No contacts provided"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		return
 	}
 
@@ -152,7 +152,7 @@ func handleBulkJSONRequest(c *gin.Context, s *cosapi_services.Services) {
 	var validationErrors []BulkErrorDetails
 
 	for i, contact := range multipleContacts {
-		err, errValue := validateContactRecord(&contact)
+		err, errValue := h.validateContactRecord(&contact)
 		total++
 		if err != nil {
 			fail++
@@ -164,23 +164,21 @@ func handleBulkJSONRequest(c *gin.Context, s *cosapi_services.Services) {
 
 			validationErrors = append(validationErrors, errDetails)
 		}
-		contact.ContactId = processContact(c.Request.Context(), s, contact)
+		contact.ContactId = h.processContact(c.Request.Context(), contact)
 	}
 
 	switch {
 	case fail == 0:
 		resp := BulkResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total,
 				Failed:  fail,
 			},
 		}
-		c.JSON(http.StatusCreated, resp)
+		h.responseHandler.HandleSuccess(c, resp)
 	case fail == 1:
 		resp := BulkResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusPartialSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total - fail,
@@ -192,12 +190,12 @@ func handleBulkJSONRequest(c *gin.Context, s *cosapi_services.Services) {
 				Description:  validationErrors[0].Description,
 			},
 		}
-		c.JSON(http.StatusPartialContent, resp)
+		h.responseHandler.HandleSuccess(c, resp)
 	case fail == total:
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No valid contacts found in request"))
+		message := "No valid contacts found in request"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 	default:
 		resp := BulkResponseMultipleErrors{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusPartialSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total - fail,
@@ -205,16 +203,17 @@ func handleBulkJSONRequest(c *gin.Context, s *cosapi_services.Services) {
 			},
 			Details: validationErrors,
 		}
+		h.responseHandler.HandleCreated(c, resp)
 		c.JSON(http.StatusCreated, resp)
 	}
 }
 
-func handleCSVUpload(c *gin.Context, s *cosapi_services.Services) {
-	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.handleCSVUpload")
+func (h *ContactHandler) handleCSVUpload(c *gin.Context) {
+	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Customerbase.handleCSVUpload")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
-	file, err := handlers.ValidateAndOpenCsvFile(c, span)
+	file, err := h.validateAndOpenCsvFile(c)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
@@ -222,21 +221,22 @@ func handleCSVUpload(c *gin.Context, s *cosapi_services.Services) {
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-	if err := validateFileHeaders(c, reader); err != nil {
+	if err := h.validateFileHeaders(c, reader); err != nil {
 		return
 	}
 
-	processCSVRecords(c, s, reader)
+	h.processCSVRecords(c, reader)
 }
 
-func validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
-	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.validateFileHeaders")
+func (h *ContactHandler) validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
+	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Customerbase.validateFileHeaders")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
 	headers, err := reader.Read()
 	if err != nil {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to read file"))
+		message := "Unable to read file"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		return err
 	}
 
@@ -252,14 +252,15 @@ func validateFileHeaders(c *gin.Context, reader *csv.Reader) error {
 	}
 
 	if !hasEmail || !hasLinkedIn {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing required headers: email, linkedin_url"))
+		message := "Missing required headers: email, linkedin_url"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		return errors.New("invalid headers")
 	}
 	return nil
 }
 
-func processCSVRecords(ginCtx *gin.Context, s *cosapi_services.Services, reader *csv.Reader) {
-	span, _ := tracing.StartTracerSpan(ginCtx.Request.Context(), "Customerbase.processCSVRecords")
+func (h *ContactHandler) processCSVRecords(c *gin.Context, reader *csv.Reader) {
+	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Customerbase.processCSVRecords")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
@@ -294,7 +295,7 @@ func processCSVRecords(ginCtx *gin.Context, s *cosapi_services.Services, reader 
 
 		total++
 
-		err, errVal := validateContactRecord(&contactRecord)
+		err, errVal := h.validateContactRecord(&contactRecord)
 		if err != nil {
 			fail++
 			csvErrors = append(csvErrors, BulkErrorDetails{
@@ -303,23 +304,21 @@ func processCSVRecords(ginCtx *gin.Context, s *cosapi_services.Services, reader 
 				Description:  fmt.Sprintf("%s", err),
 			})
 		}
-		contactRecord.ContactId = processContact(ginCtx.Request.Context(), s, contactRecord)
+		contactRecord.ContactId = h.processContact(c.Request.Context(), contactRecord)
 	}
 
 	switch {
 	case fail == 0:
 		resp := BulkResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total,
 				Failed:  fail,
 			},
 		}
-		ginCtx.JSON(http.StatusCreated, resp)
+		h.responseHandler.HandleCreated(c, resp)
 	case fail == 1:
 		resp := BulkResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total - fail,
@@ -331,12 +330,12 @@ func processCSVRecords(ginCtx *gin.Context, s *cosapi_services.Services, reader 
 				Description:  csvErrors[0].Description,
 			},
 		}
-		ginCtx.JSON(http.StatusCreated, resp)
+		h.responseHandler.HandleCreated(c, resp)
 	case fail == total:
-		handlers.SendError(ginCtx, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No valid contacts found in request"))
+		message := "No valid contacts found in request"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 	default:
 		resp := BulkResponseMultipleErrors{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Summary: BulkSummary{
 				Total:   total,
 				Success: total - fail,
@@ -344,6 +343,27 @@ func processCSVRecords(ginCtx *gin.Context, s *cosapi_services.Services, reader 
 			},
 			Details: csvErrors,
 		}
-		ginCtx.JSON(http.StatusCreated, resp)
+		h.responseHandler.HandleCreated(c, resp)
 	}
+}
+
+func (h *ContactHandler) validateAndOpenCsvFile(c *gin.Context) (multipart.File, error) {
+	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Customerbase.validateAndOpenCsvFile")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		message := "Unable to parse file"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
+		return nil, err
+	}
+
+	if header.Header.Get("Content-Type") != "text/csv" && !strings.HasSuffix(header.Filename, ".csv") {
+		message := "Invalid file type"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
+		return nil, errors.New("invalid file type")
+	}
+
+	return file, nil
 }

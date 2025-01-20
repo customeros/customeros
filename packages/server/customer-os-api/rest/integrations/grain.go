@@ -17,12 +17,12 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
-func FathomZapier(c *gin.Context, s *cosapi_services.Services) {
-	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.FathomZapier", c.Request.Header)
+func GrainZapier(c *gin.Context, s *cosapi_services.Services) {
+	ctx, span := commontracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.Grain", c.Request.Header)
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
@@ -42,90 +42,82 @@ func FathomZapier(c *gin.Context, s *cosapi_services.Services) {
 
 	if !strings.HasPrefix(c.ContentType(), "application/json") {
 		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrUnsupportedContentType)
-		return
 	}
 
 	if c.Request.UserAgent() == "" {
 		handlers.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
-		return
 	}
 
 	// if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
 	// 	handlers.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
-	// 	return
 	// }
 
-	handleFathomAISummaryZapier(c, ctx, s)
+	handleGrainNewRecordingEventZapier(c, ctx, s)
 }
 
-func handleFathomAISummaryZapier(c *gin.Context, ctx context.Context, s *cosapi_services.Services) {
-	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.handleFathomAISummaryZapier")
+func handleGrainNewRecordingEventZapier(c *gin.Context, ctx context.Context, s *cosapi_services.Services) {
+	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.handleGrainNewRecorderEventZapier")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
-	var aiSummaryDataPayload FathomZapierPayload
-	err := c.BindJSON(&aiSummaryDataPayload)
+	var grainDataPayload GrainRecordingData
+	err := c.BindJSON(&grainDataPayload)
 	if err != nil {
 		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to parse payload from Zapier"))
 		return
 	}
 
-	aiSummaryData := &aiSummaryDataPayload
-	err = aiSummaryData.toCleanPayload()
+	grainData := &grainDataPayload
+	err = grainData.cleanPayload()
 	if err != nil {
 		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to normalize payload from Zapier"))
 		return
 	}
 
-	if aiSummaryData.AISummary.HTMLFormatted == "" {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No Fathom summary data"))
-		return
+	if grainData.RecordingData.IntelligenceNotesMD == "" {
+		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No Grain meeting in payload"))
 	}
 
 	c.JSON(http.StatusAccepted, enum.BuildBaseResponse(enum.StatusProcessing))
 
 	go func() {
-		if err := publishFathomMeetingSummaryCreatedEvent(c, ctx, s, aiSummaryData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to process Fathom AI summary from zapier"))
+		if err := publishGrainMeetingSummaryCreatedEvent(c, ctx, s, grainData); err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to process Grain AI summary from zapier"))
 		}
 	}()
 	return
 }
 
-func publishFathomMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, s *cosapi_services.Services, aiSummaryData *FathomZapierPayload) error {
-	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.publishFathomMeetingSummaryCreatedEvent")
+func publishGrainMeetingSummaryCreatedEvent(c *gin.Context, ctx context.Context, s *cosapi_services.Services, grainData *GrainRecordingData) error {
+	span, _ := commontracing.StartTracerSpan(c.Request.Context(), "Flows.publishGrainMeetingSummaryEvent")
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
-	var meetingSummary data_fields.MeetingSummaryEvent
+	var meeting data_fields.MeetingSummaryEvent
 
-	content, err := aiSummaryData.toMarkdownContent()
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to convert Fathom AI summary to markdown"))
-		return err
-	}
+	content := grainData.MeetingNoteContent()
+	meeting.Content = &content
+	meeting.Tenant = common.GetTenantFromContext(ctx)
+	meeting.MeetingID = grainData.RecordingData.ID
+	participants := grainData.RecordingData.participantEmails()
+	meeting.ParticipantEmails = &participants
 
-	// build meeting summary
-	meetingSummary.Tenant = common.GetTenantFromContext(ctx)
-	meetingSummary.MeetingID = aiSummaryData.ID
-	meetingSummary.Content = &content
-	participants := aiSummaryData.Meeting.participantEmails()
-	meetingSummary.ParticipantEmails = &participants
-
-	if aiSummaryData.Meeting.ScheduledStartTime.IsZero() {
-		meetingSummary.Timestamp = utils.NowPtr()
+	if grainData.RecordingData.StartDatetime.IsZero() {
+		meeting.Timestamp = utils.NowPtr()
 	} else {
-		meetingSummary.Timestamp = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
+		meeting.Timestamp = utils.TimePtr(grainData.RecordingData.StartDatetime.UTC())
 	}
 
+	// build webhook event
 	event := dto.WebhookEvent{
-		ExternalSystemId: commonenum.SourceFathom,
-		Name:             commonenum.EventFathomMeetingSummaryCreated,
-		DataType:         data_fields.MeetingSummaryEvent{}.Type(),
-		Data:             meetingSummary,
+		ExternalSystemId: commonenum.SourceGrain,
+		Name:             commonenum.EventGrainMeetingSummaryCreated,
+		DataType:         "MeetingSummaryEvent",
+		Data:             &meeting,
 	}
 
 	pubErr := s.CommonServices.Events.Publisher.PublishWebhookEvent(ctx, event)
+
 	if pubErr != nil {
 		tracing.TraceErr(span, errors.Wrap(pubErr, "failed to publish event"))
 	}

@@ -1,22 +1,20 @@
 // @openapi 3.0.0
-package restenrich
+package enrich
 
 import (
 	"fmt"
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
@@ -24,8 +22,6 @@ import (
 // EnrichOrganizationResponse represents the response for organization enrichment
 // @Description Response structure for organization enrichment operations
 type EnrichOrganizationResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// Enriched organization data
 	// required: true
 	Data EnrichOrganizationData `json:"data"`
@@ -170,7 +166,7 @@ type EnrichOrganizationLocation struct {
 // @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /enrich/v1/organization [get]
 // @Security ApiKeyAuth
-func EnrichOrganization(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *EnrichHandler) EnrichOrganization(services *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichOrganization", c.Request.Header)
 		defer span.Finish()
@@ -179,7 +175,7 @@ func EnrichOrganization(services *cosapi_services.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
@@ -188,7 +184,8 @@ func EnrichOrganization(services *cosapi_services.Services) gin.HandlerFunc {
 
 		// check linked in or email params are present
 		if strings.TrimSpace(linkedinUrl) == "" && strings.TrimSpace(domain) == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing linkedinUrl or domain"))
+			message := "Missing linkedinUrl or domain"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
@@ -201,10 +198,8 @@ func EnrichOrganization(services *cosapi_services.Services) gin.HandlerFunc {
 			ctx, &domain, &linkedinUrl)
 
 		if enrichOrganizationResponse == nil {
-			handlers.SendError(c, span, http.StatusNotFound, &enum.ErrorResponse{
-				BaseResponse: enum.BuildBaseResponse(enum.StatusWarning),
-				Message:      "Organization not found",
-			})
+			message := "Organization not found"
+			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
 
@@ -214,7 +209,6 @@ func EnrichOrganization(services *cosapi_services.Services) gin.HandlerFunc {
 			socialUrls = append(socialUrls, social.Url)
 		}
 		response := EnrichOrganizationResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
 			Data: EnrichOrganizationData{
 				Name:             enrichOrganizationResponse.Name,
 				Domain:           enrichOrganizationResponse.Domain,
@@ -253,6 +247,6 @@ func EnrichOrganization(services *cosapi_services.Services) gin.HandlerFunc {
 			}
 		}
 
-		c.JSON(http.StatusOK, response)
+		h.responseHandler.HandleSuccess(c, response)
 	}
 }

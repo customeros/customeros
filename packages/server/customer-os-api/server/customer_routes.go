@@ -6,12 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/billing"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/customerbase"
 	restEnrich "github.com/customeros/customeros/packages/server/customer-os-api/rest/enrich"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/flows"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/mailstack"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/me"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/outreach"
 	reveal "github.com/customeros/customeros/packages/server/customer-os-api/rest/reveal_setup"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/verify"
@@ -167,11 +168,11 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 	})
 }
 
-func registerIDRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
+func registerIDRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      "/me",
-		handler:   handlers.AuthorizeMe(),
+		handler:   me.AuthorizeMe(h),
 		routeType: RouteCustomer,
 		services:  s,
 	})
