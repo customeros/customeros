@@ -32,6 +32,7 @@ type CommonConfig struct {
 	Namecheap        commonconf.NamecheapConfig
 	OpenSRS          commonconf.OpenSRSConfig
 	Cloudflare       commonconf.CloudflareConfig
+	IpData           commonconf.IpDataConfig
 }
 
 type AppConfig struct {
@@ -107,6 +108,7 @@ func InitConfig() (*Config, error) {
 			NamecheapConfig:  cmnCfg.Namecheap,
 			OpenSRSConfig:    cmnCfg.OpenSRS,
 			CloudflareConfig: cmnCfg.Cloudflare,
+			IpDataConfig:     cmnCfg.IpData,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,
