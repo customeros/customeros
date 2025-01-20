@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"log"
 	"reflect"
 
@@ -129,6 +130,7 @@ type CommonServices struct {
 
 type InitOptions struct {
 	LoadPersonalEmailProviders bool
+	LoadEmailExclusionList     bool
 }
 
 func InitCommonServices(
@@ -298,6 +300,14 @@ func InitCommonServices(
 				personalEmailProviders = append(personalEmailProviders, personalEmailProvider.ProviderDomain)
 			}
 			common.Cache.SetPersonalEmailProviders(personalEmailProviders)
+		}
+		if options.LoadEmailExclusionList {
+			//init app cache
+			exclusionList, err := postgresRepositories.TenantSettingsEmailExclusionRepository.GetExclusionList(context.Background())
+			if err != nil {
+				log.Fatalf("Error getting exclusion list: %s", err.Error())
+			}
+			common.Cache.SetEmailExclusion(exclusionList)
 		}
 	}
 
