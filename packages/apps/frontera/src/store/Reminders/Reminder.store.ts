@@ -3,7 +3,7 @@ import { set } from 'date-fns/set';
 import { RootStore } from '@store/root';
 import { Operation } from '@store/types';
 import { addDays } from 'date-fns/addDays';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { UserStore } from '@store/Users/User.store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';

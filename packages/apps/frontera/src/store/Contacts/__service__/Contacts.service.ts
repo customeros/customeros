@@ -2,7 +2,7 @@ import { P, match } from 'ts-pattern';
 import { Operation } from '@store/types';
 import { makePayload } from '@store/util';
 import { rdiffResult } from 'recursive-diff';
-import { Transport } from '@store/transport.ts';
+import { Transport } from '@infra/transport.ts';
 
 import {
   Tag,

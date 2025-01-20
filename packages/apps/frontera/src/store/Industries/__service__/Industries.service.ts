@@ -1,4 +1,4 @@
-import { Transport } from '@store/transport.ts';
+import { Transport } from '@infra/transport.ts';
 
 import GetIndustriesDocument from './getTenantIndustries.graphql';
 import {

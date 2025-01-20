@@ -4,7 +4,7 @@ import type { rdiffResult } from 'recursive-diff';
 import get from 'lodash/get';
 import { P, match } from 'ts-pattern';
 import { makePayload } from '@store/util';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 
 import { OnboardingStatus, type OrganizationUpdateInput } from '@graphql/types';
 

@@ -1,4 +1,4 @@
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 
 import GetJobRolesDocument from './getJobRoles.graphql';
 import SaveJobRolesDocument from './saveJobRole.graphql';

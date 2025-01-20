@@ -7,7 +7,7 @@ import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
 import { Operation } from '@store/types.ts';
 import { makePayload } from '@store/util.ts';
-import { Transport } from '@store/transport.ts';
+import { Transport } from '@infra/transport.ts';
 import { Store, makeAutoSyncable } from '@store/store.ts';
 import { computed, runInAction, makeAutoObservable } from 'mobx';
 import { ContractService } from '@store/Contracts/Contract.service.ts';

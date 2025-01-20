@@ -158,16 +158,7 @@ class TracedGraphQLClient {
     let err: string | null = null;
     let data: T | null = null;
 
-    // if (typeof query === 'string') {
-    //   console.log('AICI-> ', query);
-    // }
-
     const { operationName } = resolveRequestDocument(query);
-
-    // console.log(
-    //   query?.definitions[0]?.operation,
-    //   query?.definitions[0]?.name?.value,
-    // );
 
     try {
       window.dispatchEvent(

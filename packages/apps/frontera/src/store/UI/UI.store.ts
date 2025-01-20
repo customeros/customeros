@@ -2,7 +2,7 @@ import type { Channel } from 'phoenix';
 import type { RootStore } from '@store/root';
 
 import { Persister } from '@store/persister';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { when, makeAutoObservable } from 'mobx';
 import { SystemSyncPacket } from '@store/types';
 

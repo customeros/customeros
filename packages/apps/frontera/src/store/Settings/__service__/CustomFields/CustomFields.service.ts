@@ -1,7 +1,7 @@
 import { match } from 'ts-pattern';
 import { Operation } from '@store/types';
 import { makePayload } from '@store/util';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { CustomFieldsStore } from '@store/Settings/CustomFields.store';
 
 import { CustomFieldTemplateInput } from '@shared/types/__generated__/graphql.types';

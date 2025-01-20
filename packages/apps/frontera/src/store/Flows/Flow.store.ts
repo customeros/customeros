@@ -6,7 +6,7 @@ import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { Operation } from '@store/types';
 import { MarkerType } from '@xyflow/react';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { FlowService } from '@store/Flows/__service__';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';

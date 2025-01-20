@@ -2,7 +2,7 @@ import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { RootStore } from '@store/root';
 import { Operation } from '@store/types';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { rdiffResult } from 'recursive-diff';
 import { UserStore } from '@store/Users/User.store';
 import { runInAction, makeAutoObservable } from 'mobx';

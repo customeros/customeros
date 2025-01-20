@@ -1,5 +1,5 @@
 import type { RootStore } from '@store/root';
-import type { Transport } from '@store/transport';
+import type { Transport } from '@infra/transport';
 
 import { runInAction } from 'mobx';
 import { Store } from '@store/_store';

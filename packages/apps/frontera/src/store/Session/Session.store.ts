@@ -2,7 +2,7 @@ import type { RootStore } from '@store/root';
 
 import { match } from 'ts-pattern';
 import { AxiosError } from 'axios';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { Persister } from '@store/persister';
 import { toJS, autorun, runInAction, makeAutoObservable } from 'mobx';
 

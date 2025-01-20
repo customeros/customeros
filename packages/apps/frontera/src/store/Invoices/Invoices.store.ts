@@ -1,5 +1,5 @@
 import { RootStore } from '@store/root.ts';
-import { Transport } from '@store/transport.ts';
+import { Transport } from '@infra/transport.ts';
 import { SyncableGroup } from '@store/syncable-group.ts';
 import { when, override, observable, runInAction, makeObservable } from 'mobx';
 

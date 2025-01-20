@@ -1,6 +1,6 @@
 import { RootStore } from '@store/root';
 import { Syncable } from '@store/syncable';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { action, override, makeObservable } from 'mobx';
 
 import {

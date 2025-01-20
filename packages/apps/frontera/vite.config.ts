@@ -59,6 +59,7 @@ export default defineConfig(({ mode }) => ({
       '@invoices': path.resolve(__dirname, './src/routes/invoices/src'),
       '@opportunities': path.resolve(__dirname, './src/routes/prospects/src'),
       '@domain': path.resolve(__dirname, './src/domain'),
+      '@infra': path.resolve(__dirname, './src/infra'),
     },
   },
 }));

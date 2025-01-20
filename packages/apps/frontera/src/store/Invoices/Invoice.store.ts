@@ -1,7 +1,7 @@
 import type { RootStore } from '@store/root';
 
 import merge from 'lodash/merge';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { Syncable } from '@store/syncable.ts';
 import { action, override, computed, runInAction, makeObservable } from 'mobx';
 

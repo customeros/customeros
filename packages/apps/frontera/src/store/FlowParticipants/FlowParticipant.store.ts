@@ -2,7 +2,7 @@ import type { RootStore } from '@store/root';
 
 import { Channel } from 'phoenix';
 import { Operation } from '@store/types';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { makeAutoSyncableGroup } from '@store/group-store';

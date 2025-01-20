@@ -1,6 +1,6 @@
 import { match } from 'ts-pattern';
 import { Operation } from '@store/types';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { MailboxStore } from '@store/Settings/Mailbox.store';
 
 import BuyDomainsDocument from './buyDomains.graphql';

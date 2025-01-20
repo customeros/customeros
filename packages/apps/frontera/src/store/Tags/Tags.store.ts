@@ -2,7 +2,7 @@ import { merge } from 'lodash';
 import { Channel } from 'phoenix';
 import { Store } from '@store/store';
 import { RootStore } from '@store/root';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
