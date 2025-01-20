@@ -30,6 +30,8 @@ type OrganizationUiDetails {
     industry:               String @deprecated(reason: "Use industryCode")
     industryCode:           String
     industryName:           String
+    industryFlagged:        Boolean
+    industryFlaggedAt:      Time
     market:                 Market
     website:                String
     logoUrl:                String
