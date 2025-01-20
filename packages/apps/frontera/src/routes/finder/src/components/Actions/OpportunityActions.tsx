@@ -35,14 +35,14 @@ export const OpportunitiesTableActions = observer(
       if (selection?.length === 1) {
         store.ui.commandMenu.setType('OpportunityCommands');
         store.ui.commandMenu.setContext({
-          entity: 'Contact',
+          entity: 'Opportunity',
           ids: selection,
         });
         store.ui.commandMenu.setOpen(true);
       } else {
         store.ui.commandMenu.setType('OpportunityBulkCommands');
         store.ui.commandMenu.setContext({
-          entity: 'Contact',
+          entity: 'Opportunities',
           ids: selection,
         });
         store.ui.commandMenu.setOpen(true);
