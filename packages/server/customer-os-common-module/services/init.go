@@ -290,7 +290,7 @@ func InitCommonServices(
 	// Process options
 	if options != nil {
 		if options.LoadPersonalEmailProviders {
-			//init app cache
+			// init app cache
 			personalEmailProviderEntities, err := postgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
 			if err != nil {
 				log.Fatalf("Error getting personal email providers: %s", err.Error())
@@ -302,7 +302,7 @@ func InitCommonServices(
 			common.Cache.SetPersonalEmailProviders(personalEmailProviders)
 		}
 		if options.LoadEmailExclusionList {
-			//init app cache
+			// init app cache
 			exclusionList, err := postgresRepositories.TenantSettingsEmailExclusionRepository.GetExclusionList(context.Background())
 			if err != nil {
 				log.Fatalf("Error getting exclusion list: %s", err.Error())

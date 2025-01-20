@@ -48,13 +48,6 @@ func NewAgentVisitorIDService(
 	}
 }
 
-type AgentConfig struct {
-	Websites                    []string `json:"websites" validate:"required"`
-	SlackEnabled                bool     `json:"slackEnabled"`
-	SlackChannelID              string   `json:"slackChannelId,omitempty"`
-	NotificationCooldownInHours int      `json:"notificationCooldownHours"`
-}
-
 const DefaultNotificationCooldownInHours = 12
 
 func (a *agentVisitorIDService) SetActionService(action interfaces.ActionService) {
@@ -106,10 +99,7 @@ func (a *agentVisitorIDService) CreateAgent(ctx context.Context) (*postgres_enti
 		Color:        utils.GetRandomColor(),
 	}
 
-	//config := AgentConfig{
-	//	SlackEnabled:                false,
-	//	NotificationCooldownInHours: DefaultNotificationCooldownInHours,
-	//}
+	// create agent instance in database
 
 	return agent, nil
 }
