@@ -17,6 +17,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	model1 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -30931,9 +30932,9 @@ func (ec *executionContext) _ColumnView_columnType(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.ColumnViewType)
+	res := resTmp.(postgres_entity.ColumnViewType)
 	fc.Result = res
-	return ec.marshalNColumnViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewType(ctx, field.Selections, res)
+	return ec.marshalNColumnViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐColumnViewType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ColumnView_columnType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -102130,9 +102131,9 @@ func (ec *executionContext) _TableViewDef_tableType(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.TableViewType)
+	res := resTmp.(postgres_entity.TableViewType)
 	fc.Result = res
-	return ec.marshalNTableViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewType(ctx, field.Selections, res)
+	return ec.marshalNTableViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableViewType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_tableType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -102174,9 +102175,9 @@ func (ec *executionContext) _TableViewDef_tableId(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.TableIDType)
+	res := resTmp.(postgres_entity.TableIdType)
 	fc.Result = res
-	return ec.marshalNTableIdType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableIDType(ctx, field.Selections, res)
+	return ec.marshalNTableIdType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableIdType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_TableViewDef_tableId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -109702,7 +109703,7 @@ func (ec *executionContext) unmarshalInputColumnViewInput(ctx context.Context, o
 			it.ColumnID = data
 		case "columnType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("columnType"))
-			data, err := ec.unmarshalNColumnViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewType(ctx, v)
+			data, err := ec.unmarshalNColumnViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐColumnViewType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -114584,14 +114585,14 @@ func (ec *executionContext) unmarshalInputTableViewDefCreateInput(ctx context.Co
 		switch k {
 		case "tableType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tableType"))
-			data, err := ec.unmarshalNTableViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewType(ctx, v)
+			data, err := ec.unmarshalNTableViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableViewType(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.TableType = data
 		case "tableId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tableId"))
-			data, err := ec.unmarshalNTableIdType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableIDType(ctx, v)
+			data, err := ec.unmarshalNTableIdType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableIdType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -132287,14 +132288,20 @@ func (ec *executionContext) unmarshalNColumnViewInput2ᚖgithubᚗcomᚋcustomer
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNColumnViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewType(ctx context.Context, v any) (model.ColumnViewType, error) {
-	var res model.ColumnViewType
-	err := res.UnmarshalGQL(v)
+func (ec *executionContext) unmarshalNColumnViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐColumnViewType(ctx context.Context, v any) (postgres_entity.ColumnViewType, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := postgres_entity.ColumnViewType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNColumnViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐColumnViewType(ctx context.Context, sel ast.SelectionSet, v model.ColumnViewType) graphql.Marshaler {
-	return v
+func (ec *executionContext) marshalNColumnViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐColumnViewType(ctx context.Context, sel ast.SelectionSet, v postgres_entity.ColumnViewType) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNComment2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCommentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Comment) graphql.Marshaler {
@@ -136292,14 +136299,20 @@ func (ec *executionContext) marshalNSuggestedMergeOrganization2ᚖgithubᚗcom�
 	return ec._SuggestedMergeOrganization(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNTableIdType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableIDType(ctx context.Context, v any) (model.TableIDType, error) {
-	var res model.TableIDType
-	err := res.UnmarshalGQL(v)
+func (ec *executionContext) unmarshalNTableIdType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableIdType(ctx context.Context, v any) (postgres_entity.TableIdType, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := postgres_entity.TableIdType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTableIdType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableIDType(ctx context.Context, sel ast.SelectionSet, v model.TableIDType) graphql.Marshaler {
-	return v
+func (ec *executionContext) marshalNTableIdType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableIdType(ctx context.Context, sel ast.SelectionSet, v postgres_entity.TableIdType) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNTableViewDef2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewDef(ctx context.Context, sel ast.SelectionSet, v model.TableViewDef) graphql.Marshaler {
@@ -136370,14 +136383,20 @@ func (ec *executionContext) unmarshalNTableViewDefUpdateInput2githubᚗcomᚋcus
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNTableViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewType(ctx context.Context, v any) (model.TableViewType, error) {
-	var res model.TableViewType
-	err := res.UnmarshalGQL(v)
+func (ec *executionContext) unmarshalNTableViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableViewType(ctx context.Context, v any) (postgres_entity.TableViewType, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := postgres_entity.TableViewType(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNTableViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTableViewType(ctx context.Context, sel ast.SelectionSet, v model.TableViewType) graphql.Marshaler {
-	return v
+func (ec *executionContext) marshalNTableViewType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐTableViewType(ctx context.Context, sel ast.SelectionSet, v postgres_entity.TableViewType) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNTag2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTag(ctx context.Context, sel ast.SelectionSet, v model.Tag) graphql.Marshaler {

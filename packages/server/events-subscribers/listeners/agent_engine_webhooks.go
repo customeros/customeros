@@ -44,6 +44,12 @@ func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyCo
 		return err
 	}
 
+	if webhookEvent == nil {
+		err := errors.New("webhookEvent is nil")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	if webhookEvent.Data == nil {
 		err := errors.New("webhookEvent.Data is nil")
 		tracing.TraceErr(span, err)

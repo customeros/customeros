@@ -11,7 +11,8 @@ type FlowEntity struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	DefaultName string
+	TableViewDefId string
+	DefaultName    string
 
 	Name string
 

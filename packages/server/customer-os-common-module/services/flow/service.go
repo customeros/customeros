@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/service"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -24,13 +27,15 @@ import (
 
 type flowService struct {
 	neo4j         *neo4j_repository.Repositories
+	postgres      *postgres_repository.Repositories
 	events        *events.EventsService
 	flowExecution interfaces.FlowExecutionService
 }
 
-func NewFlowService(neo4j *neo4j_repository.Repositories, events *events.EventsService, flowExecution interfaces.FlowExecutionService) interfaces.FlowService {
+func NewFlowService(neo4j *neo4j_repository.Repositories, postgres *postgres_repository.Repositories, events *events.EventsService, flowExecution interfaces.FlowExecutionService) interfaces.FlowService {
 	return &flowService{
 		neo4j:         neo4j,
+		postgres:      postgres,
 		events:        events,
 		flowExecution: flowExecution,
 	}
@@ -235,7 +240,11 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 	flowEntity, err := utils.ExecuteWriteInTransaction(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		toStore := &neo4jentity.FlowEntity{}
 
+		isNew := false
+
 		if input.Id == "" {
+			isNew = true
+
 			toStore.Id, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlow)
 			if err != nil {
 				return nil, err
@@ -265,6 +274,25 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 		_, err = s.neo4j.FlowWriteRepository.Merge(ctx, &tx, toStore)
 		if err != nil {
 			return nil, err
+		}
+
+		if isNew {
+			tvDef, err := service.DefaultTableViewDefinitionFlowContactsV2(span, toStore.Id)
+			if err == nil {
+				tvDef.Tenant = tenant
+				result := s.postgres.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+				if result.Error != nil {
+					return nil, result.Error
+				}
+				viewDefinition, _ := result.Result.(postgresEntity.TableViewDefinition)
+
+				toStore.TableViewDefId = fmt.Sprint(viewDefinition.ID)
+
+				err := s.neo4j.CommonWriteRepository.UpdateStringProperty(ctx, &tx, tenant, model.NodeLabelFlow, toStore.Id, "tableViewDefId", toStore.TableViewDefId)
+				if err != nil {
+					return nil, err
+				}
+			}
 		}
 
 		// TODO this is not supporting live updates after scheduling
@@ -717,7 +745,7 @@ func (s *flowService) FlowArchive(ctx context.Context, id string) (*neo4jentity.
 	}
 
 	for _, v := range participantNodes {
-		err = s.FlowParticipantDelete(ctx, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*v.Node), "id"))
+		err = s.FlowParticipantDelete(ctx, nil, utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*v.Node), "id"))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -983,7 +1011,7 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 	}
 }
 
-func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipantId string) error {
+func (s *flowService) FlowParticipantDelete(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, flowParticipantId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowParticipantDelete")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -1013,22 +1041,22 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 		return errors.New("flow not found")
 	}
 
-	_, err = utils.ExecuteWriteInTransaction(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
-		flowActionExecutions, err := s.flowExecution.GetFlowActionExecutionsForParticipant(ctx, &tx, flow.Id, flowParticipant.EntityId, flowParticipant.EntityType)
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		flowActionExecutions, err := s.flowExecution.GetFlowActionExecutionsForParticipant(ctx, txWithPostCommit.Tx, flow.Id, flowParticipant.EntityId, flowParticipant.EntityType)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, v := range flowActionExecutions {
 			if v.Status == neo4jentity.FlowActionExecutionStatusScheduled {
-				err := s.neo4j.FlowActionExecutionWriteRepository.Delete(ctx, &tx, v.Id)
+				err := s.neo4j.FlowActionExecutionWriteRepository.Delete(ctx, txWithPostCommit.Tx, v.Id)
 				if err != nil {
 					return nil, err
 				}
 			}
 		}
 
-		err = s.neo4j.CommonWriteRepository.Unlink(ctx, &tx, tenant, neo4j_repository.LinkDetails{
+		err = s.neo4j.CommonWriteRepository.Unlink(ctx, txWithPostCommit.Tx, tenant, neo4j_repository.LinkDetails{
 			FromEntityId:   flow.Id,
 			FromEntityType: model.FLOW,
 			Relationship:   model.HAS,
@@ -1039,7 +1067,7 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 			return nil, err
 		}
 
-		err = s.neo4j.CommonWriteRepository.Unlink(ctx, &tx, tenant, neo4j_repository.LinkDetails{
+		err = s.neo4j.CommonWriteRepository.Unlink(ctx, txWithPostCommit.Tx, tenant, neo4j_repository.LinkDetails{
 			FromEntityId:   flowParticipant.Id,
 			FromEntityType: model.FLOW_PARTICIPANT,
 			Relationship:   model.HAS,
@@ -1050,7 +1078,7 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 			return nil, err
 		}
 
-		err = s.neo4j.FlowParticipantWriteRepository.Delete(ctx, &tx, flowParticipant.Id)
+		err = s.neo4j.FlowParticipantWriteRepository.Delete(ctx, txWithPostCommit.Tx, flowParticipant.Id)
 		if err != nil {
 			return nil, err
 		}

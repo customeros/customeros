@@ -2,9 +2,10 @@ package interfaces
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 )
@@ -33,7 +34,7 @@ type FlowService interface {
 	FlowParticipantById(ctx context.Context, flowParticipantId string) (*neo4jentity.FlowParticipantEntity, error)
 	FlowParticipantByEntity(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*neo4jentity.FlowParticipantEntity, error)
 	FlowParticipantAdd(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*neo4jentity.FlowParticipantEntity, error)
-	FlowParticipantDelete(ctx context.Context, flowParticipantId string) error
+	FlowParticipantDelete(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, flowParticipantId string) error
 
 	FlowSenderGetList(ctx context.Context, flowIds []string) (*neo4jentity.FlowSenderEntities, error)
 	FlowSenderGetById(ctx context.Context, id string) (*neo4jentity.FlowSenderEntity, error)

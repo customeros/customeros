@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/customeros/mailsherpa/emailparser"
-	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/customeros/mailsherpa/emailparser"
+	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -285,7 +285,7 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 					return nil, err
 				}
 
-				err = s.flow.FlowParticipantDelete(ctx, flowParticipant.Id)
+				err = s.flow.FlowParticipantDelete(ctx, txWithPostCommit, flowParticipant.Id)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err

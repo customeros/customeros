@@ -2,18 +2,17 @@ package resolver
 
 import (
 	"context"
-	"testing"
-
 	"github.com/99designs/gqlgen/client"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/utils/decode"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/utils/decode"
+	"testing"
 )
 
 func TestQueryResolver_UIContactsSearch_FilterByName(t *testing.T) {
@@ -30,7 +29,7 @@ func TestQueryResolver_UIContactsSearch_FilterByName(t *testing.T) {
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelContact))
 
-	searchBy := model.ColumnViewTypeContactsName
+	searchBy := postgresEntity.ColumnViewTypeContactsName
 	searchTerm := "Aa"
 
 	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsEmpty, 5, 1)
@@ -56,8 +55,8 @@ func TestQueryResolver_UIContactsSearch_SortByName(t *testing.T) {
 	expectedAsc := []string{"A1", "A2", "B1-AB1", "B1-AB2", "empty"}
 	expectedDesc := []string{"B1-AB2", "B1-AB1", "A2", "A1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsName, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsName, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsName, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsName, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByPrimaryEmail(t *testing.T) {
@@ -82,13 +81,154 @@ func TestQueryResolver_UIContactsSearch_FilterByPrimaryEmail(t *testing.T) {
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelContact))
 	require.Equal(t, 6, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelEmail))
 
-	searchBy := model.ColumnViewTypeContactsPrimaryEmail
+	searchBy := postgresEntity.ColumnViewTypeContactsPrimaryEmail
 	searchTerm := "aa"
 
 	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsEmpty, 5, 2)
 	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsNotEmpty, 5, 3)
 	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorContains, 5, 2)
 	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorNotContains, 5, 1)
+}
+
+func TestQueryResolver_UIContactsSearch_FilterByEmailVerificationPrimaryEmail(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	//validated email
+	contact1 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact1, neo4jentity.EmailEntity{
+		Email:         "1@gmail.com",
+		Primary:       true,
+		IsFirewalled:  utils.BoolPtr(true),
+		IsFreeAccount: utils.BoolPtr(true),
+		IsRisky:       utils.BoolPtr(false),
+		IsValidSyntax: utils.BoolPtr(false),
+		IsMailboxFull: utils.BoolPtr(true),
+		IsCatchAll:    utils.BoolPtr(true),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact11 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A1"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact11, neo4jentity.EmailEntity{
+		Email:        "11@gmail.com",
+		Primary:      true,
+		IsFirewalled: utils.BoolPtr(true),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact12 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A2"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact12, neo4jentity.EmailEntity{
+		Email:         "12@gmail.com",
+		Primary:       true,
+		IsFreeAccount: utils.BoolPtr(true),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact13 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A3"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact13, neo4jentity.EmailEntity{
+		Email:   "13@gmail.com",
+		Primary: true,
+		IsRisky: utils.BoolPtr(false),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact14 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A4"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact14, neo4jentity.EmailEntity{
+		Email:         "14@gmail.com",
+		Primary:       true,
+		IsValidSyntax: utils.BoolPtr(false),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact15 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A5"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact15, neo4jentity.EmailEntity{
+		Email:         "15@gmail.com",
+		Primary:       true,
+		IsMailboxFull: utils.BoolPtr(true),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact16 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "A6"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact16, neo4jentity.EmailEntity{
+		Email:      "16@gmail.com",
+		Primary:    true,
+		IsCatchAll: utils.BoolPtr(true),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	//not validated email
+	contact2 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "B"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact2, neo4jentity.EmailEntity{
+		Email:   "2@gmail.com",
+		Primary: true,
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           nil,
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	//validated email
+	contact3 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "C"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact3, neo4jentity.EmailEntity{
+		Email:         "3@gmail.com",
+		Primary:       true,
+		Deliverable:   utils.StringPtr("UNDELIVERABLE"),
+		IsFirewalled:  utils.BoolPtr(false),
+		IsFreeAccount: utils.BoolPtr(false),
+		IsRisky:       utils.BoolPtr(true),
+		IsValidSyntax: utils.BoolPtr(true),
+		IsMailboxFull: utils.BoolPtr(true),
+		IsCatchAll:    utils.BoolPtr(false),
+		EmailInternalFields: neo4jentity.EmailInternalFields{
+			ValidatedAt:           utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+			ValidationRequestedAt: utils.TimePtr(utils.FirstTimeOfMonth(2023, 12)),
+		},
+	})
+
+	contact4 := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "D"})
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, contact4, neo4jentity.EmailEntity{
+		Email:   "4@gmail.com",
+		Primary: true,
+	})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "E"})
+
+	searchBy := postgresEntity.ColumnViewTypeEmailVerificationPrimaryEmail
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 11, 3)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 11, 8)
+	assertContactSearch(t, searchBy, []string{"firewall_protected"}, commonModel.ComparisonOperatorIn, 11, 2)
+	assertContactSearch(t, searchBy, []string{"free_account"}, commonModel.ComparisonOperatorIn, 11, 2)
+	assertContactSearch(t, searchBy, []string{"no_risk"}, commonModel.ComparisonOperatorIn, 11, 2)
+	assertContactSearch(t, searchBy, []string{"incorrect_format"}, commonModel.ComparisonOperatorIn, 11, 2)
+	assertContactSearch(t, searchBy, []string{"invalid_mailbox"}, commonModel.ComparisonOperatorIn, 11, 1)
+	assertContactSearch(t, searchBy, []string{"mailbox_full"}, commonModel.ComparisonOperatorIn, 11, 3)
+	assertContactSearch(t, searchBy, []string{"catch_all"}, commonModel.ComparisonOperatorIn, 11, 2)
+	assertContactSearch(t, searchBy, []string{"not_verified"}, commonModel.ComparisonOperatorIn, 11, 3)
+	assertContactSearch(t, searchBy, []string{"verification_in_progress"}, commonModel.ComparisonOperatorIn, 11, 1)
 }
 
 func TestQueryResolver_UIContactsSearch_SortByPrimaryEmail(t *testing.T) {
@@ -108,8 +248,8 @@ func TestQueryResolver_UIContactsSearch_SortByPrimaryEmail(t *testing.T) {
 	expectedAsc := []string{contact3, contact1, contact2}
 	expectedDesc := []string{contact1, contact3, contact2}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_SortByPrimaryEmail_WithNoPrimaryEmail(t *testing.T) {
@@ -128,8 +268,8 @@ func TestQueryResolver_UIContactsSearch_SortByPrimaryEmail_WithNoPrimaryEmail(t 
 	expectedAsc := []string{contact1, contact2, contact3}
 	expectedDesc := []string{contact2, contact1, contact3}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsPrimaryEmail, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByCountry(t *testing.T) {
@@ -152,7 +292,7 @@ func TestQueryResolver_UIContactsSearch_FilterByCountry(t *testing.T) {
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
 
-	searchBy := model.ColumnViewTypeContactsCountry
+	searchBy := postgresEntity.ColumnViewTypeContactsCountry
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 2)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 4, 2)
@@ -184,8 +324,8 @@ func TestQueryResolver_UIContactsSearch_SortByCountry(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsCountry, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsCountry, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsCountry, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsCountry, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByRegion(t *testing.T) {
@@ -204,7 +344,7 @@ func TestQueryResolver_UIContactsSearch_FilterByRegion(t *testing.T) {
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
 
-	searchBy := model.ColumnViewTypeContactsRegion
+	searchBy := postgresEntity.ColumnViewTypeContactsRegion
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
@@ -238,8 +378,8 @@ func TestQueryResolver_UIContactsSearch_SortByRegion(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsRegion, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsRegion, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsRegion, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsRegion, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByCity(t *testing.T) {
@@ -258,7 +398,7 @@ func TestQueryResolver_UIContactsSearch_FilterByCity(t *testing.T) {
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
 
-	searchBy := model.ColumnViewTypeContactsCity
+	searchBy := postgresEntity.ColumnViewTypeContactsCity
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
@@ -292,8 +432,8 @@ func TestQueryResolver_UIContactsSearch_SortByCity(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsCity, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsCity, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsCity, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsCity, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_SortByCreatedDate(t *testing.T) {
@@ -313,8 +453,8 @@ func TestQueryResolver_UIContactsSearch_SortByCreatedDate(t *testing.T) {
 	expectedAsc := []string{"1", "2"}
 	expectedDesc := []string{"2", "1"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsCreatedAt, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsCreatedAt, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsCreatedAt, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsCreatedAt, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_SortByUpdatedDate(t *testing.T) {
@@ -334,8 +474,8 @@ func TestQueryResolver_UIContactsSearch_SortByUpdatedDate(t *testing.T) {
 	expectedAsc := []string{"1", "2"}
 	expectedDesc := []string{"2", "1"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsUpdatedAt, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsUpdatedAt, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsUpdatedAt, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsUpdatedAt, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByTags(t *testing.T) {
@@ -362,7 +502,7 @@ func TestQueryResolver_UIContactsSearch_FilterByTags(t *testing.T) {
 	require.Equal(t, 4, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelTag))
 	require.Equal(t, 4, neo4jtest.GetCountOfRelationships(ctx, driver, "TAGGED"))
 
-	searchBy := model.ColumnViewTypeContactsTags
+	searchBy := postgresEntity.ColumnViewTypeContactsTags
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
@@ -394,7 +534,7 @@ func TestQueryResolver_UIContactsSearch_FilterByLinkedIn(t *testing.T) {
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
 
-	searchBy := model.ColumnViewTypeContactsLinkedin
+	searchBy := postgresEntity.ColumnViewTypeContactsLinkedin
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 2)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 4, 2)
@@ -426,8 +566,8 @@ func TestQueryResolver_UIContactsSearch_SortByLinkedIn(t *testing.T) {
 	expectedAsc := []string{"1", "2", "3"}
 	expectedDesc := []string{"2", "1", "3"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsLinkedin, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsLinkedin, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsLinkedin, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsLinkedin, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByOrganization(t *testing.T) {
@@ -454,7 +594,7 @@ func TestQueryResolver_UIContactsSearch_FilterByOrganization(t *testing.T) {
 
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "5"})
 
-	searchBy := model.ColumnViewTypeContactsOrganization
+	searchBy := postgresEntity.ColumnViewTypeContactsOrganization
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 3)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 2)
@@ -484,8 +624,8 @@ func TestQueryResolver_UIContactsSearch_SortByOrganization(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsOrganization, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsOrganization, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsOrganization, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsOrganization, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_FilterByJobTitle(t *testing.T) {
@@ -509,7 +649,7 @@ func TestQueryResolver_UIContactsSearch_FilterByJobTitle(t *testing.T) {
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
 	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "5"})
 
-	searchBy := model.ColumnViewTypeContactsJobTitle
+	searchBy := postgresEntity.ColumnViewTypeContactsJobTitle
 
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 3)
 	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 2)
@@ -538,8 +678,356 @@ func TestQueryResolver_UIContactsSearch_SortByJobTitle(t *testing.T) {
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsJobTitle, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsJobTitle, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsJobTitle, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsJobTitle, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIContactsSearch_FilterByTimeInCurrentRole(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
+	firstOfJanuary := utils.FirstTimeOfMonth(2024, 1)
+	firstOfFebruary := utils.FirstTimeOfMonth(2024, 2)
+	firstOfMarch := utils.FirstTimeOfMonth(2024, 3)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "1", "1", neo4jentity.JobRoleEntity{Primary: true, StartedAt: &firstOfDecember})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "2", "2", neo4jentity.JobRoleEntity{Primary: false, StartedAt: &firstOfFebruary})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "3"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "3", "3", neo4jentity.JobRoleEntity{Primary: true, StartedAt: &firstOfMarch})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "5"})
+
+	searchBy := postgresEntity.ColumnViewTypeContactsTimeInCurrentRole
+
+	assertContactSearch(t, searchBy, firstOfDecember, commonModel.ComparisonOperatorGt, 5, 2)
+	assertContactSearch(t, searchBy, firstOfJanuary, commonModel.ComparisonOperatorGt, 5, 1)
+	assertContactSearch(t, searchBy, firstOfFebruary, commonModel.ComparisonOperatorGt, 5, 1)
+	assertContactSearch(t, searchBy, firstOfJanuary, commonModel.ComparisonOperatorLt, 5, 0)
+	assertContactSearch(t, searchBy, firstOfFebruary, commonModel.ComparisonOperatorLt, 5, 1)
+	assertContactSearch(t, searchBy, firstOfMarch, commonModel.ComparisonOperatorLt, 5, 2)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByTimeInCurrentRole(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	firstOfDecember := utils.FirstTimeOfMonth(2023, 12)
+	firstOfFebruary := utils.FirstTimeOfMonth(2024, 2)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "1"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "1", "1", neo4jentity.JobRoleEntity{Primary: true, StartedAt: &firstOfDecember})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: "2"})
+	neo4jtest.LinkContactWithOrganization(ctx, driver, tenantName, "2", "2", neo4jentity.JobRoleEntity{Primary: false, StartedAt: &firstOfFebruary})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty"})
+
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelContact))
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsTimeInCurrentRole, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsTimeInCurrentRole, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIContactsSearch_FilterByPhoneNumber(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{Id: "1", RawPhoneNumber: "1"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "1", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{Id: "2", RawPhoneNumber: "2"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "2", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
+	neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{Id: "3", RawPhoneNumber: "11"})
+	neo4jtest.LinkNodes(ctx, driver, "3", "3", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "5"})
+
+	searchBy := postgresEntity.ColumnViewTypeContactsPhoneNumbers
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 2)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 3)
+	assertContactSearch(t, searchBy, "1", commonModel.ComparisonOperatorContains, 5, 2)
+	assertContactSearch(t, searchBy, "11", commonModel.ComparisonOperatorContains, 5, 1)
+	assertContactSearch(t, searchBy, "2", commonModel.ComparisonOperatorContains, 5, 1)
+
+	assertContactSearch(t, searchBy, "1", commonModel.ComparisonOperatorNotContains, 5, 3)
+	assertContactSearch(t, searchBy, "11", commonModel.ComparisonOperatorNotContains, 5, 4)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByPhoneNumber(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "1"})
+	neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{Id: "1", RawPhoneNumber: "1"})
+	neo4jtest.LinkNodes(ctx, driver, "1", "1", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "2"})
+	neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{Id: "2", RawPhoneNumber: "2"})
+	neo4jtest.LinkNodes(ctx, driver, "2", "2", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty"})
+
+	expectedAsc := []string{"1", "2", "empty"}
+	expectedDesc := []string{"2", "1", "empty"}
+
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsPhoneNumbers, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsPhoneNumbers, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIContactsSearch_FilterByFlow(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f1", Name: "A"})
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f2", Name: "AA"})
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f3", Name: "B"})
+
+	//contact 1 in flow 1 and flow 2
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c1"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp11"})
+	neo4jtest.LinkNodes(ctx, driver, "f1", "fp11", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp11", "c1", "HAS")
+
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp12"})
+	neo4jtest.LinkNodes(ctx, driver, "f2", "fp12", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp12", "c1", "HAS")
+
+	//contact 2 in flow 1
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c2"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp2"})
+	neo4jtest.LinkNodes(ctx, driver, "f1", "fp2", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp2", "c2", "HAS")
+
+	//contact 3 in flow 3
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c3"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp3"})
+	neo4jtest.LinkNodes(ctx, driver, "f3", "fp3", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp3", "c3", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "4"})
+
+	searchBy := postgresEntity.ColumnViewTypeContactsFlows
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 4, 1)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 4, 3)
+	assertContactSearch(t, searchBy, []string{"f1"}, commonModel.ComparisonOperatorIn, 4, 2)
+	assertContactSearch(t, searchBy, []string{"f2"}, commonModel.ComparisonOperatorIn, 4, 1)
+	assertContactSearch(t, searchBy, []string{"f3"}, commonModel.ComparisonOperatorIn, 4, 1)
+	assertContactSearch(t, searchBy, []string{"f4"}, commonModel.ComparisonOperatorIn, 4, 0)
+	assertContactSearch(t, searchBy, []string{"f1", "f2"}, commonModel.ComparisonOperatorIn, 4, 2)
+	assertContactSearch(t, searchBy, []string{"f1", "f3"}, commonModel.ComparisonOperatorIn, 4, 3)
+	assertContactSearch(t, searchBy, []string{"f1", "f4"}, commonModel.ComparisonOperatorIn, 4, 2)
+
+	assertContactSearch(t, searchBy, []string{"f1"}, commonModel.ComparisonOperatorNotIn, 4, 2)
+	assertContactSearch(t, searchBy, []string{"f2"}, commonModel.ComparisonOperatorNotIn, 4, 3)
+	assertContactSearch(t, searchBy, []string{"f3"}, commonModel.ComparisonOperatorNotIn, 4, 3)
+	assertContactSearch(t, searchBy, []string{"f4"}, commonModel.ComparisonOperatorNotIn, 4, 4)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByFlow(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f1", Name: "A"})
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f2", Name: "B"})
+
+	//contact 1 in flow 1
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c1"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp1"})
+	neo4jtest.LinkNodes(ctx, driver, "f1", "fp1", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp1", "c1", "HAS")
+
+	//contact 2 in flow 1
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c2"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp2"})
+	neo4jtest.LinkNodes(ctx, driver, "f2", "fp2", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp2", "c2", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty"})
+
+	expectedAsc := []string{"c1", "c2", "empty"}
+	expectedDesc := []string{"c2", "c1", "empty"}
+
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsFlows, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsFlows, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIContactsSearch_FilterByFlowParticipantStatus(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f1", Name: "A"})
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f2", Name: "AA"})
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f3", Name: "B"})
+
+	//contact 1 in flow 1 and flow 2
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c1"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp11", Status: neo4jentity.FlowParticipantStatusCompleted})
+	neo4jtest.LinkNodes(ctx, driver, "f1", "fp11", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp11", "c1", "HAS")
+
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp12", Status: neo4jentity.FlowParticipantStatusCompleted})
+	neo4jtest.LinkNodes(ctx, driver, "f2", "fp12", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp12", "c1", "HAS")
+
+	//contact 2 in flow 1
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c2"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp2", Status: neo4jentity.FlowParticipantStatusReady})
+	neo4jtest.LinkNodes(ctx, driver, "f1", "fp2", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp2", "c2", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "3"})
+
+	searchBy := postgresEntity.ColumnViewTypeContactsFlowStatus
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
+	assertContactSearch(t, searchBy, []string{"COMPLETED"}, commonModel.ComparisonOperatorIn, 3, 1)
+	assertContactSearch(t, searchBy, []string{"READY"}, commonModel.ComparisonOperatorIn, 3, 1)
+	assertContactSearch(t, searchBy, []string{"ON_HOLD"}, commonModel.ComparisonOperatorIn, 3, 0)
+	assertContactSearch(t, searchBy, []string{"COMPLETED", "READY"}, commonModel.ComparisonOperatorIn, 3, 2)
+	assertContactSearch(t, searchBy, []string{"COMPLETED", "ON_HOLD"}, commonModel.ComparisonOperatorIn, 3, 1)
+
+	assertContactSearch(t, searchBy, []string{"COMPLETED"}, commonModel.ComparisonOperatorNotIn, 3, 2)
+	assertContactSearch(t, searchBy, []string{"READY"}, commonModel.ComparisonOperatorNotIn, 3, 2)
+	assertContactSearch(t, searchBy, []string{"ON_HOLD"}, commonModel.ComparisonOperatorNotIn, 3, 3)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByFlowParticipantStatus(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f1", Name: "A"})
+	neo4jtest.CreateFlow(ctx, driver, tenantName, neo4jentity.FlowEntity{Id: "f2", Name: "B"})
+
+	//contact 1 in flow 1
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c1"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp1", Status: neo4jentity.FlowParticipantStatusCompleted})
+	neo4jtest.LinkNodes(ctx, driver, "f1", "fp1", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp1", "c1", "HAS")
+
+	//contact 2 in flow 1
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c2"})
+	neo4jtest.CreateFlowParticipant(ctx, driver, tenantName, neo4jentity.FlowParticipantEntity{Id: "fp2", Status: neo4jentity.FlowParticipantStatusReady})
+	neo4jtest.LinkNodes(ctx, driver, "f2", "fp2", "HAS")
+	neo4jtest.LinkNodes(ctx, driver, "fp2", "c2", "HAS")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty"})
+
+	expectedAsc := []string{"c1", "c2", "empty"}
+	expectedDesc := []string{"c2", "c1", "empty"}
+
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsFlowStatus, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsFlowStatus, commonModel.SortingDirectionDesc, expectedDesc)
+}
+
+func TestQueryResolver_UIContactsSearch_FilterLinkedinUserConnected(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u1", Name: "A"})
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u2", Name: "B"})
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u3", Name: "C"})
+
+	//contact 1 connected to both users
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c1"})
+	neo4jtest.LinkNodes(ctx, driver, "c1", "u1", "CONNECTED_WITH")
+	neo4jtest.LinkNodes(ctx, driver, "c1", "u2", "CONNECTED_WITH")
+
+	//contact 2 connected to user 1
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c2"})
+	neo4jtest.LinkNodes(ctx, driver, "c2", "u1", "CONNECTED_WITH")
+
+	//contact 3 connected to user 2
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c3"})
+	neo4jtest.LinkNodes(ctx, driver, "c3", "u2", "CONNECTED_WITH")
+
+	//contact 4 connected to user 3
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c4"})
+	neo4jtest.LinkNodes(ctx, driver, "c4", "u3", "CONNECTED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c5"})
+
+	searchBy := postgresEntity.ColumnViewTypeContactsConnections
+
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 5, 1)
+	assertContactSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 5, 4)
+	assertContactSearch(t, searchBy, []string{"u1"}, commonModel.ComparisonOperatorIn, 5, 2)
+	assertContactSearch(t, searchBy, []string{"u2"}, commonModel.ComparisonOperatorIn, 5, 2)
+	assertContactSearch(t, searchBy, []string{"u3"}, commonModel.ComparisonOperatorIn, 5, 1)
+	assertContactSearch(t, searchBy, []string{"u4"}, commonModel.ComparisonOperatorIn, 5, 0)
+	assertContactSearch(t, searchBy, []string{"u1", "u2"}, commonModel.ComparisonOperatorIn, 5, 3)
+	assertContactSearch(t, searchBy, []string{"u1", "u3"}, commonModel.ComparisonOperatorIn, 5, 3)
+	assertContactSearch(t, searchBy, []string{"u2", "u3"}, commonModel.ComparisonOperatorIn, 5, 3)
+	assertContactSearch(t, searchBy, []string{"u3", "u4"}, commonModel.ComparisonOperatorIn, 5, 1)
+
+	assertContactSearch(t, searchBy, []string{"u1"}, commonModel.ComparisonOperatorNotIn, 5, 3)
+	assertContactSearch(t, searchBy, []string{"u2"}, commonModel.ComparisonOperatorNotIn, 5, 3)
+	assertContactSearch(t, searchBy, []string{"u1", "u2"}, commonModel.ComparisonOperatorNotIn, 5, 2)
+	assertContactSearch(t, searchBy, []string{"u3"}, commonModel.ComparisonOperatorNotIn, 5, 4)
+	assertContactSearch(t, searchBy, []string{"u4"}, commonModel.ComparisonOperatorNotIn, 5, 5)
+}
+
+func TestQueryResolver_UIContactsSearch_SortByLinkedinUserConnected(t *testing.T) {
+	ctx := context.Background()
+	defer tearDownTestCase(ctx)(t)
+
+	neo4jtest.CreateTenant(ctx, driver, tenantName)
+
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u1", Name: "A"})
+	neo4jtest.CreateUser(ctx, driver, tenantName, neo4jentity.UserEntity{Id: "u2", Name: "B"})
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c1"})
+	neo4jtest.LinkNodes(ctx, driver, "c1", "u1", "CONNECTED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "c2"})
+	neo4jtest.LinkNodes(ctx, driver, "c2", "u2", "CONNECTED_WITH")
+
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty"})
+
+	expectedAsc := []string{"c1", "c2", "empty"}
+	expectedDesc := []string{"c2", "c1", "empty"}
+
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsConnections, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsConnections, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
 func TestQueryResolver_UIContactsSearch_SortByLinkedInFollowerCount(t *testing.T) {
@@ -561,11 +1049,11 @@ func TestQueryResolver_UIContactsSearch_SortByLinkedInFollowerCount(t *testing.T
 	expectedAsc := []string{"1", "2", "empty"}
 	expectedDesc := []string{"2", "1", "empty"}
 
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsLinkedinFollowerCount, commonModel.SortingDirectionAsc, expectedAsc)
-	verifyContactSortOrder(t, model.ColumnViewTypeContactsLinkedinFollowerCount, commonModel.SortingDirectionDesc, expectedDesc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsLinkedinFollowerCount, commonModel.SortingDirectionAsc, expectedAsc)
+	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsLinkedinFollowerCount, commonModel.SortingDirectionDesc, expectedDesc)
 }
 
-func assertContactSearch(t *testing.T, filterName model.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
+func assertContactSearch(t *testing.T, filterName postgresEntity.ColumnViewType, searchValue any, operator commonModel.ComparisonOperator, totalAvailable int64, totalElements int64) {
 	rawResponse, err := c.RawPost(getQuery("contact/ui_contacts_search"),
 		client.Var("limit", 10),
 		client.Var("filterName", filterName),
@@ -588,7 +1076,7 @@ func assertContactSearch(t *testing.T, filterName model.ColumnViewType, searchVa
 	require.Equal(t, int(totalElements), len(searchResult.Ids))
 }
 
-func verifyContactSortOrder(t *testing.T, sortBy model.ColumnViewType, direction commonModel.SortingDirection, expectedOrder []string) {
+func verifyContactSortOrder(t *testing.T, sortBy postgresEntity.ColumnViewType, direction commonModel.SortingDirection, expectedOrder []string) {
 	sortedResult := assertContactSort(t, sortBy, direction)
 	assert.Equal(t, len(expectedOrder), len(sortedResult), "Mismatch in result length")
 	for i, expected := range expectedOrder {
@@ -596,10 +1084,10 @@ func verifyContactSortOrder(t *testing.T, sortBy model.ColumnViewType, direction
 	}
 }
 
-func assertContactSort(t *testing.T, sortBy model.ColumnViewType, sortDirection commonModel.SortingDirection) []string {
+func assertContactSort(t *testing.T, sortBy postgresEntity.ColumnViewType, sortDirection commonModel.SortingDirection) []string {
 	rawResponse, err := c.RawPost(getQuery("contact/ui_contacts_sort"),
 		client.Var("limit", 10),
-		client.Var("sortByField", sortBy.String()),
+		client.Var("sortByField", string(sortBy)),
 		client.Var("sortByDirection", sortDirection),
 	)
 	assertRawResponseSuccess(t, rawResponse, err)
