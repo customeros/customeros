@@ -7,7 +7,6 @@ import { CreateContact } from '@domain/usecases/people-contact-card/create-conta
 import { cn } from '@ui/utils/cn.ts';
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
-import { useStore } from '@shared/hooks/useStore';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { useModKey } from '@shared/hooks/useModKey';
 import { Signature } from '@ui/media/icons/Signature';
@@ -32,7 +31,6 @@ const contactCreate = new CreateContact();
 
 export const CreateNewContactModal = observer(
   ({ orgId, open, onClose }: CreateNewContactModalProps) => {
-    const store = useStore();
     const modalRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const inputPlaceholder =
@@ -41,15 +39,8 @@ export const CreateNewContactModal = observer(
         : contactCreate.getType === 'email'
         ? 'john@heyjude.band'
         : 'First and last name';
-    const org = store.organizations.getById(orgId);
     const confirmButtonPlaceholder =
       contactCreate.getType === 'name' ? 'Add contact' : 'Add & enrich';
-
-    useEffect(() => {
-      if (orgId && org) {
-        contactCreate.setEntity(org);
-      }
-    }, [orgId]);
 
     useModKey(
       'Enter',
@@ -66,27 +57,26 @@ export const CreateNewContactModal = observer(
       { target: modalRef, when: open },
     );
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
       contactCreate.setOrganizationId(orgId);
 
       if (contactCreate.getType === 'name') {
-        contactCreate.submit();
+        await contactCreate.submit();
 
         !contactCreate.invalidName && onClose();
       }
 
       if (contactCreate.getType === 'linkedin') {
-        contactCreate.submit();
+        await contactCreate.submit();
 
         if (contactCreate.emptyLinkedInUrl || contactCreate.invalidLinkedInUrl)
           return;
         if (contactCreate.errorLinkedIn) return;
-
         onClose();
       }
 
       if (contactCreate.getType === 'email') {
-        contactCreate.submit();
+        await contactCreate.submit();
 
         if (contactCreate.emptyEmail || contactCreate.invalidEmail) return;
         if (contactCreate.errorEmail) return;
