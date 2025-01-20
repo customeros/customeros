@@ -160,13 +160,7 @@ func (a *agentVisitorIDService) RunAgent(ctx context.Context, agent *postgres_en
 	}
 
 	// update session table with ID data
-	query := postgres_entity.WebSession{
-		ID:     event.SessionID,
-		IP:     event.IPAddress,
-		Domain: domain,
-	}
-
-	session, err := a.postgresRepositories.WebSessionRepository.Update(ctx, query)
+	session, err := a.postgresRepositories.WebSessionRepository.UpdateSessionWithDomain(ctx, event.SessionID, *domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

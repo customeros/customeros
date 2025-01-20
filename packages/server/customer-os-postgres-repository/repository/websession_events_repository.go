@@ -20,6 +20,7 @@ type WebSessionRepository interface {
 	FindLastNotification(ctx context.Context, tenant, domain string) (*postgres_entity.WebSession, error)
 	UpdateLastActivity(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error)
 	UpdateSessionEnd(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error)
+	UpdateSessionWithDomain(ctx context.Context, sessionID, domain string) (*postgres_entity.WebSession, error)
 }
 
 type webSessionEventsRepository struct {
@@ -154,6 +155,29 @@ func (r *webSessionEventsRepository) UpdateSessionEnd(ctx context.Context, sessi
 			"is_active":       false,
 			"end_time":        utils.NowPtr(),
 			"published_event": true,
+		}).
+		First(&updatedSession, "id = ?", sessionID).
+		Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &updatedSession, nil
+}
+
+func (r *webSessionEventsRepository) UpdateSessionWithDomain(ctx context.Context, sessionID, domain string) (*postgres_entity.WebSession, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionEnd")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var updatedSession postgres_entity.WebSession
+	err := r.gormDb.
+		Model(&postgres_entity.WebSession{}).
+		Where("id = ?", sessionID).
+		Updates(map[string]interface{}{
+			"domain": domain,
 		}).
 		First(&updatedSession, "id = ?", sessionID).
 		Error
