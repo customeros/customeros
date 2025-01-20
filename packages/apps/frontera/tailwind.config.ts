@@ -32,6 +32,9 @@ export default {
       current: 'currentColor',
     },
     extend: {
+      lineClamp: {
+        5: '5',
+      },
       keyframes: {
         pulseOpacity: {
           from: { opacity: '0.3' },

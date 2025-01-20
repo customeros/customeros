@@ -45,7 +45,7 @@ export class MergeOrganizationsCase {
       runInAction(() => {
         this.error = (err as Error).message;
         this.root.ui.toastError(
-          `Failed merging 1 organization`,
+          `We were unable to merge this organization`,
           this.primaryId,
         );
       });
