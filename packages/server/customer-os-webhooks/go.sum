@@ -269,8 +269,8 @@ github.com/neo4j/neo4j-go-driver/v5 v5.27.0 h1:YdsIxDjAQbjlP/4Ha9B/gF8Y39UdgdTwC
 github.com/neo4j/neo4j-go-driver/v5 v5.27.0/go.mod h1:Vff8OwT7QpLm7L2yYr85XNWe9Rbqlbeb9asNXJTHO4k=
 github.com/novuhq/go-novu v0.1.2 h1:hYVrVjZBUgByVwLE+W4DNXRRCBlHoNNOBLkDI7/enU8=
 github.com/novuhq/go-novu v0.1.2/go.mod h1:O8+kHDKSfDncLZ8olp5FL00tn1aSTMOvZI1IRZZqmUg=
-github.com/nyaruka/phonenumbers v1.4.4 h1:9yo9jLvXD7J4exe7GJATApgTlB+05snF0joMDL1p7nQ=
-github.com/nyaruka/phonenumbers v1.4.4/go.mod h1:gv+CtldaFz+G3vHHnasBSirAi3O2XLqZzVWz4V1pl2E=
+github.com/nyaruka/phonenumbers v1.5.0 h1:0M+Gd9zl53QC4Nl5z1Yj1O/zPk2XXBUwR/vlzdXSJv4=
+github.com/nyaruka/phonenumbers v1.5.0/go.mod h1:gv+CtldaFz+G3vHHnasBSirAi3O2XLqZzVWz4V1pl2E=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.0 h1:8SG7/vwALn54lVB/0yZ/MMwhFrPYtpEHQb2IpWsCzug=
