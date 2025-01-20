@@ -299,17 +299,22 @@ export const AboutPanel = observer(() => {
               {organization?.value?.industryName ? (
                 <span>{organization.value.industryName}</span>
               ) : (
-                <span className={'text-gray-400'} data-test='org-about-industry'>Industry not found yet</span>
+                <span
+                  className={'text-gray-400'}
+                  data-test='org-about-industry'
+                >
+                  Industry not found yet
+                </span>
               )}
             </p>
           </Tooltip>
           {organization.country && (
             <Tooltip align='start' label='Country'>
               <p className='text-sm flex items-center cursor-default'>
-                <div className='flex items-center mr-3'>
+                <span className='flex items-center mr-3'>
                   {organization.value.locations?.[0]?.countryCodeA2 &&
                     flags[organization.value.locations?.[0]?.countryCodeA2]}
-                </div>
+                </span>
 
                 {organization.country}
               </p>
