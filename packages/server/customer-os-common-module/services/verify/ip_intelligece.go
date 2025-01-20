@@ -24,14 +24,14 @@ func (s *verifyService) LookupIp(ctx context.Context, ip string) (*postgresentit
 	defer span.Finish()
 	span.LogFields(log.String("ip", ip))
 
-	cacheIpData, err := s.postgres.CacheIpDataRepository.Get(ctx, ip)
+	cachedIpData, err := s.postgres.CacheIpDataRepository.Get(ctx, ip)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
 		return nil, err
 	}
 	var data *postgresentity.IPDataResponseBody
 	// if cached data is missing or last time fetched > 90 days ago
-	if cacheIpData == nil || cacheIpData.UpdatedAt.AddDate(0, 0, s.cfg.External.IpDataConfig.IpDataCacheTtlDays).Before(utils.Now()) {
+	if cachedIpData == nil || cachedIpData.UpdatedAt.AddDate(0, 0, s.cfg.External.IpDataConfig.IpDataCacheTtlDays).Before(utils.Now()) {
 		// get data from IPData
 		if data, err = s.askIpData(ctx, ip); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get IPData"))
@@ -50,7 +50,7 @@ func (s *verifyService) LookupIp(ctx context.Context, ip string) (*postgresentit
 	} else {
 		// unmarshal cached data
 		data = &postgresentity.IPDataResponseBody{}
-		if err = json.Unmarshal([]byte(cacheIpData.Data), data); err != nil {
+		if err = json.Unmarshal([]byte(cachedIpData.Data), data); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal cache data"))
 			s.log.Error("failed to unmarshal cached data", err)
 			return nil, err
