@@ -313,7 +313,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 			}
 		}
 
-		likelihoodChanged = input.RenewalLikelihood != nil && existing.RenewalDetails.RenewalLikelihood.String() != utils.IfNotNilString(input.RenewalLikelihood)
+		likelihoodChanged = input.RenewalLikelihood != nil && existing.RenewalDetails.RenewalLikelihood.String() != utils.IfNotNilString(input.RenewalLikelihood.String())
 		adjustedRateChanged = input.RenewalAdjustedRate != nil && existing.RenewalDetails.RenewalAdjustedRate != utils.IfNotNilInt64(input.RenewalAdjustedRate)
 		amountChanged = input.Amount != nil && existing.Amount != utils.IfNotNilFloat64(input.Amount)
 	}

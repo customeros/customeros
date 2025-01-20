@@ -2,7 +2,6 @@ package neo4j_repository
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -27,10 +26,6 @@ type PlayerFields struct {
 
 type PlayerWriteRepository interface {
 	Merge(ctx context.Context, userId string, data neo4j_entity.PlayerEntity) error
-
-	SetDefaultUser(ctx context.Context, tenant, userId, playerId string, relation neo4j_entity.PlayerRelation) error
-	LinkWithUser(ctx context.Context, tenant, userId, playerId string, relation neo4j_entity.PlayerRelation) error
-	UnlinkUser(ctx context.Context, tenant, userId, playerId string, relation neo4j_entity.PlayerRelation) error
 }
 
 type playerWriteRepository struct {
@@ -86,88 +81,4 @@ func (r *playerWriteRepository) Merge(c context.Context, userId string, data neo
 		tracing.TraceErr(span, err)
 	}
 	return err
-}
-
-func (r *playerWriteRepository) SetDefaultUser(c context.Context, tenant, userId, playerId string, relation neo4j_entity.PlayerRelation) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "PlayerWriteRepository.SetDefaultUser")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	cypher := fmt.Sprintf(`
-			MATCH (p:Player {id:$playerId})-[r:%s]->(u:User_%s)
-			SET r.default=
-				CASE u.id
-					WHEN $userId THEN true
-					ELSE false
-				END
-			RETURN DISTINCT(p)`, relation, tenant)
-	params := map[string]any{
-		"playerId": playerId,
-		"userId":   userId,
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	return nil
-}
-
-func (r *playerWriteRepository) LinkWithUser(c context.Context, tenant, userId, playerId string, relation neo4j_entity.PlayerRelation) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "PlayerWriteRepository.LinkWithUser")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	cypher := fmt.Sprintf(`
-			MATCH (p:Player {id:$playerId}), (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			MERGE (p)-[r:%s]->(u)
-			SET r.default= CASE
-				WHEN NOT EXISTS((p)-[:%s {default: true}]->(:User)) THEN true
-				ELSE false
-			END
-			RETURN p`, relation, tenant)
-	params := map[string]any{
-		"playerId": playerId,
-		"userId":   userId,
-		"tenant":   tenant,
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	return nil
-}
-
-func (r *playerWriteRepository) UnlinkUser(c context.Context, tenant, userId, playerId string, relation neo4j_entity.PlayerRelation) error {
-	span, ctx := opentracing.StartSpanFromContext(c, "PlayerWriteRepository.UnlinkUser")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	cypher := fmt.Sprintf(`
-			MATCH (p:Player {id:$playerId}), (u:User_%s {id:$userId})
-							MATCH (p)-[r:%s]->(u)
-							DELETE r return p`, relation, tenant)
-	params := map[string]any{
-		"playerId": playerId,
-		"userId":   userId,
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	return nil
 }
