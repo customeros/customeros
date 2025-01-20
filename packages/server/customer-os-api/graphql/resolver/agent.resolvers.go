@@ -27,7 +27,6 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 		Error:        new(string),
 		Color:        "",
 		Icon:         "",
-		Status:       "",
 	}
 
 	return defaultAgent, nil
@@ -54,7 +53,6 @@ func (r *queryResolver) Agent(ctx context.Context, id string) (*model.Agent, err
 		Error:        new(string),
 		Color:        "",
 		Icon:         "",
-		Status:       "",
 	}
 
 	return defaultAgent, nil

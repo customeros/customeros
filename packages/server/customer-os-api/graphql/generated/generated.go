@@ -113,7 +113,6 @@ type ComplexityRoot struct {
 		Icon         func(childComplexity int) int
 		IsActive     func(childComplexity int) int
 		Name         func(childComplexity int) int
-		Status       func(childComplexity int) int
 		Tenant       func(childComplexity int) int
 		Type         func(childComplexity int) int
 		UpdatedAt    func(childComplexity int) int
@@ -201,7 +200,6 @@ type ComplexityRoot struct {
 		ID       func(childComplexity int) int
 		Name     func(childComplexity int) int
 		Optional func(childComplexity int) int
-		Status   func(childComplexity int) int
 		Type     func(childComplexity int) int
 		Values   func(childComplexity int) int
 	}
@@ -2428,13 +2426,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Agent.Name(childComplexity), true
 
-	case "Agent.status":
-		if e.complexity.Agent.Status == nil {
-			break
-		}
-
-		return e.complexity.Agent.Status(childComplexity), true
-
 	case "Agent.tenant":
 		if e.complexity.Agent.Tenant == nil {
 			break
@@ -2917,13 +2908,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Capability.Optional(childComplexity), true
-
-	case "Capability.status":
-		if e.complexity.Capability.Status == nil {
-			break
-		}
-
-		return e.complexity.Capability.Status(childComplexity), true
 
 	case "Capability.type":
 		if e.complexity.Capability.Type == nil {
@@ -13005,13 +12989,6 @@ enum CapabilityType {
   SEND_SLACK_NOTIFICATION
 }
 
-enum CapabilityStatus {
-  ACTIVE
-  ACTIVE_WITH_WARNINGS
-  INACTIVE
-  PENDING
-}
-
 type Capability {
   id: ID!
   type: CapabilityType!
@@ -13020,14 +12997,6 @@ type Capability {
   optional: Boolean!
   values: String!
   errors: String
-  status: CapabilityStatus!
-}
-
-enum AgentStatus {
-  ON
-  OFF
-  ON_AGENT_ERROR
-  ON_CAPABILITY_ERROR
 }
 
 enum AgentType {
@@ -13049,7 +13018,6 @@ type Agent {
   error: String
   color: String!
   icon: String!
-  status: AgentStatus!
 }
 
 input CapabilitySaveInput {
@@ -13060,7 +13028,6 @@ input CapabilitySaveInput {
   optional: Boolean
   values: String
   errors: String
-  status: CapabilityStatus
 }
 
 input AgentSaveInput {
@@ -13077,7 +13044,6 @@ input AgentSaveInput {
   updatedAt: Time!
   color: String
   icon: String
-  status: AgentStatus
 }
 `, BuiltIn: false},
 	{Name: "../schemas/attachment.graphqls", Input: `extend type Query {
@@ -27506,8 +27472,6 @@ func (ec *executionContext) fieldContext_Agent_capabilities(_ context.Context, f
 				return ec.fieldContext_Capability_values(ctx, field)
 			case "errors":
 				return ec.fieldContext_Capability_errors(ctx, field)
-			case "status":
-				return ec.fieldContext_Capability_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Capability", field.Name)
 		},
@@ -27900,50 +27864,6 @@ func (ec *executionContext) fieldContext_Agent_icon(_ context.Context, field gra
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Agent_status(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Agent_status(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.AgentStatus)
-	fc.Result = res
-	return ec.marshalNAgentStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentStatus(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Agent_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Agent",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type AgentStatus does not have child fields")
 		},
 	}
 	return fc, nil
@@ -30812,50 +30732,6 @@ func (ec *executionContext) fieldContext_Capability_errors(_ context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Capability_status(ctx context.Context, field graphql.CollectedField, obj *model.Capability) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Capability_status(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Status, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.CapabilityStatus)
-	fc.Result = res
-	return ec.marshalNCapabilityStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityStatus(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Capability_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Capability",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type CapabilityStatus does not have child fields")
 		},
 	}
 	return fc, nil
@@ -60827,8 +60703,6 @@ func (ec *executionContext) fieldContext_Mutation_agent_Save(ctx context.Context
 				return ec.fieldContext_Agent_color(ctx, field)
 			case "icon":
 				return ec.fieldContext_Agent_icon(ctx, field)
-			case "status":
-				return ec.fieldContext_Agent_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Agent", field.Name)
 		},
@@ -90191,8 +90065,6 @@ func (ec *executionContext) fieldContext_Query_agents(_ context.Context, field g
 				return ec.fieldContext_Agent_color(ctx, field)
 			case "icon":
 				return ec.fieldContext_Agent_icon(ctx, field)
-			case "status":
-				return ec.fieldContext_Agent_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Agent", field.Name)
 		},
@@ -90298,8 +90170,6 @@ func (ec *executionContext) fieldContext_Query_agent(ctx context.Context, field 
 				return ec.fieldContext_Agent_color(ctx, field)
 			case "icon":
 				return ec.fieldContext_Agent_icon(ctx, field)
-			case "status":
-				return ec.fieldContext_Agent_status(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Agent", field.Name)
 		},
@@ -108870,7 +108740,7 @@ func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "type", "tenant", "name", "capabilities", "goal", "isActive", "flowId", "visible", "createdAt", "updatedAt", "color", "icon", "status"}
+	fieldsInOrder := [...]string{"id", "type", "tenant", "name", "capabilities", "goal", "isActive", "flowId", "visible", "createdAt", "updatedAt", "color", "icon"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -108968,13 +108838,6 @@ func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, ob
 				return it, err
 			}
 			it.Icon = data
-		case "status":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalOAgentStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentStatus(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Status = data
 		}
 	}
 
@@ -109610,7 +109473,7 @@ func (ec *executionContext) unmarshalInputCapabilitySaveInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "type", "name", "action", "optional", "values", "errors", "status"}
+	fieldsInOrder := [...]string{"id", "type", "name", "action", "optional", "values", "errors"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -109666,13 +109529,6 @@ func (ec *executionContext) unmarshalInputCapabilitySaveInput(ctx context.Contex
 				return it, err
 			}
 			it.Errors = data
-		case "status":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("status"))
-			data, err := ec.unmarshalOCapabilityStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityStatus(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Status = data
 		}
 	}
 
@@ -116487,11 +116343,6 @@ func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "status":
-			out.Values[i] = ec._Agent_status(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -116935,11 +116786,6 @@ func (ec *executionContext) _Capability(ctx context.Context, sel ast.SelectionSe
 			}
 		case "errors":
 			out.Values[i] = ec._Capability_errors(ctx, field, obj)
-		case "status":
-			out.Values[i] = ec._Capability_status(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -131867,16 +131713,6 @@ func (ec *executionContext) unmarshalNAgentSaveInput2githubᚗcomᚋcustomeros�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNAgentStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentStatus(ctx context.Context, v any) (model.AgentStatus, error) {
-	var res model.AgentStatus
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNAgentStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentStatus(ctx context.Context, sel ast.SelectionSet, v model.AgentStatus) graphql.Marshaler {
-	return v
-}
-
 func (ec *executionContext) unmarshalNAgentType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentType(ctx context.Context, v any) (model.AgentType, error) {
 	var res model.AgentType
 	err := res.UnmarshalGQL(v)
@@ -132189,16 +132025,6 @@ func (ec *executionContext) marshalNCapability2ᚖgithubᚗcomᚋcustomerosᚋcu
 func (ec *executionContext) unmarshalNCapabilitySaveInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilitySaveInput(ctx context.Context, v any) (*model.CapabilitySaveInput, error) {
 	res, err := ec.unmarshalInputCapabilitySaveInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNCapabilityStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityStatus(ctx context.Context, v any) (model.CapabilityStatus, error) {
-	var res model.CapabilityStatus
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNCapabilityStatus2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityStatus(ctx context.Context, sel ast.SelectionSet, v model.CapabilityStatus) graphql.Marshaler {
-	return v
 }
 
 func (ec *executionContext) unmarshalNCapabilityType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityType(ctx context.Context, v any) (model.CapabilityType, error) {
@@ -137157,22 +136983,6 @@ func (ec *executionContext) marshalOAgent2ᚖgithubᚗcomᚋcustomerosᚋcustome
 	return ec._Agent(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOAgentStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentStatus(ctx context.Context, v any) (*model.AgentStatus, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.AgentStatus)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOAgentStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentStatus(ctx context.Context, sel ast.SelectionSet, v *model.AgentStatus) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
-}
-
 func (ec *executionContext) unmarshalOAgentType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentType(ctx context.Context, v any) (*model.AgentType, error) {
 	if v == nil {
 		return nil, nil
@@ -137334,22 +137144,6 @@ func (ec *executionContext) unmarshalOCapabilitySaveInput2ᚕᚖgithubᚗcomᚋc
 		}
 	}
 	return res, nil
-}
-
-func (ec *executionContext) unmarshalOCapabilityStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityStatus(ctx context.Context, v any) (*model.CapabilityStatus, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.CapabilityStatus)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOCapabilityStatus2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityStatus(ctx context.Context, sel ast.SelectionSet, v *model.CapabilityStatus) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) unmarshalOCapabilityType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐCapabilityType(ctx context.Context, v any) (*model.CapabilityType, error) {
