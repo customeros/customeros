@@ -6,8 +6,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	api_tenant_settings "github.com/customeros/customeros/packages/server/customer-os-api/services/tenant_settings"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
 )
 
 type PrivateIntegrationHandler struct {
@@ -24,9 +26,14 @@ func NewPrivateIntegrationHandler(services *cosapi_services.Services, responseHa
 
 func (h *PrivateIntegrationHandler) GetIntegrations() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "PrivateIntegrationHandler.GetIntegrations")
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+
 		tenantName := c.Keys["TenantName"].(string)
 		tenantIntegrationSettings, activeServices, err := h.services.TenantSettingsService.GetForTenant(tenantName)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -37,10 +44,14 @@ func (h *PrivateIntegrationHandler) GetIntegrations() gin.HandlerFunc {
 
 func (h *PrivateIntegrationHandler) CreateIntegration() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "PrivateIntegrationHandler.CreateIntegration")
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+
 		var request map[string]interface{}
 
 		if err := c.BindJSON(&request); err != nil {
-			println(err.Error())
+			tracing.TraceErr(span, err)
 			c.AbortWithStatus(500) // todo
 			return
 		}
@@ -59,6 +70,10 @@ func (h *PrivateIntegrationHandler) CreateIntegration() gin.HandlerFunc {
 
 func (h *PrivateIntegrationHandler) DeleteIntegrations() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "PrivateIntegrationHandler.DeleteIntegration")
+		defer span.Finish()
+
+		tracing.TagComponentRest(span)
 		identifier := c.Param("identifier")
 		if identifier == "" {
 			c.JSON(500, gin.H{"error": "integration identifier is empty"})
@@ -77,6 +92,7 @@ func (h *PrivateIntegrationHandler) DeleteIntegrations() gin.HandlerFunc {
 }
 
 func (h *PrivateIntegrationHandler) mapTenantSettingsEntityToDTO(tenantSettings *postgresentity.TenantSettings, activeServices map[string]bool) *map[string]interface{} {
+
 	responseMap := make(map[string]interface{})
 
 	for service, isActive := range activeServices {

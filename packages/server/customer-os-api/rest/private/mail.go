@@ -40,6 +40,7 @@ func (h *MailHandler) SendEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "mail/send", c.Request.Header)
 		defer span.Finish()
+		tracing.TagComponentRest(span)
 
 		tenant := c.GetString(security.KEY_TENANT_NAME)
 
@@ -90,6 +91,7 @@ func (h *MailHandler) TrackEmail() gin.HandlerFunc {
 		customerOSInternalIdentifier := c.Param("customerOSInternalIdentifier")
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(context.Background(), "/mail/"+customerOSInternalIdentifier+"/track", c.Request.Header)
 		defer span.Finish()
+		tracing.TagComponentRest(span)
 
 		// Preload 1px transparent image
 		px := image.NewRGBA(image.Rect(0, 0, 1, 1))

@@ -41,6 +41,7 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "AskAI")
 		defer span.Finish()
+		tracing.TagComponentRest(span)
 
 		// parse request
 		request, err := h.parseRequest(c)

@@ -2,16 +2,22 @@ package private
 
 import (
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
 )
 
 func CreatePersonalIntegrations(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "CreatePersonalIntegrations")
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+
 		var request map[string]interface{}
 
 		if err := c.BindJSON(&request); err != nil {
-			println(err.Error())
+			tracing.TraceErr(span, err)
 			c.AbortWithStatus(500) // todo
 			return
 		}
@@ -27,6 +33,7 @@ func CreatePersonalIntegrations(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 		saved, err := s.PersonalIntegrationsService.SavePersonalIntegration(integration)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
@@ -59,6 +66,10 @@ func GetPersonalIntegrations(s *cosapi_services.Services) gin.HandlerFunc {
 
 func GetPersonalIntegrationByName(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "GetPersonalIntegrationByName")
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+
 		tenantName := c.Keys["TenantName"].(string)
 		userMail := c.Keys["UserEmail"].(string)
 		integrationName := c.Param("integrationName")
