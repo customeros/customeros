@@ -116,7 +116,7 @@ func (r *agentCapabilityRegistryRepository) Initialize(ctx context.Context) erro
 	requiredCapabilities := []postgres_entity.AgentCapabilityRegistry{
 		buildCapabilities(
 			enum.CapabilityTrackWebSession,
-			"Track and identify website visitors",
+			"Track website visitors",
 		),
 		buildCapabilities(
 			enum.CapabilityIdentifyWebVisitor,
