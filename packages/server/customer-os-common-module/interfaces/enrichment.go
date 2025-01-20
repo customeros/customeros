@@ -25,12 +25,12 @@ type EnrichmentService interface {
 }
 
 type PersonSearch struct {
-	LinkedinURL *string
-	FirstName   *string
-	LastName    *string
-	Email       *string
-	Domain      *string
-	CompanyName *string
+	LinkedinURL string `json:"linkedinURL"`
+	FirstName   string `json:"firstName"`
+	LastName    string `json:"lastName"`
+	Email       string `json:"email"`
+	Domain      string `json:"domain"`
+	CompanyName string `json:"companyName"`
 }
 
 type OrganizationData struct {

@@ -356,10 +356,10 @@ func EnrichPerson(services *cosapi_services.Services) gin.HandlerFunc {
 
 		// Call enrichPerson API
 		person := interfaces.PersonSearch{
-			LinkedinURL: &linkedinUrl,
-			FirstName:   &firstName,
-			LastName:    &lastName,
-			Email:       &email,
+			LinkedinURL: linkedinUrl,
+			FirstName:   firstName,
+			LastName:    lastName,
+			Email:       email,
 		}
 		personDbID, enrichPersonResponse, err := services.CommonServices.EnrichmentService.EnrichPerson(ctx, person)
 		if err != nil {

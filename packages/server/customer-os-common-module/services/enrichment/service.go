@@ -36,9 +36,10 @@ func (s *enrichmentService) EnrichPerson(ctx context.Context, person interfaces.
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.EnrichPerson")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "person", person)
 
-	if person.Email == nil && person.Domain == nil && person.LinkedinURL == nil {
-		err := errors.New("missing email, domain, or linkedinURL")
+	if strings.TrimSpace(person.Email) == "" && strings.TrimSpace(person.Domain) == "" && strings.TrimSpace(person.LinkedinURL) == "" {
+		err := errors.New("missing email, domain, and linkedinURL")
 		tracing.TraceErr(span, err)
 		return nil, nil, err
 	}
@@ -47,8 +48,9 @@ func (s *enrichmentService) EnrichPerson(ctx context.Context, person interfaces.
 
 	var personData *postgres_entity.ScrapInResponseBody
 	// scrapin by linkedinURL
-	if person.LinkedinURL != nil {
-		_, results, err := s.ScrapInPersonProfile(ctx, *person.LinkedinURL)
+	linkedInUrl := strings.TrimSpace(person.LinkedinURL)
+	if linkedInUrl != "" {
+		_, results, err := s.ScrapInPersonProfile(ctx, linkedInUrl)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
@@ -57,12 +59,12 @@ func (s *enrichmentService) EnrichPerson(ctx context.Context, person interfaces.
 	}
 
 	// search by email, domain, and company name if not found in step 1
-	if personData != nil || (person.Email == nil && person.Domain == nil && person.CompanyName == nil) {
+	if personData != nil || (person.Email == "" && person.Domain == "" && person.CompanyName == "") {
 		return nil, personData, errs
 	}
 
 	recordID, response, err := s.ScrapInSearchPerson(
-		ctx, *person.Email, *person.FirstName, *person.LastName, *person.Domain, *person.CompanyName,
+		ctx, person.Email, person.FirstName, person.LastName, person.Domain, person.CompanyName,
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)
