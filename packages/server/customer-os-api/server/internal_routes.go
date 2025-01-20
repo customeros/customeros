@@ -24,7 +24,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
-		path:      fmt.Sprintf("%s/settings/intergrations", InternalPath),
+		path:      fmt.Sprintf("%s/settings/integrations", InternalPath),
 		handler:   h.PrivateIntegrations.GetIntegrations(),
 		routeType: RouteInternal,
 		services:  s,
@@ -32,7 +32,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
-		path:      fmt.Sprintf("%s/settings/intergrations", InternalPath),
+		path:      fmt.Sprintf("%s/settings/integrations", InternalPath),
 		handler:   h.PrivateIntegrations.CreateIntegration(),
 		routeType: RouteInternal,
 		services:  s,
@@ -40,7 +40,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "DELETE",
-		path:      fmt.Sprintf("%s/settings/intergrations/:identifier", InternalPath),
+		path:      fmt.Sprintf("%s/settings/integrations/:identifier", InternalPath),
 		handler:   h.PrivateIntegrations.DeleteIntegrations(),
 		routeType: RouteInternal,
 		services:  s,
