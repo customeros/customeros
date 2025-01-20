@@ -172,6 +172,7 @@ export const ParticipantsSelectGroup = observer(
               name='from'
               formId={formId}
               options={fromOptions}
+              menuPlacement={'auto'}
               isOptionDisabled={(option) => !option.active}
               classNames={{
                 container: () =>
