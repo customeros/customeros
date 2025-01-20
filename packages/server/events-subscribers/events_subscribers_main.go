@@ -82,7 +82,7 @@ func main() {
 		postgresRepositories,
 		cfg.Common,
 		eventsProcessingGrpcClient,
-		&commonService.InitOptions{},
+		&commonService.InitOptions{LoadPersonalEmailProviders: true},
 	)
 
 	// Create dependencies for event handlers
