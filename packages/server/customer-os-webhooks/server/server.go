@@ -90,7 +90,10 @@ func (server *server) Run(parentCtx context.Context) error {
 		repos.PostgresRepositories,
 		&server.cfg.Common,
 		grpcContainer,
-		&commonservice.InitOptions{LoadPersonalEmailProviders: true},
+		&commonservice.InitOptions{
+			LoadPersonalEmailProviders: true,
+			LoadEmailExclusionList:     true,
+		},
 	)
 
 	// Setting up Gin

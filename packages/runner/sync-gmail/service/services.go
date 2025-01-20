@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/customeros/customeros/packages/runner/sync-gmail/caches"
 	"github.com/customeros/customeros/packages/runner/sync-gmail/config"
 	"github.com/customeros/customeros/packages/runner/sync-gmail/repository"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
@@ -20,18 +19,16 @@ type Services struct {
 	CommonServices *commonService.CommonServices
 
 	grpcClients *grpc_client.Clients
-	Cache       *caches.Cache
 
 	SyncService    SyncService
 	MeetingService MeetingService
 }
 
-func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, grpcClients *grpc_client.Clients, cache *caches.Cache, log logger.Logger) *Services {
+func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, grpcClients *grpc_client.Clients, log logger.Logger) *Services {
 	repositories := repository.InitRepos(cfg, driver, postgresDB)
 
 	services := new(Services)
 	services.cfg = cfg
-	services.Cache = cache
 	services.grpcClients = grpcClients
 	services.Repositories = repositories
 
@@ -47,7 +44,10 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, postgresD
 		postgresRepositories,
 		&cfg.CommonConfig,
 		grpc_client.InitClients(nil),
-		&commonService.InitOptions{LoadPersonalEmailProviders: true},
+		&commonService.InitOptions{
+			LoadPersonalEmailProviders: true,
+			LoadEmailExclusionList:     true,
+		},
 	)
 	return services
 }

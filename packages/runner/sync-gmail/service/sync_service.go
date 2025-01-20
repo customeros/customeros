@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/runner/sync-gmail/config"
@@ -37,12 +37,13 @@ type SyncService interface {
 func (s *syncService) BuildEmailsListExcludingPersonalEmails(usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error) {
 	var allEmails []string
 
-	if from != "" && !hasPersonalEmailProvider(s.services.Cache.GetPersonalEmailProviders(), utils.ExtractDomain(from)) {
+	personalEmailProviders := s.services.CommonServices.Cache.GetPersonalEmailProviders()
+	if from != "" && !hasPersonalEmailProvider(personalEmailProviders, utils.ExtractDomain(from)) {
 		allEmails = append(allEmails, from)
 	}
 	for _, email := range [][]string{to, cc, bcc} {
 		for _, e := range email {
-			if e != "" && !hasPersonalEmailProvider(s.services.Cache.GetPersonalEmailProviders(), utils.ExtractDomain(e)) {
+			if e != "" && !hasPersonalEmailProvider(personalEmailProviders, utils.ExtractDomain(e)) {
 				allEmails = append(allEmails, e)
 			}
 		}
@@ -123,7 +124,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		tracing.TraceErr(span, errors.Wrap(err, "unable to extract domain from email"))
 		return "", err
 	}
-	if utils.Contains(s.services.Cache.GetPersonalEmailProviders(), domain) {
+	if utils.Contains(s.services.CommonServices.Cache.GetPersonalEmailProviders(), domain) {
 		emailIdPtr, err := s.services.CommonServices.EmailService.Merge(ctx, nil, tenant, interfaces.EmailFields{
 			Email:     email,
 			Source:    neo4jentity.DecodeDataSource(source),

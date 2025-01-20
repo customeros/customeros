@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"github.com/caarlos0/env/v6"
-	"github.com/joho/godotenv"
-	"github.com/customeros/customeros/packages/runner/sync-gmail/caches"
 	syncGmailConfig "github.com/customeros/customeros/packages/runner/sync-gmail/config"
 	localCron "github.com/customeros/customeros/packages/runner/sync-gmail/cron"
 	"github.com/customeros/customeros/packages/runner/sync-gmail/logger"
@@ -12,6 +10,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/joho/godotenv"
 	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
@@ -64,25 +63,7 @@ func main() {
 	defer df.Close(gRPCconn)
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 
-	appCache := caches.NewCache()
-	services := service.InitServices(config, neo4jDriver, postgresDb, grpcContainer, appCache, appLogger)
-
-	//init app cache
-	personalEmailProviderEntities, err := services.Repositories.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
-	if err != nil {
-		appLogger.Fatalf("Error getting personal email providers: %s", err.Error())
-	}
-	personalEmailProviders := make([]string, 0)
-	for _, personalEmailProvider := range personalEmailProviderEntities {
-		personalEmailProviders = append(personalEmailProviders, personalEmailProvider.ProviderDomain)
-	}
-	appCache.SetPersonalEmailProviders(personalEmailProviders)
-
-	emailExclusionEntities, err := services.Repositories.PostgresRepositories.TenantSettingsEmailExclusionRepository.GetExclusionList(ctx)
-	if err != nil {
-		appLogger.Fatalf("Error getting email exclusion list: %s", err.Error())
-	}
-	appCache.SetEmailExclusion(emailExclusionEntities)
+	services := service.InitServices(config, neo4jDriver, postgresDb, grpcContainer, appLogger)
 
 	cronJub := localCron.StartCron(config, services)
 
