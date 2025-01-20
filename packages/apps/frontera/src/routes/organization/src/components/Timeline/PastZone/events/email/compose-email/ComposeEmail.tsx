@@ -12,6 +12,7 @@ export interface ComposeEmailProps extends PropsWithChildren {
   modal: boolean;
   isSending: boolean;
   onSubmit: () => void;
+  onDiscard: () => void;
   attendees: Array<string>;
   to: Array<{ label: string; value: string }>;
   cc: Array<{ label: string; value: string }>;
@@ -21,6 +22,7 @@ export interface ComposeEmailProps extends PropsWithChildren {
 
 export const ComposeEmail: FC<ComposeEmailProps> = ({
   onModeChange,
+  onDiscard,
   formId,
   modal,
   isSending,
@@ -82,14 +84,22 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
           namespace='timeline-email-editor'
           className='text-base cursor-text email-editor h-full'
         >
-          <Button
-            size='xs'
-            onClick={onSubmit}
-            isLoading={isSending}
-            loadingText='Sending...'
-          >
-            Send
-          </Button>
+          <div className='flex gap-2'>
+            {onDiscard && (
+              <Button size='xs' variant={'ghost'} onClick={onDiscard}>
+                Discard
+              </Button>
+            )}
+
+            <Button
+              size='xs'
+              onClick={onSubmit}
+              isLoading={isSending}
+              loadingText='Sending...'
+            >
+              Send
+            </Button>
+          </div>
         </Editor>
       </div>
     </form>
