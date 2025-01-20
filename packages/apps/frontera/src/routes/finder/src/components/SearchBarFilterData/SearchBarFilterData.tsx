@@ -29,6 +29,10 @@ export const SearchBarFilterData = observer(
         TableViewType.Organizations,
         () => store.organizations.availableCounts.get(preset ?? '') ?? 0,
       )
+      .with(
+        TableViewType.Contacts,
+        () => store.contacts.availableCounts.get(preset ?? '') ?? 0,
+      )
       .otherwise(() => store.ui.searchCount);
 
     const tableName =
