@@ -736,7 +736,6 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
 
-			// TODO only industry is synced. once adding other fields, refactor this
 			if record.IndustryNaicsCode == "" && record.Description == "" {
 				continue
 			}

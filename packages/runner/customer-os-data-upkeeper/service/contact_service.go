@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -15,7 +14,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -805,17 +803,21 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 		}
 
 		for _, record := range records {
-			enrichmentResponse, err := s.callEnrichmentApiFindWorkEmail(ctx, record)
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+			_, betterContactRequestID, _, err := s.commonServices.EnrichmentService.FindWorkEmail(innerCtx, record.LinkedInUrl, record.ContactFirstName, record.ContactLastName, record.OrganizationName, record.OrganizationDomain, false)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				span.LogFields(log.Object("record", record))
 			} else {
 				// mark contact with enrich requested
-				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedId), enrichmentResponse.BetterContactRequestId)
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(innerCtx, nil, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedId), betterContactRequestID)
 				if err != nil {
 					tracing.TraceErr(span, err)
 				}
-				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt), utils.NowPtr())
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt), utils.NowPtr())
 				if err != nil {
 					tracing.TraceErr(span, err)
 				}
@@ -830,54 +832,6 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 		// force exit after single iteration
 		return
 	}
-}
-
-func (s *contactService) callEnrichmentApiFindWorkEmail(ctx context.Context, details neo4jrepository.ContactsEnrichWorkEmail) (*FindWorkEmailResponse, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.callEnrichmentApiFindWorkEmail")
-	defer span.Finish()
-
-	requestJSON, err := json.Marshal(FindWorkEmailRequest{
-		LinkedinUrl:   details.LinkedInUrl,
-		FirstName:     details.ContactFirstName,
-		LastName:      details.ContactLastName,
-		CompanyName:   details.OrganizationName,
-		CompanyDomain: details.OrganizationDomain,
-	})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
-		return nil, err
-	}
-	requestBody := []byte(string(requestJSON))
-	// TODO alexb correct the url
-	req, err := http.NewRequest("GET", s.cfg.Common.Internal.CustomerOsApi.ApiUrl+"/findWorkEmail", bytes.NewBuffer(requestBody))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
-		return nil, err
-	}
-	// Inject span context into the HTTP request
-	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
-
-	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, s.cfg.Common.Internal.CustomerOsApi.ApiKey)
-	req.Header.Set(security.TenantHeader, details.Tenant)
-
-	// Make the HTTP request
-	client := &http.Client{}
-	response, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
-		return nil, err
-	}
-	defer response.Body.Close()
-	span.LogFields(log.Int("response.status.findWorkEmail", response.StatusCode))
-
-	var findWorkEmailApiResponse FindWorkEmailResponse
-	err = json.NewDecoder(response.Body).Decode(&findWorkEmailApiResponse)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to decode find work email response"))
-		return nil, err
-	}
-	return &findWorkEmailApiResponse, nil
 }
 
 func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
