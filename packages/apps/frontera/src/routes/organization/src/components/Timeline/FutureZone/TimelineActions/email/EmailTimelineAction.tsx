@@ -34,6 +34,7 @@ export const EmailTimelineAction = () => {
         onClose={handleClose}
         isSending={isSending}
         bcc={state.values.bcc}
+        onDiscard={closeEditor}
         onSubmit={onCreateEmail}
       ></ComposeEmailContainer>
     </div>

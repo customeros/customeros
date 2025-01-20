@@ -217,12 +217,13 @@ export const EmailPreviewModal = ({
     const isFormPristine = checkPristine(state.fields);
     const areParticipantFieldsPristine = checkPristine(fields);
 
-    const isFormEmpty = !content.length || content === `<p style=""></p>`;
+    const isFormEmpty =
+      !content.length || content === `<p class="my-3"><br></p>`;
     const areFieldsEmpty = checkEmpty(values);
 
     const showConfirmationDialog =
-      ((!areParticipantFieldsPristine && !areFieldsEmpty) ||
-        (!subjectField.meta.pristine && !subject.length)) &&
+      (!areParticipantFieldsPristine && !areFieldsEmpty) ||
+      (!subjectField.meta.pristine && !subject.length) ||
       !isFormEmpty;
 
     if (isFormPristine || !showConfirmationDialog) {
@@ -319,6 +320,7 @@ export const EmailPreviewModal = ({
           onSubmit={handleSubmit}
           onClose={handleClosePreview}
           onModeChange={handleModeChange}
+          onDiscard={handleExitEditorAndCleanData}
         />
 
         <ConfirmDeleteDialog

@@ -211,7 +211,8 @@ export const TimelineActionEmailContextContextProvider = observer(
     const handleCheckCanExitSafely = () => {
       const { content, ...values } = state.values;
 
-      const isFormEmpty = !content.length || content === `<p style=""></p>`;
+      const isFormEmpty =
+        !content.length || content === `<p class="my-3"><br></p>`;
       const areFieldsEmpty =
         !values.from ||
         !values.fromProvider ||

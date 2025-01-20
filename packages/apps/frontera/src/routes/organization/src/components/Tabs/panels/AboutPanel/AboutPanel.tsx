@@ -161,7 +161,7 @@ export const AboutPanel = observer(() => {
         <div className='flex flex-col w-full flex-1 items-start justify-start gap-3 mt-2'>
           {!!organization?.value?.description && (
             <TruncatedText
-              maxLines={5}
+              maxLines={4}
               className={'text-sm'}
               data-test='org-about-description'
               text={organization.value.description}
