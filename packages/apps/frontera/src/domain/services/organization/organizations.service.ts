@@ -1,3 +1,4 @@
+import { runInAction } from 'mobx';
 import { RootStore } from '@store/root';
 import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service';
 
@@ -55,6 +56,28 @@ export class OrganizationService {
       await this.root.organizations.retrieve(results);
     } catch (_err) {
       throw new Error('Failed to search for tenant');
+    }
+  }
+
+  public async merge(primaryId: string, secondaryIds: string[]) {
+    try {
+      const { organization_Merge } = await this.service.mergeOrganizations({
+        primaryOrganizationId: primaryId,
+        mergedOrganizationIds: secondaryIds,
+      });
+
+      runInAction(() => {
+        if (organization_Merge.id) {
+          this.root.organizations.mergeOrganizations(primaryId, secondaryIds);
+
+          this.root.ui.toastSuccess(
+            `Merged organizations`,
+            `merge-${primaryId}`,
+          );
+        }
+      });
+    } catch (err) {
+      throw new Error('Failed to merge organizations');
     }
   }
 }

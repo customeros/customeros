@@ -1,12 +1,13 @@
 import { RootStore } from '@store/root.ts';
 import { action, observable, runInAction } from 'mobx';
-import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service.ts';
+import { OrganizationService } from '@domain/services';
 
 export class MergeOrganizationsCase {
   @observable accessor primaryId: string = '';
   @observable accessor secondaryId: string = '';
   @observable accessor error: string = '';
-  private service = OrganizationsService.getInstance();
+  private service = new OrganizationService();
+
   private root = RootStore.getInstance();
 
   constructor() {
@@ -22,25 +23,7 @@ export class MergeOrganizationsCase {
   @action
   async merge() {
     try {
-      const { organization_Merge } = await this.service.mergeOrganizations({
-        primaryOrganizationId: this.primaryId,
-        mergedOrganizationIds: [this.secondaryId],
-      });
-
-      runInAction(() => {
-        this.root.organizations.sync({
-          action: 'DELETE',
-          ids: [this.secondaryId],
-        });
-        this.root.organizations.sync({
-          action: 'INVALIDATE',
-          ids: [this.primaryId],
-        });
-
-        if (organization_Merge.id) {
-          this.root.ui.toastSuccess(`Merged organizations`, this.primaryId);
-        }
-      });
+      await this.service.merge(this.primaryId, [this.secondaryId]);
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error).message;

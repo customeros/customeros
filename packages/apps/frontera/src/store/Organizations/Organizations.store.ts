@@ -516,6 +516,24 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     }
   }
 
+  mergeOrganizations = (primaryId: string, secondaryIds: string[]) => {
+    secondaryIds.forEach((id) => {
+      this.root.organizations.value.delete(id);
+    });
+
+    this.root.organizations.sync({
+      action: 'DELETE',
+      ids: secondaryIds,
+    });
+
+    this.root.organizations.sync({
+      action: 'INVALIDATE',
+      ids: [primaryId],
+    });
+
+    this.root.ui.toastSuccess(`Merged organizations`, `merge-${primaryId}`);
+  };
+
   updateTags = (ids: string[], tags: TagDatum[]) => {
     const tagIdsToUpdate = new Set(tags.map((tag) => tag.metadata.id));
 
