@@ -138,11 +138,11 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 	if locationMapping != nil {
 		var location data_fields.LocationFields
 		err = json.Unmarshal([]byte(locationMapping.ResponseJson), &location)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal location"))
-			return nil, err
+		if err == nil {
+			return &location, nil
+		} else {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal location response from postgres"))
 		}
-		return &location, nil
 	}
 
 	// Step 2: Use AI to enrich the location

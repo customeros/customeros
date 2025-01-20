@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"io"
 	"net/http"
 	"strings"
@@ -58,7 +59,7 @@ func (c *AnthropicClient) Invoke(ctx context.Context, prompt *string) (string, e
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnthropicClient.Invoke")
 	defer span.Finish()
 
-	span.LogFields(log.String("anthropicPrompt", *prompt))
+	span.LogFields(log.String("anthropicPrompt", utils.IfNotNilString(prompt)))
 
 	reqBody := c.buildRequest(prompt)
 	return c.executeWithRetry(ctx, reqBody)

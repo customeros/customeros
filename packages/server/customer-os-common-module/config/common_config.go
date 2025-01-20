@@ -33,7 +33,6 @@ type InternalServicesConfig struct {
 
 type ExternalServicesConfig struct {
 	AnthropicConfig      AnthropicConfig
-	AnthropicPrompts     AnthropicPrompts
 	BetterContactConfig  BetterContactConfig
 	BrandfetchConfig     BrandfetchConfig
 	CloudflareConfig     CloudflareConfig
