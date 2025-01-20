@@ -34,6 +34,7 @@ type CommonConfig struct {
 	Cloudflare       commonconf.CloudflareConfig
 	IpData           commonconf.IpDataConfig
 	Stripe           commonconf.StripeConfig
+	BetterContact    commonconf.BetterContactConfig
 }
 
 type AppConfig struct {
@@ -105,12 +106,13 @@ func InitConfig() (*Config, error) {
 			Neo4jConfig:         cmnCfg.Neo4j,
 		},
 		External: commonconf.ExternalServicesConfig{
-			AnthropicConfig:  cmnCfg.Anthropic,
-			NamecheapConfig:  cmnCfg.Namecheap,
-			OpenSRSConfig:    cmnCfg.OpenSRS,
-			CloudflareConfig: cmnCfg.Cloudflare,
-			IpDataConfig:     cmnCfg.IpData,
-			StripeConfig:     cmnCfg.Stripe,
+			AnthropicConfig:     cmnCfg.Anthropic,
+			NamecheapConfig:     cmnCfg.Namecheap,
+			OpenSRSConfig:       cmnCfg.OpenSRS,
+			CloudflareConfig:    cmnCfg.Cloudflare,
+			IpDataConfig:        cmnCfg.IpData,
+			StripeConfig:        cmnCfg.Stripe,
+			BetterContactConfig: cmnCfg.BetterContact,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,
