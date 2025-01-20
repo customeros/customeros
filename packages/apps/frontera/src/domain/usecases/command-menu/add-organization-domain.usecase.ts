@@ -103,6 +103,12 @@ export class AddOrganizationDomainCase {
         return;
       }
 
+      if (!checkDomain.allowedForOrganization) {
+        this.error = 'We do not allow adding this domain';
+
+        return;
+      }
+
       if (!checkDomain.accessible) {
         this.error = 'This domain is not reachable';
 

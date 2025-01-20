@@ -9,5 +9,6 @@ query checkDomain($domain: String!) {
     primaryDomainOrganizationId
     primaryDomainOrganizationName
     domainOrganizationName
+    allowedForOrganization
   }
 }
