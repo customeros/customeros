@@ -14,13 +14,6 @@ enum CapabilityType {
   SEND_SLACK_NOTIFICATION
 }
 
-enum CapabilityStatus {
-  ACTIVE
-  ACTIVE_WITH_WARNINGS
-  INACTIVE
-  PENDING
-}
-
 type Capability {
   id: ID!
   type: CapabilityType!
@@ -29,14 +22,6 @@ type Capability {
   optional: Boolean!
   values: String!
   errors: String
-  status: CapabilityStatus!
-}
-
-enum AgentStatus {
-  ON
-  OFF
-  ON_AGENT_ERROR
-  ON_CAPABILITY_ERROR
 }
 
 enum AgentType {
@@ -58,7 +43,6 @@ type Agent {
   error: String
   color: String!
   icon: String!
-  status: AgentStatus!
 }
 
 input CapabilitySaveInput {
@@ -69,7 +53,6 @@ input CapabilitySaveInput {
   optional: Boolean
   values: String
   errors: String
-  status: CapabilityStatus
 }
 
 input AgentSaveInput {
@@ -86,5 +69,4 @@ input AgentSaveInput {
   updatedAt: Time!
   color: String
   icon: String
-  status: AgentStatus
 }

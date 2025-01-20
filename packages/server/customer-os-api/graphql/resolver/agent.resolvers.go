@@ -6,22 +6,54 @@ package resolver
 
 import (
 	"context"
-	"fmt"
+	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 // AgentSave is the resolver for the agent_Save field.
 func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveInput) (*model.Agent, error) {
-	panic(fmt.Errorf("not implemented: AgentSave - agent_Save"))
+	defaultAgent := &model.Agent{
+		ID:           "1",
+		Name:         "Agent 1",
+		Type:         model.AgentTypeWebVisitIdentifier,
+		Tenant:       "tenant",
+		Capabilities: []*model.Capability{},
+		Goal:         "",
+		IsActive:     false,
+		FlowID:       new(string),
+		CreatedAt:    time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
+		UpdatedAt:    time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
+		Error:        new(string),
+		Color:        "",
+		Icon:         "",
+	}
+
+	return defaultAgent, nil
 }
 
 // Agents is the resolver for the agents field.
 func (r *queryResolver) Agents(ctx context.Context) ([]*model.Agent, error) {
-	panic(fmt.Errorf("not implemented: Agents - agents"))
+	return []*model.Agent{}, nil
 }
 
 // Agent is the resolver for the agent field.
 func (r *queryResolver) Agent(ctx context.Context, id string) (*model.Agent, error) {
-	panic(fmt.Errorf("not implemented: Agent - agent"))
+	defaultAgent := &model.Agent{
+		ID:           "1",
+		Name:         "Agent 1",
+		Type:         model.AgentTypeWebVisitIdentifier,
+		Tenant:       "tenant",
+		Capabilities: []*model.Capability{},
+		Goal:         "",
+		IsActive:     false,
+		FlowID:       new(string),
+		CreatedAt:    time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
+		UpdatedAt:    time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
+		Error:        new(string),
+		Color:        "",
+		Icon:         "",
+	}
+
+	return defaultAgent, nil
 }
