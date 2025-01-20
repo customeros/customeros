@@ -8,7 +8,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"go.uber.org/multierr"
 
@@ -34,6 +33,11 @@ func NewWebSessionService(cfg *config.Config, log logger.Logger, s *commonservic
 	}
 }
 
+const (
+	WebSessionTimeoutPageExit int = 5  // mins -- page exit without a following page view
+	WebSessionTimeoutPageView int = 30 // mins -- page view without a page exit
+)
+
 func (s *webSessionService) ProcessWebSessions() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -43,14 +47,10 @@ func (s *webSessionService) ProcessWebSessions() {
 	tracing.TagComponentCronJob(span)
 
 	// find timed out page exit events
-	lookback := int(enum.WebSessionTimeoutPageExit)
-	query := postgres_entity.WebSession{
-		LastEventType: enum.WebTrackerPageExit.String(),
-		IsActive:      true,
-	}
-	pageExitSessions, err := s.commonServices.PostgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, &lookback)
+	pageExitSessions, err := s.findTimedOutPageExitEvents(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return
 	}
 
 	// close sessions & fire webtracker event
@@ -58,17 +58,15 @@ func (s *webSessionService) ProcessWebSessions() {
 		err = s.closeSessions(ctx, pageExitSessions)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			return
 		}
 	}
 
 	// find timed out page view events
-	query = postgres_entity.WebSession{
-		LastEventType: enum.WebTrackerPageView.String(),
-		IsActive:      true,
-	}
-	pageViewSessions, err := s.commonServices.PostgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, &lookback)
+	pageViewSessions, err := s.findTimedOutPageViewEvents(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return
 	}
 
 	// close sessions & fire webtracker event
@@ -76,9 +74,36 @@ func (s *webSessionService) ProcessWebSessions() {
 		err = s.closeSessions(ctx, pageViewSessions)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			return
 		}
 	}
 	return
+}
+
+func (s *webSessionService) findTimedOutPageExitEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.findTimedOutPageExitEvents")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	lookback := WebSessionTimeoutPageExit
+	query := postgres_entity.WebSession{
+		LastEventType: enum.WebTrackerPageExit.String(),
+		IsActive:      true,
+	}
+	return s.commonServices.PostgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, &lookback)
+}
+
+func (s *webSessionService) findTimedOutPageViewEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.findTimedOutPageViewEvents")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	lookback := WebSessionTimeoutPageView
+	query := postgres_entity.WebSession{
+		LastEventType: enum.WebTrackerPageView.String(),
+		IsActive:      true,
+	}
+	return s.commonServices.PostgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, &lookback)
 }
 
 func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgres_entity.WebSession) error {
@@ -88,22 +113,8 @@ func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgr
 
 	var errs error
 	for _, session := range sessions {
-		// create web visit event
-		eventData := data_fields.WebsiteVisitEvent{
-			SessionID: session.ID,
-			Tenant:    session.Tenant,
-			IPAddress: session.IP,
-			VisitorID: session.VisitorID,
-		}
+		event := s.createCloseSessionWebhookEvent(ctx, session)
 
-		event := dto.WebhookEvent{
-			ExternalSystemId: enum.SourceAgent,
-			Name:             enum.EventRevealWebsiteVisit,
-			DataType:         eventData.Type(),
-			Data:             &eventData,
-		}
-
-		// publish event
 		err := s.commonServices.Events.Publisher.PublishWebhookEvent(ctx, event)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -111,10 +122,7 @@ func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgr
 		}
 
 		// update websession record
-		session.IsActive = false
-		session.EndTime = utils.NowPtr()
-		session.PublishedEvent = true
-		_, err = s.commonServices.PostgresRepositories.WebSessionRepository.Update(ctx, session)
+		_, err = s.commonServices.PostgresRepositories.WebSessionRepository.UpdateSessionEnd(ctx, session.ID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
@@ -122,4 +130,26 @@ func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgr
 	}
 
 	return errs
+}
+
+func (s *webSessionService) createCloseSessionWebhookEvent(ctx context.Context, session postgres_entity.WebSession) dto.WebhookEvent {
+	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.createCloseSessionWebhookEvent")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	eventData := data_fields.WebsiteVisitEvent{
+		SessionID: session.ID,
+		Tenant:    session.Tenant,
+		IPAddress: session.IP,
+		VisitorID: session.VisitorID,
+	}
+
+	event := dto.WebhookEvent{
+		ExternalSystemId: enum.SourceAgent,
+		Name:             enum.EventRevealWebsiteVisit,
+		DataType:         eventData.Type(),
+		Data:             &eventData,
+	}
+
+	return event
 }

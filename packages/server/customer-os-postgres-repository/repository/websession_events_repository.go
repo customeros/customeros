@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 
@@ -17,7 +18,8 @@ type WebSessionRepository interface {
 	FindAllSessions(ctx context.Context, webWebSessionData postgres_entity.WebSession, sessionTimeoutInMins *int) ([]postgres_entity.WebSession, error)
 	FindSession(ctx context.Context, webSessionData postgres_entity.WebSession, lookbackPeriodInMins *int) (*postgres_entity.WebSession, error)
 	FindLastNotification(ctx context.Context, tenant, domain string) (*postgres_entity.WebSession, error)
-	Update(ctx context.Context, webSessionData postgres_entity.WebSession) (*postgres_entity.WebSession, error)
+	UpdateLastActivity(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error)
+	UpdateSessionEnd(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error)
 }
 
 type webSessionEventsRepository struct {
@@ -116,24 +118,46 @@ func (r *webSessionEventsRepository) FindLastNotification(ctx context.Context, t
 	return &result, nil
 }
 
-func (r *webSessionEventsRepository) Update(ctx context.Context, webSessionData postgres_entity.WebSession) (*postgres_entity.WebSession, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.Update")
+func (r *webSessionEventsRepository) UpdateLastActivity(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateLastActivity")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
-
-	if webSessionData.ID == "" {
-		err := errors.New("web session ID is missing")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
 
 	var updatedSession postgres_entity.WebSession
 	err := r.gormDb.
 		Model(&postgres_entity.WebSession{}).
-		Where("id = ?", webSessionData.ID).
-		Updates(webSessionData).
-		First(&updatedSession, "id = ?", webSessionData.ID).
+		Where("id = ?", sessionID).
+		Updates(map[string]interface{}{
+			"last_activity": utils.Now(),
+		}).
+		First(&updatedSession, "id = ?", sessionID).
 		Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &updatedSession, nil
+}
+
+func (r *webSessionEventsRepository) UpdateSessionEnd(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionEnd")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var updatedSession postgres_entity.WebSession
+	err := r.gormDb.
+		Model(&postgres_entity.WebSession{}).
+		Where("id = ?", sessionID).
+		Updates(map[string]interface{}{
+			"is_active":       false,
+			"end_time":        utils.NowPtr(),
+			"published_event": true,
+		}).
+		First(&updatedSession, "id = ?", sessionID).
+		Error
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

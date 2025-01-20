@@ -165,11 +165,7 @@ func (h *WebsiteTrackerEventsHandler) updateSessionLastActivityTimestamp(ctx con
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
-	updateQuery := postgres_entity.WebSession{
-		ID:           sessionID,
-		LastActivity: utils.Now(),
-	}
-	_, err := h.services.Repositories.PostgresRepositories.WebSessionRepository.Update(ctx, updateQuery)
+	_, err := h.services.Repositories.PostgresRepositories.WebSessionRepository.UpdateLastActivity(ctx, sessionID)
 	if err != nil {
 		err = errors.New("unable to update web session")
 		tracing.TraceErr(span, err)
