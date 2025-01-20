@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -15,12 +14,9 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/gin-gonic/gin"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 // @title MailStack API
@@ -45,7 +41,7 @@ import (
 // @Failure 500 {object} handlers.ErrorResponse "Internal server error"
 // @Router /domains/{domain}/mailboxes [post]
 // @Security ApiKeyAuth
-func RegisterNewMailbox(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *MailstackHandler) RegisterNewMailbox() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RegisterNewMailbox", c.Request.Header)
 		defer span.Finish()
@@ -55,7 +51,8 @@ func RegisterNewMailbox(services *cosapi_services.Services) gin.HandlerFunc {
 		// get domain from path
 		domain := c.Param("domain")
 		if domain == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing parameter: domain"))
+			message := "Missing parameter: domain"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 		span.LogKV("request.domain", domain)
@@ -64,7 +61,7 @@ func RegisterNewMailbox(services *cosapi_services.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
@@ -76,13 +73,14 @@ func RegisterNewMailbox(services *cosapi_services.Services) gin.HandlerFunc {
 			// log body
 			body, _ := c.GetRawData()
 			span.LogFields(tracingLog.String("request.body", string(body)))
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
+			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}
 
 		username := strings.TrimSpace(mailboxRequest.Username)
 		if username == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing parameter: username"))
+			message := "Missing parameter: username"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 		span.LogKV("request.username", username)
@@ -95,8 +93,9 @@ func RegisterNewMailbox(services *cosapi_services.Services) gin.HandlerFunc {
 		}
 
 		// validate username format
-		if err := validateMailboxUsername(username); err != nil {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("username is invalid"))
+		if err := h.validateMailboxUsername(username); err != nil {
+			message := "username is invalid"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
@@ -112,7 +111,7 @@ func RegisterNewMailbox(services *cosapi_services.Services) gin.HandlerFunc {
 			ForwardingTo:      forwardingTo,
 		}
 
-		err := services.CommonServices.MailboxService.CreateMailbox(ctx, nil, interfaces.CreateMailboxRequest{
+		err := h.services.CommonServices.MailboxService.CreateMailbox(ctx, nil, interfaces.CreateMailboxRequest{
 			Domain:          domain,
 			Username:        username,
 			Password:        password,
@@ -122,27 +121,32 @@ func RegisterNewMailbox(services *cosapi_services.Services) gin.HandlerFunc {
 		})
 		if err != nil {
 			if errors.Is(err, coserrors.ErrDomainNotFound) {
-				handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("Domain not found"))
+				message := "domain not found"
+				h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 				return
 			} else if errors.Is(err, coserrors.ErrMailboxExists) {
-				handlers.SendError(c, span, http.StatusConflict, enum.ErrConflict.WithMessage("Username already exists"))
+				message := "username already exists"
+				h.responseHandler.HandleError(c, http.StatusConflict, &message)
 				return
 			} else {
-				handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Mailbox setup failed, please contact support"))
+				message := "Mailbox setup failed"
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
 		}
 
-		mailbox, err := services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, username+"@"+domain)
+		mailbox, err := h.services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, username+"@"+domain)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Error retrieving mailbox"))
+			message := "Error retrieving mailbox"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving mailbox"))
 			return
 		}
 
-		err = services.CommonServices.Events.Publisher.PublishEvent(ctx, mailbox.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
+		err = h.services.CommonServices.Events.Publisher.PublishEvent(ctx, mailbox.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Error provisioning mailbox"))
+			message := "Error provisioning mailbox"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			tracing.TraceErr(span, errors.Wrap(err, "Error provisioning mailbox"))
 			return
 		}
@@ -150,14 +154,13 @@ func RegisterNewMailbox(services *cosapi_services.Services) gin.HandlerFunc {
 		if passwordGenerated {
 			response.Password = password
 		}
-		c.JSON(http.StatusOK, MailboxResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Mailbox:      response,
+		h.responseHandler.HandleSuccess(c, MailboxResponse{
+			Mailbox: response,
 		})
 	}
 }
 
-func validateMailboxUsername(username string) error {
+func (h *MailstackHandler) validateMailboxUsername(username string) error {
 	// Regular expression for a valid username (allows alphanumeric, dots, underscores, hyphens)
 	re := regexp.MustCompile(`^[a-zA-Z0-9._-]+$`)
 	if !re.MatchString(username) {
@@ -181,7 +184,7 @@ func validateMailboxUsername(username string) error {
 // @Failure 500 {object} handlers.ErrorResponse "Internal server error"
 // @Router /domains/{domain}/mailboxes [get]
 // @Security ApiKeyAuth
-func GetMailboxes(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *MailstackHandler) GetMailboxes() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetMailboxes", c.Request.Header)
 		defer span.Finish()
@@ -191,7 +194,8 @@ func GetMailboxes(services *cosapi_services.Services) gin.HandlerFunc {
 		// get domain from path
 		domain := c.Param("domain")
 		if domain == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing parameter: domain"))
+			message := "Missing parameter: domain"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 		span.LogKV("request.domain", domain)
@@ -200,28 +204,29 @@ func GetMailboxes(services *cosapi_services.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
 
 		// get mailboxes for domain from postgres
-		mailboxRecords, err := services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, domain)
+		mailboxRecords, err := h.services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, domain)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Error retrieving mailboxes"))
+			message := "Error retrieving mailboxes"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving mailboxes"))
 			return
 		}
 
 		response := MailboxesResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Mailboxes:    make([]MailboxRecord, 0, len(mailboxRecords)),
+			Mailboxes: make([]MailboxRecord, 0, len(mailboxRecords)),
 		}
 		for _, mailboxRecord := range mailboxRecords {
-			mailboxDetails, err := services.CommonServices.OpenSRSService.GetMailboxDetails(ctx, mailboxRecord.MailboxUsername)
+			mailboxDetails, err := h.services.CommonServices.OpenSRSService.GetMailboxDetails(ctx, mailboxRecord.MailboxUsername)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error getting mailbox details"))
-				handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Error getting mailbox details"))
+				message := "Could not get mailbox details"
+				tracing.TraceErr(span, errors.Wrap(err, message))
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
 			response.Mailboxes = append(response.Mailboxes, MailboxRecord{
@@ -232,6 +237,6 @@ func GetMailboxes(services *cosapi_services.Services) gin.HandlerFunc {
 			})
 		}
 
-		c.JSON(http.StatusOK, response)
+		h.responseHandler.HandleSuccess(c, response)
 	}
 }

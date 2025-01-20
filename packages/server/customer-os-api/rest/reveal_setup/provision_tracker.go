@@ -9,21 +9,32 @@ import (
 	"strings"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
 
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
+
+type WebTrackerHandler struct {
+	services        *cosapi_services.Services
+	responseHandler *response.Response
+}
+
+func NewWebTrackerHandler(services *cosapi_services.Services, responseHandler *response.Response) *WebTrackerHandler {
+	return &WebTrackerHandler{
+		services:        services,
+		responseHandler: responseHandler,
+	}
+}
 
 type TrackerRequest struct {
 	Domain string `json:"domain"`
 }
 
 type TrackerResponse struct {
-	enum.BaseResponse
 	Tracker TrackerRecord `json:"tracker"`
 }
 
@@ -45,29 +56,32 @@ const TrackerScript = `<!-- CustomerOS Visitor Reveal -->
 })(window, "https://app.customeros.ai/analytics-0.1.js", "script");
 </script>`
 
-func ProvisionTracker(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *WebTrackerHandler) ProvisionTracker() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Reveal.ProvisionTracker", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant := handlers.ValidateTenant(c, ctx, span)
+		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
-		payload, err := getTrackerRequestPayload(c)
+		payload, err := h.getTrackerRequestPayload(c)
 		if err != nil {
 			switch {
 			case err.Error() == "No domain":
-				handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("domain not provided"))
+				message := "domain not provided"
+				h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 				return
 			case err.Error() == "Invalid domain":
-				handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("domain is not valid"))
+				message := "domain is not valid"
+				h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 				return
 			default:
-				handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Could not parse request"))
+				message := "Could not parse request"
+				h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 				return
 			}
 		}
@@ -79,16 +93,16 @@ func ProvisionTracker(s *cosapi_services.Services) gin.HandlerFunc {
 			Enabled: true,
 		}
 
-		record, err := s.Repositories.PostgresRepositories.TrackingAllowedOriginRepository.Create(ctx, whitelist)
+		record, err := h.services.Repositories.PostgresRepositories.TrackingAllowedOriginRepository.Create(ctx, whitelist)
 		if err != nil || record == nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("could not create tracker"))
+			message := "Could not create tracker"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
 		// return tracker
 
-		c.JSON(http.StatusOK, TrackerResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
+		h.responseHandler.HandleSuccess(c, TrackerResponse{
 			Tracker: TrackerRecord{
 				ID:        record.ID,
 				Domain:    record.Origin,
@@ -99,7 +113,7 @@ func ProvisionTracker(s *cosapi_services.Services) gin.HandlerFunc {
 	}
 }
 
-func getTrackerRequestPayload(c *gin.Context) (TrackerRequest, error) {
+func (h *WebTrackerHandler) getTrackerRequestPayload(c *gin.Context) (TrackerRequest, error) {
 	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Reveal.getTrackerRequestPayload")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
@@ -123,7 +137,7 @@ func getTrackerRequestPayload(c *gin.Context) (TrackerRequest, error) {
 	return req, nil
 }
 
-func isValidDomain(ctx context.Context, domain string) bool {
+func (h *WebTrackerHandler) isValidDomain(ctx context.Context, domain string) bool {
 	span, ctx := tracing.StartTracerSpan(ctx, "Reveal.isValidDomain")
 	defer span.Finish()
 	tracing.TagComponentRest(span)

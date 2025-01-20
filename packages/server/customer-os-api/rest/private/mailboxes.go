@@ -1,9 +1,9 @@
 package private
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/gin-gonic/gin"
 
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )

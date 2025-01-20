@@ -13,10 +13,6 @@ import (
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 // @title MailStack API
@@ -39,7 +35,7 @@ import (
 // @Failure 500 {object} handlers.ErrorResponse "Internal server error - Configuration failed or service unavailable"
 // @Router /mailstack/v1/domains [post]
 // @Security ApiKeyAuth
-func RegisterNewDomain(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *MailstackHandler) RegisterNewDomain() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RegisterNewDomain", c.Request.Header)
 		defer span.Finish()
@@ -49,7 +45,7 @@ func RegisterNewDomain(services *cosapi_services.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
@@ -57,54 +53,62 @@ func RegisterNewDomain(services *cosapi_services.Services) gin.HandlerFunc {
 		// Parse and validate request body
 		var req RegisterNewDomainRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
+			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			span.LogFields(tracingLog.String("result", "Invalid request body"))
 			return
 		}
 
 		// Check for missing domain
 		if req.Domain == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing required field: domain"))
+			message := "Missing required field: domain"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		} else if req.Website == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing required field: website"))
+			message := "Missing required field: website"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
-		registerNewDomainResponse, err := registerDomain(ctx, tenant, req.Domain, req.Website, services)
+		registerNewDomainResponse, err := h.registerDomain(ctx, tenant, req.Domain, req.Website)
 		if err != nil {
 			if errors.Is(err, coserrors.ErrNotSupported) {
-				handlers.SendError(c, span, http.StatusNotAcceptable, enum.ErrBadRequest.WithMessage("Domain TLD not supported"))
+				message := "Domain TLD not supported"
+				h.responseHandler.HandleError(c, http.StatusNotAcceptable, &message)
 				return
 			} else if errors.Is(err, coserrors.ErrDomainUnavailable) {
-				handlers.SendError(c, span, http.StatusConflict, enum.ErrConflict.WithMessage("Domain already registered"))
+				message := "Domain already registered"
+				h.responseHandler.HandleError(c, http.StatusConflict, &message)
 				return
 			} else if errors.Is(err, coserrors.ErrDomainPremium) {
-				handlers.SendError(c, span, http.StatusNotAcceptable, enum.ErrBadRequest.WithMessage("Premium domain names are not supported"))
+				message := "Premium domain names are not supported"
+				h.responseHandler.HandleError(c, http.StatusNotAcceptable, &message)
 				return
 			} else if errors.Is(err, coserrors.ErrDomainPriceExceeded) {
-				handlers.SendError(c, span, http.StatusNotAcceptable, enum.ErrBadRequest.WithMessage("Unauthorized to purchase domain, please contact support"))
+				message := "Unauthorized to purchase domain"
+				h.responseHandler.HandleError(c, http.StatusNotAcceptable, &message)
 				return
 			} else if errors.Is(err, coserrors.ErrDomainConfigurationFailed) {
-				handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to configure domain"))
+				message := "Unable to configure domain"
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			} else if errors.Is(err, coserrors.ErrConnectionTimeout) {
-				handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Connection timeout, please retry"))
+				message := "Connection timeout, please retry"
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			} else {
-				handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Domain registratin failed, please contact support"))
+				message := "Domain registration failed, please contact support"
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
 		}
 
-		c.JSON(http.StatusCreated, DomainResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Domain:       registerNewDomainResponse,
+		h.responseHandler.HandleSuccess(c, DomainResponse{
+			Domain: registerNewDomainResponse,
 		})
 	}
 }
 
-func registerDomain(ctx context.Context, tenant, domain, website string, services *cosapi_services.Services) (DomainRecord, error) {
+func (h *MailstackHandler) registerDomain(ctx context.Context, tenant, domain, website string) (DomainRecord, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "registerDomain")
 	defer span.Finish()
 
@@ -116,7 +120,7 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 	// Extract the TLD from the domain (e.g., "com" from "example.com")
 	tld := strings.Split(domain, ".")[1]
 	tldSupported := false
-	for _, supportedTld := range services.Cfg.Common.Internal.MailstackConfig.SupportedTlds {
+	for _, supportedTld := range h.services.Cfg.Common.Internal.MailstackConfig.SupportedTlds {
 		if tld == supportedTld {
 			tldSupported = true
 			break
@@ -127,7 +131,7 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 	}
 
 	// step 1 - check domain availability
-	isAvailable, isPremium, err := services.CommonServices.NamecheapService.CheckDomainAvailability(ctx, domain)
+	isAvailable, isPremium, err := h.services.CommonServices.NamecheapService.CheckDomainAvailability(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error checking domain availability"))
 		return registerNewDomainResponse, err
@@ -140,24 +144,24 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 	}
 
 	// step 2 - check pricing
-	domainPrice, err := services.CommonServices.NamecheapService.GetDomainPrice(ctx, domain)
+	domainPrice, err := h.services.CommonServices.NamecheapService.GetDomainPrice(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error getting domain price"))
 		return registerNewDomainResponse, err
 	}
-	if domainPrice > services.Cfg.Common.External.NamecheapConfig.MaxPrice {
+	if domainPrice > h.services.Cfg.Common.External.NamecheapConfig.MaxPrice {
 		return registerNewDomainResponse, coserrors.ErrDomainPriceExceeded
 	}
 
 	// step 3 - register domain
-	err = services.CommonServices.NamecheapService.PurchaseDomain(ctx, tenant, domain)
+	err = h.services.CommonServices.NamecheapService.PurchaseDomain(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error purchasing domain"))
 		return registerNewDomainResponse, err
 	}
 
 	// step 4 - configure domain
-	return configureDomain(ctx, tenant, domain, website, services)
+	return h.configureDomain(ctx, tenant, domain, website)
 }
 
 // ConfigureDomain configures DNS for an existing domain
@@ -174,7 +178,7 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 // @Failure 500 {object} handlers.ErrorResponse "Internal server error - Configuration failed or service unavailable"
 // @Router /mailstack/v1/domains/configure [post]
 // @Security ApiKeyAuth
-func ConfigureDomain(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *MailstackHandler) ConfigureDomain() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "ConfigureDomain", c.Request.Header)
 		defer span.Finish()
@@ -184,7 +188,7 @@ func ConfigureDomain(services *cosapi_services.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
@@ -192,41 +196,44 @@ func ConfigureDomain(services *cosapi_services.Services) gin.HandlerFunc {
 		// Parse and validate request body
 		var req ConfigureDomainRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
+			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 			return
 		}
 
 		// Check for missing domain
 		if req.Domain == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing required field: domain"))
+			message := "Missing required field: domain"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		} else if req.Website == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing required field: website"))
+			message := "Missing required field: website"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
-		domainResponse, err := configureDomain(ctx, tenant, req.Domain, req.Website, services)
+		domainResponse, err := h.configureDomain(ctx, tenant, req.Domain, req.Website)
 		if err != nil {
 			if errors.Is(err, coserrors.ErrDomainNotFound) {
-				handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound)
+				h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 				return
 			} else if errors.Is(err, coserrors.ErrDomainConfigurationFailed) {
-				handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to configure domain"))
+				message := "Unable to configure domain"
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			} else {
-				handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Domain registration failed"))
+				message := "Domain registration failed"
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
 		}
 
-		c.JSON(http.StatusCreated, DomainResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Domain:       domainResponse,
+		h.responseHandler.HandleSuccess(c, DomainResponse{
+			Domain: domainResponse,
 		})
 	}
 }
 
-func configureDomain(ctx context.Context, tenant, domain, redirectWebsite string, services *cosapi_services.Services) (DomainRecord, error) {
+func (h *MailstackHandler) configureDomain(ctx context.Context, tenant, domain, redirectWebsite string) (DomainRecord, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "configureDomain")
 	defer span.Finish()
 
@@ -235,7 +242,7 @@ func configureDomain(ctx context.Context, tenant, domain, redirectWebsite string
 
 	var err error
 
-	domainBelongsToTenant, err := services.Repositories.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
+	domainBelongsToTenant, err := h.services.Repositories.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error checking domain"))
 		return domainResponse, err
@@ -244,14 +251,14 @@ func configureDomain(ctx context.Context, tenant, domain, redirectWebsite string
 		return domainResponse, coserrors.ErrDomainNotFound
 	}
 
-	err = services.CommonServices.MailstackService.ConfigureMailstackDomain(ctx, domain, redirectWebsite)
+	err = h.services.CommonServices.MailstackService.ConfigureMailstackDomain(ctx, domain, redirectWebsite)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error configuring domain"))
 		return domainResponse, coserrors.ErrDomainConfigurationFailed
 	}
 
 	// get domain details
-	domainInfo, err := services.CommonServices.NamecheapService.GetDomainInfo(ctx, tenant, domain)
+	domainInfo, err := h.services.CommonServices.NamecheapService.GetDomainInfo(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error getting domain info"))
 		return domainResponse, err
@@ -275,7 +282,7 @@ func configureDomain(ctx context.Context, tenant, domain, redirectWebsite string
 // @Failure 500 {object} handlers.ErrorResponse "Internal server error - Unable to retrieve domains"
 // @Router /mailstack/v1/domains [get]
 // @Security ApiKeyAuth
-func GetDomains(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *MailstackHandler) GetDomains() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetDomains", c.Request.Header)
 		defer span.Finish()
@@ -285,30 +292,31 @@ func GetDomains(services *cosapi_services.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
 
 		// get all active domains from postgres
-		activeDomainRecords, err := services.Repositories.PostgresRepositories.MailStackDomainRepository.GetActiveDomains(ctx, tenant)
+		activeDomainRecords, err := h.services.Repositories.PostgresRepositories.MailStackDomainRepository.GetActiveDomains(ctx, tenant)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving domains"))
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to retrieve domains"))
+			message := "Unable to retrieve domains"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
 		response := DomainsResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Domains:      make([]DomainRecord, 0, len(activeDomainRecords)),
+			Domains: make([]DomainRecord, 0, len(activeDomainRecords)),
 		}
 
 		for _, domainRecord := range activeDomainRecords {
-			domain, err := services.CommonServices.NamecheapService.GetDomainInfo(ctx, tenant, domainRecord.Domain)
+			domain, err := h.services.CommonServices.NamecheapService.GetDomainInfo(ctx, tenant, domainRecord.Domain)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error getting domain info"))
-				span.LogFields(tracingLog.String("result", "Error getting domain info"))
-				handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to retrieve domain info"))
+				message := "Unable to retreive domain info"
+				tracing.TraceErr(span, errors.Wrap(err, message))
+				span.LogFields(tracingLog.String("result", message))
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
 			response.Domains = append(response.Domains, DomainRecord{
@@ -319,11 +327,11 @@ func GetDomains(services *cosapi_services.Services) gin.HandlerFunc {
 			})
 		}
 
-		c.JSON(http.StatusOK, response)
+		h.responseHandler.HandleSuccess(c, response)
 	}
 }
 
-func RecommendDomain(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *MailstackHandler) RecommendDomain() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RecommendDomain", c.Request.Header)
 		defer span.Finish()
@@ -333,7 +341,7 @@ func RecommendDomain(s *cosapi_services.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
@@ -341,16 +349,16 @@ func RecommendDomain(s *cosapi_services.Services) gin.HandlerFunc {
 		// get root domain
 		baseName, exists := c.GetQuery("baseName")
 		if !exists {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("must provide baseName parameter"))
+			message := "Must provide baseName"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
 		// get domain recommendations
-		recommendations := s.CommonServices.MailboxService.RecommendOutboundDomains(ctx, baseName, 20)
+		recommendations := h.services.CommonServices.MailboxService.RecommendOutboundDomains(ctx, baseName, 20)
 
-		c.JSON(http.StatusOK, DomainRecommendationResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Domains:      recommendations,
+		h.responseHandler.HandleSuccess(c, DomainRecommendationResponse{
+			Domains: recommendations,
 		})
 	}
 }

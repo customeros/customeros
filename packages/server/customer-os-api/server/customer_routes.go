@@ -5,17 +5,9 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest/billing"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest/customerbase"
-	restEnrich "github.com/customeros/customeros/packages/server/customer-os-api/rest/enrich"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest/flows"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest/mailstack"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest/outreach"
-	reveal "github.com/customeros/customeros/packages/server/customer-os-api/rest/reveal_setup"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest/verify"
+	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/me"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
@@ -31,311 +23,302 @@ const (
 	WebhooksPath     = "/webhooks/v1"
 )
 
-func registerBillingRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerBillingRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/organizations/:id/invoices", BillingPath),
-		handler:   billing.GetInvoicesForOrganization(s),
+		handler:   h.Billing.GetInvoicesForOrganization(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
 
-func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	// Organization Routes
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/organizations", CustomerBasePath),
-		handler:   customerbase.CreateOrganization(s),
+		handler:   h.Organization.CreateOrganization(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/organizations/:id", CustomerBasePath),
-		handler:   customerbase.GetOrganization(s),
+		handler:   h.Organization.GetOrganization(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "PUT",
 		path:      fmt.Sprintf("%s/organizations/:id/links/:externalSystem/primary", CustomerBasePath),
-		handler:   customerbase.SetPrimaryExternalSystemId(s),
+		handler:   h.Organization.SetPrimaryExternalSystemId(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	// Contact Routes
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/contacts", CustomerBasePath),
-		handler:   customerbase.CreateContact(s),
+		handler:   h.Contact.CreateContact(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/contacts/bulk", CustomerBasePath),
-		handler:   customerbase.CreateBulkContacts(s),
+		handler:   h.Contact.CreateBulkContacts(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/contacts/import", CustomerBasePath),
-		handler:   customerbase.ImportContacts(s),
+		handler:   h.Contact.ImportContacts(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
 
-func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerEnrichRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/person", EnrichPath),
-		handler:   restEnrich.EnrichPerson(s),
+		handler:   h.Enrich.EnrichPerson(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/person/results/:id", EnrichPath),
-		handler:   restEnrich.EnrichPersonCallback(s),
+		handler:   h.Enrich.EnrichPersonCallback(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/organization", EnrichPath),
-		handler:   restEnrich.EnrichOrganization(s),
+		handler:   h.Enrich.EnrichOrganization(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
 
-func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
-
+func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	// webhook admin
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/hooks", FlowsPath),
-		handler:   flows.GetActiveWebhooks(s, CustomerOSAPIURL(), FlowsPath),
+		handler:   h.Webhooks.GetActiveWebhooks(CustomerOSAPIURL(), FlowsPath),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/hooks", FlowsPath),
-		handler:   flows.CreateWebhook(s, CustomerOSAPIURL(), FlowsPath),
+		handler:   h.Webhooks.CreateWebhook(CustomerOSAPIURL(), FlowsPath),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/:tenantId/i/:integrationId/rotate", FlowsPath),
-		handler:   flows.RotateWebhook(s, CustomerOSAPIURL(), FlowsPath),
+		handler:   h.Webhooks.RotateWebhook(CustomerOSAPIURL(), FlowsPath),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "DELETE",
 		path:      fmt.Sprintf("%s/:tenantId/i/:integrationId", FlowsPath),
-		handler:   flows.DeactivateWebhook(s),
+		handler:   h.Webhooks.DeactivateWebhook(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
 
-func registerIDRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
+func registerIDRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      "/me",
-		handler:   handlers.AuthorizeMe(),
+		handler:   me.AuthorizeMe(h),
 		routeType: RouteCustomer,
 		services:  s,
 	})
 }
 
-func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerMailstackRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/domains", MailstackPath),
-		handler:   mailstack.RegisterNewDomain(s),
+		handler:   h.Mailtstack.RegisterNewDomain(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/domains", MailstackPath),
-		handler:   mailstack.GetDomains(s),
+		handler:   h.Mailtstack.GetDomains(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/domains/recommendations", MailstackPath),
-		handler:   mailstack.RecommendDomain(s),
+		handler:   h.Mailtstack.RecommendDomain(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/domains/configure", MailstackPath),
-		handler:   mailstack.ConfigureDomain(s),
+		handler:   h.Mailtstack.ConfigureDomain(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/domains/:domain/mailboxes", MailstackPath),
-		handler:   mailstack.RegisterNewMailbox(s),
+		handler:   h.Mailtstack.RegisterNewMailbox(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/domains/:domain/mailboxes", MailstackPath),
-		handler:   mailstack.GetMailboxes(s),
+		handler:   h.Mailtstack.GetMailboxes(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/domains/:domain/dns", MailstackPath),
-		handler:   mailstack.DNS(s),
+		handler:   h.Mailtstack.DNS(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/domains/:domain/dns", MailstackPath),
-		handler:   mailstack.AddDNSRecord(s),
+		handler:   h.Mailtstack.AddDNSRecord(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "DELETE",
 		path:      fmt.Sprintf("%s/domains/:domain/dns", MailstackPath),
-		handler:   mailstack.DeleteDNSRecord(s),
+		handler:   h.Mailtstack.DeleteDNSRecord(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
 
-func registerOutreachRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerOutreachRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/track/email", OutreachPath),
-		handler:   outreach.GenerateEmailTrackingUrls(s),
+		handler:   h.Outreach.GenerateEmailTrackingUrls(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }
 
-func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/trackers", RevealPath),
-		handler:   reveal.ProvisionTracker(s),
+		handler:   h.WebTracker.ProvisionTracker(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
-	registerRoute(ctx, r, RouteConfig{
-		method:    "GET",
-		path:      fmt.Sprintf("%s/verify", RevealPath),
-		handler:   reveal.VerifyTracker(s),
-		routeType: RouteCustomer,
-		services:  s,
-		cache:     cache,
-	})
 }
 
-func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, cache *caches.Cache) {
+func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/email", VerifyPath),
-		handler:   verify.VerifyEmailAddress(s),
+		handler:   h.Verify.VerifyEmailAddress(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/email/bulk", VerifyPath),
-		handler:   verify.BulkUploadEmailsForVerification(s),
+		handler:   h.Verify.BulkUploadEmailsForVerification(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/email/bulk/results/:requestId", VerifyPath),
-		handler:   verify.GetBulkEmailVerificationResults(s),
+		handler:   h.Verify.GetBulkEmailVerificationResults(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/email/bulk/results/:requestId/download", VerifyPath),
-		handler:   verify.DownloadBulkEmailVerificationResults(s),
+		handler:   h.Verify.DownloadBulkEmailVerificationResults(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/ip", VerifyPath),
-		handler:   verify.IpIntelligence(s),
+		handler:   h.Verify.IpIntelligence(),
 		routeType: RouteCustomer,
 		services:  s,
-		cache:     cache,
+		cache:     s.Cache,
 	})
 }

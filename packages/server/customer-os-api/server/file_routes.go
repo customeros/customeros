@@ -4,18 +4,18 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gin-gonic/gin"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest/files"
+	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
+	"github.com/gin-gonic/gin"
 )
 
 const FilePath = "/files/v1"
 
-func registerFileRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services) {
+func registerFileRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/files", FilePath),
-		handler:   files.UploadFile(s, FilePath),
+		handler:   h.Files.UploadFile(FilePath),
 		routeType: RouteFiles,
 		services:  s,
 	})
@@ -23,7 +23,7 @@ func registerFileRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/files/:id", FilePath),
-		handler:   files.GetFileByID(s, FilePath),
+		handler:   h.Files.GetFileByID(FilePath),
 		routeType: RouteFiles,
 		services:  s,
 	})
@@ -31,7 +31,7 @@ func registerFileRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/files/:id/download", FilePath),
-		handler:   files.DownloadFile(s),
+		handler:   h.Files.DownloadFile(),
 		routeType: RouteFiles,
 		services:  s,
 	})
@@ -39,7 +39,7 @@ func registerFileRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/files/:id/base64", FilePath),
-		handler:   files.GetBase64(s),
+		handler:   h.Files.GetBase64(),
 		routeType: RouteFiles,
 		services:  s,
 	})
@@ -47,7 +47,7 @@ func registerFileRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/files/:id/public-url", FilePath),
-		handler:   files.GetPublicURL(s),
+		handler:   h.Files.GetPublicURL(),
 		routeType: RouteFiles,
 		services:  s,
 	})
@@ -55,7 +55,7 @@ func registerFileRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/files/:id/jwt", FilePath),
-		handler:   files.GetJWT(s),
+		handler:   h.Files.GetJWT(),
 		routeType: RouteFiles,
 		services:  s,
 	})

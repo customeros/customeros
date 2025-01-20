@@ -16,164 +16,212 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
+
+type WebsiteTrackerEventsHandler struct {
+	services        *cosapi_services.Services
+	responseHandler *response.Response
+}
+
+func NewWebsiteTrackerEventsHandler(services *cosapi_services.Services, responseHandler *response.Response) *WebsiteTrackerEventsHandler {
+	return &WebsiteTrackerEventsHandler{
+		services: services,
+	}
+}
 
 type ReferrerQueryParams struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }
 
-func RevealWebsiteEvents(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "public.RevealWebsiteVisitors", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "WebsiteTrackerEventsHandler.RevealWebsiteVisitors", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		origin := c.GetHeader("Origin")
-		referer := c.GetHeader("Referer")
-		userAgent := c.GetHeader("User-Agent")
-
-		span.LogKV("origin", origin)
-		span.LogKV("referer", referer)
-		span.LogKV("userAgent", userAgent)
-
-		if origin == "" || referer == "" || userAgent == "" {
-			err := fmt.Errorf("missing required headers")
-			tracing.TraceErr(span, err)
-			c.JSON(http.StatusForbidden, gin.H{})
+		if err := h.validateHeaders(c); err != nil {
+			h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 			return
 		}
 
-		// tenant validation
-		tenant, err := services.Repositories.PostgresRepositories.TrackingAllowedOriginRepository.GetTenantForOrigin(ctx, origin)
+		tenant, err := h.validateTrackingAllowed(ctx, c.GetHeader("Origin"))
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get tenant for origin"))
-			c.JSON(http.StatusForbidden, gin.H{})
-			return
-		}
-
-		if tenant == "" {
-			err = fmt.Errorf("tenant not found for origin")
 			tracing.TraceErr(span, err)
-			span.LogFields(log.String("result.info", "tenant not found for origin"))
-			c.JSON(http.StatusForbidden, gin.H{})
+			h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 			return
 		}
-
 		span.SetTag(tracing.SpanTagTenant, tenant)
 
-		trackerData := buildTrackerDbData(c, tenant)
+		trackerData := h.buildTrackerDbData(c, tenant)
 		if trackerData == nil {
 			err = fmt.Errorf("unable to build tracking record")
 			tracing.TraceErr(span, err)
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("%v", err.Error()),
-			})
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
 
 		// return early, continue processing
-		c.JSON(http.StatusAccepted, gin.H{})
+		h.responseHandler.HandleAccepted(c)
 
-		// if bot, return
-		if !isTrustedIP(ctx, services, trackerData.IP) {
+		if !h.isTrustedIP(ctx, trackerData.IP) {
 			return
 		}
 
-		// assign event to session (new or existing)
-		err = assignEventToSession(ctx, services, trackerData)
-		if err != nil {
+		if err := h.assignEventToSession(ctx, trackerData); err != nil {
 			tracing.TraceErr(span, err)
 			return
 		}
 
-		// write event to tracking table
-		_, err = services.Repositories.PostgresRepositories.WebTrackerEventsRepository.Create(ctx, *trackerData)
-		if err != nil {
+		if _, err := h.services.Repositories.PostgresRepositories.WebTrackerEventsRepository.Create(ctx, *trackerData); err != nil {
 			tracing.TraceErr(span, err)
 			return
 		}
-
-		return
 	}
 }
 
-func assignEventToSession(ctx context.Context, s *cosapi_services.Services, trackerData *postgres_entity.WebTrackerEvents) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "Tracking.assignEventsToSession")
+func (h *WebsiteTrackerEventsHandler) validateHeaders(c *gin.Context) error {
+	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "WebsiteTrackerEventsHandler.assignEventsToSession")
 	defer span.Finish()
+	tracing.TagComponentRest(span)
 
-	// find active session for visitor
+	origin := c.GetHeader("Origin")
+	referer := c.GetHeader("Referer")
+	userAgent := c.GetHeader("User-Agent")
+
+	span.LogKV("origin", origin)
+	span.LogKV("referer", referer)
+	span.LogKV("userAgent", userAgent)
+
+	switch {
+	case origin == "":
+		err := errors.New("missing origin")
+		tracing.TraceErr(span, err)
+		return err
+	case referer == "":
+		err := errors.New("missing referer")
+		tracing.TraceErr(span, err)
+		return err
+	case userAgent == "":
+		err := errors.New("missing userAgent")
+		tracing.TraceErr(span, err)
+		return err
+	default:
+		return nil
+	}
+}
+
+func (h *WebsiteTrackerEventsHandler) validateTrackingAllowed(ctx context.Context, origin string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.assignEventsToSession")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	tenant, err := h.services.Repositories.PostgresRepositories.TrackingAllowedOriginRepository.GetTenantForOrigin(ctx, origin)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get tenant for origin"))
+		return "", err
+	}
+
+	if tenant == "" {
+		err = fmt.Errorf("tenant not found for origin")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	return tenant, nil
+}
+
+func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, trackerData *postgres_entity.WebTrackerEvents) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.assignEventsToSession")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
 	query := postgres_entity.WebSession{
 		Tenant:    trackerData.Tenant,
 		VisitorID: trackerData.VisitorID,
 		IsActive:  true,
 	}
-	session, err := s.Repositories.PostgresRepositories.WebSessionRepository.FindSession(ctx, query, nil)
+	session, err := h.services.Repositories.PostgresRepositories.WebSessionRepository.FindSession(ctx, query, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	// if no active session found, create one if event is page_view
 	if session == nil && trackerData.EventType == enum.WebTrackerPageView.String() {
-
-		query := postgres_entity.WebSession{
-			Tenant:        trackerData.Tenant,
-			VisitorID:     trackerData.VisitorID,
-			IP:            trackerData.IP,
-			Referrer:      &trackerData.Referrer,
-			StartTime:     utils.Now(),
-			LastEventType: trackerData.EventType,
-			LastActivity:  utils.Now(),
-			IsActive:      true,
-		}
-
-		params := parseURLParams(trackerData.Search)
-		if params != nil {
-			paramString, err := setReferrerQueryParams(ctx, params)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-			if paramString != nil {
-				query.QueryParams = paramString
-			}
-		}
-
-		newSession, err := s.Repositories.PostgresRepositories.WebSessionRepository.Create(ctx, query)
+		session, err = h.createWebSession(ctx, trackerData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
-		if newSession == nil {
-			err = errors.New("unable to create new web session")
-			tracing.TraceErr(span, err)
-			return err
-		}
-		trackerData.SessionID = newSession.ID
-		return nil
 	}
 
 	trackerData.SessionID = session.ID
+	return h.updateSessionLastActivityTimestamp(ctx, trackerData.SessionID)
+}
 
-	// update existing session last activity
+func (h *WebsiteTrackerEventsHandler) updateSessionLastActivityTimestamp(ctx context.Context, sessionID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.updateSessionLastActivityTimestamp")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
 	updateQuery := postgres_entity.WebSession{
-		ID:           session.ID,
+		ID:           sessionID,
 		LastActivity: utils.Now(),
 	}
-	_, err = s.Repositories.PostgresRepositories.WebSessionRepository.Update(ctx, updateQuery)
+	_, err := h.services.Repositories.PostgresRepositories.WebSessionRepository.Update(ctx, updateQuery)
 	if err != nil {
 		err = errors.New("unable to update web session")
 		tracing.TraceErr(span, err)
 		return err
 	}
-
 	return nil
 }
 
-func setReferrerQueryParams(ctx context.Context, queryParams []ReferrerQueryParams) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Tracking.SetReferrerQueryParams")
+func (h *WebsiteTrackerEventsHandler) createWebSession(ctx context.Context, trackerData *postgres_entity.WebTrackerEvents) (*postgres_entity.WebSession, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.createWebSession")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	query := postgres_entity.WebSession{
+		Tenant:        trackerData.Tenant,
+		VisitorID:     trackerData.VisitorID,
+		IP:            trackerData.IP,
+		Referrer:      &trackerData.Referrer,
+		StartTime:     utils.Now(),
+		LastEventType: trackerData.EventType,
+		LastActivity:  utils.Now(),
+		IsActive:      true,
+	}
+
+	params := h.parseURLParams(trackerData.Search)
+
+	if params != nil {
+		paramString, err := h.setReferrerQueryParams(ctx, params)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		if paramString != nil {
+			query.QueryParams = paramString
+		}
+	}
+
+	newSession, err := h.services.Repositories.PostgresRepositories.WebSessionRepository.Create(ctx, query)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if newSession == nil {
+		err = errors.New("unable to create new web session")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return newSession, nil
+}
+
+func (h *WebsiteTrackerEventsHandler) setReferrerQueryParams(ctx context.Context, queryParams []ReferrerQueryParams) (*string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.SetReferrerQueryParams")
 	defer span.Finish()
 
 	bytes, err := json.Marshal(queryParams)
@@ -184,14 +232,13 @@ func setReferrerQueryParams(ctx context.Context, queryParams []ReferrerQueryPara
 	return &results, nil
 }
 
-func buildTrackerDbData(c *gin.Context, tenant string) *postgres_entity.WebTrackerEvents {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Tracking.buildTrackerEventData")
+func (h *WebsiteTrackerEventsHandler) buildTrackerDbData(c *gin.Context, tenant string) *postgres_entity.WebTrackerEvents {
+	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "WebsiteTrackerEventsHandler.buildTrackerEventData")
 	defer span.Finish()
 	tracing.TagTenant(span, tenant)
 
 	tracking := postgres_entity.WebTrackerEvents{}
 
-	// 1 Get the raw request body
 	rawJSON, err := c.GetRawData()
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get raw data"))
@@ -199,14 +246,12 @@ func buildTrackerDbData(c *gin.Context, tenant string) *postgres_entity.WebTrack
 	}
 	span.LogFields(log.String("rawJSON", string(rawJSON)))
 
-	// 2 Unmarshal into a map
 	var inputMap map[string]any
 	if err := json.Unmarshal(rawJSON, &inputMap); err != nil {
 		tracing.TraceErr(span, err)
 		return nil
 	}
 
-	// 3 Decode using mapstructure-based decode function
 	if err := utils.Decode(inputMap, &tracking); err != nil {
 		tracing.TraceErr(span, err)
 		return nil
@@ -222,11 +267,11 @@ func buildTrackerDbData(c *gin.Context, tenant string) *postgres_entity.WebTrack
 	return &tracking
 }
 
-func isTrustedIP(ctx context.Context, s *cosapi_services.Services, ipAddress string) bool {
-	span, ctx := tracing.StartTracerSpan(ctx, "Tracking.isTrustedIp")
+func (h *WebsiteTrackerEventsHandler) isTrustedIP(ctx context.Context, ipAddress string) bool {
+	span, ctx := tracing.StartTracerSpan(ctx, "WebsiteTrackerEventsHandler.isTrustedIp")
 	defer span.Finish()
 
-	ipThreats, err := s.CommonServices.VerifyService.Threats(ctx, ipAddress)
+	ipThreats, err := h.services.CommonServices.VerifyService.Threats(ctx, ipAddress)
 	if err != nil || ipThreats == nil {
 		tracing.TraceErr(span, err)
 		return true
@@ -235,19 +280,12 @@ func isTrustedIP(ctx context.Context, s *cosapi_services.Services, ipAddress str
 	return !ipThreats.IsThreat
 }
 
-func parseURLParams(queryString string) []ReferrerQueryParams {
-	// Remove leading ? if present
+func (h *WebsiteTrackerEventsHandler) parseURLParams(queryString string) []ReferrerQueryParams {
 	queryString = strings.TrimPrefix(queryString, "?")
-
-	// Split the string by & to get individual param-value pairs
 	pairs := strings.Split(queryString, "&")
-
-	// Create slice to hold results
 	params := make([]ReferrerQueryParams, 0, len(pairs))
 
-	// Parse each pair into the struct
 	for _, pair := range pairs {
-		// Split pair by = to separate param and value
 		parts := strings.SplitN(pair, "=", 2)
 		if len(parts) == 2 {
 			params = append(params, ReferrerQueryParams{

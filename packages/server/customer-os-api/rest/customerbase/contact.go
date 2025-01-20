@@ -7,24 +7,35 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/customeros/mailsherpa/mailvalidate"
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/customeros/mailsherpa/mailvalidate"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
+
+type ContactHandler struct {
+	services        *cosapi_services.Services
+	responseHandler *response.Response
+}
+
+func NewContactHandler(services *cosapi_services.Services, responseHandler *response.Response) *ContactHandler {
+	return &ContactHandler{
+		services:        services,
+		responseHandler: responseHandler,
+	}
+}
 
 // @Summary Create a new contact
 // @Description Creates a contact from either an email address or linkedin_url
@@ -38,47 +49,47 @@ import (
 // @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /customerbase/v1/contacts [post]
 // @Security ApiKeyAuth
-func CreateContact(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *ContactHandler) CreateContact() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.CreateContact", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
-		tenant := handlers.ValidateTenant(c, ctx, span)
+		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
-		handleJSONRequest(c, s)
+		h.handleJSONRequest(c)
 	}
 }
 
-func handleJSONRequest(c *gin.Context, s *cosapi_services.Services) {
-	ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.handleJSONRequest", c.Request.Header)
+func (h *ContactHandler) handleJSONRequest(c *gin.Context) {
+	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Customerbase.handleJSONRequest")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 	var contactRecord ContactRecord
 	if err := c.BindJSON(&contactRecord); err == nil && (strings.TrimSpace(contactRecord.Email) != "" || strings.TrimSpace(contactRecord.LinkedInURL) != "") {
-		err, errValue := validateContactRecord(&contactRecord)
+		err, errValue := h.validateContactRecord(&contactRecord)
 		if err != nil {
 			errMessage := fmt.Sprintf("%s | %s", errValue, err)
 			span.LogFields(log.String("result.error", errMessage))
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage(errMessage))
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &errMessage)
 			return
 		}
-		contactRecord.ContactId = processContact(c.Request.Context(), s, contactRecord)
-		c.JSON(http.StatusOK, SingleContactResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Contact:      contactRecord,
-		})
+		contactRecord.ContactId = h.processContact(c.Request.Context(), contactRecord)
+		response := SingleContactResponse{
+			Contact: contactRecord,
+		}
+		h.responseHandler.HandleSuccess(c, response)
 		return
 	}
 }
 
-func validateContactRecord(record *ContactRecord) (error, string) {
+func (h *ContactHandler) validateContactRecord(record *ContactRecord) (error, string) {
 	var errValue string
 	email := strings.TrimSpace(record.Email)
 	linkedInUrl := strings.TrimSpace(record.LinkedInURL)
@@ -109,7 +120,7 @@ func validateContactRecord(record *ContactRecord) (error, string) {
 	return nil, errValue
 }
 
-func processContact(ctx context.Context, s *cosapi_services.Services, record ContactRecord) string {
+func (h *ContactHandler) processContact(ctx context.Context, record ContactRecord) string {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Customerbase.processContact")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
@@ -127,7 +138,7 @@ func processContact(ctx context.Context, s *cosapi_services.Services, record Con
 	createdContactId := ""
 	var err error
 	if linkedInUrl != "" {
-		createdContactId, err = s.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedInUrl)
+		createdContactId, err = h.services.CommonServices.ContactService.CreateContactByLinkedIn(ctx, nil, linkedInUrl)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
 			return ""
@@ -136,24 +147,24 @@ func processContact(ctx context.Context, s *cosapi_services.Services, record Con
 
 	if email != "" {
 		if createdContactId == "" {
-			createdContactId, err = s.CommonServices.ContactService.CreateContactByEmail(ctx, nil, email)
+			createdContactId, err = h.services.CommonServices.ContactService.CreateContactByEmail(ctx, nil, email)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
 				return ""
 			}
 		} else {
-			associateEmailWithContact(ctx, s, email, createdContactId)
+			h.associateEmailWithContact(ctx, email, createdContactId)
 		}
 	}
 	return createdContactId
 }
 
-func associateEmailWithContact(ctx context.Context, s *cosapi_services.Services, email, contactId string) {
+func (h *ContactHandler) associateEmailWithContact(ctx context.Context, email, contactId string) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Customerbase.associateEmailWithContact")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
-	_, err := s.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
+	_, err := h.services.CommonServices.EmailService.Merge(ctx, nil, common.GetTenantFromContext(ctx),
 		interfaces.EmailFields{
 			Email:     email,
 			Source:    neo4jentity.DataSourceOpenline,

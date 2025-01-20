@@ -6,25 +6,19 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 // IpIntelligenceResponse represents the IP intelligence response
 // @Description Response containing IP intelligence data including threats, geolocation, and network information
 type IpIntelligenceResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// IP intelligence details
 	// required: true
 	IP IpIntelligenceRecord `json:"ip,omitempty"`
@@ -196,7 +190,7 @@ type IpIntelligenceOrganization struct {
 // @Failure 500 {object} handlers.ErrorResponse "Internal server error"
 // @Router /verify/v1/ip [get]
 // @Security ApiKeyAuth
-func IpIntelligence(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *VerifyHandler) IpIntelligence() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "IpIntelligence", c.Request.Header)
 		defer span.Finish()
@@ -205,30 +199,32 @@ func IpIntelligence(services *cosapi_services.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
-		logger := services.Log
+		logger := h.services.Log
 
 		// Check if address is provided
 		ipAddress := c.Query("address")
 		if ipAddress == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing parameter: address"))
+			message := "Missing parameter: address"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 		span.LogFields(log.String("address", ipAddress))
 
 		if net.ParseIP(ipAddress) == nil {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("IP address is not valid"))
+			message := "IP address is not valid"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			logger.Warnf("Invalid IP address format: %s", ipAddress)
 			return
 		}
 
 		var ipIntelligenceResponse IpIntelligenceRecord
-		result, err := services.CommonServices.VerifyService.LookupIp(ctx, ipAddress)
+		result, err := h.services.CommonServices.VerifyService.LookupIp(ctx, ipAddress)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
 		if result == nil {
@@ -255,7 +251,7 @@ func IpIntelligence(services *cosapi_services.Services) gin.HandlerFunc {
 				City:            result.City,
 				Country:         result.CountryName,
 				CountryIso:      result.CountryCode,
-				IsEuropeanUnion: isEuropeanUnion(result.CountryCode),
+				IsEuropeanUnion: utils.IsEuropeanUnion(result.CountryCode),
 			},
 			TimeZone: IpIntelligenceTimeZone{
 				Name:        result.TimeZone.Name,
@@ -279,7 +275,7 @@ func IpIntelligence(services *cosapi_services.Services) gin.HandlerFunc {
 			},
 		}
 
-		_, err = services.Repositories.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventIpVerificationSuccess,
+		_, err = h.services.Repositories.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventIpVerificationSuccess,
 			postgresrepository.BillableEventDetails{
 				ReferenceData: ipAddress,
 			})
@@ -287,18 +283,8 @@ func IpIntelligence(services *cosapi_services.Services) gin.HandlerFunc {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
 		}
 
-		c.JSON(http.StatusOK, IpIntelligenceResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			IP:           ipIntelligenceResponse,
+		h.responseHandler.HandleSuccess(c, IpIntelligenceResponse{
+			IP: ipIntelligenceResponse,
 		})
-	}
-}
-
-func isEuropeanUnion(countryCodeA2 string) bool {
-	switch countryCodeA2 {
-	case "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GR", "HR", "HU", "IE", "IT", "LT", "LU", "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK":
-		return true
-	default:
-		return false
 	}
 }

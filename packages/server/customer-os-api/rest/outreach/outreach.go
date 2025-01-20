@@ -4,15 +4,26 @@ package outreach
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/gin-gonic/gin"
 
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
+
+type OutreachHandler struct {
+	services        *cosapi_services.Services
+	responseHandler *response.Response
+}
+
+func NewOutreackHandler(services *cosapi_services.Services, responseHandler *response.Response) *OutreachHandler {
+	return &OutreachHandler{
+		services:        services,
+		responseHandler: responseHandler,
+	}
+}
 
 // EmailTrackingRequest represents the request for generating tracking URLs
 // @Description Request payload for generating email tracking URLs and pixels
@@ -119,7 +130,7 @@ type TrackedLink struct {
 // @Failure 500 {object} handlers.ErrorResponse "Internal server error"
 // @Router /outreach/v1/email/tracking [post]
 // @Security ApiKeyAuth
-func GenerateEmailTrackingUrls(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *OutreachHandler) GenerateEmailTrackingUrls() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GenerateEmailTrackingUrls", c.Request.Header)
 		defer span.Finish()
@@ -128,11 +139,11 @@ func GenerateEmailTrackingUrls(services *cosapi_services.Services) gin.HandlerFu
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
-		log := services.Log
+		log := h.services.Log
 
 		// Define a struct for the request body
 		var request struct {
@@ -149,15 +160,16 @@ func GenerateEmailTrackingUrls(services *cosapi_services.Services) gin.HandlerFu
 
 		// Bind the JSON request body to the struct
 		if err := c.ShouldBindJSON(&request); err != nil {
-			log.Error(ctx, "Invalid request body", err)
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Invalid request body"))
+			message := "Invalid request body"
+			log.Error(ctx, message, err)
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 		tracing.LogObjectAsJson(span, "request", request)
 
 		trackerDomain := request.TrackerDomain
 		if trackerDomain == "" {
-			trackerDomain = services.Cfg.App.TrackingPublicUrl
+			trackerDomain = h.services.Cfg.App.TrackingPublicUrl
 		}
 
 		messageId := request.MessageId
@@ -166,22 +178,24 @@ func GenerateEmailTrackingUrls(services *cosapi_services.Services) gin.HandlerFu
 		}
 
 		// Generate tracking open URL
-		trackedOpenUrl, _, err := services.CommonServices.EmailingService.GenerateEmailSpyPixelUrl(ctx, tenant, trackerDomain, messageId, request.CampaignId, request.RecipientId, request.TrackOpens)
+		trackedOpenUrl, _, err := h.services.CommonServices.EmailingService.GenerateEmailSpyPixelUrl(ctx, tenant, trackerDomain, messageId, request.CampaignId, request.RecipientId, request.TrackOpens)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			log.Error(ctx, "Error generating spy pixel URL", err)
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Error generating email open tracker"))
+			message := "Error generating email open tracker"
+			log.Error(ctx, message, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
 		// Generate tracked links
 		var trackedLinks []map[string]string
 		for _, redirectUrl := range request.Links {
-			trackedUrl, _, _, err := services.CommonServices.EmailingService.GenerateEmailLinkUrl(ctx, tenant, trackerDomain, redirectUrl, messageId, request.CampaignId, request.RecipientId, request.TrackClicks)
+			trackedUrl, _, _, err := h.services.CommonServices.EmailingService.GenerateEmailLinkUrl(ctx, tenant, trackerDomain, redirectUrl, messageId, request.CampaignId, request.RecipientId, request.TrackClicks)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				log.Error(ctx, "Error generating tracked link", err)
-				handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Error generating tracking links"))
+				message := "Error generating tracked link"
+				log.Error(ctx, message, err)
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
 			trackedLinks = append(trackedLinks, map[string]string{
@@ -193,11 +207,12 @@ func GenerateEmailTrackingUrls(services *cosapi_services.Services) gin.HandlerFu
 		// Generate unsubscribe link
 		trackedUnsubscribeLink := ""
 		if request.GenerateUnsubscribeLink && request.UnsubscribeLink != "" {
-			unsubscribeUrl, _, err := services.CommonServices.EmailingService.GenerateEmailUnsubscribeUrl(ctx, tenant, trackerDomain, request.UnsubscribeLink, messageId, request.CampaignId, request.RecipientId)
+			unsubscribeUrl, _, err := h.services.CommonServices.EmailingService.GenerateEmailUnsubscribeUrl(ctx, tenant, trackerDomain, request.UnsubscribeLink, messageId, request.CampaignId, request.RecipientId)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				log.Error(ctx, "Error generating unsubscribe URL", err)
-				handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Error generating unsubscribe link"))
+				message := "Error generating unsubscribe URL"
+				log.Error(ctx, message, err)
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
 			trackedUnsubscribeLink = unsubscribeUrl
@@ -205,7 +220,6 @@ func GenerateEmailTrackingUrls(services *cosapi_services.Services) gin.HandlerFu
 
 		// Prepare and send the response
 		response := gin.H{
-			"status":     "success",
 			"trackingId": messageId,
 		}
 		if trackedOpenUrl != "" {
@@ -218,6 +232,6 @@ func GenerateEmailTrackingUrls(services *cosapi_services.Services) gin.HandlerFu
 			response["unsubscribeLink"] = trackedUnsubscribeLink
 		}
 
-		c.JSON(http.StatusOK, response)
+		h.responseHandler.HandleSuccess(c, response)
 	}
 }

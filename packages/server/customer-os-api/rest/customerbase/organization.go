@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -16,14 +15,34 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neoEnum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
+)
+
+type OrganizationHandler struct {
+	services        *cosapi_services.Services
+	responseHandler *response.Response
+}
+
+func NewOrganizationHandler(services *cosapi_services.Services, responseHandler *response.Response) *OrganizationHandler {
+	return &OrganizationHandler{
+		services:        services,
+		responseHandler: responseHandler,
+	}
+}
+
+type APIStatus string
+
+const (
+	APIStatusError          APIStatus = "error"
+	APIStatusSuccess        APIStatus = "success"
+	APIStatusPartialSuccess APIStatus = "partial_success"
 )
 
 // @Summary Create a new organization
@@ -40,44 +59,46 @@ import (
 // @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /customerbase/v1/organizations [post]
 // @Security ApiKeyAuth
-func CreateOrganization(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *OrganizationHandler) CreateOrganization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.CreateOrganization", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant := handlers.ValidateTenant(c, ctx, span)
+		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
 		var request CreateOrganizationRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Invalid request body"))
-			s.Log.Error(ctx, "Invalid request body", err)
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
+			message := "Invalid request body"
+			tracing.TraceErr(span, errors.Wrap(err, message))
+			h.services.Log.Error(ctx, message, err)
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
-		if err := validateOrganizationRequest(c, s, &request); err != nil {
+		if err := h.validateOrganizationRequest(c, &request); err != nil {
 			return
 		}
 
-		orgFields := buildOrganizationFields(request)
-		organizationId, err := s.CommonServices.OrganizationService.Save(ctx, nil, nil, orgFields)
+		orgFields := h.buildOrganizationFields(request)
+		organizationId, err := h.services.CommonServices.OrganizationService.Save(ctx, nil, nil, orgFields)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Failed to create organization"))
-			s.Log.Error(ctx, "Failed to create organization", err)
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Failed to create organization"))
+			message := "Failed to create organization"
+			tracing.TraceErr(span, errors.Wrap(err, message))
+			h.services.Log.Error(ctx, message, err)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
-		c.JSON(http.StatusCreated, OrganizationResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
+		resp := OrganizationResponse{
 			Organization: OrganizationRecord{
 				ID: organizationId,
 			},
-		})
+		}
+		h.responseHandler.HandleCreated(c, resp)
 	}
 }
 
@@ -95,38 +116,40 @@ func CreateOrganization(s *cosapi_services.Services) gin.HandlerFunc {
 // @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /customerbase/v1/organizations/{id} [get]
 // @Security ApiKeyAuth
-func GetOrganization(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *OrganizationHandler) GetOrganization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.GetOrganization", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant := handlers.ValidateTenant(c, ctx, span)
+		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
 		orgID := c.Param("id")
 		if orgID == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Invalid organization ID"))
+			message := "Invalid organization ID"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
-		result, status := retrieveOrganization(c, s, orgID)
+		result, status := h.retrieveOrganization(c, orgID)
 
 		switch {
-		case status == enum.StatusError:
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("Organization does not exist"))
+		case status == APIStatusError:
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
-		case status == enum.StatusPartialSuccess:
-			c.JSON(http.StatusPartialContent, "Unable to retrieve full organization data")
+		case status == APIStatusPartialSuccess:
+			message := "Unable to retrieve full organization data"
+			h.responseHandler.HandleError(c, http.StatusPartialContent, &message)
 			return
 		default:
-			c.JSON(http.StatusOK, OrganizationResponse{
-				BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
+			resp := OrganizationResponse{
 				Organization: result,
-			})
+			}
+			h.responseHandler.HandleSuccess(c, resp)
 			return
 		}
 	}
@@ -147,76 +170,83 @@ func GetOrganization(s *cosapi_services.Services) gin.HandlerFunc {
 // @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /customerbase/v1/organizations/{id}/links/{externalSystem}/primary [put]
 // @Security ApiKeyAuth
-func SetPrimaryExternalSystemId(s *cosapi_services.Services) gin.HandlerFunc {
+func (h *OrganizationHandler) SetPrimaryExternalSystemId() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.SetPrimaryExternalSystemId", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant := handlers.ValidateTenant(c, ctx, span)
+		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrInvalidAPIKey)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
-		result, statusCode := handleExternalSystemUpdate(c, s)
+		result, statusCode := h.handleExternalSystemUpdate(c)
 
 		switch {
 		case statusCode == http.StatusBadRequest:
-			handlers.SendError(c, span, statusCode, enum.ErrBadRequest)
+			h.responseHandler.HandleError(c, statusCode, nil)
 		case statusCode == http.StatusInternalServerError:
-			handlers.SendError(c, span, statusCode, enum.ErrInternalServer)
+			h.responseHandler.HandleError(c, statusCode, nil)
 		case statusCode == http.StatusNotFound:
-			handlers.SendError(c, span, statusCode, enum.ErrNotFound)
+			h.responseHandler.HandleError(c, statusCode, nil)
 		default:
-			c.JSON(statusCode, ExternalSystemResponse{
-				BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
+			resp := ExternalSystemResponse{
 				Organization: result,
-			})
+			}
+			h.responseHandler.HandleSuccess(c, resp)
 		}
 	}
 }
 
-func validateOrganizationRequest(c *gin.Context, s *cosapi_services.Services, request *CreateOrganizationRequest) error {
+func (h *OrganizationHandler) validateOrganizationRequest(c *gin.Context, request *CreateOrganizationRequest) error {
 	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.validateOrganizationRequest")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
 	if request.Name == "" && request.CustomId == "" && request.Website == "" && request.LinkedinUrl == "" {
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing organization input fields"))
+		message := "Missing organization input fields"
+		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		return errors.New("missing required fields")
 	}
 
 	// Validate website domain
-	websiteDomain, _ := s.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, request.Website)
+	websiteDomain, _ := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, request.Website)
 	if websiteDomain != "" {
-		if exists, err := checkOrganizationExistsByDomain(ctx, s, websiteDomain); err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Failed to check organization domain"))
+		if exists, err := h.checkOrganizationExistsByDomain(ctx, websiteDomain); err != nil {
+			message := "Failed to check organization domain"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return err
 		} else if exists {
-			handlers.SendError(c, span, http.StatusConflict, enum.ErrConflict.WithMessage("Organization already exists with given domain"))
+			message := "Organization already exists with given domain"
+			h.responseHandler.HandleError(c, http.StatusConflict, &message)
 			return errors.New("organization exists")
 		}
 	}
 
 	// Validate custom ID
 	if request.CustomId != "" {
-		if exists, err := checkOrganizationExistsByCustomId(ctx, s, request.CustomId); err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Failed to check organization custom id"))
+		if exists, err := h.checkOrganizationExistsByCustomId(ctx, request.CustomId); err != nil {
+			message := "Failed to check organization custom id"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return err
 		} else if exists {
-			handlers.SendError(c, span, http.StatusConflict, enum.ErrConflict.WithMessage("Organization already exists with given custom id"))
+			message := "Organization already exists with given custom id"
+			h.responseHandler.HandleError(c, http.StatusConflict, &message)
 			return errors.New("organization exists")
 		}
 	}
 
 	// Validate LinkedIn URL
 	if request.LinkedinUrl != "" {
-		if exists, err := checkOrganizationExistsBySocialUrl(ctx, s, request.LinkedinUrl); err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Failed to check organization linkedin url"))
+		if exists, err := h.checkOrganizationExistsBySocialUrl(ctx, request.LinkedinUrl); err != nil {
+			message := "Failed to check organization linkedin url"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return err
 		} else if exists {
-			handlers.SendError(c, span, http.StatusConflict, enum.ErrConflict.WithMessage("Organization already exists with given linkedin url"))
+			message := "Organization already exists with given linkedin url"
+			h.responseHandler.HandleError(c, http.StatusConflict, &message)
 			return errors.New("organization exists")
 		}
 	}
@@ -224,7 +254,7 @@ func validateOrganizationRequest(c *gin.Context, s *cosapi_services.Services, re
 	return nil
 }
 
-func buildOrganizationFields(request CreateOrganizationRequest) data_fields.OrganizationFields {
+func (h *OrganizationHandler) buildOrganizationFields(request CreateOrganizationRequest) data_fields.OrganizationFields {
 	relationship := model.OrganizationRelationshipProspect
 	if request.Relationship != "" && model.OrganizationRelationship(request.Relationship).IsValid() {
 		relationship = model.OrganizationRelationship(request.Relationship)
@@ -246,12 +276,12 @@ func buildOrganizationFields(request CreateOrganizationRequest) data_fields.Orga
 	}
 
 	// Set stage based on relationship
-	fields.Stage = determineOrganizationStage(relationship)
+	fields.Stage = h.determineOrganizationStage(relationship)
 
 	return fields
 }
 
-func determineOrganizationStage(relationship model.OrganizationRelationship) *neoEnum.OrganizationStage {
+func (h *OrganizationHandler) determineOrganizationStage(relationship model.OrganizationRelationship) *neoEnum.OrganizationStage {
 	var stage model.OrganizationStage
 	switch relationship {
 	case model.OrganizationRelationshipCustomer:
@@ -266,43 +296,43 @@ func determineOrganizationStage(relationship model.OrganizationRelationship) *ne
 	return utils.ToPtr(enummapper.MapStageFromModel(stage))
 }
 
-func retrieveOrganization(c *gin.Context, s *cosapi_services.Services, orgID string) (OrganizationRecord, enum.Status) {
+func (h *OrganizationHandler) retrieveOrganization(c *gin.Context, orgID string) (OrganizationRecord, APIStatus) {
 	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.retrieveOrganization")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
 	var result OrganizationRecord
 
-	organizationDbNode, err := s.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(
+	organizationDbNode, err := h.services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(
 		ctx, common.GetTenantFromContext(ctx), orgID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, enum.StatusError
+		return result, APIStatusError
 	}
 	if organizationDbNode == nil {
-		return result, enum.StatusError
+		return result, APIStatusError
 	}
 
 	organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-	result = mapOrganizationEntityToResult(organizationEntity)
+	result = h.mapOrganizationEntityToResult(organizationEntity)
 
 	// Fetch additional data
 	partialSuccess := false
-	if err := enrichOrganizationWithDomains(ctx, s, &result, organizationEntity.ID); err != nil {
+	if err := h.enrichOrganizationWithDomains(ctx, &result, organizationEntity.ID); err != nil {
 		partialSuccess = true
 	}
-	if err := enrichOrganizationWithExternalLinks(ctx, s, &result, organizationEntity.ID); err != nil {
+	if err := h.enrichOrganizationWithExternalLinks(ctx, &result, organizationEntity.ID); err != nil {
 		partialSuccess = true
 	}
 
 	if partialSuccess {
-		return result, enum.StatusPartialSuccess
+		return result, APIStatusPartialSuccess
 	}
 
-	return result, enum.StatusSuccess
+	return result, APIStatusSuccess
 }
 
-func handleExternalSystemUpdate(c *gin.Context, s *cosapi_services.Services) (ExternalSystemRecord, int) {
+func (h *OrganizationHandler) handleExternalSystemUpdate(c *gin.Context) (ExternalSystemRecord, int) {
 	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Customerbase.handleExternalSystemUpdate")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
@@ -318,7 +348,7 @@ func handleExternalSystemUpdate(c *gin.Context, s *cosapi_services.Services) (Ex
 	}
 
 	// Validate organization exists
-	if exists, err := validateOrganizationExists(ctx, s, orgId); err != nil {
+	if exists, err := h.validateOrganizationExists(ctx, orgId); err != nil {
 		return results, http.StatusInternalServerError
 	} else if !exists {
 		return results, http.StatusNotFound
@@ -330,7 +360,7 @@ func handleExternalSystemUpdate(c *gin.Context, s *cosapi_services.Services) (Ex
 	}
 
 	// Set primary ID
-	err := s.CommonServices.ExternalSystemService.SetPrimaryExternalId(ctx, externalSystem, request.ExternalId,
+	err := h.services.CommonServices.ExternalSystemService.SetPrimaryExternalId(ctx, externalSystem, request.ExternalId,
 		common_srv.LinkWith{
 			Type: commonModel.ORGANIZATION,
 			Id:   orgId,
@@ -348,28 +378,28 @@ func handleExternalSystemUpdate(c *gin.Context, s *cosapi_services.Services) (Ex
 }
 
 // Helper functions for checking existence
-func checkOrganizationExistsByDomain(ctx context.Context, services *cosapi_services.Services, domain string) (bool, error) {
-	orgDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, common.GetTenantFromContext(ctx), domain)
+func (h *OrganizationHandler) checkOrganizationExistsByDomain(ctx context.Context, domain string) (bool, error) {
+	orgDbNode, err := h.services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, common.GetTenantFromContext(ctx), domain)
 	return orgDbNode != nil, err
 }
 
-func checkOrganizationExistsByCustomId(ctx context.Context, services *cosapi_services.Services, customId string) (bool, error) {
-	orgDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByReferenceId(ctx, common.GetTenantFromContext(ctx), customId)
+func (h *OrganizationHandler) checkOrganizationExistsByCustomId(ctx context.Context, customId string) (bool, error) {
+	orgDbNode, err := h.services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByReferenceId(ctx, common.GetTenantFromContext(ctx), customId)
 	return orgDbNode != nil, err
 }
 
-func checkOrganizationExistsBySocialUrl(ctx context.Context, services *cosapi_services.Services, url string) (bool, error) {
-	orgDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationBySocialUrl(ctx, common.GetTenantFromContext(ctx), url)
+func (h *OrganizationHandler) checkOrganizationExistsBySocialUrl(ctx context.Context, url string) (bool, error) {
+	orgDbNode, err := h.services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationBySocialUrl(ctx, common.GetTenantFromContext(ctx), url)
 	return orgDbNode != nil, err
 }
 
-func validateOrganizationExists(ctx context.Context, services *cosapi_services.Services, orgId string) (bool, error) {
-	organizationDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(ctx, common.GetTenantFromContext(ctx), orgId)
+func (h *OrganizationHandler) validateOrganizationExists(ctx context.Context, orgId string) (bool, error) {
+	organizationDbNode, err := h.services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(ctx, common.GetTenantFromContext(ctx), orgId)
 	return organizationDbNode != nil, err
 }
 
-func enrichOrganizationWithDomains(ctx context.Context, services *cosapi_services.Services, result *OrganizationRecord, orgId string) error {
-	domainEntities, err := services.CommonServices.DomainService.GetAllDomainsForOrganizations(ctx, []string{orgId})
+func (h *OrganizationHandler) enrichOrganizationWithDomains(ctx context.Context, result *OrganizationRecord, orgId string) error {
+	domainEntities, err := h.services.CommonServices.DomainService.GetAllDomainsForOrganizations(ctx, []string{orgId})
 	if err != nil {
 		return err
 	}
@@ -381,8 +411,8 @@ func enrichOrganizationWithDomains(ctx context.Context, services *cosapi_service
 	return nil
 }
 
-func enrichOrganizationWithExternalLinks(ctx context.Context, services *cosapi_services.Services, result *OrganizationRecord, orgId string) error {
-	externalSystemEntities, err := services.CommonServices.ExternalSystemService.GetExternalSystemsForEntities(ctx, []string{orgId}, commonModel.ORGANIZATION)
+func (h *OrganizationHandler) enrichOrganizationWithExternalLinks(ctx context.Context, result *OrganizationRecord, orgId string) error {
+	externalSystemEntities, err := h.services.CommonServices.ExternalSystemService.GetExternalSystemsForEntities(ctx, []string{orgId}, commonModel.ORGANIZATION)
 	if err != nil {
 		return err
 	}
@@ -400,7 +430,7 @@ func enrichOrganizationWithExternalLinks(ctx context.Context, services *cosapi_s
 	return nil
 }
 
-func mapOrganizationEntityToResult(entity *neo4jentity.OrganizationEntity) OrganizationRecord {
+func (h *OrganizationHandler) mapOrganizationEntityToResult(entity *neo4jentity.OrganizationEntity) OrganizationRecord {
 	return OrganizationRecord{
 		ID:           entity.ID,
 		CustomId:     entity.ReferenceId,

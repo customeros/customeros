@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
-	cosHandler "github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
@@ -33,20 +33,20 @@ type RouteConfig struct {
 	grpcClient *grpc_client.Clients
 }
 
-func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, s *cosapi_services.Services, cache *commoncaches.Cache) {
-	registerInternalRoutes(ctx, r, s)
-	registerPublicRoutes(ctx, r, s)
-	registerFileRoutes(ctx, r, s)
+func RegisterRestRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
+	registerInternalRoutes(ctx, r, s, h)
+	registerPublicRoutes(ctx, r, s, h)
+	registerFileRoutes(ctx, r, s, h)
 
-	registerBillingRoutes(ctx, r, s, cache)
-	registerCustomerBaseRoutes(ctx, r, s, cache)
-	registerEnrichRoutes(ctx, r, s, cache)
-	registerFlowRoutes(ctx, r, s, cache)
-	registerIDRoutes(ctx, r, s)
-	registerMailstackRoutes(ctx, r, s, cache)
-	registerOutreachRoutes(ctx, r, s, cache)
-	registerRevealRoutes(ctx, r, s, cache)
-	registerVerifyRoutes(ctx, r, s, cache)
+	registerBillingRoutes(ctx, r, s, h)
+	registerCustomerBaseRoutes(ctx, r, s, h)
+	registerEnrichRoutes(ctx, r, s, h)
+	registerFlowRoutes(ctx, r, s, h)
+	registerIDRoutes(ctx, r, s, h)
+	registerMailstackRoutes(ctx, r, s, h)
+	registerOutreachRoutes(ctx, r, s, h)
+	registerRevealRoutes(ctx, r, s, h)
+	registerVerifyRoutes(ctx, r, s, h)
 }
 
 func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
@@ -78,7 +78,7 @@ func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 				security.WithCache(config.cache),
 			),
 			enrichContextMiddleware(constants.AppSourceCustomerOsApiRest),
-			cosHandler.StatsSuccessHandler(config.method+":"+config.path, config.services),
+			rest_handlers.StatsSuccessHandler(config.method+":"+config.path, config.services),
 		)
 
 	case RouteFiles:

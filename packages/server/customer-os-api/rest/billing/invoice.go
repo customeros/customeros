@@ -14,10 +14,21 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
+	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
+
+type BillingHandler struct {
+	services        *cosapi_services.Services
+	responseHandler *response.Response
+}
+
+func NewBillingHandler(services *cosapi_services.Services, responseHandler *response.Response) *BillingHandler {
+	return &BillingHandler{
+		services:        services,
+		responseHandler: responseHandler,
+	}
+}
 
 // @Summary Get organization's invoices
 // @Description Retrieves all non-dry-run invoices for a specific organization, sorted by due date descending
@@ -33,45 +44,47 @@ import (
 // @Failure 500 {object} rest.BaseResponse "Internal server error"
 // @Router /billing/v1/organizations/{id}/invoices [get]
 // @Security ApiKeyAuth
-func GetInvoicesForOrganization(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *BillingHandler) GetInvoicesForOrganization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetInvoicesForOrganization", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
-		tenant := handlers.ValidateTenant(c, ctx, span)
+		tenant := common.GetTenantFromContext(ctx)
 
 		// Extract organization ID from the path
 		orgID := c.Param("id")
 		if orgID == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Invalid organization ID"))
+			message := "Invalid organization ID"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
 		// Check organization exists
-		organizationDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(ctx, tenant, orgID)
+		organizationDbNode, err := h.services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(ctx, tenant, orgID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("Organization does not exist"))
+			message := "Organization does not exist"
+			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
 		if organizationDbNode == nil {
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("Organization does not exist"))
+			message := "Organization does not exist"
+			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
 		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
-		invoiceEntities, err := services.CommonServices.InvoiceService.GetNonDryRunInvoicesForOrganization(ctx, tenant, organizationEntity.ID)
+		invoiceEntities, err := h.services.CommonServices.InvoiceService.GetNonDryRunInvoicesForOrganization(ctx, tenant, organizationEntity.ID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
 
 		response := InvoicesResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Invoices:     make([]InvoiceRecord, 0, len(*invoiceEntities)), // Pre-allocate slice
+			Invoices: make([]InvoiceRecord, 0, len(*invoiceEntities)), // Pre-allocate slice
 		}
 
 		workerCount := 10
@@ -92,7 +105,7 @@ func GetInvoicesForOrganization(services *cosapi_services.Services) gin.HandlerF
 
 			if (invoiceEntity.Status == neo4jenum.InvoiceStatusDue || invoiceEntity.Status == neo4jenum.InvoiceStatusOverdue) &&
 				(invoiceEntity.PaymentDetails.PaymentLink != "") {
-				record.PaymentLink = services.Cfg.Common.Internal.CustomerOsApi.ApiUrl + "/invoice/" + invoiceEntity.Id + "/pay"
+				record.PaymentLink = h.services.Cfg.Common.Internal.CustomerOsApi.ApiUrl + "/invoice/" + invoiceEntity.Id + "/pay"
 			}
 
 			wg.Add(1)
@@ -101,7 +114,7 @@ func GetInvoicesForOrganization(services *cosapi_services.Services) gin.HandlerF
 				sem <- struct{}{}        // Acquire a spot
 				defer func() { <-sem }() // Release spot in defer
 
-				publicUrl, err := services.CommonServices.FileService.GetFilePublicUrl(ctx, invoiceEntity.RepositoryFileId)
+				publicUrl, err := h.services.CommonServices.FileService.GetFilePublicUrl(ctx, invoiceEntity.RepositoryFileId)
 				if err != nil {
 					errChan <- errors.Wrap(err, "failed to get invoice public url")
 					return
@@ -133,6 +146,6 @@ func GetInvoicesForOrganization(services *cosapi_services.Services) gin.HandlerF
 			return response.Invoices[i].DueDate.After(response.Invoices[j].DueDate)
 		})
 
-		c.JSON(http.StatusOK, response)
+		h.responseHandler.HandleSuccess(c, response)
 	}
 }

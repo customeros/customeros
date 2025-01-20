@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/opentracing/opentracing-go/log"
 	"io"
 	"net/http"
 	"os"
@@ -33,6 +32,7 @@ import (
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -47,6 +47,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/resolver"
 	"github.com/customeros/customeros/packages/server/customer-os-api/metrics"
+	rest_handlers "github.com/customeros/customeros/packages/server/customer-os-api/rest"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
@@ -122,8 +123,12 @@ func (server *server) Run(parentCtx context.Context) error {
 		corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, strings.TrimSpace(header))
 	}
 
+	// Set up services
 	serviceContainer := cosapi_services.InitServices(server.log, &neo4jDriver, postgresDb, server.cfg, grpcContainer)
+
+	// Set up handlers
 	adminApiHandler := graphHandler.NewAdminApiHandler(server.cfg, serviceContainer.Repositories.Neo4jRepositories)
+	restHandlers := rest_handlers.InitRestHandlers(serviceContainer)
 
 	r.Use(cors.New(corsConfig))
 	r.Use(tracing.RecoveryWithJaeger(opentracing.GlobalTracer()))
@@ -161,7 +166,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 
 	// rest routes
-	RegisterRestRoutes(ctx, r, grpcContainer, serviceContainer, serviceContainer.Cache)
+	RegisterRestRoutes(ctx, r, serviceContainer, restHandlers)
 
 	if server.cfg.App.ApiPort == server.cfg.App.MetricsPort {
 		r.GET(server.cfg.App.Observability.Metrics.PrometheusPath, metricsHandler)

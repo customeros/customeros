@@ -1,10 +1,6 @@
 // @openapi 3.0.0
 package customerbase
 
-import (
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-)
-
 // Contact Types
 
 // ContactRecord represents the request structure for creating a contact
@@ -26,8 +22,6 @@ type ContactRecord struct {
 // SingleContactResponse represents a response containing a single contact
 // @Description Response structure for single contact operations
 type SingleContactResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// The contact information
 	Contact ContactRecord `json:"contact,omitempty"`
 }
@@ -35,8 +29,6 @@ type SingleContactResponse struct {
 // ContactsResponse represents a response containing multiple contacts
 // @Description Response structure for multiple contact operations
 type ContactsResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// List of contacts
 	Contacts []ContactRecord `json:"contacts,omitempty"`
 }
@@ -130,8 +122,6 @@ type OrganizationRecord struct {
 // OrganizationResponse represents a response containing a single organization
 // @Description Response structure for single organization operations
 type OrganizationResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// The organization information
 	Organization OrganizationRecord `json:"organization,omitempty"`
 }
@@ -139,8 +129,6 @@ type OrganizationResponse struct {
 // OrganizationsResponse represents a response containing multiple organizations
 // @Description Response structure for multiple organization operations
 type OrganizationsResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// List of organizations
 	Organizations []OrganizationRecord `json:"organizations,omitempty"`
 }
@@ -179,8 +167,6 @@ type ExternalSystemRecord struct {
 // ExternalSystemResponse represents a response containing external system information
 // @Description Response structure for external system operations
 type ExternalSystemResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// The external system information
 	Organization ExternalSystemRecord `json:"organization,omitempty"`
 }

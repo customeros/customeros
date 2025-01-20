@@ -17,14 +17,11 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 const EXTERNAL_SYSTEM = "mailstack"
 
-func PostmarkInboundEmail(c *gin.Context, s *cosapi_services.Services) {
+func (h *IntegrationHandler) PostmarkInboundEmail(c *gin.Context) {
 	_, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Flows.PostmarkInboundEmail", c.Request.Header)
 	defer span.Finish()
 	tracing.TagComponentRest(span)
@@ -32,16 +29,16 @@ func PostmarkInboundEmail(c *gin.Context, s *cosapi_services.Services) {
 	// Validate Postmark User-Agent
 	if c.Request.UserAgent() == "" || !strings.EqualFold(c.Request.UserAgent(), "Postmark") {
 		tracing.TraceErr(span, fmt.Errorf("Invalid user agent %s", c.Request.UserAgent()))
-		handlers.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
+		h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 		return
 	}
 
 	// Parse email data
-	emailData, err := parseInboundEmail(c)
+	emailData, err := h.parseInboundEmail(c)
 	if err != nil {
 		tracing.LogObjectAsJson(span, "body", c.Request.Body)
 		tracing.TraceErr(span, err)
-		handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest)
+		h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
 		return
 	}
 
@@ -55,13 +52,13 @@ func PostmarkInboundEmail(c *gin.Context, s *cosapi_services.Services) {
 			}
 		}()
 
-		if err := processInboundEmail(c, s, &emailData); err != nil {
+		if err := h.processInboundEmail(c, &emailData); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to process inbound email from Postmark"))
 		}
 	}()
 }
 
-func parseInboundEmail(c *gin.Context) (PostmarkInboundEmailData, error) {
+func (h *IntegrationHandler) parseInboundEmail(c *gin.Context) (PostmarkInboundEmailData, error) {
 	var emailData PostmarkInboundEmailData
 	err := c.BindJSON(&emailData)
 	if err != nil {
@@ -71,12 +68,12 @@ func parseInboundEmail(c *gin.Context) (PostmarkInboundEmailData, error) {
 	return emailData, nil
 }
 
-func processInboundEmail(c *gin.Context, s *cosapi_services.Services, emailData *PostmarkInboundEmailData) error {
+func (h *IntegrationHandler) processInboundEmail(c *gin.Context, emailData *PostmarkInboundEmailData) error {
 	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.processInboundEmail")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
-	tenant, err := getTenant(c, s, emailData)
+	tenant, err := h.getTenant(c, emailData)
 	if err != nil {
 		return err
 	}
@@ -88,7 +85,7 @@ func processInboundEmail(c *gin.Context, s *cosapi_services.Services, emailData 
 	})
 
 	participants := emailData.AllParticipantEmails()
-	username, err := getUsername(ctx, s, participants)
+	username, err := h.getUsername(ctx, participants)
 	if err != nil || username == "" {
 		span.LogFields(tracingLog.Bool("mailbox.found", false))
 		tracing.TraceErr(span, err)
@@ -96,7 +93,7 @@ func processInboundEmail(c *gin.Context, s *cosapi_services.Services, emailData 
 	}
 
 	messageId := emailData.GetHeaderValue("Message-Id")
-	emailExistsInDb, err := s.Repositories.PostgresRepositories.RawEmailRepository.EmailExistsByMessageId(
+	emailExistsInDb, err := h.services.Repositories.PostgresRepositories.RawEmailRepository.EmailExistsByMessageId(
 		ctx, EXTERNAL_SYSTEM, tenant, username, messageId,
 	)
 	if err != nil {
@@ -114,7 +111,7 @@ func processInboundEmail(c *gin.Context, s *cosapi_services.Services, emailData 
 		return fmt.Errorf("Unable to produce JSON email object for db: %v", err)
 	}
 
-	dbErr := s.Repositories.PostgresRepositories.RawEmailRepository.Store(
+	dbErr := h.services.Repositories.PostgresRepositories.RawEmailRepository.Store(
 		ctx, EXTERNAL_SYSTEM, tenant, username, dbEmailEntity.ProviderMessageId, messageId, string(jsonEmailEntity), dbEmailEntity.Sent, postgres_entity.REAL_TIME,
 	)
 	if dbErr != nil {
@@ -132,14 +129,14 @@ func processInboundEmail(c *gin.Context, s *cosapi_services.Services, emailData 
 	return nil
 }
 
-func getTenant(c *gin.Context, s *cosapi_services.Services, emailData *PostmarkInboundEmailData) (string, error) {
+func (h *IntegrationHandler) getTenant(c *gin.Context, emailData *PostmarkInboundEmailData) (string, error) {
 	span, ctx := tracing.StartTracerSpan(c.Request.Context(), "Flows.getTenant")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
 	nameFromBcc := emailData.TenantFromBcc()
 
-	n, err := s.Repositories.Neo4jRepositories.TenantReadRepository.GetTenantByNameIgnoreCase(ctx, nameFromBcc)
+	n, err := h.services.Repositories.Neo4jRepositories.TenantReadRepository.GetTenantByNameIgnoreCase(ctx, nameFromBcc)
 	if err != nil {
 		span.LogFields(tracingLog.Bool("tenant.found", false))
 		tracing.TraceErr(span, err)
@@ -158,7 +155,7 @@ func getTenant(c *gin.Context, s *cosapi_services.Services, emailData *PostmarkI
 	return tenant.Name, nil
 }
 
-func getUsername(ctx context.Context, s *cosapi_services.Services, EmailParticipants []string) (string, error) {
+func (h *IntegrationHandler) getUsername(ctx context.Context, EmailParticipants []string) (string, error) {
 	span, _ := tracing.StartTracerSpan(ctx, "Flows.getUsername")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
@@ -166,7 +163,7 @@ func getUsername(ctx context.Context, s *cosapi_services.Services, EmailParticip
 	tenant := common.GetTenantFromContext(ctx)
 
 	for _, p := range EmailParticipants {
-		userByEmail, err := s.Repositories.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(
+		userByEmail, err := h.services.Repositories.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(
 			ctx, tenant, p)
 		if err != nil {
 			return "", fmt.Errorf("Error getting username from email %s: %v", p, err)

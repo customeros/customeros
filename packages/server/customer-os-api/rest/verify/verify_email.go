@@ -16,12 +16,7 @@ import (
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 const (
@@ -34,8 +29,6 @@ const (
 // EmailVerificationResponse represents the email verification response
 // @Description Response for single email verification including detailed validation results
 type EmailVerificationResponse struct {
-	// Inherits standard response fields
-	enum.BaseResponse
 	// Email verification details
 	// required: true
 	Email EmailVerificationRecord `json:"email,omitempty"`
@@ -219,7 +212,7 @@ type BulkResultsDetails struct {
 // @Failure 500 {object} handlers.ErrorResponse "Internal server error"
 // @Router /verify/v1/email [get]
 // @Security ApiKeyAuth
-func VerifyEmailAddress(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *VerifyHandler) VerifyEmailAddress() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "VerifyEmailAddress", c.Request.Header)
 		defer span.Finish()
@@ -228,23 +221,23 @@ func VerifyEmailAddress(services *cosapi_services.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
-		logger := services.Log
+		logger := h.services.Log
 
 		// Check if email address is provided
 		emailAddress := c.Query("address")
 		if emailAddress == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing parameter: address"))
+			message := "Missing parameter: adderss"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 		span.LogKV("request.address", emailAddress)
 
 		syntaxValidation := mailsherpa.ValidateEmailSyntax(emailAddress)
 		if !syntaxValidation.IsValid {
-			c.JSON(http.StatusOK, EmailVerificationResponse{
-				BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
+			h.responseHandler.HandleSuccess(c, EmailVerificationResponse{
 				Email: EmailVerificationRecord{
 					EmailAddress: emailAddress,
 					Syntax: EmailVerificationSyntax{
@@ -257,13 +250,13 @@ func VerifyEmailAddress(services *cosapi_services.Services) gin.HandlerFunc {
 		}
 
 		// call validation service
-		result, err := services.CommonServices.VerifyService.ValidateEmail(ctx, emailAddress)
+		result, err := h.services.CommonServices.VerifyService.ValidateEmail(ctx, emailAddress)
 		if err != nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
 		if result == nil {
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer)
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
 
@@ -305,7 +298,7 @@ func VerifyEmailAddress(services *cosapi_services.Services) gin.HandlerFunc {
 			if emailVerificationResponse.IsCatchAll {
 				billableEvent = postgresentity.BillableEventEmailVerifiedCatchAll
 			}
-			_, err = services.Repositories.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, billableEvent,
+			_, err = h.services.Repositories.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, billableEvent,
 				postgresrepository.BillableEventDetails{
 					ReferenceData: emailAddress,
 				})
@@ -314,10 +307,8 @@ func VerifyEmailAddress(services *cosapi_services.Services) gin.HandlerFunc {
 			}
 		}
 
-		c.Header("Content-Type", "application/json")
-		c.JSON(http.StatusOK, EmailVerificationResponse{
-			BaseResponse: enum.BuildBaseResponse(enum.StatusSuccess),
-			Email:        emailVerificationResponse,
+		h.responseHandler.HandleSuccess(c, EmailVerificationResponse{
+			Email: emailVerificationResponse,
 		})
 	}
 }
@@ -336,7 +327,7 @@ func VerifyEmailAddress(services *cosapi_services.Services) gin.HandlerFunc {
 // @Failure 500 {object} handlers.ErrorResponse "Internal server error"
 // @Router /verify/v1/email/bulk [post]
 // @Security ApiKeyAuth
-func BulkUploadEmailsForVerification(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *VerifyHandler) BulkUploadEmailsForVerification() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BulkUploadEmailsForVerification", c.Request.Header)
 		defer span.Finish()
@@ -345,7 +336,7 @@ func BulkUploadEmailsForVerification(services *cosapi_services.Services) gin.Han
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			handlers.SendError(c, span, http.StatusUnauthorized, enum.ErrUnauthorized)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
@@ -364,24 +355,27 @@ func BulkUploadEmailsForVerification(services *cosapi_services.Services) gin.Han
 		file, header, err := c.Request.FormFile("file")
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to read csv file"))
+			message := "Unable to read csv file"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 		defer file.Close()
 
 		// Validate file type
 		if header.Header.Get("Content-Type") != "text/csv" && !strings.HasSuffix(header.Filename, ".csv") {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("File type not permitted.  Please send .csv file"))
+			message := "File type not permitted"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
-		requestID := uuid.New().String()
+		requestID := utils.GenerateNanoIdWithPrefix("api", 16)
 
 		// Parse the CSV file
 		reader := csv.NewReader(file)
 		headers, err := reader.Read()
 		if err != nil {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to parse csv file"))
+			message := "Unable to parse csv file"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
@@ -396,13 +390,15 @@ func BulkUploadEmailsForVerification(services *cosapi_services.Services) gin.Han
 				}
 			}
 			if emailIndex == -1 {
-				handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage(fmt.Sprintf("Column '%s' not found", emailColumn)))
+				message := fmt.Sprintf("Column '%s' not found", emailColumn)
+				h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 				return
 			}
 		} else if len(headers) == 1 {
 			emailIndex = 0 // Default to first column if only one column exists
 		} else {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Please provide emailColumn parameter"))
+			message := "Missing emailColumn parameter"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
@@ -416,7 +412,8 @@ func BulkUploadEmailsForVerification(services *cosapi_services.Services) gin.Han
 				break
 			}
 			if err != nil {
-				handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Unable to read csv file"))
+				message := "Unable to read csv file"
+				h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 				return
 			}
 
@@ -431,25 +428,28 @@ func BulkUploadEmailsForVerification(services *cosapi_services.Services) gin.Han
 		// Register the bulk request in the database
 		totalEmails := len(emails)
 		if totalEmails == 0 {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("No records found in the csv file"))
+			message := "No record in the csv file"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
-		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.RegisterRequest(ctx, tenant, requestID, header.Filename, verifyCatchAll, totalEmails)
+		bulkRequest, err := h.services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.RegisterRequest(ctx, tenant, requestID, header.Filename, verifyCatchAll, totalEmails)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to process bulk request"))
+			message := "Unable to process bulk request"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 		}
 
 		// Bulk insert email records into the database
-		err = services.Repositories.PostgresRepositories.EmailValidationRecordRepository.BulkInsertRecords(ctx, tenant, requestID, verifyCatchAll, emails)
+		err = h.services.Repositories.PostgresRepositories.EmailValidationRecordRepository.BulkInsertRecords(ctx, tenant, requestID, verifyCatchAll, emails)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert email records"))
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to process bulk request"))
+			message := "Unable to process bulk request"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 
-		countPendingRequests, err := services.Repositories.PostgresRepositories.EmailValidationRecordRepository.CountPendingRequests(ctx, bulkRequest.Priority, bulkRequest.CreatedAt)
+		countPendingRequests, err := h.services.Repositories.PostgresRepositories.EmailValidationRecordRepository.CountPendingRequests(ctx, bulkRequest.Priority, bulkRequest.CreatedAt)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to count pending requests"))
 			countPendingRequests = 100 // default to 100 records
@@ -457,12 +457,12 @@ func BulkUploadEmailsForVerification(services *cosapi_services.Services) gin.Han
 		countPendingRequests = countPendingRequests + int64(totalEmails)
 
 		// Respond with success message
-		c.JSON(http.StatusOK,
+		h.responseHandler.HandleSuccessWithCustomRequstID(c, requestID,
 			BulkUploadResponse{
 				Message:               "File uploaded successfully",
 				JobID:                 requestID,
-				ResultURL:             fmt.Sprintf("%s/verify/v1/email/bulk/results/%s", services.Cfg.Common.Internal.CustomerOsApi.ApiUrl, requestID), // Placeholder for results URL
-				EstimatedCompletionTs: float64(calculateEstimatedCompletionTs(countPendingRequests)),
+				ResultURL:             fmt.Sprintf("%s/verify/v1/email/bulk/results/%s", h.services.Cfg.Common.Internal.CustomerOsApi.ApiUrl, requestID), // Placeholder for results URL
+				EstimatedCompletionTs: float64(h.calculateEstimatedCompletionTs(countPendingRequests)),
 			})
 	}
 }
@@ -480,7 +480,7 @@ func BulkUploadEmailsForVerification(services *cosapi_services.Services) gin.Han
 // @Failure 500 {object} handlers.ErrorResponse "Internal server error"
 // @Router /verify/v1/email/bulk/results/{requestId} [get]
 // @Security ApiKeyAuth
-func GetBulkEmailVerificationResults(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *VerifyHandler) GetBulkEmailVerificationResults() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
 		defer span.Finish()
@@ -489,24 +489,27 @@ func GetBulkEmailVerificationResults(services *cosapi_services.Services) gin.Han
 
 		requestID := c.Param("requestId")
 		if requestID == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing parameter: ID"))
+			message := "Missing parameter: ID"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 		span.LogKV("requestId", requestID)
 
 		// Fetch the bulk request from the database
-		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
+		bulkRequest, err := h.services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
 		if err != nil {
+
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("invalid requestId"))
+			message := "Invalid requestId"
+			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
 		if bulkRequest == nil {
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound)
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
 			return
 		}
 
-		countPendingRequests, err := services.Repositories.PostgresRepositories.EmailValidationRecordRepository.CountPendingRequests(ctx, bulkRequest.Priority, bulkRequest.CreatedAt)
+		countPendingRequests, err := h.services.Repositories.PostgresRepositories.EmailValidationRecordRepository.CountPendingRequests(ctx, bulkRequest.Priority, bulkRequest.CreatedAt)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to count pending requests"))
 			countPendingRequests = 100 // default to 100 records
@@ -520,13 +523,13 @@ func GetBulkEmailVerificationResults(services *cosapi_services.Services) gin.Han
 					FileName:              bulkRequest.FileName,
 					Message:               fmt.Sprintf("Completed %d of %d emails", bulkRequest.DeliverableEmails+bulkRequest.UndeliverableEmails, bulkRequest.TotalEmails),
 					Results:               nil,
-					EstimatedCompletionTs: calculateEstimatedCompletionTs(countPendingRequests),
+					EstimatedCompletionTs: h.calculateEstimatedCompletionTs(countPendingRequests),
 				})
 			return
 		}
 
 		// Return the results if the processing is completed
-		c.JSON(http.StatusOK, BulkResultsResponse{
+		h.responseHandler.HandleSuccess(c, BulkResultsResponse{
 			JobID:    requestID,
 			Status:   "completed",
 			FileName: bulkRequest.FileName,
@@ -534,7 +537,7 @@ func GetBulkEmailVerificationResults(services *cosapi_services.Services) gin.Han
 				TotalEmails:   bulkRequest.TotalEmails,
 				Deliverable:   bulkRequest.DeliverableEmails,
 				Undeliverable: bulkRequest.UndeliverableEmails,
-				DownloadURL:   fmt.Sprintf("%s/verify/v1/email/bulk/results/%s/download", services.Cfg.Common.Internal.CustomerOsApi.ApiUrl, requestID),
+				DownloadURL:   fmt.Sprintf("%s/verify/v1/email/bulk/results/%s/download", h.services.Cfg.Common.Internal.CustomerOsApi.ApiUrl, requestID),
 			},
 		})
 	}
@@ -553,7 +556,7 @@ func GetBulkEmailVerificationResults(services *cosapi_services.Services) gin.Han
 // @Failure 500 {object} handlers.ErrorResponse "Internal server error"
 // @Router /verify/v1/email/bulk/results/{requestId}/download [get]
 // @Security ApiKeyAuth
-func DownloadBulkEmailVerificationResults(services *cosapi_services.Services) gin.HandlerFunc {
+func (h *VerifyHandler) DownloadBulkEmailVerificationResults() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
 		defer span.Finish()
@@ -563,48 +566,51 @@ func DownloadBulkEmailVerificationResults(services *cosapi_services.Services) gi
 		// Extract requestID from the path parameter
 		requestID := c.Param("requestId")
 		if requestID == "" {
-			handlers.SendError(c, span, http.StatusBadRequest, enum.ErrBadRequest.WithMessage("Missing requestId"))
+			message := "Missing requestId"
+			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
 		// Fetch the bulk request to ensure it exists and is completed
 		// Fetch the bulk request from the database
-		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
+		bulkRequest, err := h.services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("Unable to retrieve request"))
+			message := "Unable to retrieve request"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 		if bulkRequest == nil {
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("Unable to find request"))
+			message := "Unable to find request"
+			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
 
 		// Check if the bulk request is completed before proceeding
 		if bulkRequest.Status != postgresentity.EmailValidationRequestBulkStatusCompleted {
-			c.JSON(http.StatusAccepted, gin.H{
-				"status":    string(enum.StatusProcessing),
-				"requestId": requestID,
-				"message":   "The bulk request is still being processed. Please try again later.",
+			h.responseHandler.HandleSuccess(c, gin.H{
+				"message": "The bulk request is still being processed. Please try again later.",
 			})
 			return
 		}
 
 		if bulkRequest.FileStoreId == "" {
-			handlers.SendError(c, span, http.StatusNotFound, enum.ErrNotFound.WithMessage("csv file not found"))
+			message := "csv file not found"
+			h.responseHandler.HandleError(c, http.StatusNotFound, &message)
 			return
 		}
 
-		_, err = services.CommonServices.FileService.DownloadSingleFile(ctx, bulkRequest.FileStoreId, c, false)
+		_, err = h.services.CommonServices.FileService.DownloadSingleFile(ctx, bulkRequest.FileStoreId, c, false)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get file using file store api"))
-			handlers.SendError(c, span, http.StatusInternalServerError, enum.ErrInternalServer.WithMessage("unable to fetch the csv file"))
+			message := "Unable to fetch csv file"
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 			return
 		}
 	}
 }
 
-func calculateEstimatedCompletionTs(pendingRequests int64) int64 {
+func (h *VerifyHandler) calculateEstimatedCompletionTs(pendingRequests int64) int64 {
 	// Total estimated time in seconds for pending requests
 	totalTime := float64(pendingRequests) * singleEmailVerificationAproxDurationInSeconds / threadsToVerifyBulkEmails
 
