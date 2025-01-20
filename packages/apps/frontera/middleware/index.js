@@ -191,11 +191,11 @@ async function createServer() {
 
   const settingsApiProxy = createProxyMiddleware({
     pathFilter: '/sa',
-    pathRewrite: { '^/sa': '/internal/v1' },
-    target: process.env.CUSTOMER_OS_API_PATH,
+    pathRewrite: { '^/sa': '' },
+    target: process.env.SETTINGS_API_PATH,
     changeOrigin: true,
     headers: {
-      'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
+      'X-Openline-API-KEY': process.env.INTERNAL_API_KEY,
     },
     logger: console,
     preserveHeaderKeyCase: true,
@@ -204,8 +204,8 @@ async function createServer() {
 
   const userAdminApiProxy = createProxyMiddleware({
     pathFilter: '/ua',
-    pathRewrite: { '^/ua': '/internal/v1' },
-    target: process.env.CUSTOMER_OS_API_PATH,
+    pathRewrite: { '^/ua': '' },
+    target: process.env.USER_ADMIN_API_URL,
     changeOrigin: true,
     headers: {
       'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
@@ -217,11 +217,11 @@ async function createServer() {
 
   const fileStorageApiProxy = createProxyMiddleware({
     pathFilter: '/fs',
-    pathRewrite: { '^/fs': '/internal/v1' },
-    target: process.env.CUSTOMER_OS_API_PATH,
+    pathRewrite: { '^/fs': '' },
+    target: process.env.FILE_STORAGE_API_PATH,
     changeOrigin: true,
     headers: {
-      'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
+      'X-Openline-API-KEY': process.env.INTERNAL_API_KEY,
     },
     logger: console,
     preserveHeaderKeyCase: true,

@@ -59,7 +59,7 @@ export class Slack {
     try {
       this.isLoading = true;
       await this.transportLayer.http.post(
-        `/ua/slack/oauth/callback?code=${code}`,
+        `/sa/slack/oauth/callback?code=${code}`,
       );
       this.load();
     } catch (err) {
@@ -78,7 +78,7 @@ export class Slack {
       this.isLoading = true;
 
       const { data } = await this.transportLayer.http.get(
-        `/ua/slack/requestAccess`,
+        `/sa/slack/requestAccess`,
       );
 
       window.location.href = data.url;

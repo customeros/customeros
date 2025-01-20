@@ -757,6 +757,10 @@ func initializeUser(c context.Context, services *cosapi_services.Services, provi
 			LastName:  lastName,
 			Roles:     common_utils.ToPtr([]string{"USER", "OWNER"}),
 		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
 
 		_, err = services.CommonServices.EmailService.Merge(innerCtx, nil, tenant, interfaces.EmailFields{
 			Primary: true,

@@ -80,7 +80,7 @@ export const LogoUploader = observer(() => {
           onSuccess={handleTenantLogoUpdate}
           endpointOptions={{
             fileKeyName: 'file',
-            uploadUrl: '/file',
+            uploadUrl: '/files',
           }}
           className={cn(
             ghostButton({ colorScheme: 'gray' }),
@@ -102,7 +102,7 @@ export const LogoUploader = observer(() => {
         onSuccess={handleTenantLogoUpdate}
         endpointOptions={{
           fileKeyName: 'file',
-          uploadUrl: '/file',
+          uploadUrl: '/files',
         }}
       >
         {isDragging ? (

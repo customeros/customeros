@@ -1198,6 +1198,7 @@ type Flow struct {
 	Metadata       *Metadata               `json:"metadata"`
 	Name           string                  `json:"name"`
 	Description    string                  `json:"description"`
+	TableViewDefID string                  `json:"tableViewDefId"`
 	Nodes          string                  `json:"nodes"`
 	Edges          string                  `json:"edges"`
 	FirstStartedAt *time.Time              `json:"firstStartedAt,omitempty"`
@@ -1877,7 +1878,8 @@ func (this Metadata) GetAppSource() string         { return this.AppSource }
 func (Metadata) IsNode()            {}
 func (this Metadata) GetID() string { return this.ID }
 
-type Mutation struct{}
+type Mutation struct {
+}
 
 type Note struct {
 	ID            string        `json:"id"`
@@ -2458,7 +2460,8 @@ type PhoneNumberUpdateInput struct {
 	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 }
 
-type Query struct{}
+type Query struct {
+}
 
 type Reminder struct {
 	Metadata  *Metadata  `json:"metadata"`
