@@ -3,11 +3,11 @@ package server
 import (
 	"context"
 
-	"github.com/gin-gonic/gin"
 	commoncaches "github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	cosHandler "github.com/customeros/customeros/packages/server/customer-os-api/rest"
@@ -62,6 +62,11 @@ func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 				config.services.Repositories.PostgresRepositories.AppKeyRepository,
 				security.PLATFORM_ADMIN_API,
 				security.WithCache(config.services.Cache),
+			),
+			security.TenantUserContextEnhancer(
+				security.USERNAME_OR_TENANT,
+				config.services.Repositories.Neo4jRepositories,
+				security.WithCache(config.cache),
 			))
 
 	case RouteCustomer:

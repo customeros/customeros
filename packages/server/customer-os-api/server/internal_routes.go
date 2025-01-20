@@ -23,7 +23,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
-		path:      fmt.Sprintf("%s/settings/intergrations", InternalPath),
+		path:      fmt.Sprintf("%s/settings/integrations", InternalPath),
 		handler:   private.GetIntegrations(s),
 		routeType: RouteInternal,
 		services:  s,
@@ -31,7 +31,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
-		path:      fmt.Sprintf("%s/settings/intergrations", InternalPath),
+		path:      fmt.Sprintf("%s/settings/integrations", InternalPath),
 		handler:   private.CreateIntegration(s),
 		routeType: RouteInternal,
 		services:  s,
@@ -39,7 +39,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "DELETE",
-		path:      fmt.Sprintf("%s/settings/intergrations/:identifier", InternalPath),
+		path:      fmt.Sprintf("%s/settings/integrations/:identifier", InternalPath),
 		handler:   private.DeleteIntegrations(s),
 		routeType: RouteInternal,
 		services:  s,
@@ -79,7 +79,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
-		path:      fmt.Sprintf("%s/tenant/settings/organizationStage/:id", InternalPath),
+		path:      fmt.Sprintf("%s/settings/tenant/settings/organizationStage/:id", InternalPath),
 		handler:   private.CreateOrganizationStage(s),
 		routeType: RouteInternal,
 		services:  s,
@@ -87,7 +87,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
-		path:      fmt.Sprintf("%s/tenant/settings/apiKey", InternalPath),
+		path:      fmt.Sprintf("%s/settings/tenant/settings/apiKey", InternalPath),
 		handler:   private.GetAPIKey(s),
 		routeType: RouteInternal,
 		services:  s,
@@ -95,7 +95,7 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
-		path:      fmt.Sprintf("%s/user/settings/oauth/:tenant", InternalPath),
+		path:      fmt.Sprintf("%s/settings/user/settings/oauth/:tenant", InternalPath),
 		handler:   private.GetOAuthSettings(s),
 		routeType: RouteInternal,
 		services:  s,
@@ -103,8 +103,40 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
-		path:      fmt.Sprintf("%s/user/settings/slack", InternalPath),
+		path:      fmt.Sprintf("%s/settings/user/settings/slack", InternalPath),
 		handler:   private.GetSlackSettings(s),
+		routeType: RouteInternal,
+		services:  s,
+	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      fmt.Sprintf("%s/settings/revoke", InternalPath),
+		handler:   private.Revoke(s),
+		routeType: RouteInternal,
+		services:  s,
+	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "GET",
+		path:      fmt.Sprintf("%s/settings/slack/requestAccess", InternalPath),
+		handler:   private.RequestAccessSlack(s),
+		routeType: RouteInternal,
+		services:  s,
+	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      fmt.Sprintf("%s/settings/slack/oauth/callback", InternalPath),
+		handler:   private.CallbackSlack(s),
+		routeType: RouteInternal,
+		services:  s,
+	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      fmt.Sprintf("%s/settings/slack/revoke", InternalPath),
+		handler:   private.RevokeSlack(s),
 		routeType: RouteInternal,
 		services:  s,
 	})
@@ -121,38 +153,6 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 		method:    "GET",
 		path:      fmt.Sprintf("%s/mail/:customerOSInternalIdentifier/track", InternalPath),
 		handler:   private.TrackEmail(s),
-		routeType: RouteInternal,
-		services:  s,
-	})
-
-	registerRoute(ctx, r, RouteConfig{
-		method:    "POST",
-		path:      fmt.Sprintf("%s/revoke", InternalPath),
-		handler:   private.Revoke(s),
-		routeType: RouteInternal,
-		services:  s,
-	})
-
-	registerRoute(ctx, r, RouteConfig{
-		method:    "GET",
-		path:      fmt.Sprintf("%s/slack/requestAccess", InternalPath),
-		handler:   private.RequestAccessSlack(s),
-		routeType: RouteInternal,
-		services:  s,
-	})
-
-	registerRoute(ctx, r, RouteConfig{
-		method:    "POST",
-		path:      fmt.Sprintf("%s/slack/oauth/callback", InternalPath),
-		handler:   private.CallbackSlack(s),
-		routeType: RouteInternal,
-		services:  s,
-	})
-
-	registerRoute(ctx, r, RouteConfig{
-		method:    "POST",
-		path:      fmt.Sprintf("%s/slack/revoke", InternalPath),
-		handler:   private.RevokeSlack(s),
 		routeType: RouteInternal,
 		services:  s,
 	})

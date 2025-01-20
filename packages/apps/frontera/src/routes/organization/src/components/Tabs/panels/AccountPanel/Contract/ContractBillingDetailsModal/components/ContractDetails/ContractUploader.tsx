@@ -88,7 +88,7 @@ export const ContractUploader = observer(
               onSuccess={handleAddAttachment}
               endpointOptions={{
                 fileKeyName: 'file',
-                uploadUrl: '/file',
+                uploadUrl: '/files',
               }}
               onChange={(file, refId) => {
                 setFiles((prev) => [...prev, { file, refId }]);
@@ -113,7 +113,7 @@ export const ContractUploader = observer(
           onDragOverChange={setIsDragging}
           endpointOptions={{
             fileKeyName: 'file',
-            uploadUrl: '/file',
+            uploadUrl: '/files',
           }}
           onChange={(file, refId) => {
             setFiles((prev) => [...prev, { file, refId }]);
@@ -132,7 +132,7 @@ export const ContractUploader = observer(
                 id={id}
                 key={id}
                 fileName={fileName}
-                href={`/fs/file/${id}/download`}
+                href={`/fs/files/${id}/download`}
                 onRemove={handleRemoveAttachment}
               />
             ))}

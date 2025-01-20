@@ -649,6 +649,7 @@ type ComplexityRoot struct {
 		Senders        func(childComplexity int) int
 		Statistics     func(childComplexity int) int
 		Status         func(childComplexity int) int
+		TableViewDefID func(childComplexity int) int
 	}
 
 	FlowAction struct {
@@ -5143,6 +5144,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Flow.Status(childComplexity), true
+
+	case "Flow.tableViewDefId":
+		if e.complexity.Flow.TableViewDefID == nil {
+			break
+		}
+
+		return e.complexity.Flow.TableViewDefID(childComplexity), true
 
 	case "FlowAction.action":
 		if e.complexity.FlowAction.Action == nil {
@@ -14787,6 +14795,8 @@ type Flow implements MetadataInterface {
     metadata:           Metadata!
     name:               String!
     description:        String!
+
+    tableViewDefId: String!
 
     nodes: String!
     edges: String!
@@ -33256,6 +33266,8 @@ func (ec *executionContext) fieldContext_Contact_flows(_ context.Context, field 
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Flow_description(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "nodes":
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
@@ -45850,6 +45862,50 @@ func (ec *executionContext) fieldContext_Flow_description(_ context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Flow_tableViewDefId(ctx context.Context, field graphql.CollectedField, obj *model.Flow) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Flow_tableViewDefId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TableViewDefID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Flow_tableViewDefId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Flow",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Flow_nodes(ctx context.Context, field graphql.CollectedField, obj *model.Flow) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Flow_nodes(ctx, field)
 	if err != nil {
@@ -47268,6 +47324,8 @@ func (ec *executionContext) fieldContext_FlowSender_flow(_ context.Context, fiel
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Flow_description(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "nodes":
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
@@ -66457,6 +66515,8 @@ func (ec *executionContext) fieldContext_Mutation_flow_ChangeName(ctx context.Co
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Flow_description(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "nodes":
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
@@ -66568,6 +66628,8 @@ func (ec *executionContext) fieldContext_Mutation_flow_Merge(ctx context.Context
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Flow_description(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "nodes":
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
@@ -66679,6 +66741,8 @@ func (ec *executionContext) fieldContext_Mutation_flow_On(ctx context.Context, f
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Flow_description(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "nodes":
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
@@ -66790,6 +66854,8 @@ func (ec *executionContext) fieldContext_Mutation_flow_Off(ctx context.Context, 
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Flow_description(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "nodes":
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
@@ -92904,6 +92970,8 @@ func (ec *executionContext) fieldContext_Query_flow(ctx context.Context, field g
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Flow_description(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "nodes":
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
@@ -93015,6 +93083,8 @@ func (ec *executionContext) fieldContext_Query_flows(_ context.Context, field gr
 				return ec.fieldContext_Flow_name(ctx, field)
 			case "description":
 				return ec.fieldContext_Flow_description(ctx, field)
+			case "tableViewDefId":
+				return ec.fieldContext_Flow_tableViewDefId(ctx, field)
 			case "nodes":
 				return ec.fieldContext_Flow_nodes(ctx, field)
 			case "edges":
@@ -120506,6 +120576,11 @@ func (ec *executionContext) _Flow(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "description":
 			out.Values[i] = ec._Flow_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		case "tableViewDefId":
+			out.Values[i] = ec._Flow_tableViewDefId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}

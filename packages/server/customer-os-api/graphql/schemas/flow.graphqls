@@ -32,6 +32,8 @@ type Flow implements MetadataInterface {
     name:               String!
     description:        String!
 
+    tableViewDefId: String!
+
     nodes: String!
     edges: String!
 

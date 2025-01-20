@@ -98,7 +98,7 @@ export const General = () => {
             onSuccess={handleTenantLogoUpdate}
             endpointOptions={{
               fileKeyName: 'file',
-              uploadUrl: '/file',
+              uploadUrl: '/files',
             }}
           >
             {isDragging ? (
@@ -126,7 +126,7 @@ export const General = () => {
                       onSuccess={handleTenantLogoUpdate}
                       endpointOptions={{
                         fileKeyName: 'file',
-                        uploadUrl: '/file',
+                        uploadUrl: '/files',
                       }}
                       className={cn(
                         outlineButton({ colorScheme: 'gray' }),
