@@ -23,7 +23,7 @@ require (
 	github.com/customeros/mailsherpa v0.3.8
 	github.com/customeros/mailwatcher v0.1.6
 	github.com/docker/docker v27.4.1+incompatible
-	github.com/emersion/go-message v0.18.1
+	github.com/emersion/go-message v0.18.2
 	github.com/forPelevin/gomoji v1.2.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
@@ -33,7 +33,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mrz1836/postmark v1.7.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.27.0
-	github.com/nyaruka/phonenumbers v1.4.4
+	github.com/nyaruka/phonenumbers v1.5.0
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/rabbitmq/amqp091-go v1.10.0
@@ -168,7 +168,7 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
-	go.temporal.io/sdk v1.31.0
+	go.temporal.io/sdk v1.32.1
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0
 	golang.org/x/arch v0.12.0 // indirect

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"log"
 
 	"github.com/caarlos0/env/v6"
@@ -14,7 +15,25 @@ import (
 
 type Config struct {
 	App    AppConfig
-	Common commonconf.CommonConfig
+	Common *commonconf.CommonConfig
+}
+
+type CommonConfig struct {
+	Logger           logger.Config
+	Jaeger           tracing.JaegerConfig
+	GrpcClientConfig commonconf.GrpcClientConfig
+	RabbitMQConfig   commonconf.RabbitMQConfig
+	Anthropic        commonconf.AnthropicConfig
+	Postgres         commonconf.PostgresConfig
+	PostgresAsync    commonconf.PostgresAsyncConfig
+	Neo4j            commonconf.Neo4jConfig
+	Mailsherpa       commonconf.MailSherpaApiConfig
+	FileStore        commonconf.FileStoreConfig
+	Namecheap        commonconf.NamecheapConfig
+	OpenSRS          commonconf.OpenSRSConfig
+	Cloudflare       commonconf.CloudflareConfig
+	IpData           commonconf.IpDataConfig
+	Stripe           commonconf.StripeConfig
 }
 
 type AppConfig struct {
@@ -63,11 +82,40 @@ func InitConfig() (*Config, error) {
 
 	cfg := Config{}
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("%+v", err)
+		log.Fatalf("Error loading app configuration: %+v", err)
 	}
 	err := validator.GetValidator().Struct(cfg.App)
 	if err != nil {
 		return nil, err
+	}
+
+	cmnCfg := CommonConfig{}
+	if err := env.Parse(&cmnCfg); err != nil {
+		log.Fatalf("Error loading app configuration: %+v", err)
+	}
+
+	cfg.Common = &commonconf.CommonConfig{
+		Infrastructure: commonconf.InfrastructureConfig{
+			LoggerConfig:        cmnCfg.Logger,
+			JaegerConfig:        cmnCfg.Jaeger,
+			GrpcClientConfig:    cmnCfg.GrpcClientConfig,
+			RabbitMQConfig:      cmnCfg.RabbitMQConfig,
+			PostgresConfig:      cmnCfg.Postgres,
+			PostgresAsyncConfig: cmnCfg.PostgresAsync,
+			Neo4jConfig:         cmnCfg.Neo4j,
+		},
+		External: commonconf.ExternalServicesConfig{
+			AnthropicConfig:  cmnCfg.Anthropic,
+			NamecheapConfig:  cmnCfg.Namecheap,
+			OpenSRSConfig:    cmnCfg.OpenSRS,
+			CloudflareConfig: cmnCfg.Cloudflare,
+			IpDataConfig:     cmnCfg.IpData,
+			StripeConfig:     cmnCfg.Stripe,
+		},
+		Internal: commonconf.InternalServicesConfig{
+			MailSherpaApiConfig: cmnCfg.Mailsherpa,
+			FileStoreConfig:     cmnCfg.FileStore,
+		},
 	}
 
 	return &cfg, nil

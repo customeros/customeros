@@ -6,6 +6,7 @@ import { cn } from '@ui/utils/cn';
 import { Plus } from '@ui/media/icons/Plus';
 import { Combobox } from '@ui/form/Combobox';
 import { useStore } from '@shared/hooks/useStore';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Tag, TagLabel, TagCloseButton } from '@ui/presentation/Tag';
 import {
@@ -51,41 +52,43 @@ export const Tags = observer(
 
     return (
       <Popover>
-        <PopoverTrigger className={cn('flex items-center', className)}>
-          {leftAccessory}
-          <div
-            data-test={dataTest}
-            className='flex flex-wrap gap-1 w-fit items-center'
-          >
-            {value.length ? (
-              value.map((option) => {
-                const tag = store.tags.getById(option.value)?.value;
+        <Tooltip align='start' label='Organization tags'>
+          <PopoverTrigger className={cn('flex items-center', className)}>
+            {leftAccessory}
+            <div
+              data-test={dataTest}
+              className='flex flex-wrap gap-1 w-fit items-center'
+            >
+              {value.length ? (
+                value.map((option) => {
+                  const tag = store.tags.getById(option.value)?.value;
 
-                return (
-                  <Tag
-                    size={'md'}
-                    variant='subtle'
-                    key={option.value}
-                    colorScheme={
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      (tag?.colorCode as unknown as any) ?? 'grayModern'
-                    }
-                  >
-                    <TagLabel>{option.label}</TagLabel>
-                    <TagCloseButton
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleClear(option.value);
-                      }}
-                    />
-                  </Tag>
-                );
-              })
-            ) : (
-              <span className='text-gray-400 text-sm'>{placeholder}</span>
-            )}
-          </div>
-        </PopoverTrigger>
+                  return (
+                    <Tag
+                      size={'md'}
+                      variant='subtle'
+                      key={option.value}
+                      colorScheme={
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (tag?.colorCode as unknown as any) ?? 'grayModern'
+                      }
+                    >
+                      <TagLabel>{option.label}</TagLabel>
+                      <TagCloseButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleClear(option.value);
+                        }}
+                      />
+                    </Tag>
+                  );
+                })
+              ) : (
+                <span className='text-gray-400 text-sm'>{placeholder}</span>
+              )}
+            </div>
+          </PopoverTrigger>
+        </Tooltip>
         <PopoverContent align='start' className='min-w-[264px] max-w-[320px]'>
           <Combobox
             isMulti

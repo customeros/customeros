@@ -31,7 +31,7 @@ export const Subdomain = observer(({ domain }: { domain: string }) => {
         className=' no-underline hover:no-underline'
       >
         <CornerDownRightDot className='mr-2 size-3 text-grayModern-400' />
-        {domain}
+        <span className='hover:underline'>{domain}</span>
       </a>
       <Menu onOpenChange={(data) => setShowMenu(data)}>
         <MenuButton>

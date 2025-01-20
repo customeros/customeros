@@ -34,7 +34,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go v0.35.0
-	go.temporal.io/sdk v1.31.0
+	go.temporal.io/sdk v1.32.1
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.34.0
 	golang.org/x/sync v0.10.0
@@ -63,7 +63,7 @@ require (
 	github.com/customeros/mailsherpa v0.3.8 // indirect
 	github.com/customeros/mailwatcher v0.1.6 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/emersion/go-message v0.18.1 // indirect
+	github.com/emersion/go-message v0.18.2 // indirect
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/forPelevin/gomoji v1.2.0 // indirect
@@ -102,7 +102,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mrz1836/postmark v1.7.0 // indirect
 	github.com/nexus-rpc/sdk-go v0.1.0 // indirect
-	github.com/nyaruka/phonenumbers v1.4.4 // indirect
+	github.com/nyaruka/phonenumbers v1.5.0 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect

@@ -353,10 +353,10 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 
 		// Call enrichPerson API
 		person := interfaces.PersonSearch{
-			LinkedinURL: &linkedinUrl,
-			FirstName:   &firstName,
-			LastName:    &lastName,
-			Email:       &email,
+			LinkedinURL: linkedinUrl,
+			FirstName:   firstName,
+			LastName:    lastName,
+			Email:       email,
 		}
 		personDbID, enrichPersonResponse, err := h.services.CommonServices.EnrichmentService.EnrichPerson(ctx, person)
 		if err != nil {

@@ -88,7 +88,7 @@ require (
 	github.com/docker/docker v27.4.1+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
-	github.com/emersion/go-message v0.18.1 // indirect
+	github.com/emersion/go-message v0.18.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/forPelevin/gomoji v1.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.7 // indirect
@@ -150,7 +150,7 @@ require (
 	github.com/mrz1836/postmark v1.7.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
-	github.com/nyaruka/phonenumbers v1.4.4 // indirect
+	github.com/nyaruka/phonenumbers v1.5.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect

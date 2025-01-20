@@ -44,6 +44,12 @@ func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyCo
 		return err
 	}
 
+	if webhookEvent == nil {
+		err := errors.New("webhookEvent is nil")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	if webhookEvent.Data == nil {
 		err := errors.New("webhookEvent.Data is nil")
 		tracing.TraceErr(span, err)
@@ -391,7 +397,13 @@ func getWebhookEvent(input any) (commonenum.FlowListenerEvent, *dto.WebhookEvent
 		return commonenum.NotSet, nil, err
 	}
 
-	webhookDataPtr := reflect.New(eventDataTypes[webhookEvent.DataType]).Interface()
+	eventDataType, ok := eventDataTypes[webhookEvent.DataType]
+	if !ok {
+		err := fmt.Errorf("event data type %s is not supported", webhookEvent.DataType)
+		return commonenum.NotSet, nil, err
+	}
+
+	webhookDataPtr := reflect.New(eventDataType).Interface()
 	err := utils.Decode(webhookData, webhookDataPtr)
 	if err != nil {
 		return commonenum.NotSet, nil, err

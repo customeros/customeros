@@ -29,16 +29,6 @@ query global_Cache {
     }
     mailboxes
     isOwner
-    gCliCache {
-      id
-      type
-      display
-      data {
-        key
-        value
-        display
-      }
-    }
     minARRForecastValue
     maxARRForecastValue
     contractsExist

@@ -6,8 +6,9 @@ import { cn } from '@ui/utils/cn.ts';
 import { Market } from '@graphql/types';
 import { Combobox } from '@ui/form/Combobox';
 import { useStore } from '@shared/hooks/useStore';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { Briefcase02 } from '@ui/media/icons/Briefcase02';
 import { SelectOption } from '@shared/types/SelectOptions';
-import { Briefcase02 } from '@ui/media/icons/Briefcase02.tsx';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/overlay/Popover';
 
 import { businessTypeOptions } from '../../util';
@@ -50,19 +51,21 @@ export const BusinessTypeInput = observer(
     return (
       <>
         <Popover open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
-          <PopoverTrigger className={cn('flex items-center ')}>
-            <Briefcase02 className='text-gray-500 mr-3' />
-            <div
-              data-test={dataTest}
-              className='flex flex-wrap gap-1 w-fit items-center'
-            >
-              {value ? (
-                <div className='text-sm'>{value.label}</div>
-              ) : (
-                <span className='text-gray-400 text-sm'>Business type</span>
-              )}
-            </div>
-          </PopoverTrigger>
+          <Tooltip align='start' label='Business type'>
+            <PopoverTrigger className={cn('flex items-center ')}>
+              <Briefcase02 className='text-gray-500 mr-3' />
+              <div
+                data-test={dataTest}
+                className='flex flex-wrap gap-1 w-fit items-center'
+              >
+                {value ? (
+                  <div className='text-sm'>{value.label}</div>
+                ) : (
+                  <span className='text-gray-400 text-sm'>Business type</span>
+                )}
+              </div>
+            </PopoverTrigger>
+          </Tooltip>
           <PopoverContent align='start' className='min-w-[264px] max-w-[320px]'>
             <Combobox
               isMulti

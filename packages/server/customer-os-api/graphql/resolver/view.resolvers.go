@@ -14,6 +14,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/service"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
@@ -33,7 +34,7 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 	for _, column := range input.Columns {
 		columns = append(columns, postgresEntity.ColumnView{
 			ColumnId:   column.ColumnID,
-			ColumnType: column.ColumnType.String(),
+			ColumnType: string(column.ColumnType),
 			Width:      column.Width,
 			Visible:    column.Visible,
 			Name:       column.Name,
@@ -51,8 +52,8 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 	}
 
 	viewDefinition := postgresEntity.TableViewDefinition{
-		TableType:      input.TableType.String(),
-		TableId:        input.TableID.String(),
+		TableType:      string(input.TableType),
+		TableId:        string(input.TableID),
 		Name:           input.Name,
 		ColumnsJson:    string(columnsJsonData),
 		Order:          input.Order,
@@ -101,7 +102,7 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 	for _, column := range input.Columns {
 		columns = append(columns, postgresEntity.ColumnView{
 			ColumnId:   column.ColumnID,
-			ColumnType: column.ColumnType.String(),
+			ColumnType: string(column.ColumnType),
 			Width:      column.Width,
 			Visible:    column.Visible,
 			Name:       column.Name,
@@ -179,7 +180,7 @@ func (r *mutationResolver) TableViewDefUpdateShared(ctx context.Context, input m
 	for _, column := range input.Columns {
 		columns = append(columns, postgresEntity.ColumnView{
 			ColumnId:   column.ColumnID,
-			ColumnType: column.ColumnType.String(),
+			ColumnType: string(column.ColumnType),
 			Width:      column.Width,
 			Visible:    column.Visible,
 			Name:       column.Name,
@@ -278,9 +279,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 
 	if ok && len(tableViewDefinitions) <= 1 {
 		// check if shared presets exist
-		hasSharedPreset := CheckSharedPresetsExist(tableViewDefinitions)
+		hasSharedPreset := service.CheckSharedPresetsExist(tableViewDefinitions)
 
-		for _, def := range DefaultTableViewDefinitions(hasSharedPreset, span) {
+		for _, def := range service.DefaultTableViewDefinitions(hasSharedPreset, span) {
 			def.Tenant = tenant
 			def.UserId = userId
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, def)
@@ -295,43 +296,53 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 
 	// check all organization table view definitions are created
-	organizationFound, customersFound := false, false
+	pastInvoicesFound, upcomingInvoiceFound := false, false
+	organizationFound, customersFound, targetsFound := false, false, false
 	contactsFound, contactsForTargetOrganizationsFound := false, false
 	opportunitiesFound, opportunitiesRecordsFound, contractsFound := false, false, false
 	flowSequencesFound, flowContactsFound := false, false
 
 	for _, def := range tableViewDefinitions {
-		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeCustomers.String() {
+		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeCustomers) {
 			customersFound = true
 		}
-		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeOrganizations.String() {
+		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeOrganizations) {
 			organizationFound = true
 		}
-		if def.TableType == model.TableViewTypeContacts.String() && def.TableId == model.TableIDTypeContacts.String() {
+		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeTargets) {
+			targetsFound = true
+		}
+		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeContacts) {
 			contactsFound = true
 		}
-		if def.TableType == model.TableViewTypeContacts.String() && def.TableId == model.TableIDTypeContactsForTargetOrganizations.String() {
+		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeContactsForTargetOrganizations) {
 			contactsForTargetOrganizationsFound = true
 		}
-		if def.TableType == model.TableViewTypeOpportunities.String() && def.TableId == model.TableIDTypeOpportunities.String() {
+		if def.TableType == string(postgresEntity.TableViewTypeOpportunities) && def.TableId == string(postgresEntity.TableIDTypeOpportunities) {
 			opportunitiesFound = true
 		}
-		if def.TableType == model.TableViewTypeOpportunities.String() && def.TableId == model.TableIDTypeOpportunitiesRecords.String() {
+		if def.TableType == string(postgresEntity.TableViewTypeOpportunities) && def.TableId == string(postgresEntity.TableIDTypeOpportunitiesRecords) {
 			opportunitiesRecordsFound = true
 		}
-		if def.TableType == model.TableViewTypeContracts.String() && def.TableId == model.TableIDTypeContracts.String() {
+		if def.TableType == string(postgresEntity.TableViewTypeContracts) && def.TableId == string(postgresEntity.TableIDTypeContracts) {
 			contractsFound = true
 		}
-		if def.TableType == model.TableViewTypeFlow.String() && def.TableId == model.TableIDTypeFlowActions.String() {
+		if def.TableType == string(postgresEntity.TableViewTypeFlow) && def.TableId == string(postgresEntity.TableIDTypeFlowActions) {
 			flowSequencesFound = true
 		}
-		if def.TableType == model.TableViewTypeContacts.String() && def.TableId == model.TableIDTypeFlowContacts.String() {
+		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeFlowContacts) {
 			flowContactsFound = true
+		}
+		if def.TableType == string(postgresEntity.TableViewTypeInvoices) && def.TableId == string(postgresEntity.TableIDTypePastInvoices) {
+			pastInvoicesFound = true
+		}
+		if def.TableType == string(postgresEntity.TableViewTypeInvoices) && def.TableId == string(postgresEntity.TableIDTypeUpcomingInvoices) {
+			upcomingInvoiceFound = true
 		}
 	}
 	viewsUpdated := false
 	if !organizationFound {
-		tvDef, err := DefaultTableViewDefinitionOrganization(span)
+		tvDef, err := service.DefaultTableViewDefinitionOrganization(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -340,7 +351,16 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !customersFound {
-		tvDef, err := DefaultTableViewDefinitionCustomers(span)
+		tvDef, err := service.DefaultTableViewDefinitionCustomers(span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+		}
+	}
+	if !targetsFound {
+		tvDef, err := service.DefaultTableViewDefinitionTargets(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -349,7 +369,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !contactsFound {
-		tvDef, err := DefaultTableViewDefinitionContacts(span)
+		tvDef, err := service.DefaultTableViewDefinitionContacts(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -358,7 +378,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !contactsForTargetOrganizationsFound {
-		tvDef, err := DefaultTableViewDefinitionTargetOrganizationsContacts(span)
+		tvDef, err := service.DefaultTableViewDefinitionTargetOrganizationsContacts(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -367,7 +387,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !opportunitiesFound {
-		tvDef, err := DefaultTableViewDefinitionOpportunities(span)
+		tvDef, err := service.DefaultTableViewDefinitionOpportunities(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -375,7 +395,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !opportunitiesRecordsFound {
-		tvDef, err := DefaultTableViewDefinitionOpportunitiesRecords(span)
+		tvDef, err := service.DefaultTableViewDefinitionOpportunitiesRecords(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -384,7 +404,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !contractsFound {
-		tvDef, err := DefaultTableViewDefinitionContracts(span)
+		tvDef, err := service.DefaultTableViewDefinitionContracts(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -393,7 +413,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !flowSequencesFound {
-		tvDef, err := DefaultTableViewDefinitionFlows(span)
+		tvDef, err := service.DefaultTableViewDefinitionFlows(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -402,7 +422,25 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 	}
 	if !flowContactsFound {
-		tvDef, err := DefaultTableViewDefinitionFlowContacts(span)
+		tvDef, err := service.DefaultTableViewDefinitionFlowContacts(span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+		}
+	}
+	if !pastInvoicesFound {
+		tvDef, err := service.DefaultTableViewDefinitionPastInvoices(span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+		}
+	}
+	if !upcomingInvoiceFound {
+		tvDef, err := service.DefaultTableViewDefinitionUpcomingInvoices(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -424,7 +462,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	// add default columns if not present
 	for i := range tableViewDefinitions {
 		def := &tableViewDefinitions[i]
-		defaultColumns := DefaultColumns(def.TableId)
+		defaultColumns := service.DefaultColumns(postgresEntity.TableIdType(def.TableId))
 
 		var currentColumns postgresEntity.Columns
 		if def.ColumnsJson != "" {

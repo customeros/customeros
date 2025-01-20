@@ -86,6 +86,53 @@ export type AddTagInput = {
   tag: TagIdOrNameInput;
 };
 
+export type Agent = {
+  __typename?: 'Agent';
+  capabilities: Array<Capability>;
+  color: Scalars['String']['output'];
+  createdAt: Scalars['Time']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  flowId?: Maybe<Scalars['ID']['output']>;
+  goal: Scalars['String']['output'];
+  icon: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  isActive: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  status: AgentStatus;
+  tenant: Scalars['String']['output'];
+  type: AgentType;
+  updatedAt: Scalars['Time']['output'];
+  visible: Scalars['Boolean']['output'];
+};
+
+export type AgentSaveInput = {
+  capabilities?: InputMaybe<Array<CapabilitySaveInput>>;
+  color?: InputMaybe<Scalars['String']['input']>;
+  createdAt: Scalars['Time']['input'];
+  flowId?: InputMaybe<Scalars['ID']['input']>;
+  goal?: InputMaybe<Scalars['String']['input']>;
+  icon?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  isActive?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<AgentStatus>;
+  tenant?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<AgentType>;
+  updatedAt: Scalars['Time']['input'];
+  visible?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export enum AgentStatus {
+  Off = 'OFF',
+  On = 'ON',
+  OnAgentError = 'ON_AGENT_ERROR',
+  OnCapabilityError = 'ON_CAPABILITY_ERROR',
+}
+
+export enum AgentType {
+  WebVisitIdentifier = 'WEB_VISIT_IDENTIFIER',
+}
+
 export type Attachment = Node & {
   __typename?: 'Attachment';
   appSource: Scalars['String']['output'];
@@ -283,6 +330,41 @@ export type Calendar = {
 export enum CalendarType {
   Calcom = 'CALCOM',
   Google = 'GOOGLE',
+}
+
+export type Capability = {
+  __typename?: 'Capability';
+  action: Scalars['String']['output'];
+  errors?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  optional: Scalars['Boolean']['output'];
+  status: CapabilityStatus;
+  type: CapabilityType;
+  values: Scalars['String']['output'];
+};
+
+export type CapabilitySaveInput = {
+  action?: InputMaybe<Scalars['String']['input']>;
+  errors?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  optional?: InputMaybe<Scalars['Boolean']['input']>;
+  status?: InputMaybe<CapabilityStatus>;
+  type?: InputMaybe<CapabilityType>;
+  values?: InputMaybe<Scalars['String']['input']>;
+};
+
+export enum CapabilityStatus {
+  Active = 'ACTIVE',
+  ActiveWithWarnings = 'ACTIVE_WITH_WARNINGS',
+  Inactive = 'INACTIVE',
+  Pending = 'PENDING',
+}
+
+export enum CapabilityType {
+  SendSlackNotification = 'SEND_SLACK_NOTIFICATION',
+  WebsiteTracker = 'WEBSITE_TRACKER',
 }
 
 export type ColumnView = {
@@ -1780,35 +1862,6 @@ export enum FundingRound {
   SeriesF = 'SERIES_F',
 }
 
-export type GCliAttributeKeyValuePair = {
-  __typename?: 'GCliAttributeKeyValuePair';
-  display?: Maybe<Scalars['String']['output']>;
-  key: Scalars['String']['output'];
-  value: Scalars['String']['output'];
-};
-
-export enum GCliCacheItemType {
-  Contact = 'CONTACT',
-  Organization = 'ORGANIZATION',
-  State = 'STATE',
-}
-
-export type GCliItem = {
-  __typename?: 'GCliItem';
-  data?: Maybe<Array<GCliAttributeKeyValuePair>>;
-  display: Scalars['String']['output'];
-  id: Scalars['ID']['output'];
-  type: GCliSearchResultType;
-};
-
-export enum GCliSearchResultType {
-  Contact = 'CONTACT',
-  Email = 'EMAIL',
-  Organization = 'ORGANIZATION',
-  OrganizationRelationship = 'ORGANIZATION_RELATIONSHIP',
-  State = 'STATE',
-}
-
 export type GetPaymentIntent = {
   __typename?: 'GetPaymentIntent';
   clientSecret: Scalars['String']['output'];
@@ -1819,7 +1872,6 @@ export type GlobalCache = {
   activeEmailTokens: Array<GlobalCacheEmailToken>;
   cdnLogoUrl: Scalars['String']['output'];
   contractsExist: Scalars['Boolean']['output'];
-  gCliCache: Array<GCliItem>;
   inactiveEmailTokens: Array<GlobalCacheEmailToken>;
   isFirstLogin: Scalars['Boolean']['output'];
   isOwner: Scalars['Boolean']['output'];
@@ -2452,6 +2504,7 @@ export type MetadataInterface = {
 export type Mutation = {
   __typename?: 'Mutation';
   addTag: Scalars['ID']['output'];
+  agent_Save: Agent;
   attachment_Create: Attachment;
   bankAccount_Create: BankAccount;
   bankAccount_Delete: DeleteResponse;
@@ -2625,6 +2678,10 @@ export type Mutation = {
 
 export type MutationAddTagArgs = {
   input: AddTagInput;
+};
+
+export type MutationAgent_SaveArgs = {
+  input: AgentSaveInput;
 };
 
 export type MutationAttachment_CreateArgs = {
@@ -3879,7 +3936,6 @@ export type OrganizationUiDetails = {
   subsidiaries: Array<Scalars['String']['output']>;
   tags: Array<Tag>;
   updatedAt: Scalars['Time']['output'];
-  /** @deprecated No longer supported */
   valueProposition?: Maybe<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
   yearFounded?: Maybe<Scalars['Int64']['output']>;
@@ -4052,6 +4108,8 @@ export type PhoneNumberUpdateInput = {
 
 export type Query = {
   __typename?: 'Query';
+  agent?: Maybe<Agent>;
+  agents: Array<Agent>;
   attachment: Attachment;
   bankAccounts: Array<BankAccount>;
   billableInfo: TenantBillableInfo;
@@ -4095,7 +4153,6 @@ export type Query = {
   flow_emailVariables: Array<EmailVariableEntity>;
   flow_testEmailSender: Scalars['String']['output'];
   flows: Array<Flow>;
-  gcli_Search: Array<GCliItem>;
   globalOrganizations_Search: Array<GlobalOrganization>;
   global_Cache: GlobalCache;
   industries_InUse: Array<Industry>;
@@ -4144,6 +4201,10 @@ export type Query = {
   user: User;
   user_ByEmail: User;
   users: UserPage;
+};
+
+export type QueryAgentArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type QueryAttachmentArgs = {
@@ -4250,11 +4311,6 @@ export type QueryFlowArgs = {
 
 export type QueryFlowParticipantArgs = {
   id: Scalars['ID']['input'];
-};
-
-export type QueryGcli_SearchArgs = {
-  keyword: Scalars['String']['input'];
-  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryGlobalOrganizations_SearchArgs = {

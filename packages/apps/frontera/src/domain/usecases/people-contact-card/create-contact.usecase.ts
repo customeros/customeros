@@ -1,6 +1,5 @@
 import { RootStore } from '@store/root';
 import { action, computed, observable } from 'mobx';
-import { Organization } from '@store/Organizations/Organization.dto';
 import { ContactService } from '@store/Contacts/__service__/Contacts.service';
 
 export class CreateContact {
@@ -10,7 +9,6 @@ export class CreateContact {
   @observable accessor inputValue: string = '';
   @observable accessor type: 'linkedin' | 'email' | 'name' = 'linkedin';
   @observable accessor organizationId: string = '';
-  @observable accessor entity: Organization | null = null;
   @observable accessor invalidName: boolean = false;
   @observable accessor invalidLinkedInUrl: boolean = false;
   @observable accessor emptyLinkedInUrl: boolean = false;
@@ -22,7 +20,6 @@ export class CreateContact {
   constructor() {
     this.setInputValue = this.setInputValue.bind(this);
     this.setType = this.setType.bind(this);
-    this.setEntity = this.setEntity.bind(this);
     this.setErrorEmail = this.setErrorEmail.bind(this);
     this.setErrorLinkedin = this.setErrorLinkedin.bind(this);
   }
@@ -40,11 +37,6 @@ export class CreateContact {
   @action
   setInputValue(inputValue: string) {
     this.inputValue = inputValue;
-  }
-
-  @action
-  setEntity(entity: Organization) {
-    this.entity = entity;
   }
 
   @computed
@@ -78,8 +70,6 @@ export class CreateContact {
 
   @action
   async checkIfLinkedInUrlExists(linkedInUrl: string) {
-    if (!this.entity) return;
-
     const { contact_ByLinkedIn } = await this.service.contactExistsByLinkedIn({
       linkedIn: linkedInUrl,
     });
@@ -159,7 +149,7 @@ export class CreateContact {
 
       if (this.errorLinkedIn) return;
 
-      this.entity?.store.root.contacts.createWithSocial({
+      this.root.contacts.createWithSocial({
         organizationId: this.organizationId,
         socialUrl: this.inputValue,
       });
@@ -169,7 +159,7 @@ export class CreateContact {
       this.validateName();
 
       if (this.invalidName) return;
-      this.entity?.store.root.contacts.create(
+      this.root.contacts.create(
         this.organizationId,
         {
           onSuccess: () =>
@@ -191,7 +181,7 @@ export class CreateContact {
 
       if (this.errorEmail) return;
 
-      this.entity?.store.root.contacts.createWithEmail(
+      this.root.contacts.createWithEmail(
         this.organizationId,
         {
           onSuccess: () =>

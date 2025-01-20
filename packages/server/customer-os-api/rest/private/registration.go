@@ -521,15 +521,15 @@ func getTenant(c context.Context, services *cosapi_services.Services, personalEm
 	span.LogFields(tracingLog.Bool("isPersonalEmail", isPersonalEmail))
 
 	if isPersonalEmail {
-		playerNode, err := services.Repositories.Neo4jRepositories.PlayerReadRepository.GetPlayerByAuthIdProvider(ctx, signInRequest.LoggedInEmail, signInRequest.Provider)
+		playerNodes, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetPlayersByAuthId(ctx, signInRequest.LoggedInEmail)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, false, err
 		}
-		if playerNode != nil {
+		if playerNodes != nil && len(playerNodes) > 0 {
 			span.LogFields(tracingLog.Object("playerIdentified", true))
 
-			playerId := mapper.MapDbNodeToPlayerEntity(playerNode).Id
+			playerId := mapper.MapDbNodeToPlayerEntity(playerNodes[0]).Id
 
 			usersDb, err := services.Repositories.Neo4jRepositories.PlayerReadRepository.GetUsersForPlayer(ctx, []string{playerId})
 			if err != nil {
@@ -757,6 +757,10 @@ func initializeUser(c context.Context, services *cosapi_services.Services, provi
 			LastName:  lastName,
 			Roles:     common_utils.ToPtr([]string{"USER", "OWNER"}),
 		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
 
 		_, err = services.CommonServices.EmailService.Merge(innerCtx, nil, tenant, interfaces.EmailFields{
 			Primary: true,

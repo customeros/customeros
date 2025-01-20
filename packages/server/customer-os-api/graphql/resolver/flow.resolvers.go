@@ -336,7 +336,7 @@ func (r *mutationResolver) FlowParticipantDelete(ctx context.Context, id string)
 		return &model.Result{Result: false}, err
 	}
 
-	err = r.Services.CommonServices.FlowService.FlowParticipantDelete(ctx, id)
+	err = r.Services.CommonServices.FlowService.FlowParticipantDelete(ctx, nil, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")
@@ -373,7 +373,7 @@ func (r *mutationResolver) FlowParticipantDeleteBulk(ctx context.Context, id []s
 	}
 
 	for _, id := range id {
-		err := r.Services.CommonServices.FlowService.FlowParticipantDelete(ctx, id)
+		err := r.Services.CommonServices.FlowService.FlowParticipantDelete(ctx, nil, id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "")

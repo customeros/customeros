@@ -62,6 +62,11 @@ func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 				config.services.Repositories.PostgresRepositories.AppKeyRepository,
 				security.PLATFORM_ADMIN_API,
 				security.WithCache(config.services.Cache),
+			),
+			security.TenantUserContextEnhancer(
+				security.USERNAME_OR_TENANT,
+				config.services.Repositories.Neo4jRepositories,
+				security.WithCache(config.cache),
 			))
 
 	case RouteCustomer:

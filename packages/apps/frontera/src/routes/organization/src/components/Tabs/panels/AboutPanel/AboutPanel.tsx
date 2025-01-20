@@ -11,11 +11,11 @@ import { Input } from '@ui/form/Input';
 import { flags } from '@ui/media/flags';
 import { Tag01 } from '@ui/media/icons/Tag01';
 import { Spinner } from '@ui/feedback/Spinner';
-import { Users03 } from '@ui/media/icons/Users03';
 import { useStore } from '@shared/hooks/useStore';
 import { Seeding } from '@ui/media/icons/Seeding';
+import { Users02 } from '@ui/media/icons/Users02';
+import { Share07 } from '@ui/media/icons/Share07';
 import { Target05 } from '@ui/media/icons/Target05';
-import { Share07 } from '@ui/media/icons/Share07.tsx';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
@@ -24,13 +24,13 @@ import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { TruncatedText } from '@ui/presentation/TruncatedText/TruncatedText.tsx';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import {
   EntityType,
   OrganizationStage,
   OrganizationRelationship,
 } from '@graphql/types';
-import { BusinessTypeInput } from '@organization/components/Tabs/panels/AboutPanel/components/businessType';
 
 import { Tags } from './components/tags';
 import { Domains } from './components/Domains';
@@ -158,11 +158,14 @@ export const AboutPanel = observer(() => {
 
         <Domains />
 
-        <div className='flex flex-col w-full flex-1 items-start justify-start gap-3 mt-3'>
+        <div className='flex flex-col w-full flex-1 items-start justify-start gap-3 mt-2'>
           {!!organization?.value?.description && (
-            <p className='text-sm' data-test='org-about-description'>
-              {organization.value.description}
-            </p>
+            <TruncatedText
+              maxLines={5}
+              className={'text-sm'}
+              data-test='org-about-description'
+              text={organization.value.description}
+            />
           )}
 
           <Tags
@@ -193,32 +196,35 @@ export const AboutPanel = observer(() => {
               organization.commit();
             }}
           />
+
           <div className='flex items-center justify-center w-full '>
             <div
               data-test='org-about-relationship'
               className='flex-2 flex items-center'
             >
               <Menu>
-                <MenuButton
-                  data-test='org-about-relationship'
-                  className='min-h-[20px] text-md outline-none focus:outline-none items-center'
-                >
-                  {
-                    iconMap[
-                      (selectedRelationshipOption?.label ??
-                        'unknown') as keyof typeof iconMap
-                    ]
-                  }
-                  {''}
-                  <span
-                    className={cn(
-                      'ml-3 text-sm',
-                      !selectedRelationshipOption?.label && 'text-gray-400',
-                    )}
+                <Tooltip align='start' label='Relationship'>
+                  <MenuButton
+                    data-test='org-about-relationship'
+                    className='min-h-[20px] text-md outline-none focus:outline-none items-center'
                   >
-                    {selectedRelationshipOption?.label ?? 'Relationship'}
-                  </span>
-                </MenuButton>
+                    {
+                      iconMap[
+                        (selectedRelationshipOption?.label ??
+                          'unknown') as keyof typeof iconMap
+                      ]
+                    }
+                    {''}
+                    <span
+                      className={cn(
+                        'ml-3 text-sm',
+                        !selectedRelationshipOption?.label && 'text-gray-400',
+                      )}
+                    >
+                      {selectedRelationshipOption?.label ?? 'Relationship'}
+                    </span>
+                  </MenuButton>
+                </Tooltip>
                 <MenuList side='bottom' align='start'>
                   {relationshipOptions.map((option) => (
                     <MenuItem
@@ -261,12 +267,14 @@ export const AboutPanel = observer(() => {
                 className='flex-1 flex items-center'
               >
                 <Menu>
-                  <MenuButton className='min-h-[20px] outline-none focus:outline-none'>
-                    <Target05 className='text-gray-500 mb-0.5' />
-                    <span className='ml-3 text-sm'>
-                      {selectedStageOption?.label || 'Stage'}
-                    </span>
-                  </MenuButton>
+                  <Tooltip label='Stage' align='start'>
+                    <MenuButton className='min-h-[20px] outline-none focus:outline-none'>
+                      <Target05 className='text-gray-500 mb-0.5' />
+                      <span className='ml-3 text-sm'>
+                        {selectedStageOption?.label || 'Stage'}
+                      </span>
+                    </MenuButton>
+                  </Tooltip>
                   <MenuList side='bottom' align='start'>
                     {applicableStageOptions.map((option) => (
                       <MenuItem
@@ -285,38 +293,37 @@ export const AboutPanel = observer(() => {
               </div>
             )}
           </div>
-
-          <p className='text-sm inline items-center'>
-            <Building07 className='text-gray-500 mr-3 -mt-[3px]' />
-            {organization?.value?.industryName ? (
-              <span>{organization.value.industryName}</span>
-            ) : (
-              <span className={'text-gray-400'} data-test='org-about-industry'>
-                Industry not found yet
-              </span>
-            )}
-          </p>
-
-          {organization.country && (
-            <p className='text-sm flex items-center'>
-              <span className='flex items-center mr-3'>
-                {organization.value.locations?.[0]?.countryCodeA2 &&
-                  flags[organization.value.locations?.[0]?.countryCodeA2]}
-              </span>
-
-              {organization.country}
+          <Tooltip align='start' label='Industry'>
+            <p className='text-sm flex items-center cursor-default'>
+              <Building07 className='text-gray-500 mr-3 ' />
+              {organization?.value?.industryName ? (
+                <span>{organization.value.industryName}</span>
+              ) : (
+                <span className={'text-gray-400'} data-test='org-about-industry'>Industry not found yet</span>
+              )}
             </p>
-          )}
+          </Tooltip>
+          {organization.country && (
+            <Tooltip align='start' label='Country'>
+              <p className='text-sm flex items-center cursor-default'>
+                <div className='flex items-center mr-3'>
+                  {organization.value.locations?.[0]?.countryCodeA2 &&
+                    flags[organization.value.locations?.[0]?.countryCodeA2]}
+                </div>
 
-          <BusinessTypeInput id={id} />
+                {organization.country}
+              </p>
+            </Tooltip>
+          )}
 
           {typeof organization.value!.employees === 'number' && (
-            <p className='text-sm flex items-center cursor-default '>
-              <Users03 className='text-gray-500 mr-3' />
-              {organization.value!.employees} employees
-            </p>
+            <Tooltip align='start' label='Number of employees'>
+              <p className='text-sm flex items-center cursor-default '>
+                <Users02 className='text-gray-500 mr-3' />
+                {organization.value!.employees} employees
+              </p>
+            </Tooltip>
           )}
-
           <OwnerInput
             id={id}
             dataTest='org-about-org-owner'

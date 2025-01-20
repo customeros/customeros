@@ -51,7 +51,7 @@ require (
 	github.com/customeros/customeros/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c // indirect
 	github.com/customeros/mailwatcher v0.1.6 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/emersion/go-message v0.18.1 // indirect
+	github.com/emersion/go-message v0.18.2 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/forPelevin/gomoji v1.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.7 // indirect
@@ -94,7 +94,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mrz1836/postmark v1.7.0 // indirect
 	github.com/novuhq/go-novu v0.1.2 // indirect
-	github.com/nyaruka/phonenumbers v1.4.4 // indirect
+	github.com/nyaruka/phonenumbers v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect

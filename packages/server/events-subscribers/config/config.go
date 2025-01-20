@@ -35,6 +35,8 @@ type CommonConfig struct {
 	Namecheap     commonconf.NamecheapConfig
 	OpenSrs       commonconf.OpenSRSConfig
 	Cloudflare    commonconf.CloudflareConfig
+	TrueInbox     commonconf.TrueInboxConfig
+	Brandfetch    commonconf.BrandfetchConfig
 }
 
 func Load() *Config {
@@ -73,6 +75,8 @@ func Load() *Config {
 			NamecheapConfig:     cmnCfg.Namecheap,
 			OpenSRSConfig:       cmnCfg.OpenSrs,
 			CloudflareConfig:    cmnCfg.Cloudflare,
+			TrueInboxConfig:     cmnCfg.TrueInbox,
+			BrandfetchConfig:    cmnCfg.Brandfetch,
 		},
 	}
 
