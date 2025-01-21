@@ -57,7 +57,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: ubicloud/setup-go@v5
         with:
           go-version: stable
           cache: true
@@ -67,7 +67,7 @@ jobs:
           GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
 
       - name: Cache Go tools
-        uses: actions/cache@v4
+        uses: ubicloud/cache@v4
         with:
           path: ${{ env.GOBIN }}
           key: ${{ runner.os }}-go-tools-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
@@ -82,7 +82,7 @@ jobs:
 
       - name: Go Cache
         id: go-cache
-        uses: actions/cache@v4
+        uses: ubicloud/cache@v4
         with:
           path: |
             ~/.cache/go-build
@@ -142,7 +142,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: ubicloud/setup-go@v5
         with:
           go-version: stable
           cache: true
@@ -152,7 +152,7 @@ jobs:
           GOMODCACHE: ${{ github.workspace }}/go/pkg/mod
 
       - name: Cache Go tools
-        uses: actions/cache@v4
+        uses: ubicloud/cache@v4
         with:
           path: ${{ env.GOBIN }}
           key: ${{ runner.os }}-go-tools-${{ hashFiles('packages/server/customer-os-api/go.sum') }}
@@ -167,7 +167,7 @@ jobs:
 
       - name: Go Cache
         id: go-cache
-        uses: actions/cache@v4
+        uses: ubicloud/cache@v4
         with:
           path: |
             ~/.cache/go-build
@@ -182,7 +182,7 @@ jobs:
 
       - name: Cache Test List
         id: cache-test-list
-        uses: actions/cache@v4
+        uses: ubicloud/cache@v4
         with:
           path: ./packages/server/customer-os-api/.test-list
           key: test-list-${{ hashFiles('packages/server/customer-os-api/**/*.go') }}

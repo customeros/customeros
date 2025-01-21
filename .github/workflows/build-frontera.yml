@@ -40,7 +40,7 @@ jobs:
           driver-opts: |
             network=host
 
-      - uses: actions/setup-node@v4
+      - uses: ubicloud/setup-node@v4
         with:
           node-version: "18"
           cache: "npm"
@@ -96,7 +96,7 @@ jobs:
           driver-opts: |
             network=host
 
-      - uses: actions/setup-node@v4
+      - uses: ubicloud/setup-node@v4
         with:
           node-version: "18"
           cache: "npm"
@@ -154,7 +154,7 @@ jobs:
           driver-opts: |
             network=host
 
-      - uses: actions/setup-node@v4
+      - uses: ubicloud/setup-node@v4
         with:
           node-version: "18"
           cache: "npm"
