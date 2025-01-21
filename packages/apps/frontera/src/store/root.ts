@@ -1,6 +1,6 @@
+import { Transport } from '@infra/transport';
 import { when, makeAutoObservable } from 'mobx';
 
-import { Transport } from './transport';
 import { Persister } from './persister';
 import { UIStore } from './UI/UI.store';
 import { MailStore } from './Mail/Mail.store';

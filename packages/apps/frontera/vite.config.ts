@@ -1,5 +1,6 @@
 import path from 'path';
 import { cpus } from 'node:os';
+import svgr from 'vite-plugin-svgr';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import graphqlLoader from 'vite-plugin-graphql-loader';
@@ -40,6 +41,7 @@ export default defineConfig(({ mode }) => ({
       },
     }),
     graphqlLoader(),
+    svgr(),
   ],
   resolve: {
     alias: {
