@@ -180,11 +180,8 @@ func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Con
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.UpdateParticipantFlowRequirements")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	if requirements != nil {
-		tracing.LogObjectAsJson(span, "requirements", requirements)
-	} else {
-		span.LogFields(log.String("requirements", "nil"))
-	}
+	tracing.LogObjectAsJson(span, "requirements", requirements)
+	tracing.LogObjectAsJson(span, "participant", participant)
 
 	tenant := common.GetTenantFromContext(ctx)
 
