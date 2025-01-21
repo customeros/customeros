@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 import { useKeyBindings } from 'rooks';
 import cityTimezone from 'city-timezones';
@@ -64,10 +64,10 @@ export const ContactPreviewCard = observer(() => {
       })?.timezone
     : null;
 
-  const linkedInProfile = contact?.value.linkedInUrl;
+  const linkedInProfile = contact?.value.linkedInAlias;
   const fromatedUrl = getFormattedLink(linkedInProfile || '').replace(
     /^linkedin\.com\/(?:in\/|company\/)?/,
-    '/',
+    '',
   );
   const href = contact?.value.linkedInUrl;
 
@@ -231,7 +231,7 @@ export const ContactPreviewCard = observer(() => {
                       copyToClipboard(fromatedUrl, 'LinkedIn profile copied');
                     }}
                   >
-                    {fromatedUrl}
+                    {contact?.value.linkedInAlias || fromatedUrl}
                   </p>
                 ) : (
                   <p className='text-sm truncate w-[180px] text-gray-400'>
@@ -239,16 +239,17 @@ export const ContactPreviewCard = observer(() => {
                   </p>
                 )}
                 {fromatedUrl && (
-                  <Link to={href || ''} target='_blank'>
-                    <IconButton
-                      size='xxs'
-                      variant='ghost'
-                      colorScheme='gray'
-                      aria-label='social link'
-                      icon={<LinkExternal02 className='text-gray-500' />}
-                      className='hover:bg-gray-200 opacity-0 group-hover:opacity-100'
-                    />
-                  </Link>
+                  <IconButton
+                    size='xxs'
+                    variant='ghost'
+                    colorScheme='gray'
+                    aria-label='social link'
+                    icon={<LinkExternal02 className='text-gray-500' />}
+                    className='hover:bg-gray-200 opacity-0 group-hover:opacity-100'
+                    onClick={() =>
+                      window.open(href || '', '_blank', 'noopener')
+                    }
+                  />
                 )}
               </div>
             </div>
