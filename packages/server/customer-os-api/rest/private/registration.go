@@ -395,6 +395,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 				}
 			}
 
+			// TODO temp code, on each login try to prepare default tenant setup.
 			if !isPersonalEmail {
 				err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
 				if err != nil {
