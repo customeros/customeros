@@ -2,7 +2,6 @@ package agent_capability
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/customeros/mailsherpa/domaincheck"
