@@ -2,11 +2,10 @@ import { useMemo } from 'react';
 
 import { Flag04 } from '@ui/media/icons/Flag04';
 import { Action, OnboardingStatus } from '@graphql/types';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { getMetadata } from '@organization/components/Timeline/PastZone/events/action/utils';
 import { useTimelineEventPreviewMethodsContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
-import { getColorScheme } from './util';
+import { getIconColor } from './util';
 
 const statusMap = {
   [OnboardingStatus.Late]: 'Late',
@@ -35,24 +34,16 @@ export const OnboardingStatusChangedAction = ({
 
   const statusLabel = statusMap[status];
   const content = data?.content.replace(statusLabel, '').trimEnd();
-  const colorScheme = getColorScheme(status);
+  const iconClassName = getIconColor(status);
 
   return (
     <div
       onClick={() => openModal(data.id)}
-      className='flex items-center cursor-pointer min-h-[40px]'
+      className='flex items-center cursor-pointer'
     >
-      <div className='inline w-[30px]'>
-        <FeaturedIcon
-          size='md'
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          colorScheme={colorScheme as any}
-        >
-          <Flag04 />
-        </FeaturedIcon>
-      </div>
+      <Flag04 className={iconClassName} />
 
-      <p className='my-1 max-w-[500px] ml-2 text-sm text-gray-700 line-clamp-2'>
+      <p className='max-w-[500px] ml-2 text-sm text-gray-700 line-clamp-2'>
         {content}
         <span className='font-semibold ml-1'>{statusLabel}</span>
       </p>

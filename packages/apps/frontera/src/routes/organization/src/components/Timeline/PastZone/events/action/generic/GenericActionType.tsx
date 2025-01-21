@@ -4,13 +4,11 @@ import { Action } from '@graphql/types';
 import { Globe06 } from '@ui/media/icons/Globe06';
 import { useTimelineEventPreviewMethodsContext } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
-interface ContractStatusUpdatedActionProps {
+interface GenericActionTypeProps {
   data: Action;
 }
 
-export const GenericActionType = ({
-  data,
-}: ContractStatusUpdatedActionProps) => {
+export const GenericActionType = ({ data }: GenericActionTypeProps) => {
   const { openModal } = useTimelineEventPreviewMethodsContext();
 
   // todo, remove when content comes as valid markdown
