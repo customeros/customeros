@@ -3,11 +3,11 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -107,20 +107,15 @@ func (r *socialWriteRepository) PermanentlyDelete(ctx context.Context, tenant, s
 	tracing.TagEntity(span, socialId)
 
 	cypher := fmt.Sprintf(
-		`MATCH (soc:Social_%s {id:$socialId})<-[r:HAS]-(n:Organization|Contact)
-				SET n.updatedAt=datetime()
-				DELETE r, soc`, tenant)
+		`MATCH (soc:Social_%s {id:$socialId})<-[r:HAS]-(n:Organization|Contact|MergedContact|MergedOrganization)
+				DELETE r, soc
+				WITH n WHERE n:Organization OR n:Contact
+				SET n.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"socialId": socialId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
 }
 
 func (r *socialWriteRepository) RemoveSocialForEntityById(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialId string) error {
@@ -141,14 +136,8 @@ func (r *socialWriteRepository) RemoveSocialForEntityById(ctx context.Context, t
 		"entityId": linkedEntityId,
 		"socialId": socialId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
 }
 
 func (r *socialWriteRepository) RemoveSocialForEntityByUrl(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialUrl string) error {
@@ -169,14 +158,8 @@ func (r *socialWriteRepository) RemoveSocialForEntityByUrl(ctx context.Context, 
 		"entityId": linkedEntityId,
 		"url":      socialUrl,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
 }
 
 func (r *socialWriteRepository) Update(ctx context.Context, tenant, socialId, url string, alias, externalId *string) (*dbtype.Node, error) {
