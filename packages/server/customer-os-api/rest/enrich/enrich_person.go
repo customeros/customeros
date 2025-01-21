@@ -358,7 +358,7 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 			LastName:    lastName,
 			Email:       email,
 		}
-		personDbID, enrichPersonResponse, err := h.services.CommonServices.EnrichmentService.EnrichPerson(ctx, person)
+		scrapinRecordId, enrichPersonResponse, err := h.services.CommonServices.EnrichmentService.EnrichPerson(ctx, person)
 		if err != nil {
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
@@ -402,9 +402,7 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 				Tenant:                tenant,
 				BettercontactRecordId: dbID,
 			}
-			if personDbID != nil {
-				query.ScrapinRecordId = *personDbID
-			}
+			query.ScrapinRecordId = utils.IfNotNilUint64(scrapinRecordId)
 
 			dbRecord, err := h.services.Repositories.PostgresRepositories.CosApiEnrichPersonTempResultRepository.Create(ctx, query)
 			if err != nil {
