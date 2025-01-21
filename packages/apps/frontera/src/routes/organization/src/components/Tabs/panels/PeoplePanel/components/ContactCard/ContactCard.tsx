@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { TagDatum } from '@store/Tags/Tag.store';
 import { AddJobRole } from '@domain/usecases/people-contact-card/add-jobrole.usecase';
+import { EditContactNameUseCase } from '@domain/usecases/people-contact-card/edit-contact-name.usecase';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
@@ -118,6 +119,10 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
   const isEnriching = contactStore?.isEnriching;
 
   const jobRoleUseCase = useMemo(() => new AddJobRole(id), [id]);
+  const contactNameUseCase = useMemo(
+    () => new EditContactNameUseCase(id),
+    [id],
+  );
 
   if (!contactStore) return null;
 
@@ -172,21 +177,20 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                       <Input
                         size='xxs'
                         variant='unstyled'
-                        value={contactStore?.name || ''}
                         dataTest='org-people-contact-name'
                         onFocus={(e) => e.target.select()}
                         onKeyDown={(e) => e.stopPropagation()}
+                        value={contactNameUseCase.contactName || ''}
                         className='placeholder:font-medium font-medium min-w-[60px] w-[200px]'
+                        onBlur={() => {
+                          contactNameUseCase.execute();
+                        }}
                         onChange={(e) =>
-                          (contactStore.value.name = e.target.value)
+                          contactNameUseCase.setName(e.target.value)
                         }
                         placeholder={
                           isEnriching ? 'Getting name...' : 'First & last name'
                         }
-                        onBlur={() => {
-                          contactStore.draft();
-                          contactStore.commit();
-                        }}
                       />
                     )}
 
