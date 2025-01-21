@@ -504,7 +504,7 @@ func (s *globalOrganizationService) EnrichIndustry() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 20
+	limit := 30
 	hoursFromPreviousAttempt := 24
 	maxAttempts := 3
 
@@ -613,7 +613,7 @@ func (s *globalOrganizationService) EnrichDescription() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 20
+	limit := 30
 	hoursFromPreviousAttempt := 24
 	maxAttempts := 3
 
