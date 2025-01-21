@@ -6,11 +6,16 @@ import { observer } from 'mobx-react-lite';
 import { cn } from '@ui/utils/cn.ts';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { XCircle } from '@ui/media/icons/XCircle';
-import { getExternalUrl } from '@utils/getExternalLink';
-import { DotsVertical } from '@ui/media/icons/DotsVertical';
-import { CornerDownRightDot } from '@ui/media/icons/CornerDownRightDot';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { XCircle } from '@ui/media/icons/XCircle.tsx';
+import { getExternalUrl } from '@utils/getExternalLink.ts';
+import { DotsVertical } from '@ui/media/icons/DotsVertical.tsx';
+import { CornerDownRightDot } from '@ui/media/icons/CornerDownRightDot.tsx';
+import {
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuButton,
+} from '@ui/overlay/Menu/Menu.tsx';
 
 export const Subdomain = observer(({ domain }: { domain: string }) => {
   const store = useStore();

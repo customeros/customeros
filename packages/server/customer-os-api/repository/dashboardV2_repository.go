@@ -178,11 +178,11 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 						if rawCypher != "" {
 							rawCypher += " AND "
 						}
-						rawCypher += fmt.Sprintf(` NOT (o)-[:TAGGED]->(:Tag {name:"%s"}) `, v)
+						rawCypher += fmt.Sprintf(` NOT (o)-[:TAGGED]->(:Tag {id:"%s"}) `, v)
 					}
 					tagFilter.Filters = append(tagFilter.Filters, utils.CreateRawCypherFilter(rawCypher))
 				} else {
-					createInOrEmptyStringFilter(filter, tagFilter, string(neo4jentity.TagPropertyName))
+					createInOrEmptyStringFilter(filter, tagFilter, string(neo4jentity.TagPropertyId))
 				}
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeOrganizationsHeadquarters) {
@@ -656,6 +656,8 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 		return nil, firstErr
 	}
 
+	span.LogFields(log.Int("result.count", len(stringsWithTotalCount.Strings)), log.Int64("result.totalCount", stringsWithTotalCount.Count))
+
 	return stringsWithTotalCount, nil
 }
 
@@ -963,13 +965,13 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 				}
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsCountry) {
-				createInOrEmptyStringFilter(filter, locationFilter, "countryCodeA2")
+				createInOrEmptyStringFilter(filter, locationFilter, string(neo4jentity.LocationPropertyCountryCodeA2))
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsCity) {
-				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyLocality), filter.Filter.Value.Str, filter.Filter.Operation))
+				createInOrEmptyStringFilter(filter, locationFilter, string(neo4jentity.LocationPropertyLocality))
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsRegion) {
-				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyRegion), filter.Filter.Value.Str, filter.Filter.Operation))
+				createInOrEmptyStringFilter(filter, locationFilter, string(neo4jentity.LocationPropertyRegion))
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsTags) {
 				// special case for not in tags
@@ -979,11 +981,11 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 						if rawCypher != "" {
 							rawCypher += " AND "
 						}
-						rawCypher += fmt.Sprintf(` NOT (c)-[:TAGGED]->(:Tag {name:"%s"}) `, v)
+						rawCypher += fmt.Sprintf(` NOT (c)-[:TAGGED]->(:Tag {id:"%s"}) `, v)
 					}
 					tagFilter.Filters = append(tagFilter.Filters, utils.CreateRawCypherFilter(rawCypher))
 				} else {
-					createInOrEmptyStringFilter(filter, tagFilter, string(neo4jentity.TagPropertyName))
+					createInOrEmptyStringFilter(filter, tagFilter, string(neo4jentity.TagPropertyId))
 				}
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsLinkedin) {
@@ -1523,6 +1525,8 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	if firstErr != nil {
 		return nil, firstErr
 	}
+
+	span.LogFields(log.Int("result.count", len(stringsWithTotalCount.Strings)), log.Int64("result.totalCount", stringsWithTotalCount.Count))
 
 	return stringsWithTotalCount, nil
 }

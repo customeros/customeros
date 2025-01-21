@@ -88,6 +88,77 @@ func (r *RabbitMQSubscriber) RegisterHandler(eventType interface{}, handler inte
 	}
 }
 
+// ListenQueue starts listening to a standard queue
+func (r *RabbitMQSubscriber) ListenQueue(queueName string) error {
+	return r.listenQueueWithExclusive(queueName, false)
+}
+
+// ListenQueueExclusive starts listening to an exclusive queue
+func (r *RabbitMQSubscriber) ListenQueueExclusive(queueName string) error {
+	return r.listenQueueWithExclusive(queueName, true)
+}
+
+// listenQueueWithExclusive is the internal method to listen to a queue with optional exclusivity
+func (r *RabbitMQSubscriber) listenQueueWithExclusive(queueName string, exclusive bool) error {
+	go func() {
+		for {
+			// Open a new channel for each queue
+			channel, err := r.connection.Channel()
+			if err != nil {
+				r.logger.Errorf("Failed to open channel for queue %s: %v. Retrying...", queueName, err)
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			defer channel.Close()
+
+			// Consume messages
+			msgs, err := channel.Consume(
+				queueName, // queue
+				"",        // consumer tag
+				false,     // auto-ack
+				exclusive, // exclusive
+				false,     // no-local
+				false,     // no-wait
+				nil,       // args
+			)
+			if err != nil {
+				if exclusive && strings.Contains(err.Error(), "ACCESS_REFUSED") && strings.Contains(err.Error(), "exclusive") {
+					r.logger.Warnf("Exclusive consumer conflict for queue %s. Only one instance can consume exclusively.", queueName)
+					time.Sleep(10 * time.Second)
+					continue
+				}
+				r.logger.Errorf("Failed to register consumer on queue %s: %v. Retrying...", queueName, err)
+				time.Sleep(5 * time.Second)
+				continue
+			}
+
+			r.logger.Infof("Listening for messages on queue %s", queueName)
+
+			for d := range msgs {
+				r.handleMessage(d)
+			}
+
+			r.logger.Warn("Connection lost for queue %s. Reconnecting...", queueName)
+			time.Sleep(5 * time.Second)
+		}
+	}()
+
+	return nil
+}
+
+func (r *RabbitMQSubscriber) handleMessage(d amqp091.Delivery) {
+	// This will catch panics and send to Jaeger
+	defer tracing.RecoverAndLogToJaeger(r.logger)
+
+	err := r.processMessage(d)
+	if err != nil {
+		r.logger.Errorf("Failed to process message: %v", err)
+		r.retryAckNack(d, false)
+	} else {
+		r.retryAckNack(d, true)
+	}
+}
+
 // processMessage handles the processing of a single message
 func (r *RabbitMQSubscriber) processMessage(d amqp091.Delivery) error {
 	ctx := context.Background()
@@ -144,70 +215,6 @@ func (r *RabbitMQSubscriber) processMessage(d amqp091.Delivery) error {
 
 	// Call the handler
 	return handlerReg.Handler.HandlerFunc(ctx, &event)
-}
-
-// ListenQueue starts listening to a standard queue
-func (r *RabbitMQSubscriber) ListenQueue(queueName string) error {
-	return r.listenQueueWithExclusive(queueName, false)
-}
-
-// ListenQueueExclusive starts listening to an exclusive queue
-func (r *RabbitMQSubscriber) ListenQueueExclusive(queueName string) error {
-	return r.listenQueueWithExclusive(queueName, true)
-}
-
-// listenQueueWithExclusive is the internal method to listen to a queue with optional exclusivity
-func (r *RabbitMQSubscriber) listenQueueWithExclusive(queueName string, exclusive bool) error {
-	go func() {
-		for {
-			// Open a new channel for each queue
-			channel, err := r.connection.Channel()
-			if err != nil {
-				r.logger.Errorf("Failed to open channel for queue %s: %v. Retrying...", queueName, err)
-				time.Sleep(5 * time.Second)
-				continue
-			}
-			defer channel.Close()
-
-			// Consume messages
-			msgs, err := channel.Consume(
-				queueName, // queue
-				"",        // consumer tag
-				false,     // auto-ack
-				exclusive, // exclusive
-				false,     // no-local
-				false,     // no-wait
-				nil,       // args
-			)
-			if err != nil {
-				if exclusive && strings.Contains(err.Error(), "ACCESS_REFUSED") && strings.Contains(err.Error(), "exclusive") {
-					r.logger.Warnf("Exclusive consumer conflict for queue %s. Only one instance can consume exclusively.", queueName)
-					time.Sleep(10 * time.Second)
-					continue
-				}
-				r.logger.Errorf("Failed to register consumer on queue %s: %v. Retrying...", queueName, err)
-				time.Sleep(5 * time.Second)
-				continue
-			}
-
-			r.logger.Infof("Listening for messages on queue %s", queueName)
-
-			for d := range msgs {
-				err := r.processMessage(d)
-				if err != nil {
-					r.logger.Errorf("Failed to process message: %v", err)
-					r.retryAckNack(d, false)
-				} else {
-					r.retryAckNack(d, true)
-				}
-			}
-
-			r.logger.Warn("Connection lost for queue %s. Reconnecting...", queueName)
-			time.Sleep(5 * time.Second)
-		}
-	}()
-
-	return nil
 }
 
 // retryAckNack attempts to acknowledge or negative acknowledge a message with retries

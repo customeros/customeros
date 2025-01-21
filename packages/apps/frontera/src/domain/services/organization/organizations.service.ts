@@ -3,6 +3,8 @@ import { RootStore } from '@store/root';
 import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service';
 
 import {
+  EntityType,
+  FlagWrongFields,
   SortingDirection,
   ComparisonOperator,
 } from '@shared/types/__generated__/graphql.types';
@@ -78,6 +80,33 @@ export class OrganizationService {
       });
     } catch (err) {
       throw new Error('Failed to merge organizations');
+    }
+  }
+
+  public async flagWrongField(id: string, field: FlagWrongFields) {
+    try {
+      const { flagWrongField } = await this.service.flagWrongField({
+        input: {
+          entityId: id,
+          entityType: EntityType.Organization,
+          field,
+        },
+      });
+
+      runInAction(() => {
+        if (flagWrongField?.result) {
+          this.root.ui.toastSuccess(
+            `Noted, we're looking into it`,
+            `flag-field-${field}`,
+          );
+        }
+
+        if (!flagWrongField?.result) {
+          throw new Error('Failed to flag wrong field');
+        }
+      });
+    } catch (err) {
+      throw new Error('Failed to flag wrong field');
     }
   }
 }

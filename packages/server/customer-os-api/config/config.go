@@ -36,6 +36,8 @@ type CommonConfig struct {
 	Stripe           commonconf.StripeConfig
 	BetterContact    commonconf.BetterContactConfig
 	Scrapin          commonconf.ScrapinConfig
+	Postmark         commonconf.PostmarkConfig
+	SlackConfig      commonconf.SlackConfig
 }
 
 type AppConfig struct {
@@ -114,6 +116,9 @@ func InitConfig() (*Config, error) {
 			IpDataConfig:        cmnCfg.IpData,
 			StripeConfig:        cmnCfg.Stripe,
 			BetterContactConfig: cmnCfg.BetterContact,
+			PostmarkConfig:      cmnCfg.Postmark,
+			ScrapinConfig:       cmnCfg.Scrapin,
+			SlackConfig:         cmnCfg.SlackConfig,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,

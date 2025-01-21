@@ -705,6 +705,8 @@ type ComplexityRoot struct {
 	GlobalCache struct {
 		ActiveEmailTokens   func(childComplexity int) int
 		CdnLogoURL          func(childComplexity int) int
+		ContactCities       func(childComplexity int) int
+		ContactRegions      func(childComplexity int) int
 		ContractsExist      func(childComplexity int) int
 		InactiveEmailTokens func(childComplexity int) int
 		IsFirstLogin        func(childComplexity int) int
@@ -5364,6 +5366,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.GlobalCache.CdnLogoURL(childComplexity), true
+
+	case "GlobalCache.contactCities":
+		if e.complexity.GlobalCache.ContactCities == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.ContactCities(childComplexity), true
+
+	case "GlobalCache.contactRegions":
+		if e.complexity.GlobalCache.ContactRegions == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.ContactRegions(childComplexity), true
 
 	case "GlobalCache.contractsExist":
 		if e.complexity.GlobalCache.ContractsExist == nil {
@@ -13223,6 +13239,8 @@ type GlobalCache {
     contractsExist:         Boolean!
     isFirstLogin:           Boolean!
     cdnLogoUrl:             String!
+    contactCities:          [String!]!
+    contactRegions:         [String!]!
 }
 
 type GlobalCacheEmailToken {
@@ -48230,6 +48248,94 @@ func (ec *executionContext) _GlobalCache_cdnLogoUrl(ctx context.Context, field g
 }
 
 func (ec *executionContext) fieldContext_GlobalCache_cdnLogoUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalCache_contactCities(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_contactCities(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContactCities, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_contactCities(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GlobalCache_contactRegions(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_contactRegions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContactRegions, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_contactRegions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "GlobalCache",
 		Field:      field,
@@ -90722,6 +90828,10 @@ func (ec *executionContext) fieldContext_Query_global_Cache(_ context.Context, f
 				return ec.fieldContext_GlobalCache_isFirstLogin(ctx, field)
 			case "cdnLogoUrl":
 				return ec.fieldContext_GlobalCache_cdnLogoUrl(ctx, field)
+			case "contactCities":
+				return ec.fieldContext_GlobalCache_contactCities(ctx, field)
+			case "contactRegions":
+				return ec.fieldContext_GlobalCache_contactRegions(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type GlobalCache", field.Name)
 		},
@@ -121480,6 +121590,16 @@ func (ec *executionContext) _GlobalCache(ctx context.Context, sel ast.SelectionS
 			}
 		case "cdnLogoUrl":
 			out.Values[i] = ec._GlobalCache_cdnLogoUrl(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contactCities":
+			out.Values[i] = ec._GlobalCache_contactCities(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contactRegions":
+			out.Values[i] = ec._GlobalCache_contactRegions(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

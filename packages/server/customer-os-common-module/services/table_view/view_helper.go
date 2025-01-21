@@ -465,7 +465,7 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 				{ColumnId: 18, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLastTouchpointDate), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 19, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsLeadSource), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 25, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsParentOrganization), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 26, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsUpdatedDate), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 26, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsUpdatedDate), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 27, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCountry), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
@@ -490,7 +490,7 @@ func DefaultColumns(tableId postgres_entity.TableIdType) postgres_entity.Columns
 				{ColumnId: 15, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsTags), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 16, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsContactCount), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 17, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsParentOrganization), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 18, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsUpdatedDate), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 18, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsUpdatedDate), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 19, ColumnType: string(postgres_entity.ColumnViewTypeOrganizationsCountry), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}

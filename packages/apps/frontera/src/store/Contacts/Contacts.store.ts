@@ -189,6 +189,13 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
 
   @action
   async retrieve(ids: string[]) {
+    if (ids.length === 0) return;
+    const invalidIds = ids.filter((id) => id.length !== 36);
+
+    if (invalidIds.length > 0) {
+      throw new Error(`Invalid IDs found: ${invalidIds.join(', ')}`);
+    }
+
     try {
       const { ui_contacts } = await this.service.getContactsByIds({
         ids,

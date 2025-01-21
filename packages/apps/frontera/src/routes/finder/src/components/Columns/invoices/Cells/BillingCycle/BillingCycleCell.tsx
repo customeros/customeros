@@ -1,7 +1,4 @@
-import { observer } from 'mobx-react-lite';
-
 import { cn } from '@ui/utils/cn';
-import { useStore } from '@shared/hooks/useStore';
 import { ContractBillingCycle } from '@graphql/types';
 
 const billingCycleLabels: Record<ContractBillingCycle, string> = {
@@ -27,15 +24,18 @@ const getBillingCycleLabel = (cycleInMonths: number) => {
   }
 };
 
-export const BillingCycleCell = observer(({ id }: { id: string }) => {
-  const store = useStore();
-
-  const billingCycle = store.invoices?.toArray().find((i) => i.id === id)?.value
-    .contract.billingDetails?.billingCycleInMonths;
-
+export const BillingCycleCell = ({
+  billingCycleInMonths,
+}: {
+  billingCycleInMonths?: number;
+}) => {
   return (
-    <div className={cn(billingCycle ? 'text-gray-700' : 'text-gray-400')}>
-      {billingCycle ? getBillingCycleLabel(billingCycle) : 'Unknown'}
+    <div
+      className={cn(billingCycleInMonths ? 'text-gray-700' : 'text-gray-400')}
+    >
+      {billingCycleInMonths
+        ? getBillingCycleLabel(billingCycleInMonths)
+        : 'Unknown'}
     </div>
   );
-});
+};

@@ -226,6 +226,13 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
   @action
   async retrieve(ids: string[]) {
+    if (ids.length === 0) return;
+    const invalidIds = ids.filter((id) => id.length !== 36);
+
+    if (invalidIds.length > 0) {
+      throw new Error(`Invalid IDs found: ${invalidIds.join(', ')}`);
+    }
+
     try {
       const { ui_organizations } = await this.service.getOrganizationsByIds({
         ids,
@@ -291,6 +298,8 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
   @action
   public async invalidate(id: string) {
+    if (!id) return;
+
     try {
       const { ui_organizations } = await this.service.getOrganizationsByIds({
         ids: [id],

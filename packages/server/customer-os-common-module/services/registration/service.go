@@ -77,7 +77,7 @@ func (s *registrationService) IsInitialized() bool {
 }
 
 func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, loggedInUserEmail string) error {
-	span, ctx := s.initializeTracing(ctx, "RegistrationService.PrepareDefaultTenantSetup", map[string]interface{}{
+	span, ctx := s.initializeTracing(ctx, "PrepareDefaultTenantSetup", map[string]interface{}{
 		"loggedInUserEmail": loggedInUserEmail,
 	})
 	defer span.Finish()
@@ -449,7 +449,6 @@ func (s *registrationService) CreatePostmarkServer(ctx context.Context) error {
 }
 
 // Helper functions
-
 func (s *registrationService) initializeTracing(ctx context.Context, operation string, logFields map[string]interface{}) (opentracing.Span, context.Context) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("RegistrationService.%s", operation))
 	tracing.SetDefaultServiceSpanTags(ctx, span)

@@ -9,6 +9,8 @@ type LocationProperty string
 const (
 	LocationPropertyName          LocationProperty = "name"
 	LocationPropertyCountry       LocationProperty = "country"
+	LocationPropertyCountryCodeA2 LocationProperty = "countryCodeA2"
+	LocationPropertyCountryCodeA3 LocationProperty = "countryCodeA3"
 	LocationPropertyRegion        LocationProperty = "region"
 	LocationPropertyLocality      LocationProperty = "locality"
 	LocationPropertyAddress       LocationProperty = "address"
@@ -27,8 +29,6 @@ const (
 	LocationPropertyLongitude     LocationProperty = "longitude"
 	LocationPropertyTimeZone      LocationProperty = "timeZone"
 	LocationPropertyUtcOffset     LocationProperty = "utcOffset"
-	LocationPropertyCountryCodeA2 LocationProperty = "countryCodeA2"
-	LocationPropertyCountryCodeA3 LocationProperty = "countryCodeA3"
 )
 
 type LocationEntity struct {

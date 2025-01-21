@@ -21,7 +21,7 @@ export type FilterType = {
 import { uniqBy } from 'lodash';
 import { type RootStore } from '@store/root';
 
-import { Phone } from '@ui/media/icons/Phone';
+// import { Phone } from '@ui/media/icons/Phone';
 import { User03 } from '@ui/media/icons/User03';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Globe05 } from '@ui/media/icons/Globe05';
@@ -147,20 +147,20 @@ export const getFilterTypes = (store?: RootStore) => {
         },
       ],
     },
-    [ColumnViewType.ContactsPhoneNumbers]: {
-      filterType: 'text',
-      filterName: 'Mobile number',
-      filterAccesor: ColumnViewType.ContactsPhoneNumbers,
-      filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
-        ComparisonOperator.IsEmpty,
-        ComparisonOperator.IsNotEmpty,
-      ],
-      icon: (
-        <Phone className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
-      ),
-    },
+    // [ColumnViewType.ContactsPhoneNumbers]: {
+    //   filterType: 'text',
+    //   filterName: 'Mobile number',
+    //   filterAccesor: ColumnViewType.ContactsPhoneNumbers,
+    //   filterOperators: [
+    //     ComparisonOperator.Contains,
+    //     ComparisonOperator.NotContains,
+    //     ComparisonOperator.IsEmpty,
+    //     ComparisonOperator.IsNotEmpty,
+    //   ],
+    //   icon: (
+    //     <Phone className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
+    //   ),
+    // },
     [ColumnViewType.ContactsCity]: {
       filterType: 'list',
       filterName: 'City',
@@ -175,18 +175,10 @@ export const getFilterTypes = (store?: RootStore) => {
         <Globe05 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
       options: uniqBy(
-        store?.contacts
-          ?.toArray()
-          .flatMap((contact) => contact?.value.locations)
-          .filter(
-            (l) =>
-              l?.locality !== null &&
-              l?.locality !== undefined &&
-              l?.locality !== '',
-          )
-          .map((location) => ({
-            id: location?.locality,
-            label: location?.locality,
+        store?.globalCache.value?.contactCities
+          .map((city) => ({
+            id: city,
+            label: city,
           }))
           .sort((a, b) => (a.label ?? '').localeCompare(b.label ?? '')),
         'id',
@@ -208,7 +200,7 @@ export const getFilterTypes = (store?: RootStore) => {
     },
     [ColumnViewType.ContactsPersona]: {
       filterType: 'list',
-      filterName: 'Persona',
+      filterName: 'Tags',
       filterAccesor: ColumnViewType.ContactsPersona,
       filterOperators: [
         ComparisonOperator.In,
@@ -305,17 +297,10 @@ export const getFilterTypes = (store?: RootStore) => {
       icon: (
         <Globe04 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
-      options: uniqBy(
-        store?.contacts
-          ?.toArray()
-          .flatMap((contact) => contact?.value.locations?.[0])
-          .map((location) => ({
-            id: location?.countryCodeA2,
-            label: location?.country,
-          }))
-          .sort((a, b) => (a.label ?? '').localeCompare(b.label ?? '')),
-        'id',
-      ),
+      options: Array.from(countryMap).map(([key, value]) => ({
+        id: key.toUpperCase(),
+        label: value,
+      })),
     },
     [ColumnViewType.ContactsRegion]: {
       filterType: 'list',
@@ -331,16 +316,10 @@ export const getFilterTypes = (store?: RootStore) => {
         <Globe06 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
       options: uniqBy(
-        store?.contacts
-          ?.toArray()
-          .flatMap((contact) => contact?.value.locations?.[0])
-          .filter(
-            (l) =>
-              l?.region !== null && l?.region !== undefined && l?.region !== '',
-          )
+        store?.globalCache.value?.contactRegions
           .map((location) => ({
-            id: location.region,
-            label: location.region,
+            id: location,
+            label: location,
           }))
           .sort((a, b) => (a.label ?? '').localeCompare(b.label ?? '')),
         'id',
@@ -416,6 +395,8 @@ export const getFilterTypes = (store?: RootStore) => {
 
   return filterTypes;
 };
+
+import { countryMap } from '@assets/countries/countriesMap';
 
 import { EmailDeliverable } from '@graphql/types';
 

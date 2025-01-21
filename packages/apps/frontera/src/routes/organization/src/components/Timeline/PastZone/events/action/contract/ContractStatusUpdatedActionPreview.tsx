@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { cn } from '@ui/utils/cn';
 import { Action } from '@graphql/types';
 import { File02 } from '@ui/media/icons/File02';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { Card, CardFooter, CardContent } from '@ui/presentation/Card/Card';
 import { getMetadata } from '@organization/components/Timeline/PastZone/events/action/utils';
 import { iconsByStatus } from '@organization/components/Timeline/PastZone/events/action/contract/utils';
@@ -51,16 +50,8 @@ export const ContractStatusUpdatedActionPreview = () => {
       />
       <Card className='m-6 mt-3 p-4 shadow-xs'>
         <CardContent className='flex p-0 items-center'>
-          <div className='inline-block w-[30px]'>
-            <FeaturedIcon
-              size='md'
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              colorScheme={iconsByStatus[status].colorScheme as any}
-            >
-              {iconsByStatus[status].icon}
-            </FeaturedIcon>
-          </div>
-          <p className='my-1 max-w[500px] line-clamp-2 ml-2 text-sm text-gray-700'>
+          {iconsByStatus[status].icon}
+          <p className='max-w-[500px] line-clamp-2 ml-2 text-sm text-gray-700'>
             {content}
             <span
               className={cn(

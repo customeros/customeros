@@ -1,5 +1,6 @@
 import { ActionType } from '@graphql/types';
 import { InvoicePreviewModal } from '@organization/components/Timeline/PastZone/events/invoice/InvoicePreviewModal';
+import { GenericActionTypePreview } from '@organization/components/Timeline/PastZone/events/action/generic/GenericActionTypePreview.tsx';
 
 import { ServiceUpdatedActionPreview } from './service/ServiceUpdatedActionPreview';
 import { ContractStatusUpdatedActionPreview } from './contract/ContractStatusUpdatedActionPreview';
@@ -24,6 +25,8 @@ export const ActionPreviewModal = ({ type }: ActionPreviewModalProps) => {
       return <ServiceUpdatedActionPreview mode='created' />;
     case ActionType.OnboardingStatusChanged:
       return <OnboardingStatusChangedActionPreview />;
+    case ActionType.Generic:
+      return <GenericActionTypePreview />;
     default:
       return <InvoicePreviewModal />;
   }

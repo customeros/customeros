@@ -25,7 +25,7 @@ export const handleOperatorName = (
   return match(operator)
     .with(ComparisonOperator.Between, () => 'between')
     .with(ComparisonOperator.In, () => (!plural ? 'is' : 'is any of'))
-    .with(ComparisonOperator.Equals, () => 'equals')
+    .with(ComparisonOperator.Eq, () => 'equals')
     .with(ComparisonOperator.Gt, () =>
       type === 'date' ? 'after' : 'more than',
     )
@@ -56,7 +56,7 @@ export const handleOperatorIcon = (
     .with(ComparisonOperator.In, () => (
       <CheckCircle className='text-gray-500 group-hover:text-gray-700' />
     ))
-    .with(ComparisonOperator.Equals, () => (
+    .with(ComparisonOperator.Eq, () => (
       <Equal className='text-gray-500 group-hover:text-gray-700' />
     ))
     .with(ComparisonOperator.Gt, () =>

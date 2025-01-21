@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 import { useKeyBindings } from 'rooks';
 import cityTimezone from 'city-timezones';
@@ -64,10 +64,10 @@ export const ContactPreviewCard = observer(() => {
       })?.timezone
     : null;
 
-  const linkedInProfile = contact?.value.linkedInUrl;
+  const linkedInProfile = contact?.value.linkedInAlias;
   const fromatedUrl = getFormattedLink(linkedInProfile || '').replace(
     /^linkedin\.com\/(?:in\/|company\/)?/,
-    '/',
+    '',
   );
   const href = contact?.value.linkedInUrl;
 
@@ -96,6 +96,12 @@ export const ContactPreviewCard = observer(() => {
       when: store.ui.contactPreviewCardOpen,
     },
   );
+
+  const usersStore = store.users
+    .toArray()
+    .filter((user) => contact.value.connectedUsers?.includes(user.id));
+
+  const users = usersStore.map((user) => user.value.name);
 
   return (
     <>
@@ -225,7 +231,7 @@ export const ContactPreviewCard = observer(() => {
                       copyToClipboard(fromatedUrl, 'LinkedIn profile copied');
                     }}
                   >
-                    {fromatedUrl}
+                    {contact?.value.linkedInAlias || fromatedUrl}
                   </p>
                 ) : (
                   <p className='text-sm truncate w-[180px] text-gray-400'>
@@ -233,16 +239,17 @@ export const ContactPreviewCard = observer(() => {
                   </p>
                 )}
                 {fromatedUrl && (
-                  <Link to={href || ''} target='_blank'>
-                    <IconButton
-                      size='xxs'
-                      variant='ghost'
-                      colorScheme='gray'
-                      aria-label='social link'
-                      icon={<LinkExternal02 className='text-gray-500' />}
-                      className='hover:bg-gray-200 opacity-0 group-hover:opacity-100'
-                    />
-                  </Link>
+                  <IconButton
+                    size='xxs'
+                    variant='ghost'
+                    colorScheme='gray'
+                    aria-label='social link'
+                    icon={<LinkExternal02 className='text-gray-500' />}
+                    className='hover:bg-gray-200 opacity-0 group-hover:opacity-100'
+                    onClick={() =>
+                      window.open(href || '', '_blank', 'noopener')
+                    }
+                  />
                 )}
               </div>
             </div>
@@ -265,16 +272,24 @@ export const ContactPreviewCard = observer(() => {
                 <LinkedInSolid02 className='mt-[1px] text-gray-500' />
                 Connected to
               </div>
-              <span
-                className={cn(
-                  'overflow-hidden text-ellipsis whitespace-nowrap cursor-not-allowed text-sm',
-                  contact?.value?.connectedUsers?.[0]
-                    ? 'text-gray-700'
-                    : 'text-gray-400',
-                )}
-              >
-                {contact?.value?.connectedUsers?.[0] || 'No one yet'}
-              </span>
+
+              {users.length > 0 ? (
+                <span
+                  className={cn(
+                    'overflow-hidden text-ellipsis whitespace-nowrap cursor-not-allowed text-sm text-gray-700',
+                  )}
+                >
+                  {users.join(', ')}
+                </span>
+              ) : (
+                <span
+                  className={cn(
+                    'overflow-hidden text-ellipsis whitespace-nowrap cursor-not-allowed text-sm text-gray-400',
+                  )}
+                >
+                  {'No one yet'}
+                </span>
+              )}
             </div>
             {contact?.value?.enrichedAt && (
               <div className='text-xs text-gray-500'>

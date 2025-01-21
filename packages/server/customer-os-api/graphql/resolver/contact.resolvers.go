@@ -894,9 +894,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 	if enrichmentResponse == nil {
-		tracing.TraceErr(span, errors.New("enrichment response is nil"))
-		graphql.AddErrorf(ctx, "Failed to find work email for contact %s", contactID)
-		return &model.ActionResponse{Accepted: false}, nil
+		return &model.ActionResponse{Accepted: true}, nil
 	}
 
 	var emailsToCreateAndLinkWithContact []string

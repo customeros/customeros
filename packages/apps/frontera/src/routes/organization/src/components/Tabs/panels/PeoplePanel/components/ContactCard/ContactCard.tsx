@@ -1,9 +1,10 @@
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useMemo, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { TagDatum } from '@store/Tags/Tag.store';
 import { AddJobRole } from '@domain/usecases/people-contact-card/add-jobrole.usecase';
+import { EditContactNameUseCase } from '@domain/usecases/people-contact-card/edit-contact-name.usecase';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
@@ -118,6 +119,10 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
   const isEnriching = contactStore?.isEnriching;
 
   const jobRoleUseCase = useMemo(() => new AddJobRole(id), [id]);
+  const contactNameUseCase = useMemo(
+    () => new EditContactNameUseCase(id),
+    [id],
+  );
 
   if (!contactStore) return null;
 
@@ -172,21 +177,20 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                       <Input
                         size='xxs'
                         variant='unstyled'
-                        value={contactStore?.name || ''}
                         dataTest='org-people-contact-name'
                         onFocus={(e) => e.target.select()}
                         onKeyDown={(e) => e.stopPropagation()}
+                        value={contactNameUseCase.contactName || ''}
                         className='placeholder:font-medium font-medium min-w-[60px] w-[200px]'
-                        onChange={(e) => {
-                          contactStore.value.name = e.target.value;
+                        onBlur={() => {
+                          contactNameUseCase.execute();
                         }}
+                        onChange={(e) =>
+                          contactNameUseCase.setName(e.target.value)
+                        }
                         placeholder={
                           isEnriching ? 'Getting name...' : 'First & last name'
                         }
-                        onBlur={() => {
-                          contactStore.draft();
-                          contactStore.commit();
-                        }}
                       />
                     )}
 
@@ -300,21 +304,21 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
               <Linkedin className='text-gray-500 mr-4' />
               <div className='flex items-start justify-between w-full'>
                 {linkedInProfile ? (
-                  <p
+                  <span
                     className={cn(
                       'text-sm cursor-pointer w-[300px] truncate no-underline hover:no-underline',
                     )}
                     onClick={() =>
                       copyToClipboard(
-                        linkedInProfile,
+                        contactStore.value.linkedInUrl || '',
                         'LinkedIn profile copied',
                       )
                     }
                   >
-                    {formattedLink}
-                  </p>
+                    {contactStore.value.linkedInAlias ?? formattedLink}
+                  </span>
                 ) : (
-                  <p
+                  <span
                     onClick={() => onOpen()}
                     data-test='org-people-linkedin'
                     className={cn(
@@ -323,19 +327,20 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                     )}
                   >
                     {'LinkedIn profile URL'}
-                  </p>
+                  </span>
                 )}
                 {linkedInProfile && (
-                  <Link target='_blank' to={linkedInProfile || ''}>
-                    <IconButton
-                      size='xxs'
-                      variant='ghost'
-                      colorScheme='gray'
-                      aria-label='social link'
-                      icon={<LinkExternal02 className='text-gray-500' />}
-                      className='hover:bg-gray-200 opacity-0 group-hover/linkedin:opacity-100'
-                    />
-                  </Link>
+                  <IconButton
+                    size='xxs'
+                    variant='ghost'
+                    colorScheme='gray'
+                    aria-label='social link'
+                    className='hover:bg-gray-200  '
+                    icon={<LinkExternal02 className='text-gray-500' />}
+                    onClick={() =>
+                      window.open(linkedInProfile, '_blank', 'noopener')
+                    }
+                  />
                 )}
               </div>
             </div>
