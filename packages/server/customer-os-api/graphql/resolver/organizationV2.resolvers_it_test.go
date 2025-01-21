@@ -726,12 +726,12 @@ func TestQueryResolver_UIOrganizationsSearch_FilterByTags(t *testing.T) {
 
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsEmpty, 3, 1)
 	assertSearch(t, searchBy, "", commonModel.ComparisonOperatorIsNotEmpty, 3, 2)
-	assertSearch(t, searchBy, []string{"A", "B", "C"}, commonModel.ComparisonOperatorIn, 3, 2)
-	assertSearch(t, searchBy, []string{"c"}, commonModel.ComparisonOperatorIn, 3, 1)
-	assertSearch(t, searchBy, []string{"X", "Y", "Z"}, commonModel.ComparisonOperatorIn, 3, 0)
+	assertSearch(t, searchBy, []string{"tag3", "tag2", "no-tag"}, commonModel.ComparisonOperatorIn, 3, 2)
+	assertSearch(t, searchBy, []string{"tag4"}, commonModel.ComparisonOperatorIn, 3, 1)
+	assertSearch(t, searchBy, []string{"notag1", "notag2", "notag3"}, commonModel.ComparisonOperatorIn, 3, 0)
 
-	assertSearch(t, searchBy, []string{"X"}, commonModel.ComparisonOperatorNotIn, 3, 3)
-	assertSearch(t, searchBy, []string{"B", "Y"}, commonModel.ComparisonOperatorNotIn, 3, 2)
+	assertSearch(t, searchBy, []string{"notag1"}, commonModel.ComparisonOperatorNotIn, 3, 3)
+	assertSearch(t, searchBy, []string{"tag2", "notag2"}, commonModel.ComparisonOperatorNotIn, 3, 2)
 }
 
 func TestQueryResolver_UIOrganizationsSearch_FilterByParentOrganization(t *testing.T) {
