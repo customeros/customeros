@@ -3,20 +3,25 @@ import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
-import { cn } from '@ui/utils/cn';
+import { cn } from '@ui/utils/cn.ts';
 import { Domain } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { XCircle } from '@ui/media/icons/XCircle';
-import { Globe01 } from '@ui/media/icons/Globe01';
-import { PlusCircle } from '@ui/media/icons/PlusCircle';
-import { getExternalUrl } from '@utils/getExternalLink';
-import { DotsVertical } from '@ui/media/icons/DotsVertical';
-import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
-import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { XCircle } from '@ui/media/icons/XCircle.tsx';
+import { Globe01 } from '@ui/media/icons/Globe01.tsx';
+import { getExternalUrl } from '@utils/getExternalLink.ts';
+import { PlusCircle } from '@ui/media/icons/PlusCircle.tsx';
+import { DotsVertical } from '@ui/media/icons/DotsVertical.tsx';
+import { ChevronExpand } from '@ui/media/icons/ChevronExpand.tsx';
+import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse.tsx';
+import {
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuButton,
+} from '@ui/overlay/Menu/Menu.tsx';
 
-import { Subdomain } from './Subdomain';
+import { Subdomain } from './Subdomain.tsx';
 
 export const Domains = observer(() => {
   const store = useStore();
