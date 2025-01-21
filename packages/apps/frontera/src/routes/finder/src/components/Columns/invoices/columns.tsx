@@ -151,7 +151,12 @@ const columns: Record<string, Column> = {
       />
     ),
     cell: (props) => (
-      <BillingCycleCell id={props.getValue()?.value?.metadata.id} />
+      <BillingCycleCell
+        billingCycleInMonths={
+          props.getValue()?.value?.contract?.billingDetails
+            ?.billingCycleInMonths
+        }
+      />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
