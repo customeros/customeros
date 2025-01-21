@@ -16,7 +16,7 @@ type Agents struct {
 	Goal         string     `gorm:"column:goal;type:text" json:"goal"`
 	Status       string     `gorm:"column:status;type:varchar(32)" json:"status"`
 	IsActive     bool       `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
-	FlowID       string     `gorm:"column:flow_id;type:varchar(255)" json:"flowId" binding:"required"`
+	FlowID       string     `gorm:"column:flow_id;type:varchar(255)" json:"flowId"`
 	VisibleInUI  bool       `gorm:"column:visible_in_ui;type:boolean;default:true" json:"visibleInUI"`
 	CreatedAt    time.Time  `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
 	UpdatedAt    *time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
