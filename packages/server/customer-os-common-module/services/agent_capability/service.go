@@ -14,16 +14,22 @@ type agentCapabilityService struct {
 	executionHandlers    map[enum.AgentCapabilityType]CapabilityExecutionHandler
 	postgresRepositories *postgres_repository.Repositories
 	enrichmentService    interfaces.EnrichmentService
+	organizationService  interfaces.OrganizationService
+	actionService        interfaces.ActionService
 }
 
 func NewAgentCapabilityService(
 	postgresRepositories *postgres_repository.Repositories,
 	enrichmentService interfaces.EnrichmentService,
+	organizationService interfaces.OrganizationService,
+	actionService interfaces.ActionService,
 ) (interfaces.AgentCapabilityService, error) {
 	service := &agentCapabilityService{
 		executionHandlers:    make(map[enum.AgentCapabilityType]CapabilityExecutionHandler),
 		postgresRepositories: postgresRepositories,
 		enrichmentService:    enrichmentService,
+		organizationService:  organizationService,
+		actionService:        actionService,
 	}
 
 	// err := service.InitCapabilityRegistry()
@@ -32,7 +38,17 @@ func NewAgentCapabilityService(
 	// }
 
 	// Register handlers
+	service.executionHandlers[enum.CapabilityAnalyzeWebSessionIntent] = service.handleAnalyzeWebSessionExecution
+	service.executionHandlers[enum.CapabilityCreateOrganization] = service.handleOrganizationCreationExecution
 	service.executionHandlers[enum.CapabilityIdentifyWebVisitor] = service.handleIdentifyWebsiteVisitorExecution
 
 	return service, nil
+}
+
+func (c *agentCapabilityService) SetOrganizationService(org interfaces.OrganizationService) {
+	c.organizationService = org
+}
+
+func (c *agentCapabilityService) SetActionService(action interfaces.ActionService) {
+	c.actionService = action
 }
