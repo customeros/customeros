@@ -5,15 +5,16 @@ import (
 	"errors"
 	"fmt"
 
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/opentracing/opentracing-go"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
 )
 
 type AgentVisitorIDService struct {
@@ -88,7 +89,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 }
 
 func (a *AgentVisitorIDService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEvent string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.Run")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.createAgentExecutionRecord")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
