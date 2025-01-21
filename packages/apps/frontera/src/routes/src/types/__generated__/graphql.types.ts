@@ -1863,6 +1863,8 @@ export type GlobalCache = {
   __typename?: 'GlobalCache';
   activeEmailTokens: Array<GlobalCacheEmailToken>;
   cdnLogoUrl: Scalars['String']['output'];
+  contactCities: Array<Scalars['String']['output']>;
+  contactRegions: Array<Scalars['String']['output']>;
   contractsExist: Scalars['Boolean']['output'];
   inactiveEmailTokens: Array<GlobalCacheEmailToken>;
   isFirstLogin: Scalars['Boolean']['output'];
