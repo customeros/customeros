@@ -244,9 +244,11 @@ export const ContactPreviewCard = observer(() => {
                     variant='ghost'
                     colorScheme='gray'
                     aria-label='social link'
-                    onClick={() => window.open(href || '', '_blank')}
                     icon={<LinkExternal02 className='text-gray-500' />}
                     className='hover:bg-gray-200 opacity-0 group-hover:opacity-100'
+                    onClick={() =>
+                      window.open(href || '', '_blank', 'noopener')
+                    }
                   />
                 )}
               </div>
