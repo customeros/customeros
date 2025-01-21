@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/customeros/mailsherpa/domaincheck"
@@ -36,7 +37,8 @@ func (c *agentCapabilityService) handleIdentifyWebsiteVisitorExecution(ctx conte
 		tracing.TraceErr(span, err)
 		return err
 	}
-	executionContainer.OutputData = &result
+
+	executionContainer.OutputData = result
 	span.LogKV(
 		"event", "capability_executed",
 		"output_type", fmt.Sprintf("%T", result),
@@ -45,21 +47,22 @@ func (c *agentCapabilityService) handleIdentifyWebsiteVisitorExecution(ctx conte
 	return nil
 }
 
-func (c *agentCapabilityService) executeIdentifyWebsiteVisitor(ctx context.Context, data IdentifyWebsiteVisitorInput) (*IdentifyWebsiteVisitorResult, error) {
+func (c *agentCapabilityService) executeIdentifyWebsiteVisitor(ctx context.Context, data IdentifyWebsiteVisitorInput) (IdentifyWebsiteVisitorResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.executeIdentifyWebsiteVisitor")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
+	results := IdentifyWebsiteVisitorResult{}
+
 	domain, linkedInSlug, err := c.identifyIP(ctx, data.IPAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return results, err
 	}
 
-	return &IdentifyWebsiteVisitorResult{
-		Domain:       domain,
-		LinkedInSlug: linkedInSlug,
-	}, nil
+	results.Domain = domain
+	results.LinkedInSlug = linkedInSlug
+	return results, nil
 }
 
 func (c *agentCapabilityService) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug string, err error) {
