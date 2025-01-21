@@ -1,6 +1,7 @@
 import { FC } from 'react';
 
 import { Action, ActionType } from '@graphql/types';
+import { GenericActionType } from '@organization/components/Timeline/PastZone/events/action/generic/GenericActionType.tsx';
 
 import { ServiceUpdatedAction } from './service/ServiceUpdatedAction';
 import InvoiceStatusChangeAction from './invoice/InvoiceStatusChangeAction';
@@ -39,6 +40,8 @@ export const UserActionStub: FC<ActionStubProps> = ({ data }) => {
     case ActionType.InvoiceVoided:
     case ActionType.InvoiceOverdue:
       return <InvoiceStatusChangeAction data={data} mode={data.actionType} />;
+    case ActionType.Generic:
+      return <GenericActionType data={data} />;
   }
 
   return null;
