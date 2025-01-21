@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   build-publish:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     steps:
       - name: Delete huge unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache

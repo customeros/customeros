@@ -46,7 +46,7 @@ defaults:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     steps:
       - uses: actions/checkout@v4
 
@@ -90,7 +90,7 @@ jobs:
   build-publish:
     needs:
       - test
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     steps:
       - name: Checkout
         uses: actions/checkout@v4

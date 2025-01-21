@@ -26,7 +26,7 @@ permissions:
 
 jobs:
   build-frontera-dev:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     steps:
       - name: Delete huge unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache
@@ -82,7 +82,7 @@ jobs:
             "VITE_STRIPE_PUBLIC_KEY=${{ secrets.DEV_VITE_STRIPE_PUBLIC_KEY }}"
 
   build-frontera-prod:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     steps:
       - name: Delete huge unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache
@@ -138,7 +138,7 @@ jobs:
             "VITE_STRIPE_PUBLIC_KEY=${{ secrets.PROD_VITE_STRIPE_PUBLIC_KEY }}"
 
   build-middleware:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     steps:
       - name: Delete huge unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache
