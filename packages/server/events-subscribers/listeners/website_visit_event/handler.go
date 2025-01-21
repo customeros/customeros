@@ -3,6 +3,7 @@ package website_visit_event
 import (
 	"context"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -37,6 +38,10 @@ func (h *WebsiteVisitEventHandler) Handle(ctx context.Context) error {
 	span, ctx := tracing.StartTracerSpan(ctx, "WebsiteVisitEventHandler.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	ctx = common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant: h.event.Tenant,
+	})
 
 	activeAgents := h.lookupActiveAgents(ctx)
 	if activeAgents == nil {
