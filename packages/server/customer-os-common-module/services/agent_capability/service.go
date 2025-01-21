@@ -2,7 +2,6 @@ package agent_capability
 
 import (
 	"context"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -21,7 +20,8 @@ func NewAgentCapabilityService(
 	postgresRepositories *postgres_repository.Repositories,
 	enrichmentService interfaces.EnrichmentService,
 ) (interfaces.AgentCapabilityService, error) {
-	executionHandlers: make(map[enum.AgentCapabilityType]CapabilityExecutionHandler),
+	service := &agentCapabilityService{
+		executionHandlers:    make(map[enum.AgentCapabilityType]CapabilityExecutionHandler),
 		postgresRepositories: postgresRepositories,
 		enrichmentService:    enrichmentService,
 	}
@@ -34,5 +34,6 @@ func NewAgentCapabilityService(
 	// Register handlers
 	service.executionHandlers[enum.CapabilityIdentifyWebVisitor] = service.handleIdentifyWebsiteVisitorExecution
 
-	return &service, nil
+	return service, nil
 }
+
