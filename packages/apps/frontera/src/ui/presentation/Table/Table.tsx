@@ -40,10 +40,11 @@ import {
 
 import { cn } from '@ui/utils/cn';
 import { TableIdType } from '@graphql/types';
+import { Square } from '@ui/media/icons/Square';
 import { useModKey } from '@shared/hooks/useModKey';
 import { Tumbleweed } from '@ui/media/icons/Tumbleweed';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
-import { Checkbox, CheckboxProps } from '@ui/form/Checkbox/Checkbox';
+import { CheckSquare } from '@ui/media/icons/CheckSquare';
 
 declare module '@tanstack/table-core' {
   // REASON: TData & TValue are not used in this interface but need to be defined
@@ -391,14 +392,15 @@ export const Table = <T extends object>({
                               : 'Select All'
                           }
                         >
-                          <div>
-                            <MemoizedCheckbox
-                              key={`checkbox-header-select-all`}
-                              dataTest={'all-orgs-select-all-orgs'}
-                              isChecked={table.getIsAllRowsSelected()}
-                              onChange={() => table.toggleAllRowsSelected()}
-                              className='group-hover/header:visible group-hover/header:opacity-100'
-                            />
+                          <div
+                            onClick={() => table.toggleAllRowsSelected()}
+                            className='cursor-pointer opacity-0 group-hover/header:opacity-100'
+                          >
+                            {table.getIsAllRowsSelected() ? (
+                              <CheckSquare className='text-primary-600' />
+                            ) : (
+                              <Square className='text-gray-400' />
+                            )}
                           </div>
                         </Tooltip>
                       )}
@@ -558,7 +560,7 @@ const TableBody = <T extends object>({
             className={twMerge(
               hoverStyle,
               focusStyle,
-              'group',
+              'group/row',
               row?.getIsSelected() && 'bg-gray-50',
             )}
             onClick={
@@ -582,17 +584,25 @@ const TableBody = <T extends object>({
                   )}
                 >
                   {enableRowSelection && (
-                    <MemoizedCheckbox
-                      isChecked={row?.getIsSelected()}
+                    <div
                       key={`checkbox-${virtualRow.index}`}
-                      disabled={!row || !row?.getCanSelect()}
-                      isFocused={row?.index === focusedRowIndex}
-                      className='group-hover:visible group-hover:opacity-100'
-                      onChange={(isChecked) => {
-                        row?.getToggleSelectedHandler()(isChecked);
+                      className={cn(
+                        'cursor-pointer group-hover/row:opacity-100 group-hover/row:visible opacity-0',
+                        row?.getIsSelected() && 'opacity-100',
+                      )}
+                      onClick={() => {
+                        const isSelected = row?.getIsSelected();
+
+                        row?.getToggleSelectedHandler()(!isSelected);
                         setSelectedIndex(virtualRow.index);
                       }}
-                    />
+                    >
+                      {row?.getIsSelected() ? (
+                        <CheckSquare className='text-primary-600' />
+                      ) : (
+                        <Square className='text-gray-400' />
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -871,31 +881,6 @@ const NoResults = ({ tableId }: { tableId?: TableIdType }) => {
           )}
       </p>
     </div>
-  );
-};
-
-const MemoizedCheckbox = ({
-  className,
-  disabled,
-  isChecked,
-  isFocused,
-  onChange,
-  dataTest,
-}: CheckboxProps & { isFocused?: boolean }) => {
-  return (
-    <Checkbox
-      size='sm'
-      iconSize='sm'
-      disabled={disabled}
-      onChange={onChange}
-      data-test={dataTest}
-      isChecked={isChecked}
-      className={cn(
-        className,
-        isChecked || isFocused ? 'opacity-100' : 'opacity-0',
-        isChecked || isFocused ? 'visible' : 'hidden',
-      )}
-    />
   );
 };
 
