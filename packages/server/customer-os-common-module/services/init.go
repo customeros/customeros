@@ -14,6 +14,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/action"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/ai"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/attachment"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/azure"
@@ -76,6 +78,9 @@ type CommonServices struct {
 
 	// Services
 	ActionService              interfaces.ActionService
+	AgentService               interfaces.AgentService
+	AgentCapabilityService     interfaces.AgentCapabilityService
+	AgentVisitorIDService      *agent.AgentVisitorIDService
 	AIService                  interfaces.AIService
 	AttachmentService          interfaces.AttachmentService
 	AzureService               interfaces.AzureService
@@ -154,6 +159,7 @@ func InitCommonServices(
 	}
 
 	// Simple - Services that depend only on base services
+	agentImpl := agent.NewAgentService(postgresRepositories)
 	aiImpl := ai.NewAIService(log, &cfg.External.AnthropicConfig)
 	attachmentImpl := attachment.NewAttachmentService(neo4jRepositories)
 	azureImpl := azure.NewAzureService(&cfg.Infrastructure.AzureOAuthConfig, postgresRepositories, neo4jRepositories)
@@ -184,6 +190,10 @@ func InitCommonServices(
 	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories)
 
 	// Services that only depend on Simple
+	agentCapabilityImpl, err := agent_capability.NewAgentCapabilityService(postgresRepositories, enrichmentImpl)
+	if err != nil {
+		log.Fatalf("Cannot start agent capability service")
+	}
 	fileImpl := files.NewFileService(log, &cfg.Internal.FileStoreConfig, neo4jRepositories, attachmentImpl)
 	reminderImpl := reminders.NewReminderService(neo4jRepositories, novuImpl)
 	verifyImpl := verify.NewVerifyService(log, postgresRepositories, cfg, enrichmentImpl)
@@ -195,6 +205,7 @@ func InitCommonServices(
 	contactImpl := contact.NewContactService(log, neo4jRepositories, eventsImpl, domainImpl, emailImpl, nil, jobroleImpl, nil, nil)
 	socialImpl := social.NewSocialService(log, neo4jRepositories, eventsImpl, contactImpl)
 	orgImpl := organization.NewOrganizationService(log, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl)
+	agentVisitorIdImpl := agent.NewAgentVisitorIDService(postgresRepositories, agentImpl, agentCapabilityImpl, orgImpl)
 	contractImpl := contract.NewContractService(log, neo4jRepositories, eventsImpl, grpcClients, nil, orgImpl)
 	opportunityImpl := opportunity.NewOpportunityService(log, grpcClients, neo4jRepositories, eventsImpl, contractImpl, orgImpl, tenantSettingsImpl)
 	sliImpl := sli.NewServiceLineItemService(log, eventsImpl, neo4jRepositories, contractImpl)
@@ -232,6 +243,9 @@ func InitCommonServices(
 
 		// All other services (alphabetically)
 		ActionService:              actionImpl,
+		AgentService:               agentImpl,
+		AgentCapabilityService:     agentCapabilityImpl,
+		AgentVisitorIDService:      agentVisitorIdImpl,
 		AIService:                  aiImpl,
 		AttachmentService:          attachmentImpl,
 		AzureService:               azureImpl,

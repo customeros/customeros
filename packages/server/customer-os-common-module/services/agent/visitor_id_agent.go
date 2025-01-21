@@ -1,0 +1,110 @@
+package agent
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/opentracing/opentracing-go"
+)
+
+type AgentVisitorIDService struct {
+	postgresRepositories   *postgres_repository.Repositories
+	agentService           interfaces.AgentService
+	agentCapabilityService interfaces.AgentCapabilityService
+	organizationService    interfaces.OrganizationService
+}
+
+func NewAgentVisitorIDService(
+	postgresRepositories *postgres_repository.Repositories,
+	agentService interfaces.AgentService,
+	agentCapabilityService interfaces.AgentCapabilityService,
+	organizationService interfaces.OrganizationService,
+) *AgentVisitorIDService {
+	return &AgentVisitorIDService{
+		postgresRepositories:   postgresRepositories,
+		agentService:           agentService,
+		agentCapabilityService: agentCapabilityService,
+		organizationService:    organizationService,
+	}
+}
+
+const DefaultNotificationCooldownInHours = 12
+
+func (a *AgentVisitorIDService) Create(ctx context.Context) (*postgres_entity.Agents, error) {
+	return a.agentService.CreateAgent(ctx, enum.AgentVisitorID)
+}
+
+func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *data_fields.WebsiteVisitEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.Run")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	executionID, err := a.createAgentExecutionRecord(ctx, agentID, event.Type())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	executionContainer := dto.CapabilityExecutionContainer{
+		AgentID:          agentID,
+		AgentExecutionID: executionID,
+		Capability:       enum.CapabilityIdentifyWebVisitor,
+		InputData: agent_capability.IdentifyWebsiteVisitorInput{
+			IPAddress: event.IPAddress,
+		},
+	}
+
+	err = a.agentCapabilityService.ExecuteCapability(ctx, &executionContainer)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	output, ok := executionContainer.OutputData.(agent_capability.IdentifyWebsiteVisitorResult)
+	if !ok {
+		err := fmt.Errorf("expected IdentifyWebsiteVisitorResult, got %T", executionContainer.OutputData)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// create org
+	_, err = a.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
+		Domains: []string{output.Domain},
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return nil
+}
+
+func (a *AgentVisitorIDService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEvent string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.Run")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	agent, err := a.postgresRepositories.AgentsRepository.Find(ctx, postgres_entity.Agents{
+		ID: agentID,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	if agent == nil {
+		err := errors.New("agent not found")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	return a.agentService.CreateAgentExecutionRecord(ctx, *agent, triggerEvent)
+}

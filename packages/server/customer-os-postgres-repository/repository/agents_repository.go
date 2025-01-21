@@ -15,7 +15,7 @@ import (
 )
 
 type AgentsRepository interface {
-	Create(ctx context.Context, agent *postgres_entity.Agents) (*postgres_entity.Agents, error)
+	Create(ctx context.Context, agent postgres_entity.Agents) (*postgres_entity.Agents, error)
 	Find(ctx context.Context, agent postgres_entity.Agents) (*postgres_entity.Agents, error)
 	FindAll(ctx context.Context, agent postgres_entity.Agents) ([]postgres_entity.Agents, error)
 	FindAllFromAgentsList(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agents, error)
@@ -30,7 +30,7 @@ func NewAgentsRepository(gormDb *gorm.DB) AgentsRepository {
 	return &agentsRepository{gormDb: gormDb}
 }
 
-func (f *agentsRepository) Create(ctx context.Context, agent *postgres_entity.Agents) (*postgres_entity.Agents, error) {
+func (f *agentsRepository) Create(ctx context.Context, agent postgres_entity.Agents) (*postgres_entity.Agents, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentsRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)

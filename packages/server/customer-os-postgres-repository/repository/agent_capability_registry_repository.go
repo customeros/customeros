@@ -13,7 +13,6 @@ import (
 )
 
 type AgentCapabilityRegistryRepository interface {
-	Initialize(ctx context.Context) error
 	Create(ctx context.Context, agent postgres_entity.AgentCapabilityRegistry) (*postgres_entity.AgentCapabilityRegistry, error)
 	Find(ctx context.Context, agentID enum.AgentCapabilityType) (*postgres_entity.AgentCapabilityRegistry, error)
 	FindAll(ctx context.Context) ([]postgres_entity.AgentCapabilityRegistry, error)
@@ -106,65 +105,4 @@ func (a *agentCapabilityRegistryRepository) Update(ctx context.Context, capabili
 	}
 
 	return &updatedCapability, nil
-}
-
-func (r *agentCapabilityRegistryRepository) Initialize(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Initialize")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-
-	requiredCapabilities := []postgres_entity.AgentCapabilityRegistry{
-		buildCapabilities(
-			enum.CapabilityTrackWebSession,
-			"Track website visitors",
-		),
-		buildCapabilities(
-			enum.CapabilityIdentifyWebVisitor,
-			"Identify website visitors",
-		),
-		buildCapabilities(
-			enum.CapabilityCreateOrganization,
-			"Create new organizations",
-		),
-		buildCapabilities(
-			enum.CapabilityAnalyzeWebSessionIntent,
-			"Analyze web session for intent signals",
-		),
-		buildCapabilities(
-			enum.CapabilitySendSlackNotification,
-			"Send Slack notification",
-		),
-	}
-
-	for _, capability := range requiredCapabilities {
-		validCapability, err := enum.GetAgentCapability(capability.Type)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			continue
-		}
-		existingCapability, err := r.Find(ctx, validCapability)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			continue
-		}
-
-		if existingCapability != nil {
-			continue
-		}
-
-		_, createErr := r.Create(ctx, capability)
-		if createErr != nil {
-			tracing.TraceErr(span, createErr)
-			return createErr
-		}
-	}
-	return nil
-}
-
-func buildCapabilities(capType enum.AgentCapabilityType, desc string) postgres_entity.AgentCapabilityRegistry {
-	return postgres_entity.AgentCapabilityRegistry{
-		Type:        capType.String(),
-		Description: desc,
-		IsActive:    true,
-	}
 }

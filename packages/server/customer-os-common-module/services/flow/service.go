@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/service"
+
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
@@ -21,6 +21,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/table_view"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
@@ -277,7 +278,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 		}
 
 		if isNew {
-			tvDef, err := service.DefaultTableViewDefinitionFlowContactsV2(span, toStore.Id)
+			tvDef, err := table_view.DefaultTableViewDefinitionFlowContactsV2(span, toStore.Id)
 			if err == nil {
 				tvDef.Tenant = tenant
 				result := s.postgres.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)

@@ -6,7 +6,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -46,7 +45,7 @@ func (h *WebsiteVisitEventHandler) Handle(ctx context.Context) error {
 
 	var errs error
 	for _, agent := range activeAgents {
-		err := h.execute(ctx, agent)
+		err := h.route(ctx, agent)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
@@ -56,15 +55,10 @@ func (h *WebsiteVisitEventHandler) Handle(ctx context.Context) error {
 	return errs
 }
 
-func (h *WebsiteVisitEventHandler) execute(ctx context.Context, agent postgres_entity.Agents) error {
+func (h *WebsiteVisitEventHandler) route(ctx context.Context, agent postgres_entity.Agents) error {
 	span, ctx := tracing.StartTracerSpan(ctx, "WebsiteVisitEventHandler.execute")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	executionID, err := h.createAgentExecutionRecord(ctx, agent)
-	if err != nil {
-		return err
-	}
 
 	// run agent
 	agentType, err := enum.GetAgentType(agent.Type)
@@ -75,14 +69,14 @@ func (h *WebsiteVisitEventHandler) execute(ctx context.Context, agent postgres_e
 
 	switch agentType {
 	case enum.AgentVisitorID:
-		// send
+		return h.dependencies.CommonServices.AgentVisitorIDService.Run(ctx, agent.ID, h.event)
+
 	default:
 		err := errors.New("Unsupported agent type")
 		span.LogKV("agentType", agentType.String())
 		tracing.TraceErr(span, err)
+		return err
 	}
-
-	// update execution record
 }
 
 func (h *WebsiteVisitEventHandler) lookupActiveAgents(ctx context.Context) []postgres_entity.Agents {
@@ -99,64 +93,4 @@ func (h *WebsiteVisitEventHandler) lookupActiveAgents(ctx context.Context) []pos
 		return nil
 	}
 	return agents
-}
-
-func (h *WebsiteVisitEventHandler) createAgentExecutionRecord(ctx context.Context, agent postgres_entity.Agents) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteVisitEventHandler.createAgentExecutionRecord")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	agentExecutionRecord := postgres_entity.AgentExecution{
-		AgentID:      &agent.ID,
-		TriggerEvent: h.event.Type(),
-		Status:       enum.AgentExecutionRunning.String(),
-		StartedAt:    utils.NowPtr(),
-	}
-
-	createdRecord, err := h.dependencies.PostgresRepositories.AgentExecutionRepository.Create(ctx, agentExecutionRecord)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	if createdRecord == nil {
-		err := errors.New("unable to create agent execution record")
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	return createdRecord.ID, nil
-}
-
-func (h *WebsiteVisitEventHandler) agentExecutionSuccess(ctx context.Context, executionID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteVisitEventHandler.agentExecutionSuccess")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	agentExecutionRecord.Status = enum.AgentExecutionSuccess.String()
-	agentExecutionRecord.CompletedAt = utils.NowPtr()
-	execution, err = dependencies.PostgresRepositories.AgentExecutionRepository.Update(ctx, agentExecutionRecord)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		loopErr = multierr.Append(loopErr, err)
-	}
-
-	return nil
-}
-
-func (h *WebsiteVisitEventHandler) agentExecutionError(ctx context.Context, executionID, errorMessage string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteVisitEventHandler.agentExecutionError")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	errorMessage := loopErr.Error()
-	agentExecutionRecord.ErrorMessage = &errorMessage
-	agentExecutionRecord.Status = enum.AgentExecutionFail.String()
-
-	execution, err = dependencies.PostgresRepositories.AgentExecutionRepository.Update(ctx, agentExecutionRecord)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		loopErr = multierr.Append(loopErr, err)
-	}
-	return
 }

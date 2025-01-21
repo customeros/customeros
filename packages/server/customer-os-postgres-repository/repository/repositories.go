@@ -13,6 +13,7 @@ type Repositories struct {
 	Db      *gorm.DB
 	AsyncDb *gorm.DB
 
+	AgentCapabilityRegistryRepository            AgentCapabilityRegistryRepository
 	AgentsRepository                             AgentsRepository
 	AgentExecutionRepository                     AgentExecutionRepository
 	AgentRegistryRepository                      AgentRegistryRepository
@@ -94,6 +95,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		GoogleServiceAccountKeyRepository:  NewGoogleServiceAccountKeyRepository(postgresDB.AsyncGormDB),
 		UserEmailImportPageTokenRepository: NewUserEmailImportStateRepository(postgresDB.AsyncGormDB),
 
+		AgentCapabilityRegistryRepository:            NewAgentCapabilityRegistryRepository(postgresDB.GormDB),
 		AgentsRepository:                             NewAgentsRepository(postgresDB.GormDB),
 		AgentExecutionRepository:                     NewAgentExecutionRepository(postgresDB.GormDB),
 		AgentRegistryRepository:                      NewAgentRegistryRepository(postgresDB.GormDB),
