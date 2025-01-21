@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/opentracing/opentracing-go"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type IdentifyWebsiteVisitorInput struct {
@@ -35,7 +36,7 @@ func (c *agentCapabilityService) handleIdentifyWebsiteVisitorExecution(ctx conte
 		tracing.TraceErr(span, err)
 		return err
 	}
-	executionContainer.OutputData = result
+	executionContainer.OutputData = &result
 	span.LogKV(
 		"event", "capability_executed",
 		"output_type", fmt.Sprintf("%T", result),
@@ -59,7 +60,6 @@ func (c *agentCapabilityService) executeIdentifyWebsiteVisitor(ctx context.Conte
 		Domain:       domain,
 		LinkedInSlug: linkedInSlug,
 	}, nil
-
 }
 
 func (c *agentCapabilityService) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug string, err error) {
