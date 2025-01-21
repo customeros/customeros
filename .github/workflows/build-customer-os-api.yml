@@ -195,14 +195,10 @@ jobs:
         run: |
           set -x  # Enable debug output
           
-          if [ -f ".test-list" ] && [ -s ".test-list" ]; then
-            echo "Using cached test list"
-            cat ".test-list" > all_tests.txt
-          else
-            echo "Generating new test list..."
-            go test -list "^Test" ./graphql/resolver/... 2>/dev/null > all_tests.txt
-            cp all_tests.txt .test-list
-          fi
+          echo "Generating new test list..."
+          go test -list "^Test" ./graphql/resolver/... 2>/dev/null > all_tests.txt
+          cp all_tests.txt .test-list
+
           echo "Number of lines in all_tests.txt:"
           wc -l all_tests.txt
           
