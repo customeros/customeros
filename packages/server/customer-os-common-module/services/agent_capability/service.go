@@ -21,7 +21,7 @@ func NewAgentCapabilityService(
 	postgresRepositories *postgres_repository.Repositories,
 	enrichmentService interfaces.EnrichmentService,
 ) (interfaces.AgentCapabilityService, error) {
-	service := agentCapabilityService{
+	executionHandlers: make(map[enum.AgentCapabilityType]CapabilityExecutionHandler),
 		postgresRepositories: postgresRepositories,
 		enrichmentService:    enrichmentService,
 	}
