@@ -386,7 +386,7 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 			companyName,
 			companyDomain,
 			enrichPhoneNumber)
-		if err != nil || findWorkEmailResponse == nil {
+		if err != nil {
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
 			return
 		}
@@ -397,15 +397,15 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 			response.Data = *enrichedPersonData
 		}
 
-		betterContactResponseBody := findWorkEmailResponse.Data
-		query := postgresentity.CosApiEnrichPersonTempResult{
-			Tenant:                tenant,
-			BettercontactRecordId: dbID,
-		}
-		if personDbID != nil {
-			query.ScrapinRecordId = *personDbID
-		}
-		if betterContactResponseBody == nil {
+		if findWorkEmailResponse == nil || findWorkEmailResponse.Data == nil {
+			query := postgresentity.CosApiEnrichPersonTempResult{
+				Tenant:                tenant,
+				BettercontactRecordId: dbID,
+			}
+			if personDbID != nil {
+				query.ScrapinRecordId = *personDbID
+			}
+
 			dbRecord, err := h.services.Repositories.PostgresRepositories.CosApiEnrichPersonTempResultRepository.Create(ctx, query)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to create temp result"))
@@ -419,6 +419,8 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 			}
 			response.ResultURL = h.services.Cfg.Common.Internal.CustomerOsApi.ApiUrl + enrichPersonAcceptedUrl + "/" + dbRecord.ID.String()
 		} else {
+			betterContactResponseBody := findWorkEmailResponse.Data
+
 			response.IsComplete = true
 			emailFound, phoneFound := false, false
 			for _, item := range betterContactResponseBody {
