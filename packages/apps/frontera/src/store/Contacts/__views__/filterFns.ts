@@ -161,9 +161,8 @@ const getFilterFn = (
         { property: ColumnViewType.ContactsConnections },
         (filter) => (row: Contact) => {
           if (!filter.active) return true;
-          const users = row.value.connectedUsers?.map(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (l: any) => row.store.root.users.value.get(l.id)?.name,
+          const users = Array.from(row.value.connectedUsers.values()).map(
+            (u) => row.store.root.users.value.get(u)?.id ?? '',
           );
 
           if (!users.length)
@@ -277,26 +276,13 @@ const getFilterFn = (
 
           return match(filter.operation)
             .with(ComparisonOperator.Contains, () =>
-              filterValues?.some(
-                (categoryFilter: { value: string; category: string }) =>
-                  (categoryFilter.category === 'DELIVERABLE' &&
-                    isDeliverableV2(
-                      categoryFilter.value,
-                      emailValidationData,
-                    )) ||
-                  (categoryFilter.category === 'UNDELIVERABLE' &&
-                    isNotDeliverableV2(
-                      categoryFilter?.value,
-                      emailValidationData,
-                    )) ||
-                  (categoryFilter.category === 'UNKNOWN' &&
-                    isDeliverableUnknownV2(
-                      categoryFilter.value,
-                      emailValidationData,
-                    )),
+              filterValues?.forEach(
+                (id: string) =>
+                  isDeliverableV2(id, emailValidationData) ||
+                  isNotDeliverableV2(id, emailValidationData) ||
+                  isDeliverableUnknownV2(id, emailValidationData),
               ),
             )
-
             .with(ComparisonOperator.NotContains, () =>
               filterValues.some(
                 (categoryFilter: { value: string; category: string }) =>
@@ -485,7 +471,7 @@ function isDeliverableUnknownV2(
       data.verifyingCheckAll,
   };
 
-  return statusChecks[status]?.() ?? false;
+  return statusChecks[statuses]?.() ?? false;
 }
 
 function isDeliverableV2(

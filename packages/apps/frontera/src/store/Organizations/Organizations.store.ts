@@ -291,6 +291,8 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
   @action
   public async invalidate(id: string) {
+    if (!id) return;
+
     try {
       const { ui_organizations } = await this.service.getOrganizationsByIds({
         ids: [id],
