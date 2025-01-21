@@ -1323,6 +1323,8 @@ type GlobalCache struct {
 	ContractsExist      bool                     `json:"contractsExist"`
 	IsFirstLogin        bool                     `json:"isFirstLogin"`
 	CdnLogoURL          string                   `json:"cdnLogoUrl"`
+	ContactCities       []string                 `json:"contactCities"`
+	ContactRegions      []string                 `json:"contactRegions"`
 }
 
 type GlobalCacheEmailToken struct {

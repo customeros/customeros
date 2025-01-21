@@ -2,11 +2,11 @@ package neo4j_repository
 
 import (
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -53,6 +53,8 @@ type ContactReadRepository interface {
 	GetContactsToCheck(ctx context.Context, minutesSinceLastUpdate, hoursSinceLastCheck, limit int) ([]TenantAndContact, error)
 	GetContactsByLinkedIn(ctx context.Context, tenant, url, alias, externalId string) ([]*dbtype.Node, error)
 	GetContactsToSetPrimaryJobRole(ctx context.Context, limit int) ([]TenantAndContactId, error)
+	GetDistinctContactRegions(ctx context.Context, tenant string) ([]string, error)
+	GetDistinctContactCities(ctx context.Context, tenant string) ([]string, error)
 }
 
 type contactReadRepository struct {
@@ -822,4 +824,64 @@ func (r *contactReadRepository) GetContactsToSetPrimaryJobRole(ctx context.Conte
 	}
 	span.LogFields(log.Int("result.count", len(output)))
 	return output, nil
+}
+
+func (r *contactReadRepository) GetDistinctContactRegions(ctx context.Context, tenant string) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetDistinctContactRegions")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {active:true, name: $tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact_%s)--(l:Location) return distinct l.region`, tenant)
+	params := map[string]any{
+		"tenant": tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		span.LogFields(log.Int("result.count", 0))
+		return nil, err
+	}
+
+	return result.([]string), err
+}
+
+func (r *contactReadRepository) GetDistinctContactCities(ctx context.Context, tenant string) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetDistinctContactCities")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {active:true, name: $tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact_%s)--(l:Location) return distinct l.locality`, tenant)
+	params := map[string]any{
+		"tenant": tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		span.LogFields(log.Int("result.count", 0))
+		return nil, err
+	}
+
+	return result.([]string), err
 }
