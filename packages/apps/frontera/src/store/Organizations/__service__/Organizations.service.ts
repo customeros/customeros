@@ -26,6 +26,7 @@ import CheckWebsiteDocument from './checkWebsite.graphql';
 import RemoveDomainDocument from './removeDomain.graphql';
 import RemoveDomainsDocument from './removeDomains.graphql';
 import AddSubsidiaryDocument from './addSubsidiary.graphql';
+import FlagWrongFieldDocument from './flagWrongField.graphql';
 import GetOrganizationsDocument from './getOrganizations.graphql';
 import SaveOrganizationDocument from './saveOrganization.graphql';
 import RemoveSubsidiaryDocument from './removeSubsidiary.graphql';
@@ -75,6 +76,10 @@ import {
   GetOrganizationsQuery,
   GetOrganizationsQueryVariables,
 } from './getOrganizations.generated';
+import {
+  FlagWrongFieldMutation,
+  FlagWrongFieldMutationVariables,
+} from './flagWrongField.generated.ts';
 import {
   SaveOrganizationMutation,
   SaveOrganizationMutationVariables,
@@ -258,6 +263,13 @@ export class OrganizationsService {
       MergeOrganizationsMutation,
       MergeOrganizationsMutationVariables
     >(MergeOrganizationsDocument, payload);
+  }
+
+  async flagWrongField(payload: FlagWrongFieldMutationVariables) {
+    return this.transport.graphql.request<
+      FlagWrongFieldMutation,
+      FlagWrongFieldMutationVariables
+    >(FlagWrongFieldDocument, payload);
   }
 
   /**

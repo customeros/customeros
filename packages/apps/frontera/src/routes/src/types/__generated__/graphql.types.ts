@@ -98,7 +98,6 @@ export type Agent = {
   id: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
-  status: AgentStatus;
   tenant: Scalars['String']['output'];
   type: AgentType;
   updatedAt: Scalars['Time']['output'];
@@ -115,19 +114,11 @@ export type AgentSaveInput = {
   id?: InputMaybe<Scalars['ID']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-  status?: InputMaybe<AgentStatus>;
   tenant?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<AgentType>;
   updatedAt: Scalars['Time']['input'];
   visible?: InputMaybe<Scalars['Boolean']['input']>;
 };
-
-export enum AgentStatus {
-  Off = 'OFF',
-  On = 'ON',
-  OnAgentError = 'ON_AGENT_ERROR',
-  OnCapabilityError = 'ON_CAPABILITY_ERROR',
-}
 
 export enum AgentType {
   WebVisitIdentifier = 'WEB_VISIT_IDENTIFIER',
@@ -339,7 +330,6 @@ export type Capability = {
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   optional: Scalars['Boolean']['output'];
-  status: CapabilityStatus;
   type: CapabilityType;
   values: Scalars['String']['output'];
 };
@@ -350,17 +340,9 @@ export type CapabilitySaveInput = {
   id?: InputMaybe<Scalars['ID']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   optional?: InputMaybe<Scalars['Boolean']['input']>;
-  status?: InputMaybe<CapabilityStatus>;
   type?: InputMaybe<CapabilityType>;
   values?: InputMaybe<Scalars['String']['input']>;
 };
-
-export enum CapabilityStatus {
-  Active = 'ACTIVE',
-  ActiveWithWarnings = 'ACTIVE_WITH_WARNINGS',
-  Inactive = 'INACTIVE',
-  Pending = 'PENDING',
-}
 
 export enum CapabilityType {
   SendSlackNotification = 'SEND_SLACK_NOTIFICATION',
@@ -1692,6 +1674,16 @@ export type FilterItem = {
   value: Scalars['Any']['input'];
 };
 
+export type FlagWrongFieldInput = {
+  entityId: Scalars['ID']['input'];
+  entityType: EntityType;
+  field: FlagWrongFields;
+};
+
+export enum FlagWrongFields {
+  OrganizationIndustry = 'ORGANIZATION_INDUSTRY',
+}
+
 export type Flow = MetadataInterface & {
   __typename?: 'Flow';
   description: Scalars['String']['output'];
@@ -2563,6 +2555,7 @@ export type Mutation = {
   emailSetPrimaryForContact: Result;
   email_Validate: ActionResponse;
   externalSystem_Create: Scalars['ID']['output'];
+  flagWrongField?: Maybe<Result>;
   flowEmailActionTest: Result;
   flowParticipant_Add: FlowParticipant;
   flowParticipant_AddBulk: Result;
@@ -2944,6 +2937,10 @@ export type MutationEmail_ValidateArgs = {
 
 export type MutationExternalSystem_CreateArgs = {
   input: ExternalSystemInput;
+};
+
+export type MutationFlagWrongFieldArgs = {
+  input: FlagWrongFieldInput;
 };
 
 export type MutationFlowEmailActionTestArgs = {
@@ -3740,6 +3737,7 @@ export type Organization = MetadataInterface & {
   /** @deprecated No longer supported */
   valueProposition?: Maybe<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
+  wrongIndustry: Scalars['Boolean']['output'];
   yearFounded?: Maybe<Scalars['Int64']['output']>;
 };
 
@@ -3938,6 +3936,7 @@ export type OrganizationUiDetails = {
   updatedAt: Scalars['Time']['output'];
   valueProposition?: Maybe<Scalars['String']['output']>;
   website?: Maybe<Scalars['String']['output']>;
+  wrongIndustry: Scalars['Boolean']['output'];
   yearFounded?: Maybe<Scalars['Int64']['output']>;
 };
 

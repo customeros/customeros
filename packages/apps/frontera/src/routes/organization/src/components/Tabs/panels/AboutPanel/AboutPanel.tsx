@@ -24,17 +24,19 @@ import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { TruncatedText } from '@ui/presentation/TruncatedText/TruncatedText.tsx';
+import { TruncatedText } from '@ui/presentation/TruncatedText/TruncatedText';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
+import { AboutTabField } from '@organization/components/Tabs/panels/AboutPanel/components/AboutTabField.tsx';
 import {
   EntityType,
+  FlagWrongFields,
   OrganizationStage,
   OrganizationRelationship,
 } from '@graphql/types';
 
 import { Tags } from './components/tags';
-import { Domains } from './components/Domains';
 import { SocialMediaList } from '../../shared';
+import { Domains } from './components/domains';
 import { OwnerInput } from './components/owner';
 import { Branches } from './components/branches';
 import { stageOptions, getStageOptions, relationshipOptions } from './util';
@@ -293,21 +295,14 @@ export const AboutPanel = observer(() => {
               </div>
             )}
           </div>
-          <Tooltip align='start' label='Industry'>
-            <p className='text-sm flex items-center cursor-default'>
-              <Building07 className='text-gray-500 mr-3 ' />
-              {organization?.value?.industryName ? (
-                <span>{organization.value.industryName}</span>
-              ) : (
-                <span
-                  className={'text-gray-400'}
-                  data-test='org-about-industry'
-                >
-                  Industry not found yet
-                </span>
-              )}
-            </p>
-          </Tooltip>
+          <AboutTabField
+            dataTest={'org-about-industry'}
+            placeholder='Industry not found yet'
+            value={organization?.value?.industryName}
+            field={FlagWrongFields.OrganizationIndustry}
+            icon={<Building07 className='text-gray-500 mr-3 ' />}
+          />
+
           {organization.country && (
             <Tooltip align='start' label='Country'>
               <p className='text-sm flex items-center cursor-default'>
