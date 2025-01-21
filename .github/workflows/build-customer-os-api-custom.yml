@@ -33,7 +33,7 @@ defaults:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     strategy:
       fail-fast: false
       matrix:
@@ -123,7 +123,7 @@ jobs:
           echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
 
   test-resolver:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     strategy:
       fail-fast: false
       matrix:
@@ -278,7 +278,7 @@ jobs:
 
   build-publish:
     needs: [ test, test-resolver ]
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -340,7 +340,7 @@ jobs:
 
   trigger-deployment:
     needs: [build-publish]
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     steps:
       - name: Trigger Customer OS API Workflow
         uses: peter-evans/repository-dispatch@v3

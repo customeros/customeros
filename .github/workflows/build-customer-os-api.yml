@@ -44,7 +44,7 @@ defaults:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     strategy:
       fail-fast: false
       matrix:
@@ -133,7 +133,7 @@ jobs:
           coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
           echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
   test-resolver:
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     strategy:
       fail-fast: false
       matrix:
@@ -285,7 +285,7 @@ jobs:
 
   build-publish:
     needs: [ test, test-resolver ]
-    runs-on: ubuntu-latest
+    runs-on: ubicloud-standard-2
     steps:
       - name: Checkout
         uses: actions/checkout@v4
