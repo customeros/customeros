@@ -26,14 +26,13 @@ func NewAgentCapabilityService(
 		enrichmentService:    enrichmentService,
 	}
 
-	err := service.InitCapabilityRegistry()
-	if err != nil {
-		return nil, err
-	}
+	// err := service.InitCapabilityRegistry()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	// Register handlers
 	service.executionHandlers[enum.CapabilityIdentifyWebVisitor] = service.handleIdentifyWebsiteVisitorExecution
 
 	return service, nil
 }
-
