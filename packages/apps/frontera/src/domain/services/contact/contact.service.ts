@@ -56,4 +56,27 @@ export class ContactService {
 
     return [res, err];
   }
+
+  public async changeContactName(contact: Contact, name: string) {
+    contact.changeName(name);
+
+    const [res, err] = await unwrap(
+      this.contactRepo.updateContact({
+        input: { id: contact.id, name },
+      }),
+    );
+
+    if (err) {
+      console.error(err);
+
+      this.store.ui.toastError(
+        'Failed to change contact name',
+        'contact-name-change-failed',
+      );
+
+      return [null, err];
+    }
+
+    return [res, err];
+  }
 }
