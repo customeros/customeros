@@ -8,7 +8,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neoEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
