@@ -72,7 +72,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 
 	output, ok := executionContainer.OutputData.(agent_capability.IdentifyWebsiteVisitorResult)
 	if !ok {
-		err := fmt.Errorf("expected IdentifyWebsiteVisitorResult, got %T", executionContainer.OutputData)
+		err := fmt.Errorf("expected agent_capability.IdentifyWebsiteVisitorResult, got %T", executionContainer.OutputData)
 		tracing.TraceErr(span, err)
 		return err
 	}
