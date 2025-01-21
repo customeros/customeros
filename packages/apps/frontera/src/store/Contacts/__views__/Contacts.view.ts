@@ -39,7 +39,7 @@ export class ContactsView {
 
         return `${viewDef?.value.filters ?? ''}-${
           viewDef?.value.defaultFilters ?? ''
-        }-${viewDef?.value.sorting}-${columns}-${this.store.size}`;
+        }-${viewDef?.value.sorting}-${columns}`;
       },
       () => this.store.search(this.store.root.tableViewDefs.contactsPreset!),
     );
@@ -66,13 +66,9 @@ export class ContactsView {
     const viewDef = this.store.root.tableViewDefs.getById(preset);
 
     if (!viewDef) return;
-    const currentFlowId = window.location.pathname.split('/').pop();
 
     const defaultFilters = getContactFilterFns(viewDef.getDefaultFilters());
-    const activeFilters = getContactFilterFns(
-      viewDef.getFilters(),
-      currentFlowId,
-    );
+    const activeFilters = getContactFilterFns(viewDef.getFilters());
     const sorting = JSON.parse(viewDef.value.sorting);
 
     this.store.setView(preset, (data) => {
