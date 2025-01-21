@@ -284,26 +284,11 @@ const getFilterFn = (
               ),
             )
             .with(ComparisonOperator.NotContains, () =>
-              filterValues.some(
-                (categoryFilter: { value: string; category: string }) =>
-                  !(
-                    categoryFilter.category === 'DELIVERABLE' &&
-                    isDeliverableV2(categoryFilter.value, emailValidationData)
-                  ) &&
-                  !(
-                    categoryFilter.category === 'UNDELIVERABLE' &&
-                    isNotDeliverableV2(
-                      categoryFilter.value,
-                      emailValidationData,
-                    )
-                  ) &&
-                  !(
-                    categoryFilter.category === 'UNKNOWN' &&
-                    isDeliverableUnknownV2(
-                      categoryFilter.value,
-                      emailValidationData,
-                    )
-                  ),
+              filterValues?.forEach(
+                (id: string) =>
+                  isDeliverableV2(id, emailValidationData) ||
+                  isNotDeliverableV2(id, emailValidationData) ||
+                  isDeliverableUnknownV2(id, emailValidationData),
               ),
             )
             .with(
