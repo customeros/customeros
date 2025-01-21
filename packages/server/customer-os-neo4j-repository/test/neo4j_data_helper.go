@@ -1493,7 +1493,7 @@ func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 		"jobRoleId":      jobRoleId,
 		"title":          jobRole.JobTitle,
 		"primary":        jobRole.Primary,
-		"startedAt":      jobRole.StartedAt,
-		"endedAt":        jobRole.EndedAt,
+		"startedAt":      utils.TimePtrAsAny(jobRole.StartedAt),
+		"endedAt":        utils.TimePtrAsAny(jobRole.EndedAt),
 	})
 }
