@@ -97,6 +97,12 @@ export const ContactPreviewCard = observer(() => {
     },
   );
 
+  const usersStore = store.users
+    .toArray()
+    .filter((user) => contact.value.connectedUsers?.includes(user.id));
+
+  const users = usersStore.map((user) => user.value.name);
+
   return (
     <>
       {store.ui.contactPreviewCardOpen && (
@@ -265,16 +271,24 @@ export const ContactPreviewCard = observer(() => {
                 <LinkedInSolid02 className='mt-[1px] text-gray-500' />
                 Connected to
               </div>
-              <span
-                className={cn(
-                  'overflow-hidden text-ellipsis whitespace-nowrap cursor-not-allowed text-sm',
-                  contact?.value?.connectedUsers?.[0]
-                    ? 'text-gray-700'
-                    : 'text-gray-400',
-                )}
-              >
-                {contact?.value?.connectedUsers?.[0] || 'No one yet'}
-              </span>
+
+              {users.length > 0 ? (
+                <span
+                  className={cn(
+                    'overflow-hidden text-ellipsis whitespace-nowrap cursor-not-allowed text-sm text-gray-700',
+                  )}
+                >
+                  {users.join(', ')}
+                </span>
+              ) : (
+                <span
+                  className={cn(
+                    'overflow-hidden text-ellipsis whitespace-nowrap cursor-not-allowed text-sm text-gray-400',
+                  )}
+                >
+                  {'No one yet'}
+                </span>
+              )}
             </div>
             {contact?.value?.enrichedAt && (
               <div className='text-xs text-gray-500'>
