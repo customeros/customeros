@@ -139,5 +139,19 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 		response.IsFirstLogin = false
 	}
 
+	response.ContactCities, err = r.Services.CommonServices.Neo4jRepositories.ContactReadRepository.GetDistinctContactCities(ctx, tenantName)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed GlobalCache - get contact cities")
+		return nil, nil
+	}
+
+	response.ContactRegions, err = r.Services.CommonServices.Neo4jRepositories.ContactReadRepository.GetDistinctContactRegions(ctx, tenantName)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed GlobalCache - get contact cities")
+		return nil, nil
+	}
+
 	return response, nil
 }

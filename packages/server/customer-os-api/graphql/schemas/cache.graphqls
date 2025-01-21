@@ -14,6 +14,8 @@ type GlobalCache {
     contractsExist:         Boolean!
     isFirstLogin:           Boolean!
     cdnLogoUrl:             String!
+    contactCities:          [String!]!
+    contactRegions:         [String!]!
 }
 
 type GlobalCacheEmailToken {

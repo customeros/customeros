@@ -965,13 +965,13 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 				}
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsCountry) {
-				createInOrEmptyStringFilter(filter, locationFilter, "countryCodeA2")
+				createInOrEmptyStringFilter(filter, locationFilter, string(neo4jentity.LocationPropertyCountryCodeA2))
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsCity) {
-				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyLocality), filter.Filter.Value.Str, filter.Filter.Operation))
+				createInOrEmptyStringFilter(filter, locationFilter, string(neo4jentity.LocationPropertyLocality))
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsRegion) {
-				locationFilter.Filters = append(locationFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.LocationPropertyRegion), filter.Filter.Value.Str, filter.Filter.Operation))
+				createInOrEmptyStringFilter(filter, locationFilter, string(neo4jentity.LocationPropertyRegion))
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsTags) {
 				// special case for not in tags
