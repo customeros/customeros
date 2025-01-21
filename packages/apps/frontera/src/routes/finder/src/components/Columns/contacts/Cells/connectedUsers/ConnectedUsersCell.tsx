@@ -13,7 +13,7 @@ export const ConnectedUsers = observer(({ users }: ConnectedUsersProps) => {
 
   if (!users.length) return <p className='text-gray-400'>No one</p>;
 
-  const user = users
+  const usersDisplayed = users
     ?.map(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (l: any) => store.users.value.get(l.id)?.name,
@@ -32,7 +32,9 @@ export const ConnectedUsers = observer(({ users }: ConnectedUsersProps) => {
       }
     >
       <div className='flex w-fit'>
-        <div className='bg-gray-100 rounded-md w-fit px-1.5 '>{user}</div>
+        <div className='bg-gray-100 rounded-md w-fit px-1.5 '>
+          {usersDisplayed}
+        </div>
         {users?.length > 1 && (
           <div className='rounded-md w-fit px-1.5 ml-1 text-gray-500'>
             +{users?.length - 1}

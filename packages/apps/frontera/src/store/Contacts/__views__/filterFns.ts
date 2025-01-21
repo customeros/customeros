@@ -276,7 +276,7 @@ const getFilterFn = (
 
           return match(filter.operation)
             .with(ComparisonOperator.Contains, () =>
-              filterValues?.forEach(
+              filterValues?.some(
                 (id: string) =>
                   isDeliverableV2(id, emailValidationData) ||
                   isNotDeliverableV2(id, emailValidationData) ||
@@ -284,7 +284,7 @@ const getFilterFn = (
               ),
             )
             .with(ComparisonOperator.NotContains, () =>
-              filterValues?.forEach(
+              filterValues?.some(
                 (id: string) =>
                   isDeliverableV2(id, emailValidationData) ||
                   isNotDeliverableV2(id, emailValidationData) ||
