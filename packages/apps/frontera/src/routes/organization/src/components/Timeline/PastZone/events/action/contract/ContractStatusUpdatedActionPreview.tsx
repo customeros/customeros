@@ -51,7 +51,7 @@ export const ContractStatusUpdatedActionPreview = () => {
       <Card className='m-6 mt-3 p-4 shadow-xs'>
         <CardContent className='flex p-0 items-center'>
           {iconsByStatus[status].icon}
-          <p className='max-w[500px] line-clamp-2 ml-2 text-sm text-gray-700'>
+          <p className='max-w-[500px] line-clamp-2 ml-2 text-sm text-gray-700'>
             {content}
             <span
               className={cn(
