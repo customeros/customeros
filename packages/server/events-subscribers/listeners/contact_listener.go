@@ -237,10 +237,9 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich failed at"))
 			}
-		} else if recordID == nil {
-			tracing.TraceErr(span, errors.New("scrapin recordID is nil"))
-		} else {
-			err = c.enrichContactWithScrapInEnrichDetails(ctx, tenant, contactEntity, scrapinResponseBody, *recordID)
+		}
+		if scrapinResponseBody != nil {
+			err = c.enrichContactWithScrapInEnrichDetails(ctx, tenant, contactEntity, scrapinResponseBody, utils.IfNotNilUint64(recordID))
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "enrichContactWithScrapInEnrichDetails"))
 			}

@@ -46,23 +46,20 @@ func (s *enrichmentService) EnrichPerson(ctx context.Context, person interfaces.
 
 	var errs error
 
-	var personData *postgres_entity.ScrapInResponseBody
 	// scrapin by linkedinURL
 	linkedInUrl := strings.TrimSpace(person.LinkedinURL)
 	if linkedInUrl != "" {
-		_, results, err := s.ScrapInPersonProfile(ctx, linkedInUrl)
+		recordId, personData, err := s.ScrapInPersonProfile(ctx, linkedInUrl)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
 		}
-		personData = results
+		if personData != nil {
+			return &recordId, personData, errs
+		}
 	}
 
 	// search by email, domain, and company name if not found in step 1
-	if personData != nil || (person.Email == "" && person.Domain == "" && person.CompanyName == "") {
-		return nil, personData, errs
-	}
-
 	recordID, response, err := s.ScrapInSearchPerson(
 		ctx, person.Email, person.FirstName, person.LastName, person.Domain, person.CompanyName,
 	)
