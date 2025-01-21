@@ -77,7 +77,12 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 		return err
 	}
 
-	// create org
+	// no result, return early
+	if output.Domain == "" {
+		return nil
+	}
+
+	// create org with domain if it doesn't exist
 	_, err = a.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
 		Domains: []string{output.Domain},
 	})
