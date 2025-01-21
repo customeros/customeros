@@ -393,6 +393,7 @@ export const Table = <T extends object>({
                           }
                         >
                           <div
+                            data-test={'all-orgs-select-all-orgs'}
                             onClick={() => table.toggleAllRowsSelected()}
                             className='cursor-pointer opacity-0 group-hover/header:opacity-100'
                           >
