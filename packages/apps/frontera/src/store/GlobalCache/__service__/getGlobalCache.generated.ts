@@ -7,6 +7,8 @@ export type GlobalCacheQuery = {
   global_Cache: {
     __typename?: 'GlobalCache';
     cdnLogoUrl: string;
+    contactRegions: Array<string>;
+    contactCities: Array<string>;
     mailboxes: Array<string>;
     isOwner: boolean;
     minARRForecastValue: number;

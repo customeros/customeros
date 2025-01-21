@@ -175,18 +175,10 @@ export const getFilterTypes = (store?: RootStore) => {
         <Globe05 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
       options: uniqBy(
-        store?.contacts
-          ?.toArray()
-          .flatMap((contact) => contact?.value.locations)
-          .filter(
-            (l) =>
-              l?.locality !== null &&
-              l?.locality !== undefined &&
-              l?.locality !== '',
-          )
-          .map((location) => ({
-            id: location?.locality,
-            label: location?.locality,
+        store?.globalCache.value?.contactCities
+          .map((city) => ({
+            id: city,
+            label: city,
           }))
           .sort((a, b) => (a.label ?? '').localeCompare(b.label ?? '')),
         'id',
@@ -324,16 +316,10 @@ export const getFilterTypes = (store?: RootStore) => {
         <Globe06 className='group-hover:text-gray-700 text-gray-500 mb-0.5' />
       ),
       options: uniqBy(
-        store?.contacts
-          ?.toArray()
-          .flatMap((contact) => contact?.value.locations?.[0])
-          .filter(
-            (l) =>
-              l?.region !== null && l?.region !== undefined && l?.region !== '',
-          )
+        store?.globalCache.value?.contactRegions
           .map((location) => ({
-            id: location.region,
-            label: location.region,
+            id: location,
+            label: location,
           }))
           .sort((a, b) => (a.label ?? '').localeCompare(b.label ?? '')),
         'id',

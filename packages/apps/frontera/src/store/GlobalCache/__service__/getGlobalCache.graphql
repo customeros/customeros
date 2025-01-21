@@ -1,6 +1,8 @@
 query global_Cache {
   global_Cache {
     cdnLogoUrl
+    contactRegions
+    contactCities
     user {
       id
       emails {
@@ -35,4 +37,3 @@ query global_Cache {
     isFirstLogin
   }
 }
-
