@@ -190,10 +190,6 @@ func InitCommonServices(
 	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories)
 
 	// Services that only depend on Simple
-	agentCapabilityImpl, err := agent_capability.NewAgentCapabilityService(postgresRepositories, enrichmentImpl)
-	if err != nil {
-		log.Fatalf("Cannot start agent capability service")
-	}
 	fileImpl := files.NewFileService(log, &cfg.Internal.FileStoreConfig, neo4jRepositories, attachmentImpl)
 	reminderImpl := reminders.NewReminderService(neo4jRepositories, novuImpl)
 	verifyImpl := verify.NewVerifyService(log, postgresRepositories, cfg, enrichmentImpl)
@@ -203,9 +199,13 @@ func InitCommonServices(
 	jobroleImpl := jobrole.NewJobRoleService(neo4jRepositories, eventsImpl, nil)
 	issueImpl := issue.NewIssueService(log, neo4jRepositories, eventsImpl, nil)
 	contactImpl := contact.NewContactService(log, neo4jRepositories, eventsImpl, domainImpl, emailImpl, nil, jobroleImpl, nil, nil)
+	agentCapabilityImpl, err := agent_capability.NewAgentCapabilityService(postgresRepositories, enrichmentImpl, nil, nil)
+	if err != nil {
+		log.Fatalf("Cannot start agent capability service")
+	}
 	socialImpl := social.NewSocialService(log, neo4jRepositories, eventsImpl, contactImpl)
 	orgImpl := organization.NewOrganizationService(log, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl)
-	agentVisitorIdImpl := agent.NewAgentVisitorIDService(postgresRepositories, agentImpl, agentCapabilityImpl, orgImpl)
+	agentVisitorIdImpl := agent.NewAgentVisitorIDService(postgresRepositories, agentImpl, agentCapabilityImpl)
 	contractImpl := contract.NewContractService(log, neo4jRepositories, eventsImpl, grpcClients, nil, orgImpl)
 	opportunityImpl := opportunity.NewOpportunityService(log, grpcClients, neo4jRepositories, eventsImpl, contractImpl, orgImpl, tenantSettingsImpl)
 	sliImpl := sli.NewServiceLineItemService(log, eventsImpl, neo4jRepositories, contractImpl)
@@ -232,6 +232,8 @@ func InitCommonServices(
 	contractImpl.SetOpportunityService(opportunityImpl)
 	flowExecutionImpl.SetFlowService(flowImpl)
 	jobroleImpl.SetOrganizationService(orgImpl)
+	agentCapabilityImpl.SetOrganizationService(orgImpl)
+	agentCapabilityImpl.SetActionService(actionImpl)
 
 	// Initialize CommonServices struct
 	common := CommonServices{

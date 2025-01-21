@@ -11,4 +11,7 @@ type AgentCapabilityService interface {
 	InitCapabilityRegistry() error
 	RegisterCapability(ctx context.Context, capabilityRecord postgres_entity.AgentCapabilityRegistry) error
 	ExecuteCapability(ctx context.Context, executionContainer *dto.CapabilityExecutionContainer) error
+
+	SetOrganizationService(org OrganizationService)
+	SetActionService(action ActionService)
 }

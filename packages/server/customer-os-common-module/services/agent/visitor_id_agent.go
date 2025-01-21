@@ -21,20 +21,17 @@ type AgentVisitorIDService struct {
 	postgresRepositories   *postgres_repository.Repositories
 	agentService           interfaces.AgentService
 	agentCapabilityService interfaces.AgentCapabilityService
-	organizationService    interfaces.OrganizationService
 }
 
 func NewAgentVisitorIDService(
 	postgresRepositories *postgres_repository.Repositories,
 	agentService interfaces.AgentService,
 	agentCapabilityService interfaces.AgentCapabilityService,
-	organizationService interfaces.OrganizationService,
 ) *AgentVisitorIDService {
 	return &AgentVisitorIDService{
 		postgresRepositories:   postgresRepositories,
 		agentService:           agentService,
 		agentCapabilityService: agentCapabilityService,
-		organizationService:    organizationService,
 	}
 }
 
@@ -49,11 +46,123 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	// create execution record
 	executionID, err := a.createAgentExecutionRecord(ctx, agentID, event.Type())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
+
+	// lookup capabilities
+
+	// execute identify visitor capability
+	visitorIDResults, err := a.executeVisitorIDCapability(ctx, agentID, executionID, event)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	// no result, return early
+	if visitorIDResults.Domain == "" {
+		return nil
+	}
+
+	// execute org creation capability
+	orgCreationResults, err := a.executeOrgCreationCapability(ctx, agentID, executionID, visitorIDResults.Domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// execute web session analysis capability
+	_, err = a.executeWebSessionAnalysisCapability(
+		ctx,
+		agentID,
+		executionID,
+		visitorIDResults.Domain,
+		orgCreationResults.OrganizationID,
+		event,
+	)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// execute send notification capability
+	return nil
+}
+
+func (a *AgentVisitorIDService) executeWebSessionAnalysisCapability(
+	ctx context.Context,
+	agentID, executionID, domain, organizationID string,
+	event *data_fields.WebsiteVisitEvent,
+) (agent_capability.AnalyzeWebSessionResult, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.executeWebSessionAnalysisCapability")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	executionContainer := dto.CapabilityExecutionContainer{
+		AgentID:          agentID,
+		AgentExecutionID: executionID,
+		Capability:       enum.CapabilityAnalyzeWebSessionIntent,
+		InputData: agent_capability.AnalyzeWebSessionInput{
+			SessionID:      event.SessionID,
+			VisitorID:      event.VisitorID,
+			OrganizationID: organizationID,
+			Domain:         domain,
+		},
+	}
+
+	err := a.agentCapabilityService.ExecuteCapability(ctx, &executionContainer)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return agent_capability.AnalyzeWebSessionResult{}, err
+	}
+
+	output, ok := executionContainer.OutputData.(agent_capability.AnalyzeWebSessionResult)
+	if !ok {
+		err := fmt.Errorf("expected agent_capability.AnalyzeWebSessionResult, got %T", executionContainer.OutputData)
+		tracing.TraceErr(span, err)
+		return agent_capability.AnalyzeWebSessionResult{}, err
+	}
+
+	return output, nil
+}
+
+func (a *AgentVisitorIDService) executeOrgCreationCapability(ctx context.Context, agentID, executionID, domain string) (agent_capability.CreateOrganizationResult, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.executeOrgCreationCapability")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	executionContainer := dto.CapabilityExecutionContainer{
+		AgentID:          agentID,
+		AgentExecutionID: executionID,
+		Capability:       enum.CapabilityCreateOrganization,
+		InputData: data_fields.OrganizationFields{
+			Domains: []string{domain},
+		},
+	}
+
+	err := a.agentCapabilityService.ExecuteCapability(ctx, &executionContainer)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return agent_capability.CreateOrganizationResult{}, err
+	}
+
+	output, ok := executionContainer.OutputData.(agent_capability.CreateOrganizationResult)
+	if !ok {
+		err := fmt.Errorf("expected agent_capability.CreateOrganizationResult, got %T", executionContainer.OutputData)
+		tracing.TraceErr(span, err)
+		return agent_capability.CreateOrganizationResult{}, err
+	}
+
+	return output, nil
+
+}
+
+func (a *AgentVisitorIDService) executeVisitorIDCapability(ctx context.Context, agentID, executionID string, event *data_fields.WebsiteVisitEvent) (agent_capability.IdentifyWebsiteVisitorResult, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.executeVisitorIDCapability")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	executionContainer := dto.CapabilityExecutionContainer{
 		AgentID:          agentID,
@@ -64,33 +173,20 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 		},
 	}
 
-	err = a.agentCapabilityService.ExecuteCapability(ctx, &executionContainer)
+	err := a.agentCapabilityService.ExecuteCapability(ctx, &executionContainer)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return err
+		return agent_capability.IdentifyWebsiteVisitorResult{}, err
 	}
 
 	output, ok := executionContainer.OutputData.(agent_capability.IdentifyWebsiteVisitorResult)
 	if !ok {
 		err := fmt.Errorf("expected agent_capability.IdentifyWebsiteVisitorResult, got %T", executionContainer.OutputData)
 		tracing.TraceErr(span, err)
-		return err
+		return agent_capability.IdentifyWebsiteVisitorResult{}, err
 	}
 
-	// no result, return early
-	if output.Domain == "" {
-		return nil
-	}
-
-	// create org with domain if it doesn't exist
-	_, err = a.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
-		Domains: []string{output.Domain},
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	return nil
+	return output, nil
 }
 
 func (a *AgentVisitorIDService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEvent string) (string, error) {
