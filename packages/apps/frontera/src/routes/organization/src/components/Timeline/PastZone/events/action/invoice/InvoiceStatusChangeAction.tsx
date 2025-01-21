@@ -5,7 +5,6 @@ import { File02 } from '@ui/media/icons/File02';
 import { Action, ActionType } from '@graphql/types';
 import { FileX02 } from '@ui/media/icons/FileX02.tsx';
 import { FileCheck02 } from '@ui/media/icons/FileCheck02';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { FileAttachment02 } from '@ui/media/icons/FileAttachment02';
@@ -38,31 +37,6 @@ const iconMap: Record<string, JSX.Element> = {
   [ActionType.InvoiceOverdue]: <FileX02 className='text-primary-600' />,
 };
 
-const colorSchemeMap: Record<
-  string,
-  | 'primary'
-  | 'gray'
-  | 'grayBlue'
-  | 'warm'
-  | 'error'
-  | 'rose'
-  | 'warning'
-  | 'blueDark'
-  | 'teal'
-  | 'success'
-  | 'blue'
-  | 'moss'
-  | 'greenLight'
-  | 'violet'
-  | 'fuchsia'
-> = {
-  [ActionType.InvoiceVoided]: 'gray',
-  [ActionType.InvoicePaid]: 'success',
-  [ActionType.InvoiceSent]: 'primary',
-  [ActionType.InvoiceOverdue]: 'warning',
-  [ActionType.InvoiceIssued]: 'primary',
-};
-
 const InvoiceStatusChangeAction = ({
   data,
   mode,
@@ -90,15 +64,8 @@ const InvoiceStatusChangeAction = ({
         'opacity-50': isTemporary,
       })}
     >
-      <FeaturedIcon
-        size='md'
-        className='mr-[10px]'
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        colorScheme={colorSchemeMap[mode] as any}
-      >
-        {iconMap[mode]}
-      </FeaturedIcon>
-      <p className='my-1 max-w-[500px] ml-5 text-sm text-gray-700 '>
+      {iconMap[mode]}
+      <p className='my-1 max-w-[500px] ml-2 text-sm text-gray-700 '>
         {formattedContent}
       </p>
     </div>

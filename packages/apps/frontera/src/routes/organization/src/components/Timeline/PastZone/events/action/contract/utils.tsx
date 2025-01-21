@@ -10,23 +10,19 @@ export const iconsByStatus: Record<
   Record<string, string | ReactElement>
 > = {
   live: {
-    icon: <FileHeart02 />,
-    colorScheme: 'primary',
+    icon: <FileHeart02 className='text-primary-600' />,
     text: 'is now',
   },
   renewed: {
-    icon: <FileCheck02 />,
-    colorScheme: 'success',
+    icon: <FileCheck02 className='text-success-500' />,
     text: '',
   },
   ended: {
-    icon: <FileX02 />,
-    colorScheme: 'gray',
+    icon: <FileX02 className='text-gray-500' />,
     text: 'has',
   },
   out_of_contract: {
-    icon: <PauseCircle />,
-    colorScheme: 'warning',
+    icon: <PauseCircle className='text-warning-500' />,
     text: 'has',
   },
 };
