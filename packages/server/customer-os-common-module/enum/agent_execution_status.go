@@ -7,10 +7,10 @@ import (
 type AgentExecutionStatus string
 
 const (
-	AgentExecutionFail    AgentExecutionStatus = "ERROR"
-	AgentExecutionPending AgentExecutionStatus = "PENDING"
-	AgentExecutionRunning AgentExecutionStatus = "RUNNING"
-	AgentExecutionSuccess AgentExecutionStatus = "SUCCESS"
+	AgentExecutionFail      AgentExecutionStatus = "ERROR"
+	AgentExecutionPending   AgentExecutionStatus = "PENDING"
+	AgentExecutionRunning   AgentExecutionStatus = "RUNNING"
+	AgentExecutionCompleted AgentExecutionStatus = "COMPLETED"
 )
 
 func (t AgentExecutionStatus) String() string {
@@ -23,7 +23,7 @@ func GetAgentExecutionStatus(s string) (AgentExecutionStatus, error) {
 		AgentExecutionFail,
 		AgentExecutionPending,
 		AgentExecutionRunning,
-		AgentExecutionSuccess:
+		AgentExecutionCompleted:
 		return AgentExecutionStatus(s), nil
 
 	default:

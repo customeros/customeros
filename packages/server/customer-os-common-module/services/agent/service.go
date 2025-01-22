@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/opentracing/opentracing-go"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
 )
 
 type agentService struct {
@@ -96,7 +97,6 @@ func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent pos
 	}
 
 	return createdRecord.ID, nil
-
 }
 
 func (a *agentService) SaveAgentExecutionSuccess(ctx context.Context, executionID string) error {
@@ -112,7 +112,7 @@ func (a *agentService) SaveAgentExecutionSuccess(ctx context.Context, executionI
 		return err
 	}
 
-	executionRecord.Status = enum.AgentExecutionSuccess.String()
+	executionRecord.Status = enum.AgentExecutionCompleted.String()
 	executionRecord.CompletedAt = utils.NowPtr()
 	// update
 
@@ -134,7 +134,7 @@ func (a *agentService) SaveAgentExecutionError(ctx context.Context, executionID,
 
 	executionRecord.Status = enum.AgentExecutionFail.String()
 	executionRecord.ErrorMessage = &errorMessage
-	//update
+	// update
 
 	return nil
 }

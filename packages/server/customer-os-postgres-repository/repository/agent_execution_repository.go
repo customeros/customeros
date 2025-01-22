@@ -79,7 +79,7 @@ func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionID s
 		return nil, err
 	}
 
-	status := enum.AgentExecutionSuccess.String()
+	status := enum.AgentExecutionCompleted.String()
 	if errorMessage != nil {
 		status = enum.AgentExecutionFail.String()
 	}
@@ -96,7 +96,6 @@ func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionID s
 		}).
 		First(&updatedRecord, "id = ?", executionID).
 		Error
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
