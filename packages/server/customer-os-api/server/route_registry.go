@@ -38,6 +38,7 @@ func RegisterRestRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 	registerPublicRoutes(ctx, r, s, h)
 	registerFileRoutes(ctx, r, s, h)
 
+	registerAgentRoutes(ctx, r, s, h)
 	registerBillingRoutes(ctx, r, s, h)
 	registerCustomerBaseRoutes(ctx, r, s, h)
 	registerEnrichRoutes(ctx, r, s, h)
