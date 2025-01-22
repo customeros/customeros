@@ -71,6 +71,7 @@ func (c *agentCapabilityService) executeIdentifyWebsiteVisitor(ctx context.Conte
 		tracing.TraceErr(span, err)
 		return results, err
 	}
+	span.LogKV("domain", domain)
 
 	results.Domain = domain
 	results.LinkedInSlug = linkedInSlug

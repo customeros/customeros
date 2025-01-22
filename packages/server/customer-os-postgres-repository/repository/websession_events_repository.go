@@ -19,7 +19,7 @@ type WebSessionRepository interface {
 	FindSession(ctx context.Context, webSessionData postgres_entity.WebSession, lookbackPeriodInMins *int) (*postgres_entity.WebSession, error)
 	FindLastNotification(ctx context.Context, tenant, domain string) (*postgres_entity.WebSession, error)
 	UpdateLastActivity(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error)
-	UpdateSessionEnd(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error)
+	UpdateSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error)
 	UpdateSessionWithDomain(ctx context.Context, sessionID, domain string) (*postgres_entity.WebSession, error)
 }
 
@@ -142,7 +142,7 @@ func (r *webSessionEventsRepository) UpdateLastActivity(ctx context.Context, ses
 	return &updatedSession, nil
 }
 
-func (r *webSessionEventsRepository) UpdateSessionEnd(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error) {
+func (r *webSessionEventsRepository) UpdateSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionEnd")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -153,7 +153,7 @@ func (r *webSessionEventsRepository) UpdateSessionEnd(ctx context.Context, sessi
 		Where("id = ?", sessionID).
 		Updates(map[string]interface{}{
 			"is_active":       false,
-			"end_time":        utils.NowPtr(),
+			"end_time":        endTime,
 			"published_event": true,
 		}).
 		First(&updatedSession, "id = ?", sessionID).
@@ -173,13 +173,10 @@ func (r *webSessionEventsRepository) UpdateSessionWithDomain(ctx context.Context
 	tracing.TagComponentPostgresRepository(span)
 
 	var updatedSession postgres_entity.WebSession
-	err := r.gormDb.
-		Model(&postgres_entity.WebSession{}).
+	err := r.gormDb.Model(&postgres_entity.WebSession{}).
 		Where("id = ?", sessionID).
-		Updates(map[string]interface{}{
-			"domain": domain,
-		}).
-		First(&updatedSession, "id = ?", sessionID).
+		Update("domain", &domain).
+		First(&updatedSession).
 		Error
 
 	if err != nil {

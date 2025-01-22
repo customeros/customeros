@@ -7,6 +7,7 @@ type WebSession struct {
 	Tenant                string     `gorm:"column:tenant;type:varchar(255);" json:"tenant"`
 	VisitorID             string     `gorm:"column:visitor_id;type:varchar(255);NOT NULL;" json:"visitorId"`
 	IP                    string     `gorm:"column:ip;type:varchar(255);" json:"ip"`
+	Hostname              string     `gorm:"column:hostname;type:varchar(255);" json:"hostname"`
 	Domain                *string    `gorm:"column:domain;type:varchar(255);" json:"domain"`
 	Referrer              *string    `gorm:"column:referrer;type:varchar(255);" json:"referrer"`
 	QueryParams           *string    `gorm:"column:query_params;type:varchar(255);" json:"queryParams"`
