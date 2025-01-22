@@ -29,7 +29,7 @@ export const ContactBulkCommands = observer(() => {
             store.ui.commandMenu.setType('EditPersonaTag');
           }}
         >
-          Edit persona tag...
+          Change or add tags...
         </CommandItem>
 
         <CommandItem
