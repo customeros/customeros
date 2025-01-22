@@ -12,15 +12,6 @@ export const organizationKeywords = {
     'linkedin',
   ],
   change_or_add_tags: ['change', 'add', 'tags', 'update', 'edit'],
-  rename_org: [
-    'rename',
-    'org',
-    'organization',
-    'company',
-    'update',
-    'edit',
-    'change',
-  ],
   edit_website: [
     'edit',
     'website',

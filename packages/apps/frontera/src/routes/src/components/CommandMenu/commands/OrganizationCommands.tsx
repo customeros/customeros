@@ -1,7 +1,6 @@
 import { observer } from 'mobx-react-lite';
 
 import { Tag01 } from '@ui/media/icons/Tag01';
-import { Edit03 } from '@ui/media/icons/Edit03';
 import { User01 } from '@ui/media/icons/User01';
 import { Delete } from '@ui/media/icons/Delete';
 import { User03 } from '@ui/media/icons/User03';
@@ -94,36 +93,6 @@ export const OrganizationCommands = observer(() => {
             Remove tags
           </CommandItem>
         )}
-
-        <CommandItem
-          leftAccessory={<Edit03 />}
-          rightAccessory={
-            <>
-              <Kbd>
-                <ArrowBlockUp className='size-3' />
-              </Kbd>
-              <Kbd>R</Kbd>
-            </>
-          }
-          keywords={[
-            'rename',
-            'org',
-            'organization',
-            'company',
-            'update',
-            'edit',
-            'change',
-          ]}
-          onSelect={() => {
-            store.ui.commandMenu.setType('RenameOrganizationProperty');
-            store.ui.commandMenu.setContext({
-              ...store.ui.commandMenu.context,
-              property: 'name',
-            });
-          }}
-        >
-          Rename organization
-        </CommandItem>
 
         <CommandItem
           leftAccessory={<AlignHorizontalCentre02 />}

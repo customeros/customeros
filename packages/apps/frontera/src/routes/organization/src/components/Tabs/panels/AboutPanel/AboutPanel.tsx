@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
@@ -7,7 +6,6 @@ import { TagDatum } from '@store/Tags/Tag.store';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
-import { Input } from '@ui/form/Input';
 import { flags } from '@ui/media/flags';
 import { Tag01 } from '@ui/media/icons/Tag01';
 import { Spinner } from '@ui/feedback/Spinner';
@@ -53,7 +51,6 @@ export const AboutPanel = observer(() => {
   const store = useStore();
   const id = useParams()?.id as string;
   const [_, copyToClipboard] = useCopyToClipboard();
-  const nameRef = useRef<HTMLInputElement | null>(null);
 
   const showParentRelationshipSelector = useFeatureIsOn(
     'show-parent-relationship-selector',
@@ -61,7 +58,6 @@ export const AboutPanel = observer(() => {
   const parentRelationshipReadOnly = useFeatureIsOn(
     'parent-relationship-selector-read-only',
   );
-  const orgNameReadOnly = useFeatureIsOn('org-name-readonly');
 
   const organization = store.organizations.getById(id);
 
@@ -117,26 +113,10 @@ export const AboutPanel = observer(() => {
         )}
 
         <div className='flex items-center justify-between'>
-          <Input
-            size='xs'
-            name='name'
-            ref={nameRef}
-            autoComplete='off'
-            variant='unstyled'
-            dataTest='org-about-name'
-            placeholder='Company name'
-            disabled={orgNameReadOnly}
-            onFocus={(e) => e.target.select()}
-            value={organization?.value.name || ''}
-            onChange={(e) => {
-              organization.value.name = e.target.value;
-            }}
-            className='font-semibold text-[16px] mt-0.5 border-none overflow-hidden overflow-ellipsis'
-            onBlur={() => {
-              organization.draft();
-              organization.commit();
-            }}
-          />
+          <p className='font-semibold text-base mt-0.5 overflow-hidden overflow-ellipsis'>
+            {organization?.value?.name ?? ''}
+          </p>
+
           {organization.value?.referenceId && (
             <div className='h-full ml-4'>
               <Tooltip asChild={false} label={'Copy ID'}>

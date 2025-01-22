@@ -76,7 +76,6 @@ import {
   GetBrowserExtensionLink,
   OrganizationBulkCommands,
   InstallLinkedInExtension,
-  RenameOrganizationProperty,
   ConfirmEmailContentChanges,
   ChooseOpportunityOrganization,
   ContactEmailVerificationInfoModal,
@@ -134,7 +133,6 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   MergeConfirmationModal: <MergeConfirmationModal />,
   EditCompanyLinkedin: <EditCompanyLinkedin />,
   AddNewOrganization: <AddNewOrganization />,
-  RenameOrganizationProperty: <RenameOrganizationProperty />,
 
   // Flows
   FlowHub: <FlowHub />,

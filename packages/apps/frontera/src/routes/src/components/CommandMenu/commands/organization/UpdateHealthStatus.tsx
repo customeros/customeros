@@ -79,7 +79,7 @@ export const UpdateHealthStatus = observer(() => {
         )
         .otherwise(() => undefined);
 
-      store.ui.commandMenu.toggle('RenameOrganizationProperty');
+      store.ui.commandMenu.toggle('UpdateHealthStatus');
     };
 
   const healthStatus =

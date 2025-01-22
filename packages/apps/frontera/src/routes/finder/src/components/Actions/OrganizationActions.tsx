@@ -177,15 +177,6 @@ export const OrganizationTableActions = observer(
       },
       { when: enableKeyboardShortcuts },
     );
-    useKeys(
-      ['Shift', 'R'],
-      (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        handleOpen('RenameOrganizationProperty', 'name');
-      },
-      { when: enableKeyboardShortcuts },
-    );
 
     useModKey(
       'Backspace',
