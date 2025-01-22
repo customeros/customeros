@@ -28,6 +28,7 @@ func (a *AgentHandler) AgentRegistry() gin.HandlerFunc {
 		if agents == nil || len(agents) == 0 {
 			message := "Agent registry is empty"
 			a.responseHandler.HandleError(c, http.StatusNotFound, &message)
+			return
 		}
 
 		response, err := a.buildGetAgentRegistryResponse(ctx, agents)
@@ -35,6 +36,7 @@ func (a *AgentHandler) AgentRegistry() gin.HandlerFunc {
 			tracing.TraceErr(span, err)
 			message := "Unable to retrieve agents from registry"
 			a.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+			return
 		}
 
 		a.responseHandler.HandleSuccess(c, response)
@@ -47,13 +49,15 @@ func (a *AgentHandler) buildGetAgentRegistryResponse(ctx context.Context, agents
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	agentRecords := make([]AgentRegistryRecord, len(agents))
+	agentRecords := make([]AgentRegistryRecord, 0, len(agents))
 	var errs error
+
 	for _, agent := range agents {
 		record, err := a.buildAgentRegistryRecord(ctx, agent)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
+			continue
 		}
 		agentRecords = append(agentRecords, record)
 	}

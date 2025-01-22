@@ -30,7 +30,7 @@ func GetAgentType(s string) (AgentType, error) {
 type AgentGoal string
 
 const (
-	AgentGoalIdentifyVisitors AgentGoal = "Identified_visitors"
+	AgentGoalIdentifyVisitors AgentGoal = "identify_web_visitor"
 )
 
 func (t AgentGoal) String() string {
