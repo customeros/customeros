@@ -3,6 +3,7 @@ import { RouteObject } from 'react-router-dom';
 import { Layout } from '@shared/components/Layout/Layout';
 
 import { AuthRoute } from './auth/route';
+import { AgentRoute } from './agent/route';
 import { AgentsRoute } from './agents/route';
 import { FinderRoute } from './finder/route';
 import { Error } from './src/components/Error';
@@ -24,6 +25,7 @@ export const RootRoute: RouteObject = {
   element: <Layout />,
   children: [
     AuthRoute,
+    AgentRoute,
     AgentsRoute,
     SettingsRoute,
     OrganizationRoute,

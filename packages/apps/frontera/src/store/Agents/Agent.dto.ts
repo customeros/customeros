@@ -1,3 +1,4 @@
+import merge from 'lodash/merge';
 import { Entity } from '@store/record';
 import { computed, observable } from 'mobx';
 import { type AgentDatum } from '@infra/repositories/agent';
@@ -19,22 +20,25 @@ export class Agent extends Entity<AgentDatum> {
     return this.value.id;
   }
 
-  static default(): AgentDatum {
-    return {
-      id: crypto.randomUUID(),
-      name: 'Unknown',
-      tenant: '',
-      capabilities: [],
-      goal: '',
-      type: AgentType.WebVisitIdentifier,
-      icon: '',
-      color: '',
-      visible: true,
-      isActive: true,
-      flowId: '',
-      error: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+  static default(payload?: Partial<AgentDatum>): AgentDatum {
+    return merge(
+      {
+        id: crypto.randomUUID(),
+        name: 'Unknown',
+        tenant: '',
+        capabilities: [],
+        goal: '',
+        type: AgentType.WebVisitIdentifier,
+        icon: '',
+        color: '',
+        visible: true,
+        isActive: true,
+        flowId: '',
+        error: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      payload,
+    );
   }
 }

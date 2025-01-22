@@ -29,6 +29,7 @@ export class DevtoolsStore {
     'contracts',
     'flows',
     'jobRoles',
+    'tags',
   ];
 
   constructor() {}

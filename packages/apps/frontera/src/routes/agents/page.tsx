@@ -1,9 +1,16 @@
 import { useState } from 'react';
 
+import { observer } from 'mobx-react-lite';
+
+import { useStore } from '@shared/hooks/useStore';
+
 import { Header, AgentCard, EmptyState } from './components';
 
-export const AgentsPage = () => {
+export const AgentsPage = observer(() => {
+  const store = useStore();
   const [isVisible, setIsVisible] = useState(true);
+
+  const agents = store.agents.toArray();
 
   if (isVisible) {
     return (
@@ -19,12 +26,15 @@ export const AgentsPage = () => {
     <div className='relative h-full'>
       <Header />
       <div className='columns-3 p-4 gap-4'>
-        <AgentCard status='ON' name='Web visit identifier' />
-        <AgentCard status='OFF' name='Lead qualifier' />
-        <AgentCard status='OFF' name='Manager: Cold outbound example' />
-        <AgentCard status='OFF' name='Lead qualifier' />
-        <AgentCard status='ON' name='Web visit identifier' />
+        {agents.map((agent) => (
+          <AgentCard
+            id={agent.id}
+            key={agent.id}
+            name={agent.value.name}
+            status={agent.value.isActive ? 'ON' : 'OFF'}
+          />
+        ))}
       </div>
     </div>
   );
-};
+});
