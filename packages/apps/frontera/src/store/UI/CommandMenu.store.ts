@@ -17,7 +17,6 @@ export type CommandMenuType =
   | 'RenameOpportunityName'
   | 'ChangeArrEstimate'
   | 'OpportunityCommands'
-  | 'RenameOrganizationProperty'
   | 'DeleteConfirmationModal'
   | 'OrganizationBulkCommands'
   | 'ChooseOpportunityOrganization'
