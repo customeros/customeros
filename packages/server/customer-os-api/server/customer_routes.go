@@ -28,6 +28,14 @@ func registerAgentsRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/registry", AgentsPath),
+		handler:   h.Agents.RegisterAgent(),
+		routeType: RouteInternal,
+		services:  s,
+	})
+
+	registerRoute(ctx, r, RouteConfig{
+		method:    "GET",
+		path:      fmt.Sprintf("%s/registry", AgentsPath),
 		handler:   h.Agents.AgentRegistry(),
 		routeType: RouteCustomer,
 		services:  s,
