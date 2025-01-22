@@ -21,10 +21,13 @@ type GlobalOrganizationRepository interface {
 	Search(ctx context.Context, searchTerm string, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	GetOrganizationsToEnrichIndustry(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	GetOrganizationsToEnrichDescription(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error)
+	GetOrganizationsToEnrichName(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	MarkIndustryEnrichRequested(ctx context.Context, id uint64) error
 	MarkDescriptionEnrichRequested(ctx context.Context, id uint64) error
+	MarkNameEnrichRequested(ctx context.Context, id uint64) error
 	SetIndustry(ctx context.Context, id uint64, industryNaicsCode, industryNaicsName string) error
 	SetDescription(ctx context.Context, id uint64, description string) error
+	SetName(ctx context.Context, id uint64, name string) error
 	GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx context.Context, daysFromPreviousSync, limit int) ([]*postgres_entity.GlobalOrganization, error)
 	MarkGlobalOrganizationSyncedToNeo(ctx context.Context, id uint64) error
 }
@@ -190,6 +193,49 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichDescription(ctx c
 	return organizations, nil
 }
 
+func (r *globalOrganizationRepository) GetOrganizationsToEnrichName(ctx context.Context, hoursFromPreviousAttempt, maxAttempts, limit int) ([]*postgres_entity.GlobalOrganization, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.GetOrganizationsToEnrichName")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.Int("hoursFromPreviousAttempt", hoursFromPreviousAttempt),
+		tracingLog.Int("limit", limit),
+		tracingLog.Int("maxAttempts", maxAttempts))
+
+	// Condition to flag “suspicious” or missing name
+	// 1) Name is NULL or empty
+	// 2) Name is all-caps (letters/numbers/spaces)
+	// 3) Name has excessive punctuation (example threshold: >2 punctuation chars)
+	// 4) Name looks like a domain
+	// 5) Name is a known placeholder (“none”, “n/a”, “na”, “unknown”, “null”, etc.)
+	suspiciousNameCondition := `
+        (
+            name IS NULL
+            OR name = ''
+            OR name ~ '^[A-Z0-9\\s]+$'
+            OR length(regexp_replace(name, '[a-zA-Z0-9\\s]', '', 'g')) > 2
+            OR name ~ '^[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'
+            OR lower(name) IN ('none','n/a','na','unknown','null')
+        )
+    `
+
+	organizations := make([]*postgres_entity.GlobalOrganization, 0)
+	result := r.db.WithContext(ctx).
+		Where(suspiciousNameCondition).
+		Where("name_request_count IS NULL OR name_request_count < ?", maxAttempts).
+		Where("name_requested_at IS NULL OR name_requested_at < ?", utils.Now().Add(-1*time.Hour*time.Duration(hoursFromPreviousAttempt))).
+		Order("CASE WHEN name_requested_at IS NULL THEN 0 ELSE 1 END ASC").
+		Order("CASE WHEN name_requested_at IS NULL THEN created_at END DESC").
+		Order("name_requested_at ASC").
+		Limit(limit).
+		Find(&organizations)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
+	}
+	span.LogFields(tracingLog.Int("found", len(organizations)))
+	return organizations, nil
+}
+
 func (r *globalOrganizationRepository) MarkIndustryEnrichRequested(ctx context.Context, id uint64) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.MarkIndustryEnrichRequested")
 	defer span.Finish()
@@ -217,6 +263,23 @@ func (r *globalOrganizationRepository) MarkDescriptionEnrichRequested(ctx contex
 		Where("id = ?", id).
 		UpdateColumn("description_request_count", gorm.Expr("COALESCE(description_request_count, 0) + 1")).
 		UpdateColumn("description_requested_at", utils.Now())
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return result.Error
+	}
+	return nil
+}
+
+func (r *globalOrganizationRepository) MarkNameEnrichRequested(ctx context.Context, id uint64) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.MarkNameEnrichRequested")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.Uint64("id", id))
+
+	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
+		Where("id = ?", id).
+		UpdateColumn("name_request_count", gorm.Expr("COALESCE(name_request_count, 0) + 1")).
+		UpdateColumn("name_requested_at", utils.Now())
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
 		return result.Error
@@ -255,6 +318,25 @@ func (r *globalOrganizationRepository) SetDescription(ctx context.Context, id ui
 		Updates(map[string]interface{}{
 			"description":        description,
 			"description_set_at": utils.Now(),
+		})
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return result.Error
+	}
+	return nil
+}
+
+func (r *globalOrganizationRepository) SetName(ctx context.Context, id uint64, name string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.SetName")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(tracingLog.Uint64("id", id), tracingLog.String("name", name))
+
+	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"name":        name,
+			"name_set_at": utils.Now(),
 		})
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)

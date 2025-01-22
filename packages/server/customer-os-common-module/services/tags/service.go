@@ -161,27 +161,44 @@ func (s *tagService) AddTagToEntity(ctx context.Context, tx *neo4j.ManagedTransa
 	return tagId, nil
 }
 
-func (s *tagService) RemoveTagFromEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId string) error {
+func (s *tagService) RemoveTagFromEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, tagName string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.RemoveTagFromEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, entityId)
-	span.LogFields(log.String("tagId", tagId), log.String("entityType", entityType.String()))
+	span.LogFields(log.String("tagId", tagId), log.String("entityType", entityType.String()), log.String("tagName", tagName))
 
-	tagEntity, err := s.GetById(ctx, tagId)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to get tag by id"))
+	var tagEntity *neo4jentity.TagEntity
+	var err error
+
+	if tagId != "" {
+		tagEntity, err = s.GetById(ctx, tagId)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to get tag by id"))
+			return err
+		}
+	} else if tagName != "" {
+		tagEntity, err = s.GetTagByEntityTypeAndName(ctx, entityType, tagName)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to get tag by name"))
+			return err
+		}
+	}
+
+	if tagEntity == nil {
+		err = errors.New("tag not found")
+		tracing.TraceErr(span, err)
 		return err
 	}
 
-	err = s.neo4j.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, tx, tenant, tagId, entityId, entityType)
+	err = s.neo4j.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, tx, tenant, tagEntity.Id, entityId, entityType)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to unlink tag from entity"))
 		return err
 	}
 
 	// event for tag removed
-	err = s.events.Publisher.PublishEvent(ctx, entityId, entityType, dto.NewRemoveTagEvent(tagId, tagEntity.Name))
+	err = s.events.Publisher.PublishEvent(ctx, entityId, entityType, dto.NewRemoveTagEvent(tagEntity.Id, tagEntity.Name))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveTagEvent"))
 	}
