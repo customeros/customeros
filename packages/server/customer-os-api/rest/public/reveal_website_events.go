@@ -157,15 +157,15 @@ func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, 
 	}
 
 	trackerData.SessionID = session.ID
-	return h.updateSessionLastActivityTimestamp(ctx, trackerData.SessionID)
+	return h.updateSessionLastActivity(ctx, trackerData.SessionID, trackerData.EventType)
 }
 
-func (h *WebsiteTrackerEventsHandler) updateSessionLastActivityTimestamp(ctx context.Context, sessionID string) error {
+func (h *WebsiteTrackerEventsHandler) updateSessionLastActivity(ctx context.Context, sessionID, eventType string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.updateSessionLastActivityTimestamp")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
-	_, err := h.services.Repositories.PostgresRepositories.WebSessionRepository.UpdateLastActivity(ctx, sessionID)
+	_, err := h.services.Repositories.PostgresRepositories.WebSessionRepository.UpdateLastActivity(ctx, sessionID, eventType)
 	if err != nil {
 		err = errors.New("unable to update web session")
 		tracing.TraceErr(span, err)

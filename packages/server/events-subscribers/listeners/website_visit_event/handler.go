@@ -36,6 +36,11 @@ func NewWebsiteVisitEventHandler(dependencies *model.DependencyContainer, event 
 		return nil, err
 	}
 
+	if event.IPAddress == "" {
+		err := errors.New("IP address cannot be empty")
+		return nil, err
+	}
+
 	return &WebsiteVisitEventHandler{
 		dependencies: dependencies,
 		event:        event,

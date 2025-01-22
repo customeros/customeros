@@ -18,7 +18,7 @@ type WebSessionRepository interface {
 	FindAllSessions(ctx context.Context, webWebSessionData postgres_entity.WebSession, sessionTimeoutInMins *int) ([]postgres_entity.WebSession, error)
 	FindSession(ctx context.Context, webSessionData postgres_entity.WebSession, lookbackPeriodInMins *int) (*postgres_entity.WebSession, error)
 	FindLastNotification(ctx context.Context, tenant, domain string) (*postgres_entity.WebSession, error)
-	UpdateLastActivity(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error)
+	UpdateLastActivity(ctx context.Context, sessionID, eventType string) (*postgres_entity.WebSession, error)
 	UpdateSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error)
 	UpdateSessionWithDomain(ctx context.Context, sessionID, domain string) (*postgres_entity.WebSession, error)
 }
@@ -119,7 +119,7 @@ func (r *webSessionEventsRepository) FindLastNotification(ctx context.Context, t
 	return &result, nil
 }
 
-func (r *webSessionEventsRepository) UpdateLastActivity(ctx context.Context, sessionID string) (*postgres_entity.WebSession, error) {
+func (r *webSessionEventsRepository) UpdateLastActivity(ctx context.Context, sessionID, eventType string) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateLastActivity")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -129,7 +129,8 @@ func (r *webSessionEventsRepository) UpdateLastActivity(ctx context.Context, ses
 		Model(&postgres_entity.WebSession{}).
 		Where("id = ?", sessionID).
 		Updates(map[string]interface{}{
-			"last_activity": utils.Now(),
+			"last_activity":   utils.Now(),
+			"last_event_type": eventType,
 		}).
 		First(&updatedSession, "id = ?", sessionID).
 		Error
