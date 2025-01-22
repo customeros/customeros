@@ -51,7 +51,22 @@ func (r *webSessionEventsRepository) FindAllSessions(ctx context.Context, webSes
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	query := r.gormDb.Where(&webSessionData).Order("created_at DESC")
+	// Start with a base query
+	query := r.gormDb.Model(&postgres_entity.WebSession{})
+
+	// Add conditions explicitly
+	if webSessionData.Tenant != "" {
+		query = query.Where("tenant = ?", webSessionData.Tenant)
+	}
+	if webSessionData.Domain != nil {
+		query = query.Where("domain = ?", *webSessionData.Domain)
+	}
+	if webSessionData.VisitorID != "" {
+		query = query.Where("visitor_id = ?", webSessionData.VisitorID)
+	}
+
+	// Explicitly add the is_active condition
+	query = query.Where("is_active = ?", webSessionData.IsActive)
 
 	// Add lookback period if provided
 	if sessionTimeoutInMins != nil {
@@ -59,13 +74,13 @@ func (r *webSessionEventsRepository) FindAllSessions(ctx context.Context, webSes
 		query = query.Where("last_activity < ?", lookbackDate)
 	}
 
+	// Order and execute
 	var results []postgres_entity.WebSession
-	err := query.Find(&results).Error
+	err := query.Order("created_at DESC").Find(&results).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-
 	return results, nil
 }
 
@@ -107,7 +122,6 @@ func (r *webSessionEventsRepository) FindLastNotification(ctx context.Context, t
 		Order("sent_slack_notification DESC").
 		First(&result).
 		Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -134,7 +148,6 @@ func (r *webSessionEventsRepository) UpdateLastActivity(ctx context.Context, ses
 		}).
 		First(&updatedSession, "id = ?", sessionID).
 		Error
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -159,7 +172,6 @@ func (r *webSessionEventsRepository) UpdateSessionEnd(ctx context.Context, sessi
 		}).
 		First(&updatedSession, "id = ?", sessionID).
 		Error
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -179,7 +191,6 @@ func (r *webSessionEventsRepository) UpdateSessionWithDomain(ctx context.Context
 		Update("domain", &domain).
 		First(&updatedSession).
 		Error
-
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

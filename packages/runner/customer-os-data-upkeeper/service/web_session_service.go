@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -115,9 +114,8 @@ func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgr
 	tracing.TagComponentCronJob(span)
 
 	if sessions == nil || len(sessions) == 0 {
-		err := errors.New("There are no sessions to process")
-		tracing.TraceErr(span, err)
-		return err
+		span.LogKV("result", "no_sessions_to_process")
+		return nil
 	}
 
 	var errs error
@@ -144,7 +142,7 @@ func (s *webSessionService) processClosedSession(ctx context.Context, session po
 	}
 
 	// close websession record
-	endTime := s.calculateSessionEnd(ctx, session)
+	endTime := session.LastActivity
 	closedSession, err := s.commonServices.PostgresRepositories.WebSessionRepository.UpdateSessionEnd(ctx, session.ID, endTime)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -169,14 +167,6 @@ func (s *webSessionService) processClosedSession(ctx context.Context, session po
 	}
 
 	return nil
-}
-
-func (s *webSessionService) calculateSessionEnd(ctx context.Context, session postgres_entity.WebSession) time.Time {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionService.calculateSessionEnd")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	return session.LastActivity.Add(time.Minute)
 }
 
 func (s *webSessionService) createCloseSessionWebhookEvent(ctx context.Context, session postgres_entity.WebSession) (dto.WebhookEvent, error) {
