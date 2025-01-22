@@ -48,14 +48,14 @@ func NewWebsiteVisitEventHandler(dependencies *model.DependencyContainer, event 
 }
 
 // Add all subscribed Agents here
-func (h *WebsiteVisitEventHandler) subscribedAgents(ctx context.Context) []enum.AgentType {
+func (h *WebsiteVisitEventHandler) subscribedAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentVisitorID,
 	}
 }
 
 func (h *WebsiteVisitEventHandler) Handle(ctx context.Context) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "WebsiteVisitEventHandler.Handle")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteVisitEventHandler.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
@@ -81,7 +81,7 @@ func (h *WebsiteVisitEventHandler) Handle(ctx context.Context) error {
 }
 
 func (h *WebsiteVisitEventHandler) route(ctx context.Context, agent postgres_entity.Agents) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "WebsiteVisitEventHandler.execute")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteVisitEventHandler.route")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
@@ -121,7 +121,7 @@ func (h *WebsiteVisitEventHandler) lookupActiveAgents(ctx context.Context) []pos
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	agents, err := h.dependencies.PostgresRepositories.AgentsRepository.FindAllFromAgentsList(ctx, h.subscribedAgents(ctx))
+	agents, err := h.dependencies.PostgresRepositories.AgentsRepository.FindAllFromAgentsList(ctx, h.subscribedAgents())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil

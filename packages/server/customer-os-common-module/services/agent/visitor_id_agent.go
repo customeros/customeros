@@ -46,6 +46,8 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.Run")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("agentID", agentID)
+	tracing.LogObjectAsJson(span, "event", event)
 
 	err := a.validateWebsiteVisitEvent(event)
 	if err != nil {
