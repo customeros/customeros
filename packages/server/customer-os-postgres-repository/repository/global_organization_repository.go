@@ -213,7 +213,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichName(ctx context.
             OR name = ''
             OR name ~ '^[A-Z0-9\\s]+$'
             OR length(regexp_replace(name, '[a-zA-Z0-9\\s]', '', 'g')) > 2
-            OR name ~ '^[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'
+            OR name ~ '^[a-zA-Z0-9.-]+\\.[a-zA-Z0-9.-]+$'
             OR lower(name) IN ('none','n/a','na','unknown','null')
         )
     `
