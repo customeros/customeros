@@ -8,14 +8,32 @@ import { getOrganizationSortFn } from './sortFns';
 import { getOrganizationFilterFns } from './filterFns';
 import { OrganizationsStore } from '../Organizations.store';
 
-// TODO: Cache filtered and sorted results for faster subsequent access
+/* TODO: Explore implementing a push based strategy for this functionality.
+ * I.e. we could call the update() method imperatively from within the TableViewDef entity
+ * when a filter/sort rule is updated. This would avoid the need for the reaction and make
+ * the execution more predictable.
+ *
+ * Subjects that could push this update are:
+ *  - TableViewDef.appendDefaultFilter
+ *  - TableViewDef.appendFilter
+ *  - TableViewDef.setDefaultFilters
+ *  - TableViewDef.removeFilter
+ *  - TableViewDef.removeFilters
+ *  - TableViewDef.toggleFilter
+ *  - TableViewDef.setSorting
+ *  - TableViewDef.setFilter
+ *  - TableViewDef.setPropertyFilter
+ *  - TableViewDef.orderColumnsByVisibility?
+ *  - TableViewDef.setColumnName
+ *  - TableViewDef.setColumnSize
+ *
+ *  - Organizations.search
+ *  - Organizations.retrieve
+ */
 export class AllOrganizationsView {
   constructor(private store: OrganizationsStore) {
-    reaction(() => {
-      const preset = this.store.root.tableViewDefs.organizationsPreset;
-
-      return preset ? this.store.getSearchTermByView(preset) : '';
-    }, this.update);
+    // when new entites are added, removed or updated(by bumping the store version)
+    // -> re-compute the view eagerly
     reaction(() => {
       const preset = this.store.root.tableViewDefs.organizationsPreset;
 
@@ -23,11 +41,16 @@ export class AllOrganizationsView {
     }, this.update);
     reaction(() => this.store.value.size, this.update);
     reaction(() => this.store.version, this.update);
+
+    // when cursor is updated by loading next chunk (via scrolling the table)
     reaction(() => {
       const preset = this.store.root.tableViewDefs.organizationsPreset;
 
       return this.store.cursors.get(preset!);
     }, this.update);
+
+    // when the table view def is changed by updating a filter/sort rule
+    // -> do an async search to fetch a new list of ids
     reaction(
       () => {
         const preset = this.store.root.tableViewDefs.organizationsPreset;
@@ -45,6 +68,9 @@ export class AllOrganizationsView {
       () =>
         this.store.search(this.store.root.tableViewDefs.organizationsPreset!),
     );
+
+    // when the table view def is changed by updating a filter/sort rule
+    // -> filter + sort the current entities in the store to optimistically update the table view
     reaction(() => {
       const preset = this.store.root.tableViewDefs.organizationsPreset;
 

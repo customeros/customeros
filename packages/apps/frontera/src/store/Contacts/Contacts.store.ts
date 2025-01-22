@@ -167,6 +167,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
         this.availableCounts.set(viewDefPrest, searchResult?.totalElements);
         this.totalElements = searchResult?.totalAvailable ?? 0;
         this.searchResults.set(viewDefPrest, searchResult?.ids ?? []);
+        this.version++;
       });
     } catch (err) {
       runInAction(() => {
