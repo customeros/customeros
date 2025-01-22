@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/customeros/mailsherpa/domaincheck"
@@ -54,6 +55,17 @@ func (c *agentCapabilityService) executeIdentifyWebsiteVisitor(ctx context.Conte
 
 	results := IdentifyWebsiteVisitorResult{}
 
+	if data.IPAddress == "" {
+		err := errors.New("IP address cannot be empty")
+		tracing.TraceErr(span, err)
+		return results, err
+	}
+	if data.SessionID == "" {
+		err := errors.New("SessionID cannot be empty")
+		tracing.TraceErr(span, err)
+		return results, err
+	}
+
 	domain, linkedInSlug, err := c.identifyIP(ctx, data.IPAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -90,6 +102,10 @@ func (c *agentCapabilityService) identifyIP(ctx context.Context, ipAddress strin
 	}
 
 	_, primaryDomain := domaincheck.PrimaryDomainCheck(snitcherData.Company.Domain)
+
+	if snitcherData.Company.Profiles != nil && snitcherData.Company.Profiles.LinkedIn != nil {
+		linkedinSlug = snitcherData.Company.Profiles.LinkedIn.Handle
+	}
 
 	return primaryDomain, snitcherData.Company.Profiles.LinkedIn.Handle, nil
 }

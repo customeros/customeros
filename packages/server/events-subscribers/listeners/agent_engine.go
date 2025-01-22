@@ -15,7 +15,6 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 	"golang.org/x/net/context"
 
@@ -38,38 +37,30 @@ func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyCo
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	eventName, webhookEvent, err := getWebhookEvent(input)
+	_, webhookEvent, err := getWebhookEvent(input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if webhookEvent == nil {
-		err := errors.New("webhookEvent is nil")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if webhookEvent.Data == nil {
-		err := errors.New("webhookEvent.Data is nil")
-		tracing.TraceErr(span, err)
-		return err
+	if webhookEvent == nil || webhookEvent.Data == nil || webhookEvent.DataType == "" {
+		return fmt.Errorf("invalid webhook event: missing required fields")
 	}
 
 	// determine event handler //
 	switch webhookEvent.DataType {
 
-	case data_fields.MeetingSummaryEvent{}.Type():
-		eventData, ok := webhookEvent.Data.(*data_fields.MeetingSummaryEvent)
-		if !ok {
-			return fmt.Errorf("failed to cast to MeetingSummaryEvent, got type: %T", webhookEvent.Data)
-		}
-
-		err = handleMeetingSummaryEvent(ctx, dependencies.CommonServices, eventName, eventData)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
+	// case data_fields.MeetingSummaryEvent{}.Type():
+	// 	eventData, ok := webhookEvent.Data.(*data_fields.MeetingSummaryEvent)
+	// 	if !ok {
+	// 		return fmt.Errorf("failed to cast to MeetingSummaryEvent, got type: %T", webhookEvent.Data)
+	// 	}
+	//
+	// 	err = handleMeetingSummaryEvent(ctx, dependencies.CommonServices, eventName, eventData)
+	// 	if err != nil {
+	// 		tracing.TraceErr(span, err)
+	// 		return err
+	// 	}
 
 	case data_fields.WebsiteVisitEvent{}.Type():
 		eventData, ok := webhookEvent.Data.(*data_fields.WebsiteVisitEvent)
@@ -77,10 +68,14 @@ func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyCo
 			return fmt.Errorf("failed to cast to WebsiteVisitEvent, got type: %T", webhookEvent.Data)
 		}
 
-		websiteVisitEvent := website_visit_event.NewWebsiteVisitEventHandler(
+		websiteVisitEvent, err := website_visit_event.NewWebsiteVisitEventHandler(
 			dependencies,
 			eventData,
 		)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 
 		return websiteVisitEvent.Handle(ctx)
 
@@ -90,7 +85,6 @@ func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyCo
 		return err
 	}
 
-	return nil
 }
 
 func handleMeetingSummaryEvent(ctx context.Context, s *service.CommonServices, sourceEvent commonenum.FlowListenerEvent, eventData *data_fields.MeetingSummaryEvent) error {
@@ -306,41 +300,55 @@ func handleMarkdownEventPublishing(ctx context.Context, s *service.CommonService
 }
 
 func getWebhookEvent(input any) (commonenum.FlowListenerEvent, *dto.WebhookEvent, error) {
+	// Cast input to Event
 	message, ok := input.(*dto.Event)
 	if !ok {
-		return commonenum.NotSet, nil, fmt.Errorf("failed to cast to Event")
-	}
-	// check message data type before conversion
-	if message.Event.Data == nil {
-		err := errors.New("message data is nil")
-		return commonenum.NotSet, nil, err
+		return commonenum.NotSet, nil, fmt.Errorf("expected *dto.Event, got %T", input)
 	}
 
+	// Validate message
+	if message == nil || message.Event.Data == nil {
+		return commonenum.NotSet, nil, fmt.Errorf("message or message.Event.Data is nil")
+	}
+
+	// Cast Event.Data to WebhookEvent
 	webhookEvent, ok := message.Event.Data.(*dto.WebhookEvent)
 	if !ok {
-		err := errors.New("event is not a webhook event")
-		return commonenum.NotSet, nil, err
+		return commonenum.NotSet, nil, fmt.Errorf("expected *dto.WebhookEvent, got %T", message.Event.Data)
 	}
 
-	webhookData, ok := webhookEvent.Data.(map[string]interface{})
-	if !ok {
-		err := errors.New("event data is not a map")
-		return commonenum.NotSet, nil, err
+	// Validate webhook event
+	if webhookEvent.DataType == "" {
+		return commonenum.NotSet, nil, fmt.Errorf("webhook event data type is empty")
 	}
 
+	// Get the expected type for this event
 	eventDataType, ok := eventDataTypes[webhookEvent.DataType]
 	if !ok {
-		err := fmt.Errorf("event data type %s is not supported", webhookEvent.DataType)
-		return commonenum.NotSet, nil, err
+		return commonenum.NotSet, nil, fmt.Errorf("unsupported event data type: %s", webhookEvent.DataType)
 	}
 
+	// Cast webhook data to map
+	webhookData, ok := webhookEvent.Data.(map[string]interface{})
+	if !ok {
+		return commonenum.NotSet, nil, fmt.Errorf("expected map[string]interface{}, got %T", webhookEvent.Data)
+	}
+
+	// Create new instance of the target type
 	webhookDataPtr := reflect.New(eventDataType).Interface()
-	err := utils.Decode(webhookData, webhookDataPtr)
-	if err != nil {
-		return commonenum.NotSet, nil, err
+
+	// Decode the map into the target type
+	if err := utils.Decode(webhookData, webhookDataPtr); err != nil {
+		return commonenum.NotSet, nil, fmt.Errorf("failed to decode webhook data: %w", err)
 	}
 
+	// Set the decoded data
 	webhookEvent.Data = webhookDataPtr
+
+	// Validate name before returning
+	if webhookEvent.Name == commonenum.NotSet {
+		return commonenum.NotSet, nil, fmt.Errorf("webhook event name is not set")
+	}
 
 	return webhookEvent.Name, webhookEvent, nil
 }

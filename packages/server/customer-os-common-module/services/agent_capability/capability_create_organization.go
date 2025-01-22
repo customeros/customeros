@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/opentracing/opentracing-go"
@@ -19,6 +20,12 @@ func (c *agentCapabilityService) handleOrganizationCreationExecution(ctx context
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.handleOrganizationCreationExecution")
 	defer span.Finish()
 	tracing.TagComponentService(span)
+
+	if executionContainer == nil {
+		err := errors.New("executionContainer cannot be nil")
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	input, ok := executionContainer.InputData.(data_fields.OrganizationFields)
 	if !ok {

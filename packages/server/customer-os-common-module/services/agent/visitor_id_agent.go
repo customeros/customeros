@@ -133,11 +133,13 @@ func (a *AgentVisitorIDService) executeOrgCreationCapability(ctx context.Context
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	source := "WebVisitor ID Agent"
 	executionContainer := dto.CapabilityExecutionContainer{
 		AgentID:          agentID,
 		AgentExecutionID: executionID,
 		Capability:       enum.CapabilityCreateOrganization,
 		InputData: data_fields.OrganizationFields{
+			Source:  &source,
 			Domains: []string{domain},
 		},
 	}
