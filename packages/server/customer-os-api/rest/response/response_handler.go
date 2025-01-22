@@ -108,7 +108,7 @@ func (h *Response) HandleError(c *gin.Context, statusCode int, message *string) 
 	response := gin.H{
 		"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
 		"status":    string(APIStatusError),
-		"code":      http.StatusText(statusCode),
+		"error":     http.StatusText(statusCode),
 	}
 
 	if message != nil {
@@ -122,7 +122,7 @@ func (h *Response) AbortAndHandleError(c *gin.Context, statusCode int, message *
 	response := gin.H{
 		"requestId": utils.GenerateNanoIdWithPrefix("api", 16),
 		"status":    string(APIStatusError),
-		"code":      http.StatusText(statusCode),
+		"error":     http.StatusText(statusCode),
 	}
 
 	if message != nil {

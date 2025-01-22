@@ -101,6 +101,8 @@ jaeger-dev:
 logs:
     tail -f admin-api.log api.log events-subscribers.log
 
+os:
+    open https://165.22.117.75:5601/app/
 # Show outdated dependencies for all modules
 outdated:
     #!/usr/bin/env bash
