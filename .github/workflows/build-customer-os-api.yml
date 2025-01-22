@@ -286,6 +286,7 @@ jobs:
   build-publish:
     needs: [ test, test-resolver ]
     runs-on: ubicloud-standard-2
+    if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     steps:
       - name: Checkout
         uses: actions/checkout@v4

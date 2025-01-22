@@ -2,7 +2,7 @@ name: browser-automation-service
 
 on:
   push:
-    branches: ["otter", "dev"]
+    branches: ["otter"]
     paths:
       - "packages/server/browser-automation-api/**"
       - ".github/workflows/build-browser-automation-api.yml"
@@ -24,6 +24,7 @@ permissions:
 jobs:
   build-publish:
     runs-on: ubicloud-standard-2
+    if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     steps:
       - name: Delete huge unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache
