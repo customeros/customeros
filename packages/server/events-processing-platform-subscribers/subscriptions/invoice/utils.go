@@ -243,7 +243,11 @@ func downloadProviderLogoAsTempFile(ctx context.Context, fileService interfaces.
 		tracing.TraceErr(span, errors.Wrap(err, "fileService.GetById"))
 		return nil, nil, err
 	}
-	fileBytes, err := fileService.GetFileBytes(ctx, fileMetadata.PublicUrl)
+	if fileMetadata == nil {
+		tracing.TraceErr(span, errors.Errorf("File with id %v not found", repositoryFileId))
+		return nil, nil, errors.Errorf("File with id %v not found", repositoryFileId)
+	}
+	fileBytes, err := fileService.GetFileBytes(ctx, utils.FirstNotEmptyString(fileMetadata.PublicUrl, fileMetadata.CdnUrl))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "fileService.GetFileBytes"))
 		return nil, nil, err
