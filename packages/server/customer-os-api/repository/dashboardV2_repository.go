@@ -518,9 +518,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCountry) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += "CASE WHEN trim(l.country) <> \"\") and not l.country is null THEN toLower(trim(l.country)) ELSE '𠀀' END as SORT_BY "
+			aliases += "CASE WHEN trim(l.country) <> \"\" and not l.country is null THEN toLower(trim(l.country)) ELSE '𠀀' END as SORT_BY "
 		} else {
-			aliases += "CASE WHEN trim(l.country) <> \"\") and not l.country is null THEN toLower(trim(l.country)) ELSE '' END as SORT_BY "
+			aliases += "CASE WHEN trim(l.country) <> \"\" and not l.country is null THEN toLower(trim(l.country)) ELSE '' END as SORT_BY "
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCity) {
