@@ -18,8 +18,8 @@ type GlobalOrganization struct {
 	OtherSocials            []string   `gorm:"column:other_socials;type:text[]" json:"otherSocials"`
 	IndustryNaicsCode       string     `gorm:"column:industry_naics_code;type:varchar(255)" json:"industryNaicsCode"`
 	IndustryNaicsName       string     `gorm:"column:industry_naics_name;type:varchar(255)" json:"industryNaicsName"`
-	IndustrySetAt           time.Time  `gorm:"column:industry_set_at;type:timestamp" json:"industrySetAt"`
-	IndustryRequestedAt     time.Time  `gorm:"column:industry_requested_at;type:timestamp" json:"industryRequestedAt"`
+	IndustrySetAt           *time.Time `gorm:"column:industry_set_at;type:timestamp" json:"industrySetAt"`
+	IndustryRequestedAt     *time.Time `gorm:"column:industry_requested_at;type:timestamp" json:"industryRequestedAt"`
 	IndustryRequestCount    int        `gorm:"column:industry_request_count" json:"industryRequestCount"`
 	Market                  string     `gorm:"column:market;type:text" json:"market"`
 	YearFounded             int        `gorm:"column:year_founded" json:"yearFounded"`
@@ -35,7 +35,7 @@ type GlobalOrganization struct {
 	SourceDescription3      string     `gorm:"column:source_description_3;type:text" json:"sourceDescription3"`
 	SourceDescription4      string     `gorm:"column:source_description_4;type:text" json:"sourceDescription4"`
 	SourceDescription5      string     `gorm:"column:source_description_5;type:text" json:"sourceDescription5"`
-	SyncedToNeoAt           time.Time  `gorm:"column:synced_to_neo_at;type:timestamp" json:"syncedToNeoAt"`
+	SyncedToNeoAt           *time.Time `gorm:"column:synced_to_neo_at;type:timestamp" json:"syncedToNeoAt"`
 }
 
 // TableName sets the name of the table for GORM

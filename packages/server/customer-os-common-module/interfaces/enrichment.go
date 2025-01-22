@@ -10,7 +10,7 @@ import (
 
 type EnrichmentService interface {
 	// primary interfaces
-	EnrichOrganization(ctx context.Context, domain, linkedinURL *string) (*OrganizationData, error)
+	FetchEnrichOrganizationData(ctx context.Context, domain, linkedinURL *string) (*OrganizationData, error)
 	EnrichPerson(ctx context.Context, person PersonSearch) (*uint64, *postgres_entity.ScrapInResponseBody, error)
 	IPIdentity(ctx context.Context, ipAddress string) (*SnitcherResponse, error)
 	FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) (dbID string, betterContactRequestID string, response *postgres_entity.BetterContactResponseBody, err error)
