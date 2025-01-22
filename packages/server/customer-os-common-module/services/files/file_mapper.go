@@ -10,11 +10,12 @@ func MapAttachmentResponseToFileEntity(input *neo4jEntity.AttachmentEntity) *int
 		return nil
 	}
 	return &interfaces.File{
-		ID:       input.Id,
-		FileName: input.FileName,
-		MimeType: input.MimeType,
-		BasePath: input.BasePath,
-		Size:     input.Size,
-		CdnUrl:   input.CdnUrl,
+		ID:        input.Id,
+		FileName:  input.FileName,
+		MimeType:  input.MimeType,
+		BasePath:  input.BasePath,
+		Size:      input.Size,
+		CdnUrl:    input.CdnUrl,
+		PublicUrl: input.PublicUrl,
 	}
 }

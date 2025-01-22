@@ -564,6 +564,7 @@ func (s *fileService) GetFileBytes(ctx context.Context, fileURL string) (*[]byte
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.GetFileBytes")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("fileURL", fileURL))
 
 	resp, err := http.Get(fileURL)
 	if err != nil {

@@ -28,7 +28,7 @@ func setEventSpanTagsAndLogFields(span opentracing.Span, evt eventstore.Event) {
 }
 
 func FillInvoiceHtmlTemplate(ctx context.Context, tmpFile *os.File, invoiceData map[string]interface{}) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ConvertInvoiceHtmlToPdf")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FillInvoiceHtmlTemplate")
 	defer span.Finish()
 
 	// Get the current directory
