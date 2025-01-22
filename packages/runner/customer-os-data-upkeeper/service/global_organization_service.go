@@ -693,7 +693,7 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 50
+	limit := 500
 	daysFromPreviousSync := 30
 
 	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx, daysFromPreviousSync, limit)
