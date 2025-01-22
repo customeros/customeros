@@ -66,7 +66,7 @@ export const ContactCommands = observer(() => {
             </>
           }
         >
-          Edit persona tag...
+          Change or add tags...
         </CommandItem>
         <AddPersonaTagSubItemGroup />
 

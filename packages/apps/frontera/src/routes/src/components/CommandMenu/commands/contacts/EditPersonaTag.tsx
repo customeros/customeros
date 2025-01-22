@@ -14,7 +14,7 @@ export const EditPersonaTag = observer(() => {
       <CommandInput
         label={usecase.inputLabel}
         value={usecase.searchTerm}
-        placeholder='Edit persona tag...'
+        placeholder='Change or add tags...'
         onValueChange={usecase.setSearchTerm}
         onKeyDownCapture={(e) => {
           if (e.metaKey) {
