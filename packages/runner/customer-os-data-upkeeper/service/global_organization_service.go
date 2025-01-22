@@ -693,7 +693,7 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 20
+	limit := 50
 	daysFromPreviousSync := 30
 
 	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetGlobalOrganizationsToSyncIntoTenantOrganizations(ctx, daysFromPreviousSync, limit)
@@ -713,6 +713,7 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.SyncGlobalOrgsToTenantOrganizations.Record")
 		defer recordSpan.Finish()
 		recordSpan.LogFields(log.Uint64("record.id", record.ID), log.String("record.primaryDomain", record.PrimaryDomain))
+		tracing.TagEntity(recordSpan, record.PrimaryDomain)
 
 		// mark record as processed initially to not process same record again, even if error occurs
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkGlobalOrganizationSyncedToNeo(recordCtx, record.ID)
@@ -743,7 +744,7 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 			// sync organization
 			dataFields := data_fields.OrganizationFields{}
 			if record.IndustryNaicsCode != "" {
-				dataFields.Industry = utils.StringPtr(record.IndustryNaicsCode)
+				dataFields.IndustryCode = utils.StringPtr(record.IndustryNaicsCode)
 			}
 			if record.Description != "" {
 				dataFields.Description = utils.StringPtr(record.Description)

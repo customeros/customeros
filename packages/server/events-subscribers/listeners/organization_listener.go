@@ -124,7 +124,7 @@ func (l *organizationListenerImpl) enrichOrganization(ctx context.Context, tenan
 
 	l.services.Events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
-	enrichOrganizationResponse, err := l.services.EnrichmentService.EnrichOrganization(ctx, &domain, nil)
+	enrichOrganizationResponse, err := l.services.EnrichmentService.FetchEnrichOrganizationData(ctx, &domain, nil)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call enrich organization"))
 		l.log.Errorf("Error calling enrich organization: %s", err.Error())
@@ -171,10 +171,10 @@ func (l *organizationListenerImpl) updateOrganizationWithEnrichData(ctx context.
 	}
 
 	// Set organization name
-	if data.Name != "" {
-		orgFields.Name = utils.StringPtr(data.Name)
-	} else if organizationEntity.Name == "" {
-		if data.Domain != "" {
+	if organizationEntity.Name == "" {
+		if data.Name != "" {
+			orgFields.Name = utils.StringPtr(data.Name)
+		} else if data.Domain != "" {
 			domainPrefixCapitalized := utils.CapitalizeAllParts(utils.GetDomainWithoutTLD(data.Domain), []string{"-", "_", "."})
 			orgFields.Name = utils.StringPtr(domainPrefixCapitalized)
 		}
@@ -230,6 +230,12 @@ func (l *organizationListenerImpl) updateOrganizationWithEnrichData(ctx context.
 	for _, social := range data.Socials {
 		l.addSocial(ctx, organizationEntity.ID, tenant, social.Url, social.Alias, social.Id, constants.AppEnrichment)
 	}
+
+	err = l.neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.NodeLabelOrganization, organizationEntity.ID, string(neo4jentity.OrganizationPropertyEnrichedAt), utils.NowPtr())
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to update enriched at"))
+	}
+	l.services.Events.Publisher.PublishEventCompleted(ctx, tenant, organizationEntity.ID, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 }
 
 func (l *organizationListenerImpl) addSocial(ctx context.Context, organizationId, tenant, url, alias, externalId, appSource string) {
