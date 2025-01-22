@@ -13,8 +13,7 @@ type Config struct {
 	// Global Organizations
 	CronScheduleProcessWebsiteForGlobalOrgs    string `env:"CRON_SCHEDULE_PROCESS_WEBSITE_FOR_GLOBAL_ORGS" envDefault:"0 */1 * * * *"`
 	CronScheduleSyncDataToGlobalOrgs           string `env:"CRON_SCHEDULE_SYNC_DATA_TO_GLOBAL_ORGS" envDefault:"15 */1 * * * *"`
-	CronScheduleEnrichGlobalOrgIndustry        string `env:"CRON_SCHEDULE_ENRICH_GLOBAL_ORG_INDUSTRY" envDefault:"30 */1 * * * *"`
-	CronScheduleEnrichGlobalOrgDescription     string `env:"CRON_SCHEDULE_ENRICH_GLOBAL_ORG_DESCRIPTION" envDefault:"50 */1 * * * *"`
+	CronScheduleEnrichGlobalOrg                string `env:"CRON_SCHEDULE_ENRICH_GLOBAL_ORG" envDefault:"30 */1 * * * *"`
 	CronScheduleSyncFromGlobalOrgsToTenantOrgs string `env:"CRON_SCHEDULE_SYNC_FROM_GLOBAL_ORGS_TO_TENANT_ORGS" envDefault:"45 */1 * * * *"`
 
 	// Contacts

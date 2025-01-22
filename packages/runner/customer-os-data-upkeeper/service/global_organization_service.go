@@ -40,8 +40,7 @@ func (e *EnrichOrganizationRequest) Normalize() {
 type GlobalOrganizationService interface {
 	SyncDataIntoGlobalOrganizations()
 	ScrapinCompanyByWebsite()
-	EnrichIndustry()
-	EnrichDescription()
+	EnrichGlobalOrganization()
 	SyncGlobalOrgsToTenantOrganizations()
 }
 
@@ -62,6 +61,12 @@ func NewGlobalOrganizationService(cfg *config.Config, log logger.Logger, commonS
 func (s *globalOrganizationService) SyncDataIntoGlobalOrganizations() {
 	s.syncScrapinToGlobalOrganization()
 	s.syncBrandfetchToGlobalOrganization()
+}
+
+func (s *globalOrganizationService) EnrichGlobalOrganization() {
+	s.enrichName()
+	s.enrichIndustry()
+	s.enrichDescription()
 }
 
 func (s *globalOrganizationService) syncScrapinToGlobalOrganization() {
@@ -496,11 +501,11 @@ func (s *globalOrganizationService) callApiScrapinOrganization(ctx context.Conte
 	return nil
 }
 
-func (s *globalOrganizationService) EnrichIndustry() {
+func (s *globalOrganizationService) enrichIndustry() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.EnrichIndustry")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichIndustry")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
@@ -522,7 +527,7 @@ func (s *globalOrganizationService) EnrichIndustry() {
 
 	// process records
 	for _, record := range records {
-		span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichIndustry.Record")
+		span, ctx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichIndustry.Record")
 		defer span.Finish()
 		span.LogFields(log.Uint64("record.id", record.ID))
 
@@ -606,11 +611,11 @@ Company Name: %s
 	}
 }
 
-func (s *globalOrganizationService) EnrichDescription() {
+func (s *globalOrganizationService) enrichDescription() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.EnrichDescription")
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichDescription")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
@@ -632,7 +637,7 @@ func (s *globalOrganizationService) EnrichDescription() {
 
 	// process records
 	for _, record := range records {
-		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.EnrichDescription.Record")
+		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichDescription.Record")
 		defer recordSpan.Finish()
 		recordSpan.LogFields(log.Uint64("record.id", record.ID))
 
@@ -681,6 +686,94 @@ Company Domain: %s
 		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetDescription(recordCtx, record.ID, aiDescrition)
 		if err != nil {
 			tracing.TraceErr(recordSpan, errors.Wrap(err, "error setting description"))
+			continue
+		}
+	}
+}
+
+func (s *globalOrganizationService) enrichName() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "GlobalOrganizationService.enrichName")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 30
+	hoursFromPreviousAttempt := 24
+	maxAttempts := 3
+
+	records, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetOrganizationsToEnrichName(ctx, hoursFromPreviousAttempt, maxAttempts, limit)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting records to process"))
+		s.log.Errorf("Error getting records to process: %s", err.Error())
+		return
+	}
+
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	// process records
+	for _, record := range records {
+		recordSpan, recordCtx := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationService.enrichName.Record")
+		defer recordSpan.Finish()
+		recordSpan.LogFields(log.Uint64("record.id", record.ID))
+
+		// mark record as processed initially to not process same record again, even if error occurs
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.MarkNameEnrichRequested(recordCtx, record.ID)
+		if err != nil {
+			tracing.TraceErr(recordSpan, errors.Wrap(err, "error marking record as processed"))
+			s.log.Errorf("Error marking record as processed: %s", err.Error())
+			continue
+		}
+
+		// prepare Anthropic prompt
+		prompt := fmt.Sprintf(`
+You are a world-class naming assistant. The user will provide:
+	•	A current/partial company name
+	•	The company’s primary domain
+	•	The company’s website
+
+Your task:
+	1.	Identify the standard recognized company name.
+	2.	If the business is more commonly recognized by a brand name (e.g., “Apple” instead of “Apple Inc.”), return that simpler, branded name.
+	3.	If you find a longer official name that’s different from the brand, remove suffixes like “Inc,” “Ltd,” “LLC,” “Corp,” etc., but keep the rest of the formal name.
+    4. 	If you cannot identify a single valid name, return “N/A”
+	5.	Only output the name itself or “N/A,” with no explanations, disclaimers, or additional text.
+	6.  Output in english.
+
+Important Samples:
+	•	If input suggests “Verizon Communications Inc.,” return “Verizon”
+	•	If input suggests “Apple Inc,” return “Apple”
+	•	If brand differs from legal name (e.g., “Nestlé S.A.” vs. “Nescafé”), return the official company name “Nestle”
+	•	If unsure, return “N/A”
+
+Below is the data. Provide the final name or N/A as your entire response.
+---
+Company Name: %s
+Company Domain: %s
+Company Website: %s
+---
+`, record.Name, record.PrimaryDomain, record.Website)
+
+		// ask AI for concise description
+		aiOutput, err := s.commonServices.AIService.AskAI(recordCtx, enum.AIModelAnthropicHaiku, &prompt)
+		if err != nil {
+			tracing.TraceErr(recordSpan, errors.Wrap(err, "error asking AI"))
+			continue
+		}
+		aiName := utils.IfNotNilString(aiOutput)
+		recordSpan.LogFields(log.String("result.name", aiName))
+
+		if aiName == "" || aiName == "N/A" {
+			continue
+		}
+
+		err = s.commonServices.PostgresRepositories.GlobalOrganizationRepository.SetName(recordCtx, record.ID, aiName)
+		if err != nil {
+			tracing.TraceErr(recordSpan, errors.Wrap(err, "error setting name"))
 			continue
 		}
 	}
@@ -749,6 +842,9 @@ func (s *globalOrganizationService) SyncGlobalOrgsToTenantOrganizations() {
 			}
 			if record.Description != "" {
 				dataFields.Description = utils.StringPtr(record.Description)
+			}
+			if record.Name != "" {
+				dataFields.Name = utils.StringPtr(record.Name)
 			}
 			_, err = s.commonServices.OrganizationService.Save(innerCtx, nil, utils.StringPtr(tenantOrgs.OrganizationId), dataFields)
 			if err != nil {

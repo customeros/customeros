@@ -30,6 +30,9 @@ type GlobalOrganization struct {
 	DescriptionSetAt        *time.Time `gorm:"column:description_set_at;type:timestamp" json:"descriptionSetAt"`
 	DescriptionRequestedAt  *time.Time `gorm:"column:description_requested_at;type:timestamp" json:"descriptionRequestedAt"`
 	DescriptionRequestCount int        `gorm:"column:description_request_count" json:"descriptionRequestCount"`
+	NameSetAt               *time.Time `gorm:"column:name_set_at;type:timestamp" json:"nameSetAt"`
+	NameRequestedAt         *time.Time `gorm:"column:name_requested_at;type:timestamp" json:"nameRequestedAt"`
+	NameRequestCount        int        `gorm:"column:name_request_count" json:"nameRequestCount"`
 	SourceDescription1      string     `gorm:"column:source_description_1;type:text" json:"sourceDescription1"`
 	SourceDescription2      string     `gorm:"column:source_description_2;type:text" json:"sourceDescription2"`
 	SourceDescription3      string     `gorm:"column:source_description_3;type:text" json:"sourceDescription3"`

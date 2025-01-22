@@ -672,11 +672,11 @@ func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input mode
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request", input))
+	tracing.LogObjectAsJson(span, "request.input", input)
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.OrganizationID, commonmodel.ORGANIZATION, utils.StringOrEmpty(input.Tag.ID))
+	err := r.Services.CommonServices.TagService.RemoveTagFromEntity(ctx, nil, tenant, input.OrganizationID, commonmodel.ORGANIZATION, utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error removing tag from organization")

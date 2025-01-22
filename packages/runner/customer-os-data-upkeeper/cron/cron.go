@@ -113,8 +113,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleUpdateOrganization, GroupOrganization, updateOrganizations, "updateOrganizations")
 	addJob(cont.Cfg.App.Cron.CronScheduleSyncDataToGlobalOrgs, GroupGlobalOrg, syncDataToGlobalOrgs, "syncDataToGlobalOrgs")
 	addJob(cont.Cfg.App.Cron.CronScheduleProcessWebsiteForGlobalOrgs, GroupGlobalOrg, processWebsiteForGlobalOrgs, "processWebsiteForGlobalOrgs")
-	addJob(cont.Cfg.App.Cron.CronScheduleEnrichGlobalOrgIndustry, GroupGlobalOrg, enrichGlobalOrgIndustry, "enrichGlobalOrgIndustry")
-	addJob(cont.Cfg.App.Cron.CronScheduleEnrichGlobalOrgDescription, GroupGlobalOrg, enrichGlobalOrgDescription, "enrichGlobalOrgDescription")
+	addJob(cont.Cfg.App.Cron.CronScheduleEnrichGlobalOrg, GroupGlobalOrg, enrichGlobalOrganization, "enrichGlobalOrganization")
 	addJob(cont.Cfg.App.Cron.CronScheduleSyncFromGlobalOrgsToTenantOrgs, GroupGlobalOrg, syncGlobalOrgsToTenantOrganizations, "syncGlobalOrgsToTenantOrganizations")
 
 	// Contract Jobs
@@ -325,12 +324,8 @@ func checkMailstackDomainReputation(cont *container.Container) {
 	service.NewMailstackService(cont.Cfg, cont.Log, cont.CommonServices).CheckMailstackDomainReputation()
 }
 
-func enrichGlobalOrgIndustry(cont *container.Container) {
-	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).EnrichIndustry()
-}
-
-func enrichGlobalOrgDescription(cont *container.Container) {
-	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).EnrichDescription()
+func enrichGlobalOrganization(cont *container.Container) {
+	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).EnrichGlobalOrganization()
 }
 
 func sendReminders(cont *container.Container) {
