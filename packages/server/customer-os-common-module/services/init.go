@@ -205,7 +205,7 @@ func InitCommonServices(
 	}
 	socialImpl := social.NewSocialService(log, neo4jRepositories, eventsImpl, contactImpl)
 	orgImpl := organization.NewOrganizationService(log, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl)
-	agentVisitorIdImpl := agent.NewAgentVisitorIDService(postgresRepositories, agentImpl, agentCapabilityImpl)
+	agentVisitorIdImpl := agent.NewAgentVisitorIDService(postgresRepositories, agentImpl, agentCapabilityImpl, workspaceImpl)
 	contractImpl := contract.NewContractService(log, neo4jRepositories, eventsImpl, grpcClients, nil, orgImpl)
 	opportunityImpl := opportunity.NewOpportunityService(log, grpcClients, neo4jRepositories, eventsImpl, contractImpl, orgImpl, tenantSettingsImpl)
 	sliImpl := sli.NewServiceLineItemService(log, eventsImpl, neo4jRepositories, contractImpl)

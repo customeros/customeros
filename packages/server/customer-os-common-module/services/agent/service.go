@@ -99,7 +99,7 @@ func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent pos
 	return createdRecord.ID, nil
 }
 
-func (a *agentService) SaveAgentExecutionSuccess(ctx context.Context, executionID string) error {
+func (a *agentService) SaveAgentExecutionCompleted(ctx context.Context, executionID string, goalAchieved bool) error {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.SaveAgentExecutionSuccess")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -114,6 +114,7 @@ func (a *agentService) SaveAgentExecutionSuccess(ctx context.Context, executionI
 
 	executionRecord.Status = enum.AgentExecutionCompleted.String()
 	executionRecord.CompletedAt = utils.NowPtr()
+	executionRecord.GoalAchieved = goalAchieved
 	// update
 
 	return nil

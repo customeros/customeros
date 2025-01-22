@@ -219,11 +219,17 @@ func (c *agentCapabilityService) sessionAnalytics(ctx context.Context, sessionID
 		return "", "", "", nil
 	}
 
-	hostname := session.Hostname
+	hostname := c.cleanUrl(session.Hostname)
 
-	referrer := ""
-	if session.Referrer != nil {
+	var referrer string
+	if session.Referrer == nil {
+		referrer = ""
+	} else {
 		referrer = *session.Referrer
+	}
+	referrer = c.cleanUrl(referrer)
+	if strings.Contains(referrer, "syndicatedsearch.goog") {
+		referrer = "google.com"
 	}
 
 	sessionDuration, err := c.calculateSessionDuration(ctx, session)
@@ -286,7 +292,7 @@ func (c *agentCapabilityService) isNewCompanyVisit(ctx context.Context, domain s
 		return false, err
 	}
 
-	if len(results) == 0 {
+	if results == nil || len(results) == 0 {
 		return true, nil
 	}
 	return false, nil
@@ -297,8 +303,18 @@ func (c *agentCapabilityService) isNewWebsiteVisitor(ctx context.Context, visito
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
+	tenant := common.GetTenantFromContext(ctx)
+
+	if tenant == "" || visitorId == "" {
+		err := errors.New("neither tenant or visitorID can be nil")
+		tracing.TraceErr(span, err)
+		span.LogKV("tenant", tenant)
+		span.LogKV("visitorID", visitorId)
+		return false, err
+	}
+
 	query := postgres_entity.WebSession{
-		Tenant:    common.GetTenantFromContext(ctx),
+		Tenant:    tenant,
 		VisitorID: visitorId,
 		IsActive:  false,
 	}
@@ -309,7 +325,7 @@ func (c *agentCapabilityService) isNewWebsiteVisitor(ctx context.Context, visito
 		return false, err
 	}
 
-	if len(results) == 0 {
+	if results == nil || len(results) == 0 {
 		return true, nil
 	}
 	return false, nil
@@ -324,7 +340,7 @@ func (c *agentCapabilityService) buildTimelineMessage(ctx context.Context, sessi
 	var baseMessage string
 	switch {
 	case analysis.IsNewCompanyVisit:
-		baseMessage = fmt.Sprintf("**First Visit:** %s", analysis.SessionDuration)
+		baseMessage = fmt.Sprintf("**Initial Visit:** %s", analysis.SessionDuration)
 	case analysis.IsNewPersonVisit:
 		baseMessage = fmt.Sprintf("**New Visitor:** %s", analysis.SessionDuration)
 	case !analysis.IsNewPersonVisit:
@@ -335,12 +351,8 @@ func (c *agentCapabilityService) buildTimelineMessage(ctx context.Context, sessi
 
 	// Build source message
 	var sourceMessage string
-	if strings.Contains(analysis.Referrer, "syndicatedsearch.goog") {
-		analysis.Referrer = "google.com"
-	}
 	if analysis.Referrer != "" {
-		cleanReferrer := analysis.Referrer
-		sourceMessage = fmt.Sprintf("\n**Source:** [%s](https://%s)", cleanReferrer, cleanReferrer)
+		sourceMessage = fmt.Sprintf("\n**Source:** [%s](https://%s)", analysis.Referrer, analysis.Referrer)
 	} else {
 		sourceMessage = "\n**Source:** Direct"
 	}
@@ -377,6 +389,10 @@ func (c *agentCapabilityService) buildTimelineMessage(ctx context.Context, sessi
 }
 
 func (c *agentCapabilityService) cleanUrl(s string) string {
+	if s == "" {
+		return ""
+	}
+
 	clean := strings.TrimPrefix(s, "https://")
 	clean = strings.TrimPrefix(clean, "http://")
 	clean = strings.TrimPrefix(clean, "www.")
