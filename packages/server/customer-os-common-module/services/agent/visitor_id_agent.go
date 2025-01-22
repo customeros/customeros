@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -22,17 +24,20 @@ type AgentVisitorIDService struct {
 	postgresRepositories   *postgres_repository.Repositories
 	agentService           interfaces.AgentService
 	agentCapabilityService interfaces.AgentCapabilityService
+	workspaceService       interfaces.WorkspaceService
 }
 
 func NewAgentVisitorIDService(
 	postgresRepositories *postgres_repository.Repositories,
 	agentService interfaces.AgentService,
 	agentCapabilityService interfaces.AgentCapabilityService,
+	workspaceService interfaces.WorkspaceService,
 ) *AgentVisitorIDService {
 	return &AgentVisitorIDService{
 		postgresRepositories:   postgresRepositories,
 		agentService:           agentService,
 		agentCapabilityService: agentCapabilityService,
+		workspaceService:       workspaceService,
 	}
 }
 
@@ -128,6 +133,10 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 		}
 		return err
 	}
+
+	// check if slack notification enabled
+
+	// check if notification should be suppressed
 
 	// execute send notification capability
 
@@ -289,4 +298,65 @@ func (a *AgentVisitorIDService) createAgentExecutionRecord(ctx context.Context, 
 	}
 
 	return a.agentService.CreateAgentExecutionRecord(ctx, *agent, triggerEventType)
+}
+
+func (a *AgentVisitorIDService) skipNotification(ctx context.Context, agentConfig *AgentConfig, session *postgres_entity.WebSession) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.skipNotifications")
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	defer span.Finish()
+
+	if session.Domain == nil {
+		return true, nil
+	}
+
+	// don't send if from workspace domain
+	isWorkspaceDomain := a.isWorkspaceDomain(ctx, *session.Domain)
+	if isWorkspaceDomain {
+		return true, nil
+	}
+
+	if agentConfig == nil {
+		err := errors.New("agent config not set")
+		tracing.TraceErr(span, err)
+		return true, err
+	}
+
+	// determine last notification from this domain
+	lastNotification, err := a.postgresRepositories.WebSessionRepository.FindLastNotification(ctx, session.Tenant, *session.Domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, nil
+	}
+
+	if lastNotification == nil {
+		return false, nil
+	}
+
+	// determine how long since last notification
+	hoursSinceLastNotification := time.Now().Sub(*lastNotification.SentSlackNotification).Hours()
+	if hoursSinceLastNotification < float64(agentConfig.NotificationCooldownInHours) {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (a *AgentVisitorIDService) isWorkspaceDomain(ctx context.Context, domain string) bool {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.isWorkspaceDomain")
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	defer span.Finish()
+
+	workspaceDomains, err := a.workspaceService.GetWorkspaceDomainsForTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false
+	}
+
+	for _, d := range workspaceDomains {
+		if strings.EqualFold(d, domain) {
+			return true
+		}
+	}
+
+	return false
 }

@@ -11,7 +11,7 @@ import (
 type AgentService interface {
 	CreateAgent(ctx context.Context, agentType enum.AgentType) (*postgres_entity.Agents, error)
 	CreateAgentExecutionRecord(ctx context.Context, agent postgres_entity.Agents, triggerEvent string) (string, error)
-	SaveAgentExecutionSuccess(ctx context.Context, executionID string) error
+	SaveAgentExecutionCompleted(ctx context.Context, executionID string, goalAchieved bool) error
 	SaveAgentExecutionError(ctx context.Context, executionID, errorMessage string) error
 
 	// DeleteAgent(ctx context.Context, agentID string) error
