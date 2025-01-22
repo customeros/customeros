@@ -34,6 +34,7 @@ export default {
     extend: {
       lineClamp: {
         5: '5',
+        8: '8',
       },
       keyframes: {
         pulseOpacity: {
