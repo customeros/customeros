@@ -38,7 +38,7 @@ type CommonConfig struct {
 	Scrapin          commonconf.ScrapinConfig
 	Postmark         commonconf.PostmarkConfig
 	SlackConfig      commonconf.SlackConfig
-	QuickbooksCofig  commonconf.QuickbooksConfig
+	QuickbooksConfig commonconf.QuickbooksConfig
 }
 
 type AppConfig struct {
@@ -120,7 +120,7 @@ func InitConfig() (*Config, error) {
 			PostmarkConfig:      cmnCfg.Postmark,
 			ScrapinConfig:       cmnCfg.Scrapin,
 			SlackConfig:         cmnCfg.SlackConfig,
-			QuickbooksConfig:    cmnCfg.QuickbooksCofig,
+			QuickbooksConfig:    cmnCfg.QuickbooksConfig,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,
