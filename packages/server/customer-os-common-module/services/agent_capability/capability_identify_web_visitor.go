@@ -77,12 +77,11 @@ func (c *agentCapabilityService) executeIdentifyWebsiteVisitor(ctx context.Conte
 	results.LinkedInSlug = linkedInSlug
 
 	if domain != "" {
-		return results, nil
-	}
-	_, err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithDomain(ctx, data.SessionID, domain)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return results, err
+		_, err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithDomain(ctx, data.SessionID, domain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return results, err
+		}
 	}
 
 	return results, nil

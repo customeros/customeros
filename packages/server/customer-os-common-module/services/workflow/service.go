@@ -328,5 +328,5 @@ func (w *workflowService) SaveFlowAgentExecutionRecord(ctx context.Context, flow
 		return w.postgres.AgentExecutionRepository.Create(ctx, flowAgentExecutionRecord)
 	}
 
-	return w.postgres.AgentExecutionRepository.Update(ctx, flowAgentExecutionRecord)
+	return &postgres_entity.AgentExecution{}, nil
 }

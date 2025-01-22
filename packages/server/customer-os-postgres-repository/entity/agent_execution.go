@@ -9,7 +9,7 @@ type AgentExecution struct {
 	AgentID      *string    `gorm:"column:agent_id;type:varchar(50);not null" json:"agent_id" binding:"required"`
 	TriggerEvent string     `gorm:"column:trigger_event;type:varchar(50)" json:"triggerEvent"`
 	FlowID       *string    `gorm:"column:flow_id;type:varchar(255);" json:"flowId"`
-	Status       string     `gorm:"column:status;type:varchar(255);not null;default:'pending'" json:"status"`
+	Status       string     `gorm:"column:status;type:varchar(255);not null;default:'PENDING'" json:"status"`
 	CreatedAt    time.Time  `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
 	StartedAt    *time.Time `gorm:"column:started_at" json:"startedAt"`
 	UpdatedAt    *time.Time `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`

@@ -3,7 +3,9 @@ package postgres_repository
 import (
 	"context"
 	"errors"
+	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -15,7 +17,7 @@ import (
 type AgentExecutionRepository interface {
 	Create(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error)
 	Find(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error)
-	Update(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error)
+	Update(ctx context.Context, executionID string, completedAt *time.Time, errorMessage *string, goalAchieved bool) (*postgres_entity.AgentExecution, error)
 }
 
 type flowAgentExecutionRepository struct {
@@ -66,24 +68,35 @@ func (f *flowAgentExecutionRepository) Find(ctx context.Context, executionRecord
 	return &flowAgentExecution, nil
 }
 
-func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Update")
+func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionID string, completedAt *time.Time, errorMessage *string, goalAchieved bool) (*postgres_entity.AgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.UpdateToCompleted")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	if executionRecord.ID == "" {
+	if executionID == "" {
 		err := errors.New("ID is missing")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
+	status := enum.AgentExecutionSuccess.String()
+	if errorMessage != nil {
+		status = enum.AgentExecutionFail.String()
+	}
+
 	var updatedRecord postgres_entity.AgentExecution
 	err := f.gormDb.
 		Model(&postgres_entity.AgentExecution{}).
-		Where("id = ?", executionRecord.ID).
-		Updates(executionRecord).
-		First(&updatedRecord, "id = ?", executionRecord.ID).
+		Where("id = ?", executionID).
+		Updates(map[string]interface{}{
+			"status":        status,
+			"completed_at":  completedAt,
+			"error_message": errorMessage,
+			"goalAchieved":  goalAchieved,
+		}).
+		First(&updatedRecord, "id = ?", executionID).
 		Error
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

@@ -15,6 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type AgentVisitorIDService struct {
@@ -46,6 +47,12 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	err := a.validateWebsiteVisitEvent(event)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	// create execution record
 	executionID, err := a.createAgentExecutionRecord(ctx, agentID, event.Type())
 	if err != nil {
@@ -59,10 +66,29 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	visitorIDResults, err := a.executeVisitorIDCapability(ctx, agentID, executionID, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		errMessage := "unable to lookup visitor ID"
+		_, err := a.postgresRepositories.AgentExecutionRepository.Update(
+			ctx, executionID, nil, &errMessage, false)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 		return err
 	}
+
 	// no result, return early
 	if visitorIDResults.Domain == "" {
+		_, err := a.postgresRepositories.AgentExecutionRepository.Update(
+			ctx,
+			executionID,
+			nil, // completedAt
+			nil, // errorMessage
+			false,
+		)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 		return nil
 	}
 
@@ -70,6 +96,13 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	orgCreationResults, err := a.executeOrgCreationCapability(ctx, agentID, executionID, visitorIDResults.Domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		errMessage := "unable to create new organization"
+		_, err := a.postgresRepositories.AgentExecutionRepository.Update(
+			ctx, executionID, nil, &errMessage, false)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 		return err
 	}
 
@@ -84,10 +117,52 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		errMessage := "unable to analyze web session"
+		_, err := a.postgresRepositories.AgentExecutionRepository.Update(
+			ctx, executionID, nil, &errMessage, false)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 		return err
 	}
 
 	// execute send notification capability
+
+	// update agentExecutionRecord
+	_, err = a.postgresRepositories.AgentExecutionRepository.Update(
+		ctx,
+		executionID,
+		utils.NowPtr(),
+		nil,
+		true,
+	)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (a *AgentVisitorIDService) validateWebsiteVisitEvent(event *data_fields.WebsiteVisitEvent) error {
+	if event == nil {
+		return fmt.Errorf("event cannot be nil")
+	}
+
+	if event.SessionID == "" {
+		return fmt.Errorf("sessionId cannot be empty")
+	}
+	if event.Tenant == "" {
+		return fmt.Errorf("tenant cannot be empty")
+	}
+	if event.IPAddress == "" {
+		return fmt.Errorf("ipAddress cannot be empty")
+	}
+	if event.VisitorID == "" {
+		return fmt.Errorf("visitorId cannot be empty")
+	}
+
 	return nil
 }
 

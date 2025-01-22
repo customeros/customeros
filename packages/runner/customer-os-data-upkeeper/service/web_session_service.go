@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
@@ -10,6 +11,7 @@ import (
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
 	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
@@ -82,7 +84,7 @@ func (s *webSessionService) ProcessWebSessions() {
 }
 
 func (s *webSessionService) findTimedOutPageExitEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.findTimedOutPageExitEvents")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionService.findTimedOutPageExitEvents")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
@@ -95,7 +97,7 @@ func (s *webSessionService) findTimedOutPageExitEvents(ctx context.Context) ([]p
 }
 
 func (s *webSessionService) findTimedOutPageViewEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.findTimedOutPageViewEvents")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionService.findTimedOutPageViewEvents")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
@@ -108,23 +110,19 @@ func (s *webSessionService) findTimedOutPageViewEvents(ctx context.Context) ([]p
 }
 
 func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgres_entity.WebSession) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.closeSessions")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionService.closeSessions")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
+	if sessions == nil || len(sessions) == 0 {
+		err := errors.New("There are no sessions to process")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	var errs error
 	for _, session := range sessions {
-		event := s.createCloseSessionWebhookEvent(ctx, session)
-
-		err := s.commonServices.Events.Publisher.PublishWebhookEvent(ctx, event)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			errs = multierr.Append(errs, err)
-		}
-
-		// update websession record
-		endTime := s.calculateSessionEnd(ctx, session)
-		_, err = s.commonServices.PostgresRepositories.WebSessionRepository.UpdateSessionEnd(ctx, session.ID, endTime)
+		err := s.processClosedSession(ctx, session)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
@@ -134,18 +132,63 @@ func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgr
 	return errs
 }
 
+func (s *webSessionService) processClosedSession(ctx context.Context, session postgres_entity.WebSession) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionService.processClosedSession")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	if session.ID == "" {
+		err := errors.New("SessionID cannot be empty")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// close websession record
+	endTime := s.calculateSessionEnd(ctx, session)
+	closedSession, err := s.commonServices.PostgresRepositories.WebSessionRepository.UpdateSessionEnd(ctx, session.ID, endTime)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if closedSession == nil {
+		err := errors.New("closedSession is nil")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	event, err := s.createCloseSessionWebhookEvent(ctx, *closedSession)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = s.commonServices.Events.Publisher.PublishWebhookEvent(ctx, event)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
 func (s *webSessionService) calculateSessionEnd(ctx context.Context, session postgres_entity.WebSession) time.Time {
-	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.calculateSessionEnd")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionService.calculateSessionEnd")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
 	return session.LastActivity.Add(time.Minute)
 }
 
-func (s *webSessionService) createCloseSessionWebhookEvent(ctx context.Context, session postgres_entity.WebSession) dto.WebhookEvent {
-	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.createCloseSessionWebhookEvent")
+func (s *webSessionService) createCloseSessionWebhookEvent(ctx context.Context, session postgres_entity.WebSession) (dto.WebhookEvent, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionService.createCloseSessionWebhookEvent")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
+
+	if session.ID == "" || session.Tenant == "" || session.IP == "" || session.VisitorID == "" {
+		err := errors.New("cannot build web visit event")
+		tracing.TraceErr(span, err)
+		return dto.WebhookEvent{}, err
+	}
 
 	eventData := data_fields.WebsiteVisitEvent{
 		SessionID: session.ID,
@@ -161,5 +204,5 @@ func (s *webSessionService) createCloseSessionWebhookEvent(ctx context.Context, 
 		Data:             &eventData,
 	}
 
-	return event
+	return event, nil
 }
