@@ -31,6 +31,7 @@ func registerAgentRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.
 		handler:   h.Agents.RegisterAgent(),
 		routeType: RouteInternal,
 		services:  s,
+		cache:     s.Cache,
 	})
 
 	registerRoute(ctx, r, RouteConfig{
@@ -39,6 +40,7 @@ func registerAgentRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.
 		handler:   h.Agents.AgentRegistry(),
 		routeType: RouteCustomer,
 		services:  s,
+		cache:     s.Cache,
 	})
 }
 
@@ -292,7 +294,6 @@ func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services
 		services:  s,
 		cache:     s.Cache,
 	})
-
 }
 
 func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
