@@ -127,6 +127,14 @@ func registerInternalRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 	})
 
 	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      fmt.Sprintf("%s/settings/quickbooks/oauth/callback", InternalPath),
+		handler:   private.CallbackQuickbooks(s),
+		routeType: RouteInternal,
+		services:  s,
+	})
+
+	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
 		path:      fmt.Sprintf("%s/settings/slack/requestAccess", InternalPath),
 		handler:   private.RequestAccessSlack(s),
