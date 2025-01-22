@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"io/ioutil"
 	"net/http"
 	"net/mail"
@@ -1466,14 +1467,18 @@ func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant st
 func (h *InvoiceEventHandler) appendInvoiceFileToEmailAsAttachment(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity, postmarkEmail *interfaces.PostmarkEmail) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.appendInvoiceFileToEmailAsAttachment")
 	defer span.Finish()
+	commontracing.TagTenant(span, tenant)
 
 	fileInfo, err := h.fileStore.GetById(ctx, invoice.RepositoryFileId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
+	if fileInfo == nil {
+		return nil
+	}
 
-	invoiceFileBytes, err := h.fileStore.GetFileBytes(ctx, fileInfo.PublicUrl)
+	invoiceFileBytes, err := h.fileStore.GetFileBytes(ctx, utils.FirstNotEmptyString(fileInfo.PublicUrl, fileInfo.CdnUrl))
 	if err != nil {
 		return err
 	}
@@ -1495,11 +1500,15 @@ func (h *InvoiceEventHandler) appendProviderLogoToEmail(ctx context.Context, ten
 		return nil
 	}
 
-	metadata, err := h.fileStore.GetById(ctx, logoFileId)
+	fileInfo, err := h.fileStore.GetById(ctx, logoFileId)
 	if err != nil {
 		return err
 	}
-	fileBytes, err := h.fileStore.GetFileBytes(ctx, metadata.PublicUrl)
+	if fileInfo == nil {
+		return nil
+	}
+
+	fileBytes, err := h.fileStore.GetFileBytes(ctx, utils.FirstNotEmptyString(fileInfo.PublicUrl, fileInfo.CdnUrl))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -1508,7 +1517,7 @@ func (h *InvoiceEventHandler) appendProviderLogoToEmail(ctx context.Context, ten
 	postmarkEmail.Attachments = append(postmarkEmail.Attachments, interfaces.PostmarkEmailAttachment{
 		Filename:       "provider-logo-file-encoded",
 		ContentEncoded: base64.StdEncoding.EncodeToString(*fileBytes),
-		ContentType:    metadata.MimeType,
+		ContentType:    fileInfo.MimeType,
 		ContentID:      "cid:provider-logo-file-encoded",
 	})
 
