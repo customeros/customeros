@@ -2,7 +2,7 @@ name: browser-extension
 
 on:
   push:
-    branches: ["otter", "dev"]
+    branches: ["otter"]
     paths:
       - "packages/apps/extension/**"
       - ".github/workflows/build-browser-extension.yml"
