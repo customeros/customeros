@@ -322,7 +322,7 @@ func (s *organizationService) removeEmptySocials(ctx context.Context) {
 	tracing.TagComponentCronJob(span)
 
 	limit := 100
-	minutesSinceLastUpdate := 180 // 3 hours
+	minutesSinceLastUpdate := 180
 
 	records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, model.NodeLabelOrganization, minutesSinceLastUpdate, limit)
 	if err != nil {
@@ -361,8 +361,9 @@ func (s *organizationService) removeDuplicatedSocials(ctx context.Context) {
 	tracing.TagComponentCronJob(span)
 
 	limit := 100
+	minutesSinceLastUpdate := 5
 
-	records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, model.NodeLabelOrganization, 180, limit)
+	records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, model.NodeLabelOrganization, minutesSinceLastUpdate, limit)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error getting socials: %v", err)
@@ -392,7 +393,6 @@ func (s *organizationService) removeDuplicatedSocials(ctx context.Context) {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
 		}
-
 	}
 
 }

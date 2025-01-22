@@ -3,6 +3,7 @@ package private
 import (
 	"bytes"
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	"image"
 	"image/color"
 	"image/png"
@@ -155,7 +156,7 @@ func (h *MailHandler) TrackEmail() gin.HandlerFunc {
 			return
 		}
 
-		_, err = h.services.Repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, interactionEvent.Id, model.INTERACTION_EVENT, enum.ActionInteractionEventRead, "", metadata, utils.Now(), "user-admin-api")
+		_, err = h.services.Repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, interactionEvent.Id, model.INTERACTION_EVENT, enum.ActionInteractionEventRead, "", metadata, utils.Now(), constants.AppSourceCustomerOsApi)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
