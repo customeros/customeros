@@ -51,4 +51,5 @@ type ExternalServicesConfig struct {
 	StripeConfig         StripeConfig
 	TemporalConfig       TemporalConfig
 	TrueInboxConfig      TrueInboxConfig
+	QuickbooksCofig      QuickbooksCofig
 }
