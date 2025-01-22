@@ -1,7 +1,10 @@
 import { runInAction } from 'mobx';
 import { RootStore } from '@store/root';
+import { TagStore } from '@store/Tags/Tag.store';
+import { Organization } from '@store/Organizations/Organization.dto';
 import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service';
 
+import { unwrap } from '@shared/util/unwrap';
 import {
   EntityType,
   FlagWrongFields,
@@ -11,14 +14,14 @@ import {
 
 export class OrganizationService {
   private root = RootStore.getInstance();
-  private service = OrganizationsService.getInstance();
+  private orgRepo = OrganizationsService.getInstance();
 
   constructor() {}
 
   public async searchTenant(searchTerm: string) {
     try {
       const { ui_organizations_search } =
-        await this.service.searchOrganizations({
+        await this.orgRepo.searchOrganizations({
           limit: 30,
           sort: {
             by: 'ORGANIZATIONS_NAME',
@@ -63,7 +66,7 @@ export class OrganizationService {
 
   public async merge(primaryId: string, secondaryIds: string[]) {
     try {
-      const { organization_Merge } = await this.service.mergeOrganizations({
+      const { organization_Merge } = await this.orgRepo.mergeOrganizations({
         primaryOrganizationId: primaryId,
         mergedOrganizationIds: secondaryIds,
       });
@@ -85,7 +88,7 @@ export class OrganizationService {
 
   public async flagWrongField(id: string, field: FlagWrongFields) {
     try {
-      const { flagWrongField } = await this.service.flagWrongField({
+      const { flagWrongField } = await this.orgRepo.flagWrongField({
         input: {
           entityId: id,
           entityType: EntityType.Organization,
@@ -108,5 +111,51 @@ export class OrganizationService {
     } catch (err) {
       throw new Error('Failed to flag wrong field');
     }
+  }
+
+  public async addTag(organization: Organization, tag: TagStore) {
+    organization.addTag(tag.id);
+
+    const [res, err] = await unwrap(
+      this.orgRepo.addTag({
+        input: { organizationId: organization.id, tag: { name: tag.tagName } },
+      }),
+    );
+
+    if (err) {
+      console.error(err);
+
+      this.root.ui.toastError(
+        'Failed to add tag to organization',
+        'tag-add-failed',
+      );
+
+      return [null, err];
+    }
+
+    return [res, err];
+  }
+
+  public async removeTag(organization: Organization, tag: TagStore) {
+    organization.deleteTag(tag.id);
+
+    const [res, err] = await unwrap(
+      this.orgRepo.removeTag({
+        input: { organizationId: organization.id, tag: { name: tag.tagName } },
+      }),
+    );
+
+    if (err) {
+      console.error(err);
+
+      this.root.ui.toastError(
+        'Failed to remove tag from organization',
+        'tag-remove-failed',
+      );
+
+      return [null, err];
+    }
+
+    return [res, err];
   }
 }

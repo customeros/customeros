@@ -6,12 +6,7 @@ import { P, match } from 'ts-pattern';
 import { makePayload } from '@store/util';
 import { Transport } from '@store/transport';
 
-import {
-  type Tag,
-  EntityType,
-  OnboardingStatus,
-  type OrganizationUpdateInput,
-} from '@graphql/types';
+import { OnboardingStatus, type OrganizationUpdateInput } from '@graphql/types';
 
 import type { Organization } from '../Organization.dto';
 
@@ -464,82 +459,7 @@ export class OrganizationsService {
         });
       })
       .with([P.union('parentId', 'parentName'), ...P.array()], async () => {})
-      .with(['tags', ...P.array()], () => {
-        match(type)
-          .with('add', async () => {
-            await this.addTag({
-              input: {
-                organizationId,
-                tag: {
-                  name: value.name,
-                  entityType: EntityType.Organization,
-                },
-              },
-            });
-          })
-          .with('delete', async () => {
-            await this.removeTag({
-              input: { organizationId, tag: { id: oldValue.metadata.id } },
-            });
-          })
-          .with('update', async () => {
-            match(operation.diff)
-              .with(
-                [
-                  { op: 'update', path: ['tags', P.number, 'name'] },
-                  {
-                    op: 'update',
-                    path: ['tags', P.number, 'metadata', 'id'],
-                  },
-                  ...P.array(),
-                  {
-                    op: 'delete',
-                    path: ['tags', P.number],
-                  },
-                ],
-                async () => {
-                  const oldValue = (
-                    operation.diff[1] as rdiffResult & {
-                      oldVal: unknown;
-                    }
-                  )?.oldVal;
-
-                  await this.removeTag({
-                    input: {
-                      organizationId,
-                      tag: {
-                        id: oldValue,
-                      },
-                    },
-                  });
-                },
-              )
-              .otherwise(async () => {
-                if (!oldValue) {
-                  (value as Array<Tag>)?.forEach(async (tag) => {
-                    await this.addTag({
-                      input: {
-                        organizationId,
-                        tag: {
-                          name: tag?.name,
-                          entityType: EntityType.Organization,
-                        },
-                      },
-                    });
-                  });
-                }
-
-                if (oldValue) {
-                  await this.removeTag({
-                    input: {
-                      organizationId,
-                      tag: { id: oldValue.metadata.id },
-                    },
-                  });
-                }
-              });
-          });
-      })
+      .with(['tags', ...P.array()], () => undefined)
       .with(['updatedAt'], () => undefined)
       .with(['accountDetails'], () => undefined)
       .with(['domainsDetails', ...P.array()], async () => {
