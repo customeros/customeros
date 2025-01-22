@@ -11,7 +11,7 @@ type AgentRegistry struct {
 	Name         string `gorm:"column:name;type:varchar(255);not null;index" json:"name" binding:"required"`
 	Capabilities string `gorm:"column:capabilities;type:text" json:"capabilities"`
 	Goal         string `gorm:"column:goal;type:text" json:"goal"`
-	IsActive     bool   `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
+	IsActive     bool   `gorm:"column:is_active;type:boolean;default:true" json:"isActive"`
 	Icon         string `gorm:"column:icon;type:text" json:"icon"`
 }
 
@@ -23,4 +23,3 @@ func (r *AgentRegistry) BeforeCreate(tx *gorm.DB) error {
 	r.ID = utils.GenerateNanoIdWithPrefix("ar", 16)
 	return nil
 }
-
