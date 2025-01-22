@@ -558,6 +558,7 @@ You must:
 - Return only the NAICS code, with no additional commentary or text. The NAICS code should be digits only, e.g. "541511".
 
 Important details:
+- Use the latest NAICS codes available.
 - If multiple NAICS codes might apply, choose the best match (the most specific, relevant code).
 - Do not output any text besides the NAICS code itself.
 

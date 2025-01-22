@@ -95,45 +95,31 @@ func (s *contactService) removeEmptySocials(ctx context.Context) {
 	tracing.TagComponentCronJob(span)
 
 	limit := 100
+	minutesSinceLastUpdate := 180
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
+	records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, model.NodeLabelContact, minutesSinceLastUpdate, limit)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting socials: %v", err)
+		return
+	}
 
-		minutesSinceLastUpdate := 180
-		records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, model.NodeLabelContact, minutesSinceLastUpdate, limit)
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	// remove socials from contact
+	for _, record := range records {
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    record.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+		err := s.commonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(innerCtx, record.Tenant, record.LinkedEntityId, model.NodeLabelContact, record.SocialId)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting socials: %v", err)
-			return
+			s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
 		}
-
-		// no record
-		if len(records) == 0 {
-			return
-		}
-
-		// remove socials from contact
-		for _, record := range records {
-			err := s.commonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, record.Tenant, record.LinkedEntityId, model.NodeLabelContact, record.SocialId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
-			}
-		}
-
-		// if less than limit records are returned, we are done
-		if len(records) < limit {
-			return
-		}
-
-		// force exit after single iteration
-		return
 	}
 }
 
@@ -153,7 +139,7 @@ func (s *contactService) removeDuplicatedSocials(ctx context.Context) {
 			// continue as normal
 		}
 
-		minutesSinceLastUpdate := 180
+		minutesSinceLastUpdate := 5
 		records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, model.NodeLabelContact, minutesSinceLastUpdate, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
