@@ -85,7 +85,7 @@ func (c *agentCapabilityService) identifyIP(ctx context.Context, ipAddress strin
 		return "", "", err
 	}
 
-	if snitcherData == nil {
+	if snitcherData == nil || snitcherData.Company == nil || snitcherData.Company.Domain == "" {
 		return "", "", nil
 	}
 
