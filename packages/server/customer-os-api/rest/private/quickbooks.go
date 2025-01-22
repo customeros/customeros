@@ -13,7 +13,7 @@ func RequestAccessQuickbooks(s *cosapi_services.Services) gin.HandlerFunc {
 		_, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/internal/v1/settings/quickbooks/requestAccess", c.Request.Header)
 		defer span.Finish()
 
-		quickbooksRequestAccessUrl := "https://appcenter.intuit.com/connect/oauth2?client_id=" + s.Cfg.Common.External.QuickbooksCofig.ClientId + "&redirect_uri=" + s.Cfg.Common.External.QuickbooksCofig.RedirectUrl + "&response_type=code&scope=com.intuit.quickbooks.accounting&state=12345"
+		quickbooksRequestAccessUrl := "https://appcenter.intuit.com/connect/oauth2?client_id=" + s.Cfg.Common.External.QuickbooksConfig.ClientId + "&redirect_uri=" + s.Cfg.Common.External.QuickbooksConfig.RedirectUrl + "&response_type=code&scope=com.intuit.quickbooks.accounting&state=12345"
 
 		span.LogFields(log.Object("quickbooksRequestAccessUrl", quickbooksRequestAccessUrl))
 
