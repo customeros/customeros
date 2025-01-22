@@ -2623,6 +2623,18 @@ type ServiceLineItemUpdateInput struct {
 	ServiceEnded            *time.Time  `json:"serviceEnded,omitempty"`
 }
 
+type Sku struct {
+	ID    string  `json:"id"`
+	Name  string  `json:"name"`
+	Price float64 `json:"price"`
+}
+
+type SkuInput struct {
+	ID    *string `json:"id,omitempty"`
+	Name  string  `json:"name"`
+	Price float64 `json:"price"`
+}
+
 type SlackChannel struct {
 	Metadata     *Metadata     `json:"metadata"`
 	Organization *Organization `json:"organization,omitempty"`

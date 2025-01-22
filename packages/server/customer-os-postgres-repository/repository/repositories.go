@@ -69,6 +69,7 @@ type Repositories struct {
 	SlackChannelRepository                       SlackChannelRepository
 	SlackSettingsRepository                      SlackSettingsRepository
 	StatsApiCallsRepository                      StatsApiCallsRepository
+	SkuRepository                                SkuRepository
 	TableViewDefinitionRepository                TableViewDefinitionRepository
 	TenantRepository                             TenantRepository
 	TenantSettingsEmailExclusionRepository       TenantSettingsEmailExclusionRepository
@@ -148,6 +149,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		SlackChannelRepository:                       NewSlackChannelRepository(postgresDB.GormDB),
 		SlackSettingsRepository:                      NewSlackSettingsRepository(postgresDB.GormDB),
 		StatsApiCallsRepository:                      NewStatsApiCallsRepository(postgresDB.GormDB),
+		SkuRepository:                                NewSkuRepository(postgresDB.GormDB),
 		TableViewDefinitionRepository:                NewTableViewDefinitionRepository(postgresDB.GormDB),
 		TenantRepository:                             NewTenantRepository(postgresDB.GormDB),
 		TenantSettingsEmailExclusionRepository:       NewEmailExclusionRepository(postgresDB.GormDB),
@@ -218,6 +220,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.SlackChannelNotification{},
 		&postgres_entity.SlackSettingsEntity{},
 		&postgres_entity.StatsApiCalls{},
+		&postgres_entity.SkuEntity{},
 		&postgres_entity.TableViewDefinition{},
 		&postgres_entity.Tenant{},
 		&postgres_entity.TenantSettings{},
