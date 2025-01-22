@@ -39,6 +39,7 @@ type CommonConfig struct {
 	Postmark         commonconf.PostmarkConfig
 	SlackConfig      commonconf.SlackConfig
 	QuickbooksConfig commonconf.QuickbooksConfig
+	IntegrationApp   commonconf.IntegrationAppConfig
 }
 
 type AppConfig struct {
@@ -110,17 +111,18 @@ func InitConfig() (*Config, error) {
 			Neo4jConfig:         cmnCfg.Neo4j,
 		},
 		External: commonconf.ExternalServicesConfig{
-			AnthropicConfig:     cmnCfg.Anthropic,
-			NamecheapConfig:     cmnCfg.Namecheap,
-			OpenSRSConfig:       cmnCfg.OpenSRS,
-			CloudflareConfig:    cmnCfg.Cloudflare,
-			IpDataConfig:        cmnCfg.IpData,
-			StripeConfig:        cmnCfg.Stripe,
-			BetterContactConfig: cmnCfg.BetterContact,
-			PostmarkConfig:      cmnCfg.Postmark,
-			ScrapinConfig:       cmnCfg.Scrapin,
-			SlackConfig:         cmnCfg.SlackConfig,
-			QuickbooksConfig:    cmnCfg.QuickbooksConfig,
+			AnthropicConfig:      cmnCfg.Anthropic,
+			NamecheapConfig:      cmnCfg.Namecheap,
+			OpenSRSConfig:        cmnCfg.OpenSRS,
+			CloudflareConfig:     cmnCfg.Cloudflare,
+			IpDataConfig:         cmnCfg.IpData,
+			StripeConfig:         cmnCfg.Stripe,
+			BetterContactConfig:  cmnCfg.BetterContact,
+			PostmarkConfig:       cmnCfg.Postmark,
+			ScrapinConfig:        cmnCfg.Scrapin,
+			SlackConfig:          cmnCfg.SlackConfig,
+			QuickbooksConfig:     cmnCfg.QuickbooksConfig,
+			IntegrationAppConfig: cmnCfg.IntegrationApp,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,
