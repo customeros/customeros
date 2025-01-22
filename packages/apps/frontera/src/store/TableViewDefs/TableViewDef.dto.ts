@@ -369,7 +369,7 @@ export class TableViewDef extends Entity<TableViewDefDatum> {
 
   @action
   public setSorting(columndId: string, isDesc: boolean) {
-    const draft = this.getFilters() as { id: string; desc: boolean };
+    const draft = this.getSorting() as { id: string; desc: boolean };
 
     if (!draft) {
       this.draft();
