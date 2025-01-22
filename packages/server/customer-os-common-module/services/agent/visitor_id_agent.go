@@ -249,6 +249,7 @@ func (a *AgentVisitorIDService) executeVisitorIDCapability(ctx context.Context, 
 		Capability:       enum.CapabilityIdentifyWebVisitor,
 		InputData: agent_capability.IdentifyWebsiteVisitorInput{
 			IPAddress: event.IPAddress,
+			SessionID: event.SessionID,
 		},
 	}
 
@@ -268,10 +269,11 @@ func (a *AgentVisitorIDService) executeVisitorIDCapability(ctx context.Context, 
 	return output, nil
 }
 
-func (a *AgentVisitorIDService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEvent string) (string, error) {
+func (a *AgentVisitorIDService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEventType string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.createAgentExecutionRecord")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("agentID", agentID, "triggerEventType", triggerEventType)
 
 	agent, err := a.postgresRepositories.AgentsRepository.Find(ctx, postgres_entity.Agents{
 		ID: agentID,
@@ -287,5 +289,5 @@ func (a *AgentVisitorIDService) createAgentExecutionRecord(ctx context.Context, 
 		return "", err
 	}
 
-	return a.agentService.CreateAgentExecutionRecord(ctx, *agent, triggerEvent)
+	return a.agentService.CreateAgentExecutionRecord(ctx, *agent, triggerEventType)
 }
