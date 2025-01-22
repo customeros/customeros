@@ -243,7 +243,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 		socialUrl := normalizeSocialUrl(socialEntity.Url)
 		span.LogFields(log.String("socialUrl.normalized", socialUrl))
 
-		// Check social not used by another entity
+		// Check linked in not used by another entity
 		if socialEntity.IsLinkedin() {
 			if linkWith.Type == model.ORGANIZATION {
 				alias := socialEntity.Alias
@@ -283,6 +283,20 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 						err = coserrors.ErrLinkedInUsed
 						return "", err
 					}
+				}
+			}
+		} else {
+			// check if social with same url not linked to same entity, duplicate check
+			socialsDbNodes, err := s.neo4j.SocialReadRepository.GetAllForEntities(ctx, tenant, linkWith.Type, []string{linkWith.Id})
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			for _, socialDbNode := range socialsDbNodes {
+				entity := neo4jmapper.MapDbNodeToSocialEntity(socialDbNode.Node)
+				if entity.Url == socialUrl {
+					// social already linked to entity
+					span.LogFields(log.Bool("result.alreadyLinked", true))
+					return "", nil
 				}
 			}
 		}
