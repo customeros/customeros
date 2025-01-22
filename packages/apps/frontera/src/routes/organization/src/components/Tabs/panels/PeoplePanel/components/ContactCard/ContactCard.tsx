@@ -365,12 +365,15 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                   label: t.value?.name,
                 }))}
               onChange={(selection) => {
+                if (!contactStore?.value) {
+                  throw new Error('Contact store is not defined');
+                }
                 const tags = selection
                   .map((o) => store.tags.getById(o.value)?.value)
                   .filter(Boolean);
 
-                contactStore.value.tags = tags as TagDatum[];
                 contactStore.draft();
+                contactStore.value.tags = tags as TagDatum[];
                 contactStore.commit();
               }}
             />

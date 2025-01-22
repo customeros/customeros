@@ -210,6 +210,10 @@ export const ContactPreviewCard = observer(() => {
                 })) || []
               }
               onChange={(e) => {
+                if (!contact?.value) {
+                  throw new Error('Contact store not found');
+                }
+                contact.draft();
                 contact.value.tags = e.map(
                   (tag) => store.tags?.value.get(tag.value)?.value,
                 ) as Array<Tag>;
