@@ -11,11 +11,11 @@ import type { Organization } from '../Organization.dto';
 
 export const getOrganizationSortFn = (columnId: string) =>
   match(columnId)
-    .with(
-      ColumnViewType.OrganizationsName,
-      () => (row: Organization) =>
-        row.value.name?.trim().toLocaleLowerCase() || null,
-    )
+    .with(ColumnViewType.OrganizationsName, () => (row: Organization) => {
+      if (row.name === null || row.name.trim() === '') return null;
+
+      return row.name.trim().toLowerCase();
+    })
     .with(
       ColumnViewType.OrganizationsRelationship,
       () => (row: Organization) =>

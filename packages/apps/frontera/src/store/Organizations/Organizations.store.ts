@@ -206,6 +206,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         this.availableCounts.set(preset, searchResult?.totalElements);
         this.totalElements = searchResult?.totalAvailable ?? 0;
         this.searchResults.set(preset, searchResult?.ids ?? []);
+        this.version++;
       });
     } catch (err) {
       runInAction(() => {
