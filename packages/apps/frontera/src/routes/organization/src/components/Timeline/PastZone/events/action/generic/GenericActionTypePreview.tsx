@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import Markdown from 'react-markdown';
+import { Children, isValidElement } from 'react';
 
 import copy from 'copy-to-clipboard';
 import { MarkdownEventType } from '@store/TimelineEvents/MarkdownEvent/types';
@@ -7,6 +8,7 @@ import { XClose } from '@ui/media/icons/XClose';
 import { Link01 } from '@ui/media/icons/Link01';
 import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { getExternalUrl } from '@utils/getExternalLink.ts';
 import { CardHeader, CardContent } from '@ui/presentation/Card/Card';
 import {
   useTimelineEventPreviewStateContext,
@@ -17,23 +19,6 @@ export const GenericActionTypePreview = () => {
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
   const event = modalContent as MarkdownEventType;
-  // todo, remove when content comes as valid markdown
-  const formattedContent = useMemo(() => {
-    return event?.content?.split('\n')?.map((line, index) => {
-      if (line.trimStart().startsWith('- ')) {
-        // Handle list items
-        const text = line.replace('-', '').trim();
-
-        return (
-          <div key={index} className='list-item list-disc ml-4'>
-            {text.startsWith('/') ? <span>{text}</span> : text}
-          </div>
-        );
-      }
-
-      return <div key={index}>{line}</div>;
-    });
-  }, [event?.content]);
 
   return (
     <div className='overflow-hidden rounded-xl pb-6'>
@@ -71,8 +56,51 @@ export const GenericActionTypePreview = () => {
           </div>
         </div>
       </CardHeader>
-      <CardContent className='mt-0 max-h-[calc(100vh-60px-56px)] pt-0 pb-0 text-sm overflow-auto'>
-        {formattedContent}
+      <CardContent className='mt-0 max-h-[calc(100vh-60px-56px)] pt-0 pb-0  text-sm overflow-auto'>
+        <Markdown
+          className='text-sm
+        [&>ul]:list-disc [&>ul>li>ul]:list-circle [&>ul>li>ul>li>ul]:list-square
+        [&>ol]:list-decimal [&>ol>li>ol]:list-[lower-alpha] [&>ol>li>ol>li>ol]:list-[lower-roman]
+        [&>ul>li>ol]:list-decimal [&>ul>li>ol>li>ol]:list-[lower-alpha] [&>ul>li>ol>li>ol>li>ol]:list-[lower-roman]
+        [&>ol]:pl-4 [&_ol]:pl-4 [&>ul]:pl-4 [&_ul]:pl-4'
+          components={{
+            ul: ({ children }) => <ul className={'ml-4 mt-1'}>{children}</ul>,
+            ol: ({ children }) => <ol className={'ml-4 mt-1'}>{children}</ol>,
+
+            li: ({ children }) => {
+              const renderContent = () => {
+                return Children.map(children, (child, index) => {
+                  if (
+                    isValidElement(child) &&
+                    child.props?.node?.type === 'list'
+                  ) {
+                    return (
+                      <div key={index} className='text-gray-700'>
+                        {child}
+                      </div>
+                    );
+                  }
+
+                  return child;
+                });
+              };
+
+              return <li className='text-gray-700'>{renderContent()}</li>;
+            },
+            a: ({ children, href }) => (
+              <a
+                target='_blank'
+                rel='noreferrer noopener'
+                className='hover:underline'
+                href={href ? getExternalUrl(href) : ''}
+              >
+                /{children}
+              </a>
+            ),
+          }}
+        >
+          {event.content}
+        </Markdown>
       </CardContent>
     </div>
   );
