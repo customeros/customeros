@@ -378,16 +378,16 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsName) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += "CASE WHEN o.name <> \"\" and not o.name is null THEN toLower(trim(o.name)) ELSE '𠀀' END as SORT_BY "
+			aliases += "CASE WHEN trim(o.name) <> \"\" and not o.name is null THEN toLower(trim(o.name)) ELSE '𠀀' END as SORT_BY "
 		} else {
-			aliases += "CASE WHEN o.name <> \"\" and not o.name is null THEN toLower(trim(o.name)) ELSE '' END as SORT_BY "
+			aliases += "CASE WHEN trim(o.name) <> \"\" and not o.name is null THEN toLower(trim(o.name)) ELSE '' END as SORT_BY "
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsWebsite) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += "CASE WHEN o.website <> \"\" and not o.website is null THEN toLower(trim(o.website)) ELSE '𠀀' END as SORT_BY "
+			aliases += "CASE WHEN trim(o.website) <> \"\" and not o.website is null THEN toLower(trim(o.website)) ELSE '𠀀' END as SORT_BY "
 		} else {
-			aliases += "CASE WHEN o.website <> \"\" and not o.website is null THEN toLower(trim(o.website)) ELSE '' END as SORT_BY "
+			aliases += "CASE WHEN trim(o.website) <> \"\" and not o.website is null THEN toLower(trim(o.website)) ELSE '' END as SORT_BY "
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsPrimaryDomains) {
@@ -518,16 +518,16 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCountry) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += "CASE WHEN l.country <> \"\" and not l.country is null THEN toLower(trim(l.country)) ELSE '𠀀' END as SORT_BY "
+			aliases += "CASE WHEN trim(l.country) <> \"\" and not l.country is null THEN toLower(trim(l.country)) ELSE '𠀀' END as SORT_BY "
 		} else {
-			aliases += "CASE WHEN l.country <> \"\" and not l.country is null THEN toLower(trim(l.country)) ELSE '' END as SORT_BY "
+			aliases += "CASE WHEN trim(l.country) <> \"\" and not l.country is null THEN toLower(trim(l.country)) ELSE '' END as SORT_BY "
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsCity) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += "CASE WHEN l.locality <> \"\" and not l.locality is null THEN toLower(trim(l.locality)) ELSE '𠀀' END as SORT_BY "
+			aliases += "CASE WHEN trim(l.locality) <> \"\" and not l.locality is null THEN toLower(trim(l.locality)) ELSE '𠀀' END as SORT_BY "
 		} else {
-			aliases += "CASE WHEN l.locality <> \"\" and not l.locality is null THEN toLower(trim(l.locality)) ELSE '' END as SORT_BY "
+			aliases += "CASE WHEN trim(l.locality) <> \"\" and not l.locality is null THEN toLower(trim(l.locality)) ELSE '' END as SORT_BY "
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsIsPublic) {
@@ -539,9 +539,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsParentOrganization) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += "CASE WHEN po.name <> \"\" and not po.name is null THEN toLower(trim(po.name)) ELSE '𠀀' END as SORT_BY "
+			aliases += "CASE WHEN trim(po.name) <> \"\" and not po.name is null THEN toLower(trim(po.name)) ELSE '𠀀' END as SORT_BY "
 		} else {
-			aliases += "CASE WHEN po.name <> \"\" and not po.name is null THEN toLower(trim(po.name)) ELSE '' END as SORT_BY "
+			aliases += "CASE WHEN trim(po.name) <> \"\" and not po.name is null THEN toLower(trim(po.name)) ELSE '' END as SORT_BY "
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsUpdatedDate) {
@@ -1328,23 +1328,23 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsCountry) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += `CASE WHEN l.country <> '' AND NOT l.country IS NULL THEN toLower(trim(l.country)) ELSE '𠀀' END as SORT_BY `
+			aliases += `CASE WHEN trim(l.country) <> '' AND NOT l.country IS NULL THEN toLower(trim(l.country)) ELSE '𠀀' END as SORT_BY `
 		} else {
-			aliases += `CASE WHEN l.country <> '' AND NOT l.country IS NULL THEN toLower(trim(l.country)) ELSE '' END AS SORT_BY `
+			aliases += `CASE WHEN trim(l.country) <> '' AND NOT l.country IS NULL THEN toLower(trim(l.country)) ELSE '' END AS SORT_BY `
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsRegion) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += `CASE WHEN l.region <> '' AND NOT l.region IS NULL THEN toLower(trim(l.region)) ELSE '𠀀' END as SORT_BY `
+			aliases += `CASE WHEN trim(l.region) <> '' AND NOT l.region IS NULL THEN toLower(trim(l.region)) ELSE '𠀀' END as SORT_BY `
 		} else {
-			aliases += `CASE WHEN l.region <> '' AND NOT l.region IS NULL THEN toLower(trim(l.region)) ELSE '' END AS SORT_BY `
+			aliases += `CASE WHEN trim(l.region) <> '' AND NOT l.region IS NULL THEN toLower(trim(l.region)) ELSE '' END AS SORT_BY `
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsCity) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += `CASE WHEN l.locality <> '' AND NOT l.locality IS NULL THEN toLower(trim(l.locality)) ELSE '𠀀' END as SORT_BY `
+			aliases += `CASE WHEN trim(l.locality) <> '' AND NOT l.locality IS NULL THEN toLower(trim(l.locality)) ELSE '𠀀' END as SORT_BY `
 		} else {
-			aliases += `CASE WHEN l.locality <> '' AND NOT l.locality IS NULL THEN toLower(trim(l.locality)) ELSE '' END AS SORT_BY `
+			aliases += `CASE WHEN trim(l.locality) <> '' AND NOT l.locality IS NULL THEN toLower(trim(l.locality)) ELSE '' END AS SORT_BY `
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsCreatedAt) {
@@ -1378,9 +1378,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsOrganization) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += `CASE WHEN po.name <> '' AND NOT po.name IS NULL THEN toLower(trim(po.name)) ELSE '𠀀' END as SORT_BY `
+			aliases += `CASE WHEN trim(po.name) <> '' AND NOT po.name IS NULL THEN toLower(trim(po.name)) ELSE '𠀀' END as SORT_BY `
 		} else {
-			aliases += `CASE WHEN po.name <> '' AND NOT po.name IS NULL THEN toLower(trim(po.name)) ELSE '' END AS SORT_BY `
+			aliases += `CASE WHEN trim(po.name) <> '' AND NOT po.name IS NULL THEN toLower(trim(po.name)) ELSE '' END AS SORT_BY `
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsJobTitle) {
@@ -1399,16 +1399,16 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsPhoneNumbers) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += `CASE WHEN pn.rawPhoneNumber <> '' AND NOT pn.rawPhoneNumber IS NULL THEN toLower(trim(pn.rawPhoneNumber)) ELSE '𠀀' END as SORT_BY `
+			aliases += `CASE WHEN trim(pn.rawPhoneNumber) <> '' AND NOT pn.rawPhoneNumber IS NULL THEN toLower(trim(pn.rawPhoneNumber)) ELSE '𠀀' END as SORT_BY `
 		} else {
-			aliases += `CASE WHEN pn.rawPhoneNumber <> '' AND NOT pn.rawPhoneNumber IS NULL THEN toLower(trim(pn.rawPhoneNumber)) ELSE '' END AS SORT_BY `
+			aliases += `CASE WHEN trim(pn.rawPhoneNumber) <> '' AND NOT pn.rawPhoneNumber IS NULL THEN toLower(trim(pn.rawPhoneNumber)) ELSE '' END AS SORT_BY `
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsFlows) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += `CASE WHEN f.name <> '' AND NOT f.name IS NULL THEN toLower(trim(f.name)) ELSE '𠀀' END as SORT_BY `
+			aliases += `CASE WHEN trim(f.name) <> '' AND NOT f.name IS NULL THEN toLower(trim(f.name)) ELSE '𠀀' END as SORT_BY `
 		} else {
-			aliases += `CASE WHEN f.name <> '' AND NOT f.name IS NULL THEN toLower(trim(f.name)) ELSE '' END AS SORT_BY `
+			aliases += `CASE WHEN trim(f.name) <> '' AND NOT f.name IS NULL THEN toLower(trim(f.name)) ELSE '' END AS SORT_BY `
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsFlowStatus) {
@@ -1420,9 +1420,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsConnections) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += `CASE WHEN uc.name <> '' AND NOT uc.name IS NULL THEN toLower(trim(uc.name)) ELSE '𠀀' END as SORT_BY `
+			aliases += `CASE WHEN trim(uc.name) <> '' AND NOT uc.name IS NULL THEN toLower(trim(uc.name)) ELSE '𠀀' END as SORT_BY `
 		} else {
-			aliases += `CASE WHEN uc.name <> '' AND NOT uc.name IS NULL THEN toLower(trim(uc.name)) ELSE '' END AS SORT_BY `
+			aliases += `CASE WHEN trim(uc.name) <> '' AND NOT uc.name IS NULL THEN toLower(trim(uc.name)) ELSE '' END AS SORT_BY `
 		}
 	}
 
