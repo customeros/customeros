@@ -81,6 +81,7 @@ type Repositories struct {
 	TrackingAllowedOriginRepository              TrackingAllowedOriginRepository
 	UserEmailImportPageTokenRepository           UserEmailImportStateRepository
 	UserWorkingScheduleRepository                UserWorkingScheduleRepository
+	QuickbooksSettingsRepository                 QuickbooksSettingsRepository
 	WebhooksRepository                           WebhooksRepository
 	WebSessionRepository                         WebSessionRepository
 	WebTrackerEventsRepository                   WebTrackerEventsRepository
@@ -160,6 +161,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		TenantWebhookRepository:                      NewTenantWebhookRepo(postgresDB.GormDB),
 		TrackingAllowedOriginRepository:              NewTrackingAllowedOriginRepository(postgresDB.GormDB),
 		UserWorkingScheduleRepository:                NewUserWorkingScheduleRepository(postgresDB.GormDB),
+		QuickbooksSettingsRepository:                 NewQuickbooksSettingsRepository(postgresDB.GormDB),
 		WebhooksRepository:                           NewWebhooksRepository(postgresDB.GormDB),
 		WebSessionRepository:                         NewWebSessionRepository(postgresDB.GormDB),
 		WebTrackerEventsRepository:                   NewWebTrackerEventsRepository(postgresDB.GormDB),
@@ -231,6 +233,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.TenantWebhookApiKey{},
 		&postgres_entity.TrackingAllowedOrigin{},
 		&postgres_entity.UserWorkingSchedule{},
+		&postgres_entity.QuickbooksSettingsEntity{},
 		&postgres_entity.Webhooks{},
 		&postgres_entity.WebSession{},
 		&postgres_entity.WebTrackerEvents{},
