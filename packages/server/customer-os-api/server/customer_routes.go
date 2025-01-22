@@ -24,7 +24,7 @@ const (
 	WebhooksPath     = "/webhooks/v1"
 )
 
-func registerAgentsRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
+func registerAgentRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
 		path:      fmt.Sprintf("%s/registry", AgentsPath),
