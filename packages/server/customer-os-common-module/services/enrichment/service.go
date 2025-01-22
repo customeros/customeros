@@ -71,7 +71,7 @@ func (s *enrichmentService) EnrichPerson(ctx context.Context, person interfaces.
 }
 
 func (s *enrichmentService) FetchEnrichOrganizationData(ctx context.Context, domain, linkedinURL *string) (*interfaces.OrganizationData, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.EnrichOrganization")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EnrichmentService.FetchEnrichOrganizationData")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 

@@ -193,7 +193,7 @@ func (h *EnrichHandler) EnrichOrganization() gin.HandlerFunc {
 			log.String("request.linkedinUrl", linkedinUrl))
 
 		// Call enrichOrg
-		enrichOrganizationResponse, err := h.services.CommonServices.EnrichmentService.EnrichOrganization(
+		enrichOrganizationResponse, err := h.services.CommonServices.EnrichmentService.FetchEnrichOrganizationData(
 			ctx, &domain, &linkedinUrl)
 
 		if enrichOrganizationResponse == nil {
