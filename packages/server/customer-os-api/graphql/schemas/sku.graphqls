@@ -1,0 +1,20 @@
+extend type Query {
+    skus: [Sku!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Mutation {
+    sku_Save(input: SkuInput!): Sku! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    sku_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+input SkuInput {
+    id: ID
+    name: String!
+    price: Float!
+}
+
+type Sku {
+    id: ID!
+    name: String!
+    price: Float!
+}
