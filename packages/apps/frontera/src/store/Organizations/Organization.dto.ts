@@ -197,11 +197,34 @@ export class Organization extends Entity<OrganizationDatum> {
   }
 
   @action
-  public deleteTag(id: string) {
-    const idx = this.value.tags?.findIndex((t) => t.metadata.id === id);
+  public addTag(id: string) {
+    this.draft();
 
-    if (idx === -1 || idx === undefined || idx === null) return;
-    this.value.tags?.splice(idx, 1);
+    if (!this.value.tags) {
+      this.value.tags = [];
+    }
+
+    const tag = this.store.root.tags.getById(id);
+
+    if (!tag) {
+      console.error(`Organization.addTag: Tag with id ${id} not found`);
+
+      return;
+    }
+
+    this.value.tags.push(tag.value);
+    this.commit({ syncOnly: true });
+  }
+
+  @action
+  public deleteTag(id: string) {
+    this.draft();
+
+    if (!this.value.tags) {
+      this.value.tags = [];
+    }
+    this.value.tags = this.value.tags.filter((tag) => tag.metadata.id !== id);
+    this.commit({ syncOnly: true });
   }
 
   static default(

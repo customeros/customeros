@@ -3,14 +3,15 @@ import { useParams } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
-import { TagDatum } from '@store/Tags/Tag.store';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
+import { EditOrganizationTagUsecase } from '@domain/usecases/organization-about-panel/edit-organization-tag.usecase.ts';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
 import { flags } from '@ui/media/flags';
 import { Tag01 } from '@ui/media/icons/Tag01';
 import { Spinner } from '@ui/feedback/Spinner';
+import { Tags } from '@shared/components/Tags';
 import { useStore } from '@shared/hooks/useStore';
 import { Seeding } from '@ui/media/icons/Seeding';
 import { Users02 } from '@ui/media/icons/Users02';
@@ -34,9 +35,8 @@ import {
   OrganizationRelationship,
 } from '@graphql/types';
 
-import { Tags } from './components/tags';
-import { SocialMediaList } from '../../shared';
 import { Domains } from './components/domains';
+import { SocialMediaList } from '../../shared';
 import { OwnerInput } from './components/owner';
 import { Branches } from './components/branches';
 import { stageOptions, getStageOptions, relationshipOptions } from './util';
@@ -49,6 +49,7 @@ const iconMap = {
   unknown: <AlignHorizontalCentre02 className='text-gray-500' />,
 };
 
+const tagsUsecase = new EditOrganizationTagUsecase();
 export const AboutPanel = observer(() => {
   const store = useStore();
   const id = useParams()?.id as string;
@@ -174,28 +175,14 @@ export const AboutPanel = observer(() => {
             dataTest='org-about-tags'
             inputPlaceholder='Search...'
             onCreate={handleCreateOption}
+            options={tagsUsecase.tagList}
             placeholder='Organization tags'
+            value={tagsUsecase.selectedTags}
+            inputValue={tagsUsecase.searchTerm}
+            setInputValue={tagsUsecase.setSearchTerm}
             leftAccessory={<Tag01 className='mr-3 text-gray-500' />}
-            value={
-              organization.value.tags?.map((t) => ({
-                value: t.metadata.id,
-                label: t.name,
-              })) ?? []
-            }
-            options={store.tags
-              .getByEntityType(EntityType.Organization)
-              .map((t) => ({
-                value: t.id,
-                label: t.value?.name,
-              }))}
             onChange={(selection) => {
-              const tags = selection
-                .map((o) => store.tags.getById(o.value)?.value)
-                .filter(Boolean);
-
-              organization.draft();
-              organization.value.tags = tags as TagDatum[];
-              organization.commit();
+              tagsUsecase.select(selection.map((o) => o.value));
             }}
           />
 

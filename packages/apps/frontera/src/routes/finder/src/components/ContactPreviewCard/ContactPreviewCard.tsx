@@ -5,6 +5,7 @@ import { useKeyBindings } from 'rooks';
 import cityTimezone from 'city-timezones';
 import { observer } from 'mobx-react-lite';
 import { EditJobRole } from '@domain/usecases/contact-preview-card/edit-jobrole.usecase';
+import { EditContactTagUsecase } from '@domain/usecases/edit-contact-tags-select/edit-contact-tag.usecase.ts';
 
 import { cn } from '@ui/utils/cn';
 import { X } from '@ui/media/icons/X';
@@ -12,11 +13,12 @@ import { Input } from '@ui/form/Input';
 import { flags } from '@ui/media/flags';
 import { Avatar } from '@ui/media/Avatar';
 import { DateTimeUtils } from '@utils/date';
+import { Tags } from '@shared/components/Tags';
+import { TableViewType } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton';
 import { getTimezone } from '@utils/getTimezone';
+import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { useStore } from '@shared/hooks/useStore';
-import { Tag, TableViewType } from '@graphql/types';
-import { Tags } from '@organization/components/Tabs';
 import { getFormattedLink } from '@utils/getExternalLink';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 import { LinkedInSolid02 } from '@ui/media/icons/LinkedInSolid02';
@@ -77,6 +79,11 @@ export const ContactPreviewCard = observer(() => {
 
   const jobRoleUseCase = useMemo(
     () => new EditJobRole(String(contactId)),
+    [contactId],
+  );
+
+  const tagsUseCase = useMemo(
+    () => new EditContactTagUsecase(String(contactId)),
     [contactId],
   );
 
@@ -200,25 +207,27 @@ export const ContactPreviewCard = observer(() => {
             <EmailsSection contactId={contactId} />
           </div>
 
-          <div className='flex justify-between gap-1 w-full mb-4'>
+          <div className='flex justify-between w-full mb-4'>
             <Tags
+              dataTest='contact-tags'
               placeholder='No tags yet'
-              value={
-                contact?.value?.tags?.map((tag) => ({
-                  value: tag.metadata.id,
-                  label: tag.name,
-                })) || []
-              }
-              onChange={(e) => {
+              options={tagsUseCase.tagList}
+              onCreate={tagsUseCase.create}
+              value={tagsUseCase.selectedTags}
+              inputValue={tagsUseCase.searchTerm}
+              setInputValue={tagsUseCase.setSearchTerm}
+              onChange={(selected) => {
                 if (!contact?.value) {
                   throw new Error('Contact store not found');
                 }
-                contact.draft();
-                contact.value.tags = e.map(
-                  (tag) => store.tags?.value.get(tag.value)?.value,
-                ) as Array<Tag>;
-                contact.commit();
+                tagsUseCase.select(selected?.map((tag) => tag.value));
               }}
+              leftAccessory={
+                <div className='flex items-center mr-[78px] text-sm text-gray-500'>
+                  <Tag01 className='text-gray-500 mr-2' />
+                  <span>Tags</span>
+                </div>
+              }
             />
           </div>
           <div className='flex flex-col gap-4'>

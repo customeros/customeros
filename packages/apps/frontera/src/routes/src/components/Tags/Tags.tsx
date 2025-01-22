@@ -1,29 +1,29 @@
-import { useState } from 'react';
-
 import { observer } from 'mobx-react-lite';
 
-import { cn } from '@ui/utils/cn';
-import { Plus } from '@ui/media/icons/Plus';
+import { cn } from '@ui/utils/cn.ts';
 import { Combobox } from '@ui/form/Combobox';
+import { Plus } from '@ui/media/icons/Plus.tsx';
 import { useStore } from '@shared/hooks/useStore';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { SelectOption } from '@shared/types/SelectOptions';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
+import { SelectOption } from '@shared/types/SelectOptions.ts';
 import { Tag, TagLabel, TagCloseButton } from '@ui/presentation/Tag';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@ui/overlay/Popover/Popover';
+} from '@ui/overlay/Popover/Popover.tsx';
 
 interface TagsProps {
   dataTest?: string;
   className?: string;
+  inputValue: string;
   placeholder?: string;
   value: SelectOption[];
   options: SelectOption[];
   inputPlaceholder?: string;
   leftAccessory?: React.ReactNode;
   onCreate: (value: string) => void;
+  setInputValue: (value: string) => void;
   onChange: (selection: SelectOption[]) => void;
 }
 
@@ -38,17 +38,14 @@ export const Tags = observer(
     leftAccessory,
     inputPlaceholder,
     dataTest,
+    inputValue,
+    setInputValue,
   }: TagsProps) => {
-    const [inputValue, setInputValue] = useState('');
     const store = useStore();
 
     const handleClear = (id: string) => {
       onChange?.(value.filter((o) => o.value !== id));
     };
-
-    const foundOption = options.some((o) =>
-      o.label.toLowerCase().includes(inputValue.toLowerCase()),
-    );
 
     return (
       <Popover>
@@ -99,7 +96,7 @@ export const Tags = observer(
             onInputChange={setInputValue}
             placeholder={inputPlaceholder}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !foundOption) {
+              if (e.key === 'Enter' && !options.length) {
                 onCreate?.(inputValue);
                 setInputValue('');
               }

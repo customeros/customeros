@@ -2,19 +2,20 @@ import { useParams } from 'react-router-dom';
 import { useMemo, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { TagDatum } from '@store/Tags/Tag.store';
 import { AddJobRole } from '@domain/usecases/people-contact-card/add-jobrole.usecase';
 import { EditContactNameUseCase } from '@domain/usecases/people-contact-card/edit-contact-name.usecase';
+import { EditContactTagUsecase } from '@domain/usecases/edit-contact-tags-select/edit-contact-tag.usecase.ts';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
 import { Avatar } from '@ui/media/Avatar';
 import { DateTimeUtils } from '@utils/date';
-import { Tag01 } from '@ui/media/icons/Tag01';
+import { Tags } from '@shared/components/Tags';
 import { Spinner } from '@ui/feedback/Spinner';
 import { User03 } from '@ui/media/icons/User03';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { IconButton } from '@ui/form/IconButton';
+import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { useEvent } from '@shared/hooks/useEvent';
 import { useStore } from '@shared/hooks/useStore';
 import { Linkedin } from '@ui/media/icons/Linkedin';
@@ -39,7 +40,6 @@ import {
 } from '@ui/presentation/Card/Card';
 
 import { EmailsSection } from './components/EmailsSection';
-import { Tags } from '../../../AboutPanel/components/tags';
 import { ContactCardMenu, ContactLocation } from './components';
 import { ContactJobExperience } from './components/ContactJobExperience';
 import { AddLinkedInToContactModal } from './components/AddLinkedInToContactModal';
@@ -63,6 +63,10 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
 
   const findPrimaryJobRole = jobRoles?.find(
     (j) => j.primary && j.contact?.metadata.id === id,
+  );
+  const tagsUseCase = useMemo(
+    () => new EditContactTagUsecase(String(id)),
+    [id],
   );
 
   const handleCreateOption = (value: string) => {
@@ -344,39 +348,25 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                 )}
               </div>
             </div>
-
             <Tags
               placeholder='Tags'
-              dataTest='org-about-tags'
+              dataTest='contact-tags'
               className='min-h-4 text-sm'
               inputPlaceholder='Search...'
               onCreate={handleCreateOption}
+              options={tagsUseCase.tagList}
+              value={tagsUseCase.selectedTags}
+              inputValue={tagsUseCase.searchTerm}
+              setInputValue={tagsUseCase.setSearchTerm}
               leftAccessory={<Tag01 className='mr-4 text-gray-500 size-4' />}
-              value={
-                contactStore.value.tags?.map((t) => ({
-                  value: t.metadata.id,
-                  label: t.name,
-                })) ?? []
-              }
-              options={store.tags
-                .getByEntityType(EntityType.Contact)
-                .map((t) => ({
-                  value: t.id,
-                  label: t.value?.name,
-                }))}
-              onChange={(selection) => {
+              onChange={(selected) => {
                 if (!contactStore?.value) {
-                  throw new Error('Contact store is not defined');
+                  throw new Error('Contact store not found');
                 }
-                const tags = selection
-                  .map((o) => store.tags.getById(o.value)?.value)
-                  .filter(Boolean);
-
-                contactStore.draft();
-                contactStore.value.tags = tags as TagDatum[];
-                contactStore.commit();
+                tagsUseCase.select(selected?.map((tag) => tag.value));
               }}
             />
+
             <CardFooter className='pt-0.5 pb-0.5 px-0 max-h-5'>
               <span className='text-[12px] text-grayModern-500'>
                 {contactStore?.value?.updatedAt && updatedDaysAgo}
