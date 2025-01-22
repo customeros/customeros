@@ -73,7 +73,7 @@ export const AvatarCell = memo(
               />
             )}
             <p className='text-md font-semibold'>{fullName}</p>
-            <p className='text-xs'>{description}</p>
+            <p className='text-xs line-clamp-[8]'>{description}</p>
           </PopoverContent>
         </Popover>
       </div>
