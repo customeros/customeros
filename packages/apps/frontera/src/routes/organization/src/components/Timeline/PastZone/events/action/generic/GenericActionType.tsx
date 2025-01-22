@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import Markdown from 'react-markdown';
+import { Children, isValidElement } from 'react';
 
 import { Action } from '@graphql/types';
 import { Globe06 } from '@ui/media/icons/Globe06';
@@ -11,24 +12,6 @@ interface GenericActionTypeProps {
 export const GenericActionType = ({ data }: GenericActionTypeProps) => {
   const { openModal } = useTimelineEventPreviewMethodsContext();
 
-  // todo, remove when content comes as valid markdown
-  const formattedContent = useMemo(() => {
-    return data?.content?.split('\n')?.map((line, index) => {
-      if (line.trimStart().startsWith('- ')) {
-        // Handle list items
-        const text = line.replace('-', '').trim();
-
-        return (
-          <div key={index} className='list-item list-disc ml-4'>
-            {text.startsWith('/') ? <span>{text}</span> : text}
-          </div>
-        );
-      }
-
-      return <div key={index}>{line}</div>;
-    });
-  }, [data?.content]);
-
   if (!data?.content) return null;
 
   return (
@@ -37,10 +20,45 @@ export const GenericActionType = ({ data }: GenericActionTypeProps) => {
         onClick={() => openModal(data.id)}
         className='flex cursor-pointer min-h-[40px]'
       >
-        <Globe06 className='text-gray-500 mt-0.5' />
-        <p className=' max-w-[500px] ml-2 text-sm text-gray-700 whitespace-pre-line'>
-          {formattedContent}
-        </p>
+        <Globe06 className='text-gray-500 mt-0.5 mr-2' />
+        <Markdown
+          className='text-sm
+        [&>ul]:list-disc [&>ul>li>ul]:list-circle [&>ul>li>ul>li>ul]:list-square
+        [&>ol]:list-decimal [&>ol>li>ol]:list-[lower-alpha] [&>ol>li>ol>li>ol]:list-[lower-roman]
+        [&>ul>li>ol]:list-decimal [&>ul>li>ol>li>ol]:list-[lower-alpha] [&>ul>li>ol>li>ol>li>ol]:list-[lower-roman]
+        [&>ol]:pl-4 [&_ol]:pl-4 [&>ul]:pl-4 [&_ul]:pl-4'
+          components={{
+            ul: ({ children }) => <ul className={'ml-4 mt-1'}>{children}</ul>,
+            ol: ({ children }) => <ol className={'ml-4 mt-1'}>{children}</ol>,
+            li: ({ children }) => {
+              const renderContent = () => {
+                return Children.map(children, (child, index) => {
+                  if (
+                    isValidElement(child) &&
+                    child.props?.node?.type === 'list'
+                  ) {
+                    return (
+                      <div key={index} className='text-gray-700'>
+                        {child}
+                      </div>
+                    );
+                  }
+
+                  return child;
+                });
+              };
+
+              return <li className='text-gray-700'>{renderContent()}</li>;
+            },
+            a: ({ children }) => (
+              <a href={''} className={'pointer-events-none'}>
+                /{children}
+              </a>
+            ),
+          }}
+        >
+          {data.content}
+        </Markdown>
       </div>
     </div>
   );
