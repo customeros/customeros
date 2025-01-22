@@ -58,15 +58,18 @@ export const GenericActionTypePreview = () => {
       </CardHeader>
       <CardContent className='mt-0 max-h-[calc(100vh-60px-56px)] pt-0 pb-0  text-sm overflow-auto'>
         <Markdown
-          className='text-sm
+          className='text-sm whitespace-pre-wrap
         [&>ul]:list-disc [&>ul>li>ul]:list-circle [&>ul>li>ul>li>ul]:list-square
         [&>ol]:list-decimal [&>ol>li>ol]:list-[lower-alpha] [&>ol>li>ol>li>ol]:list-[lower-roman]
         [&>ul>li>ol]:list-decimal [&>ul>li>ol>li>ol]:list-[lower-alpha] [&>ul>li>ol>li>ol>li>ol]:list-[lower-roman]
         [&>ol]:pl-4 [&_ol]:pl-4 [&>ul]:pl-4 [&_ul]:pl-4'
           components={{
-            ul: ({ children }) => <ul className={'ml-4 mt-1'}>{children}</ul>,
-            ol: ({ children }) => <ol className={'ml-4 mt-1'}>{children}</ol>,
-
+            ul: ({ children }) => (
+              <ul className={'ml-4 -mt-4 whitespace-nowrap'}>{children}</ul>
+            ),
+            ol: ({ children }) => (
+              <ol className={'ml-4 -mt-4 whitespace-nowrap'}>{children}</ol>
+            ),
             li: ({ children }) => {
               const renderContent = () => {
                 return Children.map(children, (child, index) => {
@@ -87,6 +90,7 @@ export const GenericActionTypePreview = () => {
 
               return <li className='text-gray-700'>{renderContent()}</li>;
             },
+            p: ({ children }) => <p className='text-gray-700'>{children}</p>,
             a: ({ children, href }) => (
               <a
                 target='_blank'
@@ -94,7 +98,7 @@ export const GenericActionTypePreview = () => {
                 className='hover:underline'
                 href={href ? getExternalUrl(href) : ''}
               >
-                /{children}
+                {children}
               </a>
             ),
           }}
