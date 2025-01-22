@@ -92,6 +92,12 @@ clean:
 generate-api:
     cd ./server/customer-os-api && go run github.com/99designs/gqlgen generate
 
+jaeger:
+    open http://localhost:54847/
+
+jaeger-dev:
+    open http://localhost:16686/search
+
 logs:
     tail -f admin-api.log api.log events-subscribers.log
 
