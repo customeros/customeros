@@ -183,6 +183,7 @@ func (h *WebsiteTrackerEventsHandler) createWebSession(ctx context.Context, trac
 		Tenant:        trackerData.Tenant,
 		VisitorID:     trackerData.VisitorID,
 		IP:            trackerData.IP,
+		Hostname:      trackerData.Hostname,
 		Referrer:      &trackerData.Referrer,
 		StartTime:     utils.Now(),
 		LastEventType: trackerData.EventType,

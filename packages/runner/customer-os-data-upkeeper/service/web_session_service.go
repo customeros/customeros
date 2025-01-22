@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -122,7 +123,8 @@ func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgr
 		}
 
 		// update websession record
-		_, err = s.commonServices.PostgresRepositories.WebSessionRepository.UpdateSessionEnd(ctx, session.ID)
+		endTime := s.calculateSessionEnd(ctx, session)
+		_, err = s.commonServices.PostgresRepositories.WebSessionRepository.UpdateSessionEnd(ctx, session.ID, endTime)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
@@ -130,6 +132,14 @@ func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgr
 	}
 
 	return errs
+}
+
+func (s *webSessionService) calculateSessionEnd(ctx context.Context, session postgres_entity.WebSession) time.Time {
+	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.calculateSessionEnd")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	return session.LastActivity.Add(time.Minute)
 }
 
 func (s *webSessionService) createCloseSessionWebhookEvent(ctx context.Context, session postgres_entity.WebSession) dto.WebhookEvent {

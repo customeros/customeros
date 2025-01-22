@@ -31,6 +31,11 @@ func NewWebsiteVisitEventHandler(dependencies *model.DependencyContainer, event 
 		return nil, err
 	}
 
+	if event.SessionID == "" {
+		err := errors.New("SessionID cannot be empty")
+		return nil, err
+	}
+
 	return &WebsiteVisitEventHandler{
 		dependencies: dependencies,
 		event:        event,

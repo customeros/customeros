@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -24,11 +25,14 @@ type AnalyzeWebSessionInput struct {
 }
 
 type AnalyzeWebSessionResult struct {
+	SessionID         string
 	IsNewCompanyVisit bool
 	IsNewPersonVisit  bool
 	PageViews         []string
 	SessionDuration   string
 	SlackNotification string
+	Hostname          string
+	Referrer          string
 }
 
 func (c *agentCapabilityService) handleAnalyzeWebSessionExecution(ctx context.Context, executionContainer *dto.CapabilityExecutionContainer) error {
@@ -79,7 +83,7 @@ func (c *agentCapabilityService) executeWebSessionAnalysis(ctx context.Context, 
 	}
 
 	// calculate session duration
-	sessionDuration, err := c.calculateSessionDuration(ctx, data.SessionID)
+	hostname, referrer, sessionDuration, err := c.sessionAnalytics(ctx, data.SessionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return AnalyzeWebSessionResult{}, err
@@ -105,6 +109,8 @@ func (c *agentCapabilityService) executeWebSessionAnalysis(ctx context.Context, 
 		SessionDuration:   sessionDuration,
 		IsNewCompanyVisit: isNewCompany,
 		IsNewPersonVisit:  isNewVisitor,
+		Hostname:          hostname,
+		Referrer:          referrer,
 	}
 
 	// build timeline event
@@ -169,7 +175,7 @@ func (c *agentCapabilityService) getUniquePageViews(ctx context.Context, session
 	uniquePageMap := make(map[string]struct{})
 	for _, page := range session {
 		if page.Pathname != "" {
-			uniquePageMap[page.Pathname] = struct{}{}
+			uniquePageMap[c.cleanPathName(page.Pathname)] = struct{}{}
 		}
 	}
 
@@ -179,11 +185,26 @@ func (c *agentCapabilityService) getUniquePageViews(ctx context.Context, session
 		uniquePages = append(uniquePages, pathname)
 	}
 
+	sort.Slice(uniquePages, func(i, j int) bool {
+		// If lengths are different, sort by length
+		if len(uniquePages[i]) != len(uniquePages[j]) {
+			return len(uniquePages[i]) < len(uniquePages[j])
+		}
+		// If lengths are equal, sort alphabetically
+		return uniquePages[i] < uniquePages[j]
+	})
+
 	return uniquePages, nil
 }
+func (c *agentCapabilityService) cleanPathName(pathName string) string {
+	if pathName == "" || pathName == "/" {
+		return pathName
+	}
+	return strings.TrimSuffix(pathName, "/")
+}
 
-func (c *agentCapabilityService) calculateSessionDuration(ctx context.Context, sessionID string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.calculateSessionDuration")
+func (c *agentCapabilityService) sessionAnalytics(ctx context.Context, sessionID string) (string, string, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.sessionAnalytics")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
@@ -193,11 +214,32 @@ func (c *agentCapabilityService) calculateSessionDuration(ctx context.Context, s
 	}, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return "", err
+		return "", "", "", err
 	}
 	if session == nil {
-		return "", nil
+		return "", "", "", nil
 	}
+
+	hostname := session.Hostname
+
+	referrer := ""
+	if session.Referrer != nil {
+		referrer = *session.Referrer
+	}
+
+	sessionDuration, err := c.calculateSessionDuration(ctx, session)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", "", "", err
+	}
+
+	return hostname, referrer, sessionDuration, nil
+}
+
+func (c *agentCapabilityService) calculateSessionDuration(ctx context.Context, session *postgres_entity.WebSession) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.calculateSessionDuration")
+	defer span.Finish()
+	tracing.TagComponentService(span)
 
 	if session.EndTime == nil || session.EndTime.IsZero() {
 		err := errors.New("Session EndTime not set")
@@ -277,27 +319,58 @@ func (c *agentCapabilityService) buildTimelineMessage(ctx context.Context, sessi
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
+	// Build base message
 	var baseMessage string
 	switch {
 	case analysis.IsNewCompanyVisit:
-		baseMessage = fmt.Sprintf("First Visit: %s", analysis.SessionDuration)
+		baseMessage = fmt.Sprintf("**First Visit:** %s", analysis.SessionDuration)
 	case analysis.IsNewPersonVisit:
-		baseMessage = fmt.Sprintf("New Visitor: %s", analysis.SessionDuration)
+		baseMessage = fmt.Sprintf("**New Visitor:** %s", analysis.SessionDuration)
 	case !analysis.IsNewPersonVisit:
-		baseMessage = fmt.Sprintf("Repeat Visitor: %s", analysis.SessionDuration)
+		baseMessage = fmt.Sprintf("**Repeat Visitor:** %s", analysis.SessionDuration)
 	default:
-		baseMessage = fmt.Sprintf("Web Visitor: %s", analysis.SessionDuration)
+		baseMessage = fmt.Sprintf("**Web Visitor:** %s", analysis.SessionDuration)
 	}
 
-	// Append pages with indentation
+	// Build source message
+	var sourceMessage string
+	if analysis.Referrer != "" {
+		cleanReferrer := analysis.Referrer
+		cleanReferrer = strings.TrimPrefix(cleanReferrer, "https://")
+		cleanReferrer = strings.TrimPrefix(cleanReferrer, "http://")
+		cleanReferrer = strings.TrimPrefix(cleanReferrer, "www.")
+		cleanReferrer = strings.Trim(cleanReferrer, "/")
+		sourceMessage = fmt.Sprintf("\n**Source:** [%s](https://%s)", cleanReferrer, cleanReferrer)
+	} else {
+		sourceMessage = "\n**Source:** Direct"
+	}
+
+	// Sort pages by length and alphabetically
+	if len(analysis.PageViews) > 0 {
+		sort.Slice(analysis.PageViews, func(i, j int) bool {
+			if len(analysis.PageViews[i]) != len(analysis.PageViews[j]) {
+				return len(analysis.PageViews[i]) < len(analysis.PageViews[j])
+			}
+			return analysis.PageViews[i] < analysis.PageViews[j]
+		})
+	}
+
+	// Build full message
 	var fullMessage strings.Builder
 	fullMessage.WriteString(baseMessage)
-	for _, page := range analysis.PageViews {
-		fullMessage.WriteString(fmt.Sprintf("\n    • %s", page))
+	fullMessage.WriteString(sourceMessage)
+
+	// Only add page views if hostname is present and there are pages to show
+	if analysis.Hostname != "" && len(analysis.PageViews) > 0 {
+		fullMessage.WriteString("\n\n**Pages Viewed:**")
+		for _, page := range analysis.PageViews {
+			cleanPage := strings.TrimPrefix(page, "/")
+			fullUrl := fmt.Sprintf("https://%s%s", analysis.Hostname, page)
+			fullMessage.WriteString(fmt.Sprintf("\n* [%s](%s)", cleanPage, fullUrl))
+		}
 	}
 
-	timelineMessage := fullMessage.String()
-	return timelineMessage, nil
+	return fullMessage.String(), nil
 }
 
 //
