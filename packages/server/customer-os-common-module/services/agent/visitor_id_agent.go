@@ -83,7 +83,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 		_, err := a.postgresRepositories.AgentExecutionRepository.Update(
 			ctx,
 			executionID,
-			nil, // completedAt
+			utils.NowPtr(),
 			nil, // errorMessage
 			false,
 		)
@@ -235,7 +235,6 @@ func (a *AgentVisitorIDService) executeOrgCreationCapability(ctx context.Context
 	}
 
 	return output, nil
-
 }
 
 func (a *AgentVisitorIDService) executeVisitorIDCapability(ctx context.Context, agentID, executionID string, event *data_fields.WebsiteVisitEvent) (agent_capability.IdentifyWebsiteVisitorResult, error) {

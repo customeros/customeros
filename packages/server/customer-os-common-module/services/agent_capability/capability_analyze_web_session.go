@@ -7,14 +7,15 @@ import (
 	"sort"
 	"strings"
 
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
 )
 
 type AnalyzeWebSessionInput struct {
@@ -103,7 +104,7 @@ func (c *agentCapabilityService) executeWebSessionAnalysis(ctx context.Context, 
 		return AnalyzeWebSessionResult{}, err
 	}
 
-	//build results object
+	// build results object
 	results := AnalyzeWebSessionResult{
 		PageViews:         pageViews,
 		SessionDuration:   sessionDuration,
@@ -175,7 +176,11 @@ func (c *agentCapabilityService) getUniquePageViews(ctx context.Context, session
 	uniquePageMap := make(map[string]struct{})
 	for _, page := range session {
 		if page.Pathname != "" {
-			uniquePageMap[c.cleanPathName(page.Pathname)] = struct{}{}
+			pathname := c.cleanUrl(page.Pathname)
+			if pathname == "" || pathname == "/" {
+				pathname = c.cleanUrl(page.Hostname)
+			}
+			uniquePageMap[pathname] = struct{}{}
 		}
 	}
 
@@ -195,12 +200,6 @@ func (c *agentCapabilityService) getUniquePageViews(ctx context.Context, session
 	})
 
 	return uniquePages, nil
-}
-func (c *agentCapabilityService) cleanPathName(pathName string) string {
-	if pathName == "" || pathName == "/" {
-		return pathName
-	}
-	return strings.TrimSuffix(pathName, "/")
 }
 
 func (c *agentCapabilityService) sessionAnalytics(ctx context.Context, sessionID string) (string, string, string, error) {
@@ -276,8 +275,9 @@ func (c *agentCapabilityService) isNewCompanyVisit(ctx context.Context, domain s
 	}
 
 	query := postgres_entity.WebSession{
-		Tenant: tenant,
-		Domain: &domain,
+		Tenant:   tenant,
+		Domain:   &domain,
+		IsActive: false,
 	}
 
 	results, err := c.postgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, nil)
@@ -300,6 +300,7 @@ func (c *agentCapabilityService) isNewWebsiteVisitor(ctx context.Context, visito
 	query := postgres_entity.WebSession{
 		Tenant:    common.GetTenantFromContext(ctx),
 		VisitorID: visitorId,
+		IsActive:  false,
 	}
 
 	results, err := c.postgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, nil)
@@ -334,12 +335,11 @@ func (c *agentCapabilityService) buildTimelineMessage(ctx context.Context, sessi
 
 	// Build source message
 	var sourceMessage string
+	if strings.Contains(analysis.Referrer, "syndicatedsearch.goog") {
+		analysis.Referrer = "google.com"
+	}
 	if analysis.Referrer != "" {
 		cleanReferrer := analysis.Referrer
-		cleanReferrer = strings.TrimPrefix(cleanReferrer, "https://")
-		cleanReferrer = strings.TrimPrefix(cleanReferrer, "http://")
-		cleanReferrer = strings.TrimPrefix(cleanReferrer, "www.")
-		cleanReferrer = strings.Trim(cleanReferrer, "/")
 		sourceMessage = fmt.Sprintf("\n**Source:** [%s](https://%s)", cleanReferrer, cleanReferrer)
 	} else {
 		sourceMessage = "\n**Source:** Direct"
@@ -364,13 +364,23 @@ func (c *agentCapabilityService) buildTimelineMessage(ctx context.Context, sessi
 	if analysis.Hostname != "" && len(analysis.PageViews) > 0 {
 		fullMessage.WriteString("\n\n**Pages Viewed:**")
 		for _, page := range analysis.PageViews {
-			cleanPage := strings.TrimPrefix(page, "/")
-			fullUrl := fmt.Sprintf("https://%s%s", analysis.Hostname, page)
+			cleanPage := c.cleanUrl(page)
+			fullUrl := fmt.Sprintf("https://%s/%s", analysis.Hostname, cleanPage)
+			if strings.Contains(cleanPage, analysis.Hostname) {
+				fullUrl = fmt.Sprintf("https://%s", analysis.Hostname)
+			}
 			fullMessage.WriteString(fmt.Sprintf("\n* [%s](%s)", cleanPage, fullUrl))
 		}
 	}
 
 	return fullMessage.String(), nil
+}
+
+func (c *agentCapabilityService) cleanUrl(s string) string {
+	clean := strings.TrimPrefix(s, "https://")
+	clean = strings.TrimPrefix(clean, "http://")
+	clean = strings.TrimPrefix(clean, "www.")
+	return strings.Trim(clean, "/")
 }
 
 //
