@@ -1478,7 +1478,7 @@ func (h *InvoiceEventHandler) appendInvoiceFileToEmailAsAttachment(ctx context.C
 		return nil
 	}
 
-	invoiceFileBytes, err := h.fileStore.GetFileBytes(ctx, utils.FirstNotEmptyString(fileInfo.PublicUrl, fileInfo.CdnUrl))
+	invoiceFileBytes, err := h.fileStore.GetFileBytes(ctx, fileInfo.PublicUrl)
 	if err != nil {
 		return err
 	}
@@ -1508,7 +1508,7 @@ func (h *InvoiceEventHandler) appendProviderLogoToEmail(ctx context.Context, ten
 		return nil
 	}
 
-	fileBytes, err := h.fileStore.GetFileBytes(ctx, utils.FirstNotEmptyString(fileInfo.PublicUrl, fileInfo.CdnUrl))
+	fileBytes, err := h.fileStore.GetFileBytes(ctx, fileInfo.PublicUrl)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
