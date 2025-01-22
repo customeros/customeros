@@ -124,6 +124,7 @@ export class OrganizationService {
 
     if (err) {
       console.error(err);
+      organization.deleteTag(tag.id);
 
       this.root.ui.toastError(
         'Failed to add tag to organization',
@@ -147,6 +148,7 @@ export class OrganizationService {
 
     if (err) {
       console.error(err);
+      organization.addTag(tag.id);
 
       this.root.ui.toastError(
         'Failed to remove tag from organization',
