@@ -9,7 +9,7 @@ type AgentCapabilityRegistry struct {
 	ID          string `gorm:"primaryKey;type:varchar(20)" json:"id"`
 	Type        string `gorm:"column:type;type:varchar(255)" json:"type" binding:"required"`
 	Description string `gorm:"column:description;type:varchar(255);index" json:"description" binding:"required"`
-	Action      string `gorm:"column:action;type:varchar(255)" json:"action"`
+	Config      string `gorm:"column:config;type:text" json:"config"`
 	IsActive    bool   `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
 }
 

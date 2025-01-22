@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	AgentsPath       = "/agents/v1"
 	BillingPath      = "/billing/v1"
 	CustomerBasePath = "/customerbase/v1"
 	EnrichPath       = "/enrich/v1"
@@ -22,6 +23,16 @@ const (
 	VerifyPath       = "/verify/v1"
 	WebhooksPath     = "/webhooks/v1"
 )
+
+func registerAgentsRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      fmt.Sprintf("%s/registry", AgentsPath),
+		handler:   h.Agents.AgentRegistry(),
+		routeType: RouteCustomer,
+		services:  s,
+	})
+}
 
 func registerBillingRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
