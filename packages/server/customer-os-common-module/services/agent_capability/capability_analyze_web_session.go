@@ -64,6 +64,13 @@ func (c *agentCapabilityService) executeWebSessionAnalysis(ctx context.Context, 
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
+	// validation
+	if data.SessionID == "" || data.Domain == "" {
+		err := errors.New("Missing required input data")
+		tracing.TraceErr(span, err)
+		return AnalyzeWebSessionResult{}, err
+	}
+
 	// get unique pageviews
 	pageViews, err := c.getUniquePageViews(ctx, data.SessionID)
 	if err != nil {
@@ -152,10 +159,10 @@ func (c *agentCapabilityService) getUniquePageViews(ctx context.Context, session
 		Tenant:    common.GetTenantFromContext(ctx),
 	}, nil)
 	if err != nil {
-		return nil, err
+		return []string{}, err
 	}
 	if session == nil {
-		return nil, nil
+		return []string{}, nil
 	}
 
 	// Use map to track unique pages
@@ -189,6 +196,12 @@ func (c *agentCapabilityService) calculateSessionDuration(ctx context.Context, s
 		return "", err
 	}
 	if session == nil {
+		return "", nil
+	}
+
+	if session.EndTime == nil || session.EndTime.IsZero() {
+		err := errors.New("Session EndTime not set")
+		tracing.TraceErr(span, err)
 		return "", err
 	}
 

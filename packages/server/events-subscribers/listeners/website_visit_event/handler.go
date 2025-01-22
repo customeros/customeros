@@ -20,11 +20,21 @@ type WebsiteVisitEventHandler struct {
 	event        *data_fields.WebsiteVisitEvent
 }
 
-func NewWebsiteVisitEventHandler(dependencies *model.DependencyContainer, event *data_fields.WebsiteVisitEvent) *WebsiteVisitEventHandler {
+func NewWebsiteVisitEventHandler(dependencies *model.DependencyContainer, event *data_fields.WebsiteVisitEvent) (*WebsiteVisitEventHandler, error) {
+	if event == nil {
+		err := errors.New("Event cannot be nil")
+		return nil, err
+	}
+
+	if event.Tenant == "" {
+		err := errors.New("Tenant cannot be empty")
+		return nil, err
+	}
+
 	return &WebsiteVisitEventHandler{
 		dependencies: dependencies,
 		event:        event,
-	}
+	}, nil
 }
 
 // Add all subscribed Agents here
@@ -44,7 +54,7 @@ func (h *WebsiteVisitEventHandler) Handle(ctx context.Context) error {
 	})
 
 	activeAgents := h.lookupActiveAgents(ctx)
-	if activeAgents == nil {
+	if activeAgents == nil || len(activeAgents) == 0 {
 		return nil
 	}
 
@@ -64,6 +74,18 @@ func (h *WebsiteVisitEventHandler) route(ctx context.Context, agent postgres_ent
 	span, ctx := tracing.StartTracerSpan(ctx, "WebsiteVisitEventHandler.execute")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	if agent.Type == "" {
+		err := errors.New("agent.Type is empty")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if agent.ID == "" {
+		err := errors.New("agent.ID is empty")
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	// run agent
 	agentType, err := enum.GetAgentType(agent.Type)
