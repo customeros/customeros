@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { RemoveOrgSocialMediaItemUsecase } from '@domain/usecases/organization-about-panel/remove-org-social-media-item.usecase.ts';
@@ -29,15 +28,10 @@ const removeOrgSocialMediaItemUsecase = new RemoveOrgSocialMediaItemUsecase();
 export const SocialMediaItem = observer(
   ({ value, dataTest, leftElement, id }: SocialMediaItemProps) => {
     const [isOpen, setIsOpen] = useState(false);
-    const orgId = useParams()?.id as string;
     const [_, copyToClipboard] = useCopyToClipboard();
 
     const href = value?.startsWith('http') ? value : `https://${value}`;
     const formattedUrl = formatSocialUrl(value);
-
-    useEffect(() => {
-      removeOrgSocialMediaItemUsecase.setId(orgId);
-    }, [orgId]);
 
     return (
       <>

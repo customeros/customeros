@@ -6,6 +6,7 @@ import { OrganizationsService } from '@store/Organizations/__service__/Organizat
 
 import { unwrap } from '@shared/util/unwrap';
 import {
+  Social,
   EntityType,
   FlagWrongFields,
   SortingDirection,
@@ -153,6 +154,33 @@ export class OrganizationService {
       this.root.ui.toastError(
         'Failed to remove tag from organization',
         'tag-remove-failed',
+      );
+
+      return [null, err];
+    }
+
+    return [res, err];
+  }
+
+  public async removeSocialMediaItem(
+    organization: Organization,
+    social: Social,
+  ) {
+    organization.deleteSocialMedia(social.id);
+
+    const [res, err] = await unwrap(
+      this.orgRepo.removeSocial({
+        socialId: social.id,
+      }),
+    );
+
+    if (err) {
+      console.error(err);
+      organization.revertSocialMedia(social);
+
+      this.root.ui.toastError(
+        "We couldn't remove this link",
+        `${social.id}-remove-social-media`,
       );
 
       return [null, err];

@@ -7,6 +7,7 @@ import { countryMap } from '@assets/countries/countriesMap';
 import { action, computed, observable, runInAction } from 'mobx';
 
 import {
+  Social,
   FundingRound,
   type Contract,
   OnboardingStatus,
@@ -224,6 +225,39 @@ export class Organization extends Entity<OrganizationDatum> {
       this.value.tags = [];
     }
     this.value.tags = this.value.tags.filter((tag) => tag.metadata.id !== id);
+    this.commit({ syncOnly: true });
+  }
+
+  @action
+  public deleteSocialMedia(id: string) {
+    this.draft();
+
+    if (!this.value.socialMedia) {
+      this.value.socialMedia = [];
+    }
+    this.value.socialMedia = this.value.socialMedia.filter(
+      (social) => social.id !== id,
+    );
+    this.commit({ syncOnly: true });
+  }
+
+  @action
+  public revertSocialMedia(socialMedia: Social) {
+    this.draft();
+
+    if (!this.value.socialMedia) {
+      this.value.socialMedia = [];
+    }
+
+    if (!socialMedia.id) {
+      console.error(
+        `Organization.revertSocialMedia: Tag with id ${socialMedia.id} not found`,
+      );
+
+      return;
+    }
+
+    this.value.socialMedia.push(socialMedia);
     this.commit({ syncOnly: true });
   }
 

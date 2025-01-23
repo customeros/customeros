@@ -1,45 +1,64 @@
 import { RootStore } from '@store/root';
-import { action, observable, runInAction } from 'mobx';
-import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service';
+import { action, computed } from 'mobx';
+import { OrganizationService } from '@domain/services';
+
+import { Social } from '@graphql/types';
+import { getOrganizationUUID } from '@utils/getOrganizationUUID';
 
 export class RemoveOrgSocialMediaItemUsecase {
-  @observable accessor organizationId: string = '';
   private root = RootStore.getInstance();
-  private service = OrganizationsService.getInstance();
+  private service = new OrganizationService();
 
   constructor() {
     this.remove = this.remove.bind(this);
-    this.setId = this.setId.bind(this);
   }
 
-  @action
-  setId(id: string) {
-    this.organizationId = id;
+  @computed
+  get organization() {
+    const uuid = getOrganizationUUID(window.location.pathname);
+
+    if (!uuid) {
+      console.error('Invalid usage of RemoveOrgSocialMediaItemUsecase');
+
+      return;
+    }
+
+    return this.root.organizations.getById(uuid);
   }
 
   @action
   public async remove(id: string) {
-    try {
-      await this.service.removeSocial({ socialId: id });
+    const organization = this.organization;
 
-      runInAction(() => {
-        const org = this.root.organizations.getById(this.organizationId);
-        const idx = org?.value?.socialMedia.findIndex((s) => s.id === id);
-
-        if (typeof idx === 'undefined' || idx < 0) return;
-        org?.value?.socialMedia?.splice(idx, 1);
-      });
-    } catch {
-      this.root.ui.toastError(
-        "We couldn't remove this link",
-        `${id}-remove-social-media`,
+    if (!id || !organization) {
+      console.error(
+        'RemoveOrgSocialMediaItemUsecase: remove social called without id or organization',
       );
-    } finally {
+
+      return;
+    }
+    const social =
+      (organization?.value?.socialMedia?.find((s) => s.id === id) as Social) ??
+      null;
+
+    if (!social) {
+      console.error(
+        'RemoveOrgSocialMediaItemUsecase: social not found on organization',
+      );
+
+      return;
+    }
+
+    const [res] = await this.service.removeSocialMediaItem(
+      organization,
+      social,
+    );
+
+    if (res) {
       this.root.organizations.sync({
         action: 'INVALIDATE',
-        ids: [this.organizationId],
+        ids: [organization.id],
       });
-      this.organizationId = '';
     }
   }
 }
