@@ -26,10 +26,10 @@ func NewAskAIHandler(services *cosapi_services.Services, responseHandler *respon
 }
 
 type AskAIRequest struct {
-	Model        string  `json:"model"`
-	SystemPrompt *string `json:"systemPrompt,omitempty"`
-	Prompt       string  `json:"prompt"`
-	AIModel      commonEnum.AIModel
+	Model        string             `json:"model"`
+	SystemPrompt *string            `json:"systemPrompt,omitempty"`
+	Prompt       any                `json:"prompt"`
+	AIModel      commonEnum.AIModel `json:"-"`
 }
 
 type AskAIResponse struct {
