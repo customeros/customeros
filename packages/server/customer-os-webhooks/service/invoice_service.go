@@ -219,7 +219,7 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 			}
 		}
 
-		err = s.services.CommonServices.InvoiceService.UpdateInvoice(ctx, invoiceId, invoiceUpdateFields)
+		err = s.services.CommonServices.InvoiceService.UpdateInvoice(ctx, nil, invoiceId, invoiceUpdateFields)
 		if err != nil {
 			failedSync = true
 			tracing.TraceErr(span, err)

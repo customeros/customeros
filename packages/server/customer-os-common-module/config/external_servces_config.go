@@ -37,7 +37,7 @@ type StripeConfig struct {
 	ApiKey string `env:"STRIPE_API_KEY" envDefault:"N/A"`
 }
 
-type NovuCofig struct {
+type NovuConfig struct {
 	ApiKey      string `env:"NOVU_API_KEY"`
 	FronteraUrl string `env:"NOVU_FRONTERA_URL"`
 }

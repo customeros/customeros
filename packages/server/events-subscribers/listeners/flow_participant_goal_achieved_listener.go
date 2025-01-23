@@ -119,7 +119,7 @@ func Handle_FlowParticipantGoalAchieved(ctx context.Context, dependencies *model
 		if len(*contactWithOrganizations) > 0 {
 			contactWithOrganization := (*contactWithOrganizations)[0]
 			organizationName = contactWithOrganization.Organization.Name
-			organizationPublicLink = fmt.Sprintf("%s/organization/%s", dependencies.CommonConfig.External.NovuCofig.FronteraUrl, contactWithOrganization.Organization.ID)
+			organizationPublicLink = fmt.Sprintf("%s/organization/%s", dependencies.CommonConfig.External.NovuConfig.FronteraUrl, contactWithOrganization.Organization.ID)
 		}
 
 		// slack notification

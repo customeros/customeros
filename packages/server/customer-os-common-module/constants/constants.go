@@ -23,4 +23,7 @@ const (
 	OpenAI            = "openai"
 	AnthropicApiModel = "claude-3-5-sonnet-20240620"
 	// AnthropicApiModel = "claude-3-haiku-20240307"
+
+	UrlCustomerOsApi                 = "https://customeros.ai"
+	FileStoreFileDownloadUrlTemplate = UrlCustomerOsApi + "/files/v1/files/%s/download"
 )

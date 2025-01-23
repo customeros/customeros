@@ -3,11 +3,11 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -78,7 +78,7 @@ type InvoiceWriteRepository interface {
 	CreateInvoiceForContract(ctx context.Context, tenant, invoiceId string, data InvoiceCreateFields) error
 	FillInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceFillFields) error
 	InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string) error
-	UpdateInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceUpdateFields) error
+	UpdateInvoice(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId string, data InvoiceUpdateFields) error
 	MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error
 	MarkPaymentLinkRequested(ctx context.Context, tenant, invoiceId string) error
 	SetPaidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
@@ -260,7 +260,7 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 	return err
 }
 
-func (r *invoiceWriteRepository) UpdateInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceUpdateFields) error {
+func (r *invoiceWriteRepository) UpdateInvoice(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId string, data InvoiceUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.UpdateInvoice")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -287,7 +287,9 @@ func (r *invoiceWriteRepository) UpdateInvoice(ctx context.Context, tenant, invo
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}

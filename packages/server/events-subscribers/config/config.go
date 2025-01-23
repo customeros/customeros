@@ -31,7 +31,7 @@ type CommonConfig struct {
 	Scrapin       commonconf.ScrapinConfig
 	Snitcher      commonconf.SnitcherConfig
 	Anthropic     commonconf.AnthropicConfig
-	Novu          commonconf.NovuCofig
+	Novu          commonconf.NovuConfig
 	Namecheap     commonconf.NamecheapConfig
 	OpenSrs       commonconf.OpenSRSConfig
 	Cloudflare    commonconf.CloudflareConfig
@@ -72,7 +72,7 @@ func Load() *Config {
 			ScrapinConfig:       cmnCfg.Scrapin,
 			SnitcherConfig:      cmnCfg.Snitcher,
 			AnthropicConfig:     cmnCfg.Anthropic,
-			NovuCofig:           cmnCfg.Novu,
+			NovuConfig:          cmnCfg.Novu,
 			NamecheapConfig:     cmnCfg.Namecheap,
 			OpenSRSConfig:       cmnCfg.OpenSrs,
 			CloudflareConfig:    cmnCfg.Cloudflare,

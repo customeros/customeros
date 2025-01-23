@@ -2,6 +2,8 @@ package interfaces
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"time"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -17,7 +19,7 @@ type InvoiceService interface {
 
 	GenerateNewRandomInvoiceNumber() string
 
-	GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error)
+	GetById(ctx context.Context, tx *neo4j.ManagedTransaction, invoiceId string) (*neo4jentity.InvoiceEntity, error)
 	GetByIdAcrossAllTenants(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, string, error)
 	GetByNumber(ctx context.Context, number string) (*neo4jentity.InvoiceEntity, error)
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
@@ -27,7 +29,7 @@ type InvoiceService interface {
 	NextInvoiceDryRun(ctx context.Context, contractId, appSource string) (string, error)
 	PayInvoice(ctx context.Context, invoiceId string) error
 	VoidInvoice(ctx context.Context, invoiceId, appSource string) error
-	UpdateInvoice(ctx context.Context, invoiceId string, data neo4jrepository.InvoiceUpdateFields) error
+	UpdateInvoice(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, invoiceId string, data neo4jrepository.InvoiceUpdateFields) error
 
 	FillCycleInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error)
 	// Deprecated: Method should be re-worked. DO NOT ENABLE IN PROD

@@ -365,7 +365,7 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, input model.InvoiceU
 		}
 	}
 
-	err := s.invoice.UpdateInvoice(ctx, input.ID, data)
+	err := s.invoice.UpdateInvoice(ctx, nil, input.ID, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Error(err.Error())

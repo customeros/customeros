@@ -13,10 +13,9 @@ export const getOpportunitiesSortFn = (columnId: string) =>
       () => (row: OpportunityStore) =>
         row.organization?.value?.name?.trim().toLocaleLowerCase() || null,
     )
-    .with(
-      ColumnViewType.OpportunitiesStage,
-      () => (row: OpportunityStore) => row.value.externalStage || null,
-    )
+    .with(ColumnViewType.OpportunitiesStage, () => (row: OpportunityStore) => {
+      return row?.externalStage?.order || row.value.internalStage || null;
+    })
     .with(ColumnViewType.OpportunitiesOwner, () => (row: OpportunityStore) => {
       return row.owner?.name?.trim().toLowerCase() || null;
     })
