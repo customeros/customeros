@@ -820,7 +820,7 @@ func (s *invoiceService) AdjustInvoiceStatus() {
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
 
-			err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, invoice.Id, neo4jrepository.InvoiceUpdateFields{
+			err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, nil, invoice.Id, neo4jrepository.InvoiceUpdateFields{
 				Status:       neo4jenum.InvoiceStatusOverdue,
 				UpdateStatus: true,
 			})
@@ -847,7 +847,7 @@ func (s *invoiceService) AdjustInvoiceStatus() {
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
 
-			err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, invoice.Id, neo4jrepository.InvoiceUpdateFields{
+			err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, nil, invoice.Id, neo4jrepository.InvoiceUpdateFields{
 				Status:       neo4jenum.InvoiceStatusOnHold,
 				UpdateStatus: true,
 			})
@@ -874,7 +874,7 @@ func (s *invoiceService) AdjustInvoiceStatus() {
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
 
-			err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, invoice.Id, neo4jrepository.InvoiceUpdateFields{
+			err = s.commonServices.InvoiceService.UpdateInvoice(innerCtx, nil, invoice.Id, neo4jrepository.InvoiceUpdateFields{
 				Status:       neo4jenum.InvoiceStatusScheduled,
 				UpdateStatus: true,
 			})

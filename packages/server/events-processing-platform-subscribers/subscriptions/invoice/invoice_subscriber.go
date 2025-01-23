@@ -127,7 +127,6 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 		invoice.InvoicePdfRequestedV1,
 		invoice.InvoicePdfGeneratedV1,
 		invoice.InvoiceVoidV1,
-		invoice.InvoicePaidV1,
 		invoice.InvoicePayNotificationV1,
 		invoice.InvoiceRemindNotificationV1,
 	}
@@ -156,8 +155,6 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 		return s.invoiceEventHandler.onInvoicePdfGeneratedV1(ctx, evt)
 	case invoice.InvoiceVoidV1:
 		return s.invoiceEventHandler.onInvoiceVoidV1(ctx, evt)
-	case invoice.InvoicePaidV1:
-		return s.invoiceEventHandler.onInvoicePaidV1(ctx, evt)
 	case invoice.InvoicePayNotificationV1:
 		return s.invoiceEventHandler.onInvoicePayNotificationV1(ctx, evt)
 	case invoice.InvoiceRemindNotificationV1:

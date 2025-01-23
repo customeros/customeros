@@ -40,6 +40,8 @@ type CommonConfig struct {
 	SlackConfig      commonconf.SlackConfig
 	QuickbooksConfig commonconf.QuickbooksConfig
 	IntegrationApp   commonconf.IntegrationAppConfig
+	Novu             commonconf.NovuConfig
+	Temporal         commonconf.TemporalConfig
 }
 
 type AppConfig struct {
@@ -123,6 +125,8 @@ func InitConfig() (*Config, error) {
 			SlackConfig:          cmnCfg.SlackConfig,
 			QuickbooksConfig:     cmnCfg.QuickbooksConfig,
 			IntegrationAppConfig: cmnCfg.IntegrationApp,
+			NovuConfig:           cmnCfg.Novu,
+			TemporalConfig:       cmnCfg.Temporal,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,

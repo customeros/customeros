@@ -3,7 +3,6 @@ package invoice
 import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/google/uuid"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/tracing"
@@ -11,6 +10,7 @@ import (
 	events2 "github.com/customeros/customeros/packages/server/events/constants"
 	"github.com/customeros/customeros/packages/server/events/event/common"
 	"github.com/customeros/customeros/packages/server/events/eventstore"
+	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -386,7 +386,6 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		InvoicePayV1,
 		InvoicePdfRequestedV1,
 		InvoiceFillRequestedV1,
-		InvoicePaidV1,
 		InvoicePayNotificationV1,
 		InvoiceRemindNotificationV1,
 		InvoiceDeleteV1,
