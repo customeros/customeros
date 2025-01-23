@@ -1,7 +1,7 @@
 import { Channel } from 'phoenix';
 import { RootStore } from '@store/root';
 import { makeAutoObservable } from 'mobx';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { GroupOperation } from '@store/types';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 

@@ -19,6 +19,7 @@ const knownPaths = [
   '/customer-map',
   '/settings',
   '/welcome',
+  '/agents',
   '/flow-editor',
 ];
 
@@ -34,6 +35,7 @@ export const Layout = () => {
       P.string.startsWith('/customer-map'),
       P.string.startsWith('/flow-editor'),
       P.string.startsWith('/welcome'),
+      P.string.startsWith('/agents'),
       () => <RootSidenav />,
     )
     .with(P.string.startsWith('/organization'), () => <OrganizationSidenav />)
@@ -49,6 +51,7 @@ export const Layout = () => {
       P.string.startsWith('/flow-editor'),
       P.string.startsWith('/customer-map'),
       P.string.startsWith('/welcome'),
+      P.string.startsWith('/agents'),
       () => true,
     )
     .otherwise(() => false);

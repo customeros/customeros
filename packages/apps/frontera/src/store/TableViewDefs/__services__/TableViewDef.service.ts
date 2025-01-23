@@ -1,7 +1,7 @@
 import omit from 'lodash/omit';
 import { match } from 'ts-pattern';
 import { Operation } from '@store/types';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 
 import { TableViewDef } from '../TableViewDef.dto';
 import GetTableViewDefsDocument from './getTableViewDefs.graphql';

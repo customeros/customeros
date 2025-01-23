@@ -1,5 +1,5 @@
 import { RootStore } from '@store/root';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { SyncableGroup } from '@store/syncable-group';
 import {
   computed,

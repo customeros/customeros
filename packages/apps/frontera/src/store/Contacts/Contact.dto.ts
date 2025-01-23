@@ -1,6 +1,6 @@
 import { set, merge } from 'lodash';
 import { Entity } from '@store/record';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { FlowStore } from '@store/Flows/Flow.store';
 import { JobRoleDatum } from '@store/JobRoles/JobRole.dto';
 import { countryMap } from '@assets/countries/countriesMap';

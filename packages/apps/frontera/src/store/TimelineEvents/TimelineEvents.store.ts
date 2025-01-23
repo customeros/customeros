@@ -1,6 +1,6 @@
 import { match } from 'ts-pattern';
 import { RootStore } from '@store/root';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
 
 import {

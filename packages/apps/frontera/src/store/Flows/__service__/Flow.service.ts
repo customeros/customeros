@@ -1,4 +1,4 @@
-import type { Transport } from '@store/transport';
+import type { Transport } from '@infra/transport';
 
 import {
   FlowChangeNameMutation,

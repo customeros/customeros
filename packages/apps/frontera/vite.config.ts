@@ -1,5 +1,6 @@
 import path from 'path';
 import { cpus } from 'node:os';
+import svgr from 'vite-plugin-svgr';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import graphqlLoader from 'vite-plugin-graphql-loader';
@@ -40,6 +41,7 @@ export default defineConfig(({ mode }) => ({
       },
     }),
     graphqlLoader(),
+    svgr(),
   ],
   resolve: {
     alias: {
@@ -59,6 +61,7 @@ export default defineConfig(({ mode }) => ({
       '@invoices': path.resolve(__dirname, './src/routes/invoices/src'),
       '@opportunities': path.resolve(__dirname, './src/routes/prospects/src'),
       '@domain': path.resolve(__dirname, './src/domain'),
+      '@infra': path.resolve(__dirname, './src/infra'),
     },
   },
 }));

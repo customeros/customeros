@@ -101,7 +101,7 @@ export const AlertDialogHeader = forwardRef<
   AlertDialogGenericProps
 >(({ children, className }, ref) => {
   return (
-    <RadixAlertDialog.Title ref={ref} className={twMerge(className)}>
+    <RadixAlertDialog.Title ref={ref} className={twMerge('pr-8', className)}>
       {children}
     </RadixAlertDialog.Title>
   );
@@ -166,7 +166,7 @@ export const AlertDialogCloseIconButton = forwardRef<
     <RadixAlertDialog.Cancel
       asChild
       ref={ref}
-      className={twMerge('flex', className)}
+      className={twMerge('absolute right-6 top-[23px]', className)}
       {...props}
     >
       <IconButton

@@ -1,6 +1,6 @@
 import { Channel } from 'phoenix';
 import { RootStore } from '@store/root';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { GroupOperation } from '@store/types';
 import { UserService } from '@store/Users/User.service.ts';
 import { computed, runInAction, makeAutoObservable } from 'mobx';

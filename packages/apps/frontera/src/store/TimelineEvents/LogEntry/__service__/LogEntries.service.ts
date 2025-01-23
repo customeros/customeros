@@ -1,4 +1,4 @@
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 
 import {
   CreateLogEntryMutation,

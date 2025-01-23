@@ -1,6 +1,6 @@
 import { RootStore } from '@store/root';
 import { Syncable } from '@store/syncable';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { action, override, computed, makeObservable } from 'mobx';
 
 import { MailboxesService } from './__service__/Mailboxes/Mailboxes.service';

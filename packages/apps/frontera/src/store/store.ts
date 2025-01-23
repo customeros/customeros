@@ -1,9 +1,9 @@
 import { Channel } from 'phoenix';
 import { toJS, runInAction } from 'mobx';
+import { Transport } from '@infra/transport';
 import { getDiff, applyDiff } from 'recursive-diff';
 
 import { RootStore } from './root';
-import { Transport } from './transport';
 import { Operation, SyncPacket } from './types';
 
 type UpdateOptions = {

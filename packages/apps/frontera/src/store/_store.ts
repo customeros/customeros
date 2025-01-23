@@ -1,4 +1,5 @@
 import type { Channel } from 'phoenix';
+import type { Transport } from '@infra/transport';
 
 import set from 'lodash/set';
 import { match } from 'ts-pattern';
@@ -6,7 +7,6 @@ import { getDiff, applyDiff } from 'recursive-diff';
 import { when, action, reaction, observable, runInAction } from 'mobx';
 
 import type { RootStore } from './root';
-import type { Transport } from './transport';
 import type { Entity, EntityFactoryClass } from './record';
 
 import { Persister, PersisterInstance } from './persister';

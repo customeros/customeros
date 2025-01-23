@@ -4,7 +4,7 @@ import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { Operation } from '@store/types';
 import { makeAutoObservable } from 'mobx';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { Store, makeAutoSyncable } from '@store/store';
 import { makeAutoSyncableGroup } from '@store/group-store';
 

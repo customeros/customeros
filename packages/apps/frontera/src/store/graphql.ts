@@ -1,7 +1,8 @@
+import type { Transport } from '@infra/transport';
+
 import { match } from 'ts-pattern';
 
 import type { Operation } from './types';
-import type { Transport } from './transport';
 
 import { RootStore } from './root';
 import { ContactService } from './Contacts/__service__/Contacts.service';

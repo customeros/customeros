@@ -1,4 +1,4 @@
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 
 import SlackChannelsDocument from './slackChannels.graphql';
 import TenantSettingsDocument from './tenantSettings.graphql';

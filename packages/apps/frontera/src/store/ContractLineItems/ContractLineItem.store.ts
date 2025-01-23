@@ -4,7 +4,7 @@ import { gql } from 'graphql-request';
 import { getDiff } from 'recursive-diff';
 import { RootStore } from '@store/root.ts';
 import { Operation } from '@store/types.ts';
-import { Transport } from '@store/transport.ts';
+import { Transport } from '@infra/transport.ts';
 import { Store, makeAutoSyncable } from '@store/store.ts';
 import { toJS, runInAction, makeAutoObservable } from 'mobx';
 import { ContractLineItemService } from '@store/ContractLineItems/ContractLineItem.service.ts';

@@ -9,7 +9,7 @@ import {
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
-import { Transport } from '../../transport';
+import { Transport } from '../../../infra/transport';
 import { UserService } from '../../Users/User.service';
 import { ContractService } from '../../Contracts/Contract.service';
 import { OrganizationsService } from '../__service__/Organizations.service';

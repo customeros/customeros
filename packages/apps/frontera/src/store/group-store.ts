@@ -1,9 +1,9 @@
 import { Channel } from 'phoenix';
 import { match } from 'ts-pattern';
 import { when, runInAction } from 'mobx';
+import { Transport } from '@infra/transport';
 
 import { RootStore } from './root';
-import { Transport } from './transport';
 import { Store, StoreConstructor } from './store';
 import { GroupOperation, GroupSyncPacket } from './types';
 

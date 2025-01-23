@@ -1,6 +1,6 @@
 import { Store } from '@store/_store';
 import { RootStore } from '@store/root';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { action, computed, observable, runInAction } from 'mobx';
 
 import {

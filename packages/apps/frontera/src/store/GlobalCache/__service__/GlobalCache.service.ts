@@ -1,4 +1,4 @@
-import type { Transport } from '@store/transport.ts';
+import type { Transport } from '@infra/transport.ts';
 
 import GlobalCacheQueryDocument from './getGlobalCache.graphql';
 import { GlobalCacheQuery } from './getGlobalCache.generated.ts';

@@ -1,7 +1,7 @@
 import type { RootStore } from '@store/root';
 
 import { makeAutoObservable } from 'mobx';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 import { OauthTokenStore } from '@store/Settings/OauthTokenStore.store';
 import { BankAccountsStore } from '@store/BankAccounts/BankAccounts.store.ts';
 import { TenantBillingProfilesStore } from '@store/TenantBillingProfiles/TenantBillingProfiles.store.ts';

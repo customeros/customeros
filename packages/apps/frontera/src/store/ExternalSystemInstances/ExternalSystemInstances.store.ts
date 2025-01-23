@@ -1,6 +1,6 @@
 import { gql } from 'graphql-request';
 import { RootStore } from '@store/root.ts';
-import { Transport } from '@store/transport.ts';
+import { Transport } from '@infra/transport.ts';
 import { runInAction, makeAutoObservable } from 'mobx';
 
 import { ExternalSystemInstance } from '@graphql/types';

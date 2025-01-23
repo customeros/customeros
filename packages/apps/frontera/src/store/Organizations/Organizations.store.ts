@@ -1,5 +1,5 @@
 import type { RootStore } from '@store/root';
-import type { Transport } from '@store/transport';
+import type { Transport } from '@infra/transport';
 
 import set from 'lodash/set';
 import { Store } from '@store/_store';

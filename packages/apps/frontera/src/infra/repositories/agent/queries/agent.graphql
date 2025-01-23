@@ -1,0 +1,26 @@
+query agent($id: ID!) {
+  agent(id: $id) {
+    id
+    type
+    tenant
+    name
+    capabilities {
+      id
+      type
+      name
+      action
+      optional
+      values
+      errors
+    }
+    goal
+    isActive
+    flowId
+    visible
+    createdAt
+    updatedAt
+    error
+    color
+    icon
+  }
+}

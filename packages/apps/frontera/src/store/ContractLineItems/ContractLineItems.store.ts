@@ -3,7 +3,7 @@ import { Channel } from 'phoenix';
 import { gql } from 'graphql-request';
 import { Store } from '@store/store.ts';
 import { RootStore } from '@store/root.ts';
-import { Transport } from '@store/transport.ts';
+import { Transport } from '@infra/transport.ts';
 import { GroupOperation } from '@store/types.ts';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';

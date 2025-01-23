@@ -2,7 +2,7 @@ import { merge } from 'lodash';
 import { Store } from '@store/_store';
 import { RootStore } from '@store/root';
 import { action, runInAction } from 'mobx';
-import { Transport } from '@store/transport';
+import { Transport } from '@infra/transport';
 
 import { JobRole, type JobRoleDatum } from './JobRole.dto';
 import { JobRolesService } from './__service__/JobRoles.service';
