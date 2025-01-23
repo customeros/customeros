@@ -3,10 +3,11 @@ package private
 import (
 	"context"
 
-	"github.com/gin-gonic/gin"
-	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	commonUtils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/gin-gonic/gin"
+
+	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 )
 
 func GetOAuthSettings(s *cosapi_services.Services) gin.HandlerFunc {
@@ -28,7 +29,7 @@ func GetOAuthSettings(s *cosapi_services.Services) gin.HandlerFunc {
 func GetSlackSettings(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tenant, _ := c.Get(security.KEY_TENANT_NAME)
-		userSettings, err := s.SlackService.GetSlackSettings(c, tenant.(string))
+		userSettings, err := s.CommonServices.SlackService.GetSlackSettings(c, tenant.(string))
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return

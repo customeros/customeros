@@ -8,15 +8,16 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // SlackChannels is the resolver for the slack_Channels field.
@@ -33,14 +34,14 @@ func (r *queryResolver) SlackChannels(ctx context.Context, pagination *model.Pag
 	}
 	span.LogFields(log.Int("request.pagination.page", pagination.Page), log.Int("request.pagination.limit", pagination.Limit))
 
-	paginatedResult, err := r.Services.SlackService.GetPaginatedSlackChannels(ctx, common.GetTenantFromContext(ctx), pagination.Page, pagination.Limit)
+	paginatedResult, err := r.Services.CommonServices.SlackService.GetPaginatedSlackChannels(ctx, common.GetTenantFromContext(ctx), pagination.Page, pagination.Limit)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get invoices")
 		return nil, err
 	}
 	return &model.SlackChannelPage{
-		Content:       mapper.MapEntitiesToSlackChannels(paginatedResult.Rows.([]*postgresEntity.SlackChannel)),
+		Content:       mapper.MapEntitiesToSlackChannels(paginatedResult.Rows.([]*postgres_entity.SlackChannel)),
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err
