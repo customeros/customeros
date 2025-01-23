@@ -46,6 +46,7 @@ func NewAgentCapabilityService(
 	service.executionHandlers[enum.CapabilityAnalyzeWebSessionIntent] = service.handleAnalyzeWebSessionExecution
 	service.executionHandlers[enum.CapabilityCreateOrganization] = service.handleOrganizationCreationExecution
 	service.executionHandlers[enum.CapabilityIdentifyWebVisitor] = service.handleIdentifyWebsiteVisitorExecution
+	service.executionHandlers[enum.CapabilitySendSlackNotification] = service.handleSendSlackNotificationExecution
 
 	return service, nil
 }
