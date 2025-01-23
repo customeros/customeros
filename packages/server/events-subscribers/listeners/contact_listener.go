@@ -204,8 +204,8 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 				domain = emailDomain
 			}
 		}
-
-		firstName, lastName = contactEntity.DeriveFirstAndLastNames()
+		firstName = contactEntity.FirstName
+		lastName = contactEntity.LastName
 	}
 
 	span.LogFields(

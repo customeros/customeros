@@ -13,9 +13,6 @@ import (
 
 func MapContactUpdateInputToContactFields(input model.ContactUpdateInput) data_fields.ContactFields {
 	fields := data_fields.ContactFields{
-		Name:            input.Name,
-		FirstName:       input.FirstName,
-		LastName:        input.LastName,
 		Prefix:          input.Prefix,
 		Description:     input.Description,
 		Timezone:        input.Timezone,
@@ -24,15 +21,17 @@ func MapContactUpdateInputToContactFields(input model.ContactUpdateInput) data_f
 		Source:          utils.StringPtr(neo4jentity.DataSourceOpenline.String()),
 		AppSource:       utils.StringPtr(constants.AppSourceCustomerOsApi),
 	}
+	if input.Name != nil {
+		firstName, lastName := utils.SplitFullName(*input.Name)
+		fields.FirstName = &firstName
+		fields.LastName = &lastName
+	}
 	return fields
 }
 
 func MapContactInputToEntity(input model.ContactInput) *neo4jentity.ContactEntity {
 	contactEntity := neo4jentity.ContactEntity{
 		CreatedAt:       utils.IfNotNilTimeWithDefault(input.CreatedAt, utils.Now()),
-		FirstName:       utils.IfNotNilString(input.FirstName),
-		LastName:        utils.IfNotNilString(input.LastName),
-		Name:            utils.IfNotNilString(input.Name),
 		Prefix:          utils.IfNotNilString(input.Prefix),
 		Description:     utils.IfNotNilString(input.Description),
 		Timezone:        utils.IfNotNilString(input.Timezone),
@@ -41,20 +40,27 @@ func MapContactInputToEntity(input model.ContactInput) *neo4jentity.ContactEntit
 		Source:          neo4jentity.DataSourceOpenline,
 		AppSource:       utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 	}
+	if input.Name != nil {
+		firstName, lastName := utils.SplitFullName(*input.Name)
+		contactEntity.FirstName = firstName
+		contactEntity.LastName = lastName
+	}
 	return &contactEntity
 }
 
 func MapCustomerContactInputToEntity(input model.CustomerContactInput) *neo4jentity.ContactEntity {
 	contactEntity := neo4jentity.ContactEntity{
 		CreatedAt:   utils.IfNotNilTimeWithDefault(input.CreatedAt, utils.Now()),
-		Name:        utils.IfNotNilString(input.Name),
-		FirstName:   utils.IfNotNilString(input.FirstName),
-		LastName:    utils.IfNotNilString(input.LastName),
 		Prefix:      utils.IfNotNilString(input.Prefix),
 		Description: utils.IfNotNilString(input.Description),
 		Timezone:    utils.IfNotNilString(input.Timezone),
 		Source:      neo4jentity.DataSourceOpenline,
 		AppSource:   utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+	}
+	if input.Name != nil {
+		firstName, lastName := utils.SplitFullName(*input.Name)
+		contactEntity.FirstName = firstName
+		contactEntity.LastName = lastName
 	}
 	return &contactEntity
 }
@@ -74,7 +80,7 @@ func MapEntityToContact(contact *neo4jentity.ContactEntity) *model.Contact {
 		},
 		ID:              contact.Id,
 		Prefix:          utils.StringPtr(contact.Prefix),
-		Name:            utils.StringPtr(contact.Name),
+		Name:            utils.StringPtr(contact.FullName()),
 		FirstName:       utils.StringPtr(contact.FirstName),
 		LastName:        utils.StringPtr(contact.LastName),
 		Description:     utils.StringPtr(contact.Description),

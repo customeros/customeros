@@ -99,7 +99,6 @@ func (s *contactService) Create(ctx context.Context, contactDetails *cosapi_inte
 				Description:     utils.StringPtr(contactDetails.ContactEntity.Description),
 				ProfilePhotoUrl: utils.StringPtr(contactDetails.ContactEntity.ProfilePhotoUrl),
 				Username:        utils.StringPtr(contactDetails.ContactEntity.Username),
-				Name:            utils.StringPtr(contactDetails.ContactEntity.Name),
 				Timezone:        utils.StringPtr(contactDetails.ContactEntity.Timezone),
 			}, false)
 		if err != nil {

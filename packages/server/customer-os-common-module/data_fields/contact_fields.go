@@ -11,7 +11,6 @@ type ContactFields struct {
 	ExternalSystem  *model.ExternalSystem `json:"externalSystem,omitempty"`
 	FirstName       *string               `json:"firstName,omitempty"`
 	LastName        *string               `json:"lastName,omitempty"`
-	Name            *string               `json:"name,omitempty"`
 	Username        *string               `json:"username,omitempty"`
 	ProfilePhotoUrl *string               `json:"profilePhotoUrl,omitempty"`
 	Timezone        *string               `json:"timezone,omitempty"`

@@ -16,7 +16,7 @@ var (
 	entityType              = reflect.TypeOf(neo4jentity.ContactEntity{})
 	defaultErrorMessage     = "incorrect filter formatting"
 	defaultStringFilterItem = model.FilterItem{
-		Property:  "NAME",
+		Property:  "FIRST_NAME",
 		Operation: model2.ComparisonOperatorContains,
 		Value: model.AnyTypeValue{
 			Str: utils.StringPtr("testValue"),
@@ -26,7 +26,7 @@ var (
 )
 
 var defaultIntFilterItem = model.FilterItem{
-	Property:  "NAME",
+	Property:  "FIRST_NAME",
 	Operation: model2.ComparisonOperatorEquals,
 	Value: model.AnyTypeValue{
 		Int: utils.Int64Ptr(100),
@@ -143,7 +143,7 @@ func TestBuilderFilter_NegationOfNegation(t *testing.T) {
 	require.Empty(t, innerFilter2.Filters)
 	require.NotNil(t, innerFilter2.Details)
 	details := innerFilter2.Details
-	require.Equal(t, "name", details.NodeProperty)
+	require.Equal(t, "firstName", details.NodeProperty)
 	require.Equal(t, true, details.SupportCaseSensitive)
 	require.Equal(t, true, details.CaseSensitive)
 	require.Equal(t, model2.ComparisonOperatorContains, details.ComparisonOperator)
@@ -178,14 +178,14 @@ func TestBuilderFilter_NegationOfGroup(t *testing.T) {
 	require.Equal(t, utils.L_NONE, andFirstCondition.LogicalOperator)
 	require.Empty(t, andFirstCondition.Filters)
 	require.NotNil(t, andFirstCondition.Details)
-	require.Equal(t, "name", andFirstCondition.Details.NodeProperty)
+	require.Equal(t, "firstName", andFirstCondition.Details.NodeProperty)
 
 	andSecondCondition := andGroupFilter.Filters[0]
 	require.Equal(t, false, andSecondCondition.Negate)
 	require.Equal(t, utils.L_NONE, andSecondCondition.LogicalOperator)
 	require.Empty(t, andSecondCondition.Filters)
 	require.NotNil(t, andSecondCondition.Details)
-	require.Equal(t, "name", andSecondCondition.Details.NodeProperty)
+	require.Equal(t, "firstName", andSecondCondition.Details.NodeProperty)
 }
 
 func TestBuilderFilter_GroupOfGroupAndItem(t *testing.T) {

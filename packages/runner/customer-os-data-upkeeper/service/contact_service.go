@@ -269,7 +269,6 @@ func (s *contactService) checkContacts(ctx context.Context) {
 			contactEntity := neo4jmapper.MapDbNodeToContactEntity(record.Contact)
 			cleanFirstName := utils.CleanName(contactEntity.FirstName)
 			cleanLastName := utils.CleanName(contactEntity.LastName)
-			cleanName := utils.CleanName(contactEntity.Name)
 
 			saveContact := false
 			contactFields := data_fields.ContactFields{}
@@ -279,10 +278,6 @@ func (s *contactService) checkContacts(ctx context.Context) {
 			}
 			if cleanLastName != contactEntity.LastName {
 				contactFields.LastName = utils.StringPtr(cleanLastName)
-				saveContact = true
-			}
-			if cleanName != contactEntity.Name {
-				contactFields.Name = utils.StringPtr(cleanName)
 				saveContact = true
 			}
 

@@ -330,7 +330,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, id string, ginCont
 }
 
 func (s *fileService) GetFileBytes(ctx context.Context, attachmentId string) (*[]byte, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.DownloadSingleFile")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.GetFileBytes")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 

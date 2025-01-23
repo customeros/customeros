@@ -2,9 +2,9 @@ package test
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"log"
 )
 

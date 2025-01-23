@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"

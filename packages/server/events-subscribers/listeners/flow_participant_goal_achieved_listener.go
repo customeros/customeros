@@ -104,12 +104,8 @@ func Handle_FlowParticipantGoalAchieved(ctx context.Context, dependencies *model
 			return err
 		}
 
-		contactName := ""
-		if utils.StringFirstNonEmpty(contact.Name) != "" {
-			contactName = contact.Name
-		} else if utils.StringFirstNonEmpty(contact.FirstName, contact.LastName) != "" {
-			contactName = utils.JoinNonEmpty(" ", contact.FirstName, contact.LastName)
-		} else if contactEmail != nil && utils.StringFirstNonEmpty(contactEmail.RawEmail) != "" {
+		contactName := contact.FullName()
+		if contactName == "" && contactEmail != nil && utils.StringFirstNonEmpty(contactEmail.RawEmail) != "" {
 			contactName = contactEmail.RawEmail
 		}
 

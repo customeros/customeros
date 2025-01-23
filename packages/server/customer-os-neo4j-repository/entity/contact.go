@@ -26,7 +26,6 @@ const (
 	ContactPropertyUpdateWithWorkEmailRequestedAt              ContactProperty = "techUpdateWithWorkEmailRequestedAt"
 	ContactPropertyCheckedAt                                   ContactProperty = "techCheckedAt"
 	ContactPropertyPrefix                                      ContactProperty = "prefix"
-	ContactPropertyName                                        ContactProperty = "name"
 	ContactPropertyFirstName                                   ContactProperty = "firstName"
 	ContactPropertyLastName                                    ContactProperty = "lastName"
 	ContactPropertyDescription                                 ContactProperty = "description"
@@ -47,7 +46,6 @@ type ContactEntity struct {
 	AppSource string
 
 	Prefix          string `neo4jDb:"property:prefix;lookupName:PREFIX;supportCaseSensitive:true"`
-	Name            string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
 	FirstName       string `neo4jDb:"property:firstName;lookupName:FIRST_NAME;supportCaseSensitive:true"`
 	LastName        string `neo4jDb:"property:lastName;lookupName:LAST_NAME;supportCaseSensitive:true"`
 	Description     string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
@@ -109,39 +107,20 @@ func (c ContactEntity) Labels(tenant string) []string {
 	return []string{c.EntityLabel(), c.EntityLabel() + "_" + tenant}
 }
 
-func (c ContactEntity) DeriveFirstAndLastNames() (string, string) {
-	firstName := strings.TrimSpace(c.FirstName)
-	lastName := strings.TrimSpace(c.LastName)
-	name := strings.TrimSpace(c.Name)
-	if (firstName == "" || lastName == "") && name != "" {
-		parts := strings.Split(name, " ")
-		if firstName == "" {
-			firstName = parts[0]
-		}
-		if lastName == "" && len(parts) > 1 {
-			lastName = strings.Join(parts[1:], " ")
-		}
-	}
-
-	if firstName != "" && lastName == "" {
-		parts := strings.Split(firstName, " ")
-		if len(parts) > 1 {
-			firstName = parts[0]
-			lastName = strings.Join(parts[1:], " ")
-		}
-	}
-
-	if firstName == "" && lastName != "" {
-		parts := strings.Split(lastName, " ")
-		if len(parts) > 1 {
-			firstName = parts[0]
-			lastName = strings.Join(parts[1:], " ")
-		}
-	}
-
-	return firstName, lastName
-}
-
 func (c ContactEntity) IsHidden() bool {
 	return c.Hide
+}
+
+func (c ContactEntity) FullName() string {
+	first := strings.TrimSpace(c.FirstName)
+	last := strings.TrimSpace(c.LastName)
+
+	if first != "" && last != "" {
+		return first + " " + last
+	} else if first != "" {
+		return first
+	} else if last != "" {
+		return last
+	}
+	return ""
 }
