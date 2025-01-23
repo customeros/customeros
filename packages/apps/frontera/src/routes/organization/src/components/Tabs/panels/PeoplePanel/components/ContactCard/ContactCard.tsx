@@ -146,7 +146,7 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
         <CardHeader style={{ paddingBottom: !isExpanded ? '0' : '8px' }}>
           <div className='flex items-center justify-between w-full'>
             <div className='flex items-center w-full'>
-              <div title='cacat'>
+              <div>
                 <Avatar
                   size='sm'
                   textSize='sm'
