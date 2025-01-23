@@ -434,9 +434,9 @@ func (r *dashboardV2Repository) GetDashboardViewOrganizationDataV2(ctx context.C
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsOwner) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += `CASE WHEN (COALESCE(u.name, '') + COALESCE(u.firstName, '') + COALESCE(u.lastName, '')) <> '' THEN toLower(trim(COALESCE(u.name, '') + COALESCE(u.firstName, '') + COALESCE(u.lastName, ''))) ELSE '𠀀' END as SORT_BY `
+			aliases += `CASE WHEN (COALESCE(u.firstName, '') + COALESCE(u.lastName, '')) <> '' THEN toLower(trim(COALESCE(u.firstName, '') + COALESCE(u.lastName, ''))) ELSE '𠀀' END as SORT_BY `
 		} else {
-			aliases += `CASE WHEN (COALESCE(u.name, '') + COALESCE(u.firstName, '') + COALESCE(u.lastName, '')) <> '' THEN toLower(trim(COALESCE(u.name, '') + COALESCE(u.firstName, '') + COALESCE(u.lastName, ''))) ELSE '' END as SORT_BY `
+			aliases += `CASE WHEN (COALESCE(u.firstName, '') + COALESCE(u.lastName, '')) <> '' THEN toLower(trim(COALESCE(u.firstName, '') + COALESCE(u.lastName, ''))) ELSE '' END as SORT_BY `
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeOrganizationsLastTouchpoint) {
@@ -1313,9 +1313,9 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsName) {
 		if sort.Direction == commonmodel.SortingDirectionAsc {
-			aliases += `CASE WHEN (COALESCE(c.name, '') + COALESCE(c.firstName, '') + COALESCE(c.lastName, '')) <> '' THEN toLower(trim(COALESCE(c.name, '') + COALESCE(c.firstName, '') + COALESCE(c.lastName, ''))) ELSE '𠀀' END as SORT_BY `
+			aliases += `CASE WHEN (COALESCE(c.firstName, '') + COALESCE(c.lastName, '')) <> '' THEN toLower(trim(COALESCE(c.firstName, '') + COALESCE(c.lastName, ''))) ELSE '𠀀' END as SORT_BY `
 		} else {
-			aliases += `CASE WHEN (COALESCE(c.name, '') + COALESCE(c.firstName, '') + COALESCE(c.lastName, '')) <> '' THEN toLower(trim(COALESCE(c.name, '') + COALESCE(c.firstName, '') + COALESCE(c.lastName, ''))) ELSE '' END as SORT_BY `
+			aliases += `CASE WHEN (COALESCE(c.firstName, '') + COALESCE(c.lastName, '')) <> '' THEN toLower(trim(COALESCE(c.firstName, '') + COALESCE(c.lastName, ''))) ELSE '' END as SORT_BY `
 		}
 	}
 	if sort != nil && sort.By == string(postgresEntity.ColumnViewTypeContactsPrimaryEmail) {

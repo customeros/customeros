@@ -353,7 +353,6 @@ func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *test
 
 	contactFoundByFirstName := neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 		Prefix:    "MR",
-		Name:      "contact1",
 		FirstName: "aa",
 		LastName:  "bb",
 	})

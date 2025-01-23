@@ -21,11 +21,11 @@ func TestQueryResolver_UIContactsSearch_FilterByName(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "", LastName: "", Name: ""})
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "AAA", LastName: "BBB", Name: ""})
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "ccc", LastName: "aaa", Name: ""})
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "ccc", LastName: "ddd", Name: "--Aa--"})
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "ccc", LastName: "ddd", Name: "eee"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "", LastName: ""})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "AAA", LastName: "BBB"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "ccc", LastName: "aaa"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "ccc", LastName: "ddd"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{FirstName: "ccc", LastName: "ddd2"})
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelContact))
 
@@ -34,8 +34,8 @@ func TestQueryResolver_UIContactsSearch_FilterByName(t *testing.T) {
 
 	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsEmpty, 5, 1)
 	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorIsNotEmpty, 5, 4)
-	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorContains, 5, 3)
-	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorNotContains, 5, 2)
+	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorContains, 5, 2)
+	assertContactSearch(t, searchBy, searchTerm, commonModel.ComparisonOperatorNotContains, 5, 3)
 }
 
 func TestQueryResolver_UIContactsSearch_SortByName(t *testing.T) {
@@ -44,16 +44,16 @@ func TestQueryResolver_UIContactsSearch_SortByName(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty", FirstName: "", LastName: "", Name: ""})
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "B1-AB1", Name: "B1", FirstName: "AB1", LastName: ""})
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "A1", Name: "", FirstName: "", LastName: "A1"})
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "B1-AB2", Name: "B1", FirstName: "", LastName: "AB2"})
-	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "A2", Name: "A2", FirstName: "", LastName: ""})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "empty", FirstName: "", LastName: ""})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "B1-AB1", FirstName: "AB1", LastName: ""})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "A1", FirstName: "", LastName: "A1"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "B1-AB2", FirstName: "", LastName: "AB2"})
+	neo4jtest.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{Id: "A2", FirstName: "", LastName: "A0"})
 
 	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, commonModel.NodeLabelContact))
 
-	expectedAsc := []string{"A1", "A2", "B1-AB1", "B1-AB2", "empty"}
-	expectedDesc := []string{"B1-AB2", "B1-AB1", "A2", "A1", "empty"}
+	expectedAsc := []string{"A2", "A1", "B1-AB1", "B1-AB2", "empty"}
+	expectedDesc := []string{"B1-AB2", "B1-AB1", "A1", "A2", "empty"}
 
 	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsName, commonModel.SortingDirectionAsc, expectedAsc)
 	verifyContactSortOrder(t, postgresEntity.ColumnViewTypeContactsName, commonModel.SortingDirectionDesc, expectedDesc)
