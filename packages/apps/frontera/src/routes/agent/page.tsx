@@ -69,7 +69,7 @@ export const AgentPage = observer(() => {
                   <p>{capability.name}</p>
                 </div>
 
-                {capability.values.length && (
+                {capability.values.length > 0 && (
                   <Settings02 className='text-grayModern-500' />
                 )}
               </div>

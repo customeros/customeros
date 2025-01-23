@@ -3,10 +3,10 @@ import { Link, useParams } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 
 import { Radar } from '@ui/media/icons/Radar';
-import { IconButton } from '@ui/form/IconButton';
+// import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
-import { DotsVertical } from '@ui/media/icons/DotsVertical';
+// import { DotsVertical } from '@ui/media/icons/DotsVertical';
 
 export const Header = observer(() => {
   const { id } = useParams<{ id: string }>();
@@ -34,12 +34,12 @@ export const Header = observer(() => {
           </div>
           <div className='flex items-center gap-1'>
             <p className='text-md font-medium'>{agent?.value.name}</p>
-            <IconButton
+            {/* <IconButton
               size='xxs'
               variant='ghost'
               icon={<DotsVertical />}
               aria-label='agent options'
-            />
+            /> */}
           </div>
         </div>
       </div>
