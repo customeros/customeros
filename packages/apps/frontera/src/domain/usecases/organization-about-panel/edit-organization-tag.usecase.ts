@@ -4,14 +4,7 @@ import { TagService, OrganizationService } from '@domain/services';
 
 import { EntityType } from '@graphql/types';
 import { SelectOption } from '@ui/utils/types.ts';
-
-const extractUUID = (path: string): string | null => {
-  const match = path.match(
-    /\/organization\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:\/|$)/i,
-  );
-
-  return match ? match[1] : null;
-};
+import { getOrganizationUUID } from '@utils/getOrganizationUUID.ts';
 
 export class EditOrganizationTagUsecase {
   @observable public accessor searchTerm = '';
@@ -41,7 +34,7 @@ export class EditOrganizationTagUsecase {
 
   @computed
   get organization() {
-    const uuid = extractUUID(window.location.pathname);
+    const uuid = getOrganizationUUID(window.location.pathname);
 
     if (!uuid) {
       console.error('Invalid usage of EditOrganizationTagUsecase');
