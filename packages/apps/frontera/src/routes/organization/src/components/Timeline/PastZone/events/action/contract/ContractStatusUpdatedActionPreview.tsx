@@ -2,8 +2,7 @@ import { useMemo } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { Action } from '@graphql/types';
-import { File02 } from '@ui/media/icons/File02';
-import { Card, CardFooter, CardContent } from '@ui/presentation/Card/Card';
+import { Card, CardContent } from '@ui/presentation/Card/Card';
 import { getMetadata } from '@organization/components/Timeline/PastZone/events/action/utils';
 import { iconsByStatus } from '@organization/components/Timeline/PastZone/events/action/contract/utils';
 import { TimelineEventPreviewHeader } from '@organization/components/Timeline/shared/TimelineEventPreview/header/TimelineEventPreviewHeader';
@@ -63,14 +62,6 @@ export const ContractStatusUpdatedActionPreview = () => {
             </span>
           </p>
         </CardContent>
-        {metadata?.comment && (
-          <CardFooter className='flex p-0 pt-3 mt-4 items-center border-t border-gray-200'>
-            <File02 className='text-gray-400' />
-            <p className='max-w-[500px] line-clamp-2 ml-2 text-sm text-gray-500'>
-              {metadata.content}
-            </p>
-          </CardFooter>
-        )}
       </Card>
     </>
   );
