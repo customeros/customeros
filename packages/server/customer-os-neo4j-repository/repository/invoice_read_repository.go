@@ -183,10 +183,6 @@ func (r *invoiceReadRepository) GetInvoiceById(ctx context.Context, tx *neo4j.Ma
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	if len(result.([]*dbtype.Node)) == 0 {
-		span.LogFields(log.Bool("result.found", false))
-		return nil, nil
-	}
 	span.LogFields(log.Bool("result.found", result != nil))
 	return result.(*dbtype.Node), nil
 }
