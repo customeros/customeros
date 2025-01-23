@@ -329,6 +329,80 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, id string, ginCont
 	return byId, nil
 }
 
+func (s *fileService) GetFileBytes(ctx context.Context, attachmentId string) (*[]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.DownloadSingleFile")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.String("attachmentId", attachmentId))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	attachment, err := s.attachmentService.GetById(ctx, attachmentId)
+	byId := MapAttachmentResponseToFileEntity(attachment)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
+		return nil, err
+	}
+	tracing.LogObjectAsJson(span, "attachment", attachment)
+
+	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating aws session"))
+		log.Error(err)
+		return nil, err
+	}
+
+	svc := s3.New(session)
+
+	extension := filepath.Ext(attachment.FileName)
+	if extension == "" {
+		tracing.TraceErr(span, errors.New("No file extension found"))
+		fmt.Println("No file extension found.")
+	} else {
+		extension = extension[1:]
+		fmt.Println("File Extension:", extension)
+	}
+
+	// Get the object metadata to determine the file size and ETag
+	bucket := s.cfg.AWS.Bucket
+	key := tenant + byId.BasePath + "/" + attachment.Id + "." + extension
+	span.LogFields(log.String("bucket", bucket), log.String("key", key))
+	respHead, err := svc.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting object metadata"))
+		return nil, err
+	}
+
+	// Parse the range header
+	start := int64(0)
+	end := *respHead.ContentLength - 1
+
+	resp, err := svc.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(s.cfg.AWS.Bucket),
+		Key:    aws.String(tenant + byId.BasePath + "/" + attachment.Id + "." + extension),
+		Range:  aws.String("bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end, 10)),
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting object"))
+		// Handle error
+		s.log.Errorf("Error getting object: %v", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+	// get file bytes
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error reading file bytes"))
+		return nil, err
+	}
+
+	return &data, nil
+}
+
 func (s *fileService) Base64Image(ctx context.Context, id string) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.Base64Image")
 	defer span.Finish()
@@ -558,26 +632,6 @@ func (s *fileService) GetFilePublicUrl(ctx context.Context, fileId string) (stri
 	}
 
 	return publicUrl, nil
-}
-
-func (s *fileService) GetFileBytes(ctx context.Context, fileURL string) (*[]byte, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.GetFileBytes")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("fileURL", fileURL))
-
-	resp, err := http.Get(fileURL)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return &data, nil
 }
 
 func (s *fileService) UploadSingleFileBytesDirect(ctx context.Context, basePath, fileID, fileName string, content *[]byte, cdn bool) (*interfaces.File, error) {

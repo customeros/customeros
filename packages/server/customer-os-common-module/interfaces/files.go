@@ -9,12 +9,15 @@ import (
 
 type FileService interface {
 	GetById(ctx context.Context, id string) (*File, error)
+	// Deprecated
 	UploadSingleFile(ctx context.Context, basePath, fileId string, multipartFileHeader *multipart.FileHeader, cdnUpload bool) (*File, error)
+	// Deprecated
 	DownloadSingleFile(ctx context.Context, id string, context *gin.Context, inline bool) (*File, error)
+	// Deprecated
 	Base64Image(ctx context.Context, id string) (*string, error)
 	GetFilePublicUrl(ctx context.Context, id string) (string, error)
-	GetFileBytes(ctx context.Context, fileURL string) (*[]byte, error)
 	UploadSingleFileBytesDirect(ctx context.Context, basePath, fileID, fileName string, content *[]byte, cdn bool) (*File, error)
+	GetFileBytes(ctx context.Context, id string) (*[]byte, error)
 }
 
 type File struct {
