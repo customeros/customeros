@@ -20,7 +20,10 @@ export const useColumnSizing = (
         | ((prev: ColumnSizingState) => ColumnSizingState),
     ) => {
       const update = typeof updater === 'function' ? updater({}) : updater;
-      const [columnId, width] = Object.entries(update)[0];
+      const entries = Object.entries(update);
+
+      if (!entries.length) return;
+      const [columnId, width] = entries[0];
 
       let columnSettings = columnCache.get(columnId);
 
