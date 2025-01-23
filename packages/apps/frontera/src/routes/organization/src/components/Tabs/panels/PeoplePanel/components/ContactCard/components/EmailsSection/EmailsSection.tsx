@@ -25,13 +25,9 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
 
   const orgName = contactStore?.value.primaryOrganizationName;
 
-  const isPrimaryEmail = contactStore?.value.emails.some(
-    (email) => email.primary,
-  );
-
   const allEmails = contactStore?.value.emails || [];
-  const enrichedContact = contactStore?.emailEnriching;
-  const isEnrichingEmail = enrichedContact && !isPrimaryEmail;
+  const enrichedEmail = contactStore?.emailEnriching;
+  const isEnrichingEmail = enrichedEmail;
 
   return (
     <div>
@@ -106,6 +102,13 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                   )}
                 </div>
                 <div className='flex items-center gap-2'>
+                  {isEnrichingEmail && idx === 0 && (
+                    <Spinner
+                      size='sm'
+                      label='finding email'
+                      className='text-gray-400 fill-gray-700 mr-2'
+                    />
+                  )}
                   {email && (
                     <EmailValidationMessage
                       email={email?.email || ''}
