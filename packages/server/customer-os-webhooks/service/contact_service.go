@@ -192,28 +192,30 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			createContact = false
 		}
 		if createContact {
-			contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil, nil,
-				data_fields.ContactFields{
-					Name:            utils.StringPtr(contactInput.Name),
-					FirstName:       utils.StringPtr(contactInput.FirstName),
-					LastName:        utils.StringPtr(contactInput.LastName),
-					Description:     utils.StringPtr(contactInput.Description),
-					Timezone:        utils.StringPtr(contactInput.Timezone),
-					ProfilePhotoUrl: utils.StringPtr(contactInput.ProfilePhotoUrl),
-					CreatedAt:       contactInput.CreatedAt,
-					Source:          utils.StringPtr(contactInput.ExternalSystem),
-					AppSource:       utils.StringPtr(appSource),
-					ExternalSystem: &neo4jmodel.ExternalSystem{
-						ExternalSystemId: contactInput.ExternalSystem,
-						ExternalId:       contactInput.ExternalId,
-						ExternalUrl:      contactInput.ExternalUrl,
-						ExternalIdSecond: contactInput.ExternalIdSecond,
-						ExternalSource:   contactInput.ExternalSourceEntity,
-						SyncDate:         &syncDate,
-					},
+			dataFields := data_fields.ContactFields{
+				FirstName:       utils.StringPtr(contactInput.FirstName),
+				LastName:        utils.StringPtr(contactInput.LastName),
+				Description:     utils.StringPtr(contactInput.Description),
+				Timezone:        utils.StringPtr(contactInput.Timezone),
+				ProfilePhotoUrl: utils.StringPtr(contactInput.ProfilePhotoUrl),
+				CreatedAt:       contactInput.CreatedAt,
+				Source:          utils.StringPtr(contactInput.ExternalSystem),
+				AppSource:       utils.StringPtr(appSource),
+				ExternalSystem: &neo4jmodel.ExternalSystem{
+					ExternalSystemId: contactInput.ExternalSystem,
+					ExternalId:       contactInput.ExternalId,
+					ExternalUrl:      contactInput.ExternalUrl,
+					ExternalIdSecond: contactInput.ExternalIdSecond,
+					ExternalSource:   contactInput.ExternalSourceEntity,
+					SyncDate:         &syncDate,
 				},
-				true,
-			)
+			}
+			if contactInput.FirstName == "" && contactInput.LastName == "" && contactInput.Name != "" {
+				first, last := utils.SplitFullName(contactInput.Name)
+				dataFields.FirstName = utils.StringPtr(first)
+				dataFields.LastName = utils.StringPtr(last)
+			}
+			contactId, err = s.services.CommonServices.ContactService.Save(ctx, nil, nil, dataFields, true)
 			if err != nil {
 				failedSync = true
 				tracing.TraceErr(span, err)
@@ -235,14 +237,16 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				Source:    utils.StringPtr(contactInput.ExternalSystem),
 				AppSource: utils.StringPtr(appSource),
 			}
-			if contactEntity.Name == "" && contactInput.Name != "" {
-				contactFields.Name = utils.StringPtr(contactInput.Name)
-			}
 			if contactEntity.FirstName == "" && contactInput.FirstName != "" {
 				contactFields.FirstName = utils.StringPtr(contactInput.FirstName)
 			}
 			if contactEntity.LastName == "" && contactInput.LastName != "" {
 				contactFields.LastName = utils.StringPtr(contactInput.LastName)
+			}
+			if contactEntity.FirstName == "" && contactEntity.LastName == "" && contactInput.Name != "" {
+				first, last := utils.SplitFullName(contactInput.Name)
+				contactFields.FirstName = utils.StringPtr(first)
+				contactFields.LastName = utils.StringPtr(last)
 			}
 			if contactEntity.Description == "" && contactInput.Description != "" {
 				contactFields.Description = utils.StringPtr(contactInput.Description)
