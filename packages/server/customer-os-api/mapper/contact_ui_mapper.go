@@ -20,7 +20,7 @@ func MapEntityToContactUIDetails(entity *neo4jentity.ContactEntity, output *mode
 	output.Hide = entity.Hide
 	output.FirstName = entity.FirstName
 	output.LastName = entity.LastName
-	output.Name = entity.Name
+	output.Name = entity.FullName()
 	output.Prefix = entity.Prefix
 	output.Description = entity.Description
 	output.Timezone = entity.Timezone

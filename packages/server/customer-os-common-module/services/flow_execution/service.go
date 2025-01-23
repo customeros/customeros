@@ -1135,9 +1135,8 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 					contact := mapper.MapDbNodeToContactEntity(contactNode)
 
-					firstName, lastName := contact.DeriveFirstAndLastNames()
-					bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "contact_first_name", firstName)
-					bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "contact_last_name", lastName)
+					bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "contact_first_name", contact.FirstName)
+					bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "contact_last_name", contact.LastName)
 					bodyTemplate = s.ReplacePlaceholder(bodyTemplate, "contact_email", toEmail)
 
 					contactWithOrganizations, err := s.org.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, []string{contact.Id})

@@ -8,8 +8,8 @@ type ContactUiDetails {
     createdAt:              Time!
     updatedAt:              Time!
     hide:                   Boolean!
-    firstName:              String!
-    lastName:               String!
+    firstName:              String! @deprecated(reason: "Use `name` instead")
+    lastName:               String! @deprecated(reason: "Use `name` instead")
     name:                   String!
     prefix:                 String!
     description:            String!

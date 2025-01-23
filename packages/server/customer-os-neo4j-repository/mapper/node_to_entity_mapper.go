@@ -934,7 +934,6 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *neo4j_entity.ContactEntity {
 		Id:              utils.GetStringPropOrEmpty(props, "id"),
 		FirstName:       utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyFirstName)),
 		LastName:        utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyLastName)),
-		Name:            utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyName)),
 		Description:     utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyDescription)),
 		Timezone:        utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyTimezone)),
 		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, string(neo4j_entity.ContactPropertyProfilePhotoUrl)),

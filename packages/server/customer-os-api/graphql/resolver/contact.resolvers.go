@@ -885,9 +885,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	}
 
 	// Call events platform to find work email
-	firstName, lastName := contactEntity.DeriveFirstAndLastNames()
-
-	_, betterComtactRequestID, enrichmentResponse, err := r.Services.CommonServices.EnrichmentService.FindWorkEmail(ctx, linkedInUrl, firstName, lastName, orgName, utils.IfNotNilString(domain), false)
+	_, betterComtactRequestID, enrichmentResponse, err := r.Services.CommonServices.EnrichmentService.FindWorkEmail(ctx, linkedInUrl, contactEntity.FirstName, contactEntity.LastName, orgName, utils.IfNotNilString(domain), false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to find work email for contact %s", contactID)
@@ -1009,7 +1007,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		_, err = r.Services.Repositories.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, common.GetTenantFromContext(ctx), postgresentity.BillableEventEnrichPersonEmailFound,
 			postgresrepository.BillableEventDetails{
 				ExternalID:    betterComtactRequestID,
-				ReferenceData: fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emailsToCreateAndLinkWithContact[0], linkedInUrl, firstName, lastName),
+				ReferenceData: fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emailsToCreateAndLinkWithContact[0], linkedInUrl, contactEntity.FirstName, contactEntity.LastName),
 			})
 		if err != nil {
 			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
@@ -1019,7 +1017,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		_, err = r.Services.Repositories.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, common.GetTenantFromContext(ctx), postgresentity.BillableEventEnrichPersonPhoneFound,
 			postgresrepository.BillableEventDetails{
 				ExternalID:    betterComtactRequestID,
-				ReferenceData: fmt.Sprintf("Phone: %s, LinkedIn: %s, FirstName: %s, LastName: %s", phoneNumbers[0], linkedInUrl, firstName, lastName),
+				ReferenceData: fmt.Sprintf("Phone: %s, LinkedIn: %s, FirstName: %s, LastName: %s", phoneNumbers[0], linkedInUrl, contactEntity.FirstName, contactEntity.LastName),
 			})
 		if err != nil {
 			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))

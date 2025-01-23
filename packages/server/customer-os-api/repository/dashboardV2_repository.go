@@ -849,7 +849,6 @@ func (r *dashboardV2Repository) GetDashboardViewContactDataV2(ctx context.Contex
 				innerGroupFilter.Filters = make([]*utils.CypherFilter, 0)
 				innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.ContactPropertyFirstName), filter.Filter.Value.Str, filter.Filter.Operation))
 				innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.ContactPropertyLastName), filter.Filter.Value.Str, filter.Filter.Operation))
-				innerGroupFilter.Filters = append(innerGroupFilter.Filters, utils.CreateStringCypherFilter(string(neo4jentity.ContactPropertyName), filter.Filter.Value.Str, filter.Filter.Operation))
 				contactFilter.Filters = append(contactFilter.Filters, innerGroupFilter)
 			}
 			if filter.Filter.Property == string(postgresEntity.ColumnViewTypeContactsPrimaryEmail) {

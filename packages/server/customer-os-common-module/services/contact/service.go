@@ -180,9 +180,6 @@ func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 
 	// Clean and update contact names if not updated manually
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-		if contactFields.Name != nil {
-			contactFields.Name = utils.StringPtr(utils.CleanName(*contactFields.Name))
-		}
 		if contactFields.FirstName != nil {
 			contactFields.FirstName = utils.StringPtr(utils.CleanName(*contactFields.FirstName))
 		}

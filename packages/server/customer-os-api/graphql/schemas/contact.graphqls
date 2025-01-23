@@ -55,32 +55,12 @@ A contact represents an individual in customerOS.
 """
 type Contact implements MetadataInterface & Node {
     metadata: Metadata!
-    """
-    Deprecated, use metadata instead
-    """
-    id: ID! @deprecated(reason: "Use `metadata.id` instead")
-
-    """
-    Deprecated
-    """
-    title: String @deprecated(reason: "Use `prefix` instead")
-
-    prefix: String
-
-    """
-    The name of the contact in customerOS, alternative for firstName + lastName.
-    """
-    name: String
-
-    """
-    The first name of the contact in customerOS.
-    """
-    firstName: String
-
-    """
-    The last name of the contact in customerOS.
-    """
-    lastName:           String
+    id:                 ID! @deprecated(reason: "Use `metadata.id` instead")
+    title:              String @deprecated(reason: "Use `prefix` instead")
+    prefix:             String
+    name:               String
+    firstName:          String @deprecated(reason: "Use `name` instead")
+    lastName:           String @deprecated(reason: "Use `name` instead")
     username:           String
     description:        String
     timezone:           String
@@ -204,24 +184,10 @@ Create an individual in customerOS.
 **A `create` object.**
 """
 input ContactInput {
-
-    """
-    Deprecated
-    """
-    templateId: ID  @deprecated(reason: "Not supported")
-
-    "The prefix of the contact."
-    prefix: String
-
-    """
-    The first name of the contact.
-    """
-    firstName: String
-
-    """
-    The last name of the contact.
-    """
-    lastName:           String
+    templateId:         ID  @deprecated(reason: "Not supported")
+    prefix:             String
+    firstName:          String @deprecated(reason: "Use `name` instead")
+    lastName:           String @deprecated(reason: "Use `name` instead")
     name:               String
     description:        String
     timezone:           String
@@ -256,22 +222,12 @@ input ContactInput {
 }
 
 input CustomerContactInput {
-
-    "The prefix of the contact."
-    prefix: String
-
-    """
-    The first name of the contact.
-    """
-    firstName: String
-
-    """
-    The last name of the contact.
-    """
-    lastName: String
-    name: String
-    description: String
-    timezone: String
+    prefix:         String
+    firstName:      String @deprecated(reason: "Use `name` instead")
+    lastName:       String @deprecated(reason: "Use `name` instead")
+    name:           String
+    description:    String
+    timezone:       String
 
     "An email addresses associted with the contact."
     email: EmailInput
@@ -291,8 +247,8 @@ Updates data fields associated with an existing customer record in customerOS.
 input ContactUpdateInput {
     id:                 ID!
     patch:              Boolean
-    firstName:          String
-    lastName:           String
+    firstName:          String @deprecated(reason: "Use `name` instead")
+    lastName:           String @deprecated(reason: "Use `name` instead")
     name:               String
     prefix:             String
     description:        String

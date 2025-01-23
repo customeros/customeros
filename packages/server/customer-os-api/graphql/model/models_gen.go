@@ -371,23 +371,18 @@ type Comment struct {
 // A contact represents an individual in customerOS.
 // **A `response` object.**
 type Contact struct {
-	Metadata *Metadata `json:"metadata"`
-	// Deprecated, use metadata instead
-	ID string `json:"id"`
-	// Deprecated
-	Title  *string `json:"title,omitempty"`
-	Prefix *string `json:"prefix,omitempty"`
-	// The name of the contact in customerOS, alternative for firstName + lastName.
-	Name *string `json:"name,omitempty"`
-	// The first name of the contact in customerOS.
-	FirstName *string `json:"firstName,omitempty"`
-	// The last name of the contact in customerOS.
-	LastName        *string `json:"lastName,omitempty"`
-	Username        *string `json:"username,omitempty"`
-	Description     *string `json:"description,omitempty"`
-	Timezone        *string `json:"timezone,omitempty"`
-	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
-	Hide            *bool   `json:"hide,omitempty"`
+	Metadata        *Metadata `json:"metadata"`
+	ID              string    `json:"id"`
+	Title           *string   `json:"title,omitempty"`
+	Prefix          *string   `json:"prefix,omitempty"`
+	Name            *string   `json:"name,omitempty"`
+	FirstName       *string   `json:"firstName,omitempty"`
+	LastName        *string   `json:"lastName,omitempty"`
+	Username        *string   `json:"username,omitempty"`
+	Description     *string   `json:"description,omitempty"`
+	Timezone        *string   `json:"timezone,omitempty"`
+	ProfilePhotoURL *string   `json:"profilePhotoUrl,omitempty"`
+	Hide            *bool     `json:"hide,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	// **Required**
 	CreatedAt time.Time `json:"createdAt"`
@@ -435,13 +430,9 @@ func (this Contact) GetID() string { return this.ID }
 // Create an individual in customerOS.
 // **A `create` object.**
 type ContactInput struct {
-	// Deprecated
-	TemplateID *string `json:"templateId,omitempty"`
-	// The prefix of the contact.
-	Prefix *string `json:"prefix,omitempty"`
-	// The first name of the contact.
-	FirstName *string `json:"firstName,omitempty"`
-	// The last name of the contact.
+	TemplateID      *string `json:"templateId,omitempty"`
+	Prefix          *string `json:"prefix,omitempty"`
+	FirstName       *string `json:"firstName,omitempty"`
 	LastName        *string `json:"lastName,omitempty"`
 	Name            *string `json:"name,omitempty"`
 	Description     *string `json:"description,omitempty"`
@@ -874,11 +865,8 @@ type CustomerContact struct {
 }
 
 type CustomerContactInput struct {
-	// The prefix of the contact.
-	Prefix *string `json:"prefix,omitempty"`
-	// The first name of the contact.
-	FirstName *string `json:"firstName,omitempty"`
-	// The last name of the contact.
+	Prefix      *string `json:"prefix,omitempty"`
+	FirstName   *string `json:"firstName,omitempty"`
 	LastName    *string `json:"lastName,omitempty"`
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`

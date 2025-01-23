@@ -3,10 +3,10 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -65,10 +65,6 @@ func (r *contactWriteRepository) SaveContactInTx(ctx context.Context, tx *neo4j.
 		if data.LastName != nil {
 			cypher += ", c.lastName = CASE WHEN $updateOnlyIfEmpty = false OR c.lastName is null OR c.lastName = '' THEN $lastName ELSE c.lastName END"
 			params["lastName"] = *data.LastName
-		}
-		if data.Name != nil {
-			cypher += ", c.name = CASE WHEN $updateOnlyIfEmpty = false OR c.name is null OR c.name = '' THEN $name ELSE c.name END"
-			params["name"] = *data.Name
 		}
 		if data.Prefix != nil {
 			cypher += ", c.prefix = CASE WHEN $updateOnlyIfEmpty = false OR c.prefix is null OR c.prefix = '' THEN $prefix ELSE c.prefix END"

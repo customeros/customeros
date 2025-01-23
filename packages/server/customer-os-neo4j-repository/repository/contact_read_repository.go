@@ -606,7 +606,6 @@ func (r *contactReadRepository) GetContactsWithEmailForNameUpdate(ctx context.Co
 					(c.hide IS NULL OR c.hide = false) AND
 					(c.firstName IS NULL OR c.firstName = '') AND
 					(c.lastName IS NULL OR c.lastName = '') AND
-					(c.name IS NULL OR c.name = '') AND
 					e.email IS NOT NULL AND 
 					e.email <> '' AND 
 					c.updatedAt < datetime() - duration({minutes: 3})
