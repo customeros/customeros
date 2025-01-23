@@ -10,7 +10,7 @@ export const IndustryCell = ({
   if (!value)
     return (
       <p className='text-gray-400'>
-        {enrichingStatus ? 'Enriching...' : 'Not set'}
+        {enrichingStatus ? 'Enriching...' : 'Not found yet'}
       </p>
     );
 
