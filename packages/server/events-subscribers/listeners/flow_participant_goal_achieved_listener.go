@@ -127,7 +127,7 @@ func Handle_FlowParticipantGoalAchieved(ctx context.Context, dependencies *model
 		}
 
 		// slack notification
-		slackChannel, err := dependencies.PostgresRepositories.SlackChannelNotificationRepository.GetSlackChannel(ctx, message.Event.Tenant, postgresEntity.SlackChannelNotificationWorkflowMailstackReply)
+		slackChannel, err := dependencies.PostgresRepositories.SlackChannelNotificationRepository.GetSlackChannel(ctx, postgresEntity.SlackChannelNotificationWorkflowMailstackReply)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
