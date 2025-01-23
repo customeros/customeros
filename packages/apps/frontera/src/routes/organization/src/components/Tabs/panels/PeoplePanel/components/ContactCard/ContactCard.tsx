@@ -241,7 +241,7 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                         <Spinner
                           size='sm'
                           label='finding email'
-                          className='text-gray-400 fill-gray-700 mr-2'
+                          className='text-gray-400 fill-gray-700 mr-2 group-hover/card:opacity-100 opacity-0'
                         />
                       </Tooltip>
                     )}
@@ -306,11 +306,11 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
 
             <div className='flex items-center  max-h-6 group/linkedin'>
               <Linkedin className='text-gray-500 mr-4' />
-              <div className='flex items-start justify-between w-full'>
+              <div className='flex items-center w-full'>
                 {linkedInProfile ? (
                   <span
                     className={cn(
-                      'text-sm cursor-pointer w-[300px] truncate no-underline hover:no-underline',
+                      'text-sm cursor-pointer max-w-[300px] truncate no-underline hover:no-underline',
                     )}
                     onClick={() =>
                       copyToClipboard(
@@ -319,14 +319,17 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                       )
                     }
                   >
-                    {contactStore.value.linkedInAlias ?? formattedLink}
+                    {contactStore.value.linkedInAlias &&
+                    contactStore.value.linkedInAlias?.length > 1
+                      ? contactStore.value.linkedInAlias
+                      : formattedLink}
                   </span>
                 ) : (
                   <span
                     onClick={() => onOpen()}
                     data-test='org-people-linkedin'
                     className={cn(
-                      'text-sm cursor-pointer w-[300px] truncate no-underline hover:no-underline',
+                      'text-sm cursor-pointer max-w-[300px] truncate no-underline hover:no-underline',
                       'text-gray-400',
                     )}
                   >
@@ -339,7 +342,7 @@ export const ContactCard = observer(({ id, expandAll }: ContactCardProps) => {
                     variant='ghost'
                     colorScheme='gray'
                     aria-label='social link'
-                    className='hover:bg-gray-200  '
+                    className='hover:bg-gray-200 ml-2'
                     icon={<LinkExternal02 className='text-gray-500' />}
                     onClick={() =>
                       window.open(linkedInProfile, '_blank', 'noopener')

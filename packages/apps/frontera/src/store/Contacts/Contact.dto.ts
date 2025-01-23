@@ -42,7 +42,7 @@ export class Contact extends Entity<ContactDatum> {
     return (
       this.value.enrichedEmailRequestedAt &&
       !this.value.enrichedEmailEnrichedAt &&
-      !this.value.enrichedFailedAt
+      !this.value.enrichedEmailFound
     );
   }
 

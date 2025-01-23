@@ -1,5 +1,3 @@
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-
 export const IndustryCell = ({
   value,
   enrichingStatus,
@@ -15,8 +13,8 @@ export const IndustryCell = ({
     );
 
   return (
-    <Tooltip label={value}>
-      <p className='text-gray-700 cursor-default truncate'>{value}</p>
-    </Tooltip>
+    <p title={value} className='text-gray-700 cursor-default truncate'>
+      {value}
+    </p>
   );
 };
