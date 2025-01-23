@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/novu"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/postmark"
@@ -20,18 +22,15 @@ import (
 	"github.com/pkg/errors"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
-
-	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/config"
-	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/tracing"
 )
 
-func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, payload *InvoicePayload, postgresRepositories *postgresRepository.Repositories, cfg config.Config) error {
+func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, payload *InvoicePayload, postgresRepositories *postgresRepository.Repositories, cfg config.ExternalServicesConfig) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "DispatchWebhook")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("webhookEvent", event.String()))
 
-	if !cfg.CommonServices.External.TemporalConfig.RunWorker {
+	if !cfg.TemporalConfig.RunWorker {
 		err := errors.New("temporal worker is not running")
 		tracing.TraceErr(span, err)
 		return err
@@ -63,8 +62,8 @@ func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, pay
 	}
 	// Start Temporal Client to queue webhook workflow
 	tClient, err := temporal_client.TemporalClient(
-		cfg.CommonServices.External.TemporalConfig.HostPort,
-		cfg.CommonServices.External.TemporalConfig.Namespace)
+		cfg.TemporalConfig.HostPort,
+		cfg.TemporalConfig.Namespace)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return fmt.Errorf("error creating Temporal client: %v", err)
@@ -86,7 +85,7 @@ func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, pay
 	}
 
 	var notification *interfaces.NovuNotification
-	if cfg.CommonServices.External.TemporalConfig.NotifyOnFailure {
+	if cfg.TemporalConfig.NotifyOnFailure {
 		notification = populateNotification(tenant, event.String(), wh)
 	}
 	notificationJSON, err := json.Marshal(notification)
@@ -101,9 +100,9 @@ func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, pay
 		AuthHeaderValue:            wh.AuthHeaderValue,
 		RetryPolicy:                retryPolicy,
 		Notification:               string(notificationJSON),
-		NotificationProviderApiKey: cfg.CommonServices.External.NovuConfig.ApiKey,
-		NotifyFailure:              cfg.CommonServices.External.TemporalConfig.NotifyOnFailure,
-		NotifyAfterAttempts:        cfg.CommonServices.External.TemporalConfig.NotifyAfterAttempts,
+		NotificationProviderApiKey: cfg.NovuConfig.ApiKey,
+		NotifyFailure:              cfg.TemporalConfig.NotifyOnFailure,
+		NotifyAfterAttempts:        cfg.TemporalConfig.NotifyAfterAttempts,
 	}
 
 	// the workflow will run async, so we don't need to wait for it to finish

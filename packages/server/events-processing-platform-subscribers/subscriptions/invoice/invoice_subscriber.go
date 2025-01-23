@@ -127,7 +127,6 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 		invoice.InvoicePdfRequestedV1,
 		invoice.InvoicePdfGeneratedV1,
 		invoice.InvoiceVoidV1,
-		invoice.InvoicePaidV1,
 		invoice.InvoicePayNotificationV1,
 		invoice.InvoiceRemindNotificationV1,
 	}

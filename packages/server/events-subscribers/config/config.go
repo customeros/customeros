@@ -31,7 +31,7 @@ type CommonConfig struct {
 	Scrapin       commonconf.ScrapinConfig
 	Snitcher      commonconf.SnitcherConfig
 	Anthropic     commonconf.AnthropicConfig
-	Novu          commonconf.NovuCofig
+	Novu          commonconf.NovuConfig
 	Namecheap     commonconf.NamecheapConfig
 	OpenSrs       commonconf.OpenSRSConfig
 	Cloudflare    commonconf.CloudflareConfig
