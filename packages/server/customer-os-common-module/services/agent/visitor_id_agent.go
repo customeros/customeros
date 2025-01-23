@@ -416,7 +416,7 @@ func (a *AgentVisitorIDService) skipNotification(ctx context.Context, domain str
 		return false, nil
 	}
 
-	if lastNotification == nil {
+	if lastNotification == nil || lastNotification.SentSlackNotification == nil {
 		return false, nil
 	}
 
