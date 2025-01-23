@@ -24,6 +24,12 @@ export class TableViewDefStore extends Store<TableViewDefDatum, TableViewDef> {
 
   get defaultPreset() {
     return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Organizations && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get customersPreset() {
+    return this?.toArray().find(
       (t) => t.value.tableId === TableIdType.Customers && t.value.isPreset,
     )?.value.id;
   }

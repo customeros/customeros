@@ -12,25 +12,25 @@ import { OrganizationsStore } from '../Organizations.store';
 export class CustomersView {
   constructor(private store: OrganizationsStore) {
     reaction(() => {
-      const preset = this.store.root.tableViewDefs.defaultPreset;
+      const preset = this.store.root.tableViewDefs.customersPreset;
 
       return preset ? this.store.getSearchTermByView(preset) : '';
     }, this.update);
     reaction(() => {
-      const preset = this.store.root.tableViewDefs.defaultPreset;
+      const preset = this.store.root.tableViewDefs.customersPreset;
 
       return preset ? this.store.availableCounts.get(preset) : 0;
     }, this.update);
     reaction(() => this.store.value.size, this.update);
     reaction(() => this.store.version, this.update);
     reaction(() => {
-      const preset = this.store.root.tableViewDefs.defaultPreset;
+      const preset = this.store.root.tableViewDefs.customersPreset;
 
       return this.store.cursors.get(preset!);
     }, this.update);
     reaction(
       () => {
-        const preset = this.store.root.tableViewDefs.defaultPreset;
+        const preset = this.store.root.tableViewDefs.customersPreset;
 
         if (!preset) return '';
 
@@ -42,10 +42,10 @@ export class CustomersView {
           viewDef?.value.defaultFilters ?? ''
         }-${viewDef?.value.sorting}-${columns}`;
       },
-      () => this.store.search(this.store.root.tableViewDefs.defaultPreset!),
+      () => this.store.search(this.store.root.tableViewDefs.customersPreset!),
     );
     reaction(() => {
-      const preset = this.store.root.tableViewDefs.defaultPreset;
+      const preset = this.store.root.tableViewDefs.customersPreset;
 
       if (!preset) return '';
 
@@ -59,7 +59,7 @@ export class CustomersView {
   }
 
   public update = () => {
-    const preset = this.store.root.tableViewDefs.defaultPreset;
+    const preset = this.store.root.tableViewDefs.customersPreset;
 
     if (!preset) return;
 

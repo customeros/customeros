@@ -1,8 +1,6 @@
-import React from 'react';
-
 import { Play } from '@ui/media/icons/Play';
-import { Users01 } from '@ui/media/icons/Users01';
 import { Target05 } from '@ui/media/icons/Target05';
+import { Users02 } from '@ui/media/icons/Users02.tsx';
 import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Shuffle01 } from '@ui/media/icons/Shuffle01';
 import { Signature } from '@ui/media/icons/Signature';
@@ -20,7 +18,8 @@ export const iconMap: Record<
   InvoiceCheck: (props) => <InvoiceCheck {...props} />,
   Building07: (props) => <Building07 {...props} />,
   CheckHeart: (props) => <CheckHeart {...props} />,
-  Users01: (props) => <Users01 {...props} />,
+  Users01: (props) => <Users02 {...props} />,
+  Users02: (props) => <Users02 {...props} />,
   HeartHand: (props) => <HeartHand {...props} />,
   Signature: (props) => <Signature {...props} />,
   Target05: (props) => <Target05 {...props} />,

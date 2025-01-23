@@ -98,7 +98,7 @@ export const RootSidenavItem = observer(
           )}
         >
           <Menu open={isEditing} onOpenChange={setIsEditing}>
-            <MenuButton className='min-w-6 h-5 rounded-md outline-none focus:outline-none text-gray-400 hover:text-gray-500'>
+            <MenuButton className='min-w-6 h-5 rounded-md outline-none focus:outline-none text-gray-400 hover:text-gray-500 flex items-center'>
               <DotsVertical className='text-inherit' />
             </MenuButton>
 

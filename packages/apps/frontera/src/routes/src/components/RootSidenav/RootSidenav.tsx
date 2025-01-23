@@ -27,7 +27,7 @@ export const RootSidenav = observer(() => {
 
   const presets = {
     targetsPreset: store.tableViewDefs.targetsPreset,
-    customersPreset: store.tableViewDefs.defaultPreset,
+    customersPreset: store.tableViewDefs.customersPreset,
     organizationsPreset: store.tableViewDefs.organizationsPreset,
     upcomingInvoicesPreset: store.tableViewDefs.upcomingInvoicesPreset,
     contactsPreset: store.tableViewDefs.contactsPreset,

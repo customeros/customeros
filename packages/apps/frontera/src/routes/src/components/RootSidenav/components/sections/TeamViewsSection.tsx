@@ -1,6 +1,5 @@
-import React from 'react';
-
 import { observer } from 'mobx-react-lite';
+import { TableViewDef } from '@store/TableViewDefs/TableViewDef.dto.ts';
 
 import { cn } from '@ui/utils/cn.ts';
 import { useStore } from '@shared/hooks/useStore';
@@ -29,13 +28,18 @@ export const TeamViewsSectionSection = observer(
   }: TeamViewsSectionSectionProps) => {
     const store = useStore();
     const tableViewDefsList = store.tableViewDefs.toArray();
+    const lifecycleStagesView = [
+      store.tableViewDefs.getById(store.tableViewDefs.targetsPreset ?? ''),
+      store.tableViewDefs.getById(store.tableViewDefs.customersPreset ?? ''),
+    ].filter(Boolean) as TableViewDef[];
 
     const teamViewsSectionView =
       tableViewDefsList
         .filter((c) => !c.value.isPreset && c.value.isShared)
         .sort((a, b) => a.value.order - b.value.order) ?? [];
 
-    if (!teamViewsSectionView.length) return null;
+    if (!teamViewsSectionView.length && !lifecycleStagesView.length)
+      return null;
 
     return (
       <CollapsibleSection
@@ -44,32 +48,36 @@ export const TeamViewsSectionSection = observer(
         onToggle={() => togglePreference('isTeamViewsOpen')}
       >
         {preferences.isTeamViewsOpen &&
-          teamViewsSectionView.map((view) => (
-            <EditableSideNavItem
-              id={view.value.id}
-              key={view.value.id}
-              label={view.value.name}
-              dataTest={`side-nav-item-${view.value.name}`}
-              onClick={() => handleItemClick(`finder?preset=${view.value.id}`)}
-              isActive={checkIsActive('finder', {
-                preset: view.value.id,
-              })}
-              icon={(isActive) => {
-                const Icon = iconMap?.[view.value.icon];
+          [...(lifecycleStagesView || []), ...(teamViewsSectionView || [])].map(
+            (view) => (
+              <EditableSideNavItem
+                id={view.value.id}
+                key={view.value.id}
+                label={view.value.name}
+                dataTest={`side-nav-item-${view.value.name}`}
+                isActive={checkIsActive('finder', {
+                  preset: view.value.id,
+                })}
+                onClick={() =>
+                  handleItemClick(`finder?preset=${view.value.id}`)
+                }
+                icon={(isActive) => {
+                  const Icon = iconMap?.[view.value.icon];
 
-                if (!Icon) return <div />;
+                  if (!Icon) return <div />;
 
-                return (
-                  <Icon
-                    className={cn(
-                      'size-4 min-w-4 text-gray-500',
-                      isActive && 'text-gray-700',
-                    )}
-                  />
-                );
-              }}
-            />
-          ))}
+                  return (
+                    <Icon
+                      className={cn(
+                        'size-4 min-w-4 text-gray-500',
+                        isActive && 'text-gray-700',
+                      )}
+                    />
+                  );
+                }}
+              />
+            ),
+          )}
       </CollapsibleSection>
     );
   },
