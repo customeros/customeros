@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useRef, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { useKeyBindings } from 'rooks';
 import cityTimezone from 'city-timezones';
 import { observer } from 'mobx-react-lite';
+import { useLocalStorage } from 'usehooks-ts';
 import { EditJobRole } from '@domain/usecases/contact-preview-card/edit-jobrole.usecase';
 import { EditContactTagUsecase } from '@domain/usecases/edit-contact-tags-select/edit-contact-tag.usecase.ts';
 
@@ -28,6 +29,12 @@ import { EmailsSection } from './components';
 import { EnrichContactModal } from './components/EnrichContactModal';
 
 export const ContactPreviewCard = observer(() => {
+  const [tabs] = useLocalStorage<{
+    [key: string]: string;
+  }>(`customeros-player-last-position`, { root: 'organization' });
+
+  const linkRef = useRef<HTMLAnchorElement>(null);
+
   const store = useStore();
   const [_, copyToClipboard] = useCopyToClipboard();
 
@@ -110,6 +117,12 @@ export const ContactPreviewCard = observer(() => {
 
   const users = usersStore.map((user) => user.value.name);
 
+  const lastPositionParams = tabs[contact.value.primaryOrganizationId || ''];
+  const hrefOrg = getHref(
+    contact.value.primaryOrganizationId || '',
+    lastPositionParams || '',
+  );
+
   return (
     <>
       {store.ui.contactPreviewCardOpen && (
@@ -161,9 +174,16 @@ export const ContactPreviewCard = observer(() => {
               {company ? (
                 <div className='flex flex-2 items-center gap-1 w-full'>
                   <p className='mt-2 text-gray-500 ml-1'>at</p>
-                  <p className='font-medium mt-2 line-clamp-1'>
-                    {company || 'No org yet'}
-                  </p>
+                  <Link ref={linkRef} to={hrefOrg || ''}>
+                    <p
+                      className={cn(
+                        'font-medium mt-2 line-clamp-1',
+                        company && 'hover:cursor-pointer',
+                      )}
+                    >
+                      {company}
+                    </p>
+                  </Link>
                 </div>
               ) : (
                 <span className='mt-2 ml-0.5'> (No org yet)</span>
@@ -327,3 +347,7 @@ export const ContactPreviewCard = observer(() => {
     </>
   );
 });
+
+function getHref(id: string, lastPositionParams: string | undefined) {
+  return `/organization/${id}?${lastPositionParams || 'tab=people'}`;
+}
