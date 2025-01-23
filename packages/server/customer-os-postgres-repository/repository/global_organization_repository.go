@@ -207,6 +207,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichName(ctx context.
 	// 3) Name has excessive punctuation (example threshold: >2 punctuation chars)
 	// 4) Name looks like a domain
 	// 5) Name is a known placeholder (“none”, “n/a”, “na”, “unknown”, “null”, etc.)
+	// 6) Name is all lowercase (letters/numbers/spaces)
 	suspiciousNameCondition := `
         (
             name IS NULL
@@ -215,6 +216,7 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichName(ctx context.
             OR length(regexp_replace(name, '[a-zA-Z0-9\\s]', '', 'g')) > 2
             OR name ~ '^[a-zA-Z0-9.-]+\\.[a-zA-Z0-9.-]+$'
             OR lower(name) IN ('none','n/a','na','unknown','null')
+			OR name ~ '^[a-z0-9\\s]+$'
         )
     `
 
