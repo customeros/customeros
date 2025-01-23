@@ -33,8 +33,8 @@ export const EditPersonaTag = observer(() => {
           {usecase.tagList?.map((tag) => (
             <CommandItem
               key={tag.id}
-              onSelect={usecase.select}
               value={tag.value.metadata.id}
+              onSelect={() => usecase.select(tag.id)}
               rightAccessory={
                 usecase.contactTags.has(tag.value.name) ? <Check /> : null
               }

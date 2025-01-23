@@ -3,7 +3,6 @@ import type { Transport } from '@store/transport';
 
 import set from 'lodash/set';
 import { Store } from '@store/_store';
-import { TagDatum } from '@store/Tags/Tag.store';
 import { action, computed, observable, runInAction } from 'mobx';
 
 import {
@@ -542,52 +541,6 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     });
 
     this.root.ui.toastSuccess(`Merged organizations`, `merge-${primaryId}`);
-  };
-
-  updateTags = (ids: string[], tags: TagDatum[]) => {
-    const tagIdsToUpdate = new Set(tags.map((tag) => tag.metadata.id));
-
-    const shouldRemoveTags = ids.every((id) => {
-      const organization = this.value.get(id);
-
-      if (!organization) return false;
-
-      const organizationTagIds = new Set(
-        (organization.value.tags ?? []).map((tag) => tag.metadata.id),
-      );
-
-      return Array.from(tagIdsToUpdate).every((tagId) =>
-        organizationTagIds.has(tagId),
-      );
-    });
-
-    ids.forEach((id) => {
-      const organization = this.value.get(id);
-
-      if (!organization) return;
-
-      if (shouldRemoveTags) {
-        organization.value.tags = organization.value.tags?.filter(
-          (t) => !tagIdsToUpdate.has(t.metadata.id),
-        );
-      } else {
-        const existingIds = new Set(
-          organization.value.tags?.map((t) => t.metadata.id) ?? [],
-        );
-        const newTags = tags.filter((t) => !existingIds.has(t.metadata.id));
-
-        if (!Array.isArray(organization.value.tags)) {
-          organization.value.tags = [];
-        }
-
-        organization.value.tags = [
-          ...(organization.value.tags ?? []),
-          ...newTags,
-        ];
-
-        organization.commit();
-      }
-    });
   };
 
   removeTags = (ids: string[]) => {

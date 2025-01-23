@@ -1,11 +1,11 @@
 import { RootStore } from '@store/root';
 import { TagStore } from '@store/Tags/Tag.store';
-import { TagService, ContactService } from '@domain/services';
 import { action, computed, reaction, observable } from 'mobx';
+import { TagService, OrganizationService } from '@domain/services';
 
 import { EntityType } from '@graphql/types';
 
-export class EditPersonaTagUsecase {
+export class EditOrganizationTagUsecase {
   @observable public accessor searchTerm = '';
   @observable private accessor newTags = new Set();
   @observable public accessor initialTags: TagStore[] = [];
@@ -13,7 +13,7 @@ export class EditPersonaTagUsecase {
 
   private root = RootStore.getInstance();
   private tagService = new TagService();
-  private contactService = new ContactService();
+  private organizationService = new OrganizationService();
 
   constructor() {
     this.select = this.select.bind(this);
@@ -27,16 +27,16 @@ export class EditPersonaTagUsecase {
   }
 
   @computed
-  get contact() {
+  get organization() {
     if (
-      !['EditPersonaTag', 'ContactCommands'].includes(
+      !['ChangeTags', 'OrganizationCommands'].includes(
         this.root.ui.commandMenu.type,
       )
     ) {
       return;
     }
 
-    return this.root.contacts.getById(
+    return this.root.organizations.getById(
       this.root.ui.commandMenu.context.ids?.[0] as string,
     );
   }
@@ -44,11 +44,12 @@ export class EditPersonaTagUsecase {
   @computed
   get contextIds() {
     if (
-      !['EditPersonaTag', 'ContactCommands'].includes(
+      !['ChangeTags', 'OrganizationCommands'].includes(
         this.root.ui.commandMenu.type,
       )
-    )
+    ) {
       return [];
+    }
 
     return this.root.ui.commandMenu.context.ids;
   }
@@ -56,26 +57,28 @@ export class EditPersonaTagUsecase {
   @computed
   get inputLabel() {
     const selectedIds = this.contextIds;
-    const contact = this.contact;
+    const organization = this.organization;
 
     return selectedIds?.length === 1
-      ? `Contact - ${contact?.name}`
-      : `${selectedIds?.length} contacts`;
+      ? `Organization - ${organization?.value?.name}`
+      : `${selectedIds?.length} organizations`;
   }
 
   @computed
-  get contactTags() {
-    return new Set((this.contact?.value?.tags ?? []).map((tag) => tag.name));
+  get organizationTags() {
+    return new Set(
+      (this.organization?.value?.tags ?? []).map((tag) => tag.name),
+    );
   }
 
   @action
   private computeInitialTags() {
     this.initialTags = this.root.tags
-      ?.getByEntityType(EntityType.Contact)
+      ?.getByEntityType(EntityType.Organization)
       .filter((e) => !!e.value.name)
       .sort((a, b) => {
-        const aInOrg = this.contactTags.has(a.value.name);
-        const bInOrg = this.contactTags.has(b.value.name);
+        const aInOrg = this.organizationTags.has(a.value.name);
+        const bInOrg = this.organizationTags.has(b.value.name);
 
         if (aInOrg && !bInOrg) return -1;
         if (!aInOrg && bInOrg) return 1;
@@ -131,46 +134,42 @@ export class EditPersonaTagUsecase {
     this.root.ui.commandMenu.setOpen(false);
   }
 
-  private handleSingleContactTag(tag: TagStore): void {
-    const hasTag = this.contact?.value?.tags?.some(
+  private handleSingleOrganizationTag(tag: TagStore): void {
+    const hasTag = this.organization?.value?.tags?.some(
       (t) => t.metadata.id === tag.id,
     );
 
     if (hasTag) {
-      this.contactService.removeTag(this.contact!, tag);
+      this.organizationService.removeTag(this.organization!, tag);
       this.newTags.delete(tag.value.name);
     } else {
-      this.contactService.addTag(this.contact!, tag);
+      this.organizationService.addTag(this.organization!, tag);
     }
   }
 
-  private handleMultipleContactsTags(tag: TagStore): void {
-    const allContactsHaveTag = this.contextIds.every((id) => {
-      const contact = this.root.contacts.getById(id);
+  private handleMultipleOrganizationsTags(tag: TagStore): void {
+    const allOrgsHaveTag = this.contextIds.every((id) => {
+      const org = this.root.organizations.getById(id);
 
-      return contact?.value.tags?.some((t) => t.metadata.id === tag.id);
+      return org?.value.tags?.some((t) => t.metadata.id === tag.id);
     });
 
     this.contextIds.forEach((id) => {
-      const contact = this.root.contacts.getById(id);
+      const org = this.root.organizations.getById(id);
 
-      if (!contact) {
-        console.error('EditContactTagUsecase: Contact not found in the store');
+      if (!org) return;
 
-        return;
-      }
-
-      allContactsHaveTag
-        ? this.contactService.removeTag(contact, tag)
-        : this.contactService.addTag(contact, tag);
+      allOrgsHaveTag
+        ? this.organizationService.removeTag(org, tag)
+        : this.organizationService.addTag(org, tag);
     });
   }
 
   @action
   public select(id?: string) {
-    if (!id || !this.contact) {
+    if (!id || !this.organization) {
       console.error(
-        'EditContactTagUsecase: called select without id or contact',
+        'EditOrganizationTagUsecase: select called without id or organization',
       );
 
       return;
@@ -179,15 +178,15 @@ export class EditPersonaTagUsecase {
     const tag = this.root.tags.getById(id);
 
     if (!tag) {
-      console.error('EditContactTagUsecase: Tag not found in the store');
+      console.error('EditOrganizationTagUsecase: Tag not found in the store');
 
       return;
     }
 
     if (this.contextIds.length === 1) {
-      this.handleSingleContactTag(tag);
+      this.handleSingleOrganizationTag(tag);
     } else {
-      this.handleMultipleContactsTags(tag);
+      this.handleMultipleOrganizationsTags(tag);
     }
 
     if (!this.shouldPreventClose) {
@@ -199,10 +198,10 @@ export class EditPersonaTagUsecase {
   public create() {
     const name = this.searchTerm;
 
-    if (!this.contact) return;
+    if (!this.organization) return;
 
     this.tagService.createTag(
-      { name, entityType: EntityType.Contact },
+      { name, entityType: EntityType.Organization },
       {
         onSuccess: (id) => {
           this.select(id);
