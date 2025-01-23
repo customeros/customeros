@@ -338,22 +338,14 @@ func (c *agentCapabilityService) buildTimelineMessage(ctx context.Context, sessi
 	// Build base message
 	var baseMessage string
 	switch {
-	case analysis.IsNewCompanyVisit:
-		baseMessage = fmt.Sprintf("**Initial Visit:** %s", analysis.SessionDuration)
-	case analysis.IsNewPersonVisit:
-		baseMessage = fmt.Sprintf("**New Visitor:** %s", analysis.SessionDuration)
-	case !analysis.IsNewPersonVisit:
-		baseMessage = fmt.Sprintf("**Repeat Visitor:** %s", analysis.SessionDuration)
+	case analysis.IsNewCompanyVisit && analysis.Referrer != "":
+		baseMessage = fmt.Sprintf("A **New Visitor** referred by %s browsed for %s", analysis.Referrer, analysis.SessionDuration)
+	case analysis.IsNewCompanyVisit && analysis.Referrer == "":
+		baseMessage = fmt.Sprintf("A **New Visitor** browsed for %s", analysis.SessionDuration)
+	case !analysis.IsNewCompanyVisit && analysis.Referrer != "":
+		baseMessage = fmt.Sprintf("A **Repeat Visitor** referred by %s browsed for %s", analysis.Referrer, analysis.SessionDuration)
 	default:
-		baseMessage = fmt.Sprintf("**Web Visitor:** %s", analysis.SessionDuration)
-	}
-
-	// Build source message
-	var sourceMessage string
-	if analysis.Referrer != "" {
-		sourceMessage = fmt.Sprintf("\n**Source:** [%s](https://%s)", analysis.Referrer, analysis.Referrer)
-	} else {
-		sourceMessage = "\n**Source:** Direct"
+		baseMessage = fmt.Sprintf("A **Repeat Visitor** browsed for %s", analysis.SessionDuration)
 	}
 
 	// Sort pages by length and alphabetically
@@ -369,11 +361,9 @@ func (c *agentCapabilityService) buildTimelineMessage(ctx context.Context, sessi
 	// Build full message
 	var fullMessage strings.Builder
 	fullMessage.WriteString(baseMessage)
-	fullMessage.WriteString(sourceMessage)
 
 	// Only add page views if hostname is present and there are pages to show
 	if analysis.Hostname != "" && len(analysis.PageViews) > 0 {
-		fullMessage.WriteString("\n**Pages Viewed:**")
 		for _, page := range analysis.PageViews {
 			cleanPage := c.cleanUrl(page)
 			fullUrl := fmt.Sprintf("https://%s/%s", analysis.Hostname, cleanPage)
