@@ -513,7 +513,7 @@ func (a *AgentVisitorIDService) buildWebVisitorSlackNotification(
 	sessionLines = append(sessionLines, fmt.Sprintf("*Session Duration:* %s minutes", sessionAnalytics.SessionDuration))
 	sessionLines = append(sessionLines, fmt.Sprintf("*Pages Viewed:* %d", len(sessionAnalytics.PageViews)))
 	for _, page := range sessionAnalytics.PageViews {
-		sessionLines = append(sessionLines, fmt.Sprintf("• <%s%s|%s>", website, page, page))
+		sessionLines = append(sessionLines, fmt.Sprintf("• <https://%s|%s>", page, page))
 	}
 
 	sessionContent := strings.Join(sessionLines, "\n")
