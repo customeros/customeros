@@ -18,7 +18,7 @@ func (c *agentCapabilityService) ExecuteCapability(ctx context.Context, executio
 	span.LogKV(
 		"event", "execute_capability",
 		"agent_id", executionContainer.AgentID,
-		"capability", executionContainer.Capability,
+		"capability", executionContainer.Capability.String(),
 		"input_type", fmt.Sprintf("%T", executionContainer.InputData),
 	)
 

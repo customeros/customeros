@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"fmt"
+	"github.com/opentracing/opentracing-go/log"
 	"strings"
 	"time"
 
@@ -41,8 +42,6 @@ func NewAgentVisitorIDService(
 		workspaceService:       workspaceService,
 	}
 }
-
-const DefaultNotificationCooldownInHours = 12
 
 func (a *AgentVisitorIDService) Create(ctx context.Context) (*postgres_entity.Agents, error) {
 	return a.agentService.CreateAgent(ctx, enum.AgentVisitorID)
@@ -150,7 +149,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	// check if notification should be suppressed
 	skip, err := a.skipNotification(ctx, visitorIDResults.Domain, 12)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "unable to check if notification should be suppressed"))
 		return err
 	}
 	if skip {
@@ -166,7 +165,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 		_, err := a.postgresRepositories.AgentExecutionRepository.Update(
 			ctx, executionID, nil, &errMessage, false)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "unable to update agent execution record"))
 			return err
 		}
 		return err
@@ -202,6 +201,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	return nil
 }
 
+// TODO check where used
 func (a *AgentVisitorIDService) isSlackNotificationEnabled(ctx context.Context) (bool, string) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.isSlackNotificationEnabled")
 	defer span.Finish()
@@ -390,9 +390,10 @@ func (a *AgentVisitorIDService) createAgentExecutionRecord(ctx context.Context, 
 }
 
 func (a *AgentVisitorIDService) skipNotification(ctx context.Context, domain string, cooldownInHrs int) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.skipNotifications")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.skipNotification")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
+	span.LogFields(log.String("domain", domain), log.Int("cooldownInHrs", cooldownInHrs))
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
@@ -402,12 +403,14 @@ func (a *AgentVisitorIDService) skipNotification(ctx context.Context, domain str
 	}
 
 	if domain == "" {
+		span.LogFields(log.Bool("result.skip", true))
 		return true, nil
 	}
 
 	// don't send if from workspace domain
 	isWorkspaceDomain := a.isWorkspaceDomain(ctx, domain)
 	if isWorkspaceDomain {
+		span.LogFields(log.Bool("result.skip", true))
 		return true, nil
 	}
 
@@ -415,19 +418,23 @@ func (a *AgentVisitorIDService) skipNotification(ctx context.Context, domain str
 	lastNotification, err := a.postgresRepositories.WebSessionRepository.FindLastNotification(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		span.LogFields(log.Bool("result.skip", false))
 		return false, nil
 	}
 
 	if lastNotification == nil || lastNotification.SentSlackNotification == nil {
+		span.LogFields(log.Bool("result.skip", false))
 		return false, nil
 	}
 
 	// determine how long since last notification
 	hoursSinceLastNotification := time.Now().Sub(*lastNotification.SentSlackNotification).Hours()
 	if hoursSinceLastNotification < float64(cooldownInHrs) {
+		span.LogFields(log.Bool("result.skip", true))
 		return true, nil
 	}
 
+	span.LogFields(log.Bool("result.skip", false))
 	return false, nil
 }
 
