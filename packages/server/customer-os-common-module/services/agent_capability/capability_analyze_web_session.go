@@ -175,7 +175,7 @@ func (c *agentCapabilityService) getUniquePageViews(ctx context.Context, session
 	for _, page := range session {
 		url := c.cleanUrl(page.Hostname)
 		if page.Pathname != "" {
-			url = fmt.Sprintf("%s/%s", c.cleanUrl(page.Hostname), c.cleanUrl(page.Pathname))
+			url = strings.TrimSuffix(fmt.Sprintf("%s/%s", c.cleanUrl(page.Hostname), c.cleanUrl(page.Pathname)), "/")
 		}
 		uniquePageMap[url] = struct{}{}
 	}
@@ -253,7 +253,7 @@ func (c *agentCapabilityService) calculateSessionDuration(ctx context.Context, s
 
 	switch {
 	case minutes < 1:
-		return "<1 minute", nil
+		return "less than 1 minute", nil
 	case minutes == 1:
 		return "1 minute", nil
 	default:
@@ -281,12 +281,14 @@ func (c *agentCapabilityService) isNewCompanyVisit(ctx context.Context, domain s
 		Domain:   &domain,
 		IsActive: false,
 	}
+	span.LogKV("isActive", "false")
 
 	results, err := c.postgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
 	}
+	span.LogKV("recordsReturned", len(results))
 
 	if results == nil || len(results) == 0 {
 		return true, nil
@@ -336,13 +338,13 @@ func (c *agentCapabilityService) buildTimelineMessage(ctx context.Context, sessi
 	var baseMessage string
 	switch {
 	case analysis.IsNewCompanyVisit && analysis.Referrer != "":
-		baseMessage = fmt.Sprintf("A **New Visitor** referred by %s browsed for %s", analysis.Referrer, analysis.SessionDuration)
+		baseMessage = fmt.Sprintf("A **New visitor** referred by %s browsed for %s", analysis.Referrer, analysis.SessionDuration)
 	case analysis.IsNewCompanyVisit && analysis.Referrer == "":
-		baseMessage = fmt.Sprintf("A **New Visitor** browsed for %s", analysis.SessionDuration)
+		baseMessage = fmt.Sprintf("A **New visitor** browsed for %s", analysis.SessionDuration)
 	case !analysis.IsNewCompanyVisit && analysis.Referrer != "":
-		baseMessage = fmt.Sprintf("A **Repeat Visitor** referred by %s browsed for %s", analysis.Referrer, analysis.SessionDuration)
+		baseMessage = fmt.Sprintf("A **Repeat visitor** referred by %s browsed for %s", analysis.Referrer, analysis.SessionDuration)
 	default:
-		baseMessage = fmt.Sprintf("A **Repeat Visitor** browsed for %s", analysis.SessionDuration)
+		baseMessage = fmt.Sprintf("A **Repeat visitor** browsed for %s", analysis.SessionDuration)
 	}
 
 	// Sort pages by length and alphabetically
@@ -374,8 +376,8 @@ func (c *agentCapabilityService) cleanUrl(s string) string {
 	if s == "" {
 		return ""
 	}
-
-	clean := strings.TrimPrefix(s, "https://")
+	clean := strings.Split(s, "?")[0]
+	clean = strings.TrimPrefix(clean, "https://")
 	clean = strings.TrimPrefix(clean, "http://")
 	clean = strings.TrimPrefix(clean, "www.")
 	return strings.Trim(clean, "/")
