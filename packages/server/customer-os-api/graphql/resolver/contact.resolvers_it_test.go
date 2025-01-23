@@ -384,7 +384,7 @@ func TestQueryResolver_Contact_BasicFilters_FindContactWithLetterAInName(t *test
 
 	require.Equal(t, 2, len(contacts))
 	require.Equal(t, contactFoundByFirstName, contacts[0].ID)
-	require.Equal(t, "contact1", *contacts[0].Name)
+	require.Equal(t, "aa bb", *contacts[0].Name)
 	require.Equal(t, "aa", *contacts[0].FirstName)
 	require.Equal(t, "bb", *contacts[0].LastName)
 	require.Equal(t, contactFoundByLastName, contacts[1].ID)
