@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/quickbooks"
 	"log"
 	"reflect"
 
@@ -129,6 +130,7 @@ type CommonServices struct {
 	TenantSettingsService      interfaces.TenantSettingsService
 	UserService                interfaces.UserService
 	VerifyService              interfaces.VerifyService
+	QuickbooksService          interfaces.QuickbooksService
 	WorkflowService            interfaces.WorkflowService
 	WorkspaceService           interfaces.WorkspaceService
 }
@@ -185,6 +187,7 @@ func InitCommonServices(
 	tenantImpl := tenant.NewTenantService(log, neo4jRepositories, postgresRepositories)
 	tenantSettingsImpl := tenant_settings.NewTenantSettingsService(log, neo4jRepositories, eventsImpl)
 	userImpl := user.NewUserService(neo4jRepositories, postgresRepositories, eventsImpl)
+	quickbooksImpl := quickbooks.NewQuickbooksService(&cfg.External.QuickbooksConfig, postgresRepositories)
 	workflowImpl := workflow.NewWorkflowService(postgresRepositories)
 	workspaceImpl := workspace.NewWorkspaceService(neo4jRepositories)
 
@@ -296,6 +299,7 @@ func InitCommonServices(
 		TenantSettingsService:      tenantSettingsImpl,
 		UserService:                userImpl,
 		VerifyService:              verifyImpl,
+		QuickbooksService:          quickbooksImpl,
 		WorkflowService:            workflowImpl,
 		WorkspaceService:           workspaceImpl,
 	}
