@@ -72,7 +72,7 @@ func Load() *Config {
 			ScrapinConfig:       cmnCfg.Scrapin,
 			SnitcherConfig:      cmnCfg.Snitcher,
 			AnthropicConfig:     cmnCfg.Anthropic,
-			NovuCofig:           cmnCfg.Novu,
+			NovuConfig:          cmnCfg.Novu,
 			NamecheapConfig:     cmnCfg.Namecheap,
 			OpenSRSConfig:       cmnCfg.OpenSrs,
 			CloudflareConfig:    cmnCfg.Cloudflare,

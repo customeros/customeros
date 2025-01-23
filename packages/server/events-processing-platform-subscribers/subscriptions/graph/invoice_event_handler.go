@@ -392,7 +392,7 @@ func (h *InvoiceEventHandler) OnInvoiceVoidV1(ctx context.Context, evt eventstor
 		return err
 	}
 
-	err = h.neo4j.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, neo4jrepository.InvoiceUpdateFields{
+	err = h.neo4j.InvoiceWriteRepository.UpdateInvoice(ctx, nil, eventData.Tenant, invoiceId, neo4jrepository.InvoiceUpdateFields{
 		UpdateStatus: true,
 		Status:       neo4jenum.InvoiceStatusVoid,
 	})
@@ -494,7 +494,7 @@ func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant st
 }
 
 func (h *InvoiceEventHandler) getInvoice(ctx context.Context, tenant, invoiceId string) (*neo4jentity.InvoiceEntity, error) {
-	invoiceDbNode, err := h.neo4j.InvoiceReadRepository.GetInvoiceById(ctx, tenant, invoiceId)
+	invoiceDbNode, err := h.neo4j.InvoiceReadRepository.GetInvoiceById(ctx, nil, tenant, invoiceId)
 	if err != nil {
 		return nil, err
 	}
