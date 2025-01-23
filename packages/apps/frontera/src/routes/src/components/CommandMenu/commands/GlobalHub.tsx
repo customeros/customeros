@@ -45,7 +45,7 @@ export const GlobalSharedCommands = observer(
     const navigate = useNavigate();
 
     const targetsPreset = store.tableViewDefs.targetsPreset;
-    const customersPreset = store.tableViewDefs.defaultPreset;
+    const customersPreset = store.tableViewDefs.customersPreset;
     const organizationsPreset = store.tableViewDefs.organizationsPreset;
     const contactsPreset = store.tableViewDefs.contactsPreset;
     const upcomingInvoicesPreset = store.tableViewDefs.upcomingInvoicesPreset;

@@ -9,13 +9,11 @@ import { useStore } from '@shared/hooks/useStore';
 import { Users01 } from '@ui/media/icons/Users01';
 import { Invoice } from '@ui/media/icons/Invoice.tsx';
 import { Building07 } from '@ui/media/icons/Building07';
-import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
 import { Signature } from '@ui/media/icons/Signature.tsx';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
 import { RootSidenavItem } from '@shared/components/RootSidenav/components/RootSidenavItem';
 
-import { SidenavItem } from '../SidenavItem';
 import { CollapsibleSection } from '../CollapsibleSection';
 
 interface GeneralViewsSectionProps {
@@ -52,9 +50,6 @@ export const GeneralViewsSection = observer(
     const opportunitiesView = store.tableViewDefs.getById(
       store.tableViewDefs.opportunitiesTablePreset ?? '',
     );
-    const flowSequencesView = store.tableViewDefs.getById(
-      store.tableViewDefs.flowsPreset ?? '',
-    );
 
     const invoicesViews = [
       store.tableViewDefs.getById(
@@ -66,8 +61,7 @@ export const GeneralViewsSection = observer(
     const upcomingInvoices = invoicesViews[0];
     const allOrganizationsActivePreset = [allOrganizationsView?.[0]?.value?.id];
     const showInvoices = store.settings.tenant.value?.billingEnabled;
-
-    const isFlowEditorActive = pathname.includes('flow-editor');
+    const isOpportinitiesActive = pathname.includes('prospects');
 
     return (
       <CollapsibleSection
@@ -119,14 +113,14 @@ export const GeneralViewsSection = observer(
             />
             <RootSidenavItem
               label='Opportunities'
+              isActive={isOpportinitiesActive}
               id={opportunitiesView?.value?.id}
               dataTest={`side-nav-item-opportunities`}
               onClick={() =>
-                handleItemClick(`finder?preset=${opportunitiesView?.value?.id}`)
+                handleItemClick(
+                  `prospects?show=finder&preset=${opportunitiesView?.value?.id}`,
+                )
               }
-              isActive={checkIsActive('finder', {
-                preset: opportunitiesView?.value?.id ?? '',
-              })}
               icon={(isActive) => (
                 <CoinsStacked01
                   className={cn(
@@ -172,26 +166,6 @@ export const GeneralViewsSection = observer(
               })}
               icon={(isActive) => (
                 <Signature
-                  className={cn(
-                    'size-4 min-w-4 text-gray-500',
-                    isActive && 'text-gray-700',
-                  )}
-                />
-              )}
-            />
-            <SidenavItem
-              label='Flows'
-              dataTest={`side-nav-item-all-flows`}
-              onClick={() =>
-                handleItemClick(`finder?preset=${flowSequencesView?.value?.id}`)
-              }
-              isActive={
-                checkIsActive('finder', {
-                  preset: flowSequencesView?.value?.id ?? '',
-                }) || isFlowEditorActive
-              }
-              icon={(isActive) => (
-                <Shuffle01
                   className={cn(
                     'size-4 min-w-4 text-gray-500',
                     isActive && 'text-gray-700',
