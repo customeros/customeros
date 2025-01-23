@@ -45,6 +45,9 @@ func (r *slackChannelNotificationRepository) GetSlackChannel(c context.Context, 
 		Where("workflow = ?", workflow).
 		First(&e).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
