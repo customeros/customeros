@@ -173,14 +173,11 @@ func (c *agentCapabilityService) getUniquePageViews(ctx context.Context, session
 	// Use map to track unique pages
 	uniquePageMap := make(map[string]struct{})
 	for _, page := range session {
+		url := c.cleanUrl(page.Hostname)
 		if page.Pathname != "" {
-			pathname := c.cleanUrl(page.Pathname)
-			pathname = fmt.Sprintf("/%s", pathname)
-			if pathname == "" || pathname == "/" {
-				pathname = c.cleanUrl(page.Hostname)
-			}
-			uniquePageMap[pathname] = struct{}{}
+			url = fmt.Sprintln("%s/%s", c.cleanUrl(page.Hostname), c.cleanUrl(page.Pathname))
 		}
+		uniquePageMap[url] = struct{}{}
 	}
 
 	// Convert map keys to slice
@@ -365,12 +362,8 @@ func (c *agentCapabilityService) buildTimelineMessage(ctx context.Context, sessi
 	// Only add page views if hostname is present and there are pages to show
 	if analysis.Hostname != "" && len(analysis.PageViews) > 0 {
 		for _, page := range analysis.PageViews {
-			cleanPage := c.cleanUrl(page)
-			fullUrl := fmt.Sprintf("https://%s/%s", analysis.Hostname, cleanPage)
-			if strings.Contains(cleanPage, analysis.Hostname) {
-				fullUrl = fmt.Sprintf("https://%s", analysis.Hostname)
-			}
-			fullMessage.WriteString(fmt.Sprintf("\n* [%s](%s)", cleanPage, fullUrl))
+			fullUrl := fmt.Sprintf("https://%s", page)
+			fullMessage.WriteString(fmt.Sprintf("\n* [%s](%s)", page, fullUrl))
 		}
 	}
 
