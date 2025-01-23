@@ -57,14 +57,14 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 
 	err := a.validateWebsiteVisitEvent(event)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "invalid event"))
 		return err
 	}
 
 	// create execution record
 	executionID, err := a.createAgentExecutionRecord(ctx, agentID, event.Type())
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "unable to create agent execution record"))
 		return err
 	}
 
@@ -78,7 +78,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 		_, err := a.postgresRepositories.AgentExecutionRepository.Update(
 			ctx, executionID, nil, &errMessage, false)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "unable to update agent execution record"))
 			return err
 		}
 		return err
@@ -94,7 +94,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 			false,
 		)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "unable to update agent execution record"))
 			return err
 		}
 		return nil
@@ -103,12 +103,12 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	// execute org creation capability
 	orgCreationResults, err := a.executeOrgCreationCapability(ctx, agentID, executionID, visitorIDResults.Domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "unable to create organization"))
 		errMessage := "unable to create new organization"
 		_, err := a.postgresRepositories.AgentExecutionRepository.Update(
 			ctx, executionID, nil, &errMessage, false)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "unable to update agent execution record"))
 			return err
 		}
 		return err
@@ -124,12 +124,12 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 		event,
 	)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "unable to analyze web session"))
 		errMessage := "unable to analyze web session"
 		_, err := a.postgresRepositories.AgentExecutionRepository.Update(
 			ctx, executionID, nil, &errMessage, false)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "unable to update agent execution record"))
 			return err
 		}
 		return err
@@ -142,8 +142,10 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 		return err
 	}
 	if slackChannel == nil {
+		span.LogKV("result.slackChannel", "not found")
 		return nil
 	}
+	span.LogKV("result.slackChannel", slackChannel.ChannelId)
 
 	// check if notification should be suppressed
 	skip, err := a.skipNotification(ctx, visitorIDResults.Domain, 12)
