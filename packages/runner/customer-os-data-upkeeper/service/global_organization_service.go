@@ -549,34 +549,25 @@ func (s *globalOrganizationService) enrichIndustry() {
 		}
 
 		// Construct the prompt
-		prompt := fmt.Sprintf(`
-You are a world-class data classification and industry expert.
-Your task is to read information about a company and return its most likely NAICS industry code.
+		systemPrompt := `
+        You are a NAICS industry classification expert. 
+        Return only the single most specific and appropriate NAICS code (digits only, e.g. "541511") for the company based on the provided domain, name, and description. 
+        No additional text or commentary.
 
-You will be provided:
-1. The primary domain of the company.
-2. The company name.
-3. Optional description fields about the company from LinkedIn or its website.
+        Important details:
+        - Use the latest NAICS codes available.
+        - If multiple NAICS codes might apply, choose the best match (the most specific, relevant code).
+        - Do not output any text besides the NAICS code itself.
+        `
 
-You must:
-- Determine the single most appropriate NAICS code for the organization based on the inputs.
-- Return only the NAICS code, with no additional commentary or text. The NAICS code should be digits only, e.g. "541511".
-
-Important details:
-- Use the latest NAICS codes available.
-- If multiple NAICS codes might apply, choose the best match (the most specific, relevant code).
-- Do not output any text besides the NAICS code itself.
-
-Below is the user’s input. Use the data to derive the NAICS code.
----
-Primary Domain: %s
-Company Name: %s
-%s
----
-`, record.PrimaryDomain, record.Name, strings.Join(descLines, "\n"))
+		prompt := map[string]string{
+			"domain":      record.PrimaryDomain,
+			"name":        record.Name,
+			"description": strings.Join(descLines, "\n"),
+		}
 
 		// ask AI for NAICS code
-		aiOutput, err := s.commonServices.AIService.AskAI(ctx, enum.AIModelAnthropicHaiku, &prompt)
+		aiOutput, err := s.commonServices.AIService.AskAI(ctx, enum.AIModelAnthropicHaiku, &systemPrompt, &prompt)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
 			continue
@@ -659,19 +650,20 @@ func (s *globalOrganizationService) enrichDescription() {
 		}
 
 		// Construct the prompt
-		prompt := fmt.Sprintf(`
-You are a world-class company analyst. Read the provided information about a company, then produce a single, concise paragraph up to 300 characters max, focusing on who the company servers and how they make money. 
-Be direct and dont include any marketing speak or jargon. Include only this final paragraph as your entire output. Do not include any explanations, disclaimers, or references to this instruction.
-Output should be in english. If you cannot produce a description, set the output N/A.
----
-Company Name: %s
-Company Domain: %s
-%s
----
-`, record.Name, record.PrimaryDomain, strings.Join(descLines, "\n"))
+		systemPrompt := `
+        You are a company analyst who writes clear, direct business descriptions. 
+        Return a single paragraph (max 300 characters), in American English, explaining who the company serves and their revenue model. 
+        No marketing speak or jargon. 
+        Return "N/A" if insufficient information.`
+
+		prompt := map[string]interface{}{
+			"name":   record.Name,
+			"domain": record.PrimaryDomain,
+			"data":   strings.Join(descLines, "\n"),
+		}
 
 		// ask AI for concise description
-		aiOutput, err := s.commonServices.AIService.AskAI(recordCtx, enum.AIModelAnthropicHaiku, &prompt)
+		aiOutput, err := s.commonServices.AIService.AskAI(recordCtx, enum.AIModelAnthropicHaiku, &systemPrompt, &prompt)
 		if err != nil {
 			tracing.TraceErr(recordSpan, errors.Wrap(err, "error asking AI"))
 			continue
@@ -730,7 +722,7 @@ func (s *globalOrganizationService) enrichName() {
 		}
 
 		// prepare Anthropic prompt
-		prompt := fmt.Sprintf(`
+		systemPrompt := `
 You are a world-class naming assistant. The user will provide:
 	•	A current/partial company name
 	•	The company’s primary domain
@@ -750,16 +742,17 @@ Important Samples:
 	•	If brand differs from legal name (e.g., “Nestlé S.A.” vs. “Nescafé”), return the official company name “Nestle”
 	•	If unsure, return “N/A”
 
-Below is the data. Provide the final name or N/A as your entire response.
----
-Company Name: %s
-Company Domain: %s
-Company Website: %s
----
-`, record.Name, record.PrimaryDomain, record.Website)
+Provide the final name or N/A as your entire response.
+`
+
+		prompt := map[string]interface{}{
+			"name":    record.Name,
+			"domain":  record.PrimaryDomain,
+			"website": record.Website,
+		}
 
 		// ask AI for concise description
-		aiOutput, err := s.commonServices.AIService.AskAI(recordCtx, enum.AIModelAnthropicHaiku, &prompt)
+		aiOutput, err := s.commonServices.AIService.AskAI(recordCtx, enum.AIModelAnthropicHaiku, &systemPrompt, &prompt)
 		if err != nil {
 			tracing.TraceErr(recordSpan, errors.Wrap(err, "error asking AI"))
 			continue

@@ -26,9 +26,10 @@ func NewAskAIHandler(services *cosapi_services.Services, responseHandler *respon
 }
 
 type AskAIRequest struct {
-	Model   string
-	Prompt  string
-	AIModel commonEnum.AIModel
+	Model        string  `json:"model"`
+	SystemPrompt *string `json:"systemPrompt,omitempty"`
+	Prompt       string  `json:"prompt"`
+	AIModel      commonEnum.AIModel
 }
 
 type AskAIResponse struct {
@@ -67,7 +68,7 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 		}
 
 		// call appropriate model
-		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, &request.Prompt)
+		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, request.SystemPrompt, &request.Prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			message := "Unable to ask AI"

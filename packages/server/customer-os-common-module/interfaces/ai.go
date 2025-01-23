@@ -7,5 +7,5 @@ import (
 )
 
 type AIService interface {
-	AskAI(ctx context.Context, model enum.AIModel, prompt *string) (*string, error)
+	AskAI(ctx context.Context, model enum.AIModel, systemPrompt *string, prompt any) (*string, error)
 }

@@ -6,13 +6,12 @@ type AnthropicApiRequest struct {
 	Messages    []Message `json:"messages"`
 	MaxTokens   int       `json:"max_tokens,omitempty"`
 	Temperature float64   `json:"temperature,omitempty"`
-	System      string    `json:"system,omitempty"`
 }
 
 // Message represents a single message in the conversation
 type Message struct {
 	Role    string `json:"role"` // "user" or "assistant"
-	Content string `json:"content"`
+	Content any    `json:"content"`
 }
 
 // AnthropicApiResponse represents the response structure from Claude API
