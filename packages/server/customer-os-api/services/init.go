@@ -1,8 +1,6 @@
 package cosapi_services
 
 import (
-	api_bank_account "github.com/customeros/customeros/packages/server/customer-os-api/services/bank_account"
-	api_issue "github.com/customeros/customeros/packages/server/customer-os-api/services/issue"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
@@ -14,6 +12,7 @@ import (
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/repository"
 	api_action_item "github.com/customeros/customeros/packages/server/customer-os-api/services/action_item"
+	api_bank_account "github.com/customeros/customeros/packages/server/customer-os-api/services/bank_account"
 	api_billable "github.com/customeros/customeros/packages/server/customer-os-api/services/billable"
 	api_billing_profile "github.com/customeros/customeros/packages/server/customer-os-api/services/billing_profile"
 	api_calendar "github.com/customeros/customeros/packages/server/customer-os-api/services/calendar"
@@ -27,6 +26,7 @@ import (
 	api_email "github.com/customeros/customeros/packages/server/customer-os-api/services/email"
 	api_external_system "github.com/customeros/customeros/packages/server/customer-os-api/services/external_system"
 	api_invoice "github.com/customeros/customeros/packages/server/customer-os-api/services/invoice"
+	api_issue "github.com/customeros/customeros/packages/server/customer-os-api/services/issue"
 	api_jwt "github.com/customeros/customeros/packages/server/customer-os-api/services/jwt"
 	api_location "github.com/customeros/customeros/packages/server/customer-os-api/services/location"
 	api_log_entry "github.com/customeros/customeros/packages/server/customer-os-api/services/log_entry"
@@ -38,7 +38,6 @@ import (
 	api_personal_integrations "github.com/customeros/customeros/packages/server/customer-os-api/services/personal_integrations"
 	api_search "github.com/customeros/customeros/packages/server/customer-os-api/services/search"
 	api_sli "github.com/customeros/customeros/packages/server/customer-os-api/services/service_line_item"
-	api_slack "github.com/customeros/customeros/packages/server/customer-os-api/services/slack"
 	api_tenant_settings "github.com/customeros/customeros/packages/server/customer-os-api/services/tenant_settings"
 	api_timeline_event "github.com/customeros/customeros/packages/server/customer-os-api/services/timeline_event"
 	api_user "github.com/customeros/customeros/packages/server/customer-os-api/services/user"
@@ -79,7 +78,6 @@ type Services struct {
 	PersonalIntegrationsService cosapi_interfaces.PersonalIntegrationsService
 	SearchService               cosapi_interfaces.SearchService
 	ServiceLineItemService      cosapi_interfaces.ServiceLineItemService
-	SlackService                cosapi_interfaces.SlackService
 	TenantSettingsService       cosapi_interfaces.TenantSettingsService
 	TimelineEventService        cosapi_interfaces.TimelineEventService
 	UserService                 cosapi_interfaces.UserService
@@ -180,13 +178,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 		commonServices.ServiceLineItemService,
 		services.ContractService,
 		commonServices.TenantSettingsService,
-	)
-
-	services.SlackService = api_slack.NewSlackService(
-		log,
-		repositories,
-		grpcClients,
-		commonServices.SlackService,
 	)
 
 	services.MeetingService = api_meeting.NewMeetingService(
