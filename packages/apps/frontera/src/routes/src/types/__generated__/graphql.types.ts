@@ -530,14 +530,11 @@ export type Contact = MetadataInterface &
      */
     emails: Array<Email>;
     enrichDetails: EnrichDetails;
-    /** The first name of the contact in customerOS. */
+    /** @deprecated Use `name` instead */
     firstName?: Maybe<Scalars['String']['output']>;
     flows: Array<Flow>;
     hide?: Maybe<Scalars['Boolean']['output']>;
-    /**
-     * Deprecated, use metadata instead
-     * @deprecated Use `metadata.id` instead
-     */
+    /** @deprecated Use `metadata.id` instead */
     id: Scalars['ID']['output'];
     /**
      * `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
@@ -549,7 +546,7 @@ export type Contact = MetadataInterface &
      * @deprecated Use `tags` instead
      */
     label?: Maybe<Scalars['String']['output']>;
-    /** The last name of the contact in customerOS. */
+    /** @deprecated Use `name` instead */
     lastName?: Maybe<Scalars['String']['output']>;
     latestOrganizationWithJobRole?: Maybe<OrganizationWithJobRole>;
     /**
@@ -558,7 +555,6 @@ export type Contact = MetadataInterface &
      */
     locations: Array<Location>;
     metadata: Metadata;
-    /** The name of the contact in customerOS, alternative for firstName + lastName. */
     name?: Maybe<Scalars['String']['output']>;
     organizations: OrganizationPage;
     /** Contact owner (user) */
@@ -577,10 +573,7 @@ export type Contact = MetadataInterface &
     timelineEvents: Array<TimelineEvent>;
     timelineEventsTotalCount: Scalars['Int64']['output'];
     timezone?: Maybe<Scalars['String']['output']>;
-    /**
-     * Deprecated
-     * @deprecated Use `prefix` instead
-     */
+    /** @deprecated Use `prefix` instead */
     title?: Maybe<Scalars['String']['output']>;
     updatedAt: Scalars['Time']['output'];
     username?: Maybe<Scalars['String']['output']>;
@@ -628,20 +621,16 @@ export type ContactInput = {
   /** An email addresses associated with the contact. */
   email?: InputMaybe<EmailInput>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
-  /** The first name of the contact. */
   firstName?: InputMaybe<Scalars['String']['input']>;
-  /** The last name of the contact. */
   lastName?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   /** Deprecated */
   ownerId?: InputMaybe<Scalars['ID']['input']>;
   /** A phone number associated with the contact. */
   phoneNumber?: InputMaybe<PhoneNumberInput>;
-  /** The prefix of the contact. */
   prefix?: InputMaybe<Scalars['String']['input']>;
   profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
   socialUrl?: InputMaybe<Scalars['String']['input']>;
-  /** Deprecated */
   templateId?: InputMaybe<Scalars['ID']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
   username?: InputMaybe<Scalars['String']['input']>;
@@ -682,11 +671,13 @@ export type ContactUiDetails = {
   enrichedEmailRequestedAt?: Maybe<Scalars['Time']['output']>;
   enrichedFailedAt?: Maybe<Scalars['Time']['output']>;
   enrichedRequestedAt?: Maybe<Scalars['Time']['output']>;
+  /** @deprecated Use `name` instead */
   firstName: Scalars['String']['output'];
   flows: Array<Scalars['ID']['output']>;
   hide: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   jobRoleIds: Array<Scalars['ID']['output']>;
+  /** @deprecated Use `name` instead */
   lastName: Scalars['String']['output'];
   linkedInAlias?: Maybe<Scalars['String']['output']>;
   linkedInExternalId?: Maybe<Scalars['String']['output']>;
@@ -1217,12 +1208,9 @@ export type CustomerContactInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   /** An email addresses associted with the contact. */
   email?: InputMaybe<EmailInput>;
-  /** The first name of the contact. */
   firstName?: InputMaybe<Scalars['String']['input']>;
-  /** The last name of the contact. */
   lastName?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-  /** The prefix of the contact. */
   prefix?: InputMaybe<Scalars['String']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
 };
@@ -2654,6 +2642,8 @@ export type Mutation = {
   removeTag?: Maybe<Result>;
   serviceLineItem_BulkUpdate: Array<Scalars['ID']['output']>;
   serviceLineItem_Delete: DeleteResponse;
+  sku_Delete: Result;
+  sku_Save: Sku;
   social_Remove: Result;
   social_Update: Social;
   tableViewDef_Archive: ActionResponse;
@@ -3346,6 +3336,14 @@ export type MutationServiceLineItem_BulkUpdateArgs = {
 
 export type MutationServiceLineItem_DeleteArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationSku_DeleteArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type MutationSku_SaveArgs = {
+  input: SkuInput;
 };
 
 export type MutationSocial_RemoveArgs = {
@@ -4185,6 +4183,7 @@ export type Query = {
   reminder: Reminder;
   remindersForOrganization: Array<Reminder>;
   serviceLineItem: ServiceLineItem;
+  skus: Array<Sku>;
   slack_Channels: SlackChannelPage;
   tableViewDefs: Array<TableViewDef>;
   /** @deprecated Use tags_ByEntityType */
@@ -4623,6 +4622,19 @@ export type ServiceLineItemUpdateInput = {
   serviceEnded?: InputMaybe<Scalars['Time']['input']>;
   serviceStarted?: InputMaybe<Scalars['Time']['input']>;
   tax?: InputMaybe<TaxInput>;
+};
+
+export type Sku = {
+  __typename?: 'Sku';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+};
+
+export type SkuInput = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  name: Scalars['String']['input'];
+  price: Scalars['Float']['input'];
 };
 
 export type SlackChannel = {

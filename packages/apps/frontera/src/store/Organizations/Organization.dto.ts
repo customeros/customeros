@@ -8,6 +8,7 @@ import { action, computed, observable, runInAction } from 'mobx';
 
 import {
   Social,
+  Domain,
   FundingRound,
   type Contract,
   OnboardingStatus,
@@ -258,6 +259,34 @@ export class Organization extends Entity<OrganizationDatum> {
     }
 
     this.value.socialMedia.push(socialMedia);
+    this.commit({ syncOnly: true });
+  }
+
+  @action
+  public addDomain(domainDetails: Domain) {
+    this.draft();
+
+    if (!this.value.domainsDetails) {
+      this.value.domainsDetails = [];
+    }
+    this.value.domainsDetails.push({
+      domain: domainDetails.domain,
+      primary: domainDetails?.primary || false,
+      primaryDomain: domainDetails?.primaryDomain,
+    });
+    this.commit({ syncOnly: true });
+  }
+
+  @action
+  public deleteDomain(domain: string) {
+    this.draft();
+
+    if (!this.value.domainsDetails) {
+      this.value.domainsDetails = [];
+    }
+    this.value.domainsDetails = this.value.domainsDetails.filter(
+      (d) => d.domain !== domain,
+    );
     this.commit({ syncOnly: true });
   }
 
