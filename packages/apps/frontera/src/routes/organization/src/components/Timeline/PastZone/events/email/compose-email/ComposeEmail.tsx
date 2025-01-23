@@ -76,13 +76,14 @@ export const ComposeEmail: FC<ComposeEmailProps> = ({
         }}
       >
         <Editor
-          placeholder={''}
           showToolbarBottom
           defaultHtmlValue={value}
           onChange={(e) => onChange(e)}
           dataTest='timeline-email-editor'
+          placeholderClassName={'text-sm'}
           namespace='timeline-email-editor'
-          className='text-base cursor-text email-editor h-full'
+          placeholder={'Write something here...'}
+          className='text-sm cursor-text email-editor h-full'
         >
           <div className='flex gap-2'>
             {onDiscard && (
