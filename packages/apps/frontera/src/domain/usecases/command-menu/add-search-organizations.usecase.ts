@@ -325,7 +325,7 @@ export class AddSearchOrganizationsUsecase {
 
       await this.root.organizations.create({
         ...this.getViewDefDefaults(),
-        name: isUrl ? 'Unnamed' : this.searchTerm || 'Unnamed',
+        name: isUrl ? undefined : this.searchTerm || 'Unnamed',
         website: !isUrl ? undefined : this.searchTerm || '',
       });
     }
