@@ -1,104 +1,33 @@
-import { useMemo } from 'react';
+import { useEffect } from 'react';
 
-import { observer } from 'mobx-react-lite';
-import { TagDatum } from '@store/Tags/Tag.store';
+import { EditPersonaTagUsecase } from '@domain/usecases/command-menu/edit-persona-tag.usecase';
 
 import { Tag01 } from '@ui/media/icons/Tag01';
-import { Tag, EntityType } from '@graphql/types';
-import { Check } from '@ui/media/icons/Check.tsx';
-import { useStore } from '@shared/hooks/useStore';
-import { useModKey } from '@shared/hooks/useModKey';
+import { Check } from '@ui/media/icons/Check';
 import { CommandSubItem } from '@ui/overlay/CommandMenu';
+const usecase = new EditPersonaTagUsecase();
 
-export const AddPersonaTagSubItemGroup = observer(() => {
-  const store = useStore();
-
-  const context = store.ui.commandMenu.context;
-
-  const contact = store.contacts.value.get(context.ids?.[0] as string);
-
-  const selectedIds = context.ids;
-
-  const handleSelect = (t: TagDatum) => {
-    if (!context.ids?.[0]) return;
-
-    if (!contact) return;
-
-    if (selectedIds?.length === 1) {
-      const foundIndex = contact.value?.tags?.findIndex(
-        (e) => e.name === t.name,
-      );
-
-      if (foundIndex !== -1) {
-        contact.value.tags?.splice(foundIndex || 0, 1);
-      } else {
-        contact.value.tags = contact.value.tags ?? [];
-        contact.value.tags.push(t as Tag);
-      }
-    } else {
-      selectedIds.forEach((id) => {
-        const contact = store.contacts.value.get(id);
-
-        if (contact) {
-          const foundIndex = contact.value?.tags?.findIndex(
-            (e) => e.name === t.name,
-          );
-
-          if (foundIndex !== -1) {
-            contact.value.tags?.splice(foundIndex || 0, 1);
-          } else {
-            contact.value.tags = contact.value.tags ?? [];
-            contact.value.tags.push(t as Tag);
-          }
-        }
-      });
-    }
-    contact.commit();
-  };
-
-  const newSelectedTags = new Set(
-    (contact?.value?.tags ?? []).map((tag) => tag.name),
-  );
-  const contactTags = useMemo(
-    () => new Set((contact?.value?.tags ?? []).map((tag) => tag.name)),
-    [],
-  );
-
-  const sortedTags = store.tags
-    ?.getByEntityType(EntityType.Contact)
-    .filter((e) => !!e.value.name)
-    .sort((a, b) => {
-      const aInOrg = contactTags.has(a.value.name);
-      const bInOrg = contactTags.has(b.value.name);
-
-      if (aInOrg && !bInOrg) return -1;
-      if (!aInOrg && bInOrg) return 1;
-
-      return 0;
-    });
-
-  useModKey('Enter', (e) => {
-    e.stopPropagation();
-    store.ui.commandMenu.setOpen(false);
-  });
+export const AddPersonaTagSubItemGroup = () => {
+  useEffect(() => {
+    usecase.allowClose();
+  }, []);
 
   return (
     <>
-      {sortedTags?.map((tag) => (
+      {usecase.tagList?.map((tag) => (
         <CommandSubItem
           key={tag.id}
           icon={<Tag01 />}
           leftLabel='Add tag'
           rightLabel={tag.value.name}
-          rightAccessory={
-            newSelectedTags.has(tag.value.name) ? <Check /> : null
-          }
           onSelectAction={() => {
-            handleSelect(tag.value);
-            store.ui.commandMenu.setOpen(false);
+            usecase.select(tag.id);
           }}
+          rightAccessory={
+            usecase.contactTags.has(tag.value.name) ? <Check /> : null
+          }
         />
       ))}
     </>
   );
-});
+};

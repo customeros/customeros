@@ -4,7 +4,6 @@ import { Transport } from '@store/transport';
 import { action, computed, observable, runInAction } from 'mobx';
 
 import {
-  Tag,
   ContactInput,
   SortingDirection,
 } from '@shared/types/__generated__/graphql.types';
@@ -633,49 +632,6 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       });
     }
   }
-
-  updateTags = (ids: string[], tags: Tag[]) => {
-    const tagIdsToUpdate = new Set(tags?.map((tag) => tag.metadata.id));
-
-    const shouldRemoveTags = ids.every((id) => {
-      const contact = this.value.get(id);
-
-      if (!contact) return false;
-
-      const contactIdsTags = new Set(
-        (contact.value.tags ?? []).map((tag) => tag.metadata.id),
-      );
-
-      return Array.from(tagIdsToUpdate).every((tagId) =>
-        contactIdsTags.has(tagId),
-      );
-    });
-
-    ids.forEach((id) => {
-      const contact = this.value.get(id);
-
-      if (!contact) return;
-
-      if (shouldRemoveTags) {
-        contact.value.tags = contact.value.tags?.filter(
-          (t) => !tagIdsToUpdate.has(t.metadata.id),
-        );
-      } else {
-        const existingIds = new Set(
-          contact.value.tags?.map((t) => t.metadata.id) ?? [],
-        );
-        const newTags = tags.filter((t) => !existingIds.has(t.metadata.id));
-
-        if (!Array.isArray(contact.value.tags)) {
-          contact.value.tags = [];
-        }
-
-        contact.value.tags = [...(contact.value.tags ?? []), ...newTags];
-
-        contact.commit();
-      }
-    });
-  };
 
   private refreshCurrentView() {
     const currentPreset = new URLSearchParams(window.location.search).get(
