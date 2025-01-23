@@ -175,7 +175,7 @@ func (c *agentCapabilityService) getUniquePageViews(ctx context.Context, session
 	for _, page := range session {
 		url := c.cleanUrl(page.Hostname)
 		if page.Pathname != "" {
-			url = fmt.Sprintln("%s/%s", c.cleanUrl(page.Hostname), c.cleanUrl(page.Pathname))
+			url = fmt.Sprintf("%s/%s", c.cleanUrl(page.Hostname), c.cleanUrl(page.Pathname))
 		}
 		uniquePageMap[url] = struct{}{}
 	}
