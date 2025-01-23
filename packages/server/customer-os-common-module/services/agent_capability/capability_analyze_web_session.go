@@ -128,8 +128,6 @@ func (c *agentCapabilityService) executeWebSessionAnalysis(ctx context.Context, 
 		return results, err
 	}
 
-	// build slack notification
-
 	return results, nil
 }
 
@@ -177,6 +175,7 @@ func (c *agentCapabilityService) getUniquePageViews(ctx context.Context, session
 	for _, page := range session {
 		if page.Pathname != "" {
 			pathname := c.cleanUrl(page.Pathname)
+			pathname = fmt.Sprintf("/%s", pathname)
 			if pathname == "" || pathname == "/" {
 				pathname = c.cleanUrl(page.Hostname)
 			}
@@ -374,7 +373,7 @@ func (c *agentCapabilityService) buildTimelineMessage(ctx context.Context, sessi
 
 	// Only add page views if hostname is present and there are pages to show
 	if analysis.Hostname != "" && len(analysis.PageViews) > 0 {
-		fullMessage.WriteString("\n\n**Pages Viewed:**")
+		fullMessage.WriteString("\n**Pages Viewed:**")
 		for _, page := range analysis.PageViews {
 			cleanPage := c.cleanUrl(page)
 			fullUrl := fmt.Sprintf("https://%s/%s", analysis.Hostname, cleanPage)
@@ -398,171 +397,3 @@ func (c *agentCapabilityService) cleanUrl(s string) string {
 	clean = strings.TrimPrefix(clean, "www.")
 	return strings.Trim(clean, "/")
 }
-
-//
-// func (a *agentVisitorIDService) buildWebVisitorSlackNotification(ctx context.Context, session *postgres_entity.WebSession, orgID string) (*string, error) {
-// 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.buildWebVisitorSlackNotification")
-// 	defer span.Finish()
-// 	tracing.SetDefaultListenerSpanTags(ctx, span)
-//
-// 	// get org data from global org table
-// 	globalOrg, err := a.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, *session.Domain)
-// 	if err != nil {
-// 		tracing.TraceErr(span, err)
-// 		return nil, err
-// 	}
-//
-// 	if globalOrg == nil {
-// 		err = a.postgresRepositories.GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess(ctx, *session.Domain)
-// 		if err != nil {
-// 			tracing.TraceErr(span, err)
-// 		}
-// 	}
-//
-// 	// Build company info section
-// 	var companyLines []string
-// 	primaryDomain := *session.Domain
-// 	if globalOrg != nil {
-// 		primaryDomain = globalOrg.PrimaryDomain
-// 	}
-// 	website := "https://" + primaryDomain
-// 	name := *session.Domain
-// 	if globalOrg != nil {
-// 		name = globalOrg.Name
-// 	}
-//
-// 	companyLines = append(companyLines, fmt.Sprintf("<%s|*%s*>", website, name))
-//
-// 	if globalOrg != nil && globalOrg.Description != "" {
-// 		companyLines = append(companyLines, fmt.Sprintf("%s", globalOrg.Description))
-// 	}
-//
-// 	if website != "" {
-// 		companyLines = append(companyLines, fmt.Sprintf("*Website:* <%s|%s>", website, primaryDomain))
-// 	}
-//
-// 	if globalOrg != nil && globalOrg.LinkedInUrl != "" && globalOrg.LinkedInAlias != "" {
-// 		companyLines = append(companyLines, fmt.Sprintf("*LinkedIn:* <%s|/%s>", globalOrg.LinkedInUrl, globalOrg.LinkedInAlias))
-// 	}
-//
-// 	if globalOrg != nil && globalOrg.City != "" && globalOrg.CountryA2 != "" {
-// 		companyLines = append(companyLines, fmt.Sprintf("*Location:* %s, %s", globalOrg.City, globalOrg.CountryA2))
-// 	}
-//
-// 	if session.Referrer != nil {
-// 		referrer := strings.TrimPrefix(*session.Referrer, "https://")
-// 		referrer = strings.TrimPrefix(referrer, "http://")
-// 		referrer = strings.TrimPrefix(referrer, "www.")
-// 		referrer = strings.Trim(referrer, "/")
-// 		companyLines = append(companyLines, fmt.Sprintf("*Source:* <%s|%s>", *session.Referrer, referrer))
-// 	} else {
-// 		companyLines = append(companyLines, "*Source:* Direct")
-// 	}
-//
-// 	companyContent := strings.Join(companyLines, "\n")
-//
-// 	// Build session info section
-// 	var sessionLines []string
-//
-// 	if session.EndTime != nil && !session.EndTime.IsZero() {
-// 		duration, err := a.calculateSessionDuration(ctx, session)
-// 		if err != nil {
-// 			tracing.TraceErr(span, err)
-// 			return nil, err
-// 		}
-//
-// 		sessionLines = append(sessionLines, fmt.Sprintf("*Session Duration:* %s minutes", duration))
-// 	}
-//
-// 	// Get page views
-// 	query := postgres_entity.WebTrackerEvents{
-// 		SessionID: session.ID,
-// 		EventType: enum.WebTrackerPageView.String(),
-// 	}
-// 	pageViews, err := a.postgresRepositories.WebTrackerEventsRepository.FindAll(ctx, query, nil)
-// 	if err != nil {
-// 		tracing.TraceErr(span, err)
-// 		return nil, err
-// 	}
-//
-// 	uniquePages, err := a.getUniquePageViews(ctx, pageViews)
-// 	if err != nil {
-// 		tracing.TraceErr(span, err)
-// 		return nil, err
-// 	}
-//
-// 	sessionLines = append(sessionLines, fmt.Sprintf("*Pages Viewed:* %d", len(uniquePages)))
-// 	for _, page := range uniquePages {
-// 		sessionLines = append(sessionLines, fmt.Sprintf("• <%s%s|%s>", website, page, page))
-// 	}
-//
-// 	sessionContent := strings.Join(sessionLines, "\n")
-//
-// 	// Handle logo accessory
-// 	var logoAccessory string
-// 	if globalOrg != nil && globalOrg.LogoUrl != "" {
-// 		logoAccessory = fmt.Sprintf(`,
-//            "accessory": {
-//                "type": "image",
-//                "image_url": "%s",
-//                "alt_text": "%s logo"
-//            }`, globalOrg.LogoUrl, name)
-// 	}
-//
-// 	// Build the final layout
-// 	layoutBlocks := fmt.Sprintf(`[
-//        {
-//            "type": "header",
-//            "text": {
-//                "type": "plain_text",
-//                "text": "A visitor from %s is on your website",
-//                "emoji": true
-//            }
-//        },
-//        {
-//            "type": "divider"
-//        },
-//        {
-//            "type": "section",
-//            "text": {
-//                "type": "mrkdwn",
-//                "text": "%s"
-//            }%s
-//        },
-//        {
-//            "type": "divider"
-//        },
-//        {
-//            "type": "section",
-//            "text": {
-//                "type": "mrkdwn",
-//                "text": "%s"
-//            }
-//        },
-//        {
-//            "type": "divider"
-//        },
-//        {
-//            "type": "actions",
-//            "elements": [
-//                {
-//                    "type": "button",
-//                    "text": {
-//                        "type": "plain_text",
-//                        "text": "View in CustomerOS"
-//                    },
-//                    "url": "https://app.customeros.ai/organization/%s?tab=about",
-//                    "value": "click_me_123",
-//                    "action_id": "actionId-0"
-//                }
-//            ]
-//        }
-//    ]`,
-// 		name,
-// 		companyContent,
-// 		logoAccessory,
-// 		sessionContent,
-// 		orgID)
-//
-// 	return &layoutBlocks, nil
-// }

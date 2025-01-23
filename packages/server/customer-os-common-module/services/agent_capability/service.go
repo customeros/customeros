@@ -2,10 +2,12 @@ package agent_capability
 
 import (
 	"context"
+
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
 
 type CapabilityExecutionHandler func(ctx context.Context, executionContainer *dto.CapabilityExecutionContainer) error
@@ -16,6 +18,7 @@ type agentCapabilityService struct {
 	enrichmentService    interfaces.EnrichmentService
 	organizationService  interfaces.OrganizationService
 	actionService        interfaces.ActionService
+	notificationService  interfaces.NotificationService
 }
 
 func NewAgentCapabilityService(
@@ -23,6 +26,7 @@ func NewAgentCapabilityService(
 	enrichmentService interfaces.EnrichmentService,
 	organizationService interfaces.OrganizationService,
 	actionService interfaces.ActionService,
+	notificationService interfaces.NotificationService,
 ) (interfaces.AgentCapabilityService, error) {
 	service := &agentCapabilityService{
 		executionHandlers:    make(map[enum.AgentCapabilityType]CapabilityExecutionHandler),
@@ -30,6 +34,7 @@ func NewAgentCapabilityService(
 		enrichmentService:    enrichmentService,
 		organizationService:  organizationService,
 		actionService:        actionService,
+		notificationService:  notificationService,
 	}
 
 	// err := service.InitCapabilityRegistry()

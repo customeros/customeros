@@ -176,12 +176,11 @@ func InitCommonServices(
 	interactionSessionImpl := interaction_session.NewInteractionSessionService(neo4jRepositories)
 	markdownEventImpl := markdown_event.NewMarkdownEventService(log, neo4jRepositories, eventsImpl)
 	namecheapImpl := namecheap.NewNamecheapService(&cfg.External.NamecheapConfig, postgresRepositories)
-	notificationImpl := notification.NewNotificationService(log, postgresRepositories)
 	novuImpl := novu.NewNovuService(cfg.External.NovuCofig.ApiKey)
 	openSRSImpl := opensrs.NewOpenSRSService(log, &cfg.External.OpenSRSConfig, postgresRepositories)
 	phoneNumberImpl := phone_number.NewPhoneNumberService(neo4jRepositories, eventsImpl)
 	postmarkImpl := postmark.NewPostmarkService(&cfg.External.PostmarkConfig, postgresRepositories)
-	slackImpl := slack.NewSlackService(postgresRepositories)
+	slackImpl := slack.NewSlackService(log, postgresRepositories)
 	tagImpl := tags.NewTagService(log, neo4jRepositories, eventsImpl)
 	tenantImpl := tenant.NewTenantService(log, neo4jRepositories, postgresRepositories)
 	tenantSettingsImpl := tenant_settings.NewTenantSettingsService(log, neo4jRepositories, eventsImpl)
@@ -191,6 +190,7 @@ func InitCommonServices(
 
 	// Services that only depend on Simple
 	fileImpl := files.NewFileService(log, &cfg.Internal.FileStoreConfig, neo4jRepositories, attachmentImpl)
+	notificationImpl := notification.NewNotificationService(log, postgresRepositories, slackImpl)
 	reminderImpl := reminders.NewReminderService(neo4jRepositories, novuImpl)
 	verifyImpl := verify.NewVerifyService(log, postgresRepositories, cfg, enrichmentImpl)
 
@@ -199,7 +199,7 @@ func InitCommonServices(
 	jobroleImpl := jobrole.NewJobRoleService(neo4jRepositories, eventsImpl, nil)
 	issueImpl := issue.NewIssueService(log, neo4jRepositories, eventsImpl, nil)
 	contactImpl := contact.NewContactService(log, neo4jRepositories, eventsImpl, domainImpl, emailImpl, nil, jobroleImpl, nil, nil)
-	agentCapabilityImpl, err := agent_capability.NewAgentCapabilityService(postgresRepositories, enrichmentImpl, nil, nil)
+	agentCapabilityImpl, err := agent_capability.NewAgentCapabilityService(postgresRepositories, enrichmentImpl, nil, nil, notificationImpl)
 	if err != nil {
 		log.Fatalf("Cannot start agent capability service")
 	}

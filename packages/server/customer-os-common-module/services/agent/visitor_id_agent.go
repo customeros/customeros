@@ -2,7 +2,6 @@ package agent
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -10,7 +9,9 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -114,7 +115,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	}
 
 	// execute web session analysis capability
-	_, err = a.executeWebSessionAnalysisCapability(
+	sessionAnalytics, err := a.executeWebSessionAnalysisCapability(
 		ctx,
 		agentID,
 		executionID,
@@ -135,10 +136,53 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	}
 
 	// check if slack notification enabled
+	slackChannel, err := a.postgresRepositories.SlackChannelNotificationRepository.GetSlackChannel(ctx, "REVEAL-AI-WEBSITE-VISIT")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if slackChannel == nil {
+		return nil
+	}
 
 	// check if notification should be suppressed
+	skip, err := a.skipNotification(ctx, visitorIDResults.Domain, 12)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if skip {
+		return nil
+	}
+
+	// build slack message
+	message, err := a.buildWebVisitorSlackNotification(ctx, orgCreationResults.OrganizationID, visitorIDResults, sessionAnalytics)
+	if err != nil || message == nil {
+		err = errors.Wrap(err, "unable to build slack notificatoin")
+		tracing.TraceErr(span, err)
+		errMessage := "unable to send slack notification"
+		_, err := a.postgresRepositories.AgentExecutionRepository.Update(
+			ctx, executionID, nil, &errMessage, false)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		return err
+	}
 
 	// execute send notification capability
+	err = a.executeSendSlackNotificationCapability(ctx, agentID, executionID, slackChannel.ChannelId, message)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		errMessage := "unable to send slack notification"
+		_, err := a.postgresRepositories.AgentExecutionRepository.Update(
+			ctx, executionID, nil, &errMessage, false)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		return err
+	}
 
 	// update agentExecutionRecord
 	_, err = a.postgresRepositories.AgentExecutionRepository.Update(
@@ -154,6 +198,14 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	}
 
 	return nil
+}
+
+func (a *AgentVisitorIDService) isSlackNotificationEnabled(ctx context.Context) (bool, string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.isSlackNotificationEnabled")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	return true, ""
 }
 
 func (a *AgentVisitorIDService) validateWebsiteVisitEvent(event *data_fields.WebsiteVisitEvent) error {
@@ -172,6 +224,41 @@ func (a *AgentVisitorIDService) validateWebsiteVisitEvent(event *data_fields.Web
 	}
 	if event.VisitorID == "" {
 		return fmt.Errorf("visitorId cannot be empty")
+	}
+
+	return nil
+}
+
+func (a *AgentVisitorIDService) executeSendSlackNotificationCapability(
+	ctx context.Context,
+	agentID, executionID, slackChannelID string,
+	message *string,
+) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.executeSendSlackNotificationCapability")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("Tenant not set on context")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	executionContainer := dto.CapabilityExecutionContainer{
+		AgentID:          agentID,
+		AgentExecutionID: executionID,
+		Capability:       enum.CapabilitySendSlackNotification,
+		InputData: agent_capability.SendSlackNotificationInput{
+			Message:   message,
+			ChannelID: slackChannelID,
+		},
+	}
+
+	err := a.agentCapabilityService.ExecuteCapability(ctx, &executionContainer)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	return nil
@@ -300,29 +387,30 @@ func (a *AgentVisitorIDService) createAgentExecutionRecord(ctx context.Context, 
 	return a.agentService.CreateAgentExecutionRecord(ctx, *agent, triggerEventType)
 }
 
-func (a *AgentVisitorIDService) skipNotification(ctx context.Context, agentConfig *AgentConfig, session *postgres_entity.WebSession) (bool, error) {
+func (a *AgentVisitorIDService) skipNotification(ctx context.Context, domain string, cooldownInHrs int) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.skipNotifications")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
 
-	if session.Domain == nil {
-		return true, nil
-	}
-
-	// don't send if from workspace domain
-	isWorkspaceDomain := a.isWorkspaceDomain(ctx, *session.Domain)
-	if isWorkspaceDomain {
-		return true, nil
-	}
-
-	if agentConfig == nil {
-		err := errors.New("agent config not set")
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("Tenant not set on context")
 		tracing.TraceErr(span, err)
 		return true, err
 	}
 
+	if domain == "" {
+		return true, nil
+	}
+
+	// don't send if from workspace domain
+	isWorkspaceDomain := a.isWorkspaceDomain(ctx, domain)
+	if isWorkspaceDomain {
+		return true, nil
+	}
+
 	// determine last notification from this domain
-	lastNotification, err := a.postgresRepositories.WebSessionRepository.FindLastNotification(ctx, session.Tenant, *session.Domain)
+	lastNotification, err := a.postgresRepositories.WebSessionRepository.FindLastNotification(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, nil
@@ -334,7 +422,7 @@ func (a *AgentVisitorIDService) skipNotification(ctx context.Context, agentConfi
 
 	// determine how long since last notification
 	hoursSinceLastNotification := time.Now().Sub(*lastNotification.SentSlackNotification).Hours()
-	if hoursSinceLastNotification < float64(agentConfig.NotificationCooldownInHours) {
+	if hoursSinceLastNotification < float64(cooldownInHrs) {
 		return true, nil
 	}
 
@@ -359,4 +447,142 @@ func (a *AgentVisitorIDService) isWorkspaceDomain(ctx context.Context, domain st
 	}
 
 	return false
+}
+
+func (a *AgentVisitorIDService) buildWebVisitorSlackNotification(
+	ctx context.Context,
+	orgID string,
+	visitorID agent_capability.IdentifyWebsiteVisitorResult,
+	sessionAnalytics agent_capability.AnalyzeWebSessionResult,
+) (*string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.buildWebVisitorSlackNotification")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	// get org data from global org table
+	globalOrg, err := a.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, visitorID.Domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if globalOrg == nil {
+		err = a.postgresRepositories.GlobalOrganizationWebsiteToProcessRepository.AddWebsiteToProcess(ctx, visitorID.Domain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
+
+	// Build company info section
+	var companyLines []string
+	primaryDomain := visitorID.Domain
+	website := "https://" + primaryDomain
+	name := visitorID.Domain
+	if globalOrg != nil {
+		name = globalOrg.Name
+	}
+
+	companyLines = append(companyLines, fmt.Sprintf("<%s|*%s*>", website, name))
+
+	if globalOrg != nil && globalOrg.Description != "" {
+		companyLines = append(companyLines, fmt.Sprintf("%s", globalOrg.Description))
+	}
+
+	if website != "" {
+		companyLines = append(companyLines, fmt.Sprintf("*Website:* <%s|%s>", website, primaryDomain))
+	}
+
+	if globalOrg != nil && globalOrg.LinkedInUrl != "" && globalOrg.LinkedInAlias != "" {
+		companyLines = append(companyLines, fmt.Sprintf("*LinkedIn:* <%s|/%s>", globalOrg.LinkedInUrl, globalOrg.LinkedInAlias))
+	}
+
+	if globalOrg != nil && globalOrg.City != "" && globalOrg.CountryA2 != "" {
+		companyLines = append(companyLines, fmt.Sprintf("*Location:* %s, %s", globalOrg.City, globalOrg.CountryA2))
+	}
+
+	if sessionAnalytics.Referrer != "" {
+		companyLines = append(companyLines, fmt.Sprintf("*Source:* <https://%s|%s>", sessionAnalytics.Referrer, sessionAnalytics.Referrer))
+	} else {
+		companyLines = append(companyLines, "*Source:* Direct")
+	}
+
+	companyContent := strings.Join(companyLines, "\n")
+
+	// Build session info section
+	var sessionLines []string
+	sessionLines = append(sessionLines, fmt.Sprintf("*Session Duration:* %s minutes", sessionAnalytics.SessionDuration))
+	sessionLines = append(sessionLines, fmt.Sprintf("*Pages Viewed:* %d", len(sessionAnalytics.PageViews)))
+	for _, page := range sessionAnalytics.PageViews {
+		sessionLines = append(sessionLines, fmt.Sprintf("• <%s%s|%s>", website, page, page))
+	}
+
+	sessionContent := strings.Join(sessionLines, "\n")
+
+	// Handle logo accessory
+	var logoAccessory string
+	if globalOrg != nil && globalOrg.LogoUrl != "" {
+		logoAccessory = fmt.Sprintf(`,
+           "accessory": {
+               "type": "image",
+               "image_url": "%s",
+               "alt_text": "%s logo"
+           }`, globalOrg.LogoUrl, name)
+	}
+
+	// Build the final layout
+	layoutBlocks := fmt.Sprintf(`[
+       {
+           "type": "header",
+           "text": {
+               "type": "plain_text",
+               "text": "A visitor from %s is on your website",
+               "emoji": true
+           }
+       },
+       {
+           "type": "divider"
+       },
+       {
+           "type": "section",
+           "text": {
+               "type": "mrkdwn",
+               "text": "%s"
+           }%s
+       },
+       {
+           "type": "divider"
+       },
+       {
+           "type": "section",
+           "text": {
+               "type": "mrkdwn",
+               "text": "%s"
+           }
+       },
+       {
+           "type": "divider"
+       },
+       {
+           "type": "actions",
+           "elements": [
+               {
+                   "type": "button",
+                   "text": {
+                       "type": "plain_text",
+                       "text": "View in CustomerOS"
+                   },
+                   "url": "https://app.customeros.ai/organization/%s?tab=about",
+                   "value": "click_me_123",
+                   "action_id": "actionId-0"
+               }
+           ]
+       }
+   ]`,
+		name,
+		companyContent,
+		logoAccessory,
+		sessionContent,
+		orgID)
+
+	return &layoutBlocks, nil
 }
