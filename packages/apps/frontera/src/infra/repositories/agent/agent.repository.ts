@@ -11,15 +11,15 @@ import {
 } from './mutations/saveAgent.generated';
 
 export class AgentRepository {
-  private instance: AgentRepository | null = null;
+  private static instance: AgentRepository | null = null;
   private transport = Transport.getInstance();
 
   constructor() {
-    if (!this.instance) {
-      this.instance = new AgentRepository();
+    if (!AgentRepository.instance) {
+      AgentRepository.instance = new AgentRepository();
     }
 
-    return this.instance;
+    return AgentRepository.instance;
   }
 
   public async getAgent(payload: AgentQueryVariables) {

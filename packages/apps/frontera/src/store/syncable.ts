@@ -1,4 +1,5 @@
 import type { Channel } from 'phoenix';
+import type { Transport } from '@infra/transport';
 
 import { getDiff, applyDiff } from 'recursive-diff';
 import { Persister, type PersisterInstance } from '@store/persister';
@@ -13,7 +14,6 @@ import {
 } from 'mobx';
 
 import type { RootStore } from './root';
-import type { Transport } from './transport';
 import type { Operation, SyncPacket } from './types';
 
 type SyncableUpdateOptions = {

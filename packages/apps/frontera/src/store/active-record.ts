@@ -1,4 +1,5 @@
 import type { Channel } from 'phoenix';
+import type { Transport } from '@infra/transport';
 
 import set from 'lodash/set';
 import { match } from 'ts-pattern';
@@ -16,7 +17,6 @@ import {
 } from 'mobx';
 
 import type { RootStore } from './root';
-import type { Transport } from './transport';
 
 import { Persister, PersisterInstance } from './persister';
 import {

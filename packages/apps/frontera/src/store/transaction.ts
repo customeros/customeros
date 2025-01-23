@@ -1,8 +1,9 @@
+import type { Transport } from '@infra/transport';
+
 import localforage from 'localforage';
 import { computed, reaction, observable, makeObservable } from 'mobx';
 
 import type { RootStore } from './root';
-import type { Transport } from './transport';
 import type { Operation, GroupOperation } from './types';
 
 import { GraphqlService } from './graphql';

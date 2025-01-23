@@ -1,4 +1,5 @@
 import type { Channel } from 'phoenix';
+import type { Transport } from '@infra/transport';
 
 import { match } from 'ts-pattern';
 import { Persister, type PersisterInstance } from '@store/persister';
@@ -12,7 +13,6 @@ import {
 } from 'mobx';
 
 import type { RootStore } from './root';
-import type { Transport } from './transport';
 import type { GroupOperation, GroupSyncPacket } from './types';
 
 import { Syncable } from './syncable';
