@@ -1,6 +1,7 @@
 package private
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -30,8 +31,12 @@ func NewAskAIHandler(services *cosapi_services.Services, responseHandler *respon
 type AskAIRequest struct {
 	Model        string             `json:"model"`
 	SystemPrompt *string            `json:"systemPrompt,omitempty"`
-	Prompt       any                `json:"prompt"`
+	Prompt       PromptContent      `json:"prompt"`
 	AIModel      commonEnum.AIModel `json:"-"`
+}
+
+type PromptContent struct {
+	data any
 }
 
 type AskAIResponse struct {
@@ -114,7 +119,7 @@ func (h *AskAIHandler) validateAIRequest(req *AskAIRequest) error {
 		return fmt.Errorf("model is required")
 	}
 
-	switch v := req.Prompt.(type) {
+	switch v := req.Prompt.GetData().(type) {
 	case string:
 		if strings.TrimSpace(v) == "" {
 			return fmt.Errorf("prompt cannot be empty")
@@ -128,4 +133,23 @@ func (h *AskAIHandler) validateAIRequest(req *AskAIRequest) error {
 	}
 
 	return nil
+}
+func (p *PromptContent) UnmarshalJSON(b []byte) error {
+	var structured map[string]interface{}
+	if err := json.Unmarshal(b, &structured); err == nil {
+		p.data = structured
+		return nil
+	}
+
+	// Fall back to string
+	var str string
+	if err := json.Unmarshal(b, &str); err != nil {
+		return err
+	}
+	p.data = str
+	return nil
+}
+
+func (p PromptContent) GetData() interface{} {
+	return p.data
 }
