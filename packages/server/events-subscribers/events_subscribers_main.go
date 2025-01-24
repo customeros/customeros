@@ -2,18 +2,22 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
-	"github.com/sirupsen/logrus"
 
 	"github.com/customeros/customeros/packages/server/events-subscribers/config"
 	"github.com/customeros/customeros/packages/server/events-subscribers/handlers"
@@ -21,119 +25,208 @@ import (
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
 
-const (
-	AppName                                = "events-subscribers"
-	EventsQueueName                        = "events"
-	EventsFlowParticipantScheduleQueueName = "events-flow-participant-schedule"
-)
+type QueueConfig struct {
+	Events          string
+	FlowParticipant string
+}
 
-func main() {
-	ctx := context.Background()
+type App struct {
+	ctx           context.Context
+	cancel        context.CancelFunc
+	config        *config.Config
+	logger        logger.Logger
+	tracingCloser io.Closer
+	deps          *model.DependencyContainer
+	events        *events.EventsService
+	postgresDB    *commonConfig.PostgresDB
+	neo4jDriver   *neo4j.DriverWithContext
+	queueConfig   QueueConfig
+}
 
-	// Config
-	cfg := config.Load()
+func NewApp() *App {
+	ctx, cancel := context.WithCancel(context.Background())
+	return &App{
+		ctx:    ctx,
+		cancel: cancel,
+		queueConfig: QueueConfig{
+			Events:          "events",
+			FlowParticipant: "events-flow-participant-schedule",
+		},
+	}
+}
 
-	appLogger := logger.NewExtendedAppLogger(&cfg.Common.Infrastructure.LoggerConfig)
-	appLogger.InitLogger()
-	appLogger.WithName(AppName)
+func (a *App) Initialize() error {
+	// Load config
+	a.config = config.Load()
 
-	// Initialize Tracing
-	tracingCloser := initTracing(cfg, appLogger)
-	if tracingCloser != nil {
-		defer tracingCloser.Close()
+	// Initialize logger
+	a.logger = logger.NewExtendedAppLogger(&a.config.Common.Infrastructure.LoggerConfig)
+	a.logger.InitLogger()
+	a.logger.WithName("events-subscribers")
+
+	// Initialize tracing
+	if err := a.initTracing(); err != nil {
+		return fmt.Errorf("failed to initialize tracing: %w", err)
 	}
 
-	postgresDb, err := commonConfig.InitPostgres(&commonConfig.CommonConfig{
+	// Initialize databases
+	if err := a.initDatabases(); err != nil {
+		return fmt.Errorf("failed to initialize databases: %w", err)
+	}
+
+	// Initialize services
+	if err := a.initServices(); err != nil {
+		return fmt.Errorf("failed to initialize services: %w", err)
+	}
+
+	return nil
+}
+
+func (a *App) initTracing() error {
+	if a.config.Common.Infrastructure.JaegerConfig.Enabled {
+		tracer, closer, err := tracing.NewJaegerTracer(&a.config.Common.Infrastructure.JaegerConfig, a.logger)
+		if err != nil {
+			return fmt.Errorf("could not initialize jaeger tracer: %w", err)
+		}
+		opentracing.SetGlobalTracer(tracer)
+		a.tracingCloser = closer
+	}
+	return nil
+}
+
+func (a *App) initDatabases() error {
+	// Initialize Postgres
+	db, err := commonConfig.InitPostgres(&commonConfig.CommonConfig{
 		Infrastructure: commonConfig.InfrastructureConfig{
-			PostgresConfig:      cfg.Common.Infrastructure.PostgresConfig,
-			PostgresAsyncConfig: cfg.Common.Infrastructure.PostgresAsyncConfig,
+			PostgresConfig:      a.config.Common.Infrastructure.PostgresConfig,
+			PostgresAsyncConfig: a.config.Common.Infrastructure.PostgresAsyncConfig,
 		},
 	})
 	if err != nil {
-		logrus.Fatalf("failed opening connection to postgres: %v", err.Error())
+		return fmt.Errorf("failed opening connection to postgres: %w", err)
 	}
-	defer postgresDb.Close()
+	a.postgresDB = db
 
-	neo4jDriver, err := commonConfig.NewNeo4jDriver(cfg.Common.Infrastructure.Neo4jConfig)
+	// Initialize Neo4j
+	driver, err := commonConfig.NewNeo4jDriver(a.config.Common.Infrastructure.Neo4jConfig)
 	if err != nil {
-		appLogger.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Common.Infrastructure.Neo4jConfig.Target, err.Error())
+		return fmt.Errorf("could not establish connection with neo4j: %w", err)
 	}
-	defer neo4jDriver.Close(ctx)
+	a.neo4jDriver = &driver
 
-	// Events processing
+	return nil
+}
+
+func (a *App) initServices() error {
+	// Initialize gRPC clients
 	var eventsProcessingGrpcClient *grpc_client.Clients
-	if cfg.Common.Infrastructure.GrpcClientConfig.EventsProcessingPlatformEnabled {
-		df := grpc_client.NewDialFactory(&cfg.Common.Infrastructure.GrpcClientConfig)
+	if a.config.Common.Infrastructure.GrpcClientConfig.EventsProcessingPlatformEnabled {
+		df := grpc_client.NewDialFactory(&a.config.Common.Infrastructure.GrpcClientConfig)
 		gRPCconn, err := df.GetEventsProcessingPlatformConn()
-		defer df.Close(gRPCconn)
 		if err != nil {
-			appLogger.Fatalf("Failed to connect: %v", err)
+			return fmt.Errorf("failed to connect to gRPC: %w", err)
 		}
 		eventsProcessingGrpcClient = grpc_client.InitClients(gRPCconn)
 	}
 
-	postgresRepositories := postgres_repository.InitRepositories(postgresDb)
-	neo4jRepositories := neo4j_repository.InitNeo4jRepositories(&neo4jDriver, cfg.Common.Infrastructure.Neo4jConfig.Database)
+	// Initialize repositories
+	postgresRepositories := postgres_repository.InitRepositories(a.postgresDB)
+	neo4jRepositories := neo4j_repository.InitNeo4jRepositories(a.neo4jDriver, a.config.Common.Infrastructure.Neo4jConfig.Database)
 
-	commonServices := commonService.InitCommonServices(
-		appLogger,
+	// Initialize common services
+	commonServices := service.InitCommonServices(
+		a.logger,
 		neo4jRepositories,
 		postgresRepositories,
-		cfg.Common,
+		a.config.Common,
 		eventsProcessingGrpcClient,
-		&commonService.InitOptions{LoadPersonalEmailProviders: true},
+		&service.InitOptions{LoadPersonalEmailProviders: true},
 	)
 
-	// Create dependencies for event handlers
-	dependencies := &model.DependencyContainer{
-		Logger:               appLogger,
+	// Initialize dependency container
+	a.deps = &model.DependencyContainer{
+		Logger:               a.logger,
 		GRPCClients:          eventsProcessingGrpcClient,
-		CommonConfig:         cfg.Common,
+		CommonConfig:         a.config.Common,
 		PostgresRepositories: postgresRepositories,
 		Neo4jRepositories:    neo4jRepositories,
 		CommonServices:       commonServices,
 	}
 
-	// Create Events Service
+	// Initialize events service
 	eventsService, err := events.NewEventsService(
-		dependencies.CommonConfig.Infrastructure.RabbitMQConfig.Url,
-		appLogger,
+		a.config.Common.Infrastructure.RabbitMQConfig.Url,
+		a.logger,
 	)
 	if err != nil {
-		appLogger.Fatalf("Failed to create events service: %v", err)
+		return fmt.Errorf("failed to create events service: %w", err)
 	}
-	defer eventsService.Close()
+	a.events = eventsService
 
-	// Register all handlers
-	handlers.InitHandlerRegistration(eventsService, dependencies)
+	// Initialize handlers
+	handlers.InitHandlerRegistration(a.events, a.deps)
 
-	// Set up queue listeners
-	go func() {
-		if err := eventsService.Subscriber.ListenQueue(EventsQueueName); err != nil {
-			appLogger.Fatalf("Failed to listen to queue %s: %v", EventsQueueName, err)
-		}
-	}()
-
-	go func() {
-		if err := eventsService.Subscriber.ListenQueueExclusive(EventsFlowParticipantScheduleQueueName); err != nil {
-			appLogger.Fatalf("Failed to listen to exclusive queue %s: %v", EventsFlowParticipantScheduleQueueName, err)
-		}
-	}()
-
-	// Block the main thread from exiting
-	forever := make(chan bool)
-	log.Println(" [*] Waiting for messages")
-	<-forever
-}
-
-func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
-	if cfg.Common.Infrastructure.JaegerConfig.Enabled {
-		tracer, closer, err := tracing.NewJaegerTracer(&cfg.Common.Infrastructure.JaegerConfig, appLogger)
-		if err != nil {
-			appLogger.Fatalf("Could not initialize jaeger tracer: %v", err.Error())
-		}
-		opentracing.SetGlobalTracer(tracer)
-		return closer
-	}
 	return nil
 }
+
+func (a *App) Run() error {
+	// Start event listeners
+	errChan := make(chan error, 2)
+
+	go func() {
+		if err := a.events.Subscriber.ListenQueue(a.queueConfig.Events); err != nil {
+			errChan <- fmt.Errorf("failed to listen to queue %s: %w", a.queueConfig.Events, err)
+		}
+	}()
+
+	go func() {
+		if err := a.events.Subscriber.ListenQueueExclusive(a.queueConfig.FlowParticipant); err != nil {
+			errChan <- fmt.Errorf("failed to listen to exclusive queue %s: %w", a.queueConfig.FlowParticipant, err)
+		}
+	}()
+
+	// Handle shutdown gracefully
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case err := <-errChan:
+		return err
+	case <-sigChan:
+		return a.Shutdown()
+	case <-a.ctx.Done():
+		return a.Shutdown()
+	}
+}
+
+func (a *App) Shutdown() error {
+	a.cancel()
+
+	if a.tracingCloser != nil {
+		a.tracingCloser.Close()
+	}
+	if a.postgresDB != nil {
+		a.postgresDB.Close()
+	}
+	if a.neo4jDriver != nil {
+		(*a.neo4jDriver).Close(a.ctx)
+	}
+	if a.events != nil {
+		a.events.Close()
+	}
+
+	return nil
+}
+
+func main() {
+	app := NewApp()
+
+	if err := app.Initialize(); err != nil {
+		log.Fatalf("Failed to initialize application: %v", err)
+	}
+
+	if err := app.Run(); err != nil {
+		log.Fatalf("Application error: %v", err)
+	}
+}
+

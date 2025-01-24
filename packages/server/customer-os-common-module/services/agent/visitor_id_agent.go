@@ -3,9 +3,10 @@ package agent
 import (
 	"context"
 	"fmt"
-	"github.com/opentracing/opentracing-go/log"
 	"strings"
 	"time"
+
+	"github.com/opentracing/opentracing-go/log"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -23,23 +24,23 @@ import (
 )
 
 type AgentVisitorIDService struct {
-	postgresRepositories   *postgres_repository.Repositories
-	agentService           interfaces.AgentService
-	agentCapabilityService interfaces.AgentCapabilityService
-	workspaceService       interfaces.WorkspaceService
+	postgresRepositories *postgres_repository.Repositories
+	agentCapabilities    *agent_capability.AgentCapabilities
+	agentService         interfaces.AgentService
+	workspaceService     interfaces.WorkspaceService
 }
 
 func NewAgentVisitorIDService(
 	postgresRepositories *postgres_repository.Repositories,
+	agentCapabilities *agent_capability.AgentCapabilities,
 	agentService interfaces.AgentService,
-	agentCapabilityService interfaces.AgentCapabilityService,
 	workspaceService interfaces.WorkspaceService,
 ) *AgentVisitorIDService {
 	return &AgentVisitorIDService{
-		postgresRepositories:   postgresRepositories,
-		agentService:           agentService,
-		agentCapabilityService: agentCapabilityService,
-		workspaceService:       workspaceService,
+		postgresRepositories: postgresRepositories,
+		agentCapabilities:    agentCapabilities,
+		agentService:         agentService,
+		workspaceService:     workspaceService,
 	}
 }
 
@@ -257,11 +258,7 @@ func (a *AgentVisitorIDService) executeSendSlackNotificationCapability(
 		},
 	}
 
-	err := a.agentCapabilityService.ExecuteCapability(ctx, &executionContainer)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
+	executionContainer.AgentID = ""
 
 	return nil
 }
@@ -285,12 +282,6 @@ func (a *AgentVisitorIDService) executeWebSessionAnalysisCapability(
 			OrganizationID: organizationID,
 			Domain:         domain,
 		},
-	}
-
-	err := a.agentCapabilityService.ExecuteCapability(ctx, &executionContainer)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return agent_capability.AnalyzeWebSessionResult{}, err
 	}
 
 	output, ok := executionContainer.OutputData.(agent_capability.AnalyzeWebSessionResult)
@@ -319,12 +310,6 @@ func (a *AgentVisitorIDService) executeOrgCreationCapability(ctx context.Context
 		},
 	}
 
-	err := a.agentCapabilityService.ExecuteCapability(ctx, &executionContainer)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return agent_capability.CreateOrganizationResult{}, err
-	}
-
 	output, ok := executionContainer.OutputData.(agent_capability.CreateOrganizationResult)
 	if !ok {
 		err := fmt.Errorf("expected agent_capability.CreateOrganizationResult, got %T", executionContainer.OutputData)
@@ -348,12 +333,6 @@ func (a *AgentVisitorIDService) executeVisitorIDCapability(ctx context.Context, 
 			IPAddress: event.IPAddress,
 			SessionID: event.SessionID,
 		},
-	}
-
-	err := a.agentCapabilityService.ExecuteCapability(ctx, &executionContainer)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return agent_capability.IdentifyWebsiteVisitorResult{}, err
 	}
 
 	output, ok := executionContainer.OutputData.(agent_capability.IdentifyWebsiteVisitorResult)

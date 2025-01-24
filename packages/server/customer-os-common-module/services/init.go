@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/quickbooks"
 	"log"
 	"reflect"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/quickbooks"
 
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -16,7 +18,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/action"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/ai"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/attachment"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/azure"
@@ -80,7 +81,6 @@ type CommonServices struct {
 	// Services
 	ActionService              interfaces.ActionService
 	AgentService               interfaces.AgentService
-	AgentVisitorIDService      *agent.AgentVisitorIDService
 	AIService                  interfaces.AIService
 	AttachmentService          interfaces.AttachmentService
 	AzureService               interfaces.AzureService
@@ -132,6 +132,10 @@ type CommonServices struct {
 	QuickbooksService          interfaces.QuickbooksService
 	WorkflowService            interfaces.WorkflowService
 	WorkspaceService           interfaces.WorkspaceService
+
+	// Agents
+	AgentCapabilities     *agent_capability.AgentCapabilities
+	AgentVisitorIDService *agent.AgentVisitorIDService
 }
 
 type InitOptions struct {
@@ -201,13 +205,8 @@ func InitCommonServices(
 	jobroleImpl := jobrole.NewJobRoleService(neo4jRepositories, eventsImpl, nil)
 	issueImpl := issue.NewIssueService(log, neo4jRepositories, eventsImpl, nil)
 	contactImpl := contact.NewContactService(log, neo4jRepositories, eventsImpl, domainImpl, emailImpl, nil, jobroleImpl, nil, nil)
-	agentCapabilityImpl, err := agent_capability.NewAgentCapabilityService(postgresRepositories, enrichmentImpl, nil, nil, notificationImpl)
-	if err != nil {
-		log.Fatalf("Cannot start agent capability service")
-	}
 	socialImpl := social.NewSocialService(log, neo4jRepositories, eventsImpl, contactImpl)
 	orgImpl := organization.NewOrganizationService(log, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl)
-	agentVisitorIdImpl := agent.NewAgentVisitorIDService(postgresRepositories, agentImpl, agentCapabilityImpl, workspaceImpl)
 	contractImpl := contract.NewContractService(log, neo4jRepositories, eventsImpl, grpcClients, nil, orgImpl)
 	opportunityImpl := opportunity.NewOpportunityService(log, grpcClients, neo4jRepositories, eventsImpl, contractImpl, orgImpl, tenantSettingsImpl)
 	sliImpl := sli.NewServiceLineItemService(log, eventsImpl, neo4jRepositories, contractImpl)
@@ -234,8 +233,20 @@ func InitCommonServices(
 	contractImpl.SetOpportunityService(opportunityImpl)
 	flowExecutionImpl.SetFlowService(flowImpl)
 	jobroleImpl.SetOrganizationService(orgImpl)
-	agentCapabilityImpl.SetOrganizationService(orgImpl)
-	agentCapabilityImpl.SetActionService(actionImpl)
+
+	// initialize agent capabilities
+	capabilityImpl := agent_capability.InitCapabilities(
+		postgresRepositories,
+		actionImpl,
+		aiImpl,
+		enrichmentImpl,
+		notificationImpl,
+		orgImpl,
+		tagImpl,
+	)
+
+	// initialize agents
+	agentVisitorIDImpl := agent.NewAgentVisitorIDService(postgresRepositories, capabilityImpl, agentImpl, workspaceImpl)
 
 	// Initialize CommonServices struct
 	common := CommonServices{
@@ -248,7 +259,6 @@ func InitCommonServices(
 		// All other services (alphabetically)
 		ActionService:              actionImpl,
 		AgentService:               agentImpl,
-		AgentVisitorIDService:      agentVisitorIdImpl,
 		AIService:                  aiImpl,
 		AttachmentService:          attachmentImpl,
 		AzureService:               azureImpl,
@@ -300,6 +310,10 @@ func InitCommonServices(
 		QuickbooksService:          quickbooksImpl,
 		WorkflowService:            workflowImpl,
 		WorkspaceService:           workspaceImpl,
+
+		// Agents
+		AgentCapabilities:     capabilityImpl,
+		AgentVisitorIDService: agentVisitorIDImpl,
 	}
 
 	// Check that all services are initialized
