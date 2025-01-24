@@ -4,7 +4,6 @@ import { TagService, OrganizationService } from '@domain/services';
 
 import { EntityType } from '@graphql/types';
 import { SelectOption } from '@ui/utils/types.ts';
-import { getOrganizationUUID } from '@utils/getOrganizationUUID.ts';
 
 export class EditOrganizationTagUsecase {
   @observable public accessor searchTerm = '';
@@ -15,8 +14,10 @@ export class EditOrganizationTagUsecase {
   private root = RootStore.getInstance();
   private tagService = new TagService();
   private organizationService = new OrganizationService();
+  private organizationId: string;
 
-  constructor() {
+  constructor(organizationId: string) {
+    this.organizationId = organizationId;
     this.select = this.select.bind(this);
     this.create = this.create.bind(this);
     this.setSearchTerm = this.setSearchTerm.bind(this);
@@ -34,15 +35,9 @@ export class EditOrganizationTagUsecase {
 
   @computed
   get organization() {
-    const uuid = getOrganizationUUID(window.location.pathname);
+    if (!this.organizationId) return;
 
-    if (!uuid) {
-      console.error('Invalid usage of EditOrganizationTagUsecase');
-
-      return;
-    }
-
-    return this.root.organizations.getById(uuid);
+    return this.root.organizations.getById(this.organizationId);
   }
 
   @computed

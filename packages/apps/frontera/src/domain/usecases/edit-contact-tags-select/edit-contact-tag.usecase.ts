@@ -39,9 +39,7 @@ export class EditContactTagUsecase {
     const contact = this.root.contacts.getById(this.contactId);
 
     if (!contact) {
-      console.error(
-        'Invalid usage of EditContactTagUsecase or contact does not exist in the store',
-      );
+      return;
     }
 
     return contact;
