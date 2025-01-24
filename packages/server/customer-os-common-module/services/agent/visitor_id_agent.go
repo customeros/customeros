@@ -15,7 +15,6 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
@@ -71,7 +70,10 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	// lookup capabilities
 
 	// execute identify visitor capability
-	visitorIDResults, err := a.executeVisitorIDCapability(ctx, agentID, executionID, event)
+	visitorIDResults, err := a.agentCapabilities.IdentifyWebsiteVisitor.Execute(ctx, agent_capability.IdentifyWebsiteVisitorInput{
+		SessionID: event.SessionID,
+		IPAddress: event.IPAddress,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		errMessage := "unable to lookup visitor ID"
@@ -101,7 +103,9 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	}
 
 	// execute org creation capability
-	orgCreationResults, err := a.executeOrgCreationCapability(ctx, agentID, executionID, visitorIDResults.Domain)
+	orgCreationResults, err := a.agentCapabilities.CreateOrganization.Execute(ctx, agent_capability.CreateOrganizationInput{
+		Domain: visitorIDResults.Domain,
+	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to create organization"))
 		errMessage := "unable to create new organization"
@@ -115,14 +119,12 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	}
 
 	// execute web session analysis capability
-	sessionAnalytics, err := a.executeWebSessionAnalysisCapability(
-		ctx,
-		agentID,
-		executionID,
-		visitorIDResults.Domain,
-		orgCreationResults.OrganizationID,
-		event,
-	)
+	sessionAnalytics, err := a.agentCapabilities.AnalyzeWebSession.Execute(ctx, agent_capability.AnalyzeWebSessionInput{
+		SessionID:      event.SessionID,
+		VisitorID:      event.VisitorID,
+		OrganizationID: orgCreationResults.OrganizationID,
+		Domain:         visitorIDResults.Domain,
+	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to analyze web session"))
 		errMessage := "unable to analyze web session"
@@ -173,7 +175,10 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	}
 
 	// execute send notification capability
-	err = a.executeSendSlackNotificationCapability(ctx, agentID, executionID, slackChannel.ChannelId, message)
+	_, err = a.agentCapabilities.SendSlackNotification.Execute(ctx, agent_capability.SendSlackNotificationInput{
+		Message:   message,
+		ChannelID: slackChannel.ChannelId,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		errMessage := "unable to send slack notification"
@@ -202,15 +207,6 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	return nil
 }
 
-// TODO check where used
-func (a *AgentVisitorIDService) isSlackNotificationEnabled(ctx context.Context) (bool, string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.isSlackNotificationEnabled")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	return true, ""
-}
-
 func (a *AgentVisitorIDService) validateWebsiteVisitEvent(event *data_fields.WebsiteVisitEvent) error {
 	if event == nil {
 		return fmt.Errorf("event cannot be nil")
@@ -230,119 +226,6 @@ func (a *AgentVisitorIDService) validateWebsiteVisitEvent(event *data_fields.Web
 	}
 
 	return nil
-}
-
-func (a *AgentVisitorIDService) executeSendSlackNotificationCapability(
-	ctx context.Context,
-	agentID, executionID, slackChannelID string,
-	message *string,
-) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.executeSendSlackNotificationCapability")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	tenant := common.GetTenantFromContext(ctx)
-	if tenant == "" {
-		err := errors.New("Tenant not set on context")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	executionContainer := dto.CapabilityExecutionContainer{
-		AgentID:          agentID,
-		AgentExecutionID: executionID,
-		Capability:       enum.CapabilitySendSlackNotification,
-		InputData: agent_capability.SendSlackNotificationInput{
-			Message:   message,
-			ChannelID: slackChannelID,
-		},
-	}
-
-	executionContainer.AgentID = ""
-
-	return nil
-}
-
-func (a *AgentVisitorIDService) executeWebSessionAnalysisCapability(
-	ctx context.Context,
-	agentID, executionID, domain, organizationID string,
-	event *data_fields.WebsiteVisitEvent,
-) (agent_capability.AnalyzeWebSessionResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.executeWebSessionAnalysisCapability")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	executionContainer := dto.CapabilityExecutionContainer{
-		AgentID:          agentID,
-		AgentExecutionID: executionID,
-		Capability:       enum.CapabilityAnalyzeWebSessionIntent,
-		InputData: agent_capability.AnalyzeWebSessionInput{
-			SessionID:      event.SessionID,
-			VisitorID:      event.VisitorID,
-			OrganizationID: organizationID,
-			Domain:         domain,
-		},
-	}
-
-	output, ok := executionContainer.OutputData.(agent_capability.AnalyzeWebSessionResult)
-	if !ok {
-		err := fmt.Errorf("expected agent_capability.AnalyzeWebSessionResult, got %T", executionContainer.OutputData)
-		tracing.TraceErr(span, err)
-		return agent_capability.AnalyzeWebSessionResult{}, err
-	}
-
-	return output, nil
-}
-
-func (a *AgentVisitorIDService) executeOrgCreationCapability(ctx context.Context, agentID, executionID, domain string) (agent_capability.CreateOrganizationResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.executeOrgCreationCapability")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	source := "WebVisitor ID Agent"
-	executionContainer := dto.CapabilityExecutionContainer{
-		AgentID:          agentID,
-		AgentExecutionID: executionID,
-		Capability:       enum.CapabilityCreateOrganization,
-		InputData: data_fields.OrganizationFields{
-			Source:  &source,
-			Domains: []string{domain},
-		},
-	}
-
-	output, ok := executionContainer.OutputData.(agent_capability.CreateOrganizationResult)
-	if !ok {
-		err := fmt.Errorf("expected agent_capability.CreateOrganizationResult, got %T", executionContainer.OutputData)
-		tracing.TraceErr(span, err)
-		return agent_capability.CreateOrganizationResult{}, err
-	}
-
-	return output, nil
-}
-
-func (a *AgentVisitorIDService) executeVisitorIDCapability(ctx context.Context, agentID, executionID string, event *data_fields.WebsiteVisitEvent) (agent_capability.IdentifyWebsiteVisitorResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.executeVisitorIDCapability")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	executionContainer := dto.CapabilityExecutionContainer{
-		AgentID:          agentID,
-		AgentExecutionID: executionID,
-		Capability:       enum.CapabilityIdentifyWebVisitor,
-		InputData: agent_capability.IdentifyWebsiteVisitorInput{
-			IPAddress: event.IPAddress,
-			SessionID: event.SessionID,
-		},
-	}
-
-	output, ok := executionContainer.OutputData.(agent_capability.IdentifyWebsiteVisitorResult)
-	if !ok {
-		err := fmt.Errorf("expected agent_capability.IdentifyWebsiteVisitorResult, got %T", executionContainer.OutputData)
-		tracing.TraceErr(span, err)
-		return agent_capability.IdentifyWebsiteVisitorResult{}, err
-	}
-
-	return output, nil
 }
 
 func (a *AgentVisitorIDService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEventType string) (string, error) {
