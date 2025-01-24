@@ -13088,76 +13088,71 @@ enum ActionType {
     appSource: String!
 }`, BuiltIn: false},
 	{Name: "../schemas/agent.graphqls", Input: `extend type Query {
-  agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-  agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
+    agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
-  agent_Save(input: AgentSaveInput!): Agent!
-    @hasRole(roles: [ADMIN, USER])
-    @hasTenant
+    agent_Save(input: AgentSaveInput!): Agent!@hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 enum CapabilityType {
-  WEBSITE_TRACKER
-  SEND_SLACK_NOTIFICATION
+    WEBSITE_TRACKER
+    SEND_SLACK_NOTIFICATION
 }
 
 type Capability {
-  id: ID!
-  type: CapabilityType!
-  name: String!
-  action: String!
-  optional: Boolean!
-  values: String!
-  errors: String
+    id: ID!
+    type: CapabilityType!
+    name: String!
+    action: String!
+    optional: Boolean!
+    values: String!
+    errors: String
 }
 
 enum AgentType {
-  WEB_VISIT_IDENTIFIER
+    WEB_VISIT_IDENTIFIER
 }
 
 type Agent {
-  id: ID!
-  type: AgentType!
-  tenant: String!
-  name: String!
-  capabilities: [Capability!]!
-  goal: String!
-  isActive: Boolean!
-  flowId: ID
-  visible: Boolean!
-  createdAt: Time!
-  updatedAt: Time!
-  error: String
-  color: String!
-  icon: String!
+    id: ID!
+    type: AgentType!
+    tenant: String!
+    name: String!
+    capabilities: [Capability!]!
+    goal: String!
+    isActive: Boolean!
+    flowId: ID
+    visible: Boolean!
+    createdAt: Time!
+    updatedAt: Time!
+    error: String
+    color: String!
+    icon: String!
 }
 
 input CapabilitySaveInput {
-  id: ID
-  type: CapabilityType
-  name: String
-  action: String
-  optional: Boolean
-  values: String
-  errors: String
+    id: ID
+    type: CapabilityType
+    name: String
+    action: String
+    optional: Boolean
+    values: String
+    errors: String
 }
 
 input AgentSaveInput {
-  id: ID
-  type: AgentType
-  tenant: String
-  name: String
-  capabilities: [CapabilitySaveInput!]
-  goal: String
-  isActive: Boolean
-  flowId: ID
-  visible: Boolean
-  createdAt: Time!
-  updatedAt: Time!
-  color: String
-  icon: String
+    id: ID
+    type: AgentType
+    name: String
+    capabilities: [CapabilitySaveInput!]
+    goal: String
+    isActive: Boolean
+    flowId: ID
+    visible: Boolean
+    color: String
+    icon: String
 }
 `, BuiltIn: false},
 	{Name: "../schemas/attachment.graphqls", Input: `extend type Query {
@@ -109668,7 +109663,7 @@ func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "type", "tenant", "name", "capabilities", "goal", "isActive", "flowId", "visible", "createdAt", "updatedAt", "color", "icon"}
+	fieldsInOrder := [...]string{"id", "type", "name", "capabilities", "goal", "isActive", "flowId", "visible", "color", "icon"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -109689,13 +109684,6 @@ func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, ob
 				return it, err
 			}
 			it.Type = data
-		case "tenant":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tenant"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Tenant = data
 		case "name":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -109738,20 +109726,6 @@ func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, ob
 				return it, err
 			}
 			it.Visible = data
-		case "createdAt":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdAt"))
-			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.CreatedAt = data
-		case "updatedAt":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
-			data, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.UpdatedAt = data
 		case "color":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("color"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)

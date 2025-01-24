@@ -62,8 +62,6 @@ input AgentSaveInput {
     isActive: Boolean
     flowId: ID
     visible: Boolean
-    createdAt: Time!
-    updatedAt: Time!
     color: String
     icon: String
 }

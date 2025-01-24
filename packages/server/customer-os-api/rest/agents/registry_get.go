@@ -2,7 +2,6 @@ package agents
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -67,42 +66,28 @@ func (a *AgentHandler) buildGetAgentRegistryResponse(ctx context.Context, agents
 	}, errs
 }
 
-func (a *AgentHandler) buildAgentRegistryRecord(ctx context.Context, agent postgres_entity.AgentRegistry) (AgentRegistryRecord, error) {
+func (a *AgentHandler) buildAgentRegistryRecord(ctx context.Context, agentRegistry postgres_entity.AgentRegistry) (AgentRegistryRecord, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentHandler.buildAgentRegistryRecord")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	capabilities, err := a.parseAgentCapabilityIDs(ctx, agent.Capabilities)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return AgentRegistryRecord{}, err
+	capabilities := make([]AgentCapability, 0, len(agentRegistry.CapabilitiesConfig.Capabilities))
+	for _, capability := range agentRegistry.CapabilitiesConfig.Capabilities {
+		capabilityRecord := AgentCapability{
+			Type:        capability.Type.String(),
+			Description: capability.Description,
+			Optional:    capability.Optional,
+			Name:        capability.Name,
+		}
+		capabilities = append(capabilities, capabilityRecord)
 	}
 
 	record := AgentRegistryRecord{
-		ID:                  agent.ID,
-		Type:                agent.Type,
-		Name:                agent.Name,
-		Goal:                agent.Goal,
+		ID:                  agentRegistry.ID,
+		Type:                agentRegistry.Type.String(),
+		Name:                agentRegistry.Name,
+		Goal:                agentRegistry.Goal,
 		DefaultCapabilities: capabilities,
 	}
 	return record, nil
-}
-
-func (a *AgentHandler) parseAgentCapabilityIDs(ctx context.Context, capabilitiesStr string) ([]AgentCapability, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentHandler.parseAgentCapabilityIDs")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-
-	var ids []string
-	err := json.Unmarshal([]byte(capabilitiesStr), &ids)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	capabilities := make([]AgentCapability, len(ids))
-	for i, id := range ids {
-		capabilities[i] = AgentCapability{ID: id}
-	}
-	return capabilities, nil
 }

@@ -2,7 +2,9 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/google/uuid"
 
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -60,6 +62,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		VisibleInUI: true,
 		Icon:        agentRegistry.Icon,
 		Color:       utils.GetRandomColor(),
+		RegistryID:  agentRegistry.ID,
 	}
 
 	// build capabilities from registry
@@ -75,8 +78,12 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		if agentCapability.Name == "" {
 			agentCapability.Name = masterCapability.Type.GetName()
 		}
-		// TODO: set default values structure
-		agentCapability.Values = "{}"
+		values, err := json.Marshal(agent_capability.GetCapabilityConfigStruct(agentCapability.Type))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		agentCapability.Values = string(values)
 		agentCapabilities = append(agentCapabilities, agentCapability)
 	}
 	agent.CapabilitiesConfig = postgresentity.CapabilitiesConfig{

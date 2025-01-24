@@ -17,7 +17,7 @@ import (
 type AgentsRepository interface {
 	Create(ctx context.Context, agent postgres_entity.Agents) (*postgres_entity.Agents, error)
 	Find(ctx context.Context, agent postgres_entity.Agents) (*postgres_entity.Agents, error)
-	FindAll(ctx context.Context, agent postgres_entity.Agents) ([]postgres_entity.Agents, error)
+	GetAll(ctx context.Context) ([]postgres_entity.Agents, error)
 	FindAllFromAgentsList(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agents, error)
 	Update(ctx context.Context, agent postgres_entity.Agents) (*postgres_entity.Agents, error)
 }
@@ -38,7 +38,7 @@ func (f *agentsRepository) Create(ctx context.Context, agent postgres_entity.Age
 	agent.ID = utils.GenerateNanoIdWithPrefix("agent", 16)
 
 	var created postgres_entity.Agents
-	err := f.gormDb.Create(agent).Scan(&created).Error
+	err := f.gormDb.Create(&agent).Scan(&created).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -47,20 +47,13 @@ func (f *agentsRepository) Create(ctx context.Context, agent postgres_entity.Age
 	return &created, nil
 }
 
-func (f *agentsRepository) FindAll(ctx context.Context, agent postgres_entity.Agents) ([]postgres_entity.Agents, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentsRepository.FindAll")
+func (f *agentsRepository) GetAll(ctx context.Context) ([]postgres_entity.Agents, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentsRepository.GetAll")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	var agents []postgres_entity.Agents
-	query := f.gormDb.Where("is_active = true")
-
-	// Add additional filters based on non-zero fields in agent
-	if agent != (postgres_entity.Agents{}) {
-		query = query.Where(&agent)
-	}
-
-	err := query.Find(&agents).Error
+	err := f.gormDb.Find(&agents).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

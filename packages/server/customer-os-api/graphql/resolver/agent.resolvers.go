@@ -6,13 +6,13 @@ package resolver
 
 import (
 	"context"
+	"time"
+
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
-	"time"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 // AgentSave is the resolver for the agent_Save field.

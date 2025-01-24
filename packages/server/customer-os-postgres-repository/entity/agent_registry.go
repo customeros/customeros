@@ -1,6 +1,9 @@
 package postgres_entity
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"gorm.io/gorm"
@@ -11,12 +14,35 @@ type CapabilitiesConfig struct {
 }
 
 type Capability struct {
-	ID       string                   `json:"id"`
-	Name     string                   `json:"name"`
-	Type     enum.AgentCapabilityType `json:"type"`
-	Error    string                   `json:"error"`
-	Values   any                      `json:"values"`
-	Optional bool                     `json:"optional"`
+	ID          string                   `json:"id"`
+	Name        string                   `json:"name"`
+	Type        enum.AgentCapabilityType `json:"type"`
+	Error       string                   `json:"error"`
+	Values      string                   `json:"values"`
+	Optional    bool                     `json:"optional"`
+	Description string                   `json:"description"`
+}
+
+// Scan implements the sql.Scanner interface so GORM can read from the DB.
+func (c *CapabilitiesConfig) Scan(value interface{}) error {
+	if value == nil {
+		// Handle NULL
+		*c = CapabilitiesConfig{}
+		return nil
+	}
+
+	// Postgres jsonb columns come in as []byte
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("cannot scan type %T into CapabilitiesConfig", value)
+	}
+
+	return json.Unmarshal(bytes, &c)
+}
+
+// Value implements the driver.Valuer interface so GORM can write to the DB.
+func (c CapabilitiesConfig) Value() (driver.Value, error) {
+	return json.Marshal(c)
 }
 
 type AgentRegistry struct {

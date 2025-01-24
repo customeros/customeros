@@ -158,7 +158,7 @@ func (r *agentRegistryRepository) Initialize(ctx context.Context) error {
 
 	for _, agent := range requiredAgents {
 		// Look for existing agent by type (not ID since it might not be set yet)
-		existingAgent, err := r.Find(ctx, enum.AgentType(agent.Type))
+		existingAgent, err := r.Find(ctx, agent.Type)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return fmt.Errorf("failed to check existing agent: %w", err)
@@ -181,11 +181,30 @@ func (r *agentRegistryRepository) Initialize(ctx context.Context) error {
 
 func registerVisitorIdpostgres_entityAgent() postgres_entity.AgentRegistry {
 	return postgres_entity.AgentRegistry{
-		Type:         enum.AgentVisitorID.String(),
-		Name:         "Identify website visitors",
-		Goal:         enum.AgentGoalIdentifyVisitors.String(),
-		Icon:         "",
-		Capabilities: "",
-		IsActive:     true,
+		Type:     enum.AgentVisitorID,
+		Name:     "Identify website visitors",
+		Goal:     enum.AgentGoalIdentifyVisitors.String(),
+		Icon:     "",
+		IsActive: true,
+		CapabilitiesConfig: postgres_entity.CapabilitiesConfig{
+			Capabilities: []postgres_entity.Capability{
+				{
+					Type:     enum.CapabilityIdentifyWebVisitor,
+					Optional: false,
+				},
+				{
+					Type:     enum.CapabilityAnalyzeWebSessionIntent,
+					Optional: false,
+				},
+				{
+					Type:     enum.CapabilityCreateOrganization,
+					Optional: false,
+				},
+				{
+					Type:     enum.CapabilitySendSlackNotification,
+					Optional: true,
+				},
+			},
+		},
 	}
 }

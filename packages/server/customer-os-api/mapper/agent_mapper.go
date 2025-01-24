@@ -44,7 +44,7 @@ func MapAgentToModel(entity *postgresEntity.Agents) *model.Agent {
 	}
 }
 
-func MapAgentsToModel(entities []postgresEntity.Agents) []*model.Agent {
+func MapAgentsToModel(entities []*postgresEntity.Agents) []*model.Agent {
 	var agents []*model.Agent
 	for _, entity := range entities {
 		agents = append(agents, MapAgentToModel(entity))

@@ -24,6 +24,7 @@ type Agents struct {
 	ErrorMessage       *string            `gorm:"column:error_message;type:varchar(255)" json:"errorMessage"`
 	Color              string             `gorm:"column:color;type:varchar(255)" json:"color"`
 	Icon               string             `gorm:"column:icon;type:varchar(255)" json:"icon"`
+	RegistryID         string             `gorm:"column:registry_id;type:varchar(32)" json:"registryId"`
 }
 
 func (Agents) TableName() string {

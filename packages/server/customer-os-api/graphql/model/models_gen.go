@@ -122,15 +122,12 @@ type Agent struct {
 type AgentSaveInput struct {
 	ID           *string                `json:"id,omitempty"`
 	Type         *AgentType             `json:"type,omitempty"`
-	Tenant       *string                `json:"tenant,omitempty"`
 	Name         *string                `json:"name,omitempty"`
 	Capabilities []*CapabilitySaveInput `json:"capabilities,omitempty"`
 	Goal         *string                `json:"goal,omitempty"`
 	IsActive     *bool                  `json:"isActive,omitempty"`
 	FlowID       *string                `json:"flowId,omitempty"`
 	Visible      *bool                  `json:"visible,omitempty"`
-	CreatedAt    time.Time              `json:"createdAt"`
-	UpdatedAt    time.Time              `json:"updatedAt"`
 	Color        *string                `json:"color,omitempty"`
 	Icon         *string                `json:"icon,omitempty"`
 }
