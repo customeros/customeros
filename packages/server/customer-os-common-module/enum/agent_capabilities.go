@@ -2,6 +2,8 @@ package enum
 
 import (
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"strings"
 )
 
 type AgentCapabilityType string
@@ -29,4 +31,10 @@ func GetAgentCapability(s string) (AgentCapabilityType, error) {
 	default:
 		return "", fmt.Errorf("invalid Agent Capability: %s", s)
 	}
+}
+
+// Get name returns a friendly name for the capability, by removing _ and capitalizing the first letter of each word
+func (t AgentCapabilityType) GetName() string {
+	name := strings.ReplaceAll(string(t), "_", " ")
+	return utils.CapitalizeAllParts(name, []string{" "})
 }

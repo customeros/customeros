@@ -6,6 +6,10 @@ package resolver
 
 import (
 	"context"
+	"github.com/99designs/gqlgen/graphql"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -13,23 +17,31 @@ import (
 
 // AgentSave is the resolver for the agent_Save field.
 func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveInput) (*model.Agent, error) {
-	defaultAgent := &model.Agent{
-		ID:           "1",
-		Name:         "Agent 1",
-		Type:         model.AgentTypeWebVisitIdentifier,
-		Tenant:       "tenant",
-		Capabilities: []*model.Capability{},
-		Goal:         "",
-		IsActive:     false,
-		FlowID:       new(string),
-		CreatedAt:    time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
-		UpdatedAt:    time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
-		Error:        new(string),
-		Color:        "",
-		Icon:         "",
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AgentSave", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	// case 1 - if id missing, create new agent by type
+	if input.ID == nil {
+		if input.Type == nil {
+			graphql.AddErrorf(ctx, "Type is required")
+			return nil, nil
+		}
+		agentType := enummapper.MapAgentTypeFromModel(*input.Type)
+		agentEntity, err := r.Services.CommonServices.AgentService.CreateAgent(ctx, agentType)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to create agent")
+			return nil, nil
+		}
+		return mapper.MapAgentToModel(agentEntity), nil
 	}
 
-	return defaultAgent, nil
+	// case 2 - if id present, validate agent exist
+	// agent exists, update it
+
+	return nil, nil
 }
 
 // Agents is the resolver for the agents field.
