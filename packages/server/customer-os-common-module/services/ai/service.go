@@ -26,7 +26,7 @@ func NewAIService(log logger.Logger, config *config.AnthropicConfig) interfaces.
 	}
 }
 
-func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, prompt *string) (*string, error) {
+func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, systemPrompt *string, prompt any) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIModelService.AskAI")
 	defer span.Finish()
 	span.LogKV("model", model)
@@ -40,7 +40,7 @@ func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, prompt *strin
 		enum.AIModelAnthropicHaiku,
 		enum.AIModelAnthropicSonnet:
 
-		result, err = s.askAnthropic(ctx, model, prompt)
+		result, err = s.askAnthropic(ctx, model, systemPrompt, prompt)
 
 	default:
 		err := errors.New("Unsupported model")
@@ -55,7 +55,7 @@ func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, prompt *strin
 	return result, nil
 }
 
-func (s *aiService) askAnthropic(ctx context.Context, model enum.AIModel, prompt *string) (*string, error) {
+func (s *aiService) askAnthropic(ctx context.Context, model enum.AIModel, systemPrompt *string, prompt any) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIModelService.AskAnthropic")
 	defer span.Finish()
 
@@ -68,7 +68,7 @@ func (s *aiService) askAnthropic(ctx context.Context, model enum.AIModel, prompt
 
 	// setup client
 	client := NewAnthropicClient(s.anthropicConfig, model)
-	response, err := client.Invoke(ctx, prompt)
+	response, err := client.Invoke(ctx, systemPrompt, prompt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

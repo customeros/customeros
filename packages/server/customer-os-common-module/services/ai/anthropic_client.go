@@ -4,15 +4,17 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"io"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
@@ -24,9 +26,9 @@ const (
 	AnthropicApiHeader    = "anthropic-version"
 	ContentTypeHeader     = "content-type"
 	DefaultApiVersion     = "2023-06-01"
-	MaxTokens             = 4096
+	MaxTokens             = 1024
 	MaxRetries            = 4
-	DefaultTemperature    = 0.7
+	DefaultTemperature    = 0.1
 	DefaultTimeoutSeconds = 45
 )
 
@@ -55,25 +57,43 @@ func NewAnthropicClient(cfg *config.AnthropicConfig, model enum.AIModel) *Anthro
 	}
 }
 
-func (c *AnthropicClient) Invoke(ctx context.Context, prompt *string) (string, error) {
+func (c *AnthropicClient) Invoke(ctx context.Context, systemPrompt *string, content any) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnthropicClient.Invoke")
 	defer span.Finish()
 
-	span.LogFields(log.String("anthropicPrompt", utils.IfNotNilString(prompt)))
+	span.LogKV(
+		"systemPrompt", utils.IfNotNilString(systemPrompt),
+		"content", content,
+	)
 
-	reqBody := c.buildRequest(prompt)
+	if content == nil {
+		err := errors.New("content (user prompt) cannot be nil")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	reqBody := c.buildRequest(systemPrompt, content)
 	return c.executeWithRetry(ctx, reqBody)
 }
 
-func (c *AnthropicClient) buildRequest(prompt *string) AnthropicApiRequest {
+func (c *AnthropicClient) buildRequest(systemPrompt *string, content any) AnthropicApiRequest {
+	messages := make([]Message, 0)
+
+	if systemPrompt != nil {
+		messages = append(messages, Message{
+			Role:    "system",
+			Content: *systemPrompt,
+		})
+	}
+
+	messages = append(messages, Message{
+		Role:    "user",
+		Content: content,
+	})
+
 	return AnthropicApiRequest{
-		Model: c.model,
-		Messages: []Message{
-			{
-				Role:    "user",
-				Content: *prompt,
-			},
-		},
+		Model:       c.model,
+		Messages:    messages,
 		MaxTokens:   MaxTokens,
 		Temperature: DefaultTemperature,
 	}
@@ -116,10 +136,10 @@ func (c *AnthropicClient) handleSuccessResponse(body []byte) (string, error) {
 		return "", fmt.Errorf("error decoding response: %w", err)
 	}
 
-	if len(data.Content) > 0 {
+	if len(data.Content) > 0 && data.Content[0].Type == "text" {
 		return strings.TrimSpace(data.Content[0].Text), nil
 	}
-	return "", fmt.Errorf("empty response from API")
+	return "", fmt.Errorf("empty or invalid response from API")
 }
 
 func (c *AnthropicClient) handleErrorResponse(statusCode int, body []byte) error {

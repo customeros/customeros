@@ -2,7 +2,9 @@ package private
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	commonEnum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -26,9 +28,10 @@ func NewAskAIHandler(services *cosapi_services.Services, responseHandler *respon
 }
 
 type AskAIRequest struct {
-	Model   string
-	Prompt  string
-	AIModel commonEnum.AIModel
+	Model        string             `json:"model"`
+	SystemPrompt *string            `json:"systemPrompt,omitempty"`
+	Prompt       any                `json:"prompt"`
+	AIModel      commonEnum.AIModel `json:"-"`
 }
 
 type AskAIResponse struct {
@@ -50,24 +53,18 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
-		if request == nil {
-			message := "Empty request"
-			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
-			return
-		}
-		if request.Model == "" {
-			message := "model missing"
-			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
-			return
-		}
-		if request.Prompt == "" {
-			message := "prompt missing"
+
+		//validate request
+		err = h.validateAIRequest(request)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			message := err.Error()
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
 
 		// call appropriate model
-		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, &request.Prompt)
+		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, request.SystemPrompt, &request.Prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			message := "Unable to ask AI"
@@ -110,4 +107,25 @@ func (h *AskAIHandler) parseRequest(c *gin.Context) (*AskAIRequest, error) {
 	request.AIModel = aiModel
 
 	return &request, nil
+}
+
+func (h *AskAIHandler) validateAIRequest(req *AskAIRequest) error {
+	if req.Model == "" {
+		return fmt.Errorf("model is required")
+	}
+
+	switch v := req.Prompt.(type) {
+	case string:
+		if strings.TrimSpace(v) == "" {
+			return fmt.Errorf("prompt cannot be empty")
+		}
+	case map[string]interface{}, []interface{}:
+		if len(fmt.Sprintf("%v", v)) == 0 {
+			return fmt.Errorf("prompt content cannot be empty")
+		}
+	default:
+		return fmt.Errorf("prompt must be string or structured data")
+	}
+
+	return nil
 }
