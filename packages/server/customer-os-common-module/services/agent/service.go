@@ -134,6 +134,35 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	return newAgent, nil
 }
 
+func (a *agentService) UpdateAgent(ctx context.Context, agentFields postgresentity.Agents) (*postgresentity.Agents, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.UpdateAgent")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	existingAgentEntity, err := a.postgresRepositories.AgentsRepository.GetById(ctx, agentFields.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// set default and non-updatable fields
+	agentFields.UpdatedAt = utils.NowPtr()
+	agentFields.CreatedAt = existingAgentEntity.CreatedAt
+	agentFields.Type = existingAgentEntity.Type
+	agentFields.Tenant = existingAgentEntity.Tenant
+	agentFields.RegistryID = existingAgentEntity.RegistryID
+	agentFields.Status = existingAgentEntity.Status
+	agentFields.ErrorMessage = existingAgentEntity.ErrorMessage
+
+	updatedAgent, err := a.postgresRepositories.AgentsRepository.Update(ctx, agentFields)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return updatedAgent, nil
+}
+
 func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent postgresentity.Agents, triggerEvent string) (string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.CreateAgentExecutionRecord")
 	defer span.Finish()

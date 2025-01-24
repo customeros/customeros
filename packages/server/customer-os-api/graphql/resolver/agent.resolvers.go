@@ -46,8 +46,15 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 		return nil, nil
 	}
 	// agent exists, update it
+	agentEntityForUpdate := mapper.MapAgentSaveInputToEntity(input)
+	updatedAgentEntity, err := r.Services.CommonServices.AgentService.UpdateAgent(ctx, *agentEntityForUpdate)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update agent")
+		return nil, nil
+	}
 
-	return nil, nil
+	return mapper.MapAgentToModel(updatedAgentEntity), nil
 }
 
 // Agents is the resolver for the agents field.

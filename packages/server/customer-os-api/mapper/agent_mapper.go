@@ -11,25 +11,6 @@ func MapAgentToModel(entity *postgresEntity.Agents) *model.Agent {
 	if entity == nil {
 		return nil
 	}
-	//var columnsStruct postgresEntity.Columns
-	//err := json.Unmarshal([]byte(entity.ColumnsJson), &columnsStruct)
-	//if err != nil {
-	//	span.LogFields(log.String("columnsJson", entity.ColumnsJson))
-	//	tracing.TraceErr(span, err)
-	//}
-	//
-	//columns := make([]*model.ColumnView, 0, len(columnsStruct.Columns))
-	//for _, column := range columnsStruct.Columns {
-	//	columns = append(columns, &model.ColumnView{
-	//		ColumnID:   column.ColumnId,
-	//		ColumnType: postgresEntity.ColumnViewType(column.ColumnType),
-	//		Width:      column.Width,
-	//		Visible:    column.Visible,
-	//		Name:       column.Name,
-	//		Filter:     column.Filter,
-	//	})
-	//}
-
 	agentModel := model.Agent{
 		ID:        entity.ID,
 		Name:      entity.Name,
@@ -41,6 +22,7 @@ func MapAgentToModel(entity *postgresEntity.Agents) *model.Agent {
 		Goal:      entity.Goal,
 		IsActive:  entity.IsActive,
 		Visible:   entity.VisibleInUI,
+		FlowID:    utils.StringPtr(entity.FlowID),
 	}
 	for _, capability := range entity.CapabilitiesConfig.Capabilities {
 		agentModel.Capabilities = append(agentModel.Capabilities, &model.Capability{
@@ -55,10 +37,34 @@ func MapAgentToModel(entity *postgresEntity.Agents) *model.Agent {
 	return &agentModel
 }
 
-func MapAgentsToModel(entities []*postgresEntity.Agents) []*model.Agent {
-	var agents []*model.Agent
-	for _, entity := range entities {
-		agents = append(agents, MapAgentToModel(entity))
+func MapAgentSaveInputToEntity(input model.AgentSaveInput) *postgresEntity.Agents {
+	agentEntity := &postgresEntity.Agents{
+		ID:          utils.IfNotNilString(input.ID),
+		Name:        utils.IfNotNilString(input.Name),
+		Icon:        utils.IfNotNilString(input.Icon),
+		Color:       utils.IfNotNilString(input.Color),
+		Goal:        utils.IfNotNilString(input.Goal),
+		IsActive:    utils.IfNotNilBool(input.IsActive),
+		VisibleInUI: utils.IfNotNilBool(input.Visible),
+		FlowID:      utils.IfNotNilString(input.FlowID),
 	}
-	return agents
+	if input.Capabilities != nil {
+		capabilities := make([]postgresEntity.Capability, 0, len(input.Capabilities))
+		for _, capability := range input.Capabilities {
+			capabilities = append(capabilities, postgresEntity.Capability{
+				ID:       utils.IfNotNilString(capability.ID),
+				Name:     utils.IfNotNilString(capability.Name),
+				Error:    utils.IfNotNilString(capability.Errors),
+				Optional: utils.IfNotNilBool(capability.Optional),
+				Values:   utils.IfNotNilString(capability.Values),
+			})
+			if capability.Type != nil {
+				capabilities[len(capabilities)-1].Type = enummapper.MapAgentCapabilityTypeFromModel(*capability.Type)
+			}
+		}
+		agentEntity.CapabilitiesConfig = postgresEntity.CapabilitiesConfig{
+			Capabilities: capabilities,
+		}
+	}
+	return agentEntity
 }
