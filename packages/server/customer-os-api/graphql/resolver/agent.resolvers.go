@@ -6,54 +6,88 @@ package resolver
 
 import (
 	"context"
-	"time"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // AgentSave is the resolver for the agent_Save field.
 func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveInput) (*model.Agent, error) {
-	defaultAgent := &model.Agent{
-		ID:           "1",
-		Name:         "Agent 1",
-		Type:         model.AgentTypeWebVisitIdentifier,
-		Tenant:       "tenant",
-		Capabilities: []*model.Capability{},
-		Goal:         "",
-		IsActive:     false,
-		FlowID:       new(string),
-		CreatedAt:    time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
-		UpdatedAt:    time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
-		Error:        new(string),
-		Color:        "",
-		Icon:         "",
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.AgentSave", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	// case 1 - if id missing, create new agent by type
+	if input.ID == nil {
+		if input.Type == nil {
+			graphql.AddErrorf(ctx, "Type is required")
+			return nil, nil
+		}
+		agentType := enummapper.MapAgentTypeFromModel(*input.Type)
+		agentEntity, err := r.Services.CommonServices.AgentService.CreateAgent(ctx, agentType)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to create agent")
+			return nil, nil
+		}
+		return mapper.MapAgentToModel(agentEntity), nil
 	}
 
-	return defaultAgent, nil
+	// case 2 - if id present, validate agent exist
+	agentID := *input.ID
+	_, err := r.Services.CommonServices.AgentService.GetAgentById(ctx, agentID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Agent not found")
+		return nil, nil
+	}
+	// agent exists, update it
+	agentEntityForUpdate := mapper.MapAgentSaveInputToEntity(input)
+	updatedAgentEntity, err := r.Services.CommonServices.AgentService.UpdateAgent(ctx, *agentEntityForUpdate)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update agent")
+		return nil, nil
+	}
+
+	return mapper.MapAgentToModel(updatedAgentEntity), nil
 }
 
 // Agents is the resolver for the agents field.
 func (r *queryResolver) Agents(ctx context.Context) ([]*model.Agent, error) {
-	return []*model.Agent{}, nil
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Agents", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	agentEntities, err := r.Services.CommonServices.AgentService.GetAllAgents(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get agents")
+		return nil, nil
+	}
+	agents := make([]*model.Agent, 0, len(agentEntities))
+	for _, agentEntity := range agentEntities {
+		agents = append(agents, mapper.MapAgentToModel(agentEntity))
+	}
+	return agents, nil
 }
 
 // Agent is the resolver for the agent field.
 func (r *queryResolver) Agent(ctx context.Context, id string) (*model.Agent, error) {
-	defaultAgent := &model.Agent{
-		ID:           "1",
-		Name:         "Agent 1",
-		Type:         model.AgentTypeWebVisitIdentifier,
-		Tenant:       "tenant",
-		Capabilities: []*model.Capability{},
-		Goal:         "",
-		IsActive:     false,
-		FlowID:       new(string),
-		CreatedAt:    time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
-		UpdatedAt:    time.Date(2021, time.January, 1, 0, 0, 0, 0, time.UTC),
-		Error:        new(string),
-		Color:        "",
-		Icon:         "",
-	}
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Agent", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV("id", id)
 
-	return defaultAgent, nil
+	agentEntity, err := r.Services.CommonServices.AgentService.GetAgentById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get agent")
+		return nil, nil
+	}
+	return mapper.MapAgentToModel(agentEntity), nil
 }

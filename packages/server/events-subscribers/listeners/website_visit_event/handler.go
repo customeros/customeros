@@ -98,11 +98,7 @@ func (h *WebsiteVisitEventHandler) route(ctx context.Context, agent postgres_ent
 	}
 
 	// run agent
-	agentType, err := enum.GetAgentType(agent.Type)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
+	agentType := agent.Type
 
 	switch agentType {
 	case enum.AgentVisitorID:

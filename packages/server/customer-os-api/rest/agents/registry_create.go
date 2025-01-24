@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"net/http"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -53,14 +54,23 @@ func (a *AgentHandler) createMasterAgent(ctx context.Context, agent RegisterMast
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
-	capabilities := a.agentCapabilityIDsToString(agent.DefaultCapabilities)
+	var capabilities []postgres_entity.Capability
+	for _, inputCapability := range agent.DefaultCapabilities {
+		capability := postgres_entity.Capability{
+			Type:        enum.AgentCapabilityType(inputCapability.Type),
+			Description: inputCapability.Description,
+			Optional:    inputCapability.Optional,
+			Name:        inputCapability.Name,
+		}
+		capabilities = append(capabilities, capability)
+	}
 	query := postgres_entity.AgentRegistry{
-		Type:         agent.Type,
-		Name:         agent.Name,
-		Capabilities: capabilities,
-		Goal:         agent.Goal,
-		IsActive:     true,
-		Icon:         agent.Icon,
+		Type:               enum.AgentType(agent.Type),
+		Name:               agent.Name,
+		Goal:               agent.Goal,
+		IsActive:           true,
+		Icon:               agent.Icon,
+		CapabilitiesConfig: postgres_entity.CapabilitiesConfig{Capabilities: capabilities},
 	}
 
 	newAgent, err := a.services.Repositories.PostgresRepositories.AgentRegistryRepository.Create(ctx, query)

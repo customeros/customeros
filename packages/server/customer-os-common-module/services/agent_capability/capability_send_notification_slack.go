@@ -33,6 +33,10 @@ type SendSlackNotificationResult struct {
 	Success bool
 }
 
+type SendSlackNotificationConfig struct {
+	ChannelID string `json:"channel_id"`
+}
+
 func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data SendSlackNotificationInput) (SendSlackNotificationResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendSlackNotificationCapability.Execute")
 	defer span.Finish()
