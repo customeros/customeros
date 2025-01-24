@@ -3,12 +3,8 @@ package service
 import (
 	"context"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	commonmodel "github.com/customeros/customeros/packages/server/events/event/common"
 	"github.com/customeros/customeros/packages/server/events/eventstore"
-	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -17,8 +13,6 @@ import (
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/command_handler"
-	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/mapper"
-	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/model"
 	grpcerr "github.com/customeros/customeros/packages/server/events-processing-platform/grpc_errors"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/logger"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/tracing"
@@ -107,45 +101,6 @@ func (s *organizationService) RefreshArr(ctx context.Context, request *organizat
 	}
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
-func (s *organizationService) UpsertCustomFieldToOrganization(ctx context.Context, request *organizationpb.CustomFieldForOrganizationGrpcRequest) (*organizationpb.CustomFieldIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UpsertCustomFieldToOrganization")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, utils.StringFirstNonEmpty(request.LoggedInUserId, request.LoggedInUserId))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	customFieldId := request.CustomFieldId
-	if customFieldId == "" {
-		customFieldId = uuid.New().String()
-	}
-	sourceFields := commonmodel.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-
-	customField := model.CustomField{
-		Id:         customFieldId,
-		Name:       request.CustomFieldName,
-		TemplateId: request.CustomFieldTemplateId,
-		CustomFieldValue: neo4jmodel.CustomFieldValue{
-			Str:     request.CustomFieldValue.StringValue,
-			Bool:    request.CustomFieldValue.BoolValue,
-			Time:    utils.TimestampProtoToTimePtr(request.CustomFieldValue.DatetimeValue),
-			Int:     request.CustomFieldValue.IntegerValue,
-			Decimal: request.CustomFieldValue.DecimalValue,
-		},
-		CustomFieldDataType: mapper.MapCustomFieldDataType(request.CustomFieldDataType),
-	}
-
-	command := command.NewUpsertCustomFieldCommand(request.OrganizationId, request.Tenant,
-		sourceFields.Source, sourceFields.SourceOfTruth, sourceFields.AppSource, utils.StringFirstNonEmpty(request.LoggedInUserId, request.UserId),
-		utils.TimestampProtoToTimePtr(request.CreatedAt), utils.TimestampProtoToTimePtr(request.UpdatedAt), customField)
-	if err := s.organizationCommands.UpsertCustomFieldCommand.Handle(ctx, command); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Tenant:{%s}, organization ID: {%s}, err: {%v}", request.Tenant, request.OrganizationId, err)
-		return nil, s.errResponse(err)
-	}
-
-	return &organizationpb.CustomFieldIdGrpcResponse{Id: customFieldId}, nil
 }
 
 func (s *organizationService) errResponse(err error) error {
