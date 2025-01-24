@@ -2,7 +2,6 @@ import { RootStore } from '@store/root';
 import { Transport } from '@infra/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
 
-import mock from './mock.json';
 import { GlobalCacheQuery } from './__service__/getGlobalCache.generated';
 import { GlobalCacheService } from './__service__/GlobalCache.service.ts';
 import { UserUpdateOnboardingDetailsMutationVariables } from './__service__/updateUserOnboardingDetails.generated';
@@ -26,14 +25,6 @@ export class GlobalCacheStore {
   }
 
   async load() {
-    if (this.root.demoMode) {
-      this.value = mock.data
-        .global_Cache as unknown as GlobalCacheQuery['global_Cache'];
-      this.isBootstrapped = true;
-
-      return;
-    }
-
     try {
       this.isLoading = true;
 

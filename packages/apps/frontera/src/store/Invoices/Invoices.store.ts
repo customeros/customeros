@@ -5,7 +5,6 @@ import { when, override, observable, runInAction, makeObservable } from 'mobx';
 
 import { Invoice } from '@graphql/types';
 
-import mock from './mock.json';
 import { InvoiceStore } from './Invoice.store.ts';
 import { InvoicesService } from './__service__/Invoices.service.ts';
 
@@ -52,16 +51,6 @@ export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
   }
 
   async bootstrap() {
-    if (this.root.demoMode) {
-      this.load(mock.data.invoices.content as Invoice[], {
-        getId: (data) => data.invoiceNumber,
-      });
-      this.isBootstrapped = true;
-      this.totalElements = mock.data.invoices.totalElements;
-
-      return;
-    }
-
     if (this.isBootstrapped || this.isLoading) return;
 
     try {
