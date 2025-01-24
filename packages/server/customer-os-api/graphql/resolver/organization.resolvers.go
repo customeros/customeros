@@ -623,12 +623,24 @@ func (r *mutationResolver) OrganizationSetOwner(ctx context.Context, organizatio
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.userID", userID))
 
-	organizationEntity, err := r.Services.OrganizationService.ReplaceOwner(ctx, organizationID, userID)
+	dataFields := data_fields.OrganizationFields{
+		OwnerId: utils.StringPtr(userID),
+	}
+
+	_, err := r.Services.CommonServices.OrganizationService.Save(ctx, nil, utils.StringPtr(organizationID), dataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to set owner %s for organization %s", userID, organizationID)
 		return nil, nil
 	}
+
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, common.GetTenantFromContext(ctx), organizationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch organization details")
+		return nil, nil
+	}
+
 	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 

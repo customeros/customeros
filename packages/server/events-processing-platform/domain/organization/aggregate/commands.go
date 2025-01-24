@@ -207,8 +207,6 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 	switch c := cmd.(type) {
 	case *command.UpsertCustomFieldCommand:
 		return a.upsertCustomField(ctx, c)
-	case *command.UpdateOrganizationOwnerCommand:
-		return a.UpdateOrganizationOwner(ctx, c)
 
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
@@ -341,32 +339,6 @@ func (a *OrganizationAggregate) upsertCustomField(ctx context.Context, cmd *comm
 		return errors.Wrap(err, "NewOrganizationUpsertCustomField")
 	}
 	eventstore.EnrichEventWithMetadata(&event, &span, cmd.Tenant, cmd.LoggedInUserId)
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) UpdateOrganizationOwner(ctx context.Context, cmd *command.UpdateOrganizationOwnerCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.UpdateOrganizationOwner")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	updatedAt := utils.Now()
-
-	event, err := organizationEvents.NewOrganizationOwnerUpdateEvent(a, cmd.OwnerUserId, cmd.ActorUserId, cmd.OrganizationId, updatedAt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationOwnerUpdateEvent")
-	}
-
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: a.GetTenant(),
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.AppSource,
-	})
 
 	return a.Apply(event)
 }
