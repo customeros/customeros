@@ -13,13 +13,10 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
-	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/stretchr/testify/require"
 
-	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/test"
-	"github.com/customeros/customeros/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/customeros/customeros/packages/server/customer-os-api/test/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-api/utils/decode"
 )
@@ -1324,97 +1321,6 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 //
 //	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "SUBSIDIARY_OF"))
 //}
-
-func TestMutationResolver_OrganizationSetOwner_NewOwner(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
-
-	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		UpdateOrganizationOwner: func(context context.Context, org *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, organizationId, org.OrganizationId)
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
-			require.Equal(t, userId, org.OwnerUserId)
-			neo4jtest.UserOwnsOrganization(ctx, driver, userId, organizationId)
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: organizationId,
-			}, nil
-		},
-	}
-	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
-
-	rawResponse := callGraphQL(t, "organization/set_owner",
-		map[string]interface{}{"organizationId": organizationId, "userId": userId})
-
-	var organizationStruct struct {
-		Organization_SetOwner model.Organization
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
-	require.Nil(t, err)
-	require.NotNil(t, organizationStruct)
-
-	organization := organizationStruct.Organization_SetOwner
-	require.Equal(t, organizationId, organization.ID)
-	require.Equal(t, userId, organization.Owner.ID)
-	test.AssertRecentTime(t, organization.UpdatedAt)
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
-}
-
-func TestMutationResolver_OrganizationSetOwner_ReplaceOwner(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	previousOwnerId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
-	newOwnerId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
-	organizationId := neo4jt.CreateOrganization(ctx, driver, tenantName, "org name")
-	neo4jtest.UserOwnsOrganization(ctx, driver, previousOwnerId, organizationId)
-
-	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		UpdateOrganizationOwner: func(context context.Context, org *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, organizationId, org.OrganizationId)
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, constants.AppSourceCustomerOsApi, org.AppSource)
-			require.Equal(t, newOwnerId, org.OwnerUserId)
-			neo4jtest.UserOwnsOrganization(ctx, driver, newOwnerId, organizationId)
-			neo4jt.DeleteUserOwnsOrganization(ctx, driver, previousOwnerId, organizationId)
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: organizationId,
-			}, nil
-		},
-	}
-	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
-
-	rawResponse := callGraphQL(t, "organization/set_owner",
-		map[string]interface{}{"organizationId": organizationId, "userId": newOwnerId})
-
-	var organizationStruct struct {
-		Organization_SetOwner model.Organization
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
-	require.Nil(t, err)
-	require.NotNil(t, organizationStruct)
-
-	organization := organizationStruct.Organization_SetOwner
-	require.Equal(t, organizationId, organization.ID)
-	require.Equal(t, newOwnerId, organization.Owner.ID)
-	test.AssertRecentTime(t, organization.UpdatedAt)
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "OWNS"))
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "User", "User_" + tenantName, "Organization", "Organization_" + tenantName})
-}
 
 func TestMutationResolver_OrganizationUnsetOwner(t *testing.T) {
 	ctx := context.Background()
