@@ -12,13 +12,11 @@ import (
 type CommandHandlers struct {
 	UpsertCustomFieldCommand UpsertCustomFieldCommandHandler
 	RefreshArr               RefreshArrCommandHandler
-	UpdateOrganizationOwner  UpdateOrganizationOwnerCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, ebs *eventbuffer.EventBufferStoreService) *CommandHandlers {
 	return &CommandHandlers{
 		UpsertCustomFieldCommand: NewUpsertCustomFieldCommandHandler(log, es),
 		RefreshArr:               NewRefreshArrCommandHandler(log, es, cfg.Utils),
-		UpdateOrganizationOwner:  NewUpdateOrganizationOwnerCommandHandler(log, es, cfg.Utils, ebs),
 	}
 }

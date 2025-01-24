@@ -106,14 +106,6 @@ message CustomFieldForOrganizationGrpcRequest {
   string loggedInUserId = 12;
 }
 
-message UpdateOrganizationOwnerGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string ownerUserId = 3;
-  string loggedInUserId = 4; // The user who is performing the action
-  string appSource = 5;
-}
-
 message CreateBillingProfileGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -171,7 +163,6 @@ service organizationGrpcService {
   rpc RefreshRenewalSummary(RefreshRenewalSummaryGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshDerivedData(RefreshDerivedDataGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshArr(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc UpdateOrganizationOwner(UpdateOrganizationOwnerGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc CreateBillingProfile(CreateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc UpdateBillingProfile(UpdateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc LinkEmailToBillingProfile(LinkEmailToBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);

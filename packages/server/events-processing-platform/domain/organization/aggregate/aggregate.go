@@ -44,8 +44,6 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onPhoneNumberLink(event)
 	case organizationEvents.OrganizationUpsertCustomFieldV1:
 		return a.onUpsertCustomField(event)
-	case organizationEvents.OrganizationUpdateOwnerV1:
-		return a.onOrganizationOwnerUpdate(event)
 	case organizationEvents.OrganizationCreateBillingProfileV1:
 		return a.onCreateBillingProfile(event)
 	case organizationEvents.OrganizationUpdateBillingProfileV1:
@@ -110,16 +108,6 @@ func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) erro
 			CustomFieldValue:    eventData.CustomFieldValue,
 		}
 	}
-	return nil
-}
-
-func (a *OrganizationAggregate) onOrganizationOwnerUpdate(event eventstore.Event) error {
-	var eventData organizationEvents.OrganizationOwnerUpdateEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	// do nothing
 	return nil
 }
 

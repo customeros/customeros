@@ -3,10 +3,9 @@ package api_organization
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"reflect"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -20,6 +19,8 @@ import (
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -268,37 +269,6 @@ func (s *organizationService) GetSubsidiariesOfForOrganizations(ctx context.Cont
 		organizationEntities = append(organizationEntities, *organizationEntity)
 	}
 	return &organizationEntities, nil
-}
-
-func (s *organizationService) ReplaceOwner(ctx context.Context, organizationID, userID string) (*neo4jentity.OrganizationEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.ReplaceOwner")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationID", organizationID), log.String("userID", userID))
-
-	ownerUpdateReq := &organizationpb.UpdateOrganizationOwnerGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		OrganizationId: organizationID,
-		OwnerUserId:    userID,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return s.grpcClients.OrganizationClient.UpdateOrganizationOwner(ctx, ownerUpdateReq)
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	// get org node back from db to keep function signature the same
-	dbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, common.GetTenantFromContext(ctx), organizationID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return neo4jmapper.MapDbNodeToOrganizationEntity(dbNode), nil
 }
 
 func (s *organizationService) UpdateLastTouchpoint(ctx context.Context, organizationID string) {

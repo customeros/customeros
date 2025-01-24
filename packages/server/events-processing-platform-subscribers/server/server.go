@@ -28,7 +28,6 @@ import (
 	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/subscriptions"
 	graph_subscription "github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/subscriptions/graph"
 	invoice_subscription "github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/subscriptions/invoice"
-	notifications_subscription "github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/subscriptions/notifications"
 )
 
 const (
@@ -156,17 +155,6 @@ func (server *Server) InitSubscribers(ctx context.Context, grpcClients *grpc_cli
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {
 				server.Log.Errorf("(graphSubscriber.Connect) err: {%s}", err.Error())
-				cancel()
-			}
-		}()
-	}
-
-	if server.Config.Subscriptions.NotificationsSubscription.Enabled {
-		notificationsSubscriber := notifications_subscription.NewNotificationsSubscriber(server.Log, esdb, server.Services, server.Config)
-		go func() {
-			err := notificationsSubscriber.Connect(ctx, notificationsSubscriber.ProcessEvents)
-			if err != nil {
-				server.Log.Errorf("(notificationsSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()
