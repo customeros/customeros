@@ -208,6 +208,8 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichName(ctx context.
 	// 4) Name looks like a domain
 	// 5) Name is a known placeholder (“none”, “n/a”, “na”, “unknown”, “null”, etc.)
 	// 6) Name is all lowercase (letters/numbers/spaces)
+	// 7) Name has a known suffix (“ ltd”, “ inc”, “ gmbh”, “ s.a”, “ plc”, “ pty”, “ corp”, “ co”, “ sa”)
+	// 8) Name has a punctuation character
 	suspiciousNameCondition := `
         (
             name IS NULL
@@ -217,6 +219,8 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichName(ctx context.
             OR name ~ '^[a-zA-Z0-9.-]+\\.[a-zA-Z0-9.-]+$'
             OR lower(name) IN ('none','n/a','na','unknown','null')
 			OR name ~ '^[a-z0-9\\s]+$'
+			OR lower(name) ~ '( ltd| inc| gmbh| plc| pty| corp| co| llc| llp| ag| bv| as| ab| nv| se| sl| sc| cv| sa| sarl| spa| srl| srls| snc| sas)'
+			OR name ~ '.*[.,;:!?].*'
         )
     `
 
@@ -239,54 +243,15 @@ func (r *globalOrganizationRepository) GetOrganizationsToEnrichName(ctx context.
 }
 
 func (r *globalOrganizationRepository) MarkIndustryEnrichRequested(ctx context.Context, id uint64) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.MarkIndustryEnrichRequested")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Uint64("id", id))
-
-	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
-		Where("id = ?", id).
-		UpdateColumn("industry_request_count", gorm.Expr("COALESCE(industry_request_count, 0) + 1")).
-		UpdateColumn("industry_requested_at", utils.Now())
-	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
-		return result.Error
-	}
-	return nil
+	return r.markEnrichRequested(ctx, id, "industry")
 }
 
 func (r *globalOrganizationRepository) MarkDescriptionEnrichRequested(ctx context.Context, id uint64) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.MarkDescriptionEnrichRequested")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Uint64("id", id))
-
-	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
-		Where("id = ?", id).
-		UpdateColumn("description_request_count", gorm.Expr("COALESCE(description_request_count, 0) + 1")).
-		UpdateColumn("description_requested_at", utils.Now())
-	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
-		return result.Error
-	}
-	return nil
+	return r.markEnrichRequested(ctx, id, "description")
 }
 
 func (r *globalOrganizationRepository) MarkNameEnrichRequested(ctx context.Context, id uint64) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.MarkNameEnrichRequested")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.Uint64("id", id))
-
-	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
-		Where("id = ?", id).
-		UpdateColumn("name_request_count", gorm.Expr("COALESCE(name_request_count, 0) + 1")).
-		UpdateColumn("name_requested_at", utils.Now())
-	if result.Error != nil {
-		tracing.TraceErr(span, result.Error)
-		return result.Error
-	}
-	return nil
+	return r.markEnrichRequested(ctx, id, "name")
 }
 
 func (r *globalOrganizationRepository) SetIndustry(ctx context.Context, id uint64, industryNaicsCode, industryNaicsName string) error {
@@ -381,6 +346,24 @@ func (r *globalOrganizationRepository) MarkGlobalOrganizationSyncedToNeo(ctx con
 		UpdateColumn("synced_to_neo_at", utils.Now())
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
+		return result.Error
+	}
+	return nil
+}
+
+func (r *globalOrganizationRepository) markEnrichRequested(ctx context.Context, id uint64, fieldBase string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "GlobalOrganizationRepository.markEnrichRequested")
+	defer span.Finish()
+	span.LogFields(tracingLog.Uint64("id", id), tracingLog.String("fieldBase", fieldBase))
+
+	countField := fieldBase + "_request_count" // e.g., "industry_request_count"
+	timeField := fieldBase + "_requested_at"   // e.g., "industry_requested_at"
+
+	result := r.db.WithContext(ctx).Model(&postgres_entity.GlobalOrganization{}).
+		Where("id = ?", id).
+		UpdateColumn(countField, gorm.Expr("COALESCE("+countField+", 0) + 1")).
+		UpdateColumn(timeField, utils.Now())
+	if result.Error != nil {
 		return result.Error
 	}
 	return nil
