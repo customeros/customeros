@@ -176,6 +176,12 @@ func (s *webSessionService) processClosedSession(ctx context.Context, session po
 		return err
 	}
 
+	err = s.findSupportVisits(ctx, session.Tenant, session.ID, session.UniquePageViews)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	return nil
 }
 
@@ -252,6 +258,53 @@ func (c *webSessionService) processUniquePageViews(ctx context.Context, tenant, 
 	_, err = c.commonServices.PostgresRepositories.WebSessionRepository.UpdateSessionPageViews(ctx, sessionID, tenant, uniquePages)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Unable to update websession with unique page views"))
+		return err
+	}
+
+	return nil
+}
+
+func (s *webSessionService) findSupportVisits(ctx context.Context, tenant, sessionID string, pageViews []string) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.findSupportVisits")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	var errs error
+	for _, page := range pageViews {
+		if !strings.Contains(page, "support") {
+			continue
+		}
+		err := s.processSupportVisit(ctx, tenant, sessionID, page)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			errs = multierr.Append(errs, err)
+		}
+	}
+
+	return errs
+}
+
+func (s *webSessionService) processSupportVisit(ctx context.Context, tenant, sessionID, pageView string) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.processSupportVisit")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	supportVisit := dto.SupportEvent{
+		Tenant:       tenant,
+		WebSessionID: sessionID,
+		Source:       dto.SupportWebVisit,
+	}
+
+	event := dto.WebhookEvent{
+		ExternalSystemId: enum.SourceAgent,
+		Name:             enum.EventRevealWebsiteVisit,
+		DataType:         supportVisit.Type(),
+		Data:             &supportVisit,
+	}
+
+	err := s.commonServices.Events.Publisher.PublishWebhookEvent(ctx, event)
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
 

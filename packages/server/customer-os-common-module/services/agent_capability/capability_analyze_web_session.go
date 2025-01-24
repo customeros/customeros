@@ -277,14 +277,10 @@ func (c *AnalyzeWebSessionCapability) buildTimelineMessage(ctx context.Context, 
 	// Build base message
 	var baseMessage string
 	switch {
-	case analysis.IsNewCompanyVisit && analysis.Referrer != "":
-		baseMessage = fmt.Sprintf("A **New visitor** referred by %s browsed for %s", analysis.Referrer, analysis.SessionDuration)
-	case analysis.IsNewCompanyVisit && analysis.Referrer == "":
-		baseMessage = fmt.Sprintf("A **New visitor** browsed for %s", analysis.SessionDuration)
-	case !analysis.IsNewCompanyVisit && analysis.Referrer != "":
-		baseMessage = fmt.Sprintf("A **Repeat visitor** referred by %s browsed for %s", analysis.Referrer, analysis.SessionDuration)
+	case analysis.Referrer == "":
+		baseMessage = fmt.Sprintf("A visitor referred by **%s** browsed for %s", analysis.Referrer, analysis.SessionDuration)
 	default:
-		baseMessage = fmt.Sprintf("A **Repeat visitor** browsed for %s", analysis.SessionDuration)
+		baseMessage = fmt.Sprintf("A visitor browsed for %s", analysis.SessionDuration)
 	}
 
 	// Sort pages by length and alphabetically

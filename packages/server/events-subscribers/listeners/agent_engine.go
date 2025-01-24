@@ -29,6 +29,7 @@ var SubscribedAgents = [1]commonenum.AgentType{
 
 var eventDataTypes = map[string]reflect.Type{
 	data_fields.WebsiteVisitEvent{}.Type(): reflect.TypeOf(data_fields.WebsiteVisitEvent{}),
+	dto.SupportEvent{}.Type():              reflect.TypeOf(dto.SupportEvent{}),
 }
 
 func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyContainer, input any) error {
@@ -61,6 +62,17 @@ func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyCo
 	// 		tracing.TraceErr(span, err)
 	// 		return err
 	// 	}
+	case dto.SupportEvent{}.Type():
+		eventData, ok := webhookEvent.Data.(*dto.SupportEvent)
+		if !ok {
+			return fmt.Errorf("failed to cast to SupportEvent, got type: %T", webhookEvent.Data)
+		}
+
+		err := dependencies.CommonServices.SupportAgent.Run(ctx, eventData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 
 	case data_fields.WebsiteVisitEvent{}.Type():
 		eventData, ok := webhookEvent.Data.(*data_fields.WebsiteVisitEvent)

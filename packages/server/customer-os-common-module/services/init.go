@@ -134,8 +134,9 @@ type CommonServices struct {
 	WorkspaceService           interfaces.WorkspaceService
 
 	// Agents
-	AgentCapabilities     *agent_capability.AgentCapabilities
-	AgentVisitorIDService *agent.AgentVisitorIDService
+	AgentCapabilities *agent_capability.AgentCapabilities
+	SupportAgent      *agent.SupportAgent
+	VisitorIDAgent    *agent.VisitorIDAgent
 }
 
 type InitOptions struct {
@@ -246,7 +247,8 @@ func InitCommonServices(
 	)
 
 	// initialize agents
-	agentVisitorIDImpl := agent.NewAgentVisitorIDService(postgresRepositories, capabilityImpl, agentImpl, workspaceImpl)
+	agentVisitorIDImpl := agent.NewVisitorIDAgent(postgresRepositories, capabilityImpl, agentImpl, workspaceImpl)
+	supportAgentImpl := agent.NewSupportAgent()
 
 	// Initialize CommonServices struct
 	common := CommonServices{
@@ -312,8 +314,9 @@ func InitCommonServices(
 		WorkspaceService:           workspaceImpl,
 
 		// Agents
-		AgentCapabilities:     capabilityImpl,
-		AgentVisitorIDService: agentVisitorIDImpl,
+		AgentCapabilities: capabilityImpl,
+		SupportAgent:      supportAgentImpl,
+		VisitorIDAgent:    agentVisitorIDImpl,
 	}
 
 	// Check that all services are initialized
