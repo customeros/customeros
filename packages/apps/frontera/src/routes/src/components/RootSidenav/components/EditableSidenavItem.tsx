@@ -1,14 +1,12 @@
-import { useState, ReactElement, MouseEventHandler } from 'react';
+import { useState, type ReactElement, type MouseEventHandler } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
+import { Icon } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
 import { buttonSize } from '@ui/form/Button/Button';
-import { Archive } from '@ui/media/icons/Archive.tsx';
 import { TextInput } from '@ui/media/icons/TextInput';
-import { DotsVertical } from '@ui/media/icons/DotsVertical';
-import { LayersTwo01 } from '@ui/media/icons/LayersTwo01.tsx';
 import { ghostButton } from '@ui/form/Button/Button.variants';
 import {
   Menu,
@@ -81,7 +79,7 @@ export const EditableSideNavItem = observer(
         >
           <Menu open={isEditing} onOpenChange={setIsEditing}>
             <MenuButton className='min-w-6 h-5 rounded-md outline-none focus:outline-none text-gray-400 hover:text-gray-500 flex items-center'>
-              <DotsVertical className='text-inherit' />
+              <Icon name='dots-vertical' className='text-inherit' />
             </MenuButton>
 
             <MenuList align='end' side='bottom'>
@@ -117,7 +115,7 @@ export const EditableSideNavItem = observer(
                   setIsEditing(false);
                 }}
               >
-                <LayersTwo01 className='text-gray-500' />
+                <Icon name='layers-two-01' className='text-gray-500' />
                 Save as...
               </MenuItem>
               <MenuItem
@@ -133,7 +131,7 @@ export const EditableSideNavItem = observer(
                   store.ui.commandMenu.setOpen(true);
                 }}
               >
-                <Archive className='text-gray-500' />
+                <Icon name='archive' className='text-gray-500' />
                 Archive view
               </MenuItem>
             </MenuList>

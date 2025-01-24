@@ -1,10 +1,11 @@
 import { observer } from 'mobx-react-lite';
 import { TableViewDef } from '@store/TableViewDefs/TableViewDef.dto.ts';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
+import { Icon } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
-import { iconMap } from '@shared/components/RootSidenav/utils';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
+import { iconNameMap } from '@shared/components/RootSidenav/utils';
 import { EditableSideNavItem } from '@shared/components/RootSidenav/components/EditableSidenavItem';
 
 import { CollapsibleSection } from '../CollapsibleSection';
@@ -61,20 +62,15 @@ export const TeamViewsSectionSection = observer(
                 onClick={() =>
                   handleItemClick(`finder?preset=${view.value.id}`)
                 }
-                icon={(isActive) => {
-                  const Icon = iconMap?.[view.value.icon];
-
-                  if (!Icon) return <div />;
-
-                  return (
-                    <Icon
-                      className={cn(
-                        'size-4 min-w-4 text-gray-500',
-                        isActive && 'text-gray-700',
-                      )}
-                    />
-                  );
-                }}
+                icon={(isActive) => (
+                  <Icon
+                    name={iconNameMap?.[view.value.icon] ?? 'building-07'}
+                    className={cn(
+                      'size-4 min-w-4 text-gray-500',
+                      isActive && 'text-gray-700',
+                    )}
+                  />
+                )}
               />
             ),
           )}

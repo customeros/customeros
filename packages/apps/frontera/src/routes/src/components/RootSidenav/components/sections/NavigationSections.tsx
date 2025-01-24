@@ -4,9 +4,8 @@ import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
-import { Atom01 } from '@ui/media/icons/Atom01';
+import { Icon } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
-import { Bubbles } from '@ui/media/icons/Bubbles';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { TeamViewsSectionSection } from '@shared/components/RootSidenav/components/sections/TeamViewsSection';
@@ -33,7 +32,6 @@ export const NavigationSections = observer(
   }: NavigationSectionsProps) => {
     const store = useStore();
     const { pathname } = useLocation();
-
     const showCustomerMap = useFeatureIsOn('show-customer-map');
     const flowSequencesView = store.tableViewDefs.getById(
       store.tableViewDefs.flowsPreset ?? '',
@@ -50,11 +48,9 @@ export const NavigationSections = observer(
               isActive={checkIsActive('customer-map')}
               onClick={() => handleItemClick('customer-map')}
               icon={(isActive) => (
-                <Bubbles
-                  className={cn(
-                    'size-4 min-w-4 text-gray-500',
-                    isActive && 'text-gray-700',
-                  )}
+                <Icon
+                  name='bubbles'
+                  className={cn('text-gray-500', isActive && 'text-gray-700')}
                 />
               )}
             />
@@ -72,7 +68,8 @@ export const NavigationSections = observer(
               }) || isFlowEditorActive
             }
             icon={(isActive) => (
-              <Atom01
+              <Icon
+                name='atom-01'
                 className={cn(
                   'size-4 min-w-4 text-gray-500',
                   isActive && 'text-gray-700',

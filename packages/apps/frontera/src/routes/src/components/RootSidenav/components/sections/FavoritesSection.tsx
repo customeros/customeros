@@ -1,15 +1,14 @@
-import React from 'react';
 import { useLocation } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
-import { cn } from '@ui/utils/cn.ts';
-import { Play } from '@ui/media/icons/Play.tsx';
+import { cn } from '@ui/utils/cn';
+import { Icon } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
-import { iconMap } from '@shared/components/RootSidenav/utils';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
+import { iconNameMap } from '@shared/components/RootSidenav/utils';
+import { WelcomeSidenavItem } from '@shared/components/RootSidenav/components/WelcomeSideNavItem';
 import { EditableSideNavItem } from '@shared/components/RootSidenav/components/EditableSidenavItem';
-import { WelcomeSidenavItem } from '@shared/components/RootSidenav/components/WelcomeSideNavItem.tsx';
 
 import { CollapsibleSection } from '../CollapsibleSection';
 
@@ -57,11 +56,9 @@ export const FavoritesSection = observer(
             isActive={pathname.includes('welcome')}
             onClick={() => handleItemClick(`welcome`)}
             icon={(isActive) => (
-              <Play
-                className={cn(
-                  'size-4 min-w-4 text-gray-500',
-                  isActive && 'text-gray-700',
-                )}
+              <Icon
+                name='play'
+                className={cn('text-gray-500', isActive && 'text-gray-700')}
               />
             )}
           />
@@ -78,20 +75,15 @@ export const FavoritesSection = observer(
               isActive={checkIsActive('finder', {
                 preset: view.value.id,
               })}
-              icon={(isActive) => {
-                const Icon = iconMap?.[view.value.icon];
-
-                if (!Icon) return <div />;
-
-                return (
-                  <Icon
-                    className={cn(
-                      'size-4 min-w-4 text-gray-500',
-                      isActive && 'text-gray-700',
-                    )}
-                  />
-                );
-              }}
+              icon={(isActive) => (
+                <Icon
+                  name={iconNameMap?.[view.value.icon] ?? 'building-07'}
+                  className={cn(
+                    'min-w-4 text-gray-500',
+                    isActive && 'text-gray-700',
+                  )}
+                />
+              )}
             />
           ))}
       </CollapsibleSection>

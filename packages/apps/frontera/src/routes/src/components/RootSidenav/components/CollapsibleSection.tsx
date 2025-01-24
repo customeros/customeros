@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 
 import { cn } from '@ui/utils/cn.ts';
-import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
+import { Icon } from '@ui/media/Icon';
 
 interface CollapsibleSectionProps {
   title: string;
@@ -24,7 +24,8 @@ export const CollapsibleSection = ({
       >
         <span className='text-sm  text-gray-500'>{title}</span>
 
-        <ArrowDropdown
+        <Icon
+          name='arrow-dropdown'
           className={cn('w-5 h-5', {
             'transform -rotate-90': !isOpen,
           })}

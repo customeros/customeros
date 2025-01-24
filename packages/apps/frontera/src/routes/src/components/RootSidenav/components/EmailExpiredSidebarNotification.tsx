@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
-import { XClose } from '@ui/media/icons/XClose';
+import { Icon } from '@ui/media/Icon';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { AlertCircle } from '@ui/media/icons/AlertCircle';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
@@ -58,14 +57,14 @@ export const EmailExpiredSidebarNotification = observer(() => {
                     className='ml-[2px]'
                     colorScheme='warning'
                   >
-                    <AlertCircle />
+                    <Icon name='alert-circle' />
                   </FeaturedIcon>
 
                   <IconButton
                     variant='ghost'
-                    icon={<XClose />}
                     colorScheme='gray'
                     aria-label='Close dialog'
+                    icon={<Icon name='x-close' />}
                     onClick={() => {
                       setIsOpen(false);
                     }}

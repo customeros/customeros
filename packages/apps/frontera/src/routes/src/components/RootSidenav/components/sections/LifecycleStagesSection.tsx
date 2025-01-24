@@ -3,13 +3,14 @@ import { useSearchParams } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import { TableViewDef } from '@store/TableViewDefs/TableViewDef.dto';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
+import { Icon } from '@ui/media/Icon';
 import { TableIdType } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
-import { iconMap } from '@shared/components/RootSidenav/utils';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
-import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem.tsx';
+import { iconNameMap } from '@shared/components/RootSidenav/utils';
+import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { RootSidenavItem } from '@shared/components/RootSidenav/components/RootSidenavItem';
 
 import { CollapsibleSection } from '../CollapsibleSection';
@@ -85,22 +86,15 @@ export const LifecycleStagesSection = observer(
                     isActive={checkIsActive('prospects')}
                     onClick={() => handleItemClick(`prospects`)}
                     dataTest={`side-nav-item-${view.value.name}`}
-                    icon={(isActive) => {
-                      const Icon = iconMap?.[view.value.icon];
-
-                      if (!Icon) return <div />;
-
-                      return Icon ? (
-                        <Icon
-                          className={cn(
-                            'size-4 min-w-4 text-gray-500',
-                            isActive && 'text-gray-700',
-                          )}
-                        />
-                      ) : (
-                        <div className='size-4' />
-                      );
-                    }}
+                    icon={(isActive) => (
+                      <Icon
+                        name={iconNameMap?.[view.value.icon] ?? 'building-07'}
+                        className={cn(
+                          'min-w-4 text-gray-500',
+                          isActive && 'text-gray-700',
+                        )}
+                      />
+                    )}
                   />
                 );
               }
@@ -115,6 +109,15 @@ export const LifecycleStagesSection = observer(
                   onClick={() =>
                     handleItemClick(`finder?preset=${view.value.id}`)
                   }
+                  icon={(isActive) => (
+                    <Icon
+                      name={iconNameMap?.[view.value.icon] ?? 'building-07'}
+                      className={cn(
+                        'min-w-4 text-gray-500',
+                        isActive && 'text-gray-700',
+                      )}
+                    />
+                  )}
                   rightElement={
                     noOfOrganizationsMovedByICP > 0 &&
                     view.value.tableId === TableIdType.Targets ? (
@@ -123,22 +126,6 @@ export const LifecycleStagesSection = observer(
                       </Tag>
                     ) : null
                   }
-                  icon={(isActive) => {
-                    const Icon = iconMap?.[view.value.icon];
-
-                    if (!Icon) return <div />;
-
-                    return Icon ? (
-                      <Icon
-                        className={cn(
-                          'size-4 min-w-4 text-gray-500',
-                          isActive && 'text-gray-700',
-                        )}
-                      />
-                    ) : (
-                      <div className='size-4' />
-                    );
-                  }}
                 />
               );
             })}
