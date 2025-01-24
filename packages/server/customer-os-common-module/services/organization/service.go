@@ -350,11 +350,15 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		input.CustomerOsId = utils.StringPtr(customerOsId)
 	}
 
-	// Clean and update organization name if not updated manually
+	// Adjust input fields
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
 		if input.Name != nil {
 			input.Name = utils.StringPtr(utils.CleanName(*input.Name))
 		}
+	}
+	// trim left spaces from name
+	if input.Name != nil && !utils.IsBlank(*input.Name) {
+		input.Name = utils.StringPtr(strings.TrimLeft(*input.Name, " "))
 	}
 
 	// Validate industry code if set
@@ -373,12 +377,6 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 			}
 		}
 	}
-
-	// Prepare enrich details if organization created from global orgs, to prevent re-enriching
-	//if createFlow && input.GlobalOrgId != nil {
-	//	input.EnrichDomain = utils.StringPtr(primaryDomain)
-	//	input.EnrichSource = utils.StringPtr(constants.SourceGlobalOrgs)
-	//}
 
 	newDomains := make([]string, 0)
 

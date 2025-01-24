@@ -351,6 +351,10 @@ func IsEmptyString(s *string) bool {
 	return s == nil || *s == ""
 }
 
+func IsBlank(s string) bool {
+	return strings.TrimSpace(s) == ""
+}
+
 func GenerateRandomStringFromCharset(length int, charset string) string {
 	// Create a new source based on the current time's Unix timestamp (in nanoseconds)
 	source := rand.NewSource(time.Now().UnixNano())
