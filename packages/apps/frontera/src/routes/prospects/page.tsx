@@ -61,7 +61,7 @@ export const ProspectsBoardPage = observer(() => {
       </div>
       <div
         className={cn(
-          'flex justify-between items-center py-2 border-b-gray-200 pr-4',
+          'flex justify-between items-center py-2 border-b-gray-200 mx-4',
           {
             'border-b ': !showFinder,
           },

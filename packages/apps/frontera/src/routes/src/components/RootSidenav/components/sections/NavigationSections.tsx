@@ -42,14 +42,37 @@ export const NavigationSections = observer(
 
     return (
       <div className='px-2 pt-2.5 gap-4 overflow-y-auto overflow-hidden flex flex-col flex-1'>
-        {showCustomerMap && (
+        <div className='flex flex-col'>
+          {showCustomerMap && (
+            <SidenavItem
+              label='Customer map'
+              dataTest={`side-nav-item-customer-map`}
+              isActive={checkIsActive('customer-map')}
+              onClick={() => handleItemClick('customer-map')}
+              icon={(isActive) => (
+                <Bubbles
+                  className={cn(
+                    'size-4 min-w-4 text-gray-500',
+                    isActive && 'text-gray-700',
+                  )}
+                />
+              )}
+            />
+          )}
+
           <SidenavItem
-            label='Customer map'
-            dataTest={`side-nav-item-customer-map`}
-            isActive={checkIsActive('customer-map')}
-            onClick={() => handleItemClick('customer-map')}
+            label='Flows'
+            dataTest={`side-nav-item-all-flows`}
+            onClick={() =>
+              handleItemClick(`finder?preset=${flowSequencesView?.value?.id}`)
+            }
+            isActive={
+              checkIsActive('finder', {
+                preset: flowSequencesView?.value?.id ?? '',
+              }) || isFlowEditorActive
+            }
             icon={(isActive) => (
-              <Bubbles
+              <Atom01
                 className={cn(
                   'size-4 min-w-4 text-gray-500',
                   isActive && 'text-gray-700',
@@ -57,28 +80,7 @@ export const NavigationSections = observer(
               />
             )}
           />
-        )}
-
-        <SidenavItem
-          label='Agents'
-          dataTest={`side-nav-item-all-flows`}
-          onClick={() =>
-            handleItemClick(`finder?preset=${flowSequencesView?.value?.id}`)
-          }
-          isActive={
-            checkIsActive('finder', {
-              preset: flowSequencesView?.value?.id ?? '',
-            }) || isFlowEditorActive
-          }
-          icon={(isActive) => (
-            <Atom01
-              className={cn(
-                'size-4 min-w-4 text-gray-500',
-                isActive && 'text-gray-700',
-              )}
-            />
-          )}
-        />
+        </div>
 
         <TeamViewsSectionSection
           preferences={preferences}
