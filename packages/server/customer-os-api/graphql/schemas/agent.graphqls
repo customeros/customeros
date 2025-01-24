@@ -8,8 +8,10 @@ extend type Mutation {
 }
 
 enum CapabilityType {
-    WEBSITE_TRACKER
+    IDENTIFY_WEB_VISITOR
     SEND_SLACK_NOTIFICATION
+    CREATE_ORGANIZATION
+    ANALYZE_WEB_SESSION_INTENT
 }
 
 type Capability {
@@ -29,7 +31,6 @@ enum AgentType {
 type Agent {
     id: ID!
     type: AgentType!
-    tenant: String!
     name: String!
     capabilities: [Capability!]!
     goal: String!

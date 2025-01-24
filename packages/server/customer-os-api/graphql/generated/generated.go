@@ -114,7 +114,6 @@ type ComplexityRoot struct {
 		Icon         func(childComplexity int) int
 		IsActive     func(childComplexity int) int
 		Name         func(childComplexity int) int
-		Tenant       func(childComplexity int) int
 		Type         func(childComplexity int) int
 		UpdatedAt    func(childComplexity int) int
 		Visible      func(childComplexity int) int
@@ -2444,13 +2443,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Agent.Name(childComplexity), true
-
-	case "Agent.tenant":
-		if e.complexity.Agent.Tenant == nil {
-			break
-		}
-
-		return e.complexity.Agent.Tenant(childComplexity), true
 
 	case "Agent.type":
 		if e.complexity.Agent.Type == nil {
@@ -13097,8 +13089,10 @@ extend type Mutation {
 }
 
 enum CapabilityType {
-    WEBSITE_TRACKER
+    IDENTIFY_WEB_VISITOR
     SEND_SLACK_NOTIFICATION
+    CREATE_ORGANIZATION
+    ANALYZE_WEB_SESSION_INTENT
 }
 
 type Capability {
@@ -13118,7 +13112,6 @@ enum AgentType {
 type Agent {
     id: ID!
     type: AgentType!
-    tenant: String!
     name: String!
     capabilities: [Capability!]!
     goal: String!
@@ -27511,50 +27504,6 @@ func (ec *executionContext) fieldContext_Agent_type(_ context.Context, field gra
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type AgentType does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Agent_tenant(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Agent_tenant(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Tenant, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Agent_tenant(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Agent",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -60962,8 +60911,6 @@ func (ec *executionContext) fieldContext_Mutation_agent_Save(ctx context.Context
 				return ec.fieldContext_Agent_id(ctx, field)
 			case "type":
 				return ec.fieldContext_Agent_type(ctx, field)
-			case "tenant":
-				return ec.fieldContext_Agent_tenant(ctx, field)
 			case "name":
 				return ec.fieldContext_Agent_name(ctx, field)
 			case "capabilities":
@@ -90726,8 +90673,6 @@ func (ec *executionContext) fieldContext_Query_agents(_ context.Context, field g
 				return ec.fieldContext_Agent_id(ctx, field)
 			case "type":
 				return ec.fieldContext_Agent_type(ctx, field)
-			case "tenant":
-				return ec.fieldContext_Agent_tenant(ctx, field)
 			case "name":
 				return ec.fieldContext_Agent_name(ctx, field)
 			case "capabilities":
@@ -90831,8 +90776,6 @@ func (ec *executionContext) fieldContext_Query_agent(ctx context.Context, field 
 				return ec.fieldContext_Agent_id(ctx, field)
 			case "type":
 				return ec.fieldContext_Agent_type(ctx, field)
-			case "tenant":
-				return ec.fieldContext_Agent_tenant(ctx, field)
 			case "name":
 				return ec.fieldContext_Agent_name(ctx, field)
 			case "capabilities":
@@ -117270,11 +117213,6 @@ func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "type":
 			out.Values[i] = ec._Agent_type(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "tenant":
-			out.Values[i] = ec._Agent_tenant(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

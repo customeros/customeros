@@ -29,7 +29,8 @@ func MapAgentToModel(entity *postgresEntity.Agents) *model.Agent {
 	//		Filter:     column.Filter,
 	//	})
 	//}
-	return &model.Agent{
+
+	agentModel := model.Agent{
 		ID:        entity.ID,
 		Name:      entity.Name,
 		Icon:      entity.Icon,
@@ -40,8 +41,18 @@ func MapAgentToModel(entity *postgresEntity.Agents) *model.Agent {
 		Goal:      entity.Goal,
 		IsActive:  entity.IsActive,
 		Visible:   entity.VisibleInUI,
-		//Columns:   columns, TODO Capabilities
 	}
+	for _, capability := range entity.CapabilitiesConfig.Capabilities {
+		agentModel.Capabilities = append(agentModel.Capabilities, &model.Capability{
+			ID:       capability.ID,
+			Name:     capability.Name,
+			Type:     enummapper.MapAgentCapabilityTypeToModel(capability.Type),
+			Errors:   utils.StringPtrNillable(capability.Error),
+			Optional: capability.Optional,
+			Values:   capability.Values,
+		})
+	}
+	return &agentModel
 }
 
 func MapAgentsToModel(entities []*postgresEntity.Agents) []*model.Agent {

@@ -28,6 +28,40 @@ func NewAgentService(postgresRepositories *postgresrepository.Repositories) inte
 	}
 }
 
+func (a *agentService) GetAgentById(ctx context.Context, agentID string) (*postgresentity.Agents, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.GetAgentById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	agent, err := a.postgresRepositories.AgentsRepository.GetById(ctx, agentID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if agent == nil {
+		err := errors.New("agent not found")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return agent, nil
+}
+
+func (a *agentService) GetAllAgents(ctx context.Context) ([]*postgresentity.Agents, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.GetAllAgents")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	agents, err := a.postgresRepositories.AgentsRepository.GetAll(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return agents, nil
+}
+
 func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType) (*postgresentity.Agents, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.CreateAgent")
 	defer span.Finish()
