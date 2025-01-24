@@ -1,11 +1,15 @@
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-inverted-form';
 import { VirtuosoHandle } from 'react-virtuoso';
-import { useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
+
+import { useKey } from 'rooks';
+import { TimelineEmailUsecase } from '@domain/usecases/email-composer/send-timeline-email.usecase.ts';
 
 import { useStore } from '@shared/hooks/useStore';
+import { InteractionEvent } from '@graphql/types';
+import { useChannel } from '@shared/hooks/useChannel';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
-import { EmailParticipant, InteractionEvent } from '@graphql/types';
 import { useTimelineMeta } from '@organization/components/Timeline/state';
 import { getEmailParticipantsNameAndEmail } from '@utils/getParticipantsName';
 import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
@@ -70,6 +74,7 @@ export const EmailPreviewModal = ({
 
   const event = modalContent as InteractionEvent;
   const subject = event?.interactionSession?.name || '';
+  const orgId = useParams().id as string;
 
   const updateTimelineCache = useUpdateCacheWithNewEvent(virtuosoRef);
   const [searchParams] = useSearchParams();
@@ -93,28 +98,19 @@ export const EmailPreviewModal = ({
     timelineMeta.getTimelineVariables,
   );
 
+  const { currentUserId } = useChannel(`finder:${store.session.value.tenant}`);
+
+  const emailUseCase = useMemo(
+    () => new TimelineEmailUsecase(orgId, [], currentUserId),
+    [orgId, event.id, isOpen],
+  );
+
   const { state, setDefaultValues } = useForm<ComposeEmailDtoI>({
     formId,
     defaultValues,
   });
 
-  const handleEmailSendSuccess = async (response: unknown) => {
-    await updateTimelineCache(response, queryKey);
-
-    setDefaultValues(defaultValues);
-    // no timeout needed is this case as the event id is created when this is called
-    invalidateQuery();
-    setIsSending(false);
-    closeModal();
-  };
-
-  const handleEmailSendError = () => {
-    setIsSending(false);
-  };
-
   const handleModeChange = (newMode: string) => {
-    let newDefaultValues = defaultValues;
-
     function removeDuplicates(
       emailTO: Array<{ label: string; [x: string]: string }>,
       emailCC: Array<{ label: string; [x: string]: string }>,
@@ -148,15 +144,13 @@ export const EmailPreviewModal = ({
       : `Re: ${subject}`;
 
     if (newMode === REPLY_MODE) {
-      newDefaultValues = new ComposeEmailDto({
-        from: '',
-        fromProvider: '',
-        to: newTo,
-        cc: [],
-        bcc: [],
-        subject: reSubject,
-        content: mode === FORWARD_MODE ? '' : state.values.content,
-      });
+      emailUseCase.toSelector.select(newTo);
+      emailUseCase.ccSelector.reset();
+      emailUseCase.bccSelector.reset();
+      emailUseCase.updateSubject(reSubject);
+      emailUseCase.updateEmailContent(
+        mode === FORWARD_MODE ? '' : emailUseCase.emailContent,
+      );
     }
 
     if (newMode === REPLY_ALL_MODE) {
@@ -174,30 +168,22 @@ export const EmailPreviewModal = ({
       ];
       const newBCC = getEmailParticipantsNameAndEmail(bcc, 'value');
 
-      newDefaultValues = new ComposeEmailDto({
-        from: '',
-        fromProvider: '',
-        to: [...newTo],
-        cc: removeDuplicates(newTo, newCC),
-        bcc: newBCC,
-        subject: reSubject,
-        content: mode === FORWARD_MODE ? '' : state.values.content,
-      });
+      emailUseCase.toSelector.select(newTo);
+      emailUseCase.ccSelector.select(removeDuplicates(newTo, newCC));
+      emailUseCase.bccSelector.select(newBCC);
+      emailUseCase.updateSubject(reSubject);
+      emailUseCase.updateEmailContent(
+        mode === FORWARD_MODE ? '' : emailUseCase.emailContent,
+      );
     }
 
     if (newMode === FORWARD_MODE) {
-      newDefaultValues = new ComposeEmailDto({
-        from: '',
-        fromProvider: '',
-        to: [],
-        cc: [],
-        bcc: [],
-        subject: reSubject,
-        content: `${state.values.content}${event.content}`,
-      });
+      emailUseCase.toSelector.select([]);
+      emailUseCase.ccSelector.select([]);
+      emailUseCase.bccSelector.select([]);
+      emailUseCase.updateEmailContent(`${event.content}`);
     }
     setMode(newMode);
-    setDefaultValues(newDefaultValues);
   };
 
   const handleExitEditorAndCleanData = () => {
@@ -233,50 +219,7 @@ export const EmailPreviewModal = ({
     }
   };
 
-  const handleSubmit = () => {
-    const from = Array.isArray(state.values?.from)
-      ? state.values?.from?.[0]?.value
-      : state.values?.from?.value;
-
-    const fromProvider = state.values.from?.provider ?? '';
-    const to = [...state.values.to].map(({ value }) => value);
-    const cc = [...state.values.cc].map(({ value }) => value);
-    const bcc = [...state.values.bcc].map(({ value }) => value);
-    const params = new URLSearchParams(searchParams?.toString() ?? '');
-
-    setIsSending(true);
-
-    const id = params.get('events') ?? undefined;
-
-    store.mail.send(
-      {
-        from,
-        fromProvider,
-        to,
-        cc,
-        bcc,
-        replyTo: id,
-        content: state.values.content,
-        subject: state.values.subject,
-      },
-      {
-        onSuccess: handleEmailSendSuccess,
-        onError: handleEmailSendError,
-      },
-    );
-  };
-
-  const filteredParticipants = useMemo(
-    () => ({
-      attendees: (event?.interactionSession?.attendedBy
-        ?.map((i) => i as EmailParticipant)
-        .map((i) => i.emailParticipant.email) ?? []) as string[],
-      to: state.values.to?.filter((e) => !!e.value || !!e?.label),
-      cc: state.values.cc?.filter((e) => !!e.value || !!e?.label),
-      bcc: state.values.bcc?.filter((e) => !!e.value || !!e?.label),
-    }),
-    [event, state.values.to, state.values.cc, state.values.bcc],
-  );
+  useKey('Escape', handleClosePreview);
 
   return (
     <TimelinePreviewBackdrop onCloseModal={handleClosePreview}>
@@ -313,12 +256,10 @@ export const EmailPreviewModal = ({
         </div>
 
         <ComposeEmailContainer
-          {...filteredParticipants}
           modal
-          formId={formId}
-          isSending={isSending}
-          onSubmit={handleSubmit}
-          onClose={handleClosePreview}
+          replyMode={mode}
+          replyToId={event.id}
+          emailUseCase={emailUseCase}
           onModeChange={handleModeChange}
           onDiscard={handleExitEditorAndCleanData}
         />
@@ -327,11 +268,12 @@ export const EmailPreviewModal = ({
           isOpen={isOpen}
           isLoading={false}
           colorScheme='primary'
-          onConfirm={handleSubmit}
           confirmButtonLabel='Send'
           label={`Send this email?`}
+          emailUseCase={emailUseCase}
           cancelButtonLabel='Discard'
           onClose={handleExitEditorAndCleanData}
+          onConfirm={() => emailUseCase.createEmail(event.id)}
           description={`You have typed an unsent email. Do you want to send it, or discard it?`}
         />
       </div>

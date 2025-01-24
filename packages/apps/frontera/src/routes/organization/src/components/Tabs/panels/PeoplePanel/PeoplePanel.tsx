@@ -74,7 +74,6 @@ export const PeoplePanel = observer(() => {
           <IconButton
             size='xs'
             variant='outline'
-            onClick={() => onOpen()}
             aria-label='Add contact'
             className='text-gray-500'
             dataTest={'org-people-add-contact'}
@@ -86,6 +85,15 @@ export const PeoplePanel = observer(() => {
                 className='text-gray-300 fill-gray-400'
               />
             }
+            onClick={() => {
+              store.ui.commandMenu.setType('AddSingleContact');
+              store.ui.commandMenu.setContext({
+                ids: [id],
+                entity: 'Organization',
+                property: 'contacts',
+              });
+              store.ui.commandMenu.setOpen(true);
+            }}
           >
             Add
           </IconButton>
@@ -110,9 +118,17 @@ export const PeoplePanel = observer(() => {
               variant='outline'
               loadingText='Adding'
               colorScheme={'primary'}
-              onClick={() => onOpen()}
               dataTest='org-people-add-someone'
               isDisabled={store.contacts.isLoading}
+              onClick={() => {
+                store.ui.commandMenu.setType('AddSingleContact');
+                store.ui.commandMenu.setContext({
+                  ids: [id],
+                  entity: 'Organization',
+                  property: 'contacts',
+                });
+                store.ui.commandMenu.setOpen(true);
+              }}
             >
               Add someone
             </Button>
@@ -233,8 +249,6 @@ export const PeoplePanel = observer(() => {
           No matches found—looks like a ghost town in here
         </div>
       )}
-
-      <CreateNewContactModal orgId={id} open={open} onClose={onClose} />
     </OrganizationPanel>
   );
 });

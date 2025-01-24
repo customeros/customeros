@@ -1,4 +1,3 @@
-import ReactSelect from 'react-select';
 import { useMemo, forwardRef, useCallback } from 'react';
 import type {
   Props,
@@ -12,6 +11,7 @@ import type {
 import merge from 'lodash/merge';
 import { match } from 'ts-pattern';
 import { twMerge } from 'tailwind-merge';
+import ReactSelect, { useCreatable } from 'react-select/creatable';
 
 import { cn } from '@ui/utils/cn';
 import { Delete } from '@ui/media/icons/Delete';
@@ -20,7 +20,7 @@ import { inputVariants } from '@ui/form/Input/Input';
 type Size = 'xs' | 'sm' | 'md' | 'lg';
 // Exhaustively typing this Props interface does not offer any benefit at this moment
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface SelectProps extends Props<any, any, any> {
+interface SelectProps extends Props<any, any, any> {
   size?: Size;
   dataTest?: string;
   isReadOnly?: boolean;
@@ -28,7 +28,7 @@ export interface SelectProps extends Props<any, any, any> {
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
-export const Select = forwardRef<SelectInstance, SelectProps>(
+export const CreatableSelect = forwardRef<SelectInstance, SelectProps>(
   (
     {
       isReadOnly,
@@ -159,10 +159,7 @@ const getDefaultClassNames = ({
   valueContainer: () => 'gap-1 py-0.5 mr-0.5 inline-grid',
 });
 
-export const getMultiValueRemoveClassNames = (
-  className?: string,
-  size?: string,
-) => {
+const getMultiValueRemoveClassNames = (className?: string, size?: string) => {
   const sizeClass = match(size)
     .with('xs', () => 'size-5 *:size-5')
     .with('sm', () => 'size-5 *:size-5')
@@ -177,13 +174,13 @@ export const getMultiValueRemoveClassNames = (
   );
 };
 
-export const getMultiValueClassNames = (className?: string) => {
+const getMultiValueClassNames = (className?: string) => {
   const defaultStyle = 'border-none mb-0 bg-transparent mr-0 pl-0';
 
   return twMerge(defaultStyle, className);
 };
 
-export const getMenuClassNames =
+const getMenuClassNames =
   (menuPlacement: MenuPlacement) => (className?: string, size?: Size) => {
     const sizes = match(size)
       .with('xs', () => 'text-sm')
@@ -201,17 +198,14 @@ export const getMenuClassNames =
     return twMerge(defaultStyle, sizes, className);
   };
 
-export const getMenuListClassNames = (className?: string) => {
+const getMenuListClassNames = (className?: string) => {
   const defaultStyle =
     'p-2 max-h-[300px] border border-gray-200 bg-white outline-offset-[2px] outline-[2px] rounded-lg shadow-lg overflow-y-auto overscroll-auto ';
 
   return twMerge(defaultStyle, className);
 };
 
-export const getMultiValueLabelClassNames = (
-  className?: string,
-  size?: string,
-) => {
+const getMultiValueLabelClassNames = (className?: string, size?: string) => {
   const sizeClass = match(size)
     .with('xs', () => 'text-sm')
     .with('sm', () => 'text-sm')
@@ -227,7 +221,7 @@ export const getMultiValueLabelClassNames = (
   return twMerge(defaultStyle, className);
 };
 
-export const getContainerClassNames = (
+const getContainerClassNames = (
   className?: string,
   variant?: 'flushed' | 'unstyled' | 'group' | 'outline',
   props?: {
@@ -249,7 +243,7 @@ export const getContainerClassNames = (
   return twMerge(defaultStyle, className, variant);
 };
 
-export const getOptionClassNames = (
+const getOptionClassNames = (
   className: string = '',
   props: { isFocused?: boolean; isSelected?: boolean },
 ) => {
@@ -262,6 +256,3 @@ export const getOptionClassNames = (
     className,
   );
 };
-
-export { components } from 'react-select';
-export type { OptionProps } from 'react-select';

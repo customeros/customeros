@@ -35,6 +35,7 @@ export type CommandMenuType =
   | 'ChangeOrAddJobRoles'
   | 'EditTimeZone'
   | 'RenameTableViewDef'
+  | 'AddSingleContact'
   | 'ContactEmailVerificationInfoModal'
   | 'DuplicateView'
   | 'OpportunityBulkCommands'
@@ -149,9 +150,12 @@ export class CommandMenuStore {
   }
 
   clearContext() {
+    console.log('🏷️ ----- :here ');
     runInAction(() => {
-      Object.assign(this.context, makeDefaultContext());
+      this.context = makeDefaultContext();
     });
+
+    console.log('🏷️ ----- this.context: ', this.context);
   }
 
   setCallback(callback: () => void) {

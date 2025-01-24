@@ -1,14 +1,13 @@
+import { FC, useState } from 'react';
 import { components } from 'react-select';
-import { useField } from 'react-inverted-form';
 import { MultiValueProps } from 'react-select';
-import { FC, useState, ReactEventHandler } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
+import { EditEmailCase } from '@domain/usecases/command-menu/edit-email.usecase';
 
 import { cn } from '@ui/utils/cn';
-import { Input } from '@ui/form/Input/Input';
 import { validateEmail } from '@utils/email';
 import { SelectOption } from '@ui/utils/types';
 import { Edit03 } from '@ui/media/icons/Edit03';
@@ -22,39 +21,32 @@ interface MultiValueWithActionMenuProps extends MultiValueProps<SelectOption> {
   name: string;
   formId: string;
   navigateAfterAddingToPeople: boolean;
-  existingContacts: Array<{ id: string; label: string; value?: string | null }>;
 }
 
 export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> =
   observer(
-    ({
-      existingContacts,
-      name,
-      formId,
-      navigateAfterAddingToPeople,
-      ...rest
-    }) => {
-      const [editInput, setEditInput] = useState(false);
+    ({ name, formId, navigateAfterAddingToPeople, removeOption, ...rest }) => {
+      const [isOpen, setIsOpen] = useState(false);
       const store = useStore();
+      const navigate = useNavigate();
 
       const [searchParams, setSearchParams] = useSearchParams();
       const organizationId = useParams()?.id as string;
+      const existingContacts =
+        store.organizations.getById(organizationId)?.contacts;
+
       const [_d, setExpandedCardId] = useContactCardMeta();
-      const { getInputProps } = useField(name, formId);
-      const { onChange, value } = getInputProps();
 
       const [_, copyToClipboard] = useCopyToClipboard();
       const [lastActivePosition, setLastActivePosition] = useLocalStorage(
         `customeros-player-last-position`,
         { [organizationId as string]: 'tab=about' },
       );
-      const isContactInOrg = existingContacts.find(
-        (data: SelectOption | unknown) => {
-          return rest?.data?.value
-            ? (data as SelectOption)?.value === rest.data.value
-            : rest.data.label?.trim() === (data as SelectOption)?.label?.trim();
-        },
-      );
+      const isContactInOrg = existingContacts?.find((data) => {
+        return rest?.data?.value
+          ? data.emails.some((e) => e.email === rest.data.value)
+          : false;
+      });
 
       const validationMessage = validateEmail(rest?.data?.value);
 
@@ -80,155 +72,54 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> =
         });
       };
 
-      const handleAddContact = () => {
-        const name =
-          rest?.data?.label !== rest?.data?.value
-            ? rest?.data?.label
-            : rest?.data?.label
-                ?.split('@')?.[0]
-                ?.split('.')
-                .map(
-                  (word: string) =>
-                    word.charAt(0).toUpperCase() + word.slice(1),
-                )
-                .join(' ');
-
-        store.contacts.create(organizationId, {
-          onSuccess: (newContactId) => {
-            const contact = store.contacts.value.get(newContactId);
-
-            if (!contact) return;
-            // contact?.update((d) => {
-            //   d.name = name;
-            //   d.emails = [
-            //     {
-            //       email: rest?.data?.value,
-            //       appSource: '',
-            //       contacts: [],
-            //       createdAt: undefined,
-            //       emailValidationDetails: {
-            //         __typename: undefined,
-            //         verified: false,
-            //         verifyingCheckAll: false,
-            //         isValidSyntax: undefined,
-            //         isRisky: undefined,
-            //         isFirewalled: undefined,
-            //         provider: undefined,
-            //         firewall: undefined,
-            //         isCatchAll: undefined,
-            //         canConnectSmtp: undefined,
-            //         isDeliverable: undefined,
-            //         isMailboxFull: undefined,
-            //         isRoleAccount: undefined,
-            //         isFreeAccount: undefined,
-            //         smtpSuccess: undefined,
-            //       },
-            //       id: '',
-            //       organizations: [],
-            //       primary: false,
-            //       source: DataSource.Openline,
-            //       updatedAt: undefined,
-            //       users: [],
-            //     },
-            //   ];
-
-            //   return d;
-            // });
-            contact?.draft();
-            contact.value.name = name;
-            contact?.commit();
-            contact.draft();
-            contact.value.emails = [
-              {
-                email: rest?.data?.value,
-                emailValidationDetails: {
-                  __typename: undefined,
-                  verified: false,
-                  verifyingCheckAll: false,
-                  isValidSyntax: undefined,
-                  isRisky: undefined,
-                  isFirewalled: undefined,
-                  provider: undefined,
-                  firewall: undefined,
-                  isCatchAll: undefined,
-                  canConnectSmtp: undefined,
-                  isMailboxFull: undefined,
-                  isRoleAccount: undefined,
-                  isFreeAccount: undefined,
-                  smtpSuccess: undefined,
-                },
-                id: '',
-                primary: false,
-              },
-            ];
-            contact.commit();
-          },
-        });
-      };
-
-      if (editInput) {
-        const handleChangeValue: ReactEventHandler<HTMLElement> = (event) => {
-          const newValue = value.map((e: SelectOption<string>) =>
-            e.value === rest?.data?.value
-              ? {
-                  label: (event?.target as HTMLInputElement)?.value,
-                  value: (event?.target as HTMLInputElement)?.value,
-                }
-              : e,
-          );
-
-          onChange(newValue);
-          setEditInput(false);
-        };
-
-        return (
-          <Input
-            size='xs'
-            variant='unstyled'
-            defaultValue={rest?.data?.value}
-            className='w-fit inline text-warning-700'
-            onBlur={(e) => {
-              handleChangeValue(e);
-            }}
-            onKeyDown={(e) => {
-              e.stopPropagation();
-
-              if (e.key === 'Enter') {
-                handleChangeValue(e);
-              }
-            }}
-          />
-        );
-      }
-
-      const handleEditInput = () => {
-        setEditInput(true);
-      };
-
       return (
-        <Menu>
+        <Menu
+          onOpenChange={(newState) => {
+            setIsOpen(newState);
+          }}
+        >
           <MenuButton
             className={cn(
               isContactWithoutEmail
                 ? '[&_.multiValueClass]:data-[state=closed]:bg-warning-50 [&_.multiValueClass]:data-[state=closed]:text-warning-700 [&_.multiValueClass]:data-[state=closed]:border-warning-200 [&_.multiValueClass]:data-[state=open]:bg-warning-50 [&_.multiValueClass]:data-[state=open]:text-warning-700 [&_.multiValueClass]:data-[state=open]:border-warning-200'
-                : '[&_.multiValueClass]:data-[state=closed]:bg-gray-50 [&_.multiValueClass]:data-[state=closed]:text-gray-700 [&_.multiValueClass]:data-[state=closed]:border-gray-200 [&_.multiValueClass]:data-[state=open]:bg-primary-50 [&_.multiValueClass]:data-[state=open]:text-primary-700 [&_.multiValueClass]:data-[state=open]:last:border-primary-200',
+                : 'hover:bg-grayModern-100  rounded-sm px-1 [&_.multiValueClass]:data-[state=closed]:bg-gray-50 [&_.multiValueClass]:data-[state=closed]:text-gray-700 [&_.multiValueClass]:data-[state=closed]:border-gray-200 [&_.multiValueClass]:data-[state=open]:bg-primary-50 [&_.multiValueClass]:data-[state=open]:text-primary-700 [&_.multiValueClass]:data-[state=open]:last:border-primary-200',
+              {
+                'bg-grayModern-100 ': isOpen,
+                'bg-transparent hover:bg-grayModern-100 focus:bg-grayModern-100':
+                  !isOpen,
+              },
             )}
           >
-            <components.MultiValue {...rest}>
-              {rest.children}
+            <components.MultiValue {...rest} className={'rounded-md'}>
+              {rest.data.label}
+              {rest.data.label && rest.data.value && <> - </>}
+              {rest.data.value}
             </components.MultiValue>
           </MenuButton>
           <div onPointerDown={(e) => e.stopPropagation()}>
             <MenuList side='bottom' align='start' className='max-w-[300px] p-2'>
-              <MenuItem
-                onPointerDown={() => {
-                  handleEditInput();
-                }}
-                className='flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
-              >
-                Edit address
-                <Edit03 className='size-3 text-gray-500 ml-2' />
-              </MenuItem>
+              {isContactInOrg?.id && (
+                <MenuItem
+                  className='flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    EditEmailCase.prototype.setEmail(rest.data.value);
+                    store.ui.commandMenu.setType('EditEmail');
+
+                    store.ui.commandMenu.setContext({
+                      ids: [isContactInOrg.id],
+                      entity: 'Contact',
+                      property: 'email',
+                    });
+                    store.ui.commandMenu.setOpen(true);
+                  }}
+                >
+                  Edit address
+                  <Edit03 className='size-3 text-gray-500 ml-2' />
+                </MenuItem>
+              )}
+
               {rest?.data?.value ? (
                 <MenuItem
                   onPointerDown={() => {
@@ -252,23 +143,35 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> =
               )}
 
               <MenuItem
-                className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
                 onPointerDown={() => {
-                  const newValue = (
-                    (rest?.selectProps?.value as Array<SelectOption>) ?? []
-                  )?.filter((e: SelectOption) => e.value !== rest?.data?.value);
-
-                  onChange(newValue);
+                  removeOption(rest.data.value);
                 }}
+                className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
               >
                 Remove address
               </MenuItem>
               {!isContactInOrg && (
                 <MenuItem
-                  onPointerDown={() => {
-                    handleAddContact();
-                  }}
                   className='rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    store.ui.commandMenu.setType('AddSingleContact');
+                    store.ui.commandMenu.setContext({
+                      ids: [organizationId],
+                      entity: 'Organization',
+                      property: 'contacts',
+                      meta: {
+                        email: rest.data.value,
+                        callback: () => {
+                          if (navigateAfterAddingToPeople) {
+                            navigate(`?tab=people`);
+                          }
+                        },
+                      },
+                    });
+                    store.ui.commandMenu.setOpen(true);
+                  }}
                 >
                   Add to people
                 </MenuItem>
