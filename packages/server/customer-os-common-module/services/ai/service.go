@@ -3,15 +3,15 @@ package ai
 import (
 	"context"
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type aiService struct {
@@ -30,7 +30,8 @@ func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, systemPrompt 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIModelService.AskAI")
 	defer span.Finish()
 	span.LogKV("model", model)
-	span.LogKV("prompt", utils.IfNotNilString(prompt))
+	span.LogKV("systemPrompt", utils.IfNotNilString(systemPrompt))
+	tracing.LogObjectAsJson(span, "prompt", prompt)
 
 	var result *string
 	var err error
