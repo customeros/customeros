@@ -732,9 +732,10 @@ Your task:
 	1.	Identify the standard recognized company name.
 	2.	If the business is more commonly recognized by a brand name (e.g., “Apple” instead of “Apple Inc.”), return that simpler, branded name.
 	3.	If you find a longer official name that’s different from the brand, remove suffixes like “Inc,” “Ltd,” “LLC,” “Corp,” etc., but keep the rest of the formal name.
-    4. 	If you cannot identify a single valid name, return “N/A”
-	5.	Only output the name itself or “N/A,” with no explanations, disclaimers, or additional text.
+    4. 	If you cannot identify a single valid name, return "N/A"
+	5.	Only output the name itself or "N/A" with no explanations, disclaimers, or additional text.
 	6.  Output in english.
+	7.  If the recognized or brand name is spelled in uppercase (e.g., "SBCHC"), keep it in uppercase. Do not convert it to title case or alter its original casing.
 
 Important Samples:
 	•	If input suggests “Verizon Communications Inc.,” return “Verizon”
