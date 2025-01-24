@@ -1,9 +1,10 @@
+import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
-import { EditOrganizationTagUsecase } from '@domain/usecases/organization-about-panel/edit-organization-tag.usecase.ts';
+import { EditContactTagUsecase } from '@domain/usecases/edit-contact-tags-select/edit-contact-tag.usecase.ts';
 
 import { cn } from '@ui/utils/cn';
 import { flags } from '@ui/media/flags';
@@ -47,7 +48,6 @@ const iconMap = {
   unknown: <AlignHorizontalCentre02 className='text-gray-500' />,
 };
 
-const tagsUsecase = new EditOrganizationTagUsecase();
 export const AboutPanel = observer(() => {
   const store = useStore();
   const id = useParams()?.id as string;
@@ -74,6 +74,11 @@ export const AboutPanel = observer(() => {
 
   const applicableStageOptions = getStageOptions(
     organization.value?.relationship,
+  );
+
+  const tagsUsecase = useMemo(
+    () => new EditContactTagUsecase(String(id)),
+    [id],
   );
 
   const handleCreateOption = (value: string) => {
