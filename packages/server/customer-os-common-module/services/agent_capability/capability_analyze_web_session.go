@@ -8,15 +8,34 @@ import (
 	"strings"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
+
+type AnalyzeWebSessionCapability struct {
+	postgresRepositories *postgres_repository.Repositories
+	actionService        interfaces.ActionService
+}
+
+func NewAnalyzeWebSessionCapability(
+	postgresRepositories *postgres_repository.Repositories,
+	actionService interfaces.ActionService,
+) *AnalyzeWebSessionCapability {
+	return &AnalyzeWebSessionCapability{
+		postgresRepositories: postgresRepositories,
+		actionService:        actionService,
+	}
+}
+
+// Compile-time interface check
+var _ interfaces.AgentCapabilityExecution[AnalyzeWebSessionInput, AnalyzeWebSessionResult] = (*AnalyzeWebSessionCapability)(nil)
 
 type AnalyzeWebSessionInput struct {
 	SessionID      string
@@ -36,36 +55,8 @@ type AnalyzeWebSessionResult struct {
 	Referrer          string
 }
 
-func (c *agentCapabilityService) handleAnalyzeWebSessionExecution(ctx context.Context, executionContainer *dto.CapabilityExecutionContainer) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.handleAnalyzeWebSessionExecution")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-
-	input, ok := executionContainer.InputData.(AnalyzeWebSessionInput)
-	if !ok {
-		err := fmt.Errorf("expected AnalyzeWebSessionInput, got %T", executionContainer.InputData)
-		tracing.TraceErr(span, err)
-		return err
-	}
-	result, err := c.executeWebSessionAnalysis(ctx, input)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	executionContainer.OutputData = result
-	span.LogKV(
-		"event", "capability_executed",
-		"output_type", fmt.Sprintf("%T", result),
-		"is_new_company", result.IsNewCompanyVisit,
-		"is_new_person", result.IsNewPersonVisit,
-		"session_duration", result.SessionDuration,
-	)
-	return nil
-}
-
-func (c *agentCapabilityService) executeWebSessionAnalysis(ctx context.Context, data AnalyzeWebSessionInput) (AnalyzeWebSessionResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.executeWebSessionAnalysis")
+func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeWebSessionInput) (AnalyzeWebSessionResult, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
@@ -116,8 +107,8 @@ func (c *agentCapabilityService) executeWebSessionAnalysis(ctx context.Context, 
 	return results, nil
 }
 
-func (c *agentCapabilityService) writeSessionToTimeline(ctx context.Context, orgID, timelineMessage string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.writeSessionToTimeline")
+func (c *AnalyzeWebSessionCapability) writeSessionToTimeline(ctx context.Context, orgID, timelineMessage string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.writeSessionToTimeline")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
@@ -139,8 +130,8 @@ func (c *agentCapabilityService) writeSessionToTimeline(ctx context.Context, org
 	return nil
 }
 
-func (c *agentCapabilityService) sessionAnalytics(ctx context.Context, sessionID string) (AnalyzeWebSessionResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.sessionAnalytics")
+func (c *AnalyzeWebSessionCapability) sessionAnalytics(ctx context.Context, sessionID string) (AnalyzeWebSessionResult, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.sessionAnalytics")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
@@ -186,8 +177,8 @@ func (c *agentCapabilityService) sessionAnalytics(ctx context.Context, sessionID
 	return results, nil
 }
 
-func (c *agentCapabilityService) calculateSessionDuration(ctx context.Context, session *postgres_entity.WebSession) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.calculateSessionDuration")
+func (c *AnalyzeWebSessionCapability) calculateSessionDuration(ctx context.Context, session *postgres_entity.WebSession) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.calculateSessionDuration")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
@@ -210,8 +201,8 @@ func (c *agentCapabilityService) calculateSessionDuration(ctx context.Context, s
 	}
 }
 
-func (c *agentCapabilityService) isNewCompanyVisit(ctx context.Context, domain string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.isNewCompanyVisit")
+func (c *AnalyzeWebSessionCapability) isNewCompanyVisit(ctx context.Context, domain string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.isNewCompanyVisit")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
@@ -245,8 +236,8 @@ func (c *agentCapabilityService) isNewCompanyVisit(ctx context.Context, domain s
 	return false, nil
 }
 
-func (c *agentCapabilityService) isNewWebsiteVisitor(ctx context.Context, visitorId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.isNewCompanyVisit")
+func (c *AnalyzeWebSessionCapability) isNewWebsiteVisitor(ctx context.Context, visitorId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.isNewCompanyVisit")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
@@ -278,8 +269,8 @@ func (c *agentCapabilityService) isNewWebsiteVisitor(ctx context.Context, visito
 	return false, nil
 }
 
-func (c *agentCapabilityService) buildTimelineMessage(ctx context.Context, sessionID string, analysis AnalyzeWebSessionResult) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.buildTimelineMessage")
+func (c *AnalyzeWebSessionCapability) buildTimelineMessage(ctx context.Context, sessionID string, analysis AnalyzeWebSessionResult) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.buildTimelineMessage")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
