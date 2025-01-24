@@ -7,11 +7,11 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
-type AgentCapabilityService interface {
-	InitCapabilityRegistry() error
+type AgentCapabilityRegistry interface {
 	RegisterCapability(ctx context.Context, capabilityRecord postgres_entity.AgentCapabilityRegistry) error
 	ExecuteCapability(ctx context.Context, executionContainer *dto.CapabilityExecutionContainer) error
+}
 
-	SetOrganizationService(org OrganizationService)
-	SetActionService(action ActionService)
+type AgentCapabilityExecution[I any, O any] interface {
+	Execute(ctx context.Context, inputData I) (outputData O, error error)
 }

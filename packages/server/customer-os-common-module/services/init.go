@@ -80,7 +80,6 @@ type CommonServices struct {
 	// Services
 	ActionService              interfaces.ActionService
 	AgentService               interfaces.AgentService
-	AgentCapabilityService     interfaces.AgentCapabilityService
 	AgentVisitorIDService      *agent.AgentVisitorIDService
 	AIService                  interfaces.AIService
 	AttachmentService          interfaces.AttachmentService
@@ -249,7 +248,6 @@ func InitCommonServices(
 		// All other services (alphabetically)
 		ActionService:              actionImpl,
 		AgentService:               agentImpl,
-		AgentCapabilityService:     agentCapabilityImpl,
 		AgentVisitorIDService:      agentVisitorIdImpl,
 		AIService:                  aiImpl,
 		AttachmentService:          attachmentImpl,

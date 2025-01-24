@@ -3,14 +3,32 @@ package agent_capability
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/opentracing/opentracing-go"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
+
+type IdentifyWebsiteVisitorCapability struct {
+	postgresRepositories *postgres_repository.Repositories
+	enrichmentService    interfaces.EnrichmentService
+}
+
+func NewIdentifyWebsiteVisitorCapability(
+	postgresRepositories *postgres_repository.Repositories,
+	enrichmentService interfaces.EnrichmentService,
+) *IdentifyWebsiteVisitorCapability {
+	return &IdentifyWebsiteVisitorCapability{
+		postgresRepositories: postgresRepositories,
+		enrichmentService:    enrichmentService,
+	}
+}
+
+// Compile-time interface check
+var _ interfaces.AgentCapabilityExecution[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorResult] = (*IdentifyWebsiteVisitorCapability)(nil)
 
 type IdentifyWebsiteVisitorInput struct {
 	SessionID string
@@ -22,34 +40,8 @@ type IdentifyWebsiteVisitorResult struct {
 	LinkedInSlug string
 }
 
-func (c *agentCapabilityService) handleIdentifyWebsiteVisitorExecution(ctx context.Context, executionContainer *dto.CapabilityExecutionContainer) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.handleIdentifyWebsiteVisitorExecution")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-
-	input, ok := executionContainer.InputData.(IdentifyWebsiteVisitorInput)
-	if !ok {
-		err := fmt.Errorf("expected IdentifyWebsiteVisitorInput, got %T", executionContainer.InputData)
-		tracing.TraceErr(span, err)
-		return err
-	}
-	result, err := c.executeIdentifyWebsiteVisitor(ctx, input)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	executionContainer.OutputData = result
-	span.LogKV(
-		"event", "capability_executed",
-		"output_type", fmt.Sprintf("%T", result),
-		"domain", result.Domain,
-	)
-	return nil
-}
-
-func (c *agentCapabilityService) executeIdentifyWebsiteVisitor(ctx context.Context, data IdentifyWebsiteVisitorInput) (IdentifyWebsiteVisitorResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.executeIdentifyWebsiteVisitor")
+func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data IdentifyWebsiteVisitorInput) (IdentifyWebsiteVisitorResult, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
@@ -87,8 +79,8 @@ func (c *agentCapabilityService) executeIdentifyWebsiteVisitor(ctx context.Conte
 	return results, nil
 }
 
-func (c *agentCapabilityService) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug string, err error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentCapabilityService.identifyIP")
+func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug string, err error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "IdentifyWebsiteVisitorCapability.identifyIP")
 	defer span.Finish()
 
 	snitcherData, err := c.enrichmentService.IPIdentity(ctx, ipAddress)
