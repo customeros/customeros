@@ -76,15 +76,8 @@ func (c *agentCapabilityService) executeWebSessionAnalysis(ctx context.Context, 
 		return AnalyzeWebSessionResult{}, err
 	}
 
-	// get unique pageviews
-	pageViews, err := c.getUniquePageViews(ctx, data.SessionID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return AnalyzeWebSessionResult{}, err
-	}
-
-	// calculate session duration
-	hostname, referrer, sessionDuration, err := c.sessionAnalytics(ctx, data.SessionID)
+	// analyze session
+	results, err := c.sessionAnalytics(ctx, data.SessionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return AnalyzeWebSessionResult{}, err
@@ -96,6 +89,7 @@ func (c *agentCapabilityService) executeWebSessionAnalysis(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		return AnalyzeWebSessionResult{}, err
 	}
+	results.IsNewCompanyVisit = isNewCompany
 
 	// determene if a new person visit
 	isNewVisitor, err := c.isNewWebsiteVisitor(ctx, data.VisitorID)
@@ -103,16 +97,7 @@ func (c *agentCapabilityService) executeWebSessionAnalysis(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		return AnalyzeWebSessionResult{}, err
 	}
-
-	// build results object
-	results := AnalyzeWebSessionResult{
-		PageViews:         pageViews,
-		SessionDuration:   sessionDuration,
-		IsNewCompanyVisit: isNewCompany,
-		IsNewPersonVisit:  isNewVisitor,
-		Hostname:          hostname,
-		Referrer:          referrer,
-	}
+	results.IsNewPersonVisit = isNewVisitor
 
 	// build timeline event
 	timelineMessage, err := c.buildTimelineMessage(ctx, data.SessionID, results)
@@ -154,51 +139,7 @@ func (c *agentCapabilityService) writeSessionToTimeline(ctx context.Context, org
 	return nil
 }
 
-func (c *agentCapabilityService) getUniquePageViews(ctx context.Context, sessionID string) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.getUniquePageViews")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-
-	session, err := c.postgresRepositories.WebTrackerEventsRepository.FindAll(ctx, postgres_entity.WebTrackerEvents{
-		SessionID: sessionID,
-		Tenant:    common.GetTenantFromContext(ctx),
-	}, nil)
-	if err != nil {
-		return []string{}, err
-	}
-	if session == nil {
-		return []string{}, nil
-	}
-
-	// Use map to track unique pages
-	uniquePageMap := make(map[string]struct{})
-	for _, page := range session {
-		url := c.cleanUrl(page.Hostname)
-		if page.Pathname != "" {
-			url = strings.TrimSuffix(fmt.Sprintf("%s/%s", c.cleanUrl(page.Hostname), c.cleanUrl(page.Pathname)), "/")
-		}
-		uniquePageMap[url] = struct{}{}
-	}
-
-	// Convert map keys to slice
-	uniquePages := make([]string, 0, len(uniquePageMap))
-	for pathname := range uniquePageMap {
-		uniquePages = append(uniquePages, pathname)
-	}
-
-	sort.Slice(uniquePages, func(i, j int) bool {
-		// If lengths are different, sort by length
-		if len(uniquePages[i]) != len(uniquePages[j]) {
-			return len(uniquePages[i]) < len(uniquePages[j])
-		}
-		// If lengths are equal, sort alphabetically
-		return uniquePages[i] < uniquePages[j]
-	})
-
-	return uniquePages, nil
-}
-
-func (c *agentCapabilityService) sessionAnalytics(ctx context.Context, sessionID string) (string, string, string, error) {
+func (c *agentCapabilityService) sessionAnalytics(ctx context.Context, sessionID string) (AnalyzeWebSessionResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.sessionAnalytics")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -209,13 +150,13 @@ func (c *agentCapabilityService) sessionAnalytics(ctx context.Context, sessionID
 	}, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return "", "", "", err
+		return AnalyzeWebSessionResult{}, err
 	}
 	if session == nil {
-		return "", "", "", nil
+		return AnalyzeWebSessionResult{}, nil
 	}
 
-	hostname := c.cleanUrl(session.Hostname)
+	hostname := utils.CleanUrlBasePath(session.Hostname)
 
 	var referrer string
 	if session.Referrer == nil {
@@ -223,7 +164,7 @@ func (c *agentCapabilityService) sessionAnalytics(ctx context.Context, sessionID
 	} else {
 		referrer = *session.Referrer
 	}
-	referrer = c.cleanUrl(referrer)
+	referrer = utils.CleanUrlBasePath(referrer)
 	if strings.Contains(referrer, "syndicatedsearch.goog") {
 		referrer = "google.com"
 	}
@@ -231,10 +172,18 @@ func (c *agentCapabilityService) sessionAnalytics(ctx context.Context, sessionID
 	sessionDuration, err := c.calculateSessionDuration(ctx, session)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return "", "", "", err
+		return AnalyzeWebSessionResult{}, err
 	}
 
-	return hostname, referrer, sessionDuration, nil
+	results := AnalyzeWebSessionResult{
+		SessionID:       sessionID,
+		PageViews:       session.UniquePageViews,
+		SessionDuration: sessionDuration,
+		Hostname:        hostname,
+		Referrer:        referrer,
+	}
+
+	return results, nil
 }
 
 func (c *agentCapabilityService) calculateSessionDuration(ctx context.Context, session *postgres_entity.WebSession) (string, error) {
@@ -370,15 +319,4 @@ func (c *agentCapabilityService) buildTimelineMessage(ctx context.Context, sessi
 	}
 
 	return fullMessage.String(), nil
-}
-
-func (c *agentCapabilityService) cleanUrl(s string) string {
-	if s == "" {
-		return ""
-	}
-	clean := strings.Split(s, "?")[0]
-	clean = strings.TrimPrefix(clean, "https://")
-	clean = strings.TrimPrefix(clean, "http://")
-	clean = strings.TrimPrefix(clean, "www.")
-	return strings.Trim(clean, "/")
 }

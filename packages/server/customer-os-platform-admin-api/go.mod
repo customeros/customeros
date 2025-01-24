@@ -90,6 +90,7 @@ require (
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	github.com/likexian/gokit v0.25.15 // indirect
 	github.com/likexian/whois v1.15.5 // indirect
 	github.com/likexian/whois-parser v1.24.20 // indirect
