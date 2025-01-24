@@ -268,12 +268,6 @@ export const Search = observer(() => {
       </InputGroup>
       <UserPresence channelName={`finder:${store.session.value.tenant}`} />
 
-      <TableViewsToggleNavigation />
-
-      {tableViewDef?.value.tableId === TableIdType.FlowActions && (
-        <CreateSequenceButton />
-      )}
-
       {showAddButton && (
         <Tooltip {...addButtonTooltipProps}>
           <Button
@@ -284,6 +278,12 @@ export const Search = observer(() => {
           />
         </Tooltip>
       )}
+      <TableViewsToggleNavigation />
+
+      {tableViewDef?.value.tableId === TableIdType.FlowActions && (
+        <CreateSequenceButton />
+      )}
+
       {tableViewDef?.value.tableId !== TableIdType.FlowActions && (
         <TableViewMenu />
       )}

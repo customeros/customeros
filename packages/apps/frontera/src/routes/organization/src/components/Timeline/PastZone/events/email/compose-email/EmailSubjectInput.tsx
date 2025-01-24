@@ -15,7 +15,7 @@ export const EmailSubjectInput: FC<EmailSubjectInput> = ({
 }) => {
   return (
     <div style={{ marginTop: mt }} className='flex items-center flex-1'>
-      <span className='text-gray-700 font-semibold mr-1'>Subject:</span>
+      <span className='text-gray-700 font-semibold mr-1 text-sm'>Subject:</span>
       <FormInput
         size='xs'
         formId={formId}

@@ -166,7 +166,9 @@ export const ParticipantsSelectGroup = observer(
       >
         <div className='w-[100%]'>
           <div className='flex items-baseline mb-[-1px] mt-0 flex-1 overflow-visible'>
-            <span className='text-gray-700 font-semibold mr-1'>From:</span>
+            <span className='text-gray-700 font-semibold text-sm mr-1'>
+              From:
+            </span>
             <FormSelect
               size='sm'
               name='from'
@@ -273,7 +275,9 @@ export const ParticipantsSelectGroup = observer(
                   aria-label='Click to input participant data'
                   className={cn(!bcc.length ? 'flex-1' : 'unset', 'flex')}
                 >
-                  <span className='text-gray-700 font-semibold mr-1'>CC:</span>
+                  <span className='text-gray-700 font-semibold mr-1 text-sm'>
+                    CC:
+                  </span>
                   <p className='text-gray-500 line-clamp-1'>
                     {[...cc].map((email) => email.value).join(', ')}
                   </p>
@@ -287,7 +291,9 @@ export const ParticipantsSelectGroup = observer(
                   onFocusCapture={() => handleFocus(2)}
                   aria-label='Click to input participant data'
                 >
-                  <span className='text-gray-700 font-semibold mr-1'>BCC:</span>
+                  <span className='text-gray-700 font-semibold mr-1 text-sm'>
+                    BCC:
+                  </span>
                   <p className='text-gray-500 line-clamp-1'>
                     {[...bcc].map((email) => email.value).join(', ')}
                   </p>
