@@ -7,6 +7,7 @@ type AIModel string
 const (
 	AIModelAnthropicSonnet AIModel = "claude-3-5-sonnet-20241022"
 	AIModelAnthropicHaiku  AIModel = "claude-3-5-haiku-20241022"
+	AIModelDeepseekChat    AIModel = "deepseek-chat"
 )
 
 func (a AIModel) String() string {
