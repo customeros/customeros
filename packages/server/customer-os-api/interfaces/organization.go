@@ -18,7 +18,6 @@ type OrganizationService interface {
 	AddSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId, subsidiaryType string, removeExisting bool) error
 	RemoveSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId string) error
 	GetSubsidiariesOfForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error)
-	ReplaceOwner(ctx context.Context, organizationId, userId string) (*neo4jentity.OrganizationEntity, error)
 	UpdateLastTouchpoint(ctx context.Context, organizationId string)
 	GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.OrganizationEntities, error)
 	GetOrganizationsForSlackChannels(ctx context.Context, slackChannelIds []string) (*neo4jentity.OrganizationEntities, error)

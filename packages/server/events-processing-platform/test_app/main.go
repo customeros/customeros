@@ -114,25 +114,6 @@ func testAddCustomField() {
 	print(result)
 }
 
-func testUpdateOrgOwner() {
-
-	userId := "f7634527-ccda-4cbb-80d8-cc4af9124ef5"
-	actorId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-
-	result, err := clients.OrganizationClient.UpdateOrganizationOwner(context.Background(), &organizationpb.UpdateOrganizationOwnerGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: orgId,
-		LoggedInUserId: actorId,
-		OwnerUserId:    userId,
-		AppSource:      appSource,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
-}
-
 func testRefreshRenewalSummary() {
 	result, err := clients.OrganizationClient.RefreshRenewalSummary(context.Background(), &organizationpb.RefreshRenewalSummaryGrpcRequest{
 		Tenant:         tenant,

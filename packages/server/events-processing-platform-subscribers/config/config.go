@@ -2,12 +2,12 @@ package config
 
 import (
 	"github.com/caarlos0/env/v6"
-	"github.com/joho/godotenv"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
 	"github.com/customeros/customeros/packages/server/events/eventstoredb"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -22,10 +22,9 @@ type Config struct {
 }
 
 type Subscriptions struct {
-	GraphSubscription         GraphSubscription
-	ContractSubscription      ContractSubscription
-	NotificationsSubscription NotificationsSubscription
-	InvoiceSubscription       InvoiceSubscription
+	GraphSubscription    GraphSubscription
+	ContractSubscription ContractSubscription
+	InvoiceSubscription  InvoiceSubscription
 }
 
 type GraphSubscription struct {
@@ -43,15 +42,6 @@ type ContractSubscription struct {
 	PoolSize          int    `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
 	BufferSizeClient  uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 	MessageTimeoutSec int32  `env:"EVENT_STORE_SUBSCRIPTIONS_CONTRACT_MESSAGE_TIMEOUT" envDefault:"120" validate:"required,gte=0"`
-}
-
-type NotificationsSubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_GROUP_NAME" envDefault:"notifications-v3" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
-	IgnoreEvents     bool   `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_IGNORE_EVENTS" envDefault:"true"`
-	RedirectUrl      string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFICATIONS_REDIRECT_URL" envDefault:"https://app.openline.dev"`
 }
 
 type InvoiceSubscription struct {

@@ -42,19 +42,6 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
-	notificationEventSubscriptionSettings := esdb.SubscriptionSettingsDefault()
-	notificationEventSubscriptionSettings.ExtraStatistics = true
-	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.NotificationsSubscription.GroupName,
-		nil,
-		&notificationEventSubscriptionSettings,
-		false,
-		false,
-		esdb.End{},
-	); err != nil {
-		return err
-	}
-
 	invoiceEventSubSettings := esdb.SubscriptionSettingsDefault()
 	invoiceEventSubSettings.MessageTimeout = s.cfg.Subscriptions.InvoiceSubscription.MessageTimeoutSec * 1000
 	invoiceEventSubSettings.ExtraStatistics = true

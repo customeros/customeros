@@ -17,8 +17,6 @@ const (
 	OrganizationUpsertCustomFieldV1                = "V1_ORGANIZATION_UPSERT_CUSTOM_FIELD"
 	OrganizationRefreshArrV1                       = "V1_ORGANIZATION_REFRESH_ARR"
 	OrganizationRefreshRenewalSummaryV1            = "V1_ORGANIZATION_REFRESH_RENEWAL_SUMMARY"
-	OrganizationUpdateOwnerNotificationV1          = "V1_ORGANIZATION_UPDATE_OWNER_NOTIFICATION"
-	OrganizationUpdateOwnerV1                      = "V1_ORGANIZATION_UPDATE_OWNER" //DEPRECATED
 	OrganizationCreateBillingProfileV1             = "V1_ORGANIZATION_CREATE_BILLING_PROFILE"
 	OrganizationUpdateBillingProfileV1             = "V1_ORGANIZATION_UPDATE_BILLING_PROFILE"
 	OrganizationEmailLinkToBillingProfileV1        = "V1_ORGANIZATION_EMAIL_LINK_TO_BILLING_PROFILE"
@@ -134,54 +132,6 @@ func NewOrganizationUpsertCustomField(aggregate eventstore.Aggregate, sourceFiel
 	event := eventstore.NewBaseEvent(aggregate, OrganizationUpsertCustomFieldV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationUpsertCustomField")
-	}
-	return event, nil
-}
-
-type OrganizationOwnerUpdateEvent struct {
-	Tenant         string    `json:"tenant" validate:"required"`
-	UpdatedAt      time.Time `json:"updatedAt"`
-	OwnerUserId    string    `json:"ownerUserId" validate:"required"` // who became owner
-	OrganizationId string    `json:"organizationId" validate:"required"`
-	ActorUserId    string    `json:"actorUserId"` // who set the owner
-}
-
-func NewOrganizationOwnerUpdateEvent(aggregate eventstore.Aggregate, ownerUserId, actorUserId, organizationId string, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := OrganizationOwnerUpdateEvent{
-		Tenant:         aggregate.GetTenant(),
-		UpdatedAt:      updatedAt,
-		OwnerUserId:    ownerUserId,
-		OrganizationId: organizationId,
-		ActorUserId:    actorUserId,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationOwnerUpdateEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateOwnerV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationOwnerUpdateEvent")
-	}
-	return event, nil
-}
-
-func NewOrganizationOwnerUpdateNotificationEvent(aggregate eventstore.Aggregate, ownerUserId, actorUserId, organizationId string, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := OrganizationOwnerUpdateEvent{
-		Tenant:         aggregate.GetTenant(),
-		UpdatedAt:      updatedAt,
-		OwnerUserId:    ownerUserId,
-		OrganizationId: organizationId,
-		ActorUserId:    actorUserId,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationOwnerUpdateEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationUpdateOwnerNotificationV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationOwnerUpdateEvent")
 	}
 	return event, nil
 }

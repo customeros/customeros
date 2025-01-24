@@ -2,12 +2,9 @@ package eventbuffer
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	orgaggregate "github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/aggregate"
-	orgevents "github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/pkg/errors"
 	"os"
 	"os/signal"
@@ -119,28 +116,6 @@ func (eb *EventBufferWatcher) handleEvent(ctx context.Context, evt eventstore.Ev
 	defer span.Finish()
 
 	switch evt.EventType {
-	case orgevents.OrganizationUpdateOwnerNotificationV1:
-		var data orgevents.OrganizationOwnerUpdateEvent
-		if err := json.Unmarshal(evt.Data, &data); err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		organizationAggregate, err := orgaggregate.LoadOrganizationAggregate(ctx, eb.es, data.Tenant, data.OrganizationId, eventstore.LoadAggregateOptions{})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		err = organizationAggregate.Apply(evt)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		// Persist the changes to the event store
-		if err = eb.es.Save(ctx, organizationAggregate); err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		return err
 	default:
 		return errors.New("Event type not supported")
 	}
