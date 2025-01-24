@@ -1,0 +1,14 @@
+query checkDomain($domain: String!) {
+  checkDomain(domain: $domain) {
+    domain
+    validSyntax
+    accessible
+    primary
+    primaryDomain
+    domainOrganizationId
+    primaryDomainOrganizationId
+    primaryDomainOrganizationName
+    domainOrganizationName
+    allowedForOrganization
+  }
+}

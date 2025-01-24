@@ -3,10 +3,12 @@ import { RootStore } from '@store/root';
 import { TagStore } from '@store/Tags/Tag.store';
 import { Organization } from '@store/Organizations/Organization.dto';
 import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service';
+import { OrganizationRepository } from '@infra/repositories/organization/organization.repository.ts';
 
 import { unwrap } from '@shared/util/unwrap';
 import {
   Social,
+  Domain,
   EntityType,
   FlagWrongFields,
   SortingDirection,
@@ -16,6 +18,7 @@ import {
 export class OrganizationService {
   private root = RootStore.getInstance();
   private orgRepo = OrganizationsService.getInstance();
+  private orgInfraRepo = OrganizationRepository.getInstance();
 
   constructor() {}
 
@@ -181,6 +184,63 @@ export class OrganizationService {
       this.root.ui.toastError(
         "We couldn't remove this link",
         `${social.id}-remove-social-media`,
+      );
+
+      return [null, err];
+    }
+
+    return [res, err];
+  }
+
+  public async addDomain(organization: Organization, domain: Domain) {
+    organization.addDomain(domain);
+
+    const [res, err] = await unwrap(
+      this.orgInfraRepo.addDomain({
+        organizationId: organization.id,
+        domain: domain.domain,
+      }),
+    );
+
+    if (err) {
+      console.error(err);
+      organization.deleteDomain(domain.domain);
+
+      this.root.ui.toastError(
+        "We couldn't add this domain",
+        `${domain.domain}-add-domain`,
+      );
+
+      return [null, err];
+    }
+
+    return [res, err];
+  }
+
+  public async removeDomain(organization: Organization, domain: string) {
+    const domainDetailsToRestore = organization.value.domainsDetails.find(
+      (d) => d.domain !== domain,
+    );
+
+    organization.deleteDomain(domain);
+
+    const [res, err] = await unwrap(
+      this.orgInfraRepo.removeDomain({
+        organizationId: organization.id,
+        domain: domain,
+      }),
+    );
+
+    if (err) {
+      console.error(err);
+
+      if (domainDetailsToRestore) {
+        organization.addDomain(domainDetailsToRestore);
+      }
+
+      this.root.ui.toastError(
+        "We couldn't remove this domain",
+        `${domain}-remove-domain`,
       );
 
       return [null, err];

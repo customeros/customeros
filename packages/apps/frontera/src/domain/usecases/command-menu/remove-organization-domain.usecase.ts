@@ -1,9 +1,11 @@
 import { action, observable } from 'mobx';
+import { OrganizationService } from '@domain/services';
 import { Organization } from '@store/Organizations/Organization.dto.ts';
 
 export class RemoveOrganizationDomainCase {
   @observable accessor domain: string = '';
   @observable accessor entity: Organization | null = null;
+  private service = new OrganizationService();
 
   @action
   setEntity(entity: Organization) {
@@ -19,14 +21,6 @@ export class RemoveOrganizationDomainCase {
   submit() {
     if (!this?.entity) return;
 
-    this.entity.draft();
-
-    this.entity.value.domainsDetails.splice(
-      this.entity.value.domainsDetails.findIndex(
-        (e) => e.domain === this.domain,
-      ),
-      1,
-    );
-    this.entity?.commit();
+    this.service.removeDomain(this.entity, this.domain);
   }
 }

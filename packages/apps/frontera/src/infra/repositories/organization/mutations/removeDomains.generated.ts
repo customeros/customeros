@@ -1,4 +1,4 @@
-import * as Types from '../../../routes/src/types/__generated__/graphql.types';
+import * as Types from '../../../../routes/src/types/__generated__/graphql.types';
 
 export type RemoveDomainsMutationVariables = Types.Exact<{
   organizationId: Types.Scalars['ID']['input'];

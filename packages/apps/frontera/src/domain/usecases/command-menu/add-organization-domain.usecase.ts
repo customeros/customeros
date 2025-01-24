@@ -1,7 +1,8 @@
 import { action, observable } from 'mobx';
 import { RootStore } from '@store/root.ts';
-import { Organization } from '@store/Organizations/Organization.dto.ts';
-import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service.ts';
+import { OrganizationService } from '@domain/services';
+import { Organization } from '@store/Organizations/Organization.dto';
+import { OrganizationRepository } from '@infra/repositories/organization/organization.repository.ts';
 
 export class AddOrganizationDomainCase {
   @observable accessor inputValue: string = '';
@@ -18,7 +19,8 @@ export class AddOrganizationDomainCase {
   } = null;
   @observable accessor entity: Organization | null = null;
   private root = RootStore.getInstance();
-  private service = OrganizationsService.getInstance();
+  private service = new OrganizationService();
+  private repository = OrganizationRepository.getInstance();
 
   constructor() {
     this.setInputValue = this.setInputValue.bind(this);
@@ -74,7 +76,7 @@ export class AddOrganizationDomainCase {
     }
 
     try {
-      const { checkDomain } = await this.service.checkDomain({
+      const { checkDomain } = await this.repository.checkDomain({
         domain: this.inputValue,
       });
 
@@ -128,15 +130,17 @@ export class AddOrganizationDomainCase {
 
   @action
   submit() {
-    if (!this?.entity) return;
+    if (!this?.entity) {
+      console.error('AddOrganizationDomainCase: No entity provided');
 
-    this.entity?.draft();
-    this.entity?.value.domainsDetails.push({
+      return;
+    }
+
+    this.service.addDomain(this.entity, {
       domain: this.inputValue,
       primary: this.validationDetails?.primary || false,
       primaryDomain: this.validationDetails?.primaryDomain,
     });
-    this.entity?.commit();
     this.inputValue = '';
     this.error = '';
   }
