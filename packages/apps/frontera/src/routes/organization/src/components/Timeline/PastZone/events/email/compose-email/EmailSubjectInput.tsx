@@ -21,7 +21,7 @@ export const EmailSubjectInput: FC<EmailSubjectInput> = ({
         formId={formId}
         name={fieldName}
         variant='unstyled'
-        className='text-gray-500 height-[5px] text-md'
+        className='text-gray-500 height-[5px] text-sm'
       />
     </div>
   );
