@@ -42,6 +42,7 @@ type CommonConfig struct {
 	IntegrationApp   commonconf.IntegrationAppConfig
 	Novu             commonconf.NovuConfig
 	Temporal         commonconf.TemporalConfig
+	CosApi           commonconf.CustomerOsApiConfig
 }
 
 type AppConfig struct {
@@ -131,6 +132,7 @@ func InitConfig() (*Config, error) {
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,
 			FileStoreConfig:     cmnCfg.FileStore,
+			CustomerOsApi:       cmnCfg.CosApi,
 		},
 	}
 
