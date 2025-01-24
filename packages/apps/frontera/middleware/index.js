@@ -1,4 +1,5 @@
 import cors from 'cors';
+import helmet from 'helmet';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { google } from 'googleapis';
@@ -15,6 +16,24 @@ const PUBLIC_PATHS = [
   '/validate-magic-code',
   '/callback/azure-ad-auth',
 ];
+
+const headersMiddleware = (req, res, next) => {
+  res.removeHeader('Server');
+
+  if (req.method === 'TRACE') {
+    return res.status(403).send('TRACE method is not allowed');
+  }
+
+  if (req.method === 'OPTIONS') {
+    // Handle CORS preflight request if required
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+
+    return res.sendStatus(200);
+  }
+  next();
+};
 
 const jwtMiddleware = (req, res, next) => {
   if (PUBLIC_PATHS.some((path) => req.path.startsWith(path))) {
@@ -174,6 +193,8 @@ async function createServer() {
   const app = express();
 
   app.use(cors());
+  app.use(headersMiddleware);
+  app.use(helmet());
   app.use(jwtMiddleware);
 
   const customerOsApiProxy = createProxyMiddleware({

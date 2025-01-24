@@ -11,7 +11,6 @@ import {
   OpportunityCreateInput,
 } from '@graphql/types';
 
-import mock from './mock.json';
 import { OpportunityStore } from './Opportunity.store';
 import { OpportunitiesService } from './__services__/Opportunities.service';
 
@@ -48,18 +47,6 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
   }
 
   async bootstrap() {
-    if (this.root.demoMode) {
-      this.load(
-        mock.data.opportunities_LinkedToOrganizations
-          .content as unknown as Opportunity[],
-      );
-      this.totalElements =
-        mock.data.opportunities_LinkedToOrganizations.totalElements;
-      this.isBootstrapped = true;
-
-      return;
-    }
-
     if (this.isBootstrapped || this.isLoading) return;
 
     try {

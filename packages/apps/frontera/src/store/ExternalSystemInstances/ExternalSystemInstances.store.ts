@@ -5,8 +5,6 @@ import { runInAction, makeAutoObservable } from 'mobx';
 
 import { ExternalSystemInstance } from '@graphql/types';
 
-import mock from './mock.json';
-
 export class ExternalSystemInstancesStore {
   isLoading = false;
   error: string | null = null;
@@ -20,14 +18,6 @@ export class ExternalSystemInstancesStore {
   }
 
   async bootstrap() {
-    if (this.root.demoMode) {
-      this.value = mock.data
-        .externalSystemInstances as unknown as ExternalSystemInstance[];
-      this.isBootstrapped = true;
-
-      return;
-    }
-
     if (this.isBootstrapped || this.isLoading) return;
 
     try {

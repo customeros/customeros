@@ -15,7 +15,6 @@ import {
   InteractionSession,
 } from '@graphql/types';
 
-import mock from './mock.json';
 import { NoteStore } from './Note/Note.store';
 import { NotesStore } from './Note/Notes.store';
 import { IssueStore } from './Issues/Issue.store';
@@ -93,18 +92,6 @@ export class TimelineEventsStore {
   }
 
   async invalidateTimeline(organizationId: string) {
-    if (this.root.demoMode) {
-      runInAction(() => {
-        const mockedTimeline = this.makeTimeline(
-          (mock as unknown as Record<string, TimelineEvent[]>)[organizationId],
-        );
-
-        this.value.set(organizationId, mockedTimeline as TimelineEventStore[]);
-      });
-
-      return;
-    }
-
     try {
       this.isLoading = true;
 

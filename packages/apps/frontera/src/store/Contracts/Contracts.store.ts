@@ -11,7 +11,6 @@ import { GroupStore, makeAutoSyncableGroup } from '@store/group-store.ts';
 
 import { Contract, ContractInput } from '@graphql/types';
 
-import mock from './mock.json';
 import { ContractStore } from './Contract.store';
 
 export class ContractsStore implements GroupStore<Contract> {
@@ -57,14 +56,6 @@ export class ContractsStore implements GroupStore<Contract> {
   }
 
   async bootstrap() {
-    if (this.root.demoMode) {
-      this.load(mock.data.contracts.content as unknown as Contract[]);
-      this.isBootstrapped = true;
-      this.totalElements = mock.data.contracts.totalElements;
-
-      return;
-    }
-
     if (this.isBootstrapped || this.isLoading) return;
 
     try {
