@@ -9,7 +9,6 @@ import (
 type MockOrganizationServiceCallbacks struct {
 	RefreshArr                       func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshRenewalSummary            func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	UpdateOrganizationOwner          func(ctx context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	CreateBillingProfile             func(ctx context.Context, proto *organizationpb.CreateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
 	UpdateBillingProfile             func(ctx context.Context, proto *organizationpb.UpdateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
 	LinkEmailToBillingProfile        func(ctx context.Context, proto *organizationpb.LinkEmailToBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
@@ -26,13 +25,6 @@ func SetOrganizationCallbacks(callbacks *MockOrganizationServiceCallbacks) {
 
 type MockOrganizationService struct {
 	organizationpb.UnimplementedOrganizationGrpcServiceServer
-}
-
-func (MockOrganizationService) UpdateOrganizationOwner(context context.Context, proto *organizationpb.UpdateOrganizationOwnerGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	if organizationCallbacks.UpdateOrganizationOwner == nil {
-		panic("organizationCallbacks.UpdateOrganizationOwner is not set")
-	}
-	return organizationCallbacks.UpdateOrganizationOwner(context, proto)
 }
 
 func (MockOrganizationService) CreateBillingProfile(context context.Context, proto *organizationpb.CreateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error) {

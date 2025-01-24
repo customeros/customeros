@@ -3,7 +3,6 @@ package api_organization
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"reflect"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
