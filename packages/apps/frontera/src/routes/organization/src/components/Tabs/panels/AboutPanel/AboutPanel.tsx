@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
-import { EditContactTagUsecase } from '@domain/usecases/edit-contact-tags-select/edit-contact-tag.usecase.ts';
+import { EditOrganizationTagUsecase } from '@domain/usecases/organization-about-panel/edit-organization-tag.usecase.ts';
 
 import { cn } from '@ui/utils/cn';
 import { flags } from '@ui/media/flags';
@@ -77,7 +77,7 @@ export const AboutPanel = observer(() => {
   );
 
   const tagsUsecase = useMemo(
-    () => new EditContactTagUsecase(String(id)),
+    () => new EditOrganizationTagUsecase(String(id)),
     [id],
   );
 
