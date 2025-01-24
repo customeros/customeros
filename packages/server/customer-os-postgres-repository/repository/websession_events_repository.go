@@ -7,6 +7,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/lib/pq"
 	"github.com/opentracing/opentracing-go"
 	"gorm.io/gorm"
 
@@ -21,6 +22,7 @@ type WebSessionRepository interface {
 	UpdateLastActivity(ctx context.Context, sessionID, eventType string) (*postgres_entity.WebSession, error)
 	UpdateSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error)
 	UpdateSessionWithDomain(ctx context.Context, sessionID, domain string) (*postgres_entity.WebSession, error)
+	UpdateSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error)
 }
 
 type webSessionEventsRepository struct {
@@ -189,6 +191,25 @@ func (r *webSessionEventsRepository) UpdateSessionWithDomain(ctx context.Context
 	err := r.gormDb.Model(&postgres_entity.WebSession{}).
 		Where("id = ?", sessionID).
 		Update("domain", &domain).
+		First(&updatedSession).
+		Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &updatedSession, nil
+}
+
+func (r *webSessionEventsRepository) UpdateSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionPageViews")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var updatedSession postgres_entity.WebSession
+	err := r.gormDb.Model(&postgres_entity.WebSession{}).
+		Where("id = ? AND tenant = ?", sessionID, tenant).
+		Update("unique_page_views", pq.StringArray(pageViews)).
 		First(&updatedSession).
 		Error
 	if err != nil {

@@ -2,15 +2,19 @@ package service
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
@@ -154,6 +158,12 @@ func (s *webSessionService) processClosedSession(ctx context.Context, session po
 		return err
 	}
 
+	err = s.processUniquePageViews(ctx, session.Tenant, session.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	event, err := s.createCloseSessionWebhookEvent(ctx, *closedSession)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -195,4 +205,55 @@ func (s *webSessionService) createCloseSessionWebhookEvent(ctx context.Context, 
 	}
 
 	return event, nil
+}
+
+func (c *webSessionService) processUniquePageViews(ctx context.Context, tenant, sessionID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "webSessionService.getUniquePageViews")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	session, err := c.commonServices.PostgresRepositories.WebTrackerEventsRepository.FindAll(ctx, postgres_entity.WebTrackerEvents{
+		SessionID: sessionID,
+		Tenant:    tenant,
+	}, nil)
+	if err != nil {
+		return err
+	}
+	if session == nil {
+		return nil
+	}
+
+	// Use map to track unique pages
+	uniquePageMap := make(map[string]struct{})
+	for _, page := range session {
+		url := utils.CleanUrlBasePath(page.Hostname)
+		if page.Pathname != "" {
+			url = strings.TrimSuffix(fmt.Sprintf("%s/%s", utils.CleanUrlBasePath(page.Hostname), utils.CleanUrlBasePath(page.Pathname)), "/")
+		}
+		uniquePageMap[url] = struct{}{}
+	}
+
+	// Convert map keys to slice
+	uniquePages := make([]string, 0, len(uniquePageMap))
+	for pathname := range uniquePageMap {
+		uniquePages = append(uniquePages, pathname)
+	}
+
+	sort.Slice(uniquePages, func(i, j int) bool {
+		// If lengths are different, sort by length
+		if len(uniquePages[i]) != len(uniquePages[j]) {
+			return len(uniquePages[i]) < len(uniquePages[j])
+		}
+		// If lengths are equal, sort alphabetically
+		return uniquePages[i] < uniquePages[j]
+	})
+
+	// strore in db
+	_, err = c.commonServices.PostgresRepositories.WebSessionRepository.UpdateSessionPageViews(ctx, sessionID, tenant, uniquePages)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Unable to update websession with unique page views"))
+		return err
+	}
+
+	return nil
 }
