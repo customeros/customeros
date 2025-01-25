@@ -44,6 +44,7 @@ func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyCo
 	}
 
 	if webhookEvent == nil || webhookEvent.Data == nil || webhookEvent.DataType == "" {
+		tracing.TraceErr(span, fmt.Errorf("invalid webhook event: missing required fields"))
 		return fmt.Errorf("invalid webhook event: missing required fields")
 	}
 
@@ -65,13 +66,11 @@ func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyCo
 	case data_fields.WebsiteVisitEvent{}.Type():
 		eventData, ok := webhookEvent.Data.(*data_fields.WebsiteVisitEvent)
 		if !ok {
+			tracing.TraceErr(span, fmt.Errorf("failed to cast to WebsiteVisitEvent, got type: %T", webhookEvent.Data))
 			return fmt.Errorf("failed to cast to WebsiteVisitEvent, got type: %T", webhookEvent.Data)
 		}
 
-		websiteVisitEvent, err := website_visit_event.NewWebsiteVisitEventHandler(
-			dependencies,
-			eventData,
-		)
+		websiteVisitEvent, err := website_visit_event.NewWebsiteVisitEventHandler(dependencies, eventData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

@@ -73,7 +73,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	visitorIDResults, err := a.agentCapabilities.IdentifyWebsiteVisitor.Execute(ctx, agent_capability.IdentifyWebsiteVisitorInput{
 		SessionID: event.SessionID,
 		IPAddress: event.IPAddress,
-	})
+	}, agent_capability.NoConfig{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		errMessage := "unable to lookup visitor ID"
@@ -105,7 +105,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	// execute org creation capability
 	orgCreationResults, err := a.agentCapabilities.CreateOrganization.Execute(ctx, agent_capability.CreateOrganizationInput{
 		Domain: visitorIDResults.Domain,
-	})
+	}, agent_capability.NoConfig{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to create organization"))
 		errMessage := "unable to create new organization"
@@ -124,7 +124,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 		VisitorID:      event.VisitorID,
 		OrganizationID: orgCreationResults.OrganizationID,
 		Domain:         visitorIDResults.Domain,
-	})
+	}, agent_capability.NoConfig{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to analyze web session"))
 		errMessage := "unable to analyze web session"
@@ -178,7 +178,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	_, err = a.agentCapabilities.SendSlackNotification.Execute(ctx, agent_capability.SendSlackNotificationInput{
 		Message:   message,
 		ChannelID: slackChannel.ChannelId,
-	})
+	}, agent_capability.SendSlackNotificationConfig{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		errMessage := "unable to send slack notification"

@@ -101,7 +101,7 @@ func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []e
 		agentIds[i] = agent.String()
 	}
 
-	query := f.gormDb.Where("tenant = ? AND is_active = ? AND flow_id IS NULL", tenant, true)
+	query := f.gormDb.Where("tenant = ? AND is_active = ? AND (flow_id IS NULL OR flow_id = '')", tenant, true)
 	if len(agentIds) > 0 {
 		query = query.Where("type IN (?)", agentIds)
 	}

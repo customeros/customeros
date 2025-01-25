@@ -24,6 +24,18 @@ type AnalyzeWebSessionCapability struct {
 	actionService        interfaces.ActionService
 }
 
+func (c *AnalyzeWebSessionCapability) GetInput() any {
+	return &AnalyzeWebSessionInput{}
+}
+
+func (c *AnalyzeWebSessionCapability) GetConfig() any {
+	return &NoConfig{}
+}
+
+func (c *AnalyzeWebSessionCapability) GetOutput() any {
+	return &AnalyzeWebSessionResult{}
+}
+
 func NewAnalyzeWebSessionCapability(
 	postgresRepositories *postgres_repository.Repositories,
 	actionService interfaces.ActionService,
@@ -35,27 +47,30 @@ func NewAnalyzeWebSessionCapability(
 }
 
 // Compile-time interface check
-var _ interfaces.AgentCapabilityExecution[AnalyzeWebSessionInput, AnalyzeWebSessionResult] = (*AnalyzeWebSessionCapability)(nil)
+var (
+	_ interfaces.AgentCapabilityExecution[AnalyzeWebSessionInput, AnalyzeWebSessionResult, NoConfig] = (*AnalyzeWebSessionCapability)(nil)
+	_ interfaces.AgentCapabilityUntyped                                                              = (*AnalyzeWebSessionCapability)(nil)
+)
 
 type AnalyzeWebSessionInput struct {
-	SessionID      string
-	VisitorID      string
-	OrganizationID string
-	Domain         string
+	SessionID      string `json:"sessionId"`
+	VisitorID      string `json:"visitorId"`
+	OrganizationID string `json:"organizationId"`
+	Domain         string `json:"domain"`
 }
 
 type AnalyzeWebSessionResult struct {
-	SessionID         string
-	IsNewCompanyVisit bool
-	IsNewPersonVisit  bool
-	PageViews         []string
-	SessionDuration   string
-	SlackNotification string
-	Hostname          string
-	Referrer          string
+	SessionID         string   `json:"sessionId"`
+	IsNewCompanyVisit bool     `json:"isNewCompanyVisit"`
+	IsNewPersonVisit  bool     `json:"isNewPersonVisit"`
+	PageViews         []string `json:"pageViews"`
+	SessionDuration   string   `json:"sessionDuration"`
+	SlackNotification string   `json:"slackNotification"`
+	Hostname          string   `json:"hostname"`
+	Referrer          string   `json:"referrer"`
 }
 
-func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeWebSessionInput) (AnalyzeWebSessionResult, error) {
+func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeWebSessionInput, config NoConfig) (AnalyzeWebSessionResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -310,4 +325,20 @@ func (c *AnalyzeWebSessionCapability) buildTimelineMessage(ctx context.Context, 
 	}
 
 	return fullMessage.String(), nil
+}
+
+// ExecuteUntyped implements the AgentCapabilityUntyped interface.
+// It casts the generic input and config to the specific types and delegates to the typed Execute method.
+func (c *AnalyzeWebSessionCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
+	typedInput, ok := input.(*AnalyzeWebSessionInput)
+	if !ok {
+		return nil, fmt.Errorf("invalid input type for AnalyzeWebSessionCapability: expected AnalyzeWebSessionInput")
+	}
+
+	typedConfig, ok := config.(*NoConfig)
+	if !ok {
+		return nil, fmt.Errorf("invalid config type for AnalyzeWebSessionCapability: expected NoCOnfig")
+	}
+
+	return c.Execute(ctx, *typedInput, *typedConfig)
 }
