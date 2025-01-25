@@ -54,7 +54,7 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 			return
 		}
 
-		//validate request
+		// validate request
 		err = h.validateAIRequest(request)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -64,7 +64,7 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 		}
 
 		// call appropriate model
-		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, request.SystemPrompt, &request.Prompt)
+		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, request.SystemPrompt, request.Prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			message := "Unable to ask AI"
@@ -89,6 +89,7 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 func (h *AskAIHandler) parseRequest(c *gin.Context) (*AskAIRequest, error) {
 	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "parseRequest")
 	defer span.Finish()
+	tracing.TagComponentRest(span)
 
 	var request AskAIRequest
 	err := c.BindJSON(&request)
@@ -96,6 +97,7 @@ func (h *AskAIHandler) parseRequest(c *gin.Context) (*AskAIRequest, error) {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	tracing.LogObjectAsJson(span, "request", request)
 
 	aiModel, err := commonEnum.GetAIModel(request.Model)
 	if err != nil {

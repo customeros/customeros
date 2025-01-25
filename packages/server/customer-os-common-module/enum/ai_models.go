@@ -18,7 +18,8 @@ func GetAIModel(s string) (AIModel, error) {
 	switch AIModel(s) {
 	case
 		AIModelAnthropicHaiku,
-		AIModelAnthropicSonnet:
+		AIModelAnthropicSonnet,
+		AIModelDeepseekChat:
 		return AIModel(s), nil
 
 	default:
