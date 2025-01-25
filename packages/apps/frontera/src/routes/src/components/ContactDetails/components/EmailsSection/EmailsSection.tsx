@@ -11,7 +11,7 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 
 import { EmailMenuActions } from './EmailMenuActions';
-import { EmailValidationMessage } from '../../EmailValidationMessage';
+import { EmailValidationMessage } from './EmailValidationMessage';
 
 interface EmailsSectionProps {
   contactId: string;

@@ -56,7 +56,7 @@ export class JobRoleService {
     if (!res) {
       console.error('No response from saveJobRoles');
     } else {
-      this.root.contacts.retrieve([jobRole.id || '']);
+      this.root.contacts.retrieve([jobRole.contactId || '']);
     }
   }
 }

@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+
 import { observer } from 'mobx-react-lite';
 import { EditEmailCase } from '@domain/usecases/command-menu/edit-email.usecase';
 import { EmailVerificationStatus } from '@finder/components/Columns/contacts/filterTypes';
@@ -20,7 +22,7 @@ import {
   EmailValidationDetails,
 } from '@shared/types/__generated__/graphql.types';
 
-import { emailStatuses } from '../../EmailValidationMessage';
+import { emailStatuses } from './EmailValidationMessage';
 
 interface EmailMenuActionsProps {
   id: string;
@@ -33,6 +35,7 @@ export const EmailMenuActions = observer(
   ({ contactId, idx, email }: EmailMenuActionsProps) => {
     const store = useStore();
     const [_, copyToClipboard] = useCopyToClipboard();
+    const navigate = useNavigate();
 
     const { dispatchEvent } = useEvent<{ email: string; openEditor: string }>(
       'openEmailEditor',
@@ -99,7 +102,12 @@ export const EmailMenuActions = observer(
               <MenuItem
                 className='group/send-email'
                 onClick={() => {
-                  dispatchEvent({ email: email, openEditor: 'email' });
+                  navigate(
+                    `/organization/${contactStore.value.primaryOrganizationId}?tab=people`,
+                  );
+                  setTimeout(() => {
+                    dispatchEvent({ email: email, openEditor: 'email' });
+                  }, 0);
                 }}
               >
                 <Send03 className='text-gray-500 group-hover/send-email:text-gray-700' />

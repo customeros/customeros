@@ -6,6 +6,7 @@ import cityTimezone from 'city-timezones';
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 import { EditJobRole } from '@domain/usecases/contact-preview-card/edit-jobrole.usecase';
+import { EditContactNameUseCase } from '@domain/usecases/contact-preview-card/edit-contact-name.usecase';
 import { EditContactTagUsecase } from '@domain/usecases/edit-contact-tags-select/edit-contact-tag.usecase.ts';
 
 import { cn } from '@ui/utils/cn';
@@ -93,6 +94,10 @@ export const ContactPreviewCard = observer(() => {
     () => new EditContactTagUsecase(String(contactId)),
     [contactId],
   );
+  const contactNameUseCase = useMemo(
+    () => new EditContactNameUseCase(String(contactId)),
+    [contactId],
+  );
 
   if (!contact) return null;
 
@@ -150,17 +155,14 @@ export const ContactPreviewCard = observer(() => {
           </div>
           {isEditName ? (
             <Input
-              value={fullName}
               variant='unstyled'
               placeholder='Unknown'
               className='mb-[-8px]'
+              value={contact.name || ''}
               onFocus={(e) => e.target.select()}
-              onChange={(e) => {
-                contact.value.name = e.target.value;
-              }}
+              onChange={(e) => contact.setName(e.target.value)}
               onBlur={() => {
-                setIsEditName(false);
-                contact?.commit();
+                contactNameUseCase.execute();
               }}
             />
           ) : (

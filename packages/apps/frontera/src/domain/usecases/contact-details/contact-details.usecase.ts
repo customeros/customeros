@@ -1,22 +1,25 @@
 import { RootStore } from '@store/root';
+import { ContactService } from '@domain/services';
 import { action, computed, observable } from 'mobx';
 import { JobRoleService } from '@domain/services/jobrole/jobRole.service';
 import { SaveJobRolesMutationVariables } from '@store/JobRoles/__service__/saveJobRole.generated';
 type SaveJobRolePayload = SaveJobRolesMutationVariables['input'];
 
-export class EditJobRole {
+export class ContactDetailsUseCase {
   private root = RootStore.getInstance();
   private jobRoleService = new JobRoleService();
+  private contactService = new ContactService();
   private contactId: string;
-  @observable accessor jobRole: string | undefined = undefined;
+  @observable accessor jobRole: string = '';
 
   constructor(contactId: string) {
     this.contactId = contactId;
+    this.jobRole = this.root.jobRoles.getjobTitleByContactId(contactId) ?? '';
     this.setJobRole = this.setJobRole.bind(this);
   }
 
   @action
-  setJobRole(jobRole: string | undefined) {
+  setJobRole(jobRole: string) {
     this.jobRole = jobRole;
   }
 
@@ -69,5 +72,13 @@ export class EditJobRole {
         company: orgId,
       });
     }
+  }
+
+  @action
+  async changeContactName() {
+    const contact = this.root.contacts.getById(this.contactId);
+
+    if (!contact) return;
+    await this.contactService.changeContactName(contact, contact.name);
   }
 }

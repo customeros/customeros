@@ -17,6 +17,7 @@ import { useTableActions } from '@invoices/hooks/useTableActions';
 import { OpportunitiesTableActions } from '@finder/components/Actions/OpportunityActions';
 
 import { useStore } from '@shared/hooks/useStore';
+import { ContactDetails } from '@shared/components/ContactDetails';
 import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import {
@@ -29,7 +30,6 @@ import {
 import { EmptyState } from '../EmptyState/EmptyState';
 import { computeFinderData } from './computeFinderData';
 import { computeFinderColumns } from './computeFinderColumns';
-import { ContactPreviewCard } from '../ContactPreviewCard/ContactPreviewCard';
 import {
   ContactTableActions,
   OrganizationTableActions,
@@ -507,9 +507,19 @@ export const FinderTable = observer(() => {
           return <></>;
         }}
       />
-      {store.ui.contactPreviewCardOpen && !store.ui.isSearching && (
-        <ContactPreviewCard />
-      )}
+      {store.ui.contactPreviewCardOpen &&
+        !store.ui.isSearching &&
+        store.ui.contactPreviewCardOpen && (
+          <div
+            data-state={store.ui.contactPreviewCardOpen ? 'open' : 'closed'}
+            className='data-[state=open]:animate-slideLeftAndFade data-[state=closed]:animate-slideRightAndFade flex flex-col absolute right-0 -top-[-41px] bottom-0  max-w-[390px] min-w-[350px] border border-r-0 border-gray-200 z-[1] bg-white w-[390px]'
+          >
+            <ContactDetails
+              isExpandble={false}
+              id={String(store.ui.focusRow)}
+            />
+          </div>
+        )}
       {tableType === TableViewType.Invoices && (
         <ConfirmDeleteDialog
           onClose={reset}

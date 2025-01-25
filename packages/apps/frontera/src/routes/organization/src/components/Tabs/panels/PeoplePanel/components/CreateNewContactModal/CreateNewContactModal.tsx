@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 
 import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
-import { CreateContact } from '@domain/usecases/people-contact-card/create-contact.usecase';
+import { CreateContact } from '@domain/usecases/contact-details/create-contact.usecase';
 
 import { cn } from '@ui/utils/cn.ts';
 import { Input } from '@ui/form/Input';

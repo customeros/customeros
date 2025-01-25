@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 
 import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
-import { LinkedIn } from '@domain/usecases/people-contact-card/add-linkedin.usecase';
+import { LinkedIn } from '@domain/usecases/contact-details/add-linkedin.usecase';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
