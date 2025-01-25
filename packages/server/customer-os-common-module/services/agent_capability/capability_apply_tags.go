@@ -41,9 +41,9 @@ var (
 )
 
 type ApplyTagInput struct {
-	EntityType model.EntityType `json:"entity_type"`
-	EntityID   string           `json:"entity_id"`
-	TagID      string           `json:"tag_id"`
+	EntityType model.EntityType `json:"entityType"`
+	EntityID   string           `json:"entityId"`
+	TagID      string           `json:"tagId"`
 }
 
 type ApplyTagResult struct {

@@ -14,7 +14,7 @@ type AgentCapabilities struct {
 	ICPQualification       *ICPQualificationCapability
 	IdentifyWebsiteVisitor *IdentifyWebsiteVisitorCapability
 	SendSlackNotification  *SendSlackNotificationCapability
-	// TODO above will be depreacted
+	// TODO above will be deprecated
 	executors map[enum.AgentCapabilityType]interfaces.AgentCapabilityUntyped
 }
 

@@ -53,19 +53,19 @@ var (
 )
 
 type AnalyzeWebSessionInput struct {
-	SessionID      string `json:"session_id"`
-	VisitorID      string `json:"visitor_id"`
-	OrganizationID string `json:"organization_id"`
+	SessionID      string `json:"sessionId"`
+	VisitorID      string `json:"visitorId"`
+	OrganizationID string `json:"organizationId"`
 	Domain         string `json:"domain"`
 }
 
 type AnalyzeWebSessionResult struct {
-	SessionID         string   `json:"session_id"`
-	IsNewCompanyVisit bool     `json:"is_new_company_visit"`
-	IsNewPersonVisit  bool     `json:"is_new_person_visit"`
-	PageViews         []string `json:"page_views"`
-	SessionDuration   string   `json:"session_duration"`
-	SlackNotification string   `json:"slack_notification"`
+	SessionID         string   `json:"sessionId"`
+	IsNewCompanyVisit bool     `json:"isNewCompanyVisit"`
+	IsNewPersonVisit  bool     `json:"isNewPersonVisit"`
+	PageViews         []string `json:"pageViews"`
+	SessionDuration   string   `json:"sessionDuration"`
+	SlackNotification string   `json:"slackNotification"`
 	Hostname          string   `json:"hostname"`
 	Referrer          string   `json:"referrer"`
 }
