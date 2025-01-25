@@ -76,15 +76,16 @@ export const AddLinkedInToContactModal = observer(
                 dataTest='linkedin-url-input'
                 value={linkedInUseCase.inputValue}
                 placeholder='linkedin.com/in/john-lemon'
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    onClose();
-                  }
-                }}
                 onChange={(e) => {
                   linkedInUseCase.setInputValue(e.target.value);
 
                   linkedInUseCase.resetErrors();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    onClose();
+                  }
+                  e.stopPropagation();
                 }}
               />
             </div>

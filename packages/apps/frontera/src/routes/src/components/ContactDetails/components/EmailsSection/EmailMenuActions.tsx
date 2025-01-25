@@ -98,7 +98,8 @@ export const EmailMenuActions = observer(
           {isNotDeliverable?.value !== EmailVerificationStatus.InvalidMailbox &&
             isNotDeliverable?.value !== EmailVerificationStatus.MailboxFull &&
             isNotDeliverable?.value !==
-              EmailVerificationStatus.IncorrectFormat && (
+              EmailVerificationStatus.IncorrectFormat &&
+            contactStore.value.primaryOrganizationId && (
               <MenuItem
                 className='group/send-email'
                 onClick={() => {
