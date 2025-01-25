@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/opentracing/opentracing-go"
@@ -17,6 +18,18 @@ type IdentifyWebsiteVisitorCapability struct {
 	enrichmentService    interfaces.EnrichmentService
 }
 
+func (c *IdentifyWebsiteVisitorCapability) GetInput() any {
+	return &IdentifyWebsiteVisitorInput{}
+}
+
+func (c *IdentifyWebsiteVisitorCapability) GetConfig() any {
+	return &NoConfig{}
+}
+
+func (c *IdentifyWebsiteVisitorCapability) GetOutput() any {
+	return &IdentifyWebsiteVisitorResult{}
+}
+
 func NewIdentifyWebsiteVisitorCapability(
 	postgresRepositories *postgres_repository.Repositories,
 	enrichmentService interfaces.EnrichmentService,
@@ -28,19 +41,22 @@ func NewIdentifyWebsiteVisitorCapability(
 }
 
 // Compile-time interface check
-var _ interfaces.AgentCapabilityExecution[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorResult] = (*IdentifyWebsiteVisitorCapability)(nil)
+var (
+	_ interfaces.AgentCapabilityExecution[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorResult, NoConfig] = (*IdentifyWebsiteVisitorCapability)(nil)
+	_ interfaces.AgentCapabilityUntyped                                                                        = (*IdentifyWebsiteVisitorCapability)(nil)
+)
 
 type IdentifyWebsiteVisitorInput struct {
-	SessionID string
-	IPAddress string
+	SessionID string `json:"sessionId"`
+	IPAddress string `json:"ipAddress"`
 }
 
 type IdentifyWebsiteVisitorResult struct {
-	Domain       string
-	LinkedInSlug string
+	Domain       string `json:"domain"`
+	LinkedInSlug string `json:"linkedinSlug"`
 }
 
-func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data IdentifyWebsiteVisitorInput) (IdentifyWebsiteVisitorResult, error) {
+func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data IdentifyWebsiteVisitorInput, config NoConfig) (IdentifyWebsiteVisitorResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -100,4 +116,20 @@ func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAdd
 	}
 
 	return primaryDomain, snitcherData.Company.Profiles.LinkedIn.Handle, nil
+}
+
+// ExecuteUntyped implements the AgentCapabilityUntyped interface.
+// It casts the generic input and config to the specific types and delegates to the typed Execute method.
+func (c *IdentifyWebsiteVisitorCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
+	typedInput, ok := input.(*IdentifyWebsiteVisitorInput)
+	if !ok {
+		return nil, fmt.Errorf("invalid input type: expected AnalyzeWebSessionInput")
+	}
+
+	typedConfig, ok := config.(*NoConfig)
+	if !ok {
+		return nil, fmt.Errorf("invalid config type: expected NoCOnfig")
+	}
+
+	return c.Execute(ctx, *typedInput, *typedConfig)
 }
