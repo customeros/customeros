@@ -42,7 +42,7 @@ var (
 
 type SendSlackNotificationInput struct {
 	Message   *string `json:"message,omitempty"`
-	ChannelID string  `json:"channel_id"`
+	ChannelID string  `json:"channelId"`
 }
 
 type SendSlackNotificationResult struct {
@@ -50,7 +50,7 @@ type SendSlackNotificationResult struct {
 }
 
 type SendSlackNotificationConfig struct {
-	ChannelID string `json:"channel_id"`
+	ChannelID string `json:"channelId"`
 }
 
 func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data SendSlackNotificationInput, config SendSlackNotificationConfig) (SendSlackNotificationResult, error) {

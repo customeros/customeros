@@ -50,7 +50,7 @@ type CreateOrganizationInput struct {
 }
 
 type CreateOrganizationResult struct {
-	OrganizationID string `json:"organization_id"`
+	OrganizationID string `json:"organizationId"`
 }
 
 func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateOrganizationInput, config NoConfig) (CreateOrganizationResult, error) {

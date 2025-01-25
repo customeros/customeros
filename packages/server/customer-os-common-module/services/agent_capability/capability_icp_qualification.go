@@ -41,8 +41,8 @@ var (
 )
 
 type ICPQualificationInput struct {
-	ICPDefinition string `json:"icp_definition"`
-	PrimaryDomain string `json:"primary_domain"`
+	ICPDefinition string `json:"icpDefinition"`
+	PrimaryDomain string `json:"primaryDomain"`
 }
 
 type ICPQualificationResult struct {
