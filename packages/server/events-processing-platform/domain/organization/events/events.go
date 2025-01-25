@@ -1,20 +1,15 @@
 package events
 
 import (
-	"github.com/customeros/customeros/packages/server/events/event/common"
 	"time"
 
-	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
-	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/model"
 	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 )
 
 const (
 	OrganizationPhoneNumberLinkV1                  = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
-	OrganizationUpsertCustomFieldV1                = "V1_ORGANIZATION_UPSERT_CUSTOM_FIELD"
 	OrganizationRefreshArrV1                       = "V1_ORGANIZATION_REFRESH_ARR"
 	OrganizationRefreshRenewalSummaryV1            = "V1_ORGANIZATION_REFRESH_RENEWAL_SUMMARY"
 	OrganizationCreateBillingProfileV1             = "V1_ORGANIZATION_CREATE_BILLING_PROFILE"
@@ -90,48 +85,6 @@ func NewOrganizationRefreshRenewalSummaryEvent(aggregate eventstore.Aggregate) (
 	event := eventstore.NewBaseEvent(aggregate, OrganizationRefreshRenewalSummaryV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRefreshRenewalSummaryEvent")
-	}
-	return event, nil
-}
-
-type OrganizationUpsertCustomField struct {
-	Tenant              string                      `json:"tenant" validate:"required"`
-	Source              string                      `json:"source,omitempty"`
-	SourceOfTruth       string                      `json:"sourceOfTruth,omitempty"`
-	AppSource           string                      `json:"appSource,omitempty"`
-	CreatedAt           time.Time                   `json:"createdAt"`
-	UpdatedAt           time.Time                   `json:"updatedAt"`
-	ExistsInEventStore  bool                        `json:"existsInEventStore"`
-	TemplateId          *string                     `json:"templateId,omitempty"`
-	CustomFieldId       string                      `json:"customFieldId"`
-	CustomFieldName     string                      `json:"customFieldName"`
-	CustomFieldDataType string                      `json:"customFieldDataType"`
-	CustomFieldValue    neo4jmodel.CustomFieldValue `json:"customFieldValue"`
-}
-
-func NewOrganizationUpsertCustomField(aggregate eventstore.Aggregate, sourceFields common.Source, createdAt, updatedAt time.Time, customField model.CustomField, foundInEventStore bool) (eventstore.Event, error) {
-	eventData := OrganizationUpsertCustomField{
-		Tenant:              aggregate.GetTenant(),
-		Source:              sourceFields.Source,
-		SourceOfTruth:       sourceFields.SourceOfTruth,
-		AppSource:           sourceFields.AppSource,
-		CreatedAt:           createdAt,
-		UpdatedAt:           updatedAt,
-		ExistsInEventStore:  foundInEventStore,
-		CustomFieldId:       customField.Id,
-		TemplateId:          customField.TemplateId,
-		CustomFieldName:     customField.Name,
-		CustomFieldDataType: string(customField.CustomFieldDataType),
-		CustomFieldValue:    customField.CustomFieldValue,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationUpsertCustomField")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationUpsertCustomFieldV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationUpsertCustomField")
 	}
 	return event, nil
 }
