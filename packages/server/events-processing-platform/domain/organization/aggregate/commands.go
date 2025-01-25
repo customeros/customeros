@@ -3,7 +3,6 @@ package aggregate
 import (
 	"context"
 	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	"github.com/customeros/customeros/packages/server/events/constants"
 	"github.com/customeros/customeros/packages/server/events/event/common"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -200,20 +199,6 @@ func (a *OrganizationAggregate) UnlinkLocationFromBillingProfile(ctx context.Con
 	return a.Apply(event)
 }
 
-func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.HandleCommand")
-	defer span.Finish()
-
-	switch c := cmd.(type) {
-	case *command.UpsertCustomFieldCommand:
-		return a.upsertCustomField(ctx, c)
-
-	default:
-		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
-		return eventstore.ErrInvalidCommandType
-	}
-}
-
 func (a *OrganizationTempAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationTempAggregate.HandleCommand")
 	defer span.Finish()
@@ -298,47 +283,6 @@ func (a *OrganizationTempAggregate) refreshRenewalSummary(ctx context.Context, r
 		UserId: request.LoggedInUserId,
 		App:    request.AppSource,
 	})
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) upsertCustomField(ctx context.Context, cmd *command.UpsertCustomFieldCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.upsertCustomField")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	createdAtNotNil := utils.IfNotNilTimeWithDefault(cmd.CreatedAt, utils.Now())
-	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
-	sourceFields := cmd.Source
-	if sourceFields.Source == "" {
-		sourceFields.Source = constants.SourceOpenline
-	}
-	if sourceFields.SourceOfTruth == "" {
-		if val, ok := a.Organization.CustomFields[cmd.CustomFieldData.Id]; ok {
-			sourceFields.SourceOfTruth = val.Source.SourceOfTruth
-		} else {
-			sourceFields.SourceOfTruth = constants.SourceOpenline
-		}
-	}
-	if sourceFields.AppSource == "" {
-		sourceFields.AppSource = constants.AppSourceEventProcessingPlatform
-	}
-
-	found := false
-	if _, ok := a.Organization.CustomFields[cmd.CustomFieldData.Id]; ok {
-		found = true
-	}
-
-	event, err := organizationEvents.NewOrganizationUpsertCustomField(a, sourceFields, createdAtNotNil, updatedAtNotNil, cmd.CustomFieldData, found)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationUpsertCustomField")
-	}
-	eventstore.EnrichEventWithMetadata(&event, &span, cmd.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }

@@ -42,24 +42,9 @@ func InitClients() {
 func main() {
 	InitClients()
 
-	//testHideOrganization()
-	//testAddCustomField()
-	//testRemoveParentOrganization()
-	//testContactLinkWithPhoneNumber()
-	//testOrganizationLinkWithEmail()
-	//testOrganizationLinkWithPhoneNumber()
-	//testCreateComment()
-	//testCloseLooseOpportunity()
-	//testCreateRenewalOpportunity()
-	//testArchiveOpportunity()
-	//testUpdateOnboardingStatus()
-	//testUpdateOrgOwner()
 	//testRefreshRenewalSummary()
-	//testAddTenantBillingProfile()
 	//PleasePayInvoiceNotification()
 	//testCreateInvoice()
-	//testCreateReminder()
-	//testUpdateReminder()
 }
 
 func testCreateInvoice() {
@@ -94,24 +79,6 @@ func PleasePayInvoiceNotification() {
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
 	}
-}
-
-func testAddCustomField() {
-
-	organizationId := "5e72b6fb-5f20-4973-9b96-52f4543a0df3"
-	userId := "development@openline.ai"
-	result, _ := clients.OrganizationClient.UpsertCustomFieldToOrganization(context.Background(), &organizationpb.CustomFieldForOrganizationGrpcRequest{
-		Tenant:                tenant,
-		OrganizationId:        organizationId,
-		UserId:                userId,
-		CustomFieldTemplateId: utils.StringPtr("c70cd2fb-1c31-46fd-851c-2e47ceba508f"),
-		CustomFieldName:       "CF1",
-		CustomFieldDataType:   organizationpb.CustomFieldDataType_TEXT,
-		CustomFieldValue: &organizationpb.CustomFieldValue{
-			StringValue: utils.StringPtr("super secret value"),
-		},
-	})
-	print(result)
 }
 
 func testRefreshRenewalSummary() {

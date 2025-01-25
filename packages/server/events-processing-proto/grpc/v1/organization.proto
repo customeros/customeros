@@ -91,21 +91,6 @@ message CustomFieldValue {
   optional double decimalValue = 5;
 }
 
-message CustomFieldForOrganizationGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string userId = 3 [deprecated = true];
-  string customFieldId = 4;
-  string customFieldName = 5;
-  CustomFieldValue customFieldValue = 6;
-  CustomFieldDataType customFieldDataType = 7;
-  optional string customFieldTemplateId = 8;
-  SourceFields sourceFields = 9;
-  google.protobuf.Timestamp  createdAt = 10;
-  google.protobuf.Timestamp  updatedAt = 11;
-  string loggedInUserId = 12;
-}
-
 message CreateBillingProfileGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -150,16 +135,11 @@ message OrganizationIdGrpcResponse {
   string id = 1;
 }
 
-message CustomFieldIdGrpcResponse {
-  string id = 1;
-}
-
 message BillingProfileIdGrpcResponse {
   string id = 1;
 }
 
 service organizationGrpcService {
-  rpc UpsertCustomFieldToOrganization(CustomFieldForOrganizationGrpcRequest) returns (CustomFieldIdGrpcResponse);
   rpc RefreshRenewalSummary(RefreshRenewalSummaryGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshDerivedData(RefreshDerivedDataGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshArr(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
