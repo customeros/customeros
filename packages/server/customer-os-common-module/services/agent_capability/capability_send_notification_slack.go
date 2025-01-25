@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/opentracing/opentracing-go"
 
@@ -15,6 +16,18 @@ type SendSlackNotificationCapability struct {
 	notificationService interfaces.NotificationService
 }
 
+func (c *SendSlackNotificationCapability) GetInput() any {
+	return &SendSlackNotificationInput{}
+}
+
+func (c *SendSlackNotificationCapability) GetConfig() any {
+	return &SendSlackNotificationConfig{}
+}
+
+func (c *SendSlackNotificationCapability) GetOutput() any {
+	return &SendSlackNotificationResult{}
+}
+
 func NewSendSlackNotificationCapability(notificationService interfaces.NotificationService) *SendSlackNotificationCapability {
 	return &SendSlackNotificationCapability{
 		notificationService: notificationService,
@@ -22,22 +35,25 @@ func NewSendSlackNotificationCapability(notificationService interfaces.Notificat
 }
 
 // Compile-time interface check
-var _ interfaces.AgentCapabilityExecution[SendSlackNotificationInput, SendSlackNotificationResult] = (*SendSlackNotificationCapability)(nil)
+var (
+	_ interfaces.AgentCapabilityExecution[SendSlackNotificationInput, SendSlackNotificationResult, SendSlackNotificationConfig] = (*SendSlackNotificationCapability)(nil)
+	_ interfaces.AgentCapabilityUntyped                                                                                         = (*SendSlackNotificationCapability)(nil)
+)
 
 type SendSlackNotificationInput struct {
-	Message   *string
-	ChannelID string
+	Message   *string `json:"message,omitempty"`
+	ChannelID string  `json:"channel_id"`
 }
 
 type SendSlackNotificationResult struct {
-	Success bool
+	Success bool `json:"success"`
 }
 
 type SendSlackNotificationConfig struct {
 	ChannelID string `json:"channel_id"`
 }
 
-func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data SendSlackNotificationInput) (SendSlackNotificationResult, error) {
+func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data SendSlackNotificationInput, config SendSlackNotificationConfig) (SendSlackNotificationResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendSlackNotificationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -64,4 +80,20 @@ func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data Send
 	)
 	result.Success = true
 	return result, nil
+}
+
+// ExecuteUntyped implements the AgentCapabilityUntyped interface.
+// It casts the generic input and config to the specific types and delegates to the typed Execute method.
+func (c *SendSlackNotificationCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
+	typedInput, ok := input.(*SendSlackNotificationInput)
+	if !ok {
+		return nil, fmt.Errorf("invalid input type: expected SendSlackNotificationInput")
+	}
+
+	typedConfig, ok := config.(*SendSlackNotificationConfig)
+	if !ok {
+		return nil, fmt.Errorf("invalid config type: expected SendSlackNotificationConfig")
+	}
+
+	return c.Execute(ctx, *typedInput, *typedConfig)
 }

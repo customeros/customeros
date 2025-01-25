@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"sort"
 	"strings"
 
@@ -124,7 +126,11 @@ func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgr
 
 	var errs error
 	for _, session := range sessions {
-		err := s.processClosedSession(ctx, session)
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    session.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+		err := s.processClosedSession(innerCtx, session)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)

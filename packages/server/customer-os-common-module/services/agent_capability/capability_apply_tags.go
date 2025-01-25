@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -15,6 +16,18 @@ type ApplyTagCapability struct {
 	tagService interfaces.TagService
 }
 
+func (c *ApplyTagCapability) GetInput() any {
+	return &ApplyTagInput{}
+}
+
+func (c *ApplyTagCapability) GetConfig() any {
+	return &NoConfig{}
+}
+
+func (c *ApplyTagCapability) GetOutput() any {
+	return &ApplyTagResult{}
+}
+
 func NewApplyTagCapability(tagService interfaces.TagService) *ApplyTagCapability {
 	return &ApplyTagCapability{
 		tagService: tagService,
@@ -22,19 +35,22 @@ func NewApplyTagCapability(tagService interfaces.TagService) *ApplyTagCapability
 }
 
 // Compile-time interface check
-var _ interfaces.AgentCapabilityExecution[ApplyTagInput, ApplyTagResult] = (*ApplyTagCapability)(nil)
+var (
+	_ interfaces.AgentCapabilityExecution[ApplyTagInput, ApplyTagResult, NoConfig] = (*ApplyTagCapability)(nil)
+	_ interfaces.AgentCapabilityUntyped                                            = (*ApplyTagCapability)(nil)
+)
 
 type ApplyTagInput struct {
-	EntityType model.EntityType
-	EntityID   string
-	TagID      string
+	EntityType model.EntityType `json:"entity_type"`
+	EntityID   string           `json:"entity_id"`
+	TagID      string           `json:"tag_id"`
 }
 
 type ApplyTagResult struct {
-	Success bool
+	Success bool `json:"success"`
 }
 
-func (c *ApplyTagCapability) Execute(ctx context.Context, data ApplyTagInput) (ApplyTagResult, error) {
+func (c *ApplyTagCapability) Execute(ctx context.Context, data ApplyTagInput, config NoConfig) (ApplyTagResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -53,4 +69,20 @@ func (c *ApplyTagCapability) Execute(ctx context.Context, data ApplyTagInput) (A
 	}
 
 	return ApplyTagResult{Success: true}, nil
+}
+
+// ExecuteUntyped implements the AgentCapabilityUntyped interface.
+// It casts the generic input and config to the specific types and delegates to the typed Execute method.
+func (c *ApplyTagCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
+	typedInput, ok := input.(*ApplyTagInput)
+	if !ok {
+		return nil, fmt.Errorf("invalid input type: expected ApplyTagInput")
+	}
+
+	typedConfig, ok := config.(*NoConfig)
+	if !ok {
+		return nil, fmt.Errorf("invalid config type: expected NoCOnfig")
+	}
+
+	return c.Execute(ctx, *typedInput, *typedConfig)
 }
