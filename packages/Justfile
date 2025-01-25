@@ -148,6 +148,7 @@ start-fe:
 
 stop:
 	kill `cat api.pid` 2>/dev/null || true
+	kill `cat admin-api.pid` 2>/dev/null || true
 	kill `cat events-subscribers.pid` 2>/dev/null || true
 	rm -f *.pid
 	cd ../deployment && podman-compose down rabbitmq jaeger postgres postgres-sidecar neo4j eventstore customer-os-platform-admin-api user-admin-api settings-api

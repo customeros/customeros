@@ -36,6 +36,7 @@ type ExternalServicesConfig struct {
 	BetterContactConfig  BetterContactConfig
 	BrandfetchConfig     BrandfetchConfig
 	CloudflareConfig     CloudflareConfig
+	DeepseekConfig       DeepseekConfig
 	EnrowConfig          EnrowConfig
 	IntegrationAppConfig IntegrationAppConfig
 	IpDataConfig         IpDataConfig

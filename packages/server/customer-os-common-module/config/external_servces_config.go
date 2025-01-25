@@ -33,6 +33,11 @@ type SlackConfig struct {
 	NotifyFlowGoalAchieved          string `env:"SLACK_NOTIFY_FLOW_GOAL_ACHIEVED"`
 }
 
+type DeepseekConfig struct {
+	Url    string `env:"DEEPSEEK_URL" envDefault:"https://api.deepseek.com"`
+	ApiKey string `env:"DEEPSEEK_API_KEY" envDefault:"N/A"`
+}
+
 type StripeConfig struct {
 	ApiKey string `env:"STRIPE_API_KEY" envDefault:"N/A"`
 }

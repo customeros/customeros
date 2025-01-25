@@ -61,6 +61,7 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 		}
 
 		// validate request
+
 		err = h.validateAIRequest(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -72,7 +73,7 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 		// call appropriate model
 
 		prompt := request.Prompt.GetData()
-		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, request.SystemPrompt, &prompt)
+		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, request.SystemPrompt, prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			message := "Unable to ask AI"

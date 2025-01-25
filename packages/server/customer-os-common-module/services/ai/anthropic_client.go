@@ -11,14 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 const (
