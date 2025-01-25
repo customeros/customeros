@@ -297,6 +297,7 @@ export const ContactDetails = observer(
                       variant='unstyled'
                       onFocus={(e) => e.target.select()}
                       dataTest='org-people-contact-title'
+                      onKeyDown={(e) => e.stopPropagation()}
                       value={contactDetails.getJobRole ?? ''}
                       onBlur={() => {
                         contactDetails.submitJobRole(id, orgId);
