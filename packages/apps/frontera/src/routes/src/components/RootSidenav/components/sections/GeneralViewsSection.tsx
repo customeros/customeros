@@ -6,12 +6,12 @@ import { TableViewDef } from '@store/TableViewDefs/TableViewDef.dto';
 import { cn } from '@ui/utils/cn.ts';
 import { TableIdType } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
-import { Users01 } from '@ui/media/icons/Users01';
-import { Invoice } from '@ui/media/icons/Invoice.tsx';
+import { Users02 } from '@ui/media/icons/Users02';
+import { Invoice } from '@ui/media/icons/Invoice';
+import { Signature } from '@ui/media/icons/Signature';
 import { Building07 } from '@ui/media/icons/Building07';
-import { Signature } from '@ui/media/icons/Signature.tsx';
+import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
-import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
 import { RootSidenavItem } from '@shared/components/RootSidenav/components/RootSidenavItem';
 
 import { CollapsibleSection } from '../CollapsibleSection';
@@ -103,7 +103,7 @@ export const GeneralViewsSection = observer(
                 preset: allContactsView?.value?.id ?? '',
               })}
               icon={(isActive) => (
-                <Users01
+                <Users02
                   className={cn(
                     'size-4 min-w-4 text-gray-500',
                     isActive && 'text-gray-700',

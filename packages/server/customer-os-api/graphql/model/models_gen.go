@@ -105,7 +105,6 @@ type AddTagInput struct {
 type Agent struct {
 	ID           string        `json:"id"`
 	Type         AgentType     `json:"type"`
-	Tenant       string        `json:"tenant"`
 	Name         string        `json:"name"`
 	Capabilities []*Capability `json:"capabilities"`
 	Goal         string        `json:"goal"`
@@ -122,15 +121,12 @@ type Agent struct {
 type AgentSaveInput struct {
 	ID           *string                `json:"id,omitempty"`
 	Type         *AgentType             `json:"type,omitempty"`
-	Tenant       *string                `json:"tenant,omitempty"`
 	Name         *string                `json:"name,omitempty"`
 	Capabilities []*CapabilitySaveInput `json:"capabilities,omitempty"`
 	Goal         *string                `json:"goal,omitempty"`
 	IsActive     *bool                  `json:"isActive,omitempty"`
 	FlowID       *string                `json:"flowId,omitempty"`
 	Visible      *bool                  `json:"visible,omitempty"`
-	CreatedAt    time.Time              `json:"createdAt"`
-	UpdatedAt    time.Time              `json:"updatedAt"`
 	Color        *string                `json:"color,omitempty"`
 	Icon         *string                `json:"icon,omitempty"`
 }
@@ -3298,18 +3294,22 @@ func (e CalendarType) MarshalGQL(w io.Writer) {
 type CapabilityType string
 
 const (
-	CapabilityTypeWebsiteTracker        CapabilityType = "WEBSITE_TRACKER"
-	CapabilityTypeSendSLACkNotification CapabilityType = "SEND_SLACK_NOTIFICATION"
+	CapabilityTypeIdentifyWebVisitor      CapabilityType = "IDENTIFY_WEB_VISITOR"
+	CapabilityTypeSendSLACkNotification   CapabilityType = "SEND_SLACK_NOTIFICATION"
+	CapabilityTypeCreateOrganization      CapabilityType = "CREATE_ORGANIZATION"
+	CapabilityTypeAnalyzeWebSessionIntent CapabilityType = "ANALYZE_WEB_SESSION_INTENT"
 )
 
 var AllCapabilityType = []CapabilityType{
-	CapabilityTypeWebsiteTracker,
+	CapabilityTypeIdentifyWebVisitor,
 	CapabilityTypeSendSLACkNotification,
+	CapabilityTypeCreateOrganization,
+	CapabilityTypeAnalyzeWebSessionIntent,
 }
 
 func (e CapabilityType) IsValid() bool {
 	switch e {
-	case CapabilityTypeWebsiteTracker, CapabilityTypeSendSLACkNotification:
+	case CapabilityTypeIdentifyWebVisitor, CapabilityTypeSendSLACkNotification, CapabilityTypeCreateOrganization, CapabilityTypeAnalyzeWebSessionIntent:
 		return true
 	}
 	return false

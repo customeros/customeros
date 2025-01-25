@@ -18,7 +18,9 @@ export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
 }) => {
   return (
     <div className='flex items-baseline mb-[-1px] mt-0 flex-1 overflow-visible'>
-      <span className='text-gray-700 font-semibold mr-1'>{entryType}:</span>
+      <span className='text-gray-700 font-semibold mr-1 text-sm'>
+        {entryType}:
+      </span>
       <EmailFormMultiCreatableSelect
         formId={formId}
         name={fieldName}

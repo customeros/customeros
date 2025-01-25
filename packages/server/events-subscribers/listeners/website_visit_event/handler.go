@@ -2,7 +2,6 @@ package website_visit_event
 
 import (
 	"context"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -71,6 +70,13 @@ func (h *WebsiteVisitEventHandler) Handle(ctx context.Context) error {
 	var errs error
 	for _, agent := range activeAgents {
 		err := h.route(ctx, agent)
+		// TODO uncoment for generic processing
+		//initialParams, err := utils.StructToMap(h.event)
+		//if err != nil {
+		//	tracing.TraceErr(span, err)
+		//	errs = multierr.Append(errs, err)
+		//}
+		//err = h.dependencies.CommonServices.AgentRunnerService.Run(ctx, agent, h.event.Type(), initialParams)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
@@ -98,11 +104,7 @@ func (h *WebsiteVisitEventHandler) route(ctx context.Context, agent postgres_ent
 	}
 
 	// run agent
-	agentType, err := enum.GetAgentType(agent.Type)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
+	agentType := agent.Type
 
 	switch agentType {
 	case enum.AgentVisitorID:
@@ -124,9 +126,6 @@ func (h *WebsiteVisitEventHandler) lookupActiveAgents(ctx context.Context) []pos
 	agents, err := h.dependencies.PostgresRepositories.AgentsRepository.FindAllFromAgentsList(ctx, h.subscribedAgents())
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil
-	}
-	if agents == nil {
 		return nil
 	}
 	return agents

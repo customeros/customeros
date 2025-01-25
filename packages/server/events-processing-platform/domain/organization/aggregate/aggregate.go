@@ -4,7 +4,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	organizationEvents "github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/model"
-	"github.com/customeros/customeros/packages/server/events/event/common"
 	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -42,8 +41,6 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 	switch event.GetEventType() {
 	case organizationEvents.OrganizationPhoneNumberLinkV1:
 		return a.onPhoneNumberLink(event)
-	case organizationEvents.OrganizationUpsertCustomFieldV1:
-		return a.onUpsertCustomField(event)
 	case organizationEvents.OrganizationCreateBillingProfileV1:
 		return a.onCreateBillingProfile(event)
 	case organizationEvents.OrganizationUpdateBillingProfileV1:
@@ -74,40 +71,6 @@ func (a *OrganizationAggregate) onPhoneNumberLink(event eventstore.Event) error 
 		Primary: eventData.Primary,
 	}
 	a.Organization.UpdatedAt = eventData.UpdatedAt
-	return nil
-}
-
-func (a *OrganizationAggregate) onUpsertCustomField(event eventstore.Event) error {
-	var eventData organizationEvents.OrganizationUpsertCustomField
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	if a.Organization.CustomFields == nil {
-		a.Organization.CustomFields = make(map[string]model.CustomField)
-	}
-
-	if val, ok := a.Organization.CustomFields[eventData.CustomFieldId]; ok {
-		val.Source.SourceOfTruth = eventData.SourceOfTruth
-		val.UpdatedAt = eventData.UpdatedAt
-		val.CustomFieldValue = eventData.CustomFieldValue
-		val.Name = eventData.CustomFieldName
-	} else {
-		a.Organization.CustomFields[eventData.CustomFieldId] = model.CustomField{
-			Source: common.Source{
-				Source:        eventData.Source,
-				SourceOfTruth: eventData.SourceOfTruth,
-				AppSource:     eventData.AppSource,
-			},
-			CreatedAt:           eventData.CreatedAt,
-			UpdatedAt:           eventData.UpdatedAt,
-			Id:                  eventData.CustomFieldId,
-			TemplateId:          eventData.TemplateId,
-			Name:                eventData.CustomFieldName,
-			CustomFieldDataType: model.CustomFieldDataType(eventData.CustomFieldDataType),
-			CustomFieldValue:    eventData.CustomFieldValue,
-		}
-	}
 	return nil
 }
 

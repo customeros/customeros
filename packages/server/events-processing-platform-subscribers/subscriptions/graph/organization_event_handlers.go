@@ -215,54 +215,6 @@ func getOrderForRenewalLikelihood(likelihood string) int64 {
 	}
 }
 
-func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnUpsertCustomField")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationUpsertCustomField
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-
-	customFieldExists, err := h.neo4j.CommonReadRepository.ExistsById(ctx, eventData.Tenant, eventData.CustomFieldId, commonmodel.NodeLabelCustomField)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Failed to check if custom field exists: %s", err.Error())
-		return err
-	}
-	if !customFieldExists {
-		data := neo4jrepository.CustomFieldCreateFields{
-			CreatedAt:           eventData.CreatedAt,
-			ExistsInEventStore:  eventData.ExistsInEventStore,
-			TemplateId:          eventData.TemplateId,
-			CustomFieldId:       eventData.CustomFieldId,
-			CustomFieldName:     eventData.CustomFieldName,
-			CustomFieldDataType: eventData.CustomFieldDataType,
-			CustomFieldValue:    eventData.CustomFieldValue,
-			SourceFields: neo4jmodel.SourceFields{
-				Source:        helper.GetSource(eventData.Source),
-				SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
-				AppSource:     helper.GetSource(eventData.AppSource),
-			},
-		}
-		err = h.neo4j.CustomFieldWriteRepository.AddCustomFieldToOrganization(ctx, eventData.Tenant, organizationId, data)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Failed to add custom field to organization: %s", err.Error())
-			return err
-		}
-	} else {
-		// TODO implement update custom field
-	}
-	h.events.Publisher.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
-}
-
 type ActionOnboardingStatusMetadata struct {
 	Status     string `json:"status"`
 	Comments   string `json:"comments"`

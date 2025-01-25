@@ -10,13 +10,11 @@ import (
 
 // CommandHandlers acts as a container for all command handlers.
 type CommandHandlers struct {
-	UpsertCustomFieldCommand UpsertCustomFieldCommandHandler
-	RefreshArr               RefreshArrCommandHandler
+	RefreshArr RefreshArrCommandHandler
 }
 
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore, ebs *eventbuffer.EventBufferStoreService) *CommandHandlers {
 	return &CommandHandlers{
-		UpsertCustomFieldCommand: NewUpsertCustomFieldCommandHandler(log, es),
-		RefreshArr:               NewRefreshArrCommandHandler(log, es, cfg.Utils),
+		RefreshArr: NewRefreshArrCommandHandler(log, es, cfg.Utils),
 	}
 }

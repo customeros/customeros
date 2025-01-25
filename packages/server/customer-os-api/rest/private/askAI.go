@@ -1,6 +1,8 @@
 package private
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -30,8 +32,12 @@ func NewAskAIHandler(services *cosapi_services.Services, responseHandler *respon
 type AskAIRequest struct {
 	Model        string             `json:"model"`
 	SystemPrompt *string            `json:"systemPrompt,omitempty"`
-	Prompt       any                `json:"prompt"`
+	Prompt       PromptContent      `json:"prompt"`
 	AIModel      commonEnum.AIModel `json:"-"`
+}
+
+type PromptContent struct {
+	Data any `json:"data,omitempty"`
 }
 
 type AskAIResponse struct {
@@ -54,8 +60,9 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 			return
 		}
 
-		//validate request
-		err = h.validateAIRequest(request)
+		// validate request
+
+		err = h.validateAIRequest(ctx, request)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			message := err.Error()
@@ -64,7 +71,9 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 		}
 
 		// call appropriate model
-		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, request.SystemPrompt, &request.Prompt)
+
+		prompt := request.Prompt.GetData()
+		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, request.SystemPrompt, prompt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			message := "Unable to ask AI"
@@ -89,6 +98,7 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 func (h *AskAIHandler) parseRequest(c *gin.Context) (*AskAIRequest, error) {
 	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "parseRequest")
 	defer span.Finish()
+	tracing.TagComponentRest(span)
 
 	var request AskAIRequest
 	err := c.BindJSON(&request)
@@ -96,6 +106,7 @@ func (h *AskAIHandler) parseRequest(c *gin.Context) (*AskAIRequest, error) {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	tracing.LogObjectAsJson(span, "request", request)
 
 	aiModel, err := commonEnum.GetAIModel(request.Model)
 	if err != nil {
@@ -109,12 +120,16 @@ func (h *AskAIHandler) parseRequest(c *gin.Context) (*AskAIRequest, error) {
 	return &request, nil
 }
 
-func (h *AskAIHandler) validateAIRequest(req *AskAIRequest) error {
+func (h *AskAIHandler) validateAIRequest(ctx context.Context, req *AskAIRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "validateAIRequest")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
 	if req.Model == "" {
 		return fmt.Errorf("model is required")
 	}
 
-	switch v := req.Prompt.(type) {
+	switch v := req.Prompt.GetData().(type) {
 	case string:
 		if strings.TrimSpace(v) == "" {
 			return fmt.Errorf("prompt cannot be empty")
@@ -128,4 +143,21 @@ func (h *AskAIHandler) validateAIRequest(req *AskAIRequest) error {
 	}
 
 	return nil
+}
+
+func (p *PromptContent) UnmarshalJSON(b []byte) error {
+	var data any
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+	p.Data = data
+	return nil
+}
+
+func (p PromptContent) GetData() any {
+	return p.Data
+}
+
+func (p PromptContent) MarshalJSON() ([]byte, error) {
+	return json.Marshal(p.Data)
 }

@@ -5,9 +5,6 @@ import (
 	"log"
 	"reflect"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/quickbooks"
-
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
@@ -18,6 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/action"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/ai"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/attachment"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/azure"
@@ -57,6 +55,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/organization"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/phone_number"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/postmark"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/quickbooks"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/registration"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/reminders"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/service_line_item"
@@ -134,9 +133,10 @@ type CommonServices struct {
 	WorkspaceService           interfaces.WorkspaceService
 
 	// Agents
-	AgentCapabilities *agent_capability.AgentCapabilities
-	SupportAgent      *agent.SupportAgent
-	VisitorIDAgent    *agent.VisitorIDAgent
+	AgentCapabilities     *agent_capability.AgentCapabilities
+	AgentVisitorIDService *agent.VisitorIDAgent
+	AgentRunnerService    *agent.AgentRunnerService
+	SupportAgent          *agent.SupportAgent
 }
 
 type InitOptions struct {
@@ -166,7 +166,7 @@ func InitCommonServices(
 
 	// Simple - Services that depend only on base services
 	agentImpl := agent.NewAgentService(postgresRepositories)
-	aiImpl := ai.NewAIService(log, &cfg.External.AnthropicConfig)
+	aiImpl := ai.NewAIService(log, &cfg.External.AnthropicConfig, &cfg.External.DeepseekConfig)
 	attachmentImpl := attachment.NewAttachmentService(neo4jRepositories)
 	azureImpl := azure.NewAzureService(&cfg.Infrastructure.AzureOAuthConfig, postgresRepositories, neo4jRepositories)
 	cloudfareImpl := cloudflare.NewCloudflareService(log, &cfg.External.CloudflareConfig, postgresRepositories)
@@ -249,6 +249,7 @@ func InitCommonServices(
 	// initialize agents
 	agentVisitorIDImpl := agent.NewVisitorIDAgent(postgresRepositories, capabilityImpl, agentImpl, workspaceImpl)
 	supportAgentImpl := agent.NewSupportAgent()
+	agentRunnerImpl := agent.NewAgentRunnerService(postgresRepositories, capabilityImpl, agentImpl)
 
 	// Initialize CommonServices struct
 	common := CommonServices{
@@ -314,9 +315,10 @@ func InitCommonServices(
 		WorkspaceService:           workspaceImpl,
 
 		// Agents
-		AgentCapabilities: capabilityImpl,
-		SupportAgent:      supportAgentImpl,
-		VisitorIDAgent:    agentVisitorIDImpl,
+		AgentCapabilities:     capabilityImpl,
+		AgentVisitorIDService: agentVisitorIDImpl,
+		SupportAgent:          supportAgentImpl,
+		AgentRunnerService:    agentRunnerImpl,
 	}
 
 	// Check that all services are initialized

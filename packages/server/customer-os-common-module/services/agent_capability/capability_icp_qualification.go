@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -14,6 +15,18 @@ type ICPQualificationCapability struct {
 	aiService            interfaces.AIService
 }
 
+func (c *ICPQualificationCapability) GetInput() any {
+	return &ICPQualificationInput{}
+}
+
+func (c *ICPQualificationCapability) GetConfig() any {
+	return &NoConfig{}
+}
+
+func (c *ICPQualificationCapability) GetOutput() any {
+	return &ICPQualificationResult{}
+}
+
 func NewICPQualificationCapability(postgres *postgres_repository.Repositories, aiService interfaces.AIService) *ICPQualificationCapability {
 	return &ICPQualificationCapability{
 		postgresRepositories: postgres,
@@ -22,17 +35,20 @@ func NewICPQualificationCapability(postgres *postgres_repository.Repositories, a
 }
 
 // Compile-time interface check
-var _ interfaces.AgentCapabilityExecution[ICPQualificationInput, ICPQualificationResult] = (*ICPQualificationCapability)(nil)
+var (
+	_ interfaces.AgentCapabilityExecution[ICPQualificationInput, ICPQualificationResult, NoConfig] = (*ICPQualificationCapability)(nil)
+	_ interfaces.AgentCapabilityUntyped                                                            = (*ICPQualificationCapability)(nil)
+)
 
 type ICPQualificationInput struct {
-	ICPDefinition string
-	PrimaryDomain string
+	ICPDefinition string `json:"icpDefinition"`
+	PrimaryDomain string `json:"primaryDomain"`
 }
 
 type ICPQualificationResult struct {
 }
 
-func (c *ICPQualificationCapability) Execute(ctx context.Context, data ICPQualificationInput) (ICPQualificationResult, error) {
+func (c *ICPQualificationCapability) Execute(ctx context.Context, data ICPQualificationInput, config NoConfig) (ICPQualificationResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.executeICPQualification")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -55,4 +71,20 @@ func (c *ICPQualificationCapability) Execute(ctx context.Context, data ICPQualif
 	// disqualify as lead if not a fit
 
 	return ICPQualificationResult{}, nil
+}
+
+// ExecuteUntyped implements the AgentCapabilityUntyped interface.
+// It casts the generic input and config to the specific types and delegates to the typed Execute method.
+func (c *ICPQualificationCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
+	typedInput, ok := input.(*ICPQualificationInput)
+	if !ok {
+		return nil, fmt.Errorf("invalid input type: expected ICPQualificationInput")
+	}
+
+	typedConfig, ok := config.(*NoConfig)
+	if !ok {
+		return nil, fmt.Errorf("invalid config type: expected NoCOnfig")
+	}
+
+	return c.Execute(ctx, *typedInput, *typedConfig)
 }
