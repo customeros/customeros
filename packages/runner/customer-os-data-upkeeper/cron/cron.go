@@ -1,9 +1,9 @@
 package cron
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"sync"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/robfig/cron"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/container"
@@ -162,6 +162,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleMailstackReputation, GroupMailstack, checkMailstackDomainReputation, "checkMailstackDomainReputation")
 	addJob(cont.Cfg.App.Cron.CronScheduleSendOrganizationsReminders, GroupReminder, sendReminders, "sendReminders")
 	addJob(cont.Cfg.App.Cron.CronScheduleProcessWebSessions, GroupWebSession, processWebSessions, "processWebSessions")
+	addJob(cont.Cfg.App.Cron.CronScheduleAnalyzeWebSessionIntent, GroupWebSession, analyzeWebSessionIntent, "analyzeWebSessionIntent")
 }
 
 // HELPER FUNCTIONS
@@ -334,6 +335,10 @@ func sendReminders(cont *container.Container) {
 
 func processWebSessions(cont *container.Container) {
 	service.NewWebSessionService(cont.Cfg, cont.Log, cont.CommonServices).ProcessWebSessions()
+}
+
+func analyzeWebSessionIntent(cont *container.Container) {
+	service.NewWebSessionService(cont.Cfg, cont.Log, cont.CommonServices).ProcessIntentSignals()
 }
 
 func syncGlobalOrgsToTenantOrganizations(cont *container.Container) {

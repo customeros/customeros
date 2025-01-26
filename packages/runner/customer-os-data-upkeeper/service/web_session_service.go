@@ -3,11 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"sort"
 	"strings"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -20,10 +19,12 @@ import (
 	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 )
 
 type WebSesssionService interface {
+	ProcessIntentSignals()
 	ProcessWebSessions()
 }
 
@@ -88,6 +89,33 @@ func (s *webSessionService) ProcessWebSessions() {
 	return
 }
 
+func (s *webSessionService) ProcessIntentSignals() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.ProcessWebSessions")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	// find closed events that have not been analyzed for intent
+	sessions, err := s.commonServices.PostgresRepositories.WebSessionRepository.FindAllSessionsForIntentAnalysis(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	if len(sessions) == 0 {
+		return
+	}
+
+	for _, session := range sessions {
+		err := s.commonServices.WebVisitProcessor.Process(ctx, session)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
+}
+
 func (s *webSessionService) findTimedOutPageExitEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionService.findTimedOutPageExitEvents")
 	defer span.Finish()
@@ -98,7 +126,7 @@ func (s *webSessionService) findTimedOutPageExitEvents(ctx context.Context) ([]p
 		LastEventType: enum.WebTrackerPageExit.String(),
 		IsActive:      true,
 	}
-	return s.commonServices.PostgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, &lookback)
+	return s.commonServices.PostgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, &lookback)
 }
 
 func (s *webSessionService) findTimedOutPageViewEvents(ctx context.Context) ([]postgres_entity.WebSession, error) {
@@ -111,7 +139,7 @@ func (s *webSessionService) findTimedOutPageViewEvents(ctx context.Context) ([]p
 		LastEventType: enum.WebTrackerPageView.String(),
 		IsActive:      true,
 	}
-	return s.commonServices.PostgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, &lookback)
+	return s.commonServices.PostgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, &lookback)
 }
 
 func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgres_entity.WebSession) error {
@@ -182,12 +210,6 @@ func (s *webSessionService) processClosedSession(ctx context.Context, session po
 		return err
 	}
 
-	err = s.findSupportVisits(ctx, session.Tenant, session.ID, session.UniquePageViews)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	return nil
 }
 
@@ -238,10 +260,7 @@ func (c *webSessionService) processUniquePageViews(ctx context.Context, tenant, 
 	// Use map to track unique pages
 	uniquePageMap := make(map[string]struct{})
 	for _, page := range session {
-		url := utils.CleanUrlBasePath(page.Hostname)
-		if page.Pathname != "" {
-			url = strings.TrimSuffix(fmt.Sprintf("%s/%s", utils.CleanUrlBasePath(page.Hostname), utils.CleanUrlBasePath(page.Pathname)), "/")
-		}
+		url := c.extractPageUrl(page)
 		uniquePageMap[url] = struct{}{}
 	}
 
@@ -251,14 +270,7 @@ func (c *webSessionService) processUniquePageViews(ctx context.Context, tenant, 
 		uniquePages = append(uniquePages, pathname)
 	}
 
-	sort.Slice(uniquePages, func(i, j int) bool {
-		// If lengths are different, sort by length
-		if len(uniquePages[i]) != len(uniquePages[j]) {
-			return len(uniquePages[i]) < len(uniquePages[j])
-		}
-		// If lengths are equal, sort alphabetically
-		return uniquePages[i] < uniquePages[j]
-	})
+	uniquePages = c.sortUrlsByLength(uniquePages)
 
 	// strore in db
 	_, err = c.commonServices.PostgresRepositories.WebSessionRepository.UpdateSessionPageViews(ctx, sessionID, tenant, uniquePages)
@@ -270,49 +282,24 @@ func (c *webSessionService) processUniquePageViews(ctx context.Context, tenant, 
 	return nil
 }
 
-func (s *webSessionService) findSupportVisits(ctx context.Context, tenant, sessionID string, pageViews []string) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.findSupportVisits")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	var errs error
-	for _, page := range pageViews {
-		if !strings.Contains(page, "support") {
-			continue
+func (c *webSessionService) sortUrlsByLength(urls []string) []string {
+	sort.Slice(urls, func(i, j int) bool {
+		// If lengths are different, sort by length
+		if len(urls[i]) != len(urls[j]) {
+			return len(urls[i]) < len(urls[j])
 		}
-		err := s.processSupportVisit(ctx, tenant, sessionID, page)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			errs = multierr.Append(errs, err)
-		}
-	}
-
-	return errs
+		// If lengths are equal, sort alphabetically
+		return urls[i] < urls[j]
+	})
+	return urls
 }
 
-func (s *webSessionService) processSupportVisit(ctx context.Context, tenant, sessionID, pageView string) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.processSupportVisit")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	supportVisit := dto.SupportEvent{
-		Tenant:       tenant,
-		WebSessionID: sessionID,
-		Source:       dto.SupportWebVisit,
+func (c *webSessionService) extractPageUrl(page postgres_entity.WebTrackerEvents) string {
+	url := utils.CleanUrlBasePath(page.Hostname)
+	if page.Pathname != "" {
+		url = strings.TrimSuffix(fmt.Sprintf("%s/%s",
+			utils.CleanUrlBasePath(page.Hostname),
+			utils.CleanUrlBasePath(page.Pathname)), "/")
 	}
-
-	event := dto.WebhookEvent{
-		ExternalSystemId: enum.SourceAgent,
-		Name:             enum.EventRevealWebsiteVisit,
-		DataType:         supportVisit.Type(),
-		Data:             &supportVisit,
-	}
-
-	err := s.commonServices.Events.Publisher.PublishWebhookEvent(ctx, event)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	return nil
+	return url
 }

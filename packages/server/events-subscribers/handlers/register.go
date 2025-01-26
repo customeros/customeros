@@ -7,12 +7,12 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
+
 	"github.com/customeros/customeros/packages/server/events-subscribers/listeners"
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
 
 func InitHandlerRegistration(eventsService *events.EventsService, dependencies *model.DependencyContainer) {
-
 	// Register Flow handlers
 	eventsService.Subscriber.RegisterHandler(dto.FlowOn{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
@@ -142,4 +142,12 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 		DataType:  reflect.TypeOf(dto.FlowAgentEvent{}),
 	})
 
+	// Intent Handlers
+	eventsService.Subscriber.RegisterHandler(dto.IntentEvent{}, interfaces.EventHandler{
+		HandlerFunc: func(ctx context.Context, event any) error {
+			return listeners.OnIntentEventCreated(ctx, dependencies, event)
+		},
+		EventType: reflect.TypeOf(dto.IntentEvent{}).Name(),
+		DataType:  reflect.TypeOf(dto.IntentEvent{}),
+	})
 }

@@ -1,8 +1,9 @@
 package postgres_entity
 
 import (
-	"github.com/lib/pq"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 type WebSession struct {
@@ -23,6 +24,7 @@ type WebSession struct {
 	DetectedExit          bool           `gorm:"column:detected_exit;type:boolean;default:false" json:"detectedExit"`
 	PublishedEvent        bool           `gorm:"column:published_event;type:boolean;default:false" json:"publishedEvent"`
 	SentSlackNotification *time.Time     `gorm:"column:sent_slack_notification;type:timestamp;" json:"sentSlackNotification"`
+	IntentSignals         int8           `gorm:"column:intent_signals;type:smallint;default:0" json:"intentSignals"`
 	CreatedAt             time.Time      `gorm:"default:CURRENT_TIMESTAMP"`
 }
 

@@ -8,7 +8,7 @@ type FlowAgentEvent struct {
 	FlowExecutionId  string
 	Tenant           string
 	ExternalSystemId enum.Source
-	SourceEvent      enum.FlowListenerEvent
+	SourceEvent      enum.AgentListenerEvent
 	Name             enum.FlowAgent
 	DataType         string
 	Data             any

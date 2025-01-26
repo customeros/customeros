@@ -32,6 +32,7 @@ const (
 	SourceStripe         Source = "stripe"
 	SourceUnthread       Source = "unthread"
 	SourceWebscrape      Source = "webscrape"
+	SourceWebtracker     Source = "webtracker"
 	SourceZendeskSell    Source = "zendesk-sell"
 	SourceZendeskSupport Source = "zendesk_support"
 )

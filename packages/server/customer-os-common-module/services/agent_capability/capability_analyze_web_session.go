@@ -238,7 +238,7 @@ func (c *AnalyzeWebSessionCapability) isNewCompanyVisit(ctx context.Context, dom
 	}
 	span.LogKV("isActive", "false")
 
-	results, err := c.postgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, nil)
+	results, err := c.postgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
@@ -272,7 +272,7 @@ func (c *AnalyzeWebSessionCapability) isNewWebsiteVisitor(ctx context.Context, v
 		IsActive:  false,
 	}
 
-	results, err := c.postgresRepositories.WebSessionRepository.FindAllSessions(ctx, query, nil)
+	results, err := c.postgresRepositories.WebSessionRepository.FindAllActiveSessions(ctx, query, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err

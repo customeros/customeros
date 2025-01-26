@@ -40,7 +40,7 @@ func (w *workflowService) SaveFlow(ctx context.Context, flowRecord postgres_enti
 	return w.postgres.FlowsRepository.Update(ctx, flowRecord)
 }
 
-func (w *workflowService) GetFlowsByTrigger(ctx context.Context, listenerEvent enum.FlowListenerEvent) ([]postgres_entity.Flows, error) {
+func (w *workflowService) GetFlowsByTrigger(ctx context.Context, listenerEvent enum.AgentListenerEvent) ([]postgres_entity.Flows, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkflowService.GetFlowsByTrigger")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -110,7 +110,7 @@ func (w *workflowService) GetNextStepInFlow(ctx context.Context, flowId string, 
 	return nextStep, nil
 }
 
-func (w *workflowService) GetFlowsForListenerEvent(ctx context.Context, sourceEvent enum.FlowListenerEvent, eventType string, eventData any) ([]postgres_entity.Flows, error) {
+func (w *workflowService) GetFlowsForListenerEvent(ctx context.Context, sourceEvent enum.AgentListenerEvent, eventType string, eventData any) ([]postgres_entity.Flows, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.getFlowsForEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
