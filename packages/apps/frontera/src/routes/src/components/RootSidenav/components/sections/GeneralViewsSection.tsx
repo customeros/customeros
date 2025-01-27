@@ -126,7 +126,7 @@ export const GeneralViewsSection = observer(
             />
             {showInvoices && upcomingInvoices && (
               <RootSidenavItem
-                label='Invoices sal'
+                label='Invoices'
                 id={upcomingInvoices.value.id}
                 key={upcomingInvoices.value.id}
                 dataTest={`side-nav-item-${upcomingInvoices.value.name}`}
