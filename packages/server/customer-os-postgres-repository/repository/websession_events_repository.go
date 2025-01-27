@@ -104,6 +104,7 @@ func (r *webSessionEventsRepository) FindAllSessionsForIntentAnalysis(ctx contex
 		Where("intent_signals = ?", IntentNotAnalyzed).
 		Where("is_active = ?", false).
 		Where("domain IS NOT NULL AND domain != ''").
+		Where("unique_page_views IS NOT NULL AND array_length(unique_page_views, 1) > 0").
 		Order("created_at DESC").
 		Find(&results).
 		Error
