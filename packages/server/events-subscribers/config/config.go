@@ -19,25 +19,26 @@ type AppConfig struct {
 }
 
 type CommonConfig struct {
-	Logger        logger.Config
-	Jaeger        tracing.JaegerConfig
-	Postgres      commonconf.PostgresConfig
-	PostgresAsync commonconf.PostgresAsyncConfig
-	Neo4j         commonconf.Neo4jConfig
-	RabbitMQ      commonconf.RabbitMQConfig
-	GrpcClient    commonconf.GrpcClientConfig
-	MailSherpaApi commonconf.MailSherpaApiConfig
-	BetterContact commonconf.BetterContactConfig
-	Scrapin       commonconf.ScrapinConfig
-	Snitcher      commonconf.SnitcherConfig
-	Anthropic     commonconf.AnthropicConfig
-	Novu          commonconf.NovuConfig
-	Namecheap     commonconf.NamecheapConfig
-	OpenSrs       commonconf.OpenSRSConfig
-	Cloudflare    commonconf.CloudflareConfig
-	TrueInbox     commonconf.TrueInboxConfig
-	Brandfetch    commonconf.BrandfetchConfig
-	Enrow         commonconf.EnrowConfig
+	Logger           logger.Config
+	Jaeger           tracing.JaegerConfig
+	Postgres         commonconf.PostgresConfig
+	PostgresAsync    commonconf.PostgresAsyncConfig
+	Neo4j            commonconf.Neo4jConfig
+	RabbitMQ         commonconf.RabbitMQConfig
+	GrpcClient       commonconf.GrpcClientConfig
+	MailSherpaApi    commonconf.MailSherpaApiConfig
+	BetterContact    commonconf.BetterContactConfig
+	Scrapin          commonconf.ScrapinConfig
+	Snitcher         commonconf.SnitcherConfig
+	Anthropic        commonconf.AnthropicConfig
+	Novu             commonconf.NovuConfig
+	Namecheap        commonconf.NamecheapConfig
+	OpenSrs          commonconf.OpenSRSConfig
+	Cloudflare       commonconf.CloudflareConfig
+	TrueInbox        commonconf.TrueInboxConfig
+	Brandfetch       commonconf.BrandfetchConfig
+	Enrow            commonconf.EnrowConfig
+	QuickbooksConfig commonconf.QuickbooksConfig
 }
 
 func Load() *Config {
@@ -79,6 +80,7 @@ func Load() *Config {
 			TrueInboxConfig:     cmnCfg.TrueInbox,
 			BrandfetchConfig:    cmnCfg.Brandfetch,
 			EnrowConfig:         cmnCfg.Enrow,
+			QuickbooksConfig:    cmnCfg.QuickbooksConfig,
 		},
 	}
 

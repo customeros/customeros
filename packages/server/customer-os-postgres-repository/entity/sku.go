@@ -9,6 +9,9 @@ type SkuEntity struct {
 	Tenant    string    `gorm:"column:tenant;type:varchar(255);not null" json:"tenant" binding:"required"`
 	Name      string    `gorm:"column:name;type:varchar(255);not null" json:"name" binding:"required"`
 	Price     float64   `gorm:"column:price;type:decimal(10,2);not null" json:"price" binding:"required"`
+	Archived  bool      `gorm:"column:archived;type:boolean;default:false" json:"archived"`
+
+	QuickbooksId string `gorm:"column:quickbooks_id;type:varchar(255)" json:"quickbooksId"`
 }
 
 func (SkuEntity) TableName() string {

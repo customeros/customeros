@@ -40,6 +40,7 @@ const (
 	WEBHOOK_EVENT            EntityType = "WEBHOOK"
 	LOCATION                 EntityType = "LOCATION"
 	JOB_ROLE                 EntityType = "JOB_ROLE"
+	SKU                      EntityType = "SKU"
 )
 
 func (entityType EntityType) String() string {
