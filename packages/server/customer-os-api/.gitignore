@@ -2,3 +2,4 @@
 bin/
 customer-os-api
 tmp-sources
+.envrc
