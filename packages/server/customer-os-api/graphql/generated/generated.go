@@ -1195,7 +1195,7 @@ type ComplexityRoot struct {
 		RemoveTag                                  func(childComplexity int, input model.RemoveTagInput) int
 		ServiceLineItemBulkUpdate                  func(childComplexity int, input model.ServiceLineItemBulkUpdateInput) int
 		ServiceLineItemDelete                      func(childComplexity int, id string) int
-		SkuDelete                                  func(childComplexity int, id string) int
+		SkuArchive                                 func(childComplexity int, id string) int
 		SkuSave                                    func(childComplexity int, input model.SkuInput) int
 		SocialRemove                               func(childComplexity int, socialID string) int
 		SocialUpdate                               func(childComplexity int, input model.SocialUpdateInput) int
@@ -2081,7 +2081,7 @@ type MutationResolver interface {
 	ServiceLineItemDelete(ctx context.Context, id string) (*model.DeleteResponse, error)
 	ServiceLineItemBulkUpdate(ctx context.Context, input model.ServiceLineItemBulkUpdateInput) ([]string, error)
 	SkuSave(ctx context.Context, input model.SkuInput) (*model.Sku, error)
-	SkuDelete(ctx context.Context, id string) (*model.Result, error)
+	SkuArchive(ctx context.Context, id string) (*model.Result, error)
 	SocialUpdate(ctx context.Context, input model.SocialUpdateInput) (*model.Social, error)
 	SocialRemove(ctx context.Context, socialID string) (*model.Result, error)
 	TagCreate(ctx context.Context, input model.TagInput) (*model.Tag, error)
@@ -9002,17 +9002,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.ServiceLineItemDelete(childComplexity, args["id"].(string)), true
 
-	case "Mutation.sku_Delete":
-		if e.complexity.Mutation.SkuDelete == nil {
+	case "Mutation.sku_Archive":
+		if e.complexity.Mutation.SkuArchive == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_sku_Delete_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_sku_Archive_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SkuDelete(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.SkuArchive(childComplexity, args["id"].(string)), true
 
 	case "Mutation.sku_Save":
 		if e.complexity.Mutation.SkuSave == nil {
@@ -16690,7 +16690,7 @@ input TaxInput {
 
 extend type Mutation {
     sku_Save(input: SkuInput!): Sku! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    sku_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    sku_Archive(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 input SkuInput {
@@ -23762,17 +23762,17 @@ func (ec *executionContext) field_Mutation_serviceLineItem_Delete_argsID(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Mutation_sku_Delete_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+func (ec *executionContext) field_Mutation_sku_Archive_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Mutation_sku_Delete_argsID(ctx, rawArgs)
+	arg0, err := ec.field_Mutation_sku_Archive_argsID(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
 	args["id"] = arg0
 	return args, nil
 }
-func (ec *executionContext) field_Mutation_sku_Delete_argsID(
+func (ec *executionContext) field_Mutation_sku_Archive_argsID(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (string, error) {
@@ -77459,8 +77459,8 @@ func (ec *executionContext) fieldContext_Mutation_sku_Save(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_sku_Delete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_sku_Delete(ctx, field)
+func (ec *executionContext) _Mutation_sku_Archive(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_sku_Archive(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -77474,7 +77474,7 @@ func (ec *executionContext) _Mutation_sku_Delete(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		directive0 := func(rctx context.Context) (any, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().SkuDelete(rctx, fc.Args["id"].(string))
+			return ec.resolvers.Mutation().SkuArchive(rctx, fc.Args["id"].(string))
 		}
 
 		directive1 := func(ctx context.Context) (any, error) {
@@ -77524,7 +77524,7 @@ func (ec *executionContext) _Mutation_sku_Delete(ctx context.Context, field grap
 	return ec.marshalNResult2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_sku_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_sku_Archive(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -77545,7 +77545,7 @@ func (ec *executionContext) fieldContext_Mutation_sku_Delete(ctx context.Context
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_sku_Delete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_sku_Archive_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -126107,9 +126107,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "sku_Delete":
+		case "sku_Archive":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_sku_Delete(ctx, field)
+				return ec._Mutation_sku_Archive(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

@@ -4,7 +4,7 @@ extend type Query {
 
 extend type Mutation {
     sku_Save(input: SkuInput!): Sku! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    sku_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    sku_Archive(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 input SkuInput {
