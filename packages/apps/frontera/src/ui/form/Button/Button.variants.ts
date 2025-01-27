@@ -15,6 +15,7 @@ export const iconVariant = cva('', {
       ghost: [],
     },
     colorScheme: {
+      white: [],
       primary: [],
       gray: [],
       grayBlue: [],
@@ -41,6 +42,12 @@ export const iconVariant = cva('', {
     },
   },
   compoundVariants: [
+    {
+      size: 'xxs',
+      variant: 'solid',
+      colorScheme: 'white',
+      className: ['w-3 h-3', 'text-white'],
+    },
     {
       size: 'xxs',
       variant: 'solid',
@@ -178,6 +185,12 @@ export const iconVariant = cva('', {
       variant: 'solid',
       colorScheme: 'pink',
       className: ['w-3 h-3', 'text-white'],
+    },
+    {
+      size: 'xxs',
+      variant: 'outline',
+      colorScheme: 'white',
+      className: ['w-3 h-3', 'text-white-600'],
     },
     {
       size: 'xxs',
@@ -320,6 +333,12 @@ export const iconVariant = cva('', {
     {
       size: 'xxs',
       variant: 'link',
+      colorScheme: 'white',
+      className: ['w-3 h-3', 'text-white-700'],
+    },
+    {
+      size: 'xxs',
+      variant: 'link',
       colorScheme: 'primary',
       className: ['w-3 h-3', 'text-primary-700'],
     },
@@ -458,6 +477,12 @@ export const iconVariant = cva('', {
     {
       size: 'xxs',
       variant: 'ghost',
+      colorScheme: 'white',
+      className: ['w-3 h-3', 'text-white-700'],
+    },
+    {
+      size: 'xxs',
+      variant: 'ghost',
       colorScheme: 'primary',
       className: ['w-3 h-3', 'text-primary-700'],
     },
@@ -596,6 +621,12 @@ export const iconVariant = cva('', {
     {
       size: 'xs',
       variant: 'solid',
+      colorScheme: 'white',
+      className: ['w-4 h-4', 'text-white'],
+    },
+    {
+      size: 'xs',
+      variant: 'solid',
       colorScheme: 'primary',
       className: ['w-4 h-4', 'text-white'],
     },
@@ -730,6 +761,12 @@ export const iconVariant = cva('', {
       variant: 'solid',
       colorScheme: 'pink',
       className: ['w-4 h-4', 'text-white'],
+    },
+    {
+      size: 'xs',
+      variant: 'outline',
+      colorScheme: 'white',
+      className: ['w-4 h-4', 'text-white-600'],
     },
     {
       size: 'xs',
@@ -872,6 +909,12 @@ export const iconVariant = cva('', {
     {
       size: 'xs',
       variant: 'link',
+      colorScheme: 'white',
+      className: ['w-4 h-4', 'text-white-700'],
+    },
+    {
+      size: 'xs',
+      variant: 'link',
       colorScheme: 'primary',
       className: ['w-4 h-4', 'text-primary-700'],
     },
@@ -1010,6 +1053,12 @@ export const iconVariant = cva('', {
     {
       size: 'xs',
       variant: 'ghost',
+      colorScheme: 'white',
+      className: ['w-4 h-4', 'text-white-700'],
+    },
+    {
+      size: 'xs',
+      variant: 'ghost',
       colorScheme: 'primary',
       className: ['w-4 h-4', 'text-primary-700'],
     },
@@ -1148,6 +1197,12 @@ export const iconVariant = cva('', {
     {
       size: 'sm',
       variant: 'solid',
+      colorScheme: 'white',
+      className: ['w-5 h-5', 'text-white'],
+    },
+    {
+      size: 'sm',
+      variant: 'solid',
       colorScheme: 'primary',
       className: ['w-5 h-5', 'text-white'],
     },
@@ -1282,6 +1337,12 @@ export const iconVariant = cva('', {
       variant: 'solid',
       colorScheme: 'pink',
       className: ['w-5 h-5', 'text-white'],
+    },
+    {
+      size: 'sm',
+      variant: 'outline',
+      colorScheme: 'white',
+      className: ['w-5 h-5', 'text-white-600'],
     },
     {
       size: 'sm',
@@ -1424,6 +1485,12 @@ export const iconVariant = cva('', {
     {
       size: 'sm',
       variant: 'link',
+      colorScheme: 'white',
+      className: ['w-5 h-5', 'text-white-700'],
+    },
+    {
+      size: 'sm',
+      variant: 'link',
       colorScheme: 'primary',
       className: ['w-5 h-5', 'text-primary-700'],
     },
@@ -1562,6 +1629,12 @@ export const iconVariant = cva('', {
     {
       size: 'sm',
       variant: 'ghost',
+      colorScheme: 'white',
+      className: ['w-5 h-5', 'text-white-700'],
+    },
+    {
+      size: 'sm',
+      variant: 'ghost',
       colorScheme: 'primary',
       className: ['w-5 h-5', 'text-primary-700'],
     },
@@ -1700,6 +1773,12 @@ export const iconVariant = cva('', {
     {
       size: 'md',
       variant: 'solid',
+      colorScheme: 'white',
+      className: ['w-5 h-5', 'text-white'],
+    },
+    {
+      size: 'md',
+      variant: 'solid',
       colorScheme: 'primary',
       className: ['w-5 h-5', 'text-white'],
     },
@@ -1834,6 +1913,12 @@ export const iconVariant = cva('', {
       variant: 'solid',
       colorScheme: 'pink',
       className: ['w-5 h-5', 'text-white'],
+    },
+    {
+      size: 'md',
+      variant: 'outline',
+      colorScheme: 'white',
+      className: ['w-5 h-5', 'text-white-600'],
     },
     {
       size: 'md',
@@ -1976,6 +2061,12 @@ export const iconVariant = cva('', {
     {
       size: 'md',
       variant: 'link',
+      colorScheme: 'white',
+      className: ['w-5 h-5', 'text-white-700'],
+    },
+    {
+      size: 'md',
+      variant: 'link',
       colorScheme: 'primary',
       className: ['w-5 h-5', 'text-primary-700'],
     },
@@ -2114,6 +2205,12 @@ export const iconVariant = cva('', {
     {
       size: 'md',
       variant: 'ghost',
+      colorScheme: 'white',
+      className: ['w-5 h-5', 'text-white-700'],
+    },
+    {
+      size: 'md',
+      variant: 'ghost',
       colorScheme: 'primary',
       className: ['w-5 h-5', 'text-primary-700'],
     },
@@ -2252,6 +2349,12 @@ export const iconVariant = cva('', {
     {
       size: 'lg',
       variant: 'solid',
+      colorScheme: 'white',
+      className: ['w-6 h-6', 'text-white'],
+    },
+    {
+      size: 'lg',
+      variant: 'solid',
       colorScheme: 'primary',
       className: ['w-6 h-6', 'text-white'],
     },
@@ -2386,6 +2489,12 @@ export const iconVariant = cva('', {
       variant: 'solid',
       colorScheme: 'pink',
       className: ['w-6 h-6', 'text-white'],
+    },
+    {
+      size: 'lg',
+      variant: 'outline',
+      colorScheme: 'white',
+      className: ['w-6 h-6', 'text-white-600'],
     },
     {
       size: 'lg',
@@ -2528,6 +2637,12 @@ export const iconVariant = cva('', {
     {
       size: 'lg',
       variant: 'link',
+      colorScheme: 'white',
+      className: ['w-6 h-6', 'text-white-700'],
+    },
+    {
+      size: 'lg',
+      variant: 'link',
       colorScheme: 'primary',
       className: ['w-6 h-6', 'text-primary-700'],
     },
@@ -2662,6 +2777,12 @@ export const iconVariant = cva('', {
       variant: 'link',
       colorScheme: 'pink',
       className: ['w-6 h-6', 'text-pink-700'],
+    },
+    {
+      size: 'lg',
+      variant: 'ghost',
+      colorScheme: 'white',
+      className: ['w-6 h-6', 'text-white-700'],
     },
     {
       size: 'lg',
@@ -2822,6 +2943,13 @@ export const linkButton = cva(
   {
     variants: {
       colorScheme: {
+        white: [
+          'text-white-700',
+          'hover:text-white-700',
+          'focus:text-white-700',
+          'hover:underline',
+          'focus:underline',
+        ],
         primary: [
           'text-primary-700',
           'hover:text-primary-700',
@@ -3009,6 +3137,18 @@ export const solidButton = cva(
   {
     variants: {
       colorScheme: {
+        white: [
+          'text-white',
+          'border',
+          'border-solid',
+          'bg-white-600',
+          'hover:bg-white-700',
+          'focus:bg-white-700',
+          'border-white-600',
+          'hover:border-white-700',
+          'focus:shadow-ringPrimary',
+          'focus-visible:shadow-ringPrimary',
+        ],
         primary: [
           'text-white',
           'border',
@@ -3311,6 +3451,15 @@ export const ghostButton = cva(
   {
     variants: {
       colorScheme: {
+        white: [
+          'bg-transparent',
+          'shadow-none',
+          'text-gray-25',
+          'hover:text-gray-25',
+          'focus:text-gray-25',
+          'hover:bg-gray-600',
+          'focus:bg-gray-600',
+        ],
         primary: [
           'bg-transparent',
           'text-primary-700',
@@ -3544,6 +3693,16 @@ export const outlineButton = cva(
   {
     variants: {
       colorScheme: {
+        white: [
+          'bg-white-50',
+          'text-white-700',
+          'border',
+          'border-solid',
+          'border-white-300',
+          'hover:bg-white-100',
+          'hover:text-white-700',
+          'focus:bg-white-100',
+        ],
         primary: [
           'bg-primary-50',
           'text-primary-700',

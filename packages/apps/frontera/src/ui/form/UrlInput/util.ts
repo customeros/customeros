@@ -25,5 +25,13 @@ export function formatSocialUrl(value = '', orgUrl?: boolean) {
     url = url.replace('linkedin.com/company', '');
   }
 
+  if (url.includes('facebook.com')) {
+    url = url.replace('facebook.com', '');
+  }
+
+  if (url.includes('instagram.com')) {
+    url = url.replace('instagram.com', '');
+  }
+
   return url;
 }
