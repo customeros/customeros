@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 
 import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
-import { LinkedIn } from '@domain/usecases/people-contact-card/add-linkedin.usecase';
+import { LinkedIn } from '@domain/usecases/contact-details/add-linkedin.usecase';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
@@ -43,8 +43,14 @@ export const AddLinkedInToContactModal = observer(
       'Enter',
       () => {
         linkedInUseCase.submitLinkedInUrl();
-        !linkedInUseCase.emptyLinkedInUrl && onClose();
-        !linkedInUseCase.invalidLinkedInUrl && onClose();
+
+        if (
+          linkedInUseCase.emptyLinkedInUrl ||
+          linkedInUseCase.invalidLinkedInUrl
+        )
+          return;
+
+        onClose();
       },
       {
         targetRef: modalRef,
@@ -76,15 +82,16 @@ export const AddLinkedInToContactModal = observer(
                 dataTest='linkedin-url-input'
                 value={linkedInUseCase.inputValue}
                 placeholder='linkedin.com/in/john-lemon'
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    onClose();
-                  }
-                }}
                 onChange={(e) => {
                   linkedInUseCase.setInputValue(e.target.value);
 
                   linkedInUseCase.resetErrors();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    onClose();
+                  }
+                  e.stopPropagation();
                 }}
               />
             </div>
@@ -96,7 +103,7 @@ export const AddLinkedInToContactModal = observer(
             {linkedInUseCase.invalidLinkedInUrl &&
               !linkedInUseCase.emptyLinkedInUrl && (
                 <p className='text-error-500 text-[12px] mt-0'>
-                  Invalid linkedin URL
+                  This LinkedIn appears to be invalid
                 </p>
               )}
             {linkedInUseCase.error && (
@@ -115,8 +122,14 @@ export const AddLinkedInToContactModal = observer(
               dataTest='add-linkedin-url'
               onClick={() => {
                 linkedInUseCase.submitLinkedInUrl();
-                !linkedInUseCase.emptyLinkedInUrl && onClose();
-                !linkedInUseCase.invalidLinkedInUrl && onClose();
+
+                if (
+                  linkedInUseCase.emptyLinkedInUrl ||
+                  linkedInUseCase.invalidLinkedInUrl
+                )
+                  return;
+
+                onClose();
               }}
             >
               Add & enrich

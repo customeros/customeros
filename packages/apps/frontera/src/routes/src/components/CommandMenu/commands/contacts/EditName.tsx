@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { EditContactNameUseCase } from '@domain/usecases/command-menu/edit-contact-name.usecase';
 
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { useStore } from '@shared/hooks/useStore';
@@ -10,11 +11,13 @@ export const EditName = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
   const contact = store.contacts.value.get(context.ids?.[0] as string);
-  const contactName = contact?.value?.name ?? '';
-
-  const [name, setName] = useState(() => contactName);
 
   const label = `Contact - ${contact?.name}`;
+
+  const contactNameUseCase = useMemo(
+    () => new EditContactNameUseCase(contact?.id || ''),
+    [contact?.id],
+  );
 
   const handleClose = () => {
     store.ui.commandMenu.setOpen(false);
@@ -22,19 +25,7 @@ export const EditName = observer(() => {
   };
 
   const handleChangeName = () => {
-    if (!context.ids?.[0]) return;
-
-    if (!contact) return;
-
-    if (!name.trim()?.length) {
-      handleClose();
-
-      return;
-    }
-
-    contact.value.name = name;
-
-    contact.commit();
+    contactNameUseCase.execute();
     handleClose();
   };
 
@@ -42,9 +33,9 @@ export const EditName = observer(() => {
     <Command>
       <CommandInput
         label={label}
-        value={name || ''}
+        value={contact?.name}
         placeholder='Edit name'
-        onValueChange={(value) => setName(value)}
+        onValueChange={(value) => contact?.setName(value)}
         onKeyDownCapture={(e) => {
           if (e.key === ' ') {
             e.stopPropagation();
@@ -54,8 +45,8 @@ export const EditName = observer(() => {
       <Command.List>
         <CommandItem
           leftAccessory={<Edit03 />}
-          onSelect={handleChangeName}
-        >{`Rename name to "${name}"`}</CommandItem>
+          onSelect={() => handleChangeName()}
+        >{`Rename name to "${contact?.name}"`}</CommandItem>
       </Command.List>
     </Command>
   );

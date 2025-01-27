@@ -99,6 +99,13 @@ export class Contact extends Entity<ContactDatum> {
     );
   }
 
+  @action
+  setName(name: string) {
+    this.draft();
+    this.value.name = name;
+    this.commit({ syncOnly: true });
+  }
+
   @computed
   get emailId() {
     return this.value.emails?.[0]?.id;

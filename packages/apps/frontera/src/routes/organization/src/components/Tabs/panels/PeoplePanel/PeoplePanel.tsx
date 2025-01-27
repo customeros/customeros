@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import { differenceInCalendarMonths } from 'date-fns';
-import { SearchSortContact } from '@domain/usecases/people-contact-card/search-sort-contacts.usecase';
+import { SearchSortContact } from '@domain/usecases/contact-details/search-sort-contacts.usecase';
 
 import { Input } from '@ui/form/Input';
 import { FeaturedIcon } from '@ui/media/Icon';
@@ -17,10 +17,10 @@ import { Spinner } from '@ui/feedback/Spinner/Spinner';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
+import { ContactDetails } from '@shared/components/ContactDetails';
 import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
 import { SortOptionsMenu } from './components/SortOptionsMenu';
-import { ContactCard } from './components/ContactCard/ContactCard';
 import { CreateNewContactModal } from './components/CreateNewContactModal';
 const searchSortContactUseCase = new SearchSortContact();
 
@@ -220,7 +220,11 @@ export const PeoplePanel = observer(() => {
             className='group/card'
             style={{ width: '100%' }}
           >
-            <ContactCard id={contact?.id} expandAll={expandAll} />
+            <ContactDetails
+              id={contact?.id}
+              isExpandble={true}
+              expandAll={expandAll}
+            />
           </div>
         ))}
 

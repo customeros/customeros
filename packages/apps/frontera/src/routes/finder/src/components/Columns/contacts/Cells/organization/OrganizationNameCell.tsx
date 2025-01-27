@@ -4,9 +4,9 @@ import { useRef, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
-import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { SwitchHorizontal01 } from '@ui/media/icons/SwitchHorizontal01';
 
 interface OrganizationNameCellProps {
   org: string;
@@ -73,7 +73,7 @@ export const OrganizationNameCell = observer(
         <IconButton
           size='xxs'
           variant='ghost'
-          icon={<Edit03 />}
+          icon={<SwitchHorizontal01 />}
           className='opacity-0 group-hover/orgName:opacity-100 mt-[3px]'
           aria-label={`navigate-to-${contactStore?.value.primaryOrganizationName}`}
           onClick={() => {

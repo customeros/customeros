@@ -17,7 +17,7 @@ import { PlusCircle } from '@ui/media/icons/PlusCircle';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/components/ContactCard/EmailValidationMessage';
+import { EmailValidationMessage } from '@shared/components/ContactDetails/components/EmailsSection/EmailValidationMessage';
 
 interface EmailCellProps {
   contactId: string;
