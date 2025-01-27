@@ -321,7 +321,7 @@ func (r *serviceLineItemResolver) Sku(ctx context.Context, obj *model.ServiceLin
 	skuEntity, err := r.Services.CommonServices.PostgresRepositories.SkuRepository.Get(ctx, tenant, *obj.SkuID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get sku by id %s", obj.SkuID)
+		graphql.AddErrorf(ctx, "Failed to get sku by id %s", *obj.SkuID)
 		return nil, err
 	}
 
