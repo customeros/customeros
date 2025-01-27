@@ -4,14 +4,25 @@ import { observer } from 'mobx-react-lite';
 import { RemoveOrgSocialMediaItemUsecase } from '@domain/usecases/organization-about-panel/remove-org-social-media-item.usecase.ts';
 
 import { cn } from '@ui/utils/cn';
-import { XCircle } from '@ui/media/icons/XCircle';
+import { Button } from '@ui/form/Button/Button';
+import { Trash01 } from '@ui/media/icons/Trash01';
+import { Divider } from '@ui/presentation/Divider';
 import { Copy01 } from '@ui/media/icons/Copy01.tsx';
 import { Share03 } from '@ui/media/icons/Share03.tsx';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { formatSocialUrl } from '@ui/form/UrlInput/util';
 import { IconButton } from '@ui/form/IconButton/IconButton';
-import { DotsVertical } from '@ui/media/icons/DotsVertical';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { Popover, PopoverContent, PopoverTrigger } from '@ui/overlay/Popover';
+import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  AlertDialogCloseIconButton,
+} from '@ui/overlay/AlertDialog/AlertDialog';
 
 import { SocialIcon } from './SocialIcons';
 
@@ -27,80 +38,116 @@ interface SocialMediaItemProps {
 const removeOrgSocialMediaItemUsecase = new RemoveOrgSocialMediaItemUsecase();
 export const SocialMediaItem = observer(
   ({ value, dataTest, leftElement, id }: SocialMediaItemProps) => {
-    const [isOpen, setIsOpen] = useState(false);
+    const [openActionBar, setIsOpenActionBar] = useState(false);
     const [_, copyToClipboard] = useCopyToClipboard();
+    const { onClose, onOpen, open } = useDisclosure();
 
     const href = value?.startsWith('http') ? value : `https://${value}`;
-    const formattedUrl = formatSocialUrl(value);
 
     return (
       <>
-        <div className='w-full  group'>
+        <div className='w-full group'>
           <div className='h-full relative w-full flex items-center'>
-            <div className='h-full flex items-center '>
+            <div className='h-full flex items-center'>
               <div
                 tabIndex={0}
-                role={'button'}
                 data-test={dataTest}
-                rel='noopener noreferrer'
-                onClick={() => copyToClipboard(value, 'Link copied')}
-                className='text-sm truncate cursor-default overflow-hidden overflow-ellipsis mr-2'
+                className='text-sm truncate cursor-default overflow-hidden overflow-ellipsis mr-3'
               >
-                <SocialIcon url={value}>{leftElement}</SocialIcon>
-                <span className='ml-3'>{formattedUrl}</span>
-              </div>
-
-              <div className='flex items-center gap-1'>
-                <div>
-                  <IconButton
-                    size='xxs'
-                    variant='ghost'
-                    aria-label={'Open in the new tab'}
-                    icon={<Share03 className={'size-3 m-0'} />}
-                    onClick={() =>
-                      window.open(href, '_blank', 'noopener noreferrer')
-                    }
-                    className={cn('opacity-0 group-hover:opacity-100', {
-                      '!opacity-100': isOpen,
-                    })}
-                  />
-                </div>
-
-                <Menu onOpenChange={(isOpen) => setIsOpen(isOpen)}>
-                  <MenuButton asChild>
-                    <IconButton
-                      size='xxs'
-                      variant='ghost'
-                      aria-label={'Collapse'}
-                      icon={<DotsVertical className={'size-3 m-0'} />}
-                      className={cn('opacity-0 group-hover:opacity-100', {
-                        '!opacity-100': isOpen,
-                      })}
-                    />
-                  </MenuButton>
-
-                  <MenuList className='min-w-[100px]'>
-                    <MenuItem
-                      onClick={() => copyToClipboard(value, 'Link copied')}
-                    >
-                      <Copy01 />
-                      Copy link
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        removeOrgSocialMediaItemUsecase.remove(id);
-                      }}
-                    >
-                      <XCircle />
-                      Remove social link
-                    </MenuItem>
-                  </MenuList>
-                </Menu>
+                <Popover open={openActionBar} onOpenChange={setIsOpenActionBar}>
+                  <PopoverTrigger>
+                    <Tooltip asChild label={formatSocialUrl(value)}>
+                      <div>
+                        <SocialIcon
+                          url={value}
+                          className={cn(
+                            openActionBar &&
+                              'border-[1px] border-gray-700 rounded-full ',
+                          )}
+                        >
+                          {leftElement}
+                        </SocialIcon>
+                      </div>
+                    </Tooltip>
+                  </PopoverTrigger>
+                  <PopoverContent side='top' className='bg-gray-700'>
+                    <div className=' flex items-center text-white'>
+                      <span className=' mr-2 text-sm truncate w-[150px]'>
+                        {formatSocialUrl(value)}
+                      </span>
+                      <Divider className='bg-gray-500 w-3 rotate-90 h-[1px] border-0' />
+                      <div className='flex gap-2'>
+                        <IconButton
+                          size='xxs'
+                          variant='ghost'
+                          icon={<Share03 />}
+                          colorScheme={'white'}
+                          aria-label={'Open in the new tab'}
+                          onClick={() =>
+                            window.open(href, '_blank', 'noopener noreferrer')
+                          }
+                        />
+                        <IconButton
+                          size='xxs'
+                          variant='ghost'
+                          icon={<Copy01 />}
+                          colorScheme={'white'}
+                          aria-label={'copy-social-link'}
+                          onClick={() => copyToClipboard(value, 'Link copied')}
+                        />
+                        <IconButton
+                          size='xxs'
+                          variant='ghost'
+                          icon={<Trash01 />}
+                          colorScheme={'white'}
+                          onClick={() => onOpen()}
+                          aria-label={'delete-social-link'}
+                        />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
         </div>
+
+        <DeleteModal open={open} socialId={id} onClose={onClose} />
       </>
+    );
+  },
+);
+
+interface DeleteModalProps {
+  open: boolean;
+  socialId: string;
+  onClose: () => void;
+}
+
+export const DeleteModal = observer(
+  ({ socialId, onClose, open }: DeleteModalProps) => {
+    return (
+      <AlertDialog isOpen={open} onClose={onClose}>
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogCloseIconButton />
+            <AlertDialogBody>
+              <span className='font-medium'>Delete this social link?</span>
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button onClick={onClose}>Cancel</Button>
+              <Button
+                colorScheme='primary'
+                onClick={() => {
+                  removeOrgSocialMediaItemUsecase.remove(socialId);
+                }}
+              >
+                Confirm
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     );
   },
 );

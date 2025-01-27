@@ -1,3 +1,4 @@
+import { cn } from '@ui/utils/cn';
 import { X } from '@ui/media/logos/X';
 import { Slack } from '@ui/media/logos/Slack';
 import { Reddit } from '@ui/media/logos/Reddit';
@@ -20,27 +21,44 @@ import { isKnownUrl } from './util';
 
 export const SocialIcon = ({
   children,
+  className,
   url,
-}: React.PropsWithChildren<{ url: string }>) => {
+}: React.PropsWithChildren<{ url: string; className?: string }>) => {
   const knownUrl = isKnownUrl(url);
 
-  if (knownUrl === 'twitter') return <X className='size-4' />;
-  if (knownUrl === 'facebook') return <Facebook className='size-4' />;
-  if (knownUrl === 'linkedin') return <Linkedin className='size-4' />;
-  if (knownUrl === 'github') return <Github className='size-4' />;
-  if (knownUrl === 'instagram') return <Instagram className='size-4' />;
-  if (knownUrl === 'youtube') return <Youtube className='size-4' />;
-  if (knownUrl === 'pinterest') return <Pinterest className='size-4' />;
-  if (knownUrl === 'angellist') return <Angellist className='size-4' />;
-  if (knownUrl === 'notion') return <Notion className='size-4' />;
-  if (knownUrl === 'clubhouse') return <Clubhouse className='size-4' />;
-  if (knownUrl === 'discord') return <Discord className='size-4' />;
-  if (knownUrl === 'slack') return <Slack className='size-4' />;
-  if (knownUrl === 'tiktok') return <Tiktok className='size-4' />;
-  if (knownUrl === 'telegram') return <Telegram className='size-4' />;
-  if (knownUrl === 'snapchat') return <Snapchat className='size-4' />;
-  if (knownUrl === 'reddit') return <Reddit className='size-4' />;
-  if (knownUrl === 'google') return <Google className='size-4' />;
+  if (knownUrl === 'twitter') return <X className={cn('size-4', className)} />;
+  if (knownUrl === 'facebook')
+    return <Facebook className={cn('size-4', className)} />;
+  if (knownUrl === 'linkedin')
+    return <Linkedin className={cn('size-4', className)} />;
+  if (knownUrl === 'github')
+    return <Github className={cn('size-4', className)} />;
+  if (knownUrl === 'instagram')
+    return <Instagram className={cn('size-4', className)} />;
+  if (knownUrl === 'youtube')
+    return <Youtube className={cn('size-4', className)} />;
+  if (knownUrl === 'pinterest')
+    return <Pinterest className={cn('size-4', className)} />;
+  if (knownUrl === 'angellist')
+    return <Angellist className={cn('size-4', className)} />;
+  if (knownUrl === 'notion')
+    return <Notion className={cn('size-4', className)} />;
+  if (knownUrl === 'clubhouse')
+    return <Clubhouse className={cn('size-4', className)} />;
+  if (knownUrl === 'discord')
+    return <Discord className={cn('size-4', className)} />;
+  if (knownUrl === 'slack')
+    return <Slack className={cn('size-4', className)} />;
+  if (knownUrl === 'tiktok')
+    return <Tiktok className={cn('size-4', className)} />;
+  if (knownUrl === 'telegram')
+    return <Telegram className={cn('size-4', className)} />;
+  if (knownUrl === 'snapchat')
+    return <Snapchat className={cn('size-4', className)} />;
+  if (knownUrl === 'reddit')
+    return <Reddit className={cn('size-4', className)} />;
+  if (knownUrl === 'google')
+    return <Google className={cn('size-4', className)} />;
 
   return <>{children}</>;
 };

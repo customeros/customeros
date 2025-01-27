@@ -155,7 +155,14 @@ export const AboutPanel = observer(() => {
               text={organization.value.description}
             />
           )}
-
+          <SocialMediaList
+            dataTest='org-about-social-link'
+            leftElement={<Share07 className='text-gray-500' />}
+            value={organization?.value.socialMedia.map((s) => ({
+              value: s.id,
+              label: s.url,
+            }))}
+          />
           <Tags
             dataTest='org-about-tags'
             inputPlaceholder='Search...'
@@ -300,14 +307,6 @@ export const AboutPanel = observer(() => {
             id={id}
             dataTest='org-about-org-owner'
             owner={organization?.value.owner}
-          />
-          <SocialMediaList
-            dataTest='org-about-social-link'
-            leftElement={<Share07 className='text-gray-500' />}
-            value={organization?.value.socialMedia.map((s) => ({
-              value: s.id,
-              label: s.url,
-            }))}
           />
 
           {showParentRelationshipSelector &&

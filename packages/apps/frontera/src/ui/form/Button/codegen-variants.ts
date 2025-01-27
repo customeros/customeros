@@ -10,7 +10,7 @@ const prettierConfig = JSON.parse(
 const buttonTypes = ['Link', 'Solid', 'Ghost', 'Outline'];
 const sizes = ['xxs', 'xs', 'sm', 'md', 'lg'];
 
-const colors = Object.keys(file.colors).filter((color) => color !== 'white');
+const colors = Object.keys(file.colors);
 const variants = ['solid', 'outline', 'link', 'ghost'];
 
 const solidButton = (color: string) => `
@@ -63,6 +63,16 @@ const ghostButton = (color: string) => `
       'focus:text-${color}-700',
       'hover:bg-${color}-100',
       'focus:bg-${color}-100',
+    ]`
+    : color === 'white'
+    ? `[
+      'bg-transparent',
+      'shadow-none',
+      'text-gray-25',
+      'hover:text-gray-25',
+      'focus:text-gray-25',
+      'hover:bg-gray-600',
+      'focus:bg-gray-600',
     ]`
     : `[
       'bg-transparent',
