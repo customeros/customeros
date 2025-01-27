@@ -9,7 +9,9 @@ type InvoiceLineEntity struct {
 	Id                      string
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
-	Name                    string
+	SkuId                   string
+	SkuName                 string
+	Name                    string //deprecated
 	Price                   float64
 	Quantity                int64
 	BilledType              neo4jenum.BilledType

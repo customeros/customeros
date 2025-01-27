@@ -480,7 +480,9 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *n
 		invoiceLineEntity := &neo4jentity.InvoiceLineEntity{
 			Id:                      line.ServiceLineItemId,
 			ServiceLineItemParentId: line.ServiceLineItemParentId,
-			Name:                    line.Name,
+			SkuId:                   line.SkuId,
+			SkuName:                 line.SkuName,
+			Name:                    utils.FirstNotEmptyString(line.SkuName, line.Name),
 			Price:                   line.Price,
 			Quantity:                line.Quantity,
 			Amount:                  line.Amount,
@@ -538,6 +540,7 @@ func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *
 	sliEntitiesForProration := neo4jentity.ServiceLineItemEntities{}
 	for _, sliData := range *sliEntities {
 		sliEntity := neo4jentity.ServiceLineItemEntity{
+			SkuId:     sliData.SkuId,
 			Name:      sliData.Name,
 			Comments:  sliData.Comments,
 			Billed:    sliData.Billed,
@@ -564,6 +567,8 @@ func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *
 		invoiceLineEntity := &neo4jentity.InvoiceLineEntity{
 			Id:                      line.ServiceLineItemId,
 			ServiceLineItemParentId: line.ServiceLineItemParentId,
+			SkuId:                   line.SkuId,
+			SkuName:                 utils.FirstNotEmptyString(line.SkuName, line.Name),
 			Name:                    line.Name,
 			Price:                   line.Price,
 			Quantity:                line.Quantity,

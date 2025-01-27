@@ -180,6 +180,8 @@ func (a *InvoiceAggregate) FillInvoice(ctx context.Context, request *invoicepb.F
 				Source:    events2.SourceOpenline,
 				AppSource: request.AppSource,
 			},
+			SkuId:                   line.SkuId,
+			SkuName:                 line.SkuName,
 			Name:                    line.Name,
 			Price:                   line.Price,
 			Quantity:                line.Quantity,

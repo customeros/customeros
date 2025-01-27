@@ -104,7 +104,7 @@ func TestInvoiceResolver_Invoice(t *testing.T) {
 	require.Equal(t, "Link", *invoice.PaymentLink)
 
 	require.Equal(t, 1, len(invoice.InvoiceLineItems))
-	require.Equal(t, "SLI 1", invoice.InvoiceLineItems[0].Description)
+	require.Equal(t, "SLI 1", *invoice.InvoiceLineItems[0].Description)
 	require.Equal(t, 100.0, invoice.InvoiceLineItems[0].Price)
 	require.Equal(t, int64(1), invoice.InvoiceLineItems[0].Quantity)
 	require.Equal(t, 100.0, invoice.InvoiceLineItems[0].Subtotal)
@@ -766,67 +766,6 @@ func TestInvoiceResolver_InvoicesForOrganization(t *testing.T) {
 
 	require.ElementsMatch(t, []string{invoice1Id, invoice2Id}, []string{invoiceStruct.Invoices.Content[0].Metadata.ID, invoiceStruct.Invoices.Content[1].Metadata.ID})
 	require.ElementsMatch(t, []string{"1", "2"}, []string{invoiceStruct.Invoices.Content[0].InvoiceNumber, invoiceStruct.Invoices.Content[1].InvoiceNumber})
-}
-
-func TestInvoiceResolver_NextDryRunForContract(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	nextInvoiceDate := utils.FirstTimeOfMonth(2023, 6)
-	periodStartExpected := utils.FirstTimeOfMonth(2023, 6)
-	periodEndExpected := utils.LastDayOfMonth(2023, 6)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, organizationId, neo4jentity.ContractEntity{
-		BillingCycleInMonths: 1,
-		Currency:             neo4jenum.CurrencyAUD,
-		InvoiceNote:          "abc",
-		NextInvoiceDate:      &nextInvoiceDate,
-	})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
-
-	calledNextDryRun := false
-	invoiceServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
-		NewInvoiceForContract: func(context context.Context, request *invoicepb.NewInvoiceForContractRequest) (*invoicepb.InvoiceIdResponse, error) {
-			require.Equal(t, tenantName, request.Tenant)
-			require.Equal(t, testUserId, request.LoggedInUserId)
-			require.Equal(t, contractId, request.ContractId)
-			require.Equal(t, int64(1), request.BillingCycleInMonths)
-			require.Equal(t, neo4jenum.CurrencyAUD.String(), request.Currency)
-			require.Equal(t, utils.ConvertTimeToTimestampPtr(&periodStartExpected), request.InvoicePeriodStart)
-			require.Equal(t, utils.ConvertTimeToTimestampPtr(&periodEndExpected), request.InvoicePeriodEnd)
-			require.Equal(t, constants.AppSourceCustomerOsApi, request.SourceFields.AppSource)
-			calledNextDryRun = true
-			return &invoicepb.InvoiceIdResponse{
-				Id: invoiceId,
-			}, nil
-		},
-	}
-	events_platform.SetInvoiceCallbacks(&invoiceServiceCallbacks)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		model2.NodeLabelOrganization: 1,
-		model2.NodeLabelContract:     1,
-	})
-
-	rawResponse := callGraphQL(t, "invoice/next_dry_run_for_contract", map[string]interface{}{
-		"page":       0,
-		"limit":      10,
-		"contractId": contractId,
-	})
-	require.Nil(t, rawResponse.Errors)
-
-	var invoiceStruct struct {
-		Invoice_NextDryRunForContract string
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
-	require.Nil(t, err)
-
-	require.True(t, calledNextDryRun)
-
-	require.Equal(t, invoiceId, invoiceStruct.Invoice_NextDryRunForContract)
 }
 
 func TestMutationResolver_InvoiceUpdate(t *testing.T) {

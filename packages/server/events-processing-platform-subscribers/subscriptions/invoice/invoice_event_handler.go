@@ -694,7 +694,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 
 	for _, invoiceLine := range invoiceLineEntities {
 		invoiceLineItem := map[string]string{
-			"Name":      invoiceLine.Name,
+			"Name":      utils.FirstNotEmptyString(invoiceLine.SkuName, invoiceLine.Name),
 			"Quantity":  fmt.Sprintf("%d", invoiceLine.Quantity),
 			"UnitPrice": invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Price, 2),
 			"Amount":    invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Amount, 2),
