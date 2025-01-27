@@ -111,12 +111,12 @@ func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data Send
 // It casts the generic input and config to the specific types and delegates to the typed Execute method.
 func (c *SendSlackNotificationCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
 	typedInput, ok := input.(*SendSlackNotificationInput)
-	if !ok {
+	if !ok || typedInput == nil {
 		return nil, fmt.Errorf("invalid input type: expected SendSlackNotificationInput")
 	}
 
 	typedConfig, ok := config.(*SendSlackNotificationConfig)
-	if !ok {
+	if !ok || typedConfig == nil {
 		return nil, fmt.Errorf("invalid config type: expected SendSlackNotificationConfig")
 	}
 

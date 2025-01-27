@@ -85,12 +85,12 @@ func (c *ApplyTagCapability) Execute(ctx context.Context, data ApplyTagInput, co
 // It casts the generic input and config to the specific types and delegates to the typed Execute method.
 func (c *ApplyTagCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
 	typedInput, ok := input.(*ApplyTagInput)
-	if !ok {
+	if !ok || typedInput == nil {
 		return nil, fmt.Errorf("invalid input type: expected ApplyTagInput")
 	}
 
 	typedConfig, ok := config.(*NoConfig)
-	if !ok {
+	if !ok || typedConfig == nil {
 		return nil, fmt.Errorf("invalid config type: expected NoCOnfig")
 	}
 
