@@ -62,7 +62,6 @@ func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyCo
 	// 		tracing.TraceErr(span, err)
 	// 		return err
 	// 	}
-
 	case data_fields.WebsiteVisitEvent{}.Type():
 		eventData, ok := webhookEvent.Data.(*data_fields.WebsiteVisitEvent)
 		if !ok {
@@ -83,10 +82,9 @@ func OnWebhookEventCreated(ctx context.Context, dependencies *model.DependencyCo
 		tracing.TraceErr(span, err)
 		return err
 	}
-
 }
 
-func handleMeetingSummaryEvent(ctx context.Context, s *service.CommonServices, sourceEvent commonenum.FlowListenerEvent, eventData *data_fields.MeetingSummaryEvent) error {
+func handleMeetingSummaryEvent(ctx context.Context, s *service.CommonServices, sourceEvent commonenum.AgentListenerEvent, eventData *data_fields.MeetingSummaryEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.HandleMeetingSummaryEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -111,7 +109,7 @@ func handleMeetingSummaryEvent(ctx context.Context, s *service.CommonServices, s
 	return errs
 }
 
-func publishCreateTimelineEvent(ctx context.Context, s *service.CommonServices, flow *postgres_entity.Flows, eventData *data_fields.MeetingSummaryEvent, sourceEvent commonenum.FlowListenerEvent) error {
+func publishCreateTimelineEvent(ctx context.Context, s *service.CommonServices, flow *postgres_entity.Flows, eventData *data_fields.MeetingSummaryEvent, sourceEvent commonenum.AgentListenerEvent) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.publishCreateTimelineEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -268,7 +266,7 @@ func createMarkdownEvent(system commonenum.Source, eventData *data_fields.Meetin
 }
 
 func handleMarkdownEventPublishing(ctx context.Context, s *service.CommonServices,
-	system commonenum.Source, sourceEvent commonenum.FlowListenerEvent, orgId string,
+	system commonenum.Source, sourceEvent commonenum.AgentListenerEvent, orgId string,
 	mdEvent *data_fields.MarkdownEventFields, flowExecutionId string,
 ) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventHandlers.handleMarkdownEventPublishing")
@@ -298,7 +296,7 @@ func handleMarkdownEventPublishing(ctx context.Context, s *service.CommonService
 	return nil
 }
 
-func getWebhookEvent(input any) (commonenum.FlowListenerEvent, *dto.WebhookEvent, error) {
+func getWebhookEvent(input any) (commonenum.AgentListenerEvent, *dto.WebhookEvent, error) {
 	// Cast input to Event
 	message, ok := input.(*dto.Event)
 	if !ok {

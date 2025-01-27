@@ -108,7 +108,7 @@ func (h *WebsiteVisitEventHandler) route(ctx context.Context, agent postgres_ent
 
 	switch agentType {
 	case enum.AgentVisitorID:
-		return h.dependencies.CommonServices.AgentVisitorIDService.Run(ctx, agent.ID, h.event)
+		return h.dependencies.CommonServices.VisitorIDAgent.Run(ctx, agent.ID, h.event)
 
 	default:
 		err := errors.New("Unsupported agent type")

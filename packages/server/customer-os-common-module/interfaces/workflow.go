@@ -11,9 +11,9 @@ import (
 type WorkflowService interface {
 	// Flow
 	SaveFlow(ctx context.Context, flowRecord postgres_entity.Flows) (*postgres_entity.Flows, error)
-	GetFlowsByTrigger(ctx context.Context, listenerEvent enum.FlowListenerEvent) ([]postgres_entity.Flows, error)
+	GetFlowsByTrigger(ctx context.Context, listenerEvent enum.AgentListenerEvent) ([]postgres_entity.Flows, error)
 	GetNextStepInFlow(ctx context.Context, flowId string, fromNodeId *string) (*FlowNextStep, error)
-	GetFlowsForListenerEvent(ctx context.Context, sourceEvent enum.FlowListenerEvent, eventType string, eventData any) ([]postgres_entity.Flows, error)
+	GetFlowsForListenerEvent(ctx context.Context, sourceEvent enum.AgentListenerEvent, eventType string, eventData any) ([]postgres_entity.Flows, error)
 
 	// Flow Execution
 	BuildAndSaveFlowExecutionRecord(ctx context.Context, flowStatus, flowId, flowNodeId, entityId, entityType, currentStep string, eventData any) (*postgres_entity.FlowExecution, error)
@@ -29,7 +29,7 @@ type WorkflowService interface {
 	// Validation
 	ValidateEventType(ctx context.Context, nodeType enum.FlowNodeType, event string) bool
 	ValidateFlowBelongsToTenant(ctx context.Context, flowId string) (bool, error)
-	ValidateListener(ctx context.Context, listenerEvent enum.FlowListenerEvent) (bool, error)
+	ValidateListener(ctx context.Context, listenerEvent enum.AgentListenerEvent) (bool, error)
 	ValidateNodeType(ctx context.Context, nodeType string) (bool, *enum.FlowNodeType)
 	ValidateTransition(ctx context.Context, fromNodeId string, toNodeId string) (bool, error)
 }

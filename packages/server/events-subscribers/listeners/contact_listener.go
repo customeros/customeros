@@ -48,13 +48,12 @@ func OnSocialAddedToContact(ctx context.Context, dependencies *model.DependencyC
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	message := input.(*dto.Event)
-	// check message data type before conversion
-	if message.Event.Data == nil {
-		err := errors.New("message data is nil")
+	message, err := validateEvent(ctx, input)
+	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil
+		return err
 	}
+
 	messageData := message.Event.Data.(*dto.AddSocialToContact)
 	socialUrl := messageData.Social
 	contactId := message.Event.EntityId

@@ -6,7 +6,7 @@ import (
 
 type WebhookEvent struct {
 	ExternalSystemId enum.Source
-	Name             enum.FlowListenerEvent
+	Name             enum.AgentListenerEvent
 	DataType         string
 	Data             interface{}
 }

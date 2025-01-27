@@ -18,7 +18,7 @@ type FlowListenerEventRecord struct {
 	Description string `json:"description"`
 }
 
-func (w *workflowService) ValidateListener(ctx context.Context, listenerEvent enum.FlowListenerEvent) (bool, error) {
+func (w *workflowService) ValidateListener(ctx context.Context, listenerEvent enum.AgentListenerEvent) (bool, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ValidateListener")
 	defer span.Finish()
 	tracing.TagComponentService(span)

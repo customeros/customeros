@@ -36,6 +36,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/flow_execution"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/google"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/industry"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/intent_signals"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/interaction_event"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/interaction_session"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/invoice"
@@ -129,13 +130,15 @@ type CommonServices struct {
 	UserService                interfaces.UserService
 	VerifyService              interfaces.VerifyService
 	QuickbooksService          interfaces.QuickbooksService
+	WebVisitProcessor          *intent_signals.WebVisitProcessor
 	WorkflowService            interfaces.WorkflowService
 	WorkspaceService           interfaces.WorkspaceService
 
 	// Agents
-	AgentCapabilities     *agent_capability.AgentCapabilities
-	AgentVisitorIDService *agent.AgentVisitorIDService
-	AgentRunnerService    *agent.AgentRunnerService
+	AgentCapabilities  *agent_capability.AgentCapabilities
+	VisitorIDAgent     *agent.VisitorIDAgent
+	AgentRunnerService *agent.AgentRunnerService
+	SupportAgent       *agent.SupportAgent
 }
 
 type InitOptions struct {
@@ -207,6 +210,7 @@ func InitCommonServices(
 	contactImpl := contact.NewContactService(log, neo4jRepositories, eventsImpl, domainImpl, emailImpl, nil, jobroleImpl, nil, nil)
 	socialImpl := social.NewSocialService(log, neo4jRepositories, eventsImpl, contactImpl)
 	orgImpl := organization.NewOrganizationService(log, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl, currencyImpl)
+	webVisitProcessorImpl := intent_signals.NewWebVisitProcessor(postgresRepositories, eventsImpl, orgImpl)
 	contractImpl := contract.NewContractService(log, neo4jRepositories, eventsImpl, grpcClients, nil, orgImpl)
 	opportunityImpl := opportunity.NewOpportunityService(log, grpcClients, neo4jRepositories, eventsImpl, contractImpl, orgImpl, tenantSettingsImpl)
 	sliImpl := sli.NewServiceLineItemService(log, eventsImpl, neo4jRepositories, contractImpl)
@@ -246,7 +250,8 @@ func InitCommonServices(
 	)
 
 	// initialize agents
-	agentVisitorIDImpl := agent.NewAgentVisitorIDService(postgresRepositories, capabilityImpl, agentImpl, workspaceImpl)
+	agentVisitorIDImpl := agent.NewVisitorIDAgent(postgresRepositories, capabilityImpl, agentImpl, workspaceImpl)
+	supportAgentImpl := agent.NewSupportAgent(postgresRepositories, capabilityImpl, tagImpl)
 	agentRunnerImpl := agent.NewAgentRunnerService(postgresRepositories, capabilityImpl, agentImpl)
 
 	// Initialize CommonServices struct
@@ -309,13 +314,16 @@ func InitCommonServices(
 		UserService:                userImpl,
 		VerifyService:              verifyImpl,
 		QuickbooksService:          quickbooksImpl,
+		WebVisitProcessor:          webVisitProcessorImpl,
 		WorkflowService:            workflowImpl,
 		WorkspaceService:           workspaceImpl,
 
 		// Agents
-		AgentCapabilities:     capabilityImpl,
-		AgentVisitorIDService: agentVisitorIDImpl,
-		AgentRunnerService:    agentRunnerImpl,
+		AgentCapabilities:  capabilityImpl,
+		AgentRunnerService: agentRunnerImpl,
+
+		SupportAgent:   supportAgentImpl,
+		VisitorIDAgent: agentVisitorIDImpl,
 	}
 
 	// Check that all services are initialized

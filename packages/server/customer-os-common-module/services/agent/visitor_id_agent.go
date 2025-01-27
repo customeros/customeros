@@ -6,11 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opentracing/opentracing-go/log"
-
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
@@ -22,20 +21,20 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-type AgentVisitorIDService struct {
+type VisitorIDAgent struct {
 	postgresRepositories *postgres_repository.Repositories
 	agentCapabilities    *agent_capability.AgentCapabilities
 	agentService         interfaces.AgentService
 	workspaceService     interfaces.WorkspaceService
 }
 
-func NewAgentVisitorIDService(
+func NewVisitorIDAgent(
 	postgresRepositories *postgres_repository.Repositories,
 	agentCapabilities *agent_capability.AgentCapabilities,
 	agentService interfaces.AgentService,
 	workspaceService interfaces.WorkspaceService,
-) *AgentVisitorIDService {
-	return &AgentVisitorIDService{
+) *VisitorIDAgent {
+	return &VisitorIDAgent{
 		postgresRepositories: postgresRepositories,
 		agentCapabilities:    agentCapabilities,
 		agentService:         agentService,
@@ -43,12 +42,12 @@ func NewAgentVisitorIDService(
 	}
 }
 
-func (a *AgentVisitorIDService) Create(ctx context.Context) (*postgres_entity.Agents, error) {
+func (a *VisitorIDAgent) Create(ctx context.Context) (*postgres_entity.Agents, error) {
 	return a.agentService.CreateAgent(ctx, enum.AgentVisitorID)
 }
 
-func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *data_fields.WebsiteVisitEvent) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.Run")
+func (a *VisitorIDAgent) Run(ctx context.Context, agentID string, event *data_fields.WebsiteVisitEvent) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "VisitorIDAgent.Run")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("agentID", agentID)
@@ -207,7 +206,7 @@ func (a *AgentVisitorIDService) Run(ctx context.Context, agentID string, event *
 	return nil
 }
 
-func (a *AgentVisitorIDService) validateWebsiteVisitEvent(event *data_fields.WebsiteVisitEvent) error {
+func (a *VisitorIDAgent) validateWebsiteVisitEvent(event *data_fields.WebsiteVisitEvent) error {
 	if event == nil {
 		return fmt.Errorf("event cannot be nil")
 	}
@@ -228,7 +227,7 @@ func (a *AgentVisitorIDService) validateWebsiteVisitEvent(event *data_fields.Web
 	return nil
 }
 
-func (a *AgentVisitorIDService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEventType string) (string, error) {
+func (a *VisitorIDAgent) createAgentExecutionRecord(ctx context.Context, agentID, triggerEventType string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.createAgentExecutionRecord")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -251,7 +250,7 @@ func (a *AgentVisitorIDService) createAgentExecutionRecord(ctx context.Context, 
 	return a.agentService.CreateAgentExecutionRecord(ctx, *agent, triggerEventType)
 }
 
-func (a *AgentVisitorIDService) skipNotification(ctx context.Context, domain string, cooldownInHrs int) (bool, error) {
+func (a *VisitorIDAgent) skipNotification(ctx context.Context, domain string, cooldownInHrs int) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.skipNotification")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
@@ -300,7 +299,7 @@ func (a *AgentVisitorIDService) skipNotification(ctx context.Context, domain str
 	return false, nil
 }
 
-func (a *AgentVisitorIDService) isWorkspaceDomain(ctx context.Context, domain string) bool {
+func (a *VisitorIDAgent) isWorkspaceDomain(ctx context.Context, domain string) bool {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentVisitorIDService.isWorkspaceDomain")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
@@ -320,7 +319,7 @@ func (a *AgentVisitorIDService) isWorkspaceDomain(ctx context.Context, domain st
 	return false
 }
 
-func (a *AgentVisitorIDService) buildWebVisitorSlackNotification(
+func (a *VisitorIDAgent) buildWebVisitorSlackNotification(
 	ctx context.Context,
 	orgID string,
 	visitorID agent_capability.IdentifyWebsiteVisitorResult,
