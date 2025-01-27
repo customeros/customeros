@@ -32,9 +32,19 @@ export const featureIconVariant = cva(
         purple: [],
         cyan: [],
         orangeDark: [],
+        white: [],
+        indigo: [],
+        blueLight: [],
+        pink: [],
       },
     },
     compoundVariants: [
+      {
+        colorScheme: 'white',
+        className: [
+          'bg-white-100 ring-white-50 ring-offset-white-100 text-white-600',
+        ],
+      },
       {
         colorScheme: 'primary',
         className: [

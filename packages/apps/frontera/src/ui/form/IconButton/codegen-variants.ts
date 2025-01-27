@@ -8,7 +8,7 @@ const prettierConfig = JSON.parse(
 );
 
 const sizes = ['xxs', 'xs', 'sm', 'md', 'lg'];
-const colors = Object.keys(file.colors).filter((color) => color !== 'white');
+const colors = Object.keys(file.colors);
 const variants = ['solid', 'outline', 'ghost'];
 
 const genCompoundVariant = (

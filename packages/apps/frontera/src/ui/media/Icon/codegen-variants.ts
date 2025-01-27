@@ -6,7 +6,7 @@ import * as file from '../../theme/colors';
 const prettierConfig = JSON.parse(
   fs.readFileSync(process.cwd() + '/.prettierrc', 'utf8'),
 );
-const colors = Object.keys(file.colors).filter((color) => color !== 'white');
+const colors = Object.keys(file.colors);
 type compoundVariants = {
   colorScheme: string;
   className: string[];
