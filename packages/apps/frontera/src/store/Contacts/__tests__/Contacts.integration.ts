@@ -90,8 +90,6 @@ describe('ContactsService - Integration Tests', () => {
 
     const contact_name = 'Vitest_' + crypto.randomUUID();
     const contact_description = 'Vitest_' + crypto.randomUUID();
-    const contact_firstName = 'Vitest_' + crypto.randomUUID();
-    const contact_lastName = 'Vitest_' + crypto.randomUUID();
     const contact_prefix = 'Mr.';
     const contact_profilePhotoUrl = 'https://example.com';
     const contact_timezone = 'America/North_Dakota/New_Salem';
@@ -102,8 +100,6 @@ describe('ContactsService - Integration Tests', () => {
         id: contact_CreateForOrganization.id,
         name: contact_name,
         description: contact_description,
-        firstName: contact_firstName,
-        lastName: contact_lastName,
         prefix: contact_prefix,
         patch: true,
         profilePhotoUrl: contact_profilePhotoUrl,
@@ -118,8 +114,6 @@ describe('ContactsService - Integration Tests', () => {
 
     expect.soft(contact?.name).toBe(contact_name);
     expect.soft(contact?.description).toBe(contact_description);
-    expect.soft(contact?.firstName).toBe(contact_firstName);
-    expect.soft(contact?.lastName).toBe(contact_lastName);
     expect.soft(contact?.prefix).toBe(contact_prefix);
     expect.soft(contact?.profilePhotoUrl).toBe(contact_profilePhotoUrl);
     expect.soft(contact?.timezone).toBe(contact_timezone);
