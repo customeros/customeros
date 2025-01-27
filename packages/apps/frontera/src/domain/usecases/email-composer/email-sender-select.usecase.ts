@@ -20,7 +20,8 @@ type EmailOption = {
 export class EmailSenderSelectUsecase {
   @observable public accessor searchTerm = '';
   @observable private accessor newEmailOptions = new Set();
-  @observable public accessor selectedEmail: EmailOption[] = [];
+  @observable public accessor selectedEmail: EmailOption | undefined =
+    undefined;
   @observable public accessor emailOptions: {
     label: string;
     value: string;
@@ -147,9 +148,9 @@ export class EmailSenderSelectUsecase {
   }
 
   @action
-  public select(value: SelectOption[]) {
+  public select(value: SelectOption) {
     if (!value) {
-      this.selectedEmail = [];
+      this.selectedEmail = undefined;
     }
     this.selectedEmail = value;
   }

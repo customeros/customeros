@@ -82,7 +82,7 @@ export const EmailPreviewModal = ({
       emailUseCase.updateSubject(`Re: ${subject}`);
 
       if (from?.[0].value) {
-        emailUseCase.fromSelector.select(from as SelectOption[]);
+        emailUseCase.fromSelector.select(from[0] as SelectOption);
       }
       emailUseCase.toSelector.select(
         getEmailParticipantsNameAndEmailSelection(to) || [],
