@@ -197,10 +197,23 @@ async function createServer() {
   app.use(helmet());
   app.use(jwtMiddleware);
 
-  const customerOsApiProxy = createProxyMiddleware({
+  const customerOsApiGqlProxy = createProxyMiddleware({
     pathFilter: '/customer-os-api',
     pathRewrite: { '^/customer-os-api': '' },
     target: process.env.CUSTOMER_OS_API_PATH + '/query',
+    changeOrigin: true,
+    headers: {
+      'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
+    },
+    logger: console,
+    preserveHeaderKeyCase: true,
+    followRedirects: true,
+  });
+
+  const customerOsApiRestProxy = createProxyMiddleware({
+    pathFilter: '/cos',
+    pathRewrite: { '^/cos': '' },
+    target: process.env.CUSTOMER_OS_API_PATH,
     changeOrigin: true,
     headers: {
       'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
@@ -249,7 +262,8 @@ async function createServer() {
     followRedirects: true,
   });
 
-  app.use(customerOsApiProxy);
+  app.use(customerOsApiGqlProxy);
+  app.use(customerOsApiRestProxy);
   app.use(settingsApiProxy);
   app.use(userAdminApiProxy);
   app.use(fileStorageApiProxy);
