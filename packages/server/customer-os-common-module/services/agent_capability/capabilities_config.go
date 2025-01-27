@@ -8,6 +8,8 @@ func GetCapabilityConfigStruct(capabilityType enum.AgentCapabilityType) any {
 	switch capabilityType {
 	case enum.CapabilitySendSlackNotification:
 		return &SendSlackNotificationConfig{}
+	case enum.CapabilitySendWebVisitorSlackNotification:
+		return &SendWebVisitorSlackNotificationConfig{}
 	default:
 		return &NoConfig{}
 	}
