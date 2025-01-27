@@ -147,9 +147,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case orgevents.OrganizationRefreshRenewalSummaryV1:
 		_ = s.organizationEventHandler.OnRefreshRenewalSummaryV1(ctx, evt)
 		return nil
-	case orgevents.OrganizationRefreshDerivedDataV1:
-		_ = s.organizationEventHandler.OnRefreshDerivedDataV1(ctx, evt)
-		return nil
 	case orgevents.OrganizationCreateBillingProfileV1:
 		_ = s.organizationEventHandler.OnCreateBillingProfile(ctx, evt)
 		return nil

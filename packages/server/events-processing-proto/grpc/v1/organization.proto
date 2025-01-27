@@ -27,13 +27,6 @@ message RefreshRenewalSummaryGrpcRequest {
   string appSource = 4;
 }
 
-message RefreshDerivedDataGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string loggedInUserId = 3;
-  string appSource = 4;
-}
-
 message LinkEmailToBillingProfileGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -141,7 +134,6 @@ message BillingProfileIdGrpcResponse {
 
 service organizationGrpcService {
   rpc RefreshRenewalSummary(RefreshRenewalSummaryGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc RefreshDerivedData(RefreshDerivedDataGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc RefreshArr(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc CreateBillingProfile(CreateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc UpdateBillingProfile(UpdateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);

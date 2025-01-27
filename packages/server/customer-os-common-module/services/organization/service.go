@@ -34,26 +34,36 @@ import (
 )
 
 type organizationService struct {
-	log      logger.Logger
-	postgres *postgres_repository.Repositories
-	neo4j    *neo4j_repository.Repositories
-	events   *events.EventsService
-	domain   interfaces.DomainService
-	industry interfaces.IndustryService
-	user     interfaces.UserService
-	social   interfaces.SocialService
+	log             logger.Logger
+	postgres        *postgres_repository.Repositories
+	neo4j           *neo4j_repository.Repositories
+	events          *events.EventsService
+	domain          interfaces.DomainService
+	industry        interfaces.IndustryService
+	user            interfaces.UserService
+	social          interfaces.SocialService
+	currencyService interfaces.CurrencyService
 }
 
-func NewOrganizationService(log logger.Logger, postgres *postgres_repository.Repositories, neo4j *neo4j_repository.Repositories, events *events.EventsService, domain interfaces.DomainService, industry interfaces.IndustryService, social interfaces.SocialService, user interfaces.UserService) interfaces.OrganizationService {
+func NewOrganizationService(log logger.Logger,
+	postgres *postgres_repository.Repositories,
+	neo4j *neo4j_repository.Repositories,
+	events *events.EventsService,
+	domain interfaces.DomainService,
+	industry interfaces.IndustryService,
+	social interfaces.SocialService,
+	user interfaces.UserService,
+	currencyService interfaces.CurrencyService) interfaces.OrganizationService {
 	return &organizationService{
-		log:      log,
-		postgres: postgres,
-		neo4j:    neo4j,
-		events:   events,
-		domain:   domain,
-		industry: industry,
-		user:     user,
-		social:   social,
+		log:             log,
+		postgres:        postgres,
+		neo4j:           neo4j,
+		events:          events,
+		domain:          domain,
+		industry:        industry,
+		user:            user,
+		social:          social,
+		currencyService: currencyService,
 	}
 }
 
@@ -1362,6 +1372,175 @@ func (s *organizationService) ValidateOrganizationExists(ctx context.Context, tx
 		tracing.TraceErr(span, err)
 		return err
 	}
+
+	return nil
+}
+
+func (s *organizationService) UpdateDerivedData(ctx context.Context, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateDerivedData")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, organizationId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	organizationEntity, err := s.GetById(ctx, tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = s.calculateChurnedDate(ctx, organizationEntity)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to calculate churned date"))
+	}
+	err = s.calculateLtv(ctx, tenant, organizationEntity)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to calculate ltv"))
+	}
+
+	s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+	return nil
+}
+
+func (s *organizationService) calculateChurnedDate(ctx context.Context, organizationEntity *neo4jentity.OrganizationEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.calculateChurnedDate")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, organizationEntity.ID)
+
+	tenant := common.GetTenantFromContext(ctx)
+	// get all contracts for organization
+	orgContracts, err := s.neo4j.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{organizationEntity.ID})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while getting contracts for organization %s: %s", organizationEntity.ID, err.Error())
+		return err
+	}
+
+	orgContractEntities := []neo4jentity.ContractEntity{}
+	for _, orgContract := range orgContracts {
+		orgContractEntities = append(orgContractEntities, *neo4jmapper.MapDbNodeToContractEntity(orgContract.Node))
+	}
+	endedContractFound := false
+	nonEndedContractFound := false
+	var endedAt *time.Time
+
+	for _, contract := range orgContractEntities {
+		if contract.ContractStatus == neo4jenum.ContractStatusDraft {
+			continue
+		}
+		if contract.ContractStatus == neo4jenum.ContractStatusEnded {
+			endedContractFound = true
+			if contract.EndedAt != nil && (endedAt == nil || contract.EndedAt.After(*endedAt)) {
+				endedAt = contract.EndedAt
+			}
+		}
+		if contract.ContractStatus != neo4jenum.ContractStatusEnded && contract.ContractStatus != neo4jenum.ContractStatusDraft {
+			nonEndedContractFound = true
+			break
+		}
+	}
+
+	if nonEndedContractFound {
+		span.LogFields(log.String("result", "no non-ended contracts found"))
+		return nil
+	}
+
+	if endedContractFound && endedAt != nil {
+		err = s.neo4j.OrganizationWriteRepository.UpdateTimeProperty(ctx, tenant, organizationEntity.ID, "derivedChurnedAt", endedAt)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Failed to update churn date for organization %s: %s", organizationEntity.ID, err.Error())
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *organizationService) calculateLtv(ctx context.Context, tenant string, organizationEntity *neo4jentity.OrganizationEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.calculateLtv")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, organizationEntity.ID)
+
+	// get all contracts for organization
+	orgContracts, err := s.neo4j.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{organizationEntity.ID})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while getting contracts for organization %s: %s", organizationEntity.ID, err.Error())
+		return err
+	}
+
+	var orgContractEntities []neo4jentity.ContractEntity
+	for _, orgContract := range orgContracts {
+		orgContractEntities = append(orgContractEntities, *neo4jmapper.MapDbNodeToContractEntity(orgContract.Node))
+	}
+
+	// check multiple currencies
+	currencySet := make(map[string]struct{})
+	for _, contract := range orgContractEntities {
+		if contract.Ltv != 0 && contract.Currency.String() != "" {
+			currencySet[contract.Currency.String()] = struct{}{}
+		}
+	}
+	multipleCurrencies := len(currencySet) > 1
+
+	ltvCurrency := ""
+	if multipleCurrencies {
+		// get tenant base currency
+		tenantSettingsDbNode, err := s.neo4j.TenantReadRepository.GetTenantSettings(ctx, tenant)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Failed to get tenant settings for tenant %s: %s", tenant, err.Error())
+		}
+		tenantSettings := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
+		ltvCurrency = tenantSettings.BaseCurrency.String()
+	} else if len(currencySet) == 1 {
+		ltvCurrency = orgContractEntities[0].Currency.String()
+	}
+
+	ltv := 0.0
+	for _, contract := range orgContractEntities {
+		if ltvCurrency == "" || contract.Currency.String() == ltvCurrency {
+			ltv += contract.Ltv
+		} else {
+			rate, err := s.currencyService.GetRate(ctx, contract.Currency.String(), ltvCurrency)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Failed to get rate for currency %s: %s", contract.Currency.String(), err.Error())
+				continue
+			}
+			ltv += contract.Ltv * rate
+		}
+	}
+
+	// set ltv
+	truncatedLtv := utils.TruncateFloat64(ltv, 2)
+	err = s.neo4j.OrganizationWriteRepository.UpdateFloatProperty(ctx, tenant, organizationEntity.ID, "derivedLtv", truncatedLtv)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed to update ltv for organization %s: %s", organizationEntity.ID, err.Error())
+	}
+
+	// set ltv currency
+	if ltvCurrency != "" {
+		err = s.neo4j.OrganizationWriteRepository.UpdateStringProperty(ctx, tenant, organizationEntity.ID, "derivedLtvCurrency", ltvCurrency)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Failed to update ltv currency for organization %s: %s", organizationEntity.ID, err.Error())
+		}
+	}
+
+	span.LogFields(log.String("result.ltv", fmt.Sprintf("%f", truncatedLtv)))
+	span.LogFields(log.String("result.ltvCurrency", ltvCurrency))
 
 	return nil
 }
