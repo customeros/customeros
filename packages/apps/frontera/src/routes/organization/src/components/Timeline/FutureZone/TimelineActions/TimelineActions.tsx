@@ -12,7 +12,6 @@ import { TimelineActionLogEntryContextContextProvider } from '@organization/comp
 
 import { TimelineActionsArea } from './TimelineActionsArea';
 import { TimelineActionButtons } from './TimelineActionButtons';
-import TimelineActionEmailContextContextProvider from './context/TimelineActionEmailContext';
 
 interface TimelineActionsProps {
   invalidateQuery: () => void;
@@ -51,29 +50,24 @@ export const TimelineActions = observer(
     );
 
     return (
-      <TimelineActionEmailContextContextProvider
+      <TimelineActionLogEntryContextContextProvider
         id={id}
         invalidateQuery={invalidateQuery}
       >
-        <TimelineActionLogEntryContextContextProvider
-          id={id}
-          invalidateQuery={invalidateQuery}
-        >
-          <div className='bg-gray-25'>
-            <TimelineActionButtons
-              onClick={setActiveEditor}
-              emailUseCase={emailUseCase}
-              activeEditor={activeEditor}
-              invalidateQuery={invalidateQuery}
-            />
-            <TimelineActionsArea
-              emailUseCase={emailUseCase}
-              activeEditor={activeEditor}
-              hide={() => setActiveEditor(null)}
-            />
-          </div>
-        </TimelineActionLogEntryContextContextProvider>
-      </TimelineActionEmailContextContextProvider>
+        <div className='bg-gray-25'>
+          <TimelineActionButtons
+            onClick={setActiveEditor}
+            emailUseCase={emailUseCase}
+            activeEditor={activeEditor}
+            invalidateQuery={invalidateQuery}
+          />
+          <TimelineActionsArea
+            emailUseCase={emailUseCase}
+            activeEditor={activeEditor}
+            hide={() => setActiveEditor(null)}
+          />
+        </div>
+      </TimelineActionLogEntryContextContextProvider>
     );
   },
 );

@@ -27,6 +27,11 @@ export const EmailTimelineAction = ({
     }
   };
 
+  const handleDiscard = () => {
+    emailUseCase.resetEditor();
+    closeEditor();
+  };
+
   useKey('Escape', () => {
     handleClose();
   });
@@ -37,7 +42,7 @@ export const EmailTimelineAction = ({
         <ComposeEmailContainer
           modal={false}
           onClose={handleClose}
-          onDiscard={closeEditor}
+          onDiscard={handleDiscard}
           emailUseCase={emailUseCase}
         />
       </div>

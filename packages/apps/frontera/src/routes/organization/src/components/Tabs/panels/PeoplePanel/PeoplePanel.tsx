@@ -20,7 +20,6 @@ import { ContactDetails } from '@shared/components/ContactDetails';
 import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
 import { SortOptionsMenu } from './components/SortOptionsMenu';
-import { ContactCard } from './components/ContactCard/ContactCard';
 const searchSortContactUseCase = new SearchSortContact();
 
 export const PeoplePanel = observer(() => {
@@ -235,9 +234,9 @@ export const PeoplePanel = observer(() => {
             style={{ width: '100%' }}
           >
             <ContactDetails
-              id={contact?.id}
               isExpandble={true}
               expandAll={expandAll}
+              id={contact?.id ?? ''}
             />
           </div>
         ))}
