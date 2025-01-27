@@ -18,6 +18,8 @@ type QuickbooksSettingsEntity struct {
 	RefreshTokenExpiresIn int       `gorm:"column:refresh_token_expires_in;"`
 	RefreshTokenExpiresAt time.Time `gorm:"column:refresh_token_expires_at;type:timestamp"`
 	RefreshTokenExpired   bool      `gorm:"column:refresh_token_expired;"`
+
+	SalesAccountId string `gorm:"column:sales_account_id;"`
 }
 
 func (QuickbooksSettingsEntity) TableName() string {

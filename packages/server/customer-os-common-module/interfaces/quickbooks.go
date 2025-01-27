@@ -46,6 +46,13 @@ type QuickbooksGetProductResponse struct {
 	} `json:"Item"`
 }
 
+type QuickbooksSaveAccountResponse struct {
+	QuickbooksCheckFaultResponse
+	Account *struct {
+		Id string `json:"Id"`
+	} `json:"Account"`
+}
+
 type QuickbooksSaveProductResponse struct {
 	QuickbooksCheckFaultResponse
 	Product *struct {
