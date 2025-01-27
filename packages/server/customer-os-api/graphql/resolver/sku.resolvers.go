@@ -7,12 +7,14 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
@@ -58,11 +60,16 @@ func (r *mutationResolver) SkuSave(ctx context.Context, input model.SkuInput) (*
 		return nil, err
 	}
 
+	err = r.Services.CommonServices.Events.Publisher.PublishEvent(ctx, sku.ID, commonModel.SKU, dto.SkuUpdate{})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
 	return mapper.MapEntityToSku(sku), nil
 }
 
-// SkuDelete is the resolver for the sku_Delete field.
-func (r *mutationResolver) SkuDelete(ctx context.Context, id string) (*model.Result, error) {
+// SkuArchive is the resolver for the sku_Archive field.
+func (r *mutationResolver) SkuArchive(ctx context.Context, id string) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "SkuResolver.SkuDelete", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -83,11 +90,16 @@ func (r *mutationResolver) SkuDelete(ctx context.Context, id string) (*model.Res
 		return nil, err
 	}
 
-	err = r.Services.CommonServices.PostgresRepositories.SkuRepository.Delete(ctx, tenant, id)
+	err = r.Services.CommonServices.PostgresRepositories.SkuRepository.Archive(ctx, tenant, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to delete sku")
 		return nil, err
+	}
+
+	err = r.Services.CommonServices.Events.Publisher.PublishEvent(ctx, sku.ID, commonModel.SKU, dto.SkuUpdate{})
+	if err != nil {
+		tracing.TraceErr(span, err)
 	}
 
 	return &model.Result{Result: true}, nil
@@ -101,7 +113,7 @@ func (r *queryResolver) Skus(ctx context.Context) ([]*model.Sku, error) {
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	skuEntities, err := r.Services.CommonServices.PostgresRepositories.SkuRepository.GetAll(ctx, tenant)
+	skuEntities, err := r.Services.CommonServices.PostgresRepositories.SkuRepository.GetAll(ctx, tenant, utils.BoolPtr(false))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get skus")

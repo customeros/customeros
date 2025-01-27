@@ -559,17 +559,10 @@ func (s *contractService) updateOrganizationRelationship(ctx context.Context, te
 				s.log.Errorf("UpdateOrganization failed: %s", err.Error())
 				return errors.Wrap(err, "UpdateOrganization")
 			}
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return s.grpc.OrganizationClient.RefreshDerivedData(ctx, &organizationpb.RefreshDerivedDataGrpcRequest{
-					Tenant:         tenant,
-					OrganizationId: orgEntity.ID,
-					AppSource:      common.GetAppSourceFromContext(ctx),
-				})
-			})
+			err = s.org.UpdateDerivedData(ctx, orgEntity.ID)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				s.log.Errorf("RefreshDerivedData failed: %s", err.Error())
-				return errors.Wrap(err, "RefreshDerivedData")
+				s.log.Errorf("UpdateDerivedData failed: %s", err.Error())
 			}
 		}
 	}
@@ -1147,14 +1140,7 @@ func (s *contractService) RecalculateContractLtv(ctx context.Context, contractId
 
 	// request organization ltv refresh
 	if organizationEntity.ID != "" {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.grpc.OrganizationClient.RefreshDerivedData(ctx, &organizationpb.RefreshDerivedDataGrpcRequest{
-				Tenant:         tenant,
-				OrganizationId: organizationEntity.ID,
-				AppSource:      common.GetAppSourceFromContext(ctx),
-			})
-		})
+		err = s.org.UpdateDerivedData(ctx, organizationEntity.ID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}

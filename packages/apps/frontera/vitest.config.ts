@@ -11,6 +11,9 @@ export default defineConfig({
     testTimeout: 30000,
     setupFiles: ['src/store/vitest-hooks.ts'],
     hookTimeout: 60000,
+    alias: {
+      '@infra': path.resolve(__dirname, './src/infra'),
+    },
   },
   plugins: [graphqlLoader()],
   resolve: {

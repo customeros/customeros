@@ -209,7 +209,7 @@ func InitCommonServices(
 	issueImpl := issue.NewIssueService(log, neo4jRepositories, eventsImpl, nil)
 	contactImpl := contact.NewContactService(log, neo4jRepositories, eventsImpl, domainImpl, emailImpl, nil, jobroleImpl, nil, nil)
 	socialImpl := social.NewSocialService(log, neo4jRepositories, eventsImpl, contactImpl)
-	orgImpl := organization.NewOrganizationService(log, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl)
+	orgImpl := organization.NewOrganizationService(log, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl, currencyImpl)
 	webVisitProcessorImpl := intent_signals.NewWebVisitProcessor(postgresRepositories, eventsImpl, orgImpl)
 	contractImpl := contract.NewContractService(log, neo4jRepositories, eventsImpl, grpcClients, nil, orgImpl)
 	opportunityImpl := opportunity.NewOpportunityService(log, grpcClients, neo4jRepositories, eventsImpl, contractImpl, orgImpl, tenantSettingsImpl)

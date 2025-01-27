@@ -121,7 +121,7 @@ func (s *quickbooksService) GetAndStoreAccessToken(ctx context.Context, realmId 
 
 //TODO create a CustomerOS invoice Account in QB and link services to it
 
-func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName string) (*interfaces.QuickbooksSaveProductResponse, error) {
+func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName string, archived bool) (*interfaces.QuickbooksSaveProductResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveProduct")
 	defer span.Finish()
 
@@ -139,63 +139,82 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 		return nil, nil
 	}
 
+	if quickbooksSettingsEntity.SalesAccountId == "" {
+
+		salesAccountUrl := fmt.Sprintf("https://sandbox-quickbooks.api.intuit.com/v3/company/%s/account", quickbooksSettingsEntity.RealmId)
+		salesAccountRequest := map[string]interface{}{
+			"Name":        "CustomerOS Sales",
+			"AccountType": "Income",
+		}
+
+		qbAccountResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, salesAccountUrl, "POST", salesAccountRequest)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		var qbAccount interfaces.QuickbooksSaveAccountResponse
+		err = json.Unmarshal(qbAccountResponse, &qbAccount)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		quickbooksSettingsEntity.SalesAccountId = qbAccount.Account.Id
+		_, err = s.postgres.QuickbooksSettingsRepository.Save(ctx, *quickbooksSettingsEntity)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+	}
+
+	// load product from QB to get the SyncToken
+
 	request := map[string]interface{}{
 		"Name": productName,
 		"Type": "Service",
 		"IncomeAccountRef": map[string]interface{}{
-			"value": "1", // TODO HOW DO WE GET THIS ID??
+			"value": quickbooksSettingsEntity.SalesAccountId,
 		},
+		"Active": !archived,
 	}
 
 	if id != "" {
 		request["Id"] = id
 	}
 
-	payload, err := json.Marshal(request)
+	if id != "" {
+		productByIdUrl := fmt.Sprintf("https://sandbox-quickbooks.api.intuit.com/v3/company/%s/item/%s", quickbooksSettingsEntity.RealmId, id)
+		qbProductResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, productByIdUrl, "GET", request)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		var qbProduct interfaces.QuickbooksGetProductResponse
+		err = json.Unmarshal(qbProductResponse, &qbProduct)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		request["SyncToken"] = qbProduct.Product.SyncToken
+	}
+
+	requestUrl := fmt.Sprintf("https://sandbox-quickbooks.api.intuit.com/v3/company/%s/item", quickbooksSettingsEntity.RealmId)
+
+	qbResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, requestUrl, "POST", request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	// Create a new HTTP request
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://sandbox-quickbooks.api.intuit.com/v3/company/%s/item?minorversion=73", quickbooksSettingsEntity.RealmId), bytes.NewBuffer(payload))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	// Set headers
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+quickbooksSettingsEntity.AccessToken)
-
-	// Perform the HTTP request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Read response body
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	// convert body to OauthSlackResponse
 	var quickbooksResponse interfaces.QuickbooksSaveProductResponse
-	err = json.Unmarshal(body, &quickbooksResponse)
+	err = json.Unmarshal(qbResponse, &quickbooksResponse)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
-	}
-
-	if quickbooksResponse.Fault != nil {
-		span.LogFields(log.Object("error", quickbooksResponse.Fault))
-		return nil, fmt.Errorf("error: %s", quickbooksResponse.Fault.Error[0].Message)
 	}
 
 	return &quickbooksResponse, nil
@@ -351,4 +370,101 @@ func (s *quickbooksService) SaveInvoice(ctx context.Context, customerId string, 
 	}
 
 	return &quickbooksResponse, nil
+}
+
+func (s *quickbooksService) performRequest(ctx context.Context, quickbooksSettingsEntity *postgres_entity.QuickbooksSettingsEntity, requestUrl string, requestMethod string, requestBody map[string]interface{}) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.performRequest")
+	defer span.Finish()
+
+	payload, err := json.Marshal(requestBody)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// Create a new HTTP request
+	req, err := http.NewRequest(requestMethod, requestUrl, bytes.NewBuffer(payload))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// Set headers
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+quickbooksSettingsEntity.AccessToken)
+
+	// Perform the HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var bodyBytes []byte
+
+	// Read response body
+	bodyBytes, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// convert body to OauthSlackResponse
+	var quickbooksCheckFaultResponse interfaces.QuickbooksCheckFaultResponse
+	err = json.Unmarshal(bodyBytes, &quickbooksCheckFaultResponse)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	fault := quickbooksCheckFaultResponse.Fault
+	if fault != nil {
+
+		if (*fault).Type == "AUTHENTICATION" {
+			//refresh token
+
+			requestData := url.Values{}
+			requestData.Set("grant_type", "refresh_token")
+			requestData.Set("refresh_token", quickbooksSettingsEntity.RefreshToken)
+
+			quickbooksSettingsEntity, err = s.GetAndStoreAccessToken(ctx, quickbooksSettingsEntity.RealmId, requestData)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			// retry the HTTP request
+			client := &http.Client{}
+			resp, err := client.Do(req)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+			defer resp.Body.Close()
+
+			// Read response body
+			bodyBytes, err = ioutil.ReadAll(resp.Body)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			err = json.Unmarshal(bodyBytes, &quickbooksCheckFaultResponse)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+		} else {
+
+			span.LogFields(log.Object("error", fault))
+			return nil, fmt.Errorf("error: %s", fault.Error[0].Message)
+
+		}
+	}
+
+	return bodyBytes, nil
 }

@@ -12,9 +12,9 @@ import (
 
 type SkuRepository interface {
 	Get(ctx context.Context, tenant, id string) (*postgres_entity.SkuEntity, error)
-	GetAll(ctx context.Context, tenant string) ([]*postgres_entity.SkuEntity, error)
+	GetAll(ctx context.Context, tenant string, archived *bool) ([]*postgres_entity.SkuEntity, error)
 	Save(ctx context.Context, sku *postgres_entity.SkuEntity) (*postgres_entity.SkuEntity, error)
-	Delete(ctx context.Context, tenant, id string) error
+	Archive(ctx context.Context, tenant, id string) error
 }
 
 type skuRepository struct {
@@ -54,13 +54,19 @@ func (repo *skuRepository) Get(ctx context.Context, tenant, id string) (*postgre
 	return existing, nil
 }
 
-func (repo *skuRepository) GetAll(ctx context.Context, tenant string) ([]*postgres_entity.SkuEntity, error) {
+func (repo *skuRepository) GetAll(ctx context.Context, tenant string, archived *bool) ([]*postgres_entity.SkuEntity, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "SkuRepository.GetAll")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
+	var err error
 	var existing []*postgres_entity.SkuEntity
-	err := repo.db.Find(&existing, "tenant = ?", tenant).Error
+
+	if archived == nil {
+		err = repo.db.Find(&existing, "tenant = ?", tenant).Error
+	} else {
+		err = repo.db.Find(&existing, "tenant = ? and archived = ?", tenant, archived).Error
+	}
 
 	if err != nil {
 		span.LogFields(tracingLog.Bool("result.found", false))
@@ -83,8 +89,8 @@ func (repo *skuRepository) Save(ctx context.Context, sku *postgres_entity.SkuEnt
 	return sku, nil
 }
 
-func (repo *skuRepository) Delete(ctx context.Context, tenant, id string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "SkuRepository.Delete")
+func (repo *skuRepository) Archive(ctx context.Context, tenant, id string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "SkuRepository.Archive")
 	defer span.Finish()
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
@@ -95,9 +101,12 @@ func (repo *skuRepository) Delete(ctx context.Context, tenant, id string) error 
 		return err
 	}
 
-	err = repo.db.Delete(&existing).Error
-	if err != nil {
-		return err
+	existing.Archived = true
+
+	result := repo.db.Save(existing)
+	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
+		return fmt.Errorf("archiving sku failed: %w", result.Error)
 	}
 
 	return nil

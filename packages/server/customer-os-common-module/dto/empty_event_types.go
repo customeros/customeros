@@ -17,3 +17,5 @@ type FlowParticipantSchedule struct{}
 type MailstackProvisionBuyRequest struct{}
 
 type MailstackProvisionMailbox struct{}
+
+type SkuUpdate struct{}

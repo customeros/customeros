@@ -105,6 +105,15 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 		DataType:  reflect.TypeOf(dto.RequestEnrichOrganization{}),
 	})
 
+	// SKU handlers
+	eventsService.Subscriber.RegisterHandler(dto.SkuUpdate{}, interfaces.EventHandler{
+		HandlerFunc: func(ctx context.Context, event any) error {
+			return listeners.OnSkuUpdate(ctx, dependencies, event)
+		},
+		EventType: reflect.TypeOf(dto.SkuUpdate{}).Name(),
+		DataType:  reflect.TypeOf(dto.SkuUpdate{}),
+	})
+
 	// Automation Engine
 	eventsService.Subscriber.RegisterHandler(dto.WebhookEvent{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {

@@ -4,12 +4,11 @@ import (
 	"context"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"net/url"
-	"time"
 )
 
 type QuickbooksService interface {
 	GetAndStoreAccessToken(ctx context.Context, realmId string, requestData url.Values) (*postgres_entity.QuickbooksSettingsEntity, error)
-	SaveProduct(ctx context.Context, id, productName string) (*QuickbooksSaveProductResponse, error)
+	SaveProduct(ctx context.Context, id, productName string, archived bool) (*QuickbooksSaveProductResponse, error)
 	SaveCustomer(ctx context.Context, id, customerName string) (*QuickbooksSaveCustomerResponse, error)
 }
 
@@ -33,31 +32,42 @@ type OauthQuickbooksResponse struct {
 }
 
 type QuickbooksSaveCustomerResponse struct {
+	QuickbooksCheckFaultResponse
 	Customer *struct {
 		Id string `json:"Id"`
 	} `json:"Customer"`
-	Fault *struct {
-		Error []struct {
-			Message string `json:"Message"`
-			Detail  string `json:"Detail"`
-			Code    string `json:"code"`
-		} `json:"Error"`
-		Type string `json:"type"`
-	} `json:"Fault"`
-	Time time.Time `json:"time"`
+}
+
+type QuickbooksGetProductResponse struct {
+	QuickbooksCheckFaultResponse
+	Product *struct {
+		Id        string `json:"Id"`
+		SyncToken string `json:"SyncToken"`
+	} `json:"Item"`
+}
+
+type QuickbooksSaveAccountResponse struct {
+	QuickbooksCheckFaultResponse
+	Account *struct {
+		Id string `json:"Id"`
+	} `json:"Account"`
 }
 
 type QuickbooksSaveProductResponse struct {
-	Customer *struct {
+	QuickbooksCheckFaultResponse
+	Product *struct {
 		Id string `json:"Id"`
-	} `json:"Customer"`
+	} `json:"Item"`
+}
+
+type QuickbooksCheckFaultResponse struct {
 	Fault *struct {
 		Error []struct {
-			Message string `json:"Message"`
-			Detail  string `json:"Detail"`
-			Code    string `json:"code"`
-		} `json:"Error"`
+			Message string      `json:"message"`
+			Detail  string      `json:"detail"`
+			Code    string      `json:"code"`
+			Element interface{} `json:"element"`
+		} `json:"error"`
 		Type string `json:"type"`
-	} `json:"Fault"`
-	Time time.Time `json:"time"`
+	} `json:"fault"`
 }

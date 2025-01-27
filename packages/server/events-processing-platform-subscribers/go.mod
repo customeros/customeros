@@ -128,7 +128,7 @@ require (
 	golang.org/x/time v0.9.0 // indirect
 	google.golang.org/api v0.210.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241202173237-19429a94021a // indirect
-	google.golang.org/protobuf v1.36.2 // indirect
+	google.golang.org/protobuf v1.36.4 // indirect
 	gorm.io/datatypes v1.2.5 // indirect
 	gorm.io/driver/mysql v1.5.6 // indirect
 	gorm.io/driver/postgres v1.5.11 // indirect
