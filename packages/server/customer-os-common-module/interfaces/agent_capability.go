@@ -13,6 +13,8 @@ type AgentCapabilityRegistry interface {
 
 type AgentCapabilityExecution[I any, O any, C any] interface {
 	Execute(ctx context.Context, inputData I, configData C) (outputData O, error error)
+	ValidateConfig(C) error
+	ValidateInput(I) error
 }
 
 type AgentCapabilityUntyped interface {

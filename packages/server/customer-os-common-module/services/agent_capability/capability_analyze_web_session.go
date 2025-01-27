@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"sort"
 	"strings"
 
@@ -22,6 +23,20 @@ import (
 type AnalyzeWebSessionCapability struct {
 	postgresRepositories *postgres_repository.Repositories
 	actionService        interfaces.ActionService
+}
+
+func (c *AnalyzeWebSessionCapability) ValidateConfig(config NoConfig) error {
+	return nil
+}
+
+func (c *AnalyzeWebSessionCapability) ValidateInput(data AnalyzeWebSessionInput) error {
+	if data.SessionID == "" {
+		return errors.New("Missing required input data: SessionID")
+	}
+	if data.Domain == "" {
+		return coserrors.ErrCapabilityDomainMissing
+	}
+	return nil
 }
 
 func (c *AnalyzeWebSessionCapability) GetInput() any {
@@ -75,9 +90,8 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeW
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
-	// validation
-	if data.SessionID == "" || data.Domain == "" {
-		err := errors.New("Missing required input data")
+	err := c.ValidateInput(data)
+	if err != nil {
 		tracing.TraceErr(span, err)
 		return AnalyzeWebSessionResult{}, err
 	}

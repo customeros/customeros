@@ -82,6 +82,7 @@ func (f *agentsRepository) GetAll(ctx context.Context) ([]*postgres_entity.Agent
 	return agents, nil
 }
 
+// TODO alexb rename it
 func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agents, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentsRepository.FindAllFromAgentsList")
 	defer span.Finish()
@@ -101,7 +102,7 @@ func (f *agentsRepository) FindAllFromAgentsList(ctx context.Context, agents []e
 		agentIds[i] = agent.String()
 	}
 
-	query := f.gormDb.Where("tenant = ? AND is_active = ? AND (flow_id IS NULL OR flow_id = '')", tenant, true)
+	query := f.gormDb.Where("tenant = ? AND is_active = ?", tenant, true)
 	if len(agentIds) > 0 {
 		query = query.Where("type IN (?)", agentIds)
 	}

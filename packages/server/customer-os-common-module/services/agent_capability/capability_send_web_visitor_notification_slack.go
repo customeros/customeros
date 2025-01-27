@@ -12,59 +12,58 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
-type SendSlackNotificationCapability struct {
+type SendWebVisitorSlackNotificationCapability struct {
 	notificationService interfaces.NotificationService
 }
 
-func (c *SendSlackNotificationCapability) ValidateConfig() error {
+func (c *SendWebVisitorSlackNotificationCapability) ValidateConfig() error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c *SendSlackNotificationCapability) ValidateInput() error {
+func (c *SendWebVisitorSlackNotificationCapability) ValidateInput() error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c *SendSlackNotificationCapability) GetInput() any {
+func (c *SendWebVisitorSlackNotificationCapability) GetInput() any {
 	return &SendSlackNotificationInput{}
 }
 
-func (c *SendSlackNotificationCapability) GetConfig() any {
+func (c *SendWebVisitorSlackNotificationCapability) GetConfig() any {
 	return &SendSlackNotificationConfig{}
 }
 
-func (c *SendSlackNotificationCapability) GetOutput() any {
+func (c *SendWebVisitorSlackNotificationCapability) GetOutput() any {
 	return &SendSlackNotificationResult{}
 }
 
-func NewSendSlackNotificationCapability(notificationService interfaces.NotificationService) *SendSlackNotificationCapability {
-	return &SendSlackNotificationCapability{
+func NewSendWebVisitorSlackNotificationCapability(notificationService interfaces.NotificationService) *SendWebVisitorSlackNotificationCapability {
+	return &SendWebVisitorSlackNotificationCapability{
 		notificationService: notificationService,
 	}
 }
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapabilityExecution[SendSlackNotificationInput, SendSlackNotificationResult, SendSlackNotificationConfig] = (*SendSlackNotificationCapability)(nil)
-	_ interfaces.AgentCapabilityUntyped                                                                                         = (*SendSlackNotificationCapability)(nil)
+	_ interfaces.AgentCapabilityExecution[SendSlackNotificationInput, SendSlackNotificationResult, SendSlackNotificationConfig] = (*SendWebVisitorSlackNotificationCapability)(nil)
+	_ interfaces.AgentCapabilityUntyped                                                                                         = (*SendWebVisitorSlackNotificationCapability)(nil)
 )
 
-type SendSlackNotificationInput struct {
-	Message   *string `json:"message,omitempty"`
-	ChannelID string  `json:"channelId"`
+type SendWebVisitorSlackNotificationInput struct {
+	Message *string `json:"message,omitempty"`
 }
 
-type SendSlackNotificationResult struct {
+type SendWebVisitorSlackNotificationResult struct {
 	Success bool `json:"success"`
 }
 
-type SendSlackNotificationConfig struct {
+type SendWebVisitorSlackNotificationConfig struct {
 	ChannelID string `json:"channelId"`
 }
 
-func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data SendSlackNotificationInput, config SendSlackNotificationConfig) (SendSlackNotificationResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SendSlackNotificationCapability.Execute")
+func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context, data SendSlackNotificationInput, config SendSlackNotificationConfig) (SendSlackNotificationResult, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SendWebVisitorSlackNotificationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
@@ -94,7 +93,7 @@ func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data Send
 
 // ExecuteUntyped implements the AgentCapabilityUntyped interface.
 // It casts the generic input and config to the specific types and delegates to the typed Execute method.
-func (c *SendSlackNotificationCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
+func (c *SendWebVisitorSlackNotificationCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
 	typedInput, ok := input.(*SendSlackNotificationInput)
 	if !ok {
 		return nil, fmt.Errorf("invalid input type: expected SendSlackNotificationInput")

@@ -3,8 +3,6 @@ package agent_capability
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
@@ -14,6 +12,16 @@ import (
 
 type CreateOrganizationCapability struct {
 	organizationService interfaces.OrganizationService
+}
+
+func (c *CreateOrganizationCapability) ValidateConfig() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *CreateOrganizationCapability) ValidateInput() error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (c *CreateOrganizationCapability) GetInput() any {
@@ -26,11 +34,6 @@ func (c *CreateOrganizationCapability) GetConfig() any {
 
 func (c *CreateOrganizationCapability) GetOutput() any {
 	return &CreateOrganizationResult{}
-}
-
-// CapType returns the capability's corresponding AgentCapabilityType.
-func (c *CreateOrganizationCapability) CapType() enum.AgentCapabilityType {
-	return enum.CapabilityCreateOrganization
 }
 
 func NewCreateOrganizationCapability(orgService interfaces.OrganizationService) *CreateOrganizationCapability {
@@ -59,6 +62,12 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateO
 	tracing.TagComponentService(span)
 
 	results := CreateOrganizationResult{}
+
+	if data.Domain == "" {
+		err := fmt.Errorf("domain is required")
+		tracing.TraceErr(span, err)
+		return results, err
+	}
 
 	orgID, err := c.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
 		Domains: []string{data.Domain},

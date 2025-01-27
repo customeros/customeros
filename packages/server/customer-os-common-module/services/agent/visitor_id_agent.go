@@ -59,13 +59,6 @@ func (a *VisitorIDAgent) Run(ctx context.Context, agentID string, event *data_fi
 		return err
 	}
 
-	// create execution record
-	executionID, err := a.createAgentExecutionRecord(ctx, agentID, event.Type())
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to create agent execution record"))
-		return err
-	}
-
 	// lookup capabilities
 
 	// execute identify visitor capability

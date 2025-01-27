@@ -15,6 +15,16 @@ type ICPQualificationCapability struct {
 	aiService            interfaces.AIService
 }
 
+func (c *ICPQualificationCapability) ValidateConfig() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *ICPQualificationCapability) ValidateInput() error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (c *ICPQualificationCapability) GetInput() any {
 	return &ICPQualificationInput{}
 }

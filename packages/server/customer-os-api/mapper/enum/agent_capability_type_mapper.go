@@ -7,10 +7,11 @@ import (
 )
 
 var agentCapabilityTypeByModel = map[model.CapabilityType]enum.AgentCapabilityType{
-	model.CapabilityTypeSendSLACkNotification:   enum.CapabilitySendSlackNotification,
-	model.CapabilityTypeAnalyzeWebSessionIntent: enum.CapabilityAnalyzeWebSessionIntent,
-	model.CapabilityTypeCreateOrganization:      enum.CapabilityCreateOrganization,
-	model.CapabilityTypeIdentifyWebVisitor:      enum.CapabilityIdentifyWebVisitor,
+	model.CapabilityTypeSendSLACkNotification:           enum.CapabilitySendSlackNotification,
+	model.CapabilityTypeAnalyzeWebSessionIntent:         enum.CapabilityAnalyzeWebSessionIntent,
+	model.CapabilityTypeCreateOrganization:              enum.CapabilityCreateOrganization,
+	model.CapabilityTypeIdentifyWebVisitor:              enum.CapabilityIdentifyWebVisitor,
+	model.CapabilityTypeWebVisitorSendSLACkNotification: enum.CapabilitySendWebVisitorSlackNotification,
 }
 
 var agentCapabilityTypeByValue = utils.ReverseMap(agentCapabilityTypeByModel)

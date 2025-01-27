@@ -16,6 +16,16 @@ type ApplyTagCapability struct {
 	tagService interfaces.TagService
 }
 
+func (c *ApplyTagCapability) ValidateConfig() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *ApplyTagCapability) ValidateInput() error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (c *ApplyTagCapability) GetInput() any {
 	return &ApplyTagInput{}
 }

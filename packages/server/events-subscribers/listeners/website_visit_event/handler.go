@@ -6,6 +6,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -69,14 +70,13 @@ func (h *WebsiteVisitEventHandler) Handle(ctx context.Context) error {
 
 	var errs error
 	for _, agent := range activeAgents {
-		err := h.route(ctx, agent)
-		// TODO uncoment for generic processing
-		//initialParams, err := utils.StructToMap(h.event)
-		//if err != nil {
-		//	tracing.TraceErr(span, err)
-		//	errs = multierr.Append(errs, err)
-		//}
-		//err = h.dependencies.CommonServices.AgentRunnerService.Run(ctx, agent, h.event.Type(), initialParams)
+		// replaced route with generic mapping
+		initialParams, err := utils.StructToMap(h.event)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			errs = multierr.Append(errs, err)
+		}
+		err = h.dependencies.CommonServices.AgentRunnerService.Run(ctx, agent, h.event.Type(), initialParams)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
@@ -84,38 +84,6 @@ func (h *WebsiteVisitEventHandler) Handle(ctx context.Context) error {
 	}
 
 	return errs
-}
-
-func (h *WebsiteVisitEventHandler) route(ctx context.Context, agent postgres_entity.Agents) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteVisitEventHandler.route")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	if agent.Type == "" {
-		err := errors.New("agent.Type is empty")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if agent.ID == "" {
-		err := errors.New("agent.ID is empty")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// run agent
-	agentType := agent.Type
-
-	switch agentType {
-	case enum.AgentVisitorID:
-		return h.dependencies.CommonServices.VisitorIDAgent.Run(ctx, agent.ID, h.event)
-
-	default:
-		err := errors.New("Unsupported agent type")
-		span.LogKV("agentType", agentType.String())
-		tracing.TraceErr(span, err)
-		return err
-	}
 }
 
 func (h *WebsiteVisitEventHandler) lookupActiveAgents(ctx context.Context) []postgres_entity.Agents {

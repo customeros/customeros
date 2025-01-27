@@ -2,8 +2,8 @@ package agent_capability
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/opentracing/opentracing-go"
@@ -16,6 +16,20 @@ import (
 type IdentifyWebsiteVisitorCapability struct {
 	postgresRepositories *postgres_repository.Repositories
 	enrichmentService    interfaces.EnrichmentService
+}
+
+func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(config NoConfig) error {
+	return nil
+}
+
+func (c *IdentifyWebsiteVisitorCapability) ValidateInput(data IdentifyWebsiteVisitorInput) error {
+	if data.IPAddress == "" {
+		return errors.New("IP address cannot be empty")
+	}
+	if data.SessionID == "" {
+		return errors.New("SessionID cannot be empty")
+	}
+	return nil
 }
 
 func (c *IdentifyWebsiteVisitorCapability) GetInput() any {
@@ -63,13 +77,8 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data Ide
 
 	results := IdentifyWebsiteVisitorResult{}
 
-	if data.IPAddress == "" {
-		err := errors.New("IP address cannot be empty")
-		tracing.TraceErr(span, err)
-		return results, err
-	}
-	if data.SessionID == "" {
-		err := errors.New("SessionID cannot be empty")
+	err := c.ValidateInput(data)
+	if err != nil {
 		tracing.TraceErr(span, err)
 		return results, err
 	}

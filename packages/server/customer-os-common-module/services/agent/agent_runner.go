@@ -3,7 +3,6 @@ package agent
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -12,7 +11,6 @@ import (
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
-	"go.uber.org/multierr"
 )
 
 type AgentRunnerService struct {
@@ -62,67 +60,62 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	allParams := make(map[string]any)
 	utils.MergeMapToMap(initialParams, allParams)
 
-	var errs error
+	var capErr error
 	for _, capability := range agent.CapabilitiesConfig.Capabilities {
-		capType := capability.Type
+		if !capability.Active {
+			continue
+		}
 
-		capExecutor, err := a.agentCapabilitiesService.GetExecutor(capType)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to get capability executor"))
-			return err
+		capType := capability.Type
+		var capExecutor interfaces.AgentCapabilityUntyped
+		capExecutor, capErr = a.agentCapabilitiesService.GetExecutor(capType)
+		if capErr != nil {
+			break
 		}
 
 		input := capExecutor.GetInput()
-		err = utils.MapToStruct(allParams, input)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrapf(err, "unable to map input for capability : %s", capType))
-			return err
+		capErr = utils.MapToStruct(allParams, input)
+		if capErr != nil {
+			break
 		}
 
 		config := capExecutor.GetConfig()
 		if capability.Values != "" {
 			data := []byte(capability.Values)
-			err = json.Unmarshal(data, config)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrapf(err, "unable to unmarshal config for capability : %s", capType))
-				return err
+			capErr = json.Unmarshal(data, config)
+			if capErr != nil {
+				break
 			}
 		}
 
-		output, err := capExecutor.ExecuteUntyped(ctx, input, config)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			if capability.Optional {
-				errs = multierr.Append(errs, err)
-				continue
-			}
-			return fmt.Errorf("capability %s execution failed: %w", capType, err)
+		var output any
+		output, capErr = capExecutor.ExecuteUntyped(ctx, input, config)
+		if capErr != nil {
+			break
 		}
 
 		// Merge the output back into allParams for subsequent capabilities
 		if output != nil {
-			outputMap, err := utils.StructToMap(output)
-			if err != nil {
-				if capability.Optional {
-					fmt.Printf("Optional capability %s output conversion failed: %v. Skipping.\n", capType, err)
-					errs = multierr.Append(errs, err)
-					continue
-				}
-				return fmt.Errorf("output conversion failed for capability %s: %w", capType, err)
+			outputMap := make(map[string]any)
+			outputMap, capErr = utils.StructToMap(output)
+			if capErr != nil {
+				break
 			}
-
 			utils.MergeMapToMap(outputMap, allParams)
 		}
 	}
 
+	if capErr != nil {
+		tracing.TraceErr(span, err)
+		_, dbErr := a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, nil, utils.StringPtr(err.Error()), false)
+		if dbErr != nil {
+			tracing.TraceErr(span, errors.Wrap(dbErr, "unable to update agent execution record"))
+			return dbErr
+		}
+	}
+
 	// update agentExecutionRecord
-	_, err = a.postgresRepositories.AgentExecutionRepository.Update(
-		ctx,
-		executionID,
-		utils.NowPtr(),
-		nil,
-		true,
-	)
+	_, err = a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, utils.NowPtr(), nil, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

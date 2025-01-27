@@ -189,20 +189,20 @@ func registerVisitorIdpostgres_entityAgent() postgres_entity.AgentRegistry {
 		CapabilitiesConfig: postgres_entity.CapabilitiesConfig{
 			Capabilities: []postgres_entity.Capability{
 				{
-					Type:     enum.CapabilityIdentifyWebVisitor,
-					Optional: false,
+					Type:   enum.CapabilityIdentifyWebVisitor,
+					Active: true,
 				},
 				{
-					Type:     enum.CapabilityAnalyzeWebSessionIntent,
-					Optional: false,
+					Type:   enum.CapabilityAnalyzeWebSessionIntent,
+					Active: true,
 				},
 				{
-					Type:     enum.CapabilityCreateOrganization,
-					Optional: false,
+					Type:   enum.CapabilityCreateOrganization,
+					Active: true,
 				},
 				{
-					Type:     enum.CapabilitySendSlackNotification,
-					Optional: true,
+					Type:   enum.CapabilitySendWebVisitorSlackNotification,
+					Active: false,
 				},
 			},
 		},
