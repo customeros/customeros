@@ -409,10 +409,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
           ids: [record.id],
         });
 
-        this.root.ui.toastSuccess(
-          'Organization added successfully!',
-          record.id,
-        );
+        this.root.ui.toastSuccess('Organization added', record.id);
       });
     } catch (error) {
       runInAction(() => {

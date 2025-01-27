@@ -1,6 +1,6 @@
+import { Copy02 } from '@ui/media/icons/Copy02';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton';
-import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { getExternalUrl, getFormattedLink } from '@utils/getExternalLink';
 
@@ -33,8 +33,8 @@ export const LinkedInDisplay = ({
     <div className='flex items-center group'>
       <Tooltip label={url ?? ''}>
         <p
-          className='text-gray-700 truncate cursor-default'
-          onClick={() => copyToClipboard(url, 'LinkedIn profile copied')}
+          onClick={() => window.open(url, '_blank', 'noopener')}
+          className='text-gray-700 truncate cursor-default hover:underline hover:cursor-pointer'
         >
           {displayLink}
         </p>
@@ -43,9 +43,9 @@ export const LinkedInDisplay = ({
       <IconButton
         size='xxs'
         variant='ghost'
-        aria-label='contact website'
-        icon={<LinkExternal02 className='text-gray-500' />}
-        onClick={() => window.open(url, '_blank', 'noopener')}
+        aria-label='social-link'
+        icon={<Copy02 className='text-gray-500' />}
+        onClick={() => copyToClipboard(url, 'LinkedIn profile copied')}
         className='ml-1 rounded-[5px] opacity-0 group-hover:opacity-100'
       />
     </div>

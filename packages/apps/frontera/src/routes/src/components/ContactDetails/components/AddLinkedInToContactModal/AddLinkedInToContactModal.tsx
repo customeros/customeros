@@ -43,8 +43,14 @@ export const AddLinkedInToContactModal = observer(
       'Enter',
       () => {
         linkedInUseCase.submitLinkedInUrl();
-        !linkedInUseCase.emptyLinkedInUrl && onClose();
-        !linkedInUseCase.invalidLinkedInUrl && onClose();
+
+        if (
+          linkedInUseCase.emptyLinkedInUrl ||
+          linkedInUseCase.invalidLinkedInUrl
+        )
+          return;
+
+        onClose();
       },
       {
         targetRef: modalRef,
@@ -97,7 +103,7 @@ export const AddLinkedInToContactModal = observer(
             {linkedInUseCase.invalidLinkedInUrl &&
               !linkedInUseCase.emptyLinkedInUrl && (
                 <p className='text-error-500 text-[12px] mt-0'>
-                  Invalid linkedin URL
+                  This LinkedIn appears to be invalid
                 </p>
               )}
             {linkedInUseCase.error && (
@@ -116,8 +122,14 @@ export const AddLinkedInToContactModal = observer(
               dataTest='add-linkedin-url'
               onClick={() => {
                 linkedInUseCase.submitLinkedInUrl();
-                !linkedInUseCase.emptyLinkedInUrl && onClose();
-                !linkedInUseCase.invalidLinkedInUrl && onClose();
+
+                if (
+                  linkedInUseCase.emptyLinkedInUrl ||
+                  linkedInUseCase.invalidLinkedInUrl
+                )
+                  return;
+
+                onClose();
               }}
             >
               Add & enrich

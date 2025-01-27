@@ -144,7 +144,7 @@ export const ContactDetails = observer(
             style={{ paddingBottom: !isExpanded && isExpandble ? '0' : '8px' }}
           >
             {!isExpandble && (
-              <div className='flex items-center justify-between '>
+              <div className='flex items-center justify-between pb-3'>
                 <p className='text-base font-medium '>Contact overview</p>
                 <IconButton
                   size='xs'
