@@ -55,7 +55,7 @@ export class EmailParticipantSelectUsecase {
 
   @action
   private computeInitialEmailOptions() {
-    this.emailOptions = this.organization?.contacts
+    this.emailOptions = (this.organization?.contacts || [])
       .flatMap((e) => e.emails.map((d) => ({ ...d, contactName: e.name })))
       .filter(Boolean)
       .sort((a, b) => {
@@ -69,8 +69,8 @@ export class EmailParticipantSelectUsecase {
       })
       .map((contact) => {
         return {
-          value: contact.email,
-          label: contact.contactName,
+          value: contact?.email || '',
+          label: contact?.contactName || '',
         };
       });
   }
@@ -130,8 +130,9 @@ export class EmailParticipantSelectUsecase {
   @action
   public addOption() {
     if (!this.searchTerm) return;
+    const emailValidation = validateEmail(this.searchTerm);
 
-    if (validateEmail(this.searchTerm)) {
+    if (emailValidation) {
       this.root.ui.toastError('Invalid email address', 'invalid-email');
 
       return;

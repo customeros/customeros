@@ -2,15 +2,16 @@ import { useParams } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { TimelineEmailUsecase } from '@domain/usecases/email-composer/send-timeline-email.usecase.ts';
 
 import { Button } from '@ui/form/Button/Button';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { useStore } from '@shared/hooks/useStore';
 import { useEvent } from '@shared/hooks/useEvent';
 import { AlarmClockPlus } from '@ui/media/icons/AlarmClockPlus';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure.ts';
 import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
-import { useTimelineActionEmailContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionEmailContext';
 import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionLogEntryContext';
 import {
   EditorType,
@@ -19,12 +20,19 @@ import {
 
 interface TimelineActionButtonsProps {
   invalidateQuery: () => void;
+  emailUseCase: TimelineEmailUsecase;
+
   activeEditor: 'log-entry' | 'email' | null;
   onClick: (activeEditor: 'log-entry' | 'email' | null) => void;
 }
 
 export const TimelineActionButtons = observer(
-  ({ onClick, activeEditor, invalidateQuery }: TimelineActionButtonsProps) => {
+  ({
+    onClick,
+    activeEditor,
+    invalidateQuery,
+    emailUseCase,
+  }: TimelineActionButtonsProps) => {
     const store = useStore();
     const { id } = useParams();
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -38,11 +46,11 @@ export const TimelineActionButtons = observer(
       onCreateLogEntry,
     } = useTimelineActionLogEntryContext();
     const {
-      checkCanExitSafely: checkCanExitEmailSafely,
-      showConfirmationDialog: showEmailConfirmationDialog,
-      onCreateEmail,
-      handleExitEditorAndCleanData: handleExitEmailEditorAndCleanData,
-    } = useTimelineActionEmailContext();
+      open: showEmailConfirmationDialog,
+      onOpen,
+      onClose,
+    } = useDisclosure();
+
     const { openedEditor, showEditor } = useTimelineActionContext();
     const [openOnConfirm, setOpenOnConfirm] = useState<null | EditorType>(null);
 
@@ -70,10 +78,14 @@ export const TimelineActionButtons = observer(
       if (openedEditor === targetEditor) {
         const canClose =
           targetEditor === 'email'
-            ? checkCanExitEmailSafely()
+            ? emailUseCase.canExitSafely
             : checkCanExitSafely();
 
         if (canClose) showEditor(null);
+
+        if (openedEditor === 'email' && !canClose) {
+          onOpen();
+        }
 
         return;
       }
@@ -82,7 +94,7 @@ export const TimelineActionButtons = observer(
 
       const canClose =
         targetEditor === 'log-entry'
-          ? checkCanExitEmailSafely()
+          ? emailUseCase.canExitSafely
           : checkCanExitSafely();
 
       if (canClose) {
@@ -93,7 +105,8 @@ export const TimelineActionButtons = observer(
 
     const handleDiscard = () => {
       if (showEmailConfirmationDialog) {
-        handleExitEmailEditorAndCleanData();
+        emailUseCase.resetEditor();
+        onClose();
       } else {
         handleExitLogEntryEditorAndCleanData();
       }
@@ -116,12 +129,9 @@ export const TimelineActionButtons = observer(
     };
 
     const handleConfirmEmail = () => {
-      const handleSuccess = () => {
-        handleExitEmailEditorAndCleanData();
-        showEditor(openOnConfirm);
-      };
+      showEditor(openOnConfirm);
 
-      onCreateEmail(handleSuccess);
+      emailUseCase.createEmail();
     };
 
     const toggleEmailEditor = () => {

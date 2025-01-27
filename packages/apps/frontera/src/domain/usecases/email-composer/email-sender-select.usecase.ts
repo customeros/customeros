@@ -3,17 +3,24 @@ import { action, computed, observable } from 'mobx';
 
 import { SelectOption } from '@ui/utils/types.ts';
 
-function extractEventUUID(url) {
+function extractEventUUID(url: string) {
   const matches = url.match(
     /events=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/,
   );
 
   return matches ? matches[1] : null;
 }
+
+type EmailOption = {
+  label: string;
+  value: string;
+  active?: boolean;
+  provider?: string;
+};
 export class EmailSenderSelectUsecase {
   @observable public accessor searchTerm = '';
   @observable private accessor newEmailOptions = new Set();
-  @observable public accessor selectedEmail: SelectOption<string>[];
+  @observable public accessor selectedEmail: EmailOption[] = [];
   @observable public accessor emailOptions: {
     label: string;
     value: string;
@@ -57,9 +64,9 @@ export class EmailSenderSelectUsecase {
   @action
   private computeInitialEmailOptions() {
     const id = extractEventUUID(window.location.href);
-    const userMailboxes = this.root.globalCache.value?.mailboxes?.filter(
-      (v) => v.value?.userId === this.currentUserId,
-    );
+
+    const userMailboxes = this.root.globalCache.value?.user?.mailboxes;
+
     const activeEmailOptions = this.root.globalCache.value?.activeEmailTokens
       .filter((a) => (id && this.attendees?.includes(a.email)) || !id)
       .map((v) => ({
@@ -88,9 +95,9 @@ export class EmailSenderSelectUsecase {
         active: true,
       }));
 
-    const userMailboxOptions = userMailboxes.map((v) => ({
-      label: v.value.mailbox,
-      value: v.value.mailbox,
+    const userMailboxOptions = userMailboxes?.map((v) => ({
+      label: v,
+      value: v,
       provider: 'mailbox',
       active: true,
     }));
@@ -140,7 +147,10 @@ export class EmailSenderSelectUsecase {
   }
 
   @action
-  public select(value: SelectOption) {
+  public select(value: SelectOption[]) {
+    if (!value) {
+      this.selectedEmail = [];
+    }
     this.selectedEmail = value;
   }
 }

@@ -150,12 +150,9 @@ export class CommandMenuStore {
   }
 
   clearContext() {
-    console.log('🏷️ ----- :here ');
     runInAction(() => {
       this.context = makeDefaultContext();
     });
-
-    console.log('🏷️ ----- this.context: ', this.context);
   }
 
   setCallback(callback: () => void) {

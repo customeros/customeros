@@ -6,6 +6,7 @@ import {
 } from 'react-select';
 
 import { observer } from 'mobx-react-lite';
+import { EmailParticipantSelectUsecase } from '@domain/usecases/email-composer/email-participant-select.usecase.ts';
 
 import { cn } from '@ui/utils/cn.ts';
 import { SelectOption } from '@ui/utils/types';
@@ -17,20 +18,26 @@ import { getMultiValueLabelClassNames } from '@ui/form/CreatableSelect';
 import { MultiValueWithActionMenu } from '@shared/components/EmailMultiCreatableSelect/MultiValueWithActionMenu';
 import {
   Select,
+  SelectProps,
   getMenuClassNames,
   getOptionClassNames,
   getMenuListClassNames,
   getContainerClassNames,
 } from '@ui/form/Select';
 
+interface EmailFormMultiCreatableSelectProps extends SelectProps {
+  name: string;
+  navigateAfterAddingToPeople: boolean;
+  emailParticipantUseCase: EmailParticipantSelectUsecase;
+}
+
 export const EmailFormMultiCreatableSelect = observer(
   ({
     name,
-    formId,
     navigateAfterAddingToPeople,
     emailParticipantUseCase,
     ...props
-  }) => {
+  }: EmailFormMultiCreatableSelectProps) => {
     const [_, copyToClipboard] = useCopyToClipboard();
 
     const Option = useCallback((rest: OptionProps<SelectOption>) => {
@@ -79,7 +86,6 @@ export const EmailFormMultiCreatableSelect = observer(
           <MultiValueWithActionMenu
             {...multiValueProps}
             name={name || ''}
-            formId={formId || ''}
             navigateAfterAddingToPeople={navigateAfterAddingToPeople}
             removeOption={emailParticipantUseCase.removeSelectedEmail}
           />
@@ -108,6 +114,7 @@ export const EmailFormMultiCreatableSelect = observer(
         isMulti
         autoFocus
         size='sm'
+        name={name}
         backspaceRemovesValue
         menuPlacement={'auto'}
         components={components}
@@ -119,13 +126,15 @@ export const EmailFormMultiCreatableSelect = observer(
         onInputChange={(inputValue) => {
           emailParticipantUseCase.setSearchTerm(inputValue);
         }}
-        value={emailParticipantUseCase.selectedEmails?.map((email) => ({
-          label: email.label || '',
-          value: email.value || '',
-        }))}
+        value={emailParticipantUseCase.selectedEmails?.map(
+          (email: SelectOption) => ({
+            label: email.label || '',
+            value: email.value || '',
+          }),
+        )}
         classNames={{
-          input: () => 'pl-3',
-          placeholder: () => 'pl-3 text-gray-400',
+          input: () => 'pl-1',
+          placeholder: () => 'pl-1 text-gray-400',
           container: ({ isFocused }) =>
             getContainerClassNames('flex flex-col min-h-[auto]', 'unstyled', {
               isFocused,
@@ -137,8 +146,8 @@ export const EmailFormMultiCreatableSelect = observer(
           menu: ({ menuPlacement }) =>
             getMenuClassNames(menuPlacement)('bg-white', 'sm'),
           noOptionsMessage: () => 'text-gray-500',
-          valueContainer: () => '!cursor-text mx-0.5 my-0.5',
-          multiValueLabel: (props) => {
+          valueContainer: () => '!cursor-text mx-0 my-0.5',
+          multiValueLabel: () => {
             return getMultiValueLabelClassNames(
               'bg-transparent hover:bg-transparent focus:bg-transparent active:bg-transparent rounded-sm px-1',
               'sm',

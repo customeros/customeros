@@ -82,6 +82,7 @@ export const ParticipantsSelectGroup = observer(
                 size='xs'
                 name='from'
                 menuPlacement={'auto'}
+                value={from.selectedEmail}
                 options={from.emailOptions}
                 onChange={(e) => from.select(e)}
                 placeholder={'Enter name or email...'}
@@ -154,6 +155,7 @@ export const ParticipantsSelectGroup = observer(
               Subject:
             </span>
             <Input
+              autoFocus
               size='xs'
               variant='unstyled'
               value={emailUseCase.subject}

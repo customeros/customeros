@@ -13,6 +13,10 @@ query global_Cache {
       firstName
       lastName
       mailboxes
+      mailboxesV2 {
+        userId
+        mailbox
+      }
       onboarding {
         showOnboardingPage
         onboardingInboundStepCompleted
@@ -30,6 +34,7 @@ query global_Cache {
       provider
     }
     mailboxes
+
     isOwner
     minARRForecastValue
     maxARRForecastValue

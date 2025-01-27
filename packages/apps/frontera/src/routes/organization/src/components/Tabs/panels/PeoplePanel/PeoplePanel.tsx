@@ -14,19 +14,17 @@ import { Users02 } from '@ui/media/icons/Users02';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { UsersPlus } from '@ui/media/icons/UsersPlus';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
-import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { ContactDetails } from '@shared/components/ContactDetails';
 import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
 import { SortOptionsMenu } from './components/SortOptionsMenu';
-import { CreateNewContactModal } from './components/CreateNewContactModal';
+import { ContactCard } from './components/ContactCard/ContactCard';
 const searchSortContactUseCase = new SearchSortContact();
 
 export const PeoplePanel = observer(() => {
   const store = useStore();
-  const { open, onOpen, onClose } = useDisclosure();
   const id = useParams()?.id as string;
   const [expandAll, setExpandAll] = useState(false);
   const organization = store.organizations.getById(id);

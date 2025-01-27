@@ -29,7 +29,10 @@ export const AddSingleContact = observer(() => {
     contactCreate.getType === 'name' ? 'Add contact' : 'Add & enrich';
 
   const handleClose = (
-    e?: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>,
+    e?:
+      | MouseEvent<HTMLButtonElement>
+      | KeyboardEvent<HTMLInputElement>
+      | KeyboardEvent<HTMLButtonElement>,
   ) => {
     e?.stopPropagation();
     e?.preventDefault();
