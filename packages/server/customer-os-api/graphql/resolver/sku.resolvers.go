@@ -52,6 +52,7 @@ func (r *mutationResolver) SkuSave(ctx context.Context, input model.SkuInput) (*
 
 	toStore.Name = input.Name
 	toStore.Price = input.Price
+	toStore.Type = input.Type
 
 	sku, err := r.Services.CommonServices.PostgresRepositories.SkuRepository.Save(ctx, toStore)
 	if err != nil {

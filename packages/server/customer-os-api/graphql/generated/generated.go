@@ -1616,9 +1616,11 @@ type ComplexityRoot struct {
 	}
 
 	Sku struct {
-		ID    func(childComplexity int) int
-		Name  func(childComplexity int) int
-		Price func(childComplexity int) int
+		Archived func(childComplexity int) int
+		ID       func(childComplexity int) int
+		Name     func(childComplexity int) int
+		Price    func(childComplexity int) int
+		Type     func(childComplexity int) int
 	}
 
 	SlackChannel struct {
@@ -11875,6 +11877,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceLineItem.Tax(childComplexity), true
 
+	case "Sku.archived":
+		if e.complexity.Sku.Archived == nil {
+			break
+		}
+
+		return e.complexity.Sku.Archived(childComplexity), true
+
 	case "Sku.id":
 		if e.complexity.Sku.ID == nil {
 			break
@@ -11895,6 +11904,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Sku.Price(childComplexity), true
+
+	case "Sku.type":
+		if e.complexity.Sku.Type == nil {
+			break
+		}
+
+		return e.complexity.Sku.Type(childComplexity), true
 
 	case "SlackChannel.channelId":
 		if e.complexity.SlackChannel.ChannelID == nil {
@@ -16722,12 +16738,20 @@ input SkuInput {
     id: ID
     name: String!
     price: Float!
+    type: SkuType!
 }
 
 type Sku {
-    id: ID!
-    name: String!
-    price: Float!
+    id:       ID!
+    name:     String!
+    price:    Float!
+    type:     SkuType!
+    archived: Boolean!
+}
+
+enum SkuType {
+    SUBSCRIPTION
+    ONE_TIME
 }`, BuiltIn: false},
 	{Name: "../schemas/slack.graphqls", Input: `extend type Query {
     slack_Channels(pagination: Pagination): SlackChannelPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -77490,6 +77514,10 @@ func (ec *executionContext) fieldContext_Mutation_sku_Save(ctx context.Context, 
 				return ec.fieldContext_Sku_name(ctx, field)
 			case "price":
 				return ec.fieldContext_Sku_price(ctx, field)
+			case "type":
+				return ec.fieldContext_Sku_type(ctx, field)
+			case "archived":
+				return ec.fieldContext_Sku_archived(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sku", field.Name)
 		},
@@ -97940,6 +97968,10 @@ func (ec *executionContext) fieldContext_Query_skus(_ context.Context, field gra
 				return ec.fieldContext_Sku_name(ctx, field)
 			case "price":
 				return ec.fieldContext_Sku_price(ctx, field)
+			case "type":
+				return ec.fieldContext_Sku_type(ctx, field)
+			case "archived":
+				return ec.fieldContext_Sku_archived(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sku", field.Name)
 		},
@@ -100684,6 +100716,10 @@ func (ec *executionContext) fieldContext_ServiceLineItem_sku(_ context.Context, 
 				return ec.fieldContext_Sku_name(ctx, field)
 			case "price":
 				return ec.fieldContext_Sku_price(ctx, field)
+			case "type":
+				return ec.fieldContext_Sku_type(ctx, field)
+			case "archived":
+				return ec.fieldContext_Sku_archived(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sku", field.Name)
 		},
@@ -101364,6 +101400,94 @@ func (ec *executionContext) fieldContext_Sku_price(_ context.Context, field grap
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Sku_type(ctx context.Context, field graphql.CollectedField, obj *model.Sku) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Sku_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(postgres_entity.SkuType)
+	fc.Result = res
+	return ec.marshalNSkuType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐSkuType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Sku_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Sku",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type SkuType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Sku_archived(ctx context.Context, field graphql.CollectedField, obj *model.Sku) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Sku_archived(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Archived, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Sku_archived(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Sku",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -115372,7 +115496,7 @@ func (ec *executionContext) unmarshalInputSkuInput(ctx context.Context, obj any)
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "name", "price"}
+	fieldsInOrder := [...]string{"id", "name", "price", "type"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -115400,6 +115524,13 @@ func (ec *executionContext) unmarshalInputSkuInput(ctx context.Context, obj any)
 				return it, err
 			}
 			it.Price = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalNSkuType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐSkuType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
 		}
 	}
 
@@ -131027,6 +131158,16 @@ func (ec *executionContext) _Sku(ctx context.Context, sel ast.SelectionSet, obj 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "type":
+			out.Values[i] = ec._Sku_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "archived":
+			out.Values[i] = ec._Sku_archived(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -137179,6 +137320,22 @@ func (ec *executionContext) marshalNSku2ᚖgithubᚗcomᚋcustomerosᚋcustomero
 func (ec *executionContext) unmarshalNSkuInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSkuInput(ctx context.Context, v any) (model.SkuInput, error) {
 	res, err := ec.unmarshalInputSkuInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNSkuType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐSkuType(ctx context.Context, v any) (postgres_entity.SkuType, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := postgres_entity.SkuType(tmp)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSkuType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑpostgresᚑrepositoryᚋentityᚐSkuType(ctx context.Context, sel ast.SelectionSet, v postgres_entity.SkuType) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNSlackChannel2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSlackChannelᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SlackChannel) graphql.Marshaler {

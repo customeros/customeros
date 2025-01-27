@@ -7,6 +7,7 @@ type SkuEntity struct {
 	CreatedAt time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
 	UpdatedAt time.Time `gorm:"column:updated_at;type:timestamp;DEFAULT:current_timestamp" json:"updatedAt"`
 	Tenant    string    `gorm:"column:tenant;type:varchar(255);not null" json:"tenant" binding:"required"`
+	Type      SkuType   `gorm:"column:sku_type;type:varchar(255);not null" json:"type" binding:"required"`
 	Name      string    `gorm:"column:name;type:varchar(255);not null" json:"name" binding:"required"`
 	Price     float64   `gorm:"column:price;type:decimal(10,2);not null" json:"price" binding:"required"`
 	Archived  bool      `gorm:"column:archived;type:boolean;default:false" json:"archived"`
@@ -17,3 +18,10 @@ type SkuEntity struct {
 func (SkuEntity) TableName() string {
 	return "sku"
 }
+
+type SkuType string
+
+const (
+	SkuTypeSubscription SkuType = "SUBSCRIPTION"
+	SkuTypeOneTime      SkuType = "ONE_TIME"
+)

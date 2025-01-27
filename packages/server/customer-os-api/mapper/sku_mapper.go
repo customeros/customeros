@@ -11,9 +11,11 @@ func MapEntityToSku(entity *postgresEntity.SkuEntity) *model.Sku {
 		return nil
 	}
 	output := model.Sku{
-		ID:    entity.ID,
-		Name:  entity.Name,
-		Price: entity.Price,
+		ID:       entity.ID,
+		Name:     entity.Name,
+		Price:    entity.Price,
+		Type:     entity.Type,
+		Archived: entity.Archived,
 	}
 	return &output
 }

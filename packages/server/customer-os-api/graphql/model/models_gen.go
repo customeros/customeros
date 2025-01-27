@@ -2614,15 +2614,18 @@ type ServiceLineItemUpdateInput struct {
 }
 
 type Sku struct {
-	ID    string  `json:"id"`
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
+	ID       string                  `json:"id"`
+	Name     string                  `json:"name"`
+	Price    float64                 `json:"price"`
+	Type     postgres_entity.SkuType `json:"type"`
+	Archived bool                    `json:"archived"`
 }
 
 type SkuInput struct {
-	ID    *string `json:"id,omitempty"`
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
+	ID    *string                 `json:"id,omitempty"`
+	Name  string                  `json:"name"`
+	Price float64                 `json:"price"`
+	Type  postgres_entity.SkuType `json:"type"`
 }
 
 type SlackChannel struct {
