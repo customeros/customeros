@@ -18,7 +18,8 @@ type ServiceLineItemService interface {
 
 type ServiceLineItemCreateData struct {
 	ContractId        string                            `json:"contractId"`
-	SliName           string                            `json:"sliName"`
+	SliName           string                            `json:"sliName"` //deprecated
+	SkuId             string                            `json:"skuId"`
 	SliPrice          float64                           `json:"sliPrice"`
 	SliQuantity       int64                             `json:"sliQuantity"`
 	SliBilledType     neo4jenum.BilledType              `json:"sliBilledType"`
@@ -32,7 +33,8 @@ type ServiceLineItemCreateData struct {
 
 type ServiceLineItemNewVersionData struct {
 	Id        string                 `json:"id"`
-	Name      string                 `json:"sliName"`
+	SkuId     string                 `json:"skuId"`
+	Name      string                 `json:"sliName"` //deprecated
 	Price     float64                `json:"sliPrice"`
 	Quantity  int64                  `json:"sliQuantity"`
 	Comments  string                 `json:"sliComments"`
@@ -45,7 +47,8 @@ type ServiceLineItemNewVersionData struct {
 type ServiceLineItemUpdateData struct {
 	Id                      string                 `json:"id"`
 	IsRetroactiveCorrection bool                   `json:"isRetroactiveCorrection"`
-	SliName                 string                 `json:"sliName"`
+	SkuId                   string                 `json:"skuId"`
+	SliName                 string                 `json:"sliName"` //deprecated
 	SliPrice                float64                `json:"sliPrice"`
 	SliQuantity             int64                  `json:"sliQuantity"`
 	SliBilledType           neo4jenum.BilledType   `json:"sliBilledType"`

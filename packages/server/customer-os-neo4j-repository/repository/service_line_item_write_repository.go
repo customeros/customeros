@@ -3,10 +3,10 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -61,6 +61,7 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 								sli.endedAt=$endedAt,
 								sli.source=$source,
 								sli.appSource=$appSource,
+								sli.skuId=$skuId,
 								sli.name=$name,
 								sli.price=toFloat($price),
 								sli.quantity=$quantity,
@@ -81,6 +82,7 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 		"parentId":          utils.IfNotNilString(data.ParentId),
 		"price":             utils.IfNotNilFloat64(data.Price),
 		"quantity":          utils.IfNotNilInt64(data.Quantity),
+		"skuId":             utils.IfNotNilString(data.SkuId),
 		"name":              utils.IfNotNilString(data.Name),
 		"comments":          utils.IfNotNilString(data.Comments),
 		"vatRate":           utils.IfNotNilFloat64(data.TaxRate),
@@ -118,6 +120,10 @@ func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tx *neo4j.M
 							SET sli.updatedAt=datetime()`, tenant)
 	params := map[string]any{
 		"serviceLineItemId": serviceLineItemId,
+	}
+	if data.SkuId != nil {
+		params["skuId"] = *data.SkuId
+		cypher += `, sli.skuId = $skuId`
 	}
 	if data.Name != nil {
 		params["name"] = *data.Name

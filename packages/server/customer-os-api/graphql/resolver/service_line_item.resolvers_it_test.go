@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"

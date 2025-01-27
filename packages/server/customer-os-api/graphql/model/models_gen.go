@@ -2527,6 +2527,8 @@ type ServiceLineItem struct {
 	Metadata       *Metadata         `json:"metadata"`
 	BillingCycle   BilledType        `json:"billingCycle"`
 	Comments       string            `json:"comments"`
+	SkuID          *string           `json:"skuId,omitempty"`
+	Sku            *Sku              `json:"sku,omitempty"`
 	Description    string            `json:"description"`
 	ParentID       string            `json:"parentId"`
 	Price          float64           `json:"price"`
@@ -2551,6 +2553,7 @@ type ServiceLineItemBulkUpdateInput struct {
 
 type ServiceLineItemBulkUpdateItem struct {
 	ServiceLineItemID       *string     `json:"serviceLineItemId,omitempty"`
+	SkuID                   *string     `json:"skuId,omitempty"`
 	Name                    *string     `json:"name,omitempty"`
 	Billed                  *BilledType `json:"billed,omitempty"`
 	Price                   *float64    `json:"price,omitempty"`
@@ -2571,6 +2574,7 @@ type ServiceLineItemCloseInput struct {
 
 type ServiceLineItemInput struct {
 	ContractID     string      `json:"contractId"`
+	SkuID          *string     `json:"skuId,omitempty"`
 	Description    *string     `json:"description,omitempty"`
 	BillingCycle   *BilledType `json:"billingCycle,omitempty"`
 	Price          *float64    `json:"price,omitempty"`
@@ -2583,6 +2587,7 @@ type ServiceLineItemInput struct {
 
 type ServiceLineItemNewVersionInput struct {
 	ID             *string    `json:"id,omitempty"`
+	SkuID          *string    `json:"skuId,omitempty"`
 	Description    *string    `json:"description,omitempty"`
 	Price          *float64   `json:"price,omitempty"`
 	Quantity       *int64     `json:"quantity,omitempty"`
@@ -2595,6 +2600,7 @@ type ServiceLineItemNewVersionInput struct {
 type ServiceLineItemUpdateInput struct {
 	ID          *string `json:"id,omitempty"`
 	Description *string `json:"description,omitempty"`
+	SkuID       *string `json:"skuId,omitempty"`
 	// Deprecated: billing cycle is not updatable.
 	BillingCycle            *BilledType `json:"billingCycle,omitempty"`
 	Price                   *float64    `json:"price,omitempty"`

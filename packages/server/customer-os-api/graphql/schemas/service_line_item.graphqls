@@ -17,7 +17,9 @@ type ServiceLineItem implements MetadataInterface {
     metadata:           Metadata!
     billingCycle:       BilledType!
     comments:           String!
-    description:        String!
+    skuId:              ID  #todo make it mandatory
+    sku:                Sku @goField(forceResolver: true) #todo make it mandatory
+    description:        String! @deprecated(reason: "use skuId")
     parentId:           ID!
     price:              Float!
     quantity:           Int64!
@@ -32,7 +34,8 @@ type ServiceLineItem implements MetadataInterface {
 
 input ServiceLineItemInput {
     contractId:         ID!
-    description:        String
+    skuId:              ID #todo make this mandatory after FE changes
+    description:        String @deprecated(reason: "use skuId")
     billingCycle:       BilledType
     price:              Float
     quantity:           Int64
@@ -44,7 +47,8 @@ input ServiceLineItemInput {
 
 input ServiceLineItemUpdateInput {
     id:                         ID
-    description:                String
+    description:                String @deprecated(reason: "use skuId")
+    skuId:                      ID #todo make this mandatory after FE changes
     """
     Deprecated: billing cycle is not updatable.
     """
@@ -61,7 +65,8 @@ input ServiceLineItemUpdateInput {
 
 input ServiceLineItemNewVersionInput {
     id:                         ID
-    description:                String
+    skuId:                      ID  #todo make this mandatory after FE changes
+    description:                String @deprecated(reason: "use skuId")
     price:                      Float
     quantity:                   Int64
     tax:                        TaxInput
@@ -78,7 +83,8 @@ input ServiceLineItemBulkUpdateInput {
 
 input ServiceLineItemBulkUpdateItem {
     serviceLineItemId:       ID
-    name:                    String
+    skuId:                   ID
+    name:                    String @deprecated(reason: "use skuId")
     billed:                  BilledType
     price:                   Float
     quantity:                Int64
