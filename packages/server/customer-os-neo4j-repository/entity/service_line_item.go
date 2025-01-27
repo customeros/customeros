@@ -15,7 +15,8 @@ const (
 
 type ServiceLineItemEntity struct {
 	ID               string
-	Name             string
+	SkuId            string
+	Name             string //deprecated
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	StartedAt        time.Time  // DateTime

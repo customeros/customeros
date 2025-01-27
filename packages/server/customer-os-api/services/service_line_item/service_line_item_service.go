@@ -62,6 +62,8 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "serviceLineItemDetails", serviceLineItemDetails)
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	// check that quantity is not negative
 	if serviceLineItemDetails.SliQuantity < 0 {
 		err := errors.New("quantity must not be negative")
@@ -77,6 +79,7 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 
 	sliDataFields := data_fields.SLIFields{
 		ContractId: utils.StringPtr(serviceLineItemDetails.ContractId),
+		SkuId:      utils.StringPtr(serviceLineItemDetails.SkuId),
 		Name:       utils.StringPtr(serviceLineItemDetails.SliName),
 		Quantity:   utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
 		Price:      utils.Float64Ptr(serviceLineItemDetails.SliPrice),
@@ -84,6 +87,22 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 		StartedAt:  serviceLineItemDetails.StartedAt,
 		EndedAt:    serviceLineItemDetails.EndedAt,
 		Source:     utils.StringPtr(serviceLineItemDetails.Source.String()),
+	}
+
+	if serviceLineItemDetails.SkuId != "" && serviceLineItemDetails.SliName == "" {
+		skuEntity, err := s.repositories.PostgresRepositories.SkuRepository.Get(ctx, tenant, serviceLineItemDetails.SkuId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+
+		if skuEntity == nil {
+			err := fmt.Errorf("sku with id {%s} not found", serviceLineItemDetails.SkuId)
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+
+		sliDataFields.Name = utils.StringPtr(skuEntity.Name)
 	}
 
 	sliDataFields.BilledType = utils.ToPtr(serviceLineItemDetails.SliBilledType)
@@ -219,6 +238,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 	sliDataFields := data_fields.SLIFields{
 		ContractId: utils.StringPtr(contractEntity.Id),
 		ParentId:   utils.StringPtr(baseServiceLineItemEntity.ID),
+		SkuId:      utils.StringPtr(utils.StringFirstNonEmpty(data.SkuId, baseServiceLineItemEntity.SkuId)),
 		Name:       utils.StringPtr(utils.StringFirstNonEmpty(data.Name, baseServiceLineItemEntity.Name)),
 		Quantity:   utils.Int64Ptr(data.Quantity),
 		Price:      utils.Float64Ptr(data.Price),
@@ -270,7 +290,8 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	sliIsInvoiced, _ := s.repositories.Neo4jRepositories.ServiceLineItemReadRepository.WasServiceLineItemInvoiced(ctx, common.GetTenantFromContext(ctx), baseServiceLineItemEntity.ID)
 	startedAt := utils.ToDate(utils.IfNotNilTimeWithDefault(serviceLineItemDetails.StartedAt, baseServiceLineItemEntity.StartedAt))
 
-	anyFieldChanged := baseServiceLineItemEntity.Name != serviceLineItemDetails.SliName ||
+	anyFieldChanged := baseServiceLineItemEntity.SkuId != serviceLineItemDetails.SkuId ||
+		baseServiceLineItemEntity.Name != serviceLineItemDetails.SliName ||
 		baseServiceLineItemEntity.Price != serviceLineItemDetails.SliPrice ||
 		baseServiceLineItemEntity.Quantity != serviceLineItemDetails.SliQuantity ||
 		baseServiceLineItemEntity.VatRate != serviceLineItemDetails.SliVatRate ||
@@ -281,6 +302,23 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 	if !anyFieldChanged && (utils.ToDate(baseServiceLineItemEntity.StartedAt).Equal(startedAt) || sliIsInvoiced) {
 		span.LogFields(log.String("result", "No changes recorded"))
 		return nil
+	}
+
+	//todo remove this when name is removed from SLI
+	if baseServiceLineItemEntity.SkuId != serviceLineItemDetails.SkuId {
+		skuEntity, err := s.repositories.PostgresRepositories.SkuRepository.Get(ctx, common.GetTenantFromContext(ctx), serviceLineItemDetails.SkuId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if skuEntity == nil {
+			err := fmt.Errorf("sku with id {%s} not found", serviceLineItemDetails.SkuId)
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		serviceLineItemDetails.SliName = skuEntity.Name
 	}
 
 	if baseServiceLineItemEntity.Canceled {
@@ -389,6 +427,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 
 	if isRetroactiveCorrection == true {
 		sliDataFields := data_fields.SLIFields{
+			SkuId:      utils.StringPtr(serviceLineItemDetails.SkuId),
 			Name:       utils.StringPtr(serviceLineItemDetails.SliName),
 			Quantity:   utils.Int64Ptr(serviceLineItemDetails.SliQuantity),
 			Price:      utils.Float64Ptr(serviceLineItemDetails.SliPrice),
@@ -426,6 +465,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 		// Create new SLI version
 		_, err := s.NewVersion(ctx, cosapi_interfaces.ServiceLineItemNewVersionData{
 			Id:        baseServiceLineItemEntity.ParentID,
+			SkuId:     utils.StringFirstNonEmpty(serviceLineItemDetails.SkuId, baseServiceLineItemEntity.SkuId),
 			Name:      utils.StringFirstNonEmpty(serviceLineItemDetails.SliName, baseServiceLineItemEntity.Name),
 			Price:     serviceLineItemDetails.SliPrice,
 			Quantity:  serviceLineItemDetails.SliQuantity,

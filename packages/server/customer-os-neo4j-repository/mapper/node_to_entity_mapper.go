@@ -473,6 +473,7 @@ func MapDbNodeToServiceLineItemEntity(dbNode *dbtype.Node) *neo4j_entity.Service
 	props := utils.GetPropsFromNode(*dbNode)
 	serviceLineItem := neo4j_entity.ServiceLineItemEntity{
 		ID:            utils.GetStringPropOrEmpty(props, "id"),
+		SkuId:         utils.GetStringPropOrEmpty(props, "skuId"),
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),

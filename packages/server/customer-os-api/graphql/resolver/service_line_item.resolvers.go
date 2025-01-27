@@ -16,6 +16,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	api_sli "github.com/customeros/customeros/packages/server/customer-os-api/services/service_line_item"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -35,6 +36,7 @@ func (r *mutationResolver) ContractLineItemCreate(ctx context.Context, input mod
 		Source:      neo4jentity.DataSourceOpenline,
 		StartedAt:   input.ServiceStarted,
 		EndedAt:     input.ServiceEnded,
+		SkuId:       utils.IfNotNilString(input.SkuID),
 		SliName:     utils.IfNotNilString(input.Description),
 		SliPrice:    utils.IfNotNilFloat64(input.Price),
 		SliQuantity: utils.IfNotNilInt64(input.Quantity),
@@ -79,6 +81,7 @@ func (r *mutationResolver) ContractLineItemNewVersion(ctx context.Context, input
 
 	data := cosapi_interfaces.ServiceLineItemNewVersionData{
 		Id:        utils.IfNotNilString(input.ID),
+		SkuId:     utils.IfNotNilString(input.SkuID),
 		Name:      utils.IfNotNilString(input.Description),
 		Price:     utils.IfNotNilFloat64(input.Price),
 		Quantity:  utils.IfNotNilInt64(input.Quantity),
@@ -119,6 +122,7 @@ func (r *mutationResolver) ContractLineItemUpdate(ctx context.Context, input mod
 	data := cosapi_interfaces.ServiceLineItemUpdateData{
 		Id:                      utils.IfNotNilString(input.ID),
 		IsRetroactiveCorrection: utils.IfNotNilBool(input.IsRetroactiveCorrection),
+		SkuId:                   utils.IfNotNilString(input.SkuID),
 		SliName:                 utils.IfNotNilString(input.Description),
 		SliPrice:                utils.IfNotNilFloat64(input.Price),
 		SliQuantity:             utils.IfNotNilInt64(input.Quantity),
@@ -299,6 +303,29 @@ func (r *queryResolver) ServiceLineItem(ctx context.Context, id string) (*model.
 		return nil, err
 	}
 	return mapper.MapEntityToServiceLineItem(serviceLineItemEntityPtr), nil
+}
+
+// Sku is the resolver for the sku field.
+func (r *serviceLineItemResolver) Sku(ctx context.Context, obj *model.ServiceLineItem) (*model.Sku, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.ServiceLineItem.Sku", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	//TODO remove after migration
+	if obj.SkuID == nil || *obj.SkuID == "" {
+		return nil, nil
+	}
+
+	skuEntity, err := r.Services.CommonServices.PostgresRepositories.SkuRepository.Get(ctx, tenant, *obj.SkuID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get sku by id %s", obj.SkuID)
+		return nil, err
+	}
+
+	return mapper.MapEntityToSku(skuEntity), nil
 }
 
 // CreatedBy is the resolver for the createdBy field.

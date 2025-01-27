@@ -1611,6 +1611,7 @@ type ComplexityRoot struct {
 		ServiceEnded   func(childComplexity int) int
 		ServiceStarted func(childComplexity int) int
 		Sku            func(childComplexity int) int
+		SkuID          func(childComplexity int) int
 		Tax            func(childComplexity int) int
 	}
 
@@ -2240,6 +2241,8 @@ type ReminderResolver interface {
 	Owner(ctx context.Context, obj *model.Reminder) (*model.User, error)
 }
 type ServiceLineItemResolver interface {
+	Sku(ctx context.Context, obj *model.ServiceLineItem) (*model.Sku, error)
+
 	CreatedBy(ctx context.Context, obj *model.ServiceLineItem) (*model.User, error)
 	ExternalLinks(ctx context.Context, obj *model.ServiceLineItem) ([]*model.ExternalSystem, error)
 }
@@ -11858,6 +11861,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ServiceLineItem.Sku(childComplexity), true
 
+	case "ServiceLineItem.skuId":
+		if e.complexity.ServiceLineItem.SkuID == nil {
+			break
+		}
+
+		return e.complexity.ServiceLineItem.SkuID(childComplexity), true
+
 	case "ServiceLineItem.tax":
 		if e.complexity.ServiceLineItem.Tax == nil {
 			break
@@ -16594,7 +16604,8 @@ type ServiceLineItem implements MetadataInterface {
     metadata:           Metadata!
     billingCycle:       BilledType!
     comments:           String!
-    sku:                Sku!
+    skuId:              ID  #todo make it mandatory
+    sku:                Sku @goField(forceResolver: true) #todo make it mandatory
     description:        String! @deprecated(reason: "use skuId")
     parentId:           ID!
     price:              Float!
@@ -16610,7 +16621,7 @@ type ServiceLineItem implements MetadataInterface {
 
 input ServiceLineItemInput {
     contractId:         ID!
-    skuId:              ID!
+    skuId:              ID #todo make this mandatory after FE changes
     description:        String @deprecated(reason: "use skuId")
     billingCycle:       BilledType
     price:              Float
@@ -16624,7 +16635,7 @@ input ServiceLineItemInput {
 input ServiceLineItemUpdateInput {
     id:                         ID
     description:                String @deprecated(reason: "use skuId")
-    skuId:                      ID!
+    skuId:                      ID #todo make this mandatory after FE changes
     """
     Deprecated: billing cycle is not updatable.
     """
@@ -16641,7 +16652,7 @@ input ServiceLineItemUpdateInput {
 
 input ServiceLineItemNewVersionInput {
     id:                         ID
-    skuId:                      ID!
+    skuId:                      ID  #todo make this mandatory after FE changes
     description:                String @deprecated(reason: "use skuId")
     price:                      Float
     quantity:                   Int64
@@ -35883,6 +35894,8 @@ func (ec *executionContext) fieldContext_Contract_contractLineItems(_ context.Co
 				return ec.fieldContext_ServiceLineItem_billingCycle(ctx, field)
 			case "comments":
 				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
+			case "skuId":
+				return ec.fieldContext_ServiceLineItem_skuId(ctx, field)
 			case "sku":
 				return ec.fieldContext_ServiceLineItem_sku(ctx, field)
 			case "description":
@@ -37766,6 +37779,8 @@ func (ec *executionContext) fieldContext_Contract_serviceLineItems(_ context.Con
 				return ec.fieldContext_ServiceLineItem_billingCycle(ctx, field)
 			case "comments":
 				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
+			case "skuId":
+				return ec.fieldContext_ServiceLineItem_skuId(ctx, field)
 			case "sku":
 				return ec.fieldContext_ServiceLineItem_sku(ctx, field)
 			case "description":
@@ -53061,6 +53076,8 @@ func (ec *executionContext) fieldContext_InvoiceLine_contractLineItem(_ context.
 				return ec.fieldContext_ServiceLineItem_billingCycle(ctx, field)
 			case "comments":
 				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
+			case "skuId":
+				return ec.fieldContext_ServiceLineItem_skuId(ctx, field)
 			case "sku":
 				return ec.fieldContext_ServiceLineItem_sku(ctx, field)
 			case "description":
@@ -76644,6 +76661,8 @@ func (ec *executionContext) fieldContext_Mutation_contractLineItem_Create(ctx co
 				return ec.fieldContext_ServiceLineItem_billingCycle(ctx, field)
 			case "comments":
 				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
+			case "skuId":
+				return ec.fieldContext_ServiceLineItem_skuId(ctx, field)
 			case "sku":
 				return ec.fieldContext_ServiceLineItem_sku(ctx, field)
 			case "description":
@@ -76765,6 +76784,8 @@ func (ec *executionContext) fieldContext_Mutation_contractLineItem_NewVersion(ct
 				return ec.fieldContext_ServiceLineItem_billingCycle(ctx, field)
 			case "comments":
 				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
+			case "skuId":
+				return ec.fieldContext_ServiceLineItem_skuId(ctx, field)
 			case "sku":
 				return ec.fieldContext_ServiceLineItem_sku(ctx, field)
 			case "description":
@@ -76886,6 +76907,8 @@ func (ec *executionContext) fieldContext_Mutation_contractLineItem_Update(ctx co
 				return ec.fieldContext_ServiceLineItem_billingCycle(ctx, field)
 			case "comments":
 				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
+			case "skuId":
+				return ec.fieldContext_ServiceLineItem_skuId(ctx, field)
 			case "sku":
 				return ec.fieldContext_ServiceLineItem_sku(ctx, field)
 			case "description":
@@ -97793,6 +97816,8 @@ func (ec *executionContext) fieldContext_Query_serviceLineItem(ctx context.Conte
 				return ec.fieldContext_ServiceLineItem_billingCycle(ctx, field)
 			case "comments":
 				return ec.fieldContext_ServiceLineItem_comments(ctx, field)
+			case "skuId":
+				return ec.fieldContext_ServiceLineItem_skuId(ctx, field)
 			case "sku":
 				return ec.fieldContext_ServiceLineItem_sku(ctx, field)
 			case "description":
@@ -100575,6 +100600,47 @@ func (ec *executionContext) fieldContext_ServiceLineItem_comments(_ context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _ServiceLineItem_skuId(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ServiceLineItem_skuId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SkuID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ServiceLineItem_skuId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ServiceLineItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ServiceLineItem_sku(ctx context.Context, field graphql.CollectedField, obj *model.ServiceLineItem) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ServiceLineItem_sku(ctx, field)
 	if err != nil {
@@ -100589,29 +100655,26 @@ func (ec *executionContext) _ServiceLineItem_sku(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Sku, nil
+		return ec.resolvers.ServiceLineItem().Sku(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.Sku)
 	fc.Result = res
-	return ec.marshalNSku2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSku(ctx, field.Selections, res)
+	return ec.marshalOSku2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSku(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ServiceLineItem_sku(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "ServiceLineItem",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -115047,7 +115110,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemInput(ctx context.Conte
 			it.ContractID = data
 		case "skuId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skuId"))
-			data, err := ec.unmarshalNID2string(ctx, v)
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -115137,7 +115200,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemNewVersionInput(ctx con
 			it.ID = data
 		case "skuId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skuId"))
-			data, err := ec.unmarshalNID2string(ctx, v)
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -115227,7 +115290,7 @@ func (ec *executionContext) unmarshalInputServiceLineItemUpdateInput(ctx context
 			it.Description = data
 		case "skuId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skuId"))
-			data, err := ec.unmarshalNID2string(ctx, v)
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -130768,11 +130831,41 @@ func (ec *executionContext) _ServiceLineItem(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "skuId":
+			out.Values[i] = ec._ServiceLineItem_skuId(ctx, field, obj)
 		case "sku":
-			out.Values[i] = ec._ServiceLineItem_sku(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ServiceLineItem_sku(ctx, field, obj)
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "description":
 			out.Values[i] = ec._ServiceLineItem_description(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -139509,6 +139602,13 @@ func (ec *executionContext) unmarshalOServiceLineItemBulkUpdateItem2ᚖgithubᚗ
 	}
 	res, err := ec.unmarshalInputServiceLineItemBulkUpdateItem(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOSku2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSku(ctx context.Context, sel ast.SelectionSet, v *model.Sku) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Sku(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOSortBy2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑcommonᚑmoduleᚋmodelᚐSortByᚄ(ctx context.Context, v any) ([]*model1.SortBy, error) {

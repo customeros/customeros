@@ -781,6 +781,7 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 				MERGE (c)-[:HAS_SERVICE]->(sli:ServiceLineItem {id:$id})
 				SET 
 					sli:ServiceLineItem_%s,
+					sli.skuId=$skuId,
 					sli.name=$name,
 					sli.source=$source,
 					sli.sourceOfTruth=$sourceOfTruth,
@@ -805,6 +806,7 @@ func CreateServiceLineItemForContract(ctx context.Context, driver *neo4j.DriverW
 		"id":               serviceLineItemId,
 		"contractId":       contractId,
 		"tenant":           tenant,
+		"skuId":            serviceLineItem.SkuId,
 		"name":             serviceLineItem.Name,
 		"source":           serviceLineItem.Source,
 		"sourceOfTruth":    serviceLineItem.SourceOfTruth,
