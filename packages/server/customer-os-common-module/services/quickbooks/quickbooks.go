@@ -139,13 +139,43 @@ func (s *quickbooksService) SaveProduct(ctx context.Context, id, productName str
 		return nil, nil
 	}
 
+	if quickbooksSettingsEntity.SalesAccountId == "" {
+
+		salesAccountUrl := fmt.Sprintf("https://sandbox-quickbooks.api.intuit.com/v3/company/%s/account", quickbooksSettingsEntity.RealmId)
+		salesAccountRequest := map[string]interface{}{
+			"Name":        "CustomerOS Sales",
+			"AccountType": "Income",
+		}
+
+		qbAccountResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, salesAccountUrl, "POST", salesAccountRequest)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		var qbAccount interfaces.QuickbooksSaveAccountResponse
+		err = json.Unmarshal(qbAccountResponse, &qbAccount)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		quickbooksSettingsEntity.SalesAccountId = qbAccount.Account.Id
+		_, err = s.postgres.QuickbooksSettingsRepository.Save(ctx, *quickbooksSettingsEntity)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+	}
+
 	// load product from QB to get the SyncToken
 
 	request := map[string]interface{}{
 		"Name": productName,
 		"Type": "Service",
 		"IncomeAccountRef": map[string]interface{}{
-			"value": "1", // TODO HOW DO WE GET THIS ID??
+			"value": quickbooksSettingsEntity.SalesAccountId,
 		},
 		"Active": !archived,
 	}
