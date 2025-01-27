@@ -74,8 +74,15 @@ func (s *aiService) askDeepseek(ctx context.Context, model enum.AIModel, systemP
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	if s.deepseekConfig.ApiKey == "" || s.deepseekConfig.Url == "" {
-		err := errors.New("Deepseek API key or path not set")
+	if s.deepseekConfig.ApiKey == "" {
+		err := errors.New("Deepseek API key not set")
+		tracing.TraceErr(span, err)
+		s.log.Error(err)
+		return nil, err
+	}
+
+	if s.deepseekConfig.Url == "" {
+		err := errors.New("Deepseek Url not set")
 		tracing.TraceErr(span, err)
 		s.log.Error(err)
 		return nil, err
