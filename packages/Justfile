@@ -126,7 +126,7 @@ restart-api:
     echo "CustomerOS API restarted"
 
 start:
-	cd ../deployment && podman-compose up rabbitmq jaeger postgres postgres-sidecar neo4j eventstore customer-os-platform-admin-api -d
+	cd ../deployment && podman-compose up rabbitmq jaeger postgres postgres-sidecar neo4j eventstore -d
 
 start-api:
     cd ./server/customer-os-platform-admin-api && go run . > ../../admin-api.log 2>&1 & echo $$! > admin-api.pid
