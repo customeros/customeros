@@ -103,11 +103,11 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	var agentCapabilities []postgresentity.Capability
 	for _, masterCapability := range agentRegistry.CapabilitiesConfig.Capabilities {
 		agentCapability := postgresentity.Capability{
-			ID:       uuid.New().String(),
-			Name:     masterCapability.Name,
-			Type:     masterCapability.Type,
-			Error:    "",
-			Optional: masterCapability.Optional,
+			ID:     uuid.New().String(),
+			Name:   masterCapability.Name,
+			Type:   masterCapability.Type,
+			Error:  "",
+			Active: masterCapability.Active,
 		}
 		if agentCapability.Name == "" {
 			agentCapability.Name = masterCapability.Type.GetName()

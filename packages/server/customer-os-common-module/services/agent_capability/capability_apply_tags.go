@@ -16,12 +16,12 @@ type ApplyTagCapability struct {
 	tagService interfaces.TagService
 }
 
-func (c *ApplyTagCapability) ValidateConfig() error {
+func (c *ApplyTagCapability) ValidateConfig(config NoConfig) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (c *ApplyTagCapability) ValidateInput() error {
+func (c *ApplyTagCapability) ValidateInput(input ApplyTagInput) error {
 	//TODO implement me
 	panic("implement me")
 }

@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
@@ -14,14 +15,29 @@ type CreateOrganizationCapability struct {
 	organizationService interfaces.OrganizationService
 }
 
-func (c *CreateOrganizationCapability) ValidateConfig() error {
-	//TODO implement me
-	panic("implement me")
+type CreateOrganizationInput struct {
+	Domain string `json:"domain"`
 }
 
-func (c *CreateOrganizationCapability) ValidateInput() error {
-	//TODO implement me
-	panic("implement me")
+type CreateOrganizationResult struct {
+	OrganizationID string `json:"organizationId"`
+}
+
+func NewCreateOrganizationCapability(orgService interfaces.OrganizationService) *CreateOrganizationCapability {
+	return &CreateOrganizationCapability{
+		organizationService: orgService,
+	}
+}
+
+func (c *CreateOrganizationCapability) ValidateConfig(config NoConfig) error {
+	return nil
+}
+
+func (c *CreateOrganizationCapability) ValidateInput(input CreateOrganizationInput) error {
+	if input.Domain == "" {
+		return coserrors.ErrCapabilityDomainMissing
+	}
+	return nil
 }
 
 func (c *CreateOrganizationCapability) GetInput() any {
@@ -36,25 +52,11 @@ func (c *CreateOrganizationCapability) GetOutput() any {
 	return &CreateOrganizationResult{}
 }
 
-func NewCreateOrganizationCapability(orgService interfaces.OrganizationService) *CreateOrganizationCapability {
-	return &CreateOrganizationCapability{
-		organizationService: orgService,
-	}
-}
-
 // Compile-time interface checks
 var (
 	_ interfaces.AgentCapabilityExecution[CreateOrganizationInput, CreateOrganizationResult, NoConfig] = (*CreateOrganizationCapability)(nil)
 	_ interfaces.AgentCapabilityUntyped                                                                = (*CreateOrganizationCapability)(nil)
 )
-
-type CreateOrganizationInput struct {
-	Domain string `json:"domain"`
-}
-
-type CreateOrganizationResult struct {
-	OrganizationID string `json:"organizationId"`
-}
 
 func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateOrganizationInput, config NoConfig) (CreateOrganizationResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateOrganizationCapability.Execute")
@@ -63,8 +65,11 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateO
 
 	results := CreateOrganizationResult{}
 
-	if data.Domain == "" {
-		err := fmt.Errorf("domain is required")
+	if err := c.ValidateInput(data); err != nil {
+		tracing.TraceErr(span, err)
+		return results, err
+	}
+	if err := c.ValidateConfig(config); err != nil {
 		tracing.TraceErr(span, err)
 		return results, err
 	}

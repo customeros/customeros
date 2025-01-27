@@ -31,7 +31,7 @@ func (c *AnalyzeWebSessionCapability) ValidateConfig(config NoConfig) error {
 
 func (c *AnalyzeWebSessionCapability) ValidateInput(data AnalyzeWebSessionInput) error {
 	if data.SessionID == "" {
-		return errors.New("Missing required input data: SessionID")
+		return errors.New("missing required input data: SessionID")
 	}
 	if data.Domain == "" {
 		return coserrors.ErrCapabilityDomainMissing
@@ -90,8 +90,11 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeW
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
-	err := c.ValidateInput(data)
-	if err != nil {
+	if err := c.ValidateConfig(config); err != nil {
+		tracing.TraceErr(span, err)
+		return AnalyzeWebSessionResult{}, err
+	}
+	if err := c.ValidateInput(data); err != nil {
 		tracing.TraceErr(span, err)
 		return AnalyzeWebSessionResult{}, err
 	}

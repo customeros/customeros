@@ -29,6 +29,9 @@ func (c *IdentifyWebsiteVisitorCapability) ValidateInput(data IdentifyWebsiteVis
 	if data.SessionID == "" {
 		return errors.New("SessionID cannot be empty")
 	}
+	if data.VisitorID == "" {
+		return errors.New("VisitorID cannot be empty")
+	}
 	return nil
 }
 
@@ -63,6 +66,7 @@ var (
 type IdentifyWebsiteVisitorInput struct {
 	SessionID string `json:"sessionId"`
 	IPAddress string `json:"ipAddress"`
+	VisitorID string `json:"visitorId"`
 }
 
 type IdentifyWebsiteVisitorResult struct {
@@ -77,8 +81,11 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data Ide
 
 	results := IdentifyWebsiteVisitorResult{}
 
-	err := c.ValidateInput(data)
-	if err != nil {
+	if err := c.ValidateInput(data); err != nil {
+		tracing.TraceErr(span, err)
+		return results, err
+	}
+	if err := c.ValidateConfig(config); err != nil {
 		tracing.TraceErr(span, err)
 		return results, err
 	}
