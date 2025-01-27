@@ -17,7 +17,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 const (
@@ -56,51 +55,31 @@ func NewAnthropicClient(cfg *config.AnthropicConfig, model enum.AIModel) *Anthro
 	}
 }
 
-func (c *AnthropicClient) Invoke(ctx context.Context, systemPrompt *string, content any) (string, error) {
+func (c *AnthropicClient) Invoke(ctx context.Context, systemPrompt, prompt string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnthropicClient.Invoke")
 	defer span.Finish()
+	span.LogKV("systemPrompt", systemPrompt)
+	span.LogKV("prompt", prompt)
 
-	span.LogKV(
-		"systemPrompt", utils.IfNotNilString(systemPrompt),
-		"content", content,
-	)
-
-	if content == nil {
+	if prompt == "" {
 		err := errors.New("content (user prompt) cannot be nil")
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
-	reqBody := c.buildRequest(systemPrompt, content)
+	reqBody := c.buildRequest(systemPrompt, prompt)
 	return c.executeWithRetry(ctx, reqBody)
 }
 
-func (c *AnthropicClient) buildRequest(systemPrompt *string, content any) AnthropicApiRequest {
-	var processedContent any
-	if contentMap, ok := content.(map[string]any); ok {
-		jsonBytes, err := json.Marshal(contentMap)
-		if err == nil {
-			processedContent = string(jsonBytes)
-		} else {
-			processedContent = content
-		}
-	} else {
-		processedContent = content
-	}
-
+func (c *AnthropicClient) buildRequest(systemPrompt, content string) AnthropicApiRequest {
 	req := AnthropicApiRequest{
-		Model: c.model,
-		Messages: []Message{{Role: "user", Content: []any{map[string]any{
-			"type": "text",
-			"text": processedContent,
-		}}}},
+		Model:       c.model,
+		Messages:    []Message{{Role: "user", Content: content}},
 		MaxTokens:   MaxTokens,
 		Temperature: DefaultTemperature,
 	}
 
-	if systemPrompt != nil {
-		req.System = *systemPrompt
-	}
+	req.System = systemPrompt
 
 	return req
 }

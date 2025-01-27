@@ -565,9 +565,16 @@ func (s *globalOrganizationService) enrichIndustry() {
 			"name":        record.Name,
 			"description": strings.Join(descLines, "\n"),
 		}
+		// Convert the map to a JSON string
+		jsonBytes, err := json.Marshal(prompt)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error marshalling prompt"))
+			continue
+		}
+		promptString := string(jsonBytes)
 
 		// ask AI for NAICS code
-		aiOutput, err := s.commonServices.AIService.AskAI(ctx, enum.AIModelAnthropicHaiku, &systemPrompt, &prompt)
+		aiOutput, err := s.commonServices.AIService.AskAI(ctx, enum.AIModelAnthropicHaiku, systemPrompt, promptString)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "error asking AI"))
 			continue
@@ -661,9 +668,16 @@ func (s *globalOrganizationService) enrichDescription() {
 			"domain": record.PrimaryDomain,
 			"data":   strings.Join(descLines, "\n"),
 		}
+		// Convert the map to a JSON string
+		jsonBytes, err := json.Marshal(prompt)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error marshalling prompt"))
+			continue
+		}
+		promptString := string(jsonBytes)
 
 		// ask AI for concise description
-		aiOutput, err := s.commonServices.AIService.AskAI(recordCtx, enum.AIModelAnthropicHaiku, &systemPrompt, &prompt)
+		aiOutput, err := s.commonServices.AIService.AskAI(recordCtx, enum.AIModelAnthropicHaiku, systemPrompt, promptString)
 		if err != nil {
 			tracing.TraceErr(recordSpan, errors.Wrap(err, "error asking AI"))
 			continue
@@ -751,9 +765,16 @@ Provide the final name or N/A as your entire response.
 			"domain":  record.PrimaryDomain,
 			"website": record.Website,
 		}
+		// Convert the map to a JSON string
+		jsonBytes, err := json.Marshal(prompt)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error marshalling prompt"))
+			continue
+		}
+		promptString := string(jsonBytes)
 
 		// ask AI for concise description
-		aiOutput, err := s.commonServices.AIService.AskAI(recordCtx, enum.AIModelAnthropicHaiku, &systemPrompt, &prompt)
+		aiOutput, err := s.commonServices.AIService.AskAI(recordCtx, enum.AIModelAnthropicHaiku, systemPrompt, promptString)
 		if err != nil {
 			tracing.TraceErr(recordSpan, errors.Wrap(err, "error asking AI"))
 			continue
