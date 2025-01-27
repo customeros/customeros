@@ -17,7 +17,8 @@ type ServiceLineItem implements MetadataInterface {
     metadata:           Metadata!
     billingCycle:       BilledType!
     comments:           String!
-    description:        String!
+    sku:                Sku!
+    description:        String! @deprecated(reason: "use skuId")
     parentId:           ID!
     price:              Float!
     quantity:           Int64!
@@ -32,7 +33,8 @@ type ServiceLineItem implements MetadataInterface {
 
 input ServiceLineItemInput {
     contractId:         ID!
-    description:        String
+    skuId:              ID!
+    description:        String @deprecated(reason: "use skuId")
     billingCycle:       BilledType
     price:              Float
     quantity:           Int64
@@ -44,7 +46,8 @@ input ServiceLineItemInput {
 
 input ServiceLineItemUpdateInput {
     id:                         ID
-    description:                String
+    description:                String @deprecated(reason: "use skuId")
+    skuId:                      ID!
     """
     Deprecated: billing cycle is not updatable.
     """
@@ -61,7 +64,8 @@ input ServiceLineItemUpdateInput {
 
 input ServiceLineItemNewVersionInput {
     id:                         ID
-    description:                String
+    skuId:                      ID!
+    description:                String @deprecated(reason: "use skuId")
     price:                      Float
     quantity:                   Int64
     tax:                        TaxInput
@@ -78,7 +82,8 @@ input ServiceLineItemBulkUpdateInput {
 
 input ServiceLineItemBulkUpdateItem {
     serviceLineItemId:       ID
-    name:                    String
+    skuId:                   ID
+    name:                    String @deprecated(reason: "use skuId")
     billed:                  BilledType
     price:                   Float
     quantity:                Int64
