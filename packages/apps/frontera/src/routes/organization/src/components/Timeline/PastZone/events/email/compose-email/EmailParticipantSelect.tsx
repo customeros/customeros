@@ -1,38 +1,29 @@
 import { FC } from 'react';
 
-import { emailRegex } from '@organization/components/Timeline/PastZone/events/email/utils';
+import { EmailParticipantSelectUsecase } from '@domain/usecases/email-composer/email-participant-select.usecase.ts';
+
 import { EmailFormMultiCreatableSelect } from '@shared/components/EmailMultiCreatableSelect';
 
 interface EmailParticipantSelect {
-  formId: string;
   entryType: string;
-  fieldName: string;
   autofocus: boolean;
+  emailParticipantUseCase: EmailParticipantSelectUsecase;
 }
 
 export const EmailParticipantSelect: FC<EmailParticipantSelect> = ({
   entryType,
-  fieldName,
-  formId,
   autofocus = false,
+  emailParticipantUseCase,
 }) => {
   return (
-    <div className='flex items-baseline mb-[-1px] mt-0 flex-1 overflow-visible'>
-      <span className='text-gray-700 font-semibold mr-1 text-sm'>
-        {entryType}:
-      </span>
+    <div className='flex  mb-[-1px] mt-0 flex-1 overflow-visible min-h-[28px] items-center'>
+      <span className='text-gray-700 font-semibold text-sm'>{entryType}:</span>
       <EmailFormMultiCreatableSelect
-        formId={formId}
-        name={fieldName}
+        name={entryType}
         autoFocus={autofocus}
-        noOptionsMessage={() => null}
-        allowCreateWhileLoading={false}
         navigateAfterAddingToPeople={true}
         placeholder='Enter name or email...'
-        isValidNewOption={(input) => emailRegex.test(input)}
-        formatCreateLabel={(input) => {
-          return input;
-        }}
+        emailParticipantUseCase={emailParticipantUseCase}
         getOptionLabel={(d) => {
           if (d?.__isNew__) {
             return `${d.label}`;

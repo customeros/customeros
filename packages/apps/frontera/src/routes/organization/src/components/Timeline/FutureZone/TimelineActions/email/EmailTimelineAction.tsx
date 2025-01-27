@@ -1,13 +1,17 @@
 import { useEffect } from 'react';
 
+import { useKey } from 'rooks';
+import { TimelineEmailUsecase } from '@domain/usecases/email-composer/send-timeline-email.usecase.ts';
+
 import { useTimelineRefContext } from '@organization/components/Timeline/context/TimelineRefContext';
 import { ComposeEmailContainer } from '@organization/components/Timeline/PastZone/events/email/compose-email/ComposeEmailContainer';
 import { useTimelineActionContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionContext';
-import { useTimelineActionEmailContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionEmailContext';
 
-export const EmailTimelineAction = () => {
-  const { isSending, onCreateEmail, formId, state, checkCanExitSafely } =
-    useTimelineActionEmailContext();
+export const EmailTimelineAction = ({
+  emailUseCase,
+}: {
+  emailUseCase: TimelineEmailUsecase;
+}) => {
   const { virtuosoRef } = useTimelineRefContext();
   const { closeEditor } = useTimelineActionContext();
 
@@ -16,27 +20,32 @@ export const EmailTimelineAction = () => {
   }, [virtuosoRef]);
 
   const handleClose = () => {
-    const canClose = checkCanExitSafely();
+    const canClose = emailUseCase.canExitSafely;
 
     if (canClose) {
       closeEditor();
     }
   };
 
+  const handleDiscard = () => {
+    emailUseCase.resetEditor();
+    closeEditor();
+  };
+
+  useKey('Escape', () => {
+    handleClose();
+  });
+
   return (
     <div className='rounded-md shadow-lg m-6 mt-2 bg-white border border-gray-100 max-w-[800px]'>
-      <ComposeEmailContainer
-        modal={false}
-        attendees={[]}
-        formId={formId}
-        to={state.values.to}
-        cc={state.values.cc}
-        onClose={handleClose}
-        isSending={isSending}
-        bcc={state.values.bcc}
-        onDiscard={closeEditor}
-        onSubmit={onCreateEmail}
-      ></ComposeEmailContainer>
+      <div className='rounded-b-2xl py-4 px-6 overflow-visible pt-1 bg-white rounded-lg max-h-[100%]'>
+        <ComposeEmailContainer
+          modal={false}
+          onClose={handleClose}
+          onDiscard={handleDiscard}
+          emailUseCase={emailUseCase}
+        />
+      </div>
     </div>
   );
 };

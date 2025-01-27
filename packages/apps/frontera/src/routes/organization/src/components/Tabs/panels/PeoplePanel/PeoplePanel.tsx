@@ -14,19 +14,16 @@ import { Users02 } from '@ui/media/icons/Users02';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { UsersPlus } from '@ui/media/icons/UsersPlus';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
-import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
 import { ContactDetails } from '@shared/components/ContactDetails';
 import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
 import { SortOptionsMenu } from './components/SortOptionsMenu';
-import { CreateNewContactModal } from './components/CreateNewContactModal';
 const searchSortContactUseCase = new SearchSortContact();
 
 export const PeoplePanel = observer(() => {
   const store = useStore();
-  const { open, onOpen, onClose } = useDisclosure();
   const id = useParams()?.id as string;
   const [expandAll, setExpandAll] = useState(false);
   const organization = store.organizations.getById(id);
@@ -74,7 +71,6 @@ export const PeoplePanel = observer(() => {
           <IconButton
             size='xs'
             variant='outline'
-            onClick={() => onOpen()}
             aria-label='Add contact'
             className='text-gray-500'
             dataTest={'org-people-add-contact'}
@@ -86,6 +82,15 @@ export const PeoplePanel = observer(() => {
                 className='text-gray-300 fill-gray-400'
               />
             }
+            onClick={() => {
+              store.ui.commandMenu.setType('AddSingleContact');
+              store.ui.commandMenu.setContext({
+                ids: [id],
+                entity: 'Organization',
+                property: 'contacts',
+              });
+              store.ui.commandMenu.setOpen(true);
+            }}
           >
             Add
           </IconButton>
@@ -110,9 +115,17 @@ export const PeoplePanel = observer(() => {
               variant='outline'
               loadingText='Adding'
               colorScheme={'primary'}
-              onClick={() => onOpen()}
               dataTest='org-people-add-someone'
               isDisabled={store.contacts.isLoading}
+              onClick={() => {
+                store.ui.commandMenu.setType('AddSingleContact');
+                store.ui.commandMenu.setContext({
+                  ids: [id],
+                  entity: 'Organization',
+                  property: 'contacts',
+                });
+                store.ui.commandMenu.setOpen(true);
+              }}
             >
               Add someone
             </Button>
@@ -221,9 +234,9 @@ export const PeoplePanel = observer(() => {
             style={{ width: '100%' }}
           >
             <ContactDetails
-              id={contact?.id}
               isExpandble={true}
               expandAll={expandAll}
+              id={contact?.id ?? ''}
             />
           </div>
         ))}
@@ -233,8 +246,6 @@ export const PeoplePanel = observer(() => {
           No matches found—looks like a ghost town in here
         </div>
       )}
-
-      <CreateNewContactModal orgId={id} open={open} onClose={onClose} />
     </OrganizationPanel>
   );
 });

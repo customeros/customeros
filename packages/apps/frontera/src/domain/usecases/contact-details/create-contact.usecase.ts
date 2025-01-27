@@ -22,6 +22,7 @@ export class CreateContact {
     this.setType = this.setType.bind(this);
     this.setErrorEmail = this.setErrorEmail.bind(this);
     this.setErrorLinkedin = this.setErrorLinkedin.bind(this);
+    this.clearErrors = this.clearErrors.bind(this);
   }
 
   @action
@@ -130,6 +131,18 @@ export class CreateContact {
 
   @action
   clearState() {
+    this.errorEmail = '';
+    this.errorLinkedIn = '';
+    this.emptyLinkedInUrl = false;
+    this.invalidLinkedInUrl = false;
+    this.emptyEmail = false;
+    this.invalidEmail = false;
+    this.inputValue = '';
+    this.type = 'linkedin';
+  }
+
+  @action
+  clearErrors() {
     this.errorEmail = '';
     this.errorLinkedIn = '';
     this.emptyLinkedInUrl = false;

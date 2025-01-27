@@ -107,8 +107,8 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
     const components = useMemo(
       () => ({
         Control,
-        ..._components,
         ClearIndicator,
+        ..._components,
         DropdownIndicator: () => null,
       }),
       [Control, _components],

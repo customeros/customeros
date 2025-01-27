@@ -27,6 +27,11 @@ export type GlobalCacheQuery = {
         rawEmail?: string | null;
         primary: boolean;
       }> | null;
+      mailboxesV2: Array<{
+        __typename?: 'Mailbox';
+        userId?: string | null;
+        mailbox: string;
+      }>;
       onboarding: {
         __typename?: 'UserOnboardingDetails';
         showOnboardingPage: boolean;

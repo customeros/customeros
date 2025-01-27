@@ -107,3 +107,13 @@ export const getEmailParticipantsNameAndEmail = (
     getParticipantNameAndEmail(participant as EmailParticipant, label),
   );
 };
+
+export const getEmailParticipantsNameAndEmailSelection = (
+  participants: InteractionEventParticipant[],
+): Array<{ label: string; value: string }> => {
+  if (!participants) return [];
+
+  return participants.map((participant) =>
+    getParticipantNameAndEmail(participant as EmailParticipant, 'value'),
+  ) as Array<{ label: string; value: string }>;
+};

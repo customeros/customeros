@@ -50,6 +50,7 @@ import {
   EditContactFlow,
   AddContactsBulk,
   ChangeFlowStatus,
+  AddSingleContact,
   ChangeArrEstimate,
   FlowsBulkCommands,
   AddContactsToFlow,
@@ -113,6 +114,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   AddContactsBulk: <AddContactsBulk />,
   AddEmail: <AddEmail />,
   EditLatestOrgActive: <EditLatestOrgActive />,
+  AddSingleContact: <AddSingleContact />,
 
   // Opportunity
   OpportunityHub: <OpportunityHub />,
