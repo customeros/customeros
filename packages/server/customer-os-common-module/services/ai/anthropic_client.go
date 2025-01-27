@@ -76,7 +76,6 @@ func (c *AnthropicClient) Invoke(ctx context.Context, systemPrompt *string, cont
 }
 
 func (c *AnthropicClient) buildRequest(systemPrompt *string, content any) AnthropicApiRequest {
-	// If content is a map, convert it to JSON string
 	var processedContent any
 	if contentMap, ok := content.(map[string]any); ok {
 		jsonBytes, err := json.Marshal(contentMap)
@@ -90,8 +89,11 @@ func (c *AnthropicClient) buildRequest(systemPrompt *string, content any) Anthro
 	}
 
 	req := AnthropicApiRequest{
-		Model:       c.model,
-		Messages:    []Message{{Role: "user", Content: []any{processedContent}}},
+		Model: c.model,
+		Messages: []Message{{Role: "user", Content: []any{map[string]any{
+			"type": "text",
+			"text": processedContent,
+		}}}},
 		MaxTokens:   MaxTokens,
 		Temperature: DefaultTemperature,
 	}
