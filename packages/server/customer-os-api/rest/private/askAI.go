@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"net/http"
 	"strings"
 
@@ -71,9 +72,21 @@ func (h *AskAIHandler) AskAI() gin.HandlerFunc {
 		}
 
 		// call appropriate model
-
 		prompt := request.Prompt.GetData()
-		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, request.SystemPrompt, prompt)
+		// convert prompt to string
+		if promptStr, ok := prompt.(string); ok {
+			prompt = promptStr
+		} else {
+			promptBytes, err := json.Marshal(prompt)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				message := "Unable to marshal prompt"
+				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
+				return
+			}
+			prompt = string(promptBytes)
+		}
+		answer, err := h.services.CommonServices.AIService.AskAI(ctx, request.AIModel, utils.IfNotNilString(request.SystemPrompt), prompt.(string))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			message := "Unable to ask AI"
