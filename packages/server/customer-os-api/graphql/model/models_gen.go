@@ -319,7 +319,7 @@ type Capability struct {
 	Name   string         `json:"name"`
 	Action string         `json:"action"`
 	Active bool           `json:"active"`
-	Values string         `json:"values"`
+	Config string         `json:"config"`
 	Errors *string        `json:"errors,omitempty"`
 }
 
@@ -329,7 +329,7 @@ type CapabilitySaveInput struct {
 	Name   *string         `json:"name,omitempty"`
 	Action *string         `json:"action,omitempty"`
 	Active *bool           `json:"active,omitempty"`
-	Values *string         `json:"values,omitempty"`
+	Config *string         `json:"config,omitempty"`
 	Errors *string         `json:"errors,omitempty"`
 }
 

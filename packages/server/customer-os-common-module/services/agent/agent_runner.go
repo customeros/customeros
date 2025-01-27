@@ -80,8 +80,8 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 		}
 
 		config := capExecutor.GetConfig()
-		if capability.Values != "" {
-			data := []byte(capability.Values)
+		if capability.Config != "" {
+			data := []byte(capability.Config)
 			capErr = json.Unmarshal(data, config)
 			if capErr != nil {
 				break

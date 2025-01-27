@@ -18,7 +18,7 @@ type Capability struct {
 	Name        string                   `json:"name"`
 	Type        enum.AgentCapabilityType `json:"type"`
 	Error       string                   `json:"error"`
-	Values      string                   `json:"values"`
+	Config      string                   `json:"config"`
 	Active      bool                     `json:"active"`
 	Description string                   `json:"description"`
 }

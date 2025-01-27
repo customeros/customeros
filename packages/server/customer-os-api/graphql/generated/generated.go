@@ -197,11 +197,11 @@ type ComplexityRoot struct {
 	Capability struct {
 		Action func(childComplexity int) int
 		Active func(childComplexity int) int
+		Config func(childComplexity int) int
 		Errors func(childComplexity int) int
 		ID     func(childComplexity int) int
 		Name   func(childComplexity int) int
 		Type   func(childComplexity int) int
-		Values func(childComplexity int) int
 	}
 
 	ColumnView struct {
@@ -2903,6 +2903,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Capability.Active(childComplexity), true
 
+	case "Capability.config":
+		if e.complexity.Capability.Config == nil {
+			break
+		}
+
+		return e.complexity.Capability.Config(childComplexity), true
+
 	case "Capability.errors":
 		if e.complexity.Capability.Errors == nil {
 			break
@@ -2930,13 +2937,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Capability.Type(childComplexity), true
-
-	case "Capability.values":
-		if e.complexity.Capability.Values == nil {
-			break
-		}
-
-		return e.complexity.Capability.Values(childComplexity), true
 
 	case "ColumnView.columnId":
 		if e.complexity.ColumnView.ColumnID == nil {
@@ -13120,7 +13120,7 @@ type Capability {
     name: String!
     action: String!
     active: Boolean!
-    values: String!
+    config: String!
     errors: String
 }
 
@@ -13150,7 +13150,7 @@ input CapabilitySaveInput {
     name: String
     action: String
     active: Boolean
-    values: String
+    config: String
     errors: String
 }
 
@@ -27627,8 +27627,8 @@ func (ec *executionContext) fieldContext_Agent_capabilities(_ context.Context, f
 				return ec.fieldContext_Capability_action(ctx, field)
 			case "active":
 				return ec.fieldContext_Capability_active(ctx, field)
-			case "values":
-				return ec.fieldContext_Capability_values(ctx, field)
+			case "config":
+				return ec.fieldContext_Capability_config(ctx, field)
 			case "errors":
 				return ec.fieldContext_Capability_errors(ctx, field)
 			}
@@ -30811,8 +30811,8 @@ func (ec *executionContext) fieldContext_Capability_active(_ context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Capability_values(ctx context.Context, field graphql.CollectedField, obj *model.Capability) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Capability_values(ctx, field)
+func (ec *executionContext) _Capability_config(ctx context.Context, field graphql.CollectedField, obj *model.Capability) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Capability_config(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -30825,7 +30825,7 @@ func (ec *executionContext) _Capability_values(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Values, nil
+		return obj.Config, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -30842,7 +30842,7 @@ func (ec *executionContext) _Capability_values(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Capability_values(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Capability_config(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Capability",
 		Field:      field,
@@ -110461,7 +110461,7 @@ func (ec *executionContext) unmarshalInputCapabilitySaveInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "type", "name", "action", "active", "values", "errors"}
+	fieldsInOrder := [...]string{"id", "type", "name", "action", "active", "config", "errors"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -110503,13 +110503,13 @@ func (ec *executionContext) unmarshalInputCapabilitySaveInput(ctx context.Contex
 				return it, err
 			}
 			it.Active = data
-		case "values":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("values"))
+		case "config":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("config"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Values = data
+			it.Config = data
 		case "errors":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errors"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -117872,8 +117872,8 @@ func (ec *executionContext) _Capability(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "values":
-			out.Values[i] = ec._Capability_values(ctx, field, obj)
+		case "config":
+			out.Values[i] = ec._Capability_config(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

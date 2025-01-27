@@ -59,7 +59,7 @@ func (a *AgentHandler) createMasterAgent(ctx context.Context, agent RegisterMast
 		capability := postgres_entity.Capability{
 			Type:        enum.AgentCapabilityType(inputCapability.Type),
 			Description: inputCapability.Description,
-			Optional:    inputCapability.Optional,
+			Active:      inputCapability.Active,
 			Name:        inputCapability.Name,
 		}
 		capabilities = append(capabilities, capability)

@@ -21,7 +21,7 @@ type Capability {
     name: String!
     action: String!
     active: Boolean!
-    values: String!
+    config: String!
     errors: String
 }
 
@@ -51,7 +51,7 @@ input CapabilitySaveInput {
     name: String
     action: String
     active: Boolean
-    values: String
+    config: String
     errors: String
 }
 

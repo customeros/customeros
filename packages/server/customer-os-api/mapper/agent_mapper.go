@@ -31,7 +31,7 @@ func MapAgentToModel(entity *postgresEntity.Agents) *model.Agent {
 			Type:   enummapper.MapAgentCapabilityTypeToModel(capability.Type),
 			Errors: utils.StringPtrNillable(capability.Error),
 			Active: capability.Active,
-			Values: capability.Values,
+			Config: capability.Config,
 		})
 	}
 	return &agentModel
@@ -56,7 +56,7 @@ func MapAgentSaveInputToEntity(input model.AgentSaveInput) *postgresEntity.Agent
 				Name:   utils.IfNotNilString(capability.Name),
 				Error:  utils.IfNotNilString(capability.Errors),
 				Active: utils.IfNotNilBool(capability.Active),
-				Values: utils.IfNotNilString(capability.Values),
+				Config: utils.IfNotNilString(capability.Config),
 			})
 			if capability.Type != nil {
 				capabilities[len(capabilities)-1].Type = enummapper.MapAgentCapabilityTypeFromModel(*capability.Type)
