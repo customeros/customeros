@@ -49,7 +49,7 @@ require (
 	golang.org/x/oauth2 v0.24.0
 	google.golang.org/api v0.210.0
 	google.golang.org/grpc v1.70.0
-	google.golang.org/protobuf v1.36.2
+	google.golang.org/protobuf v1.36.4
 	gorm.io/datatypes v1.2.5
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
