@@ -103,6 +103,7 @@ func (r *webSessionEventsRepository) FindAllSessionsForIntentAnalysis(ctx contex
 	err := r.gormDb.Model(&postgres_entity.WebSession{}).
 		Where("intent_signals = ?", IntentNotAnalyzed).
 		Where("is_active = ?", false).
+		Where("domain IS NOT NULL AND domain != ''").
 		Order("created_at DESC").
 		Find(&results).
 		Error
@@ -261,7 +262,7 @@ func (r *webSessionEventsRepository) UpdateIntentSignal(ctx context.Context, ses
 	var updatedSession postgres_entity.WebSession
 	err := r.gormDb.Model(&postgres_entity.WebSession{}).
 		Where("id = ? AND tenant = ?", sessionID, tenant).
-		Update("intent_signal", intentSignal).
+		Update("intent_signals", intentSignal).
 		First(&updatedSession).
 		Error
 	if err != nil {

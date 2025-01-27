@@ -24,6 +24,7 @@ type CommonConfig struct {
 	GrpcClientConfig commonconf.GrpcClientConfig
 	RabbitMQConfig   commonconf.RabbitMQConfig
 	Anthropic        commonconf.AnthropicConfig
+	Deepseek         commonconf.DeepseekConfig
 	Postgres         commonconf.PostgresConfig
 	PostgresAsync    commonconf.PostgresAsyncConfig
 	Neo4j            commonconf.Neo4jConfig
