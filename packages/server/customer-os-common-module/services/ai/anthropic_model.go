@@ -3,6 +3,7 @@ package ai
 // AnthropicApiRequest represents the request structure for Claude API
 type AnthropicApiRequest struct {
 	Model       string    `json:"model"`
+	System      string    `json:"system,omitempty"` // Add this field
 	Messages    []Message `json:"messages"`
 	MaxTokens   int       `json:"max_tokens,omitempty"`
 	Temperature float64   `json:"temperature,omitempty"`

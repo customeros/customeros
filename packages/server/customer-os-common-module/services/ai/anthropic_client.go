@@ -76,26 +76,18 @@ func (c *AnthropicClient) Invoke(ctx context.Context, systemPrompt *string, cont
 }
 
 func (c *AnthropicClient) buildRequest(systemPrompt *string, content any) AnthropicApiRequest {
-	messages := make([]Message, 0)
-
-	if systemPrompt != nil {
-		messages = append(messages, Message{
-			Role:    "system",
-			Content: *systemPrompt,
-		})
-	}
-
-	messages = append(messages, Message{
-		Role:    "user",
-		Content: content,
-	})
-
-	return AnthropicApiRequest{
+	req := AnthropicApiRequest{
 		Model:       c.model,
-		Messages:    messages,
+		Messages:    []Message{{Role: "user", Content: content}},
 		MaxTokens:   MaxTokens,
 		Temperature: DefaultTemperature,
 	}
+
+	if systemPrompt != nil {
+		req.System = *systemPrompt // Set as top-level system parameter
+	}
+
+	return req
 }
 
 func (c *AnthropicClient) createHttpRequest(ctx context.Context, reqBody AnthropicApiRequest) (*http.Request, error) {
