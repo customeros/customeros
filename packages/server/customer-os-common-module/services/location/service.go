@@ -163,7 +163,7 @@ func (s *locationService) ExtractAndEnrichLocation(ctx context.Context, tenant, 
 		s.log.Errorf("Error storing prompt log: %v", err)
 	}
 
-	aiResult, err := s.ai.AskAI(ctx, enum.AIModelAnthropicHaiku, nil, &prompt)
+	aiResult, err := s.ai.AskAI(ctx, enum.AIModelAnthropicHaiku, "", prompt)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get AI response"))
 		s.log.Errorf("Error invoking AI: %s", err.Error())

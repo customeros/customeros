@@ -28,12 +28,12 @@ func NewAIService(log logger.Logger, anthropicConfig *config.AnthropicConfig, de
 	}
 }
 
-func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, systemPrompt *string, prompt any) (*string, error) {
+func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, systemPrompt string, prompt string) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.AskAI")
 	defer span.Finish()
 	span.LogKV("model", model)
-	span.LogKV("systemPrompt", utils.IfNotNilString(systemPrompt))
-	tracing.LogObjectAsJson(span, "prompt", prompt)
+	span.LogKV("systemPrompt", systemPrompt)
+	span.LogKV("prompt", prompt)
 
 	var result *string
 	var err error
@@ -69,7 +69,7 @@ func (s *aiService) AskAI(ctx context.Context, model enum.AIModel, systemPrompt 
 	return result, nil
 }
 
-func (s *aiService) askDeepseek(ctx context.Context, model enum.AIModel, systemPrompt *string, prompt any) (*string, error) {
+func (s *aiService) askDeepseek(ctx context.Context, model enum.AIModel, systemPrompt string, prompt any) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askDeepseek")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -98,7 +98,7 @@ func (s *aiService) askDeepseek(ctx context.Context, model enum.AIModel, systemP
 	return response, nil
 }
 
-func (s *aiService) askAnthropic(ctx context.Context, model enum.AIModel, systemPrompt *string, prompt any) (*string, error) {
+func (s *aiService) askAnthropic(ctx context.Context, model enum.AIModel, systemPrompt string, prompt string) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AIService.askAnthropic")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

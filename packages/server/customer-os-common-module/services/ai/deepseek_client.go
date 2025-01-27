@@ -37,7 +37,7 @@ func NewDeepseekClient(cfg *config.DeepseekConfig, model enum.AIModel) *Deepseek
 	}
 }
 
-func (c *DeepseekClient) AskDeepseek(ctx context.Context, systemPrompt *string, content any) (*string, error) {
+func (c *DeepseekClient) AskDeepseek(ctx context.Context, systemPrompt string, content any) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DeepseekClient.AskDeepseek")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -60,10 +60,10 @@ func (c *DeepseekClient) AskDeepseek(ctx context.Context, systemPrompt *string, 
 	return c.executeWithRetry(ctx, req)
 }
 
-func (c *DeepseekClient) buildRequest(systemPrompt *string, content any) *DeepseekRequest {
+func (c *DeepseekClient) buildRequest(systemPrompt string, content any) *DeepseekRequest {
 	sysPromptStr := "You are a helpful assistant."
-	if systemPrompt != nil {
-		sysPromptStr = *systemPrompt
+	if systemPrompt != "" {
+		sysPromptStr = systemPrompt
 	}
 
 	var promptContent string
