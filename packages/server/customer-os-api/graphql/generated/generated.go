@@ -829,6 +829,8 @@ type ComplexityRoot struct {
 		Metadata         func(childComplexity int) int
 		Price            func(childComplexity int) int
 		Quantity         func(childComplexity int) int
+		Sku              func(childComplexity int) int
+		SkuID            func(childComplexity int) int
 		Subtotal         func(childComplexity int) int
 		TaxDue           func(childComplexity int) int
 		Total            func(childComplexity int) int
@@ -1122,7 +1124,6 @@ type ComplexityRoot struct {
 		FlowSenderDelete                           func(childComplexity int, id string) int
 		FlowSenderMerge                            func(childComplexity int, flowID string, input model.FlowSenderMergeInput) int
 		InteractionEventLinkAttachment             func(childComplexity int, eventID string, attachmentID string) int
-		InvoiceNextDryRunForContract               func(childComplexity int, contractID string) int
 		InvoicePay                                 func(childComplexity int, id string) int
 		InvoiceSimulate                            func(childComplexity int, input model.InvoiceSimulateInput) int
 		InvoiceUpdate                              func(childComplexity int, input model.InvoiceUpdateInput) int
@@ -1900,6 +1901,8 @@ type InvoiceResolver interface {
 	InvoiceLineItems(ctx context.Context, obj *model.Invoice) ([]*model.InvoiceLine, error)
 }
 type InvoiceLineResolver interface {
+	Sku(ctx context.Context, obj *model.InvoiceLine) (*model.Sku, error)
+
 	ContractLineItem(ctx context.Context, obj *model.InvoiceLine) (*model.ServiceLineItem, error)
 }
 type IssueResolver interface {
@@ -2006,7 +2009,6 @@ type MutationResolver interface {
 	FlowSenderDelete(ctx context.Context, id string) (*model.Result, error)
 	FlowEmailActionTest(ctx context.Context, subject string, bodyTemplate string, sendToEmailAddress string) (*model.Result, error)
 	InteractionEventLinkAttachment(ctx context.Context, eventID string, attachmentID string) (*model.Result, error)
-	InvoiceNextDryRunForContract(ctx context.Context, contractID string) (string, error)
 	InvoiceUpdate(ctx context.Context, input model.InvoiceUpdateInput) (*model.Invoice, error)
 	InvoicePay(ctx context.Context, id string) (*model.Invoice, error)
 	InvoiceVoid(ctx context.Context, id string) (*model.Invoice, error)
@@ -6084,6 +6086,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InvoiceLine.Quantity(childComplexity), true
 
+	case "InvoiceLine.sku":
+		if e.complexity.InvoiceLine.Sku == nil {
+			break
+		}
+
+		return e.complexity.InvoiceLine.Sku(childComplexity), true
+
+	case "InvoiceLine.skuId":
+		if e.complexity.InvoiceLine.SkuID == nil {
+			break
+		}
+
+		return e.complexity.InvoiceLine.SkuID(childComplexity), true
+
 	case "InvoiceLine.subtotal":
 		if e.complexity.InvoiceLine.Subtotal == nil {
 			break
@@ -8131,18 +8147,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.InteractionEventLinkAttachment(childComplexity, args["eventId"].(string), args["attachmentId"].(string)), true
-
-	case "Mutation.invoice_NextDryRunForContract":
-		if e.complexity.Mutation.InvoiceNextDryRunForContract == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_invoice_NextDryRunForContract_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.InvoiceNextDryRunForContract(childComplexity, args["contractId"].(string)), true
 
 	case "Mutation.invoice_Pay":
 		if e.complexity.Mutation.InvoicePay == nil {
@@ -15201,7 +15205,6 @@ interface SourceFieldsInterface {
 }
 
 extend type Mutation {
-    invoice_NextDryRunForContract(contractId: ID!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     invoice_Update(input: InvoiceUpdateInput!): Invoice!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     invoice_Pay(id: ID!): Invoice!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     invoice_Void(id: ID!): Invoice!  @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -15280,7 +15283,9 @@ type InvoiceProvider {
 
 type InvoiceLine implements MetadataInterface {
     metadata:           Metadata!
-    description:        String!
+    skuId:              ID
+    sku:                Sku @goField(forceResolver: true)
+    description:        String @deprecated(reason: "use sku instead")
     price:              Float!
     quantity:           Int64!
     subtotal:           Float!
@@ -20702,34 +20707,6 @@ func (ec *executionContext) field_Mutation_interactionEvent_LinkAttachment_argsA
 
 	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("attachmentId"))
 	if tmp, ok := rawArgs["attachmentId"]; ok {
-		return ec.unmarshalNID2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_invoice_NextDryRunForContract_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_invoice_NextDryRunForContract_argsContractID(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["contractId"] = arg0
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_invoice_NextDryRunForContract_argsContractID(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["contractId"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("contractId"))
-	if tmp, ok := rawArgs["contractId"]; ok {
 		return ec.unmarshalNID2string(ctx, tmp)
 	}
 
@@ -51876,6 +51853,10 @@ func (ec *executionContext) fieldContext_Invoice_invoiceLineItems(_ context.Cont
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_InvoiceLine_metadata(ctx, field)
+			case "skuId":
+				return ec.fieldContext_InvoiceLine_skuId(ctx, field)
+			case "sku":
+				return ec.fieldContext_InvoiceLine_sku(ctx, field)
 			case "description":
 				return ec.fieldContext_InvoiceLine_description(ctx, field)
 			case "price":
@@ -52792,6 +52773,96 @@ func (ec *executionContext) fieldContext_InvoiceLine_metadata(_ context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _InvoiceLine_skuId(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceLine_skuId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SkuID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceLine_skuId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceLine",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InvoiceLine_sku(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_InvoiceLine_sku(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.InvoiceLine().Sku(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Sku)
+	fc.Result = res
+	return ec.marshalOSku2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐSku(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_InvoiceLine_sku(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InvoiceLine",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Sku_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Sku_name(ctx, field)
+			case "price":
+				return ec.fieldContext_Sku_price(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Sku", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _InvoiceLine_description(ctx context.Context, field graphql.CollectedField, obj *model.InvoiceLine) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_InvoiceLine_description(ctx, field)
 	if err != nil {
@@ -52813,14 +52884,11 @@ func (ec *executionContext) _InvoiceLine_description(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_InvoiceLine_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -68047,95 +68115,6 @@ func (ec *executionContext) fieldContext_Mutation_interactionEvent_LinkAttachmen
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_interactionEvent_LinkAttachment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_invoice_NextDryRunForContract(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_invoice_NextDryRunForContract(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		directive0 := func(rctx context.Context) (any, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().InvoiceNextDryRunForContract(rctx, fc.Args["contractId"].(string))
-		}
-
-		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
-			if err != nil {
-				var zeroVal string
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal string
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (any, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal string
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_invoice_NextDryRunForContract(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_invoice_NextDryRunForContract_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -123449,11 +123428,43 @@ func (ec *executionContext) _InvoiceLine(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "skuId":
+			out.Values[i] = ec._InvoiceLine_skuId(ctx, field, obj)
+		case "sku":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InvoiceLine_sku(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "description":
 			out.Values[i] = ec._InvoiceLine_description(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "price":
 			out.Values[i] = ec._InvoiceLine_price(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -125864,13 +125875,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "interactionEvent_LinkAttachment":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_interactionEvent_LinkAttachment(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "invoice_NextDryRunForContract":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_invoice_NextDryRunForContract(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

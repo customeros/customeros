@@ -175,6 +175,8 @@ func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *neo4j_entity.InvoiceLine
 		Id:                      utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:               utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:               utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		SkuId:                   utils.GetStringPropOrEmpty(props, "skuId"),
+		SkuName:                 utils.GetStringPropOrEmpty(props, "skuName"),
 		Name:                    utils.GetStringPropOrEmpty(props, "name"),
 		Price:                   utils.GetFloatPropOrZero(props, "price"),
 		Quantity:                utils.GetInt64PropOrZero(props, "quantity"),

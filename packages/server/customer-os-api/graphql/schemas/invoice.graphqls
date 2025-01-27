@@ -5,7 +5,6 @@ extend type Query {
 }
 
 extend type Mutation {
-    invoice_NextDryRunForContract(contractId: ID!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     invoice_Update(input: InvoiceUpdateInput!): Invoice!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     invoice_Pay(id: ID!): Invoice!  @hasRole(roles: [ADMIN, USER]) @hasTenant
     invoice_Void(id: ID!): Invoice!  @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -84,7 +83,9 @@ type InvoiceProvider {
 
 type InvoiceLine implements MetadataInterface {
     metadata:           Metadata!
-    description:        String!
+    skuId:              ID
+    sku:                Sku @goField(forceResolver: true)
+    description:        String @deprecated(reason: "use sku instead")
     price:              Float!
     quantity:           Int64!
     subtotal:           Float!

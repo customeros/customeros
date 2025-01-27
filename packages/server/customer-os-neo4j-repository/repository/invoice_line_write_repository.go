@@ -3,11 +3,11 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -16,7 +16,9 @@ import (
 type InvoiceLineCreateFields struct {
 	CreatedAt               time.Time          `json:"createdAt"`
 	SourceFields            model.SourceFields `json:"sourceFields"`
-	Name                    string             `json:"name"`
+	SkuId                   string             `json:"skuId"`
+	SkuName                 string             `json:"skuName"`
+	Name                    string             `json:"name"` //deprecated
 	Price                   float64            `json:"price"`
 	Quantity                int64              `json:"quantity"`
 	Amount                  float64            `json:"amount"`
@@ -56,6 +58,8 @@ func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tena
 								il:InvoiceLine_%s,
 								il.createdAt=$createdAt,
 								il.updatedAt=datetime(),
+								il.skuId=$skuId,
+								il.skuName=$skuName,
 								il.name=$name,
 								il.price=$price,
 								il.quantity=$quantity,
@@ -77,6 +81,8 @@ func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tena
 		"invoiceId":               invoiceId,
 		"invoiceLineId":           invoiceLineId,
 		"createdAt":               data.CreatedAt,
+		"skuId":                   data.SkuId,
+		"skuName":                 data.SkuName,
 		"name":                    data.Name,
 		"price":                   data.Price,
 		"quantity":                data.Quantity,

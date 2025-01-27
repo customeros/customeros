@@ -116,7 +116,9 @@ type InvoiceLineEvent struct {
 	Id                      string        `json:"id" validate:"required"`
 	CreatedAt               time.Time     `json:"createdAt" validate:"required"`
 	SourceFields            common.Source `json:"sourceFields"`
-	Name                    string        `json:"name" validate:"required"`
+	SkuId                   string        `json:"skuId"`
+	SkuName                 string        `json:"skuName"`
+	Name                    string        `json:"name"` //deprecated
 	Price                   float64       `json:"price" validate:"required"`
 	Quantity                int64         `json:"quantity" validate:"required"`
 	Amount                  float64       `json:"amount" validate:"required"`

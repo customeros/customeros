@@ -68,6 +68,29 @@ func (r *invoiceResolver) InvoiceLineItems(ctx context.Context, obj *model.Invoi
 	return mapper.MapEntitiesToInvoiceLines(entities), nil
 }
 
+// Sku is the resolver for the sku field.
+func (r *invoiceLineResolver) Sku(ctx context.Context, obj *model.InvoiceLine) (*model.Sku, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Invoice.Sku", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	//TODO remove after migration
+	if obj.SkuID == nil || *obj.SkuID == "" {
+		return nil, nil
+	}
+
+	skuEntity, err := r.Services.CommonServices.PostgresRepositories.SkuRepository.Get(ctx, tenant, *obj.SkuID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get sku by id %s", *obj.SkuID)
+		return nil, err
+	}
+
+	return mapper.MapEntityToSku(skuEntity), nil
+}
+
 // ContractLineItem is the resolver for the contractLineItem field.
 func (r *invoiceLineResolver) ContractLineItem(ctx context.Context, obj *model.InvoiceLine) (*model.ServiceLineItem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
@@ -80,23 +103,6 @@ func (r *invoiceLineResolver) ContractLineItem(ctx context.Context, obj *model.I
 		return nil, nil
 	}
 	return mapper.MapEntityToServiceLineItem(serviceLineItemEntity), nil
-}
-
-// InvoiceNextDryRunForContract is the resolver for the invoice_NextDryRunForContract field.
-func (r *mutationResolver) InvoiceNextDryRunForContract(ctx context.Context, contractID string) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "InvoiceResolver.InvoiceNextInvoiceDryRun", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request.contractID", contractID))
-
-	invoiceId, err := r.Services.CommonServices.InvoiceService.NextInvoiceDryRun(ctx, contractID, constants.AppSourceCustomerOsApi)
-
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to dry run next invoice for contract")
-		return "", err
-	}
-	return invoiceId, nil
 }
 
 // InvoiceUpdate is the resolver for the invoice_Update field.

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"time"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -70,7 +71,7 @@ func PopulateInvoicePayload(invoice *neo4jentity.InvoiceEntity, org *neo4jentity
 
 	for _, il := range ils {
 		invoiceLineItems = append(invoiceLineItems, InvoiceLineItem{
-			Description: il.Name,
+			Description: utils.StringFirstNonEmpty(il.SkuName, il.Name),
 			MetadataID:  il.Id,
 		})
 	}

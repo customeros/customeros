@@ -1435,7 +1435,9 @@ type InvoiceCustomer struct {
 
 type InvoiceLine struct {
 	Metadata         *Metadata        `json:"metadata"`
-	Description      string           `json:"description"`
+	SkuID            *string          `json:"skuId,omitempty"`
+	Sku              *Sku             `json:"sku,omitempty"`
+	Description      *string          `json:"description,omitempty"`
 	Price            float64          `json:"price"`
 	Quantity         int64            `json:"quantity"`
 	Subtotal         float64          `json:"subtotal"`

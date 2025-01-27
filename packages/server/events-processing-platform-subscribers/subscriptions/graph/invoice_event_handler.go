@@ -193,7 +193,9 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 	for _, item := range eventData.InvoiceLines {
 		invoiceLineData := neo4jrepository.InvoiceLineCreateFields{
 			CreatedAt:   item.CreatedAt,
-			Name:        item.Name,
+			SkuId:       item.SkuId,
+			SkuName:     item.SkuName,
+			Name:        utils.FirstNotEmptyString(item.SkuName, item.Name),
 			Price:       item.Price,
 			Quantity:    item.Quantity,
 			Amount:      item.Amount,
