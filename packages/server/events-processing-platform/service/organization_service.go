@@ -10,7 +10,6 @@ import (
 
 	"github.com/customeros/customeros/packages/server/events-processing-platform/config"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization"
-	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/command"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/command_handler"
 	grpcerr "github.com/customeros/customeros/packages/server/events-processing-platform/grpc_errors"
@@ -52,30 +51,6 @@ func (s *organizationService) RefreshRenewalSummary(ctx context.Context, request
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Failed to refresh renewal summary for organization with id {%s} for tenant {%s}, err: %s", request.OrganizationId, request.Tenant, err.Error())
 		return nil, s.errResponse(err)
-	}
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
-func (s *organizationService) RefreshDerivedData(ctx context.Context, request *organizationpb.RefreshDerivedDataGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RefreshDerivedData")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
-
-	// handle deadlines
-	if err := ctx.Err(); err != nil {
-		return nil, status.Error(codes.Canceled, "Context canceled")
-	}
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return aggregate.NewOrganizationTempAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
-	}
-	if _, err := s.requestHandlerService.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{SkipLoadEvents: true}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(RefreshDerivedData.Handle) tenant:{%s}, err: %s", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
 	}
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil

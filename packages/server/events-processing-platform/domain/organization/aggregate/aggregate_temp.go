@@ -2,11 +2,9 @@ package aggregate
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/events"
 	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
@@ -27,9 +25,7 @@ func (a *OrganizationTempAggregate) HandleGRPCRequest(ctx context.Context, reque
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationTempAggregate.HandleGRPCRequest")
 	defer span.Finish()
 
-	switch r := request.(type) {
-	case *organizationpb.RefreshDerivedDataGrpcRequest:
-		return nil, a.refreshDerivedData(ctx, r)
+	switch request.(type) {
 	case *organizationpb.OrganizationIdGrpcRequest:
 		rpc := params["rpc"]
 		if rpc == nil {
@@ -41,26 +37,4 @@ func (a *OrganizationTempAggregate) HandleGRPCRequest(ctx context.Context, reque
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
-}
-
-func (a *OrganizationTempAggregate) refreshDerivedData(ctx context.Context, request *organizationpb.RefreshDerivedDataGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationTempAggregate.refreshDerivedData")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	refreshDataEvent, err := events.NewOrganizationRefreshDerivedData(a)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationRefreshDerivedData")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&refreshDataEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	return a.Apply(refreshDataEvent)
 }
