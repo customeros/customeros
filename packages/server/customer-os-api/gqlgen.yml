@@ -68,6 +68,9 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+  SkuType:
+    model:
+      - github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity.SkuType
   TableViewType:
     model:
       - github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity.TableViewType

@@ -11,10 +11,18 @@ input SkuInput {
     id: ID
     name: String!
     price: Float!
+    type: SkuType!
 }
 
 type Sku {
-    id: ID!
-    name: String!
-    price: Float!
+    id:       ID!
+    name:     String!
+    price:    Float!
+    type:     SkuType!
+    archived: Boolean!
+}
+
+enum SkuType {
+    SUBSCRIPTION
+    ONE_TIME
 }
