@@ -175,21 +175,10 @@ export const EmailFormMultiCreatableSelect = observer(
         noOptionsMessage={({ inputValue }) => (
           <div
             className='text-gray-700 px-3 py-1 mt-0.5 rounded-md bg-grayModern-100 gap-1 flex items-center'
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                emailParticipantUseCase.select({
-                  label: '',
-                  value: inputValue,
-                });
-              }
-            }}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              emailParticipantUseCase.select({
-                label: inputValue,
-                value: inputValue,
-              });
+              emailParticipantUseCase.addOption();
             }}
           >
             <Plus />

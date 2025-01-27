@@ -86,8 +86,8 @@ export class TimelineEmailUsecase {
       if (emailContent) {
         await this.root.mail.send(
           {
-            fromProvider: this.fromSelector.selectedEmail?.[0]?.provider ?? '',
-            from: this.fromSelector.selectedEmail?.[0].value,
+            fromProvider: this.fromSelector.selectedEmail?.provider ?? '',
+            from: this.fromSelector.selectedEmail?.value ?? '',
             to: this.toSelector.selectedEmails?.map(({ value }) => value),
             cc: this.ccSelector.selectedEmails?.map(({ value }) => value),
             bcc: this.bccSelector.selectedEmails?.map(({ value }) => value),
