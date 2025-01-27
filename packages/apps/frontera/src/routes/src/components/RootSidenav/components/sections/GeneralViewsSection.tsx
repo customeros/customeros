@@ -1,16 +1,13 @@
+import type { TableViewDef } from '@store/TableViewDefs/TableViewDef.dto';
+
 import { useLocation } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-import { TableViewDef } from '@store/TableViewDefs/TableViewDef.dto';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
+import { Icon } from '@ui/media/Icon';
 import { TableIdType } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
-import { Users02 } from '@ui/media/icons/Users02';
-import { Invoice } from '@ui/media/icons/Invoice';
-import { Signature } from '@ui/media/icons/Signature';
-import { Building07 } from '@ui/media/icons/Building07';
-import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
 import { RootSidenavItem } from '@shared/components/RootSidenav/components/RootSidenavItem';
 
@@ -84,11 +81,9 @@ export const GeneralViewsSection = observer(
                 )
               }
               icon={(isActive) => (
-                <Building07
-                  className={cn(
-                    'size-4 min-w-4 text-gray-500',
-                    isActive && 'text-gray-700',
-                  )}
+                <Icon
+                  name='building-07'
+                  className={cn('text-gray-500', isActive && 'text-gray-700')}
                 />
               )}
             />
@@ -103,7 +98,8 @@ export const GeneralViewsSection = observer(
                 preset: allContactsView?.value?.id ?? '',
               })}
               icon={(isActive) => (
-                <Users02
+                <Icon
+                  name='users-01'
                   className={cn(
                     'size-4 min-w-4 text-gray-500',
                     isActive && 'text-gray-700',
@@ -122,11 +118,9 @@ export const GeneralViewsSection = observer(
                 )
               }
               icon={(isActive) => (
-                <CoinsStacked01
-                  className={cn(
-                    'size-4 min-w-4 text-gray-500',
-                    isActive && 'text-gray-700',
-                  )}
+                <Icon
+                  name='coins-stacked-01'
+                  className={cn('text-gray-500', isActive && 'text-gray-700')}
                 />
               )}
             />
@@ -142,16 +136,12 @@ export const GeneralViewsSection = observer(
                 isActive={checkIsActive('finder', {
                   preset: invoicesViews.map((e) => e?.value?.id),
                 })}
-                icon={(isActive) => {
-                  return (
-                    <Invoice
-                      className={cn(
-                        'size-4 min-w-4 text-gray-500',
-                        isActive && 'text-gray-700',
-                      )}
-                    />
-                  );
-                }}
+                icon={(isActive) => (
+                  <Icon
+                    name='invoice'
+                    className={cn('text-gray-500', isActive && 'text-gray-700')}
+                  />
+                )}
               />
             )}
             <RootSidenavItem
@@ -165,11 +155,11 @@ export const GeneralViewsSection = observer(
                 preset: contractsView?.value?.id ?? '',
               })}
               icon={(isActive) => (
-                <Signature
-                  className={cn(
-                    'size-4 min-w-4 text-gray-500',
-                    isActive && 'text-gray-700',
-                  )}
+                <Icon
+                  strokeWidth={0}
+                  name='signature'
+                  fill='currentColor'
+                  className={cn('text-gray-500', isActive && 'text-gray-700')}
                 />
               )}
             />

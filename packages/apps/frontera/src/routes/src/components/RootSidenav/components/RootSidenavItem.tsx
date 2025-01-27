@@ -3,11 +3,10 @@ import { useState, ReactElement, MouseEventHandler } from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
+import { Icon } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
 import { buttonSize } from '@ui/form/Button/Button';
-import { LayersTwo01 } from '@ui/media/icons/LayersTwo01.tsx';
 import { ghostButton } from '@ui/form/Button/Button.variants';
-import { DotsVertical } from '@ui/media/icons/DotsVertical.tsx';
 import {
   Menu,
   MenuItem,
@@ -99,12 +98,12 @@ export const RootSidenavItem = observer(
         >
           <Menu open={isEditing} onOpenChange={setIsEditing}>
             <MenuButton className='min-w-6 h-5 rounded-md outline-none focus:outline-none text-gray-400 hover:text-gray-500 flex items-center'>
-              <DotsVertical className='text-inherit' />
+              <Icon name='dots-vertical' className='text-inherit' />
             </MenuButton>
 
             <MenuList align='end' side='bottom'>
               <MenuItem onClick={handleAddToMyViews}>
-                <LayersTwo01 className='text-gray-500' />
+                <Icon name='layers-two-01' className='text-gray-500' />
                 Save as...
               </MenuItem>
             </MenuList>

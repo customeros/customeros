@@ -2,14 +2,11 @@ import { useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
+import { Icon } from '@ui/media/Icon';
 import { Image } from '@ui/media/Image/Image';
 import { Spinner } from '@ui/feedback/Spinner';
 import { useStore } from '@shared/hooks/useStore';
-import { LogOut01 } from '@ui/media/icons/LogOut01';
-import { CloudOff } from '@ui/media/icons/CloudOff';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { Settings02 } from '@ui/media/icons/Settings02';
-import { ChevronDown } from '@ui/media/icons/ChevronDown';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
 import logoCustomerOs from '../../../../../src/assets/customer-os-small.png';
@@ -48,19 +45,25 @@ export const LogoSection = observer(() => {
             <span className='font-semibold  text-start w-[fit-content] overflow-hidden text-ellipsis whitespace-nowrap'>
               {store.settings.tenant.value?.workspaceName || 'CustomerOS'}
             </span>
-            <ChevronDown className='size-3 min-w-3' />
+            <Icon name='chevron-down' className='size-3 min-w-3' />
           </MenuButton>
         </div>
         <MenuList align='start' side='bottom' className='min-w-[137px]'>
           <MenuItem className='group' onClick={() => navigate('/settings')}>
             <div data-test='logo-settings' className='flex gap-2 items-center'>
-              <Settings02 className='group-hover:text-gray-700 text-gray-500' />
+              <Icon
+                name='settings-02'
+                className='group-hover:text-gray-700 text-gray-500'
+              />
               <span>Settings</span>
             </div>
           </MenuItem>
           <MenuItem className='group' onClick={handleSignOutClick}>
             <div className='flex gap-2 items-center'>
-              <LogOut01 className='group-hover:text-gray-700 text-gray-500' />
+              <Icon
+                name='log-out-01'
+                className='group-hover:text-gray-700 text-gray-500'
+              />
               <span>Sign Out</span>
             </div>
           </MenuItem>
@@ -99,7 +102,7 @@ export const LogoSection = observer(() => {
           }
         >
           <div className='flex items-center'>
-            <CloudOff className='mr-3 text-gray-500' />
+            <Icon name='cloud-off' className='mr-3 text-gray-500' />
           </div>
         </Tooltip>
       )}
