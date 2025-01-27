@@ -43,7 +43,7 @@ func (a *SupportAgent) ProcessIntentEvent(ctx context.Context, intentEvent *dto.
 	tracing.LogObjectAsJson(span, "event", intentEvent)
 
 	// find active agents for tenant
-	agents, err := a.postgresRepositories.AgentsRepository.FindAllFromAgentsList(ctx, []enum.AgentType{enum.AgentSupport})
+	agents, err := a.postgresRepositories.AgentsRepository.GetActiveAgentsByTypes(ctx, []enum.AgentType{enum.AgentSupport})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

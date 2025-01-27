@@ -25,6 +25,9 @@ var (
 	// validation errors
 	ErrLinkedInUsed = errors.New("linkedin url is already used")
 	ErrEmailUsed    = errors.New("Email is already used")
+
+	// Capability errors
+	ErrCapabilityDomainMissing = errors.New("Missing domain")
 )
 
 func SkipTracing(err error) bool {
@@ -36,6 +39,7 @@ func SkipTracing(err error) bool {
 	errs := []error{
 		ErrLinkedInUsed,
 		ErrEmailUsed,
+		ErrCapabilityDomainMissing,
 	}
 
 	for _, e := range errs {

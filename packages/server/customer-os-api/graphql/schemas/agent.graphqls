@@ -9,9 +9,10 @@ extend type Mutation {
 
 enum CapabilityType {
     IDENTIFY_WEB_VISITOR
-    SEND_SLACK_NOTIFICATION
     CREATE_ORGANIZATION
     ANALYZE_WEB_SESSION_INTENT
+    SEND_SLACK_NOTIFICATION
+    WEB_VISITOR_SEND_SLACK_NOTIFICATION
 }
 
 type Capability {
@@ -19,8 +20,8 @@ type Capability {
     type: CapabilityType!
     name: String!
     action: String!
-    optional: Boolean!
-    values: String!
+    active: Boolean!
+    config: String!
     errors: String
 }
 
@@ -49,8 +50,8 @@ input CapabilitySaveInput {
     type: CapabilityType
     name: String
     action: String
-    optional: Boolean
-    values: String
+    active: Boolean
+    config: String
     errors: String
 }
 

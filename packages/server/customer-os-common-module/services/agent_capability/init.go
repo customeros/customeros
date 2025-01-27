@@ -26,6 +26,7 @@ func InitCapabilities(
 	notificationService interfaces.NotificationService,
 	organizationService interfaces.OrganizationService,
 	tagService interfaces.TagService,
+	workspaceService interfaces.WorkspaceService,
 
 ) *AgentCapabilities {
 
@@ -45,6 +46,7 @@ func InitCapabilities(
 	executors[enum.CapabilityCreateOrganization] = NewCreateOrganizationCapability(organizationService)
 	executors[enum.CapabilityIdentifyWebVisitor] = NewIdentifyWebsiteVisitorCapability(postgresRepositories, enrichmentService)
 	executors[enum.CapabilitySendSlackNotification] = NewSendSlackNotificationCapability(notificationService)
+	executors[enum.CapabilitySendWebVisitorSlackNotification] = NewSendWebVisitorSlackNotificationCapability(postgresRepositories, notificationService, workspaceService)
 	// Continue registering other capabilities here...
 	capabilities.executors = executors
 

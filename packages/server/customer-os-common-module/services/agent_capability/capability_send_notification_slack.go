@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
 	"github.com/opentracing/opentracing-go"
 
@@ -14,6 +15,20 @@ import (
 
 type SendSlackNotificationCapability struct {
 	notificationService interfaces.NotificationService
+}
+
+func (c *SendSlackNotificationCapability) ValidateConfig(config SendSlackNotificationConfig) error {
+	if config.ChannelID == "" {
+		return errors.New("ChannelID must be set")
+	}
+	return nil
+}
+
+func (c *SendSlackNotificationCapability) ValidateInput(input SendSlackNotificationInput) error {
+	if input.Message == nil || utils.IfNotNilString(input.Message) == "" {
+		return errors.New("Message must be set")
+	}
+	return nil
 }
 
 func (c *SendSlackNotificationCapability) GetInput() any {
@@ -41,8 +56,7 @@ var (
 )
 
 type SendSlackNotificationInput struct {
-	Message   *string `json:"message,omitempty"`
-	ChannelID string  `json:"channelId"`
+	Message *string `json:"message,omitempty"`
 }
 
 type SendSlackNotificationResult struct {
@@ -60,6 +74,17 @@ func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data Send
 
 	result := SendSlackNotificationResult{}
 
+	if err := c.ValidateInput(data); err != nil {
+		tracing.TraceErr(span, err)
+		result.Success = false
+		return result, err
+	}
+	if err := c.ValidateConfig(config); err != nil {
+		tracing.TraceErr(span, err)
+		result.Success = false
+		return result, err
+	}
+
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("Tenant not set on context")
@@ -68,7 +93,7 @@ func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data Send
 		return result, err
 	}
 
-	err := c.notificationService.NotifySlackChannel(ctx, tenant, data.ChannelID, data.Message)
+	err := c.notificationService.NotifySlackChannel(ctx, tenant, config.ChannelID, data.Message)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		result.Success = false

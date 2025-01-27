@@ -314,23 +314,23 @@ type Calendar struct {
 }
 
 type Capability struct {
-	ID       string         `json:"id"`
-	Type     CapabilityType `json:"type"`
-	Name     string         `json:"name"`
-	Action   string         `json:"action"`
-	Optional bool           `json:"optional"`
-	Values   string         `json:"values"`
-	Errors   *string        `json:"errors,omitempty"`
+	ID     string         `json:"id"`
+	Type   CapabilityType `json:"type"`
+	Name   string         `json:"name"`
+	Action string         `json:"action"`
+	Active bool           `json:"active"`
+	Config string         `json:"config"`
+	Errors *string        `json:"errors,omitempty"`
 }
 
 type CapabilitySaveInput struct {
-	ID       *string         `json:"id,omitempty"`
-	Type     *CapabilityType `json:"type,omitempty"`
-	Name     *string         `json:"name,omitempty"`
-	Action   *string         `json:"action,omitempty"`
-	Optional *bool           `json:"optional,omitempty"`
-	Values   *string         `json:"values,omitempty"`
-	Errors   *string         `json:"errors,omitempty"`
+	ID     *string         `json:"id,omitempty"`
+	Type   *CapabilityType `json:"type,omitempty"`
+	Name   *string         `json:"name,omitempty"`
+	Action *string         `json:"action,omitempty"`
+	Active *bool           `json:"active,omitempty"`
+	Config *string         `json:"config,omitempty"`
+	Errors *string         `json:"errors,omitempty"`
 }
 
 type ColumnView struct {
@@ -3300,22 +3300,24 @@ func (e CalendarType) MarshalGQL(w io.Writer) {
 type CapabilityType string
 
 const (
-	CapabilityTypeIdentifyWebVisitor      CapabilityType = "IDENTIFY_WEB_VISITOR"
-	CapabilityTypeSendSLACkNotification   CapabilityType = "SEND_SLACK_NOTIFICATION"
-	CapabilityTypeCreateOrganization      CapabilityType = "CREATE_ORGANIZATION"
-	CapabilityTypeAnalyzeWebSessionIntent CapabilityType = "ANALYZE_WEB_SESSION_INTENT"
+	CapabilityTypeIdentifyWebVisitor              CapabilityType = "IDENTIFY_WEB_VISITOR"
+	CapabilityTypeCreateOrganization              CapabilityType = "CREATE_ORGANIZATION"
+	CapabilityTypeAnalyzeWebSessionIntent         CapabilityType = "ANALYZE_WEB_SESSION_INTENT"
+	CapabilityTypeSendSLACkNotification           CapabilityType = "SEND_SLACK_NOTIFICATION"
+	CapabilityTypeWebVisitorSendSLACkNotification CapabilityType = "WEB_VISITOR_SEND_SLACK_NOTIFICATION"
 )
 
 var AllCapabilityType = []CapabilityType{
 	CapabilityTypeIdentifyWebVisitor,
-	CapabilityTypeSendSLACkNotification,
 	CapabilityTypeCreateOrganization,
 	CapabilityTypeAnalyzeWebSessionIntent,
+	CapabilityTypeSendSLACkNotification,
+	CapabilityTypeWebVisitorSendSLACkNotification,
 }
 
 func (e CapabilityType) IsValid() bool {
 	switch e {
-	case CapabilityTypeIdentifyWebVisitor, CapabilityTypeSendSLACkNotification, CapabilityTypeCreateOrganization, CapabilityTypeAnalyzeWebSessionIntent:
+	case CapabilityTypeIdentifyWebVisitor, CapabilityTypeCreateOrganization, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeSendSLACkNotification, CapabilityTypeWebVisitorSendSLACkNotification:
 		return true
 	}
 	return false

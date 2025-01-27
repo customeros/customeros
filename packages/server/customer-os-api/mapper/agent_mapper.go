@@ -26,12 +26,12 @@ func MapAgentToModel(entity *postgresEntity.Agents) *model.Agent {
 	}
 	for _, capability := range entity.CapabilitiesConfig.Capabilities {
 		agentModel.Capabilities = append(agentModel.Capabilities, &model.Capability{
-			ID:       capability.ID,
-			Name:     capability.Name,
-			Type:     enummapper.MapAgentCapabilityTypeToModel(capability.Type),
-			Errors:   utils.StringPtrNillable(capability.Error),
-			Optional: capability.Optional,
-			Values:   capability.Values,
+			ID:     capability.ID,
+			Name:   capability.Name,
+			Type:   enummapper.MapAgentCapabilityTypeToModel(capability.Type),
+			Errors: utils.StringPtrNillable(capability.Error),
+			Active: capability.Active,
+			Config: capability.Config,
 		})
 	}
 	return &agentModel
@@ -52,11 +52,11 @@ func MapAgentSaveInputToEntity(input model.AgentSaveInput) *postgresEntity.Agent
 		capabilities := make([]postgresEntity.Capability, 0, len(input.Capabilities))
 		for _, capability := range input.Capabilities {
 			capabilities = append(capabilities, postgresEntity.Capability{
-				ID:       utils.IfNotNilString(capability.ID),
-				Name:     utils.IfNotNilString(capability.Name),
-				Error:    utils.IfNotNilString(capability.Errors),
-				Optional: utils.IfNotNilBool(capability.Optional),
-				Values:   utils.IfNotNilString(capability.Values),
+				ID:     utils.IfNotNilString(capability.ID),
+				Name:   utils.IfNotNilString(capability.Name),
+				Error:  utils.IfNotNilString(capability.Errors),
+				Active: utils.IfNotNilBool(capability.Active),
+				Config: utils.IfNotNilString(capability.Config),
 			})
 			if capability.Type != nil {
 				capabilities[len(capabilities)-1].Type = enummapper.MapAgentCapabilityTypeFromModel(*capability.Type)

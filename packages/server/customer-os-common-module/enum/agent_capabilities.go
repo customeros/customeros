@@ -9,10 +9,11 @@ import (
 type AgentCapabilityType string
 
 const (
-	CapabilityAnalyzeWebSessionIntent AgentCapabilityType = "analyze_web_session_for_intent"
-	CapabilityCreateOrganization      AgentCapabilityType = "create_organization"
-	CapabilityIdentifyWebVisitor      AgentCapabilityType = "identify_web_visitor"
-	CapabilitySendSlackNotification   AgentCapabilityType = "send_slack_notification"
+	CapabilityAnalyzeWebSessionIntent         AgentCapabilityType = "analyze_web_session_for_intent"
+	CapabilityCreateOrganization              AgentCapabilityType = "create_organization"
+	CapabilityIdentifyWebVisitor              AgentCapabilityType = "identify_web_visitor"
+	CapabilitySendSlackNotification           AgentCapabilityType = "send_slack_notification"
+	CapabilitySendWebVisitorSlackNotification AgentCapabilityType = "send_web_visitor_slack_notification"
 )
 
 func (t AgentCapabilityType) String() string {
@@ -25,7 +26,8 @@ func GetAgentCapability(s string) (AgentCapabilityType, error) {
 		CapabilityAnalyzeWebSessionIntent,
 		CapabilityCreateOrganization,
 		CapabilityIdentifyWebVisitor,
-		CapabilitySendSlackNotification:
+		CapabilitySendSlackNotification,
+		CapabilitySendWebVisitorSlackNotification:
 		return AgentCapabilityType(s), nil
 
 	default:

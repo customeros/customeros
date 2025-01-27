@@ -76,7 +76,7 @@ func (a *AgentHandler) buildAgentRegistryRecord(ctx context.Context, agentRegist
 		capabilityRecord := AgentCapability{
 			Type:        capability.Type.String(),
 			Description: capability.Description,
-			Optional:    capability.Optional,
+			Active:      capability.Active,
 			Name:        capability.Name,
 		}
 		capabilities = append(capabilities, capabilityRecord)
