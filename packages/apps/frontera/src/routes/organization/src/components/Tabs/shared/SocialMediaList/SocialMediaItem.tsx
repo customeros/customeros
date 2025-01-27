@@ -9,6 +9,7 @@ import { Trash01 } from '@ui/media/icons/Trash01';
 import { Divider } from '@ui/presentation/Divider';
 import { Copy01 } from '@ui/media/icons/Copy01.tsx';
 import { Share03 } from '@ui/media/icons/Share03.tsx';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { formatSocialUrl } from '@ui/form/UrlInput/util';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
@@ -37,7 +38,7 @@ interface SocialMediaItemProps {
 const removeOrgSocialMediaItemUsecase = new RemoveOrgSocialMediaItemUsecase();
 export const SocialMediaItem = observer(
   ({ value, dataTest, leftElement, id }: SocialMediaItemProps) => {
-    const [isHovered, setIsHovered] = useState(false);
+    const [openActionBar, setIsOpenActionBar] = useState(false);
     const [_, copyToClipboard] = useCopyToClipboard();
     const { onClose, onOpen, open } = useDisclosure();
 
@@ -53,17 +54,21 @@ export const SocialMediaItem = observer(
                 data-test={dataTest}
                 className='text-sm truncate cursor-default overflow-hidden overflow-ellipsis mr-3'
               >
-                <Popover open={isHovered} onOpenChange={setIsHovered}>
+                <Popover open={openActionBar} onOpenChange={setIsOpenActionBar}>
                   <PopoverTrigger>
-                    <SocialIcon
-                      url={value}
-                      className={cn(
-                        isHovered &&
-                          'border-[1px] border-gray-700 rounded-full ',
-                      )}
-                    >
-                      {leftElement}
-                    </SocialIcon>
+                    <Tooltip asChild label={formatSocialUrl(value)}>
+                      <div>
+                        <SocialIcon
+                          url={value}
+                          className={cn(
+                            openActionBar &&
+                              'border-[1px] border-gray-700 rounded-full ',
+                          )}
+                        >
+                          {leftElement}
+                        </SocialIcon>
+                      </div>
+                    </Tooltip>
                   </PopoverTrigger>
                   <PopoverContent side='top' className='bg-gray-700'>
                     <div className=' flex items-center text-white'>
