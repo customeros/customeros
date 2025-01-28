@@ -21,7 +21,6 @@ import (
 
 	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/config"
-	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/eventbuffer"
 	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/service"
@@ -125,10 +124,6 @@ func (server *Server) Start(parentCtx context.Context) error {
 
 	// Setting up cache
 	server.caches = caches.InitCaches()
-
-	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Services.PostgresRepositories.EventBufferRepository, server.Log, server.AggregateStore)
-	eventBufferWatcher.Start(ctx)
-	defer eventBufferWatcher.Stop()
 
 	server.InitSubscribers(ctx, grpcClients, esdb, cancel)
 

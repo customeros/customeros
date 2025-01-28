@@ -38,7 +38,7 @@ func OnSkuUpdate(ctx context.Context, dependencies *model.DependencyContainer, i
 		return err
 	}
 
-	if skuEntity.QuickbooksId == "" {
+	if skuEntity != nil && skuEntity.QuickbooksId == "" {
 		skuEntity.QuickbooksId = qbProduct.Product.Id
 		_, err = dependencies.CommonServices.PostgresRepositories.SkuRepository.Save(ctx, skuEntity)
 		if err != nil {

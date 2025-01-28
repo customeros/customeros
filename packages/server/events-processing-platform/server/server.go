@@ -10,7 +10,6 @@ import (
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
-	"github.com/customeros/customeros/packages/server/events/eventbuffer"
 	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/customeros/customeros/packages/server/events/eventstore/store"
 	"github.com/customeros/customeros/packages/server/events/eventstoredb"
@@ -96,8 +95,7 @@ func (server *Server) Start(parentCtx context.Context) error {
 
 	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
 
-	bufferService := eventbuffer.NewEventBufferStoreService(server.Repositories.PostgresRepositories.EventBufferRepository, server.Log)
-	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore, bufferService)
+	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore)
 
 	// Server.runMetrics(cancel)
 	// Server.runHealthCheck(ctx)

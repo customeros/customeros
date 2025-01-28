@@ -46,7 +46,6 @@ type Repositories struct {
 	EnrichDetailsPrefilterTrackingRepository     EnrichDetailsPrefilterTrackingRepository
 	EnrichDetailsScrapInRepository               EnrichDetailsScrapInRepository
 	EnrichDetailsTrackingRepository              EnrichDetailsTrackingRepository
-	EventBufferRepository                        EventBufferRepository
 	ExternalAppKeysRepository                    ExternalAppKeysRepository
 	FlowsRepository                              FlowsRepository
 	FlowEdgeRepository                           FlowEdgeRepository
@@ -130,7 +129,6 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		EnrichDetailsPrefilterTrackingRepository:     NewEnrichDetailsPrefilterTrackingRepository(postgresDB.GormDB),
 		EnrichDetailsScrapInRepository:               NewEnrichDetailsScrapInRepository(postgresDB.GormDB),
 		EnrichDetailsTrackingRepository:              NewEnrichDetailsTrackingRepository(postgresDB.GormDB),
-		EventBufferRepository:                        NewEventBufferRepository(postgresDB.GormDB),
 		ExternalAppKeysRepository:                    NewExternalAppKeysRepository(postgresDB.GormDB),
 		FlowsRepository:                              NewFlowsRepository(postgresDB.GormDB),
 		FlowEdgeRepository:                           NewFlowEdgeRepository(postgresDB.GormDB),
@@ -200,7 +198,6 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.EnrichDetailsPreFilterTracking{},
 		&postgres_entity.EnrichDetailsScrapIn{},
 		&postgres_entity.EnrichDetailsTracking{},
-		&postgres_entity.EventBuffer{},
 		&postgres_entity.ExternalAppKeys{},
 		&postgres_entity.Flows{},
 		&postgres_entity.FlowEdge{},

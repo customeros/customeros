@@ -20,7 +20,6 @@ import (
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/events/eventbuffer"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -68,19 +67,12 @@ func main() {
 
 	repositories := repository.InitRepositories(cfg, &neo4jDriver, postgresDb)
 
-	eventBufferProcessService := eventbuffer.NewEventBufferProcessService(repositories.PostgresRepositories.EventBufferRepository, appLogger, epClient)
-	eventBufferProcessService.Start(ctx)
-	defer eventBufferProcessService.Stop()
-
-	eventBufferStoreService := eventbuffer.NewEventBufferStoreService(repositories.PostgresRepositories.EventBufferRepository, appLogger)
-
 	cntnr := &container.Container{
 		Cfg:                           cfg,
 		Log:                           appLogger,
 		Repositories:                  repositories,
 		CommonServices:                commonService.InitCommonServices(appLogger, repositories.Neo4jRepositories, repositories.PostgresRepositories, cfg.Common, epClient, &commonService.InitOptions{LoadPersonalEmailProviders: true}),
 		EventProcessingServicesClient: epClient,
-		EventBufferStoreService:       eventBufferStoreService,
 	}
 
 	crons := localcron.StartCron(cntnr)
@@ -88,10 +80,6 @@ func main() {
 	if err = run(appLogger, crons,
 		func() error {
 			return localcron.StopCron(appLogger, crons) // Stop cron jobs
-		},
-		func() error {
-			eventBufferProcessService.Stop() // Stop event buffer service
-			return nil
 		}); err != nil {
 		appLogger.Fatal(err)
 	}
