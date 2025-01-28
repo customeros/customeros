@@ -1,7 +1,6 @@
 package postgres_repository
 
 import (
-	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -62,7 +61,8 @@ func (repo *slackSettingsRepository) Save(ctx context.Context, slackSettings pos
 
 	result := repo.db.Save(&slackSettings)
 	if result.Error != nil {
-		return nil, fmt.Errorf("saving slack settings failed: %w", result.Error)
+		tracing.TraceErr(span, result.Error)
+		return nil, result.Error
 	}
 	return &slackSettings, nil
 }
@@ -75,11 +75,13 @@ func (repo *slackSettingsRepository) Delete(ctx context.Context, tenant string) 
 
 	existing, err := repo.Get(ctx, tenant)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
 
 	err = repo.db.Delete(&existing).Error
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return err
 	}
 

@@ -99,7 +99,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 
 		request, err := http.NewRequest("POST", "https://slack.com/api/oauth.v2.access", nil)
 		if err != nil {
-			fmt.Println("Error creating request:", err)
+			tracing.TraceErr(span, err)
 			return
 		}
 		request.Body = ioutil.NopCloser(strings.NewReader(requestBody))
@@ -111,7 +111,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		client := &http.Client{}
 		resp, err := client.Do(request)
 		if err != nil {
-			fmt.Println("Error making request:", err)
+			tracing.TraceErr(span, err)
 			return
 		}
 		defer resp.Body.Close()
@@ -119,7 +119,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		// Read and print the response
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			fmt.Println("Error reading response:", err)
+			tracing.TraceErr(span, err)
 			return
 		}
 
@@ -127,7 +127,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		var slackResponse OauthSlackResponse
 		err = json.Unmarshal(body, &slackResponse)
 		if err != nil {
-			fmt.Println("Error unmarshalling response:", err)
+			tracing.TraceErr(span, err)
 			return
 		}
 
@@ -147,9 +147,9 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 				entity.Id = slackSettingsEntity.Id
 			}
 
-			_, err := s.Repositories.PostgresRepositories.SlackSettingsRepository.Save(c, entity)
+			_, err := s.Repositories.PostgresRepositories.SlackSettingsRepository.Save(ctx, entity)
 			if err != nil {
-				fmt.Println("Error saving slack settings:", err)
+				tracing.TraceErr(span, err)
 				return
 			}
 		}
