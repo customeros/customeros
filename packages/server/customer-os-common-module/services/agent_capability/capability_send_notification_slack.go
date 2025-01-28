@@ -2,9 +2,9 @@ package agent_capability
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/pkg/errors"
 
 	"github.com/opentracing/opentracing-go"
 
@@ -71,17 +71,18 @@ func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data Send
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendSlackNotificationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.LogObjectAsJson(span, "input", data)
+	tracing.LogObjectAsJson(span, "config", config)
 
 	result := SendSlackNotificationResult{}
 
 	if err := c.ValidateInput(data); err != nil {
-		tracing.TraceErr(span, err)
-		result.Success = false
+		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
 		return result, err
 	}
 	if err := c.ValidateConfig(config); err != nil {
-		tracing.TraceErr(span, err)
-		result.Success = false
+		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
 		return result, err
 	}
 
@@ -104,6 +105,7 @@ func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data Send
 		"event", "capability_executed",
 	)
 	result.Success = true
+	tracing.LogObjectAsJson(span, "result", result)
 	return result, nil
 }
 

@@ -2,19 +2,17 @@ package agent_capability
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
-	"time"
-
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
+	"strings"
+	"time"
 )
 
 type SendWebVisitorSlackNotificationCapability struct {
@@ -95,17 +93,20 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendWebVisitorSlackNotificationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.LogObjectAsJson(span, "input", data)
+	tracing.LogObjectAsJson(span, "config", config)
 
 	result := SendWebVisitorSlackNotificationResult{
 		Success: false,
 	}
 
 	if err := c.ValidateInput(data); err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
 		return result, err
 	}
 	if err := c.ValidateConfig(config); err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
 		return result, err
 	}
 
@@ -150,6 +151,7 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 	}
 
 	result.Success = sendResult.Success
+	tracing.LogObjectAsJson(span, "result", result)
 	return result, nil
 }
 

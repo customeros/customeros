@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/mailsherpa/domaincheck"
@@ -78,37 +79,41 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data Ide
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.LogObjectAsJson(span, "input", data)
+	tracing.LogObjectAsJson(span, "config", config)
 
-	results := IdentifyWebsiteVisitorResult{}
+	result := IdentifyWebsiteVisitorResult{}
 
 	if err := c.ValidateInput(data); err != nil {
-		tracing.TraceErr(span, err)
-		return results, err
+		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		return result, err
 	}
 	if err := c.ValidateConfig(config); err != nil {
-		tracing.TraceErr(span, err)
-		return results, err
+		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		return result, err
 	}
 
 	domain, linkedInSlug, err := c.identifyIP(ctx, data.IPAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return results, err
+		return result, err
 	}
 	span.LogKV("domain", domain)
 
-	results.Domain = domain
-	results.LinkedInSlug = linkedInSlug
+	result.Domain = domain
+	result.LinkedInSlug = linkedInSlug
 
 	if domain != "" {
 		_, err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithDomain(ctx, data.SessionID, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return results, err
+			return result, err
 		}
 	}
 
-	return results, nil
+	tracing.LogObjectAsJson(span, "result", result)
+	return result, nil
 }
 
 func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug string, err error) {
