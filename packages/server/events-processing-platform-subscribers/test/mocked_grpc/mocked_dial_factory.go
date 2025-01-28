@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
@@ -31,7 +30,6 @@ func (dfi MockedTestDialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.Cl
 
 	server := grpc.NewServer()
 
-	organizationpb.RegisterOrganizationGrpcServiceServer(server, &MockOrganizationService{})
 	invoicepb.RegisterInvoiceGrpcServiceServer(server, &MockInvoiceService{})
 
 	go func() {
