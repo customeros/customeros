@@ -193,11 +193,11 @@ func registerVisitorIdpostgres_entityAgent() postgres_entity.AgentRegistry {
 					Active: true,
 				},
 				{
-					Type:   enum.CapabilityAnalyzeWebSessionIntent,
+					Type:   enum.CapabilityCreateOrganization,
 					Active: true,
 				},
 				{
-					Type:   enum.CapabilityCreateOrganization,
+					Type:   enum.CapabilityAnalyzeWebSessionIntent,
 					Active: true,
 				},
 				{
