@@ -131,6 +131,11 @@ type AgentSaveInput struct {
 	Icon         *string                `json:"icon,omitempty"`
 }
 
+type AgentSlackChannel struct {
+	ChannelID string `json:"channelId"`
+	Name      string `json:"name"`
+}
+
 type Attachment struct {
 	ID            string     `json:"id"`
 	CreatedAt     time.Time  `json:"createdAt"`

@@ -63,7 +63,7 @@ func MapDbNodeToWorkspaceEntity(dbNode *dbtype.Node) *neo4j_entity.WorkspaceEnti
 	props := utils.GetPropsFromNode(*dbNode)
 	workspace := neo4j_entity.WorkspaceEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Name:          utils.GetStringPropOrEmpty(props, "domain"),
+		Name:          utils.GetStringPropOrEmpty(props, "name"),
 		Provider:      utils.GetStringPropOrEmpty(props, "provider"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),

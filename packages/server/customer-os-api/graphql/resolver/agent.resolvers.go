@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
@@ -90,4 +89,28 @@ func (r *queryResolver) Agent(ctx context.Context, id string) (*model.Agent, err
 		return nil, nil
 	}
 	return mapper.MapAgentToModel(agentEntity), nil
+}
+
+// SlackChannelsWithBot is the resolver for the slackChannelsWithBot field.
+func (r *queryResolver) SlackChannelsWithBot(ctx context.Context) ([]*model.AgentSlackChannel, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.SlackChannelsWithBot", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	slackChannels, err := r.Services.CommonServices.SlackService.ListSlackChannelsWithBot(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get slack channels")
+		return nil, nil
+	}
+
+	var agentSlackChannels []*model.AgentSlackChannel
+	for _, slackChannel := range slackChannels {
+		agentSlackChannels = append(agentSlackChannels, &model.AgentSlackChannel{
+			ChannelID: slackChannel.ID,
+			Name:      slackChannel.Name,
+		})
+	}
+
+	return agentSlackChannels, nil
 }

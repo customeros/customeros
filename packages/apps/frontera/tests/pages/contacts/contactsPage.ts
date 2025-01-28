@@ -9,8 +9,7 @@ import {
 export class ContactsPage {
   private page: Page;
 
-  private sideNavItemAllContacts =
-    'div[data-test="side-nav-item-all-contacts"]';
+  sideNavItemAllContacts = 'div[data-test="side-nav-item-all-contacts"]';
   sideNavItemAllContactsSelected =
     'div[data-test="side-nav-item-all-contacts"] div[aria-selected="true"]';
   private allOrgsSelectAllOrgs = 'div[data-test="all-orgs-select-all-orgs"]';

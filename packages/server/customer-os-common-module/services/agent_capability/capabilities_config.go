@@ -4,6 +4,11 @@ import "github.com/customeros/customeros/packages/server/customer-os-common-modu
 
 type NoConfig struct{}
 
+type CapabilityOutput struct {
+	ExecutionValidated bool `json:"executionValidated"`
+	Completed          bool `json:"completed"`
+}
+
 func GetCapabilityConfigStruct(capabilityType enum.AgentCapabilityType) any {
 	switch capabilityType {
 	case enum.CapabilitySendSlackNotification:

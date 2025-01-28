@@ -32,9 +32,8 @@ type SendWebVisitorSlackNotificationInput struct {
 	SessionDuration string   `json:"sessionDuration"`
 }
 
-type SendWebVisitorSlackNotificationResult struct {
-	Success bool `json:"success"`
-	Skipped bool `json:"skipped"`
+type SendWebVisitorSlackNotificationOutput struct {
+	CapabilityOutput
 }
 
 type SendWebVisitorSlackNotificationConfig struct {
@@ -42,7 +41,7 @@ type SendWebVisitorSlackNotificationConfig struct {
 	CooldownHours SlackCooldownHoursConfig `json:"cooldownHours"`
 }
 type SlackCooldownHoursConfig struct {
-	Value int    `json:"value"`
+	Value int64  `json:"value"`
 	Error string `json:"error"`
 }
 
@@ -60,7 +59,7 @@ func NewSendWebVisitorSlackNotificationCapability(postgresRepositories *postgres
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapabilityExecution[SendWebVisitorSlackNotificationInput, SendWebVisitorSlackNotificationResult, SendWebVisitorSlackNotificationConfig] = (*SendWebVisitorSlackNotificationCapability)(nil)
+	_ interfaces.AgentCapabilityExecution[SendWebVisitorSlackNotificationInput, SendWebVisitorSlackNotificationOutput, SendWebVisitorSlackNotificationConfig] = (*SendWebVisitorSlackNotificationCapability)(nil)
 	_ interfaces.AgentCapabilityUntyped                                                                                                                       = (*SendWebVisitorSlackNotificationCapability)(nil)
 )
 
@@ -93,10 +92,10 @@ func (c *SendWebVisitorSlackNotificationCapability) GetConfig() any {
 }
 
 func (c *SendWebVisitorSlackNotificationCapability) GetOutput() any {
-	return &SendWebVisitorSlackNotificationResult{}
+	return &SendWebVisitorSlackNotificationOutput{}
 }
 
-func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context, data SendWebVisitorSlackNotificationInput, config SendWebVisitorSlackNotificationConfig) (SendWebVisitorSlackNotificationResult, error) {
+func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context, data SendWebVisitorSlackNotificationInput, config SendWebVisitorSlackNotificationConfig) (SendWebVisitorSlackNotificationOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendWebVisitorSlackNotificationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -104,10 +103,7 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 	tracing.LogObjectAsJson(span, "input", data)
 	tracing.LogObjectAsJson(span, "config", config)
 
-	result := SendWebVisitorSlackNotificationResult{
-		Success: false,
-		Skipped: false,
-	}
+	result := SendWebVisitorSlackNotificationOutput{}
 
 	if err := c.ValidateInput(data); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
@@ -117,6 +113,8 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
 		return result, err
 	}
+
+	result.ExecutionValidated = true
 
 	// check if slack notification enabled
 	slackChannel, err := c.postgresRepositories.SlackChannelNotificationRepository.GetSlackChannel(ctx, "REVEAL-AI-WEBSITE-VISIT")
@@ -137,8 +135,6 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		return result, err
 	}
 	if skip {
-		result.Success = true
-		result.Skipped = true
 		return result, nil
 	}
 
@@ -153,7 +149,7 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		return result, err
 	}
 
-	sendResult, err := c.sendSlackNotificationCapability.Execute(ctx, SendSlackNotificationInput{Message: message}, SendSlackNotificationConfig{ChannelID: SlackChannelIdConfig{
+	_, err = c.sendSlackNotificationCapability.Execute(ctx, SendSlackNotificationInput{Message: message}, SendSlackNotificationConfig{ChannelID: SlackChannelIdConfig{
 		Value: config.ChannelID.Value,
 	}})
 	if err != nil {
@@ -161,16 +157,16 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		return result, err
 	}
 
-	result.Success = sendResult.Success
+	result.Completed = true
 	tracing.LogObjectAsJson(span, "result", result)
 	return result, nil
 }
 
-func (c *SendWebVisitorSlackNotificationCapability) skipNotification(ctx context.Context, domain string, cooldownInHrs int) (bool, error) {
+func (c *SendWebVisitorSlackNotificationCapability) skipNotification(ctx context.Context, domain string, cooldownInHrs int64) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendWebVisitorSlackNotificationCapability.skipNotification")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
-	span.LogFields(log.String("domain", domain), log.Int("cooldownInHrs", cooldownInHrs))
+	span.LogFields(log.String("domain", domain), log.Int64("cooldownInHrs", cooldownInHrs))
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {

@@ -40,7 +40,7 @@ func (c *SendSlackNotificationCapability) GetConfig() any {
 }
 
 func (c *SendSlackNotificationCapability) GetOutput() any {
-	return &SendSlackNotificationResult{}
+	return &SendSlackNotificationOutput{}
 }
 
 func NewSendSlackNotificationCapability(notificationService interfaces.NotificationService) *SendSlackNotificationCapability {
@@ -51,7 +51,7 @@ func NewSendSlackNotificationCapability(notificationService interfaces.Notificat
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapabilityExecution[SendSlackNotificationInput, SendSlackNotificationResult, SendSlackNotificationConfig] = (*SendSlackNotificationCapability)(nil)
+	_ interfaces.AgentCapabilityExecution[SendSlackNotificationInput, SendSlackNotificationOutput, SendSlackNotificationConfig] = (*SendSlackNotificationCapability)(nil)
 	_ interfaces.AgentCapabilityUntyped                                                                                         = (*SendSlackNotificationCapability)(nil)
 )
 
@@ -59,8 +59,8 @@ type SendSlackNotificationInput struct {
 	Message *string `json:"message,omitempty"`
 }
 
-type SendSlackNotificationResult struct {
-	Success bool `json:"success"`
+type SendSlackNotificationOutput struct {
+	CapabilityOutput
 }
 
 type SendSlackNotificationConfig struct {
@@ -72,7 +72,7 @@ type SlackChannelIdConfig struct {
 	Error string `json:"error"`
 }
 
-func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data SendSlackNotificationInput, config SendSlackNotificationConfig) (SendSlackNotificationResult, error) {
+func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data SendSlackNotificationInput, config SendSlackNotificationConfig) (SendSlackNotificationOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendSlackNotificationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -80,7 +80,7 @@ func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data Send
 	tracing.LogObjectAsJson(span, "input", data)
 	tracing.LogObjectAsJson(span, "config", config)
 
-	result := SendSlackNotificationResult{}
+	result := SendSlackNotificationOutput{}
 
 	if err := c.ValidateInput(data); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
@@ -90,26 +90,22 @@ func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data Send
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
 		return result, err
 	}
+	result.ExecutionValidated = true
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("Tenant not set on context")
 		tracing.TraceErr(span, err)
-		result.Success = false
 		return result, err
 	}
 
 	err := c.notificationService.NotifySlackChannel(ctx, tenant, config.ChannelID.Value, data.Message)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		result.Success = false
 		return result, err
 	}
 
-	span.LogKV(
-		"event", "capability_executed",
-	)
-	result.Success = true
+	result.Completed = true
 	tracing.LogObjectAsJson(span, "result", result)
 	return result, nil
 }

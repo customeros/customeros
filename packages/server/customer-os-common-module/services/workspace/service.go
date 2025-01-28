@@ -74,7 +74,7 @@ func (s *workspaceService) GetWorkspaceDomainsForTenant(ctx context.Context) ([]
 		return []string{}, err
 	}
 
-	domains := []string{}
+	var domains []string
 	for _, dbNode := range dbNodes {
 		workspaceEntity := neo4jmapper.MapDbNodeToWorkspaceEntity(dbNode)
 		domains = append(domains, workspaceEntity.Name)
