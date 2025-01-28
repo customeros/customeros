@@ -1,11 +1,11 @@
 package config
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"log"
 
 	"github.com/caarlos0/env/v6"
 	commonconf "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
 	"github.com/joho/godotenv"
@@ -117,6 +117,7 @@ func InitConfig() (*Config, error) {
 		},
 		External: commonconf.ExternalServicesConfig{
 			AnthropicConfig:      cmnCfg.Anthropic,
+			DeepseekConfig:       cmnCfg.Deepseek,
 			NamecheapConfig:      cmnCfg.Namecheap,
 			OpenSRSConfig:        cmnCfg.OpenSRS,
 			CloudflareConfig:     cmnCfg.Cloudflare,
