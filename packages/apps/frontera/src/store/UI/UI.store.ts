@@ -21,7 +21,6 @@ export class UIStore {
   isEditingTableCell: boolean = false;
   dirtyEditor: string | null = null;
   activeConfirmation: string | null = null;
-  contactPreviewCardOpen: boolean = false;
   movedIcpOrganization: number = 0;
   focusRow: number | string | null = null;
   emailAdress: string = '';
@@ -104,10 +103,6 @@ export class UIStore {
 
   setMovedIcpOrganization(value: number) {
     this.movedIcpOrganization = value;
-  }
-
-  setContactPreviewCardOpen(value: boolean) {
-    this.contactPreviewCardOpen = value;
   }
 
   setFocusRow(value: number | string | null) {

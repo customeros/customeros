@@ -3,6 +3,7 @@ import { useEffect, MouseEventHandler } from 'react';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
+import { useLocalStorage } from 'usehooks-ts';
 import { Preview } from '@invoices/components/Preview';
 import { FinderTable } from '@finder/components/FinderTable';
 import { FinderFilters } from '@finder/components/FinderFilters/FinderFilters';
@@ -10,7 +11,10 @@ import { FinderFilters } from '@finder/components/FinderFilters/FinderFilters';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { Divider } from '@ui/presentation/Divider';
+import { PreviewCard } from '@shared/components/PreviewCard';
 import { ViewSettings } from '@shared/components/ViewSettings';
+import { ContactDetails } from '@shared/components/ContactDetails';
+import { OrganizationDetails } from '@shared/components/OrganizationDetails';
 import {
   TableIdType,
   TableViewType,
@@ -22,6 +26,8 @@ export const FinderPage = observer(() => {
   const store = useStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
+  const [previewCard] = useLocalStorage('previewCard', false);
+
   const defaultPreset = store.tableViewDefs.defaultPreset;
   const currentPreset = store.tableViewDefs
     ?.toArray()
@@ -71,37 +77,55 @@ export const FinderPage = observer(() => {
   };
 
   return (
-    <div className='flex w-full items-start h-full'>
+    <div className='flex w-full items-start h-full '>
       <div className='w-[100%] bg-white h-full'>
-        <Search />
-        <div className='flex justify-between mx-4 my-2 items-start'>
-          <FinderFilters
-            tableId={tableId || TableIdType.Organizations}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            type={tableType || (TableViewType.Organizations as any)}
-          />
-          <div className='flex items-center gap-2'>
-            {tableViewDef?.hasFilters() && (
-              <Button
-                size='xs'
-                variant='ghost'
-                onClick={() => tableViewDef?.removeFilters()}
-              >
-                Clear
-              </Button>
-            )}
-            {isPreset && filters && (
-              <Button size='xs' onClick={handleAddToMyViews}>
-                Save to...
-              </Button>
-            )}
-            {filters && <Divider className='rotate-90 w-5 mx-[-6px]' />}
-            {tableViewType && (
-              <ViewSettings tableId={tableId} type={tableViewType} />
-            )}
-          </div>
+        <div className='w-full'>
+          <Search />
         </div>
-        <FinderTable />
+        <div className='flex'>
+          <div className=' w-full overflow-auto'>
+            <div className='flex justify-between mx-4 my-2 items-start'>
+              <FinderFilters
+                tableId={tableId || TableIdType.Organizations}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                type={tableType || (TableViewType.Organizations as any)}
+              />
+              <div className='flex items-center gap-2'>
+                {tableViewDef?.hasFilters() && (
+                  <Button
+                    size='xs'
+                    variant='ghost'
+                    onClick={() => tableViewDef?.removeFilters()}
+                  >
+                    Clear
+                  </Button>
+                )}
+                {isPreset && filters && (
+                  <Button size='xs' onClick={handleAddToMyViews}>
+                    Save to...
+                  </Button>
+                )}
+                {filters && <Divider className='rotate-90 w-5 mx-[-6px]' />}
+                {tableViewType && (
+                  <ViewSettings tableId={tableId} type={tableViewType} />
+                )}
+              </div>
+            </div>
+            <FinderTable />
+          </div>
+          {previewCard && !store.ui.isSearching && (
+            <PreviewCard>
+              {tableViewDef?.value.tableType === TableViewType.Contacts && (
+                <ContactDetails
+                  isExpandble={false}
+                  id={String(store.ui.focusRow)}
+                />
+              )}
+              {tableViewDef?.value.tableType ===
+                TableViewType.Organizations && <OrganizationDetails />}
+            </PreviewCard>
+          )}
+        </div>
         <Preview />
       </div>
     </div>

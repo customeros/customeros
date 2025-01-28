@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
+import { Eye } from '@ui/media/icons/Eye';
 import { useStore } from '@shared/hooks/useStore';
 
 interface OrganizationCellProps {
@@ -12,6 +13,7 @@ interface OrganizationCellProps {
 export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
   const store = useStore();
   const org = store.organizations.getById(id);
+  const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
   const name = org?.value?.name;
   const isEnriching = org?.isEnriching;
@@ -39,7 +41,7 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
   if (!org) return <p className='text-gray-400'>Not set</p>;
 
   return (
-    <span className='inline'>
+    <div className='flex items-center gap-2 group'>
       <p
         onClick={handleNavigate}
         data-test='organization-name-in-all-orgs-table'
@@ -47,7 +49,18 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
       >
         {fullName}
       </p>
-    </span>
+      <Eye
+        className='opacity-0 group-hover:opacity-100 text-gray-500'
+        onClick={() => {
+          if (previewCard === true && store.ui.focusRow === id) {
+            setPreviewCard(false);
+          } else {
+            store.ui.setFocusRow(id);
+            setPreviewCard(true);
+          }
+        }}
+      />
+    </div>
   );
 });
 
