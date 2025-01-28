@@ -38,8 +38,12 @@ type SendWebVisitorSlackNotificationResult struct {
 }
 
 type SendWebVisitorSlackNotificationConfig struct {
-	ChannelID     string `json:"channelId"`
-	CooldownHours int    `json:"cooldownHours"`
+	ChannelID     SlackChannelIdConfig     `json:"channelId"`
+	CooldownHours SlackCooldownHoursConfig `json:"cooldownHours"`
+}
+type SlackCooldownHoursConfig struct {
+	Value int    `json:"value"`
+	Error string `json:"error"`
 }
 
 func NewSendWebVisitorSlackNotificationCapability(postgresRepositories *postgres_repository.Repositories,
@@ -61,10 +65,10 @@ var (
 )
 
 func (c *SendWebVisitorSlackNotificationCapability) ValidateConfig(config SendWebVisitorSlackNotificationConfig) error {
-	if config.ChannelID == "" {
+	if config.ChannelID.Value == "" {
 		return errors.New("ChannelID must be set")
 	}
-	if config.CooldownHours < 0 {
+	if config.CooldownHours.Value < 0 {
 		return errors.New("CooldownHours must be greater than or equal to 0")
 	}
 	return nil
@@ -127,7 +131,7 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 	span.LogKV("result.slackChannel", slackChannel.ChannelId)
 
 	// check if notification should be suppressed
-	skip, err := c.skipNotification(ctx, data.Domain, config.CooldownHours)
+	skip, err := c.skipNotification(ctx, data.Domain, config.CooldownHours.Value)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return result, err
@@ -149,7 +153,9 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		return result, err
 	}
 
-	sendResult, err := c.sendSlackNotificationCapability.Execute(ctx, SendSlackNotificationInput{Message: message}, SendSlackNotificationConfig{ChannelID: config.ChannelID})
+	sendResult, err := c.sendSlackNotificationCapability.Execute(ctx, SendSlackNotificationInput{Message: message}, SendSlackNotificationConfig{ChannelID: SlackChannelIdConfig{
+		Value: config.ChannelID.Value,
+	}})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return result, err

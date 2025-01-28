@@ -8,12 +8,7 @@ import (
 )
 
 type AgentCapabilities struct {
-	AnalyzeWebSession      *AnalyzeWebSessionCapability
-	ApplyTag               *ApplyTagCapability
-	CreateOrganization     *CreateOrganizationCapability
-	ICPQualification       *ICPQualificationCapability
-	IdentifyWebsiteVisitor *IdentifyWebsiteVisitorCapability
-	SendSlackNotification  *SendSlackNotificationCapability
+	ApplyTag *ApplyTagCapability
 	// TODO above will be deprecated
 	executors map[enum.AgentCapabilityType]interfaces.AgentCapabilityUntyped
 }
@@ -31,12 +26,7 @@ func InitCapabilities(
 ) *AgentCapabilities {
 
 	capabilities := AgentCapabilities{
-		AnalyzeWebSession:      NewAnalyzeWebSessionCapability(postgresRepositories, actionService),
-		ApplyTag:               NewApplyTagCapability(tagService),
-		CreateOrganization:     NewCreateOrganizationCapability(organizationService),
-		ICPQualification:       NewICPQualificationCapability(postgresRepositories, aiService),
-		IdentifyWebsiteVisitor: NewIdentifyWebsiteVisitorCapability(postgresRepositories, enrichmentService),
-		SendSlackNotification:  NewSendSlackNotificationCapability(notificationService),
+		ApplyTag: NewApplyTagCapability(tagService),
 	}
 
 	executors := make(map[enum.AgentCapabilityType]interfaces.AgentCapabilityUntyped)
