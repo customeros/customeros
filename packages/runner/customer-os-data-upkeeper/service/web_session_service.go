@@ -229,6 +229,7 @@ func (s *webSessionService) createCloseSessionWebhookEvent(ctx context.Context, 
 		Tenant:    session.Tenant,
 		IPAddress: session.IP,
 		VisitorID: session.VisitorID,
+		Hostname:  session.Hostname,
 	}
 
 	event := dto.WebhookEvent{

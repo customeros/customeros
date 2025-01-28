@@ -5,6 +5,7 @@ type WebsiteVisitEvent struct {
 	Tenant    string `json:"tenant"`
 	IPAddress string `json:"ipAddress"`
 	VisitorID string `json:"visitorId"`
+	Hostname  string `json:"hostname"`
 }
 
 func (f WebsiteVisitEvent) Type() string {
