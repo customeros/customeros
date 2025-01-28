@@ -4,15 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go/log"
 	"strings"
 	"time"
 
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
@@ -43,7 +43,8 @@ type SendWebVisitorSlackNotificationConfig struct {
 
 func NewSendWebVisitorSlackNotificationCapability(postgresRepositories *postgres_repository.Repositories,
 	notificationService interfaces.NotificationService,
-	workspaceService interfaces.WorkspaceService) *SendWebVisitorSlackNotificationCapability {
+	workspaceService interfaces.WorkspaceService,
+) *SendWebVisitorSlackNotificationCapability {
 	return &SendWebVisitorSlackNotificationCapability{
 		postgresRepositories:            postgresRepositories,
 		notificationService:             notificationService,
@@ -274,8 +275,8 @@ func (c *SendWebVisitorSlackNotificationCapability) buildWebVisitorSlackNotifica
 
 	// Build session info section
 	var sessionLines []string
-	sessionLines = append(sessionLines, fmt.Sprintf("*Session Duration:* %s minutes", data.SessionDuration))
-	sessionLines = append(sessionLines, fmt.Sprintf("*Pages Viewed:* %d", len(data.PageViews)))
+	sessionLines = append(sessionLines, fmt.Sprintf("*Session Duration:* %s", data.SessionDuration))
+	sessionLines = append(sessionLines, "*Pages Viewed:*")
 	for _, page := range data.PageViews {
 		sessionLines = append(sessionLines, fmt.Sprintf("• <https://%s|%s>", page, page))
 	}
