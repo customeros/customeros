@@ -594,6 +594,12 @@ func (s *cloudflareService) addMailStackRedirectPageRules(ctx context.Context, z
 	defer span.Finish()
 	span.LogKV("zoneID", zoneID, "domain", domain, "destinationURL", destinationURL)
 
+	// if destinationURL not starting with http or https, add https
+	destinationURL = strings.TrimSpace(destinationURL)
+	if !strings.HasPrefix(destinationURL, "http") {
+		destinationURL = "https://" + destinationURL
+	}
+
 	// Page rule configurations
 	pageRules := []map[string]interface{}{
 		{
