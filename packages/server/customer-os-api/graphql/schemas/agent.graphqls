@@ -1,10 +1,17 @@
 extend type Query {
     agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    slackChannelsWithBot: [AgentSlackChannel!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
     agent_Save(input: AgentSaveInput!): Agent!@hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type AgentSlackChannel {
+    channelId: String!
+    name: String!
 }
 
 enum CapabilityType {

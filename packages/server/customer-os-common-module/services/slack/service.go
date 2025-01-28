@@ -212,10 +212,12 @@ func (s *slackService) GetSlackSettings(ctx context.Context, tenant string) (*in
 	return &slackSettingsResponse, nil
 }
 
-func (s *slackService) getBotToken(ctx context.Context, tenant string) (string, error) {
+func (s *slackService) getBotToken(ctx context.Context) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.getBotToken")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
 
 	slackSettingsEntity, err := s.postgresRepositories.SlackSettingsRepository.Get(ctx, tenant)
 	if err != nil {
@@ -232,12 +234,12 @@ func (s *slackService) getBotToken(ctx context.Context, tenant string) (string, 
 	return slackSettingsEntity.AccessToken, nil
 }
 
-func (s *slackService) ListSlackChannelsWithBot(ctx context.Context, tenant string) ([]interfaces.SlackChannelResponse, error) {
+func (s *slackService) ListSlackChannelsWithBot(ctx context.Context) ([]interfaces.SlackChannelResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.ListSlackChannelsWithBot")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	token, err := s.getBotToken(ctx, tenant)
+	token, err := s.getBotToken(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -293,14 +295,14 @@ func (s *slackService) ListSlackChannelsWithBot(ctx context.Context, tenant stri
 	return result.Channels, nil
 }
 
-func (s *slackService) JoinSlackChannelsWithBot(ctx context.Context, tenant, channelId string) error {
+func (s *slackService) JoinSlackChannelsWithBot(ctx context.Context, channelId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.JoinSlackChannelsWithBot")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	span.LogFields(log.String("channelId", channelId))
 
-	token, err := s.getBotToken(ctx, tenant)
+	token, err := s.getBotToken(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -363,14 +365,14 @@ func (s *slackService) JoinSlackChannelsWithBot(ctx context.Context, tenant, cha
 	return nil
 }
 
-func (s *slackService) LeaveSlackChannelsWithBot(ctx context.Context, tenant, channelId string) error {
+func (s *slackService) LeaveSlackChannelsWithBot(ctx context.Context, channelId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SlackService.LeaveSlackChannelsWithBot")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	span.LogFields(log.String("channelId", channelId))
 
-	token, err := s.getBotToken(ctx, tenant)
+	token, err := s.getBotToken(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
