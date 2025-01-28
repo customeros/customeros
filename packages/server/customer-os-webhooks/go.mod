@@ -123,7 +123,7 @@ require (
 	github.com/robfig/cron v1.2.0 // indirect
 	github.com/smartystreets/smartystreets-go-sdk v1.21.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/stripe/stripe-go/v81 v81.2.0 // indirect
+	github.com/stripe/stripe-go/v81 v81.3.0 // indirect
 	github.com/tetratelabs/wazero v1.8.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect

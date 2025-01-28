@@ -177,7 +177,7 @@ require (
 	github.com/smartystreets/smartystreets-go-sdk v1.21.1 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/stripe/stripe-go/v81 v81.2.0 // indirect
+	github.com/stripe/stripe-go/v81 v81.3.0 // indirect
 	github.com/tetratelabs/wazero v1.8.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
