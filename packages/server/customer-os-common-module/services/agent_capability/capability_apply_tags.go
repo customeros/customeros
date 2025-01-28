@@ -2,8 +2,8 @@ package agent_capability
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -64,6 +64,16 @@ func (c *ApplyTagCapability) Execute(ctx context.Context, data ApplyTagInput, co
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+
+	if err := c.ValidateConfig(config); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		return ApplyTagResult{}, err
+	}
+	if err := c.ValidateInput(data); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		return ApplyTagResult{}, err
+	}
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {

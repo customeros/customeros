@@ -31,8 +31,8 @@ var (
 )
 
 func SkipTracing(err error) bool {
-	if err != nil {
-		return false
+	if err == nil {
+		return true
 	}
 
 	// List of errors to be skipped from tracing
