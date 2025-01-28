@@ -45,26 +45,28 @@ func (h *MailstackHandler) RegisterNewDomain() gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
+			tracing.TraceErr(span, errors.New("Missing tenant in context"))
 			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
-			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
 
 		// Parse and validate request body
 		var req RegisterNewDomainRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
+			tracing.TraceErr(span, err)
 			h.responseHandler.HandleError(c, http.StatusBadRequest, nil)
-			span.LogFields(tracingLog.String("result", "Invalid request body"))
 			return
 		}
 
 		// Check for missing domain
 		if req.Domain == "" {
 			message := "Missing required field: domain"
+			tracing.TraceErr(span, errors.New(message))
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		} else if req.Website == "" {
 			message := "Missing required field: website"
+			tracing.TraceErr(span, errors.New(message))
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}
@@ -73,30 +75,37 @@ func (h *MailstackHandler) RegisterNewDomain() gin.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, coserrors.ErrNotSupported) {
 				message := "Domain TLD not supported"
+				tracing.TraceErr(span, errors.New(message))
 				h.responseHandler.HandleError(c, http.StatusNotAcceptable, &message)
 				return
 			} else if errors.Is(err, coserrors.ErrDomainUnavailable) {
 				message := "Domain already registered"
+				tracing.TraceErr(span, errors.New(message))
 				h.responseHandler.HandleError(c, http.StatusConflict, &message)
 				return
 			} else if errors.Is(err, coserrors.ErrDomainPremium) {
 				message := "Premium domain names are not supported"
+				tracing.TraceErr(span, errors.New(message))
 				h.responseHandler.HandleError(c, http.StatusNotAcceptable, &message)
 				return
 			} else if errors.Is(err, coserrors.ErrDomainPriceExceeded) {
 				message := "Unauthorized to purchase domain"
+				tracing.TraceErr(span, errors.New(message))
 				h.responseHandler.HandleError(c, http.StatusNotAcceptable, &message)
 				return
 			} else if errors.Is(err, coserrors.ErrDomainConfigurationFailed) {
 				message := "Unable to configure domain"
+				tracing.TraceErr(span, errors.New(message))
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			} else if errors.Is(err, coserrors.ErrConnectionTimeout) {
 				message := "Connection timeout, please retry"
+				tracing.TraceErr(span, errors.New(message))
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			} else {
 				message := "Domain registration failed, please contact support"
+				tracing.TraceErr(span, errors.New(message))
 				h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
 				return
 			}
@@ -111,6 +120,7 @@ func (h *MailstackHandler) RegisterNewDomain() gin.HandlerFunc {
 func (h *MailstackHandler) registerDomain(ctx context.Context, tenant, domain, website string) (DomainRecord, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "registerDomain")
 	defer span.Finish()
+	tracing.TagComponentRest(span)
 
 	registerNewDomainResponse := DomainRecord{}
 
@@ -119,15 +129,10 @@ func (h *MailstackHandler) registerDomain(ctx context.Context, tenant, domain, w
 	// check if domain tld is supported
 	// Extract the TLD from the domain (e.g., "com" from "example.com")
 	tld := strings.Split(domain, ".")[1]
-	tldSupported := false
 	for _, supportedTld := range h.services.Cfg.Common.Internal.MailstackConfig.SupportedTlds {
-		if tld == supportedTld {
-			tldSupported = true
-			break
+		if tld != supportedTld {
+			return registerNewDomainResponse, coserrors.ErrNotSupported
 		}
-	}
-	if !tldSupported {
-		return registerNewDomainResponse, coserrors.ErrNotSupported
 	}
 
 	// step 1 - check domain availability
@@ -137,9 +142,11 @@ func (h *MailstackHandler) registerDomain(ctx context.Context, tenant, domain, w
 		return registerNewDomainResponse, err
 	}
 	if !isAvailable {
+		tracing.TraceErr(span, coserrors.ErrDomainUnavailable)
 		return registerNewDomainResponse, coserrors.ErrDomainUnavailable
 	}
 	if isPremium {
+		tracing.TraceErr(span, coserrors.ErrDomainPremium)
 		return registerNewDomainResponse, coserrors.ErrDomainPremium
 	}
 
