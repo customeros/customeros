@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"io/ioutil"
 	"net/http"
@@ -98,6 +99,8 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 	tracing.LogObjectAsJson(span, "eventData", eventData)
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: eventData.Tenant})
 
 	invoiceEntity, err := h.invoice.GetById(ctx, nil, invoiceId)
 	if err != nil {

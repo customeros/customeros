@@ -109,60 +109,60 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 		}
 	}
 
-	// Organization Jobs
-	addJob(cont.Cfg.App.Cron.CronScheduleUpdateOrganization, GroupOrganization, updateOrganizations, "updateOrganizations")
-	addJob(cont.Cfg.App.Cron.CronScheduleSyncDataToGlobalOrgs, GroupGlobalOrg, syncDataToGlobalOrgs, "syncDataToGlobalOrgs")
-	addJob(cont.Cfg.App.Cron.CronScheduleProcessWebsiteForGlobalOrgs, GroupGlobalOrg, processWebsiteForGlobalOrgs, "processWebsiteForGlobalOrgs")
-	addJob(cont.Cfg.App.Cron.CronScheduleEnrichGlobalOrg, GroupGlobalOrg, enrichGlobalOrganization, "enrichGlobalOrganization")
-	addJob(cont.Cfg.App.Cron.CronScheduleSyncFromGlobalOrgsToTenantOrgs, GroupGlobalOrg, syncGlobalOrgsToTenantOrganizations, "syncGlobalOrgsToTenantOrganizations")
-
-	// Contract Jobs
+	//// Organization Jobs
+	//addJob(cont.Cfg.App.Cron.CronScheduleUpdateOrganization, GroupOrganization, updateOrganizations, "updateOrganizations")
+	//addJob(cont.Cfg.App.Cron.CronScheduleSyncDataToGlobalOrgs, GroupGlobalOrg, syncDataToGlobalOrgs, "syncDataToGlobalOrgs")
+	//addJob(cont.Cfg.App.Cron.CronScheduleProcessWebsiteForGlobalOrgs, GroupGlobalOrg, processWebsiteForGlobalOrgs, "processWebsiteForGlobalOrgs")
+	//addJob(cont.Cfg.App.Cron.CronScheduleEnrichGlobalOrg, GroupGlobalOrg, enrichGlobalOrganization, "enrichGlobalOrganization")
+	//addJob(cont.Cfg.App.Cron.CronScheduleSyncFromGlobalOrgsToTenantOrgs, GroupGlobalOrg, syncGlobalOrgsToTenantOrganizations, "syncGlobalOrgsToTenantOrganizations")
+	//
+	//// Contract Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleUpdateContract, GroupContract, updateContractsStatusAndRenewal, "updateContractsStatusAndRenewal")
 
 	// Invoice Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleGenerateInvoice, GroupInvoice, generateCycleInvoices, "generateCycleInvoices")
-	addJob(cont.Cfg.App.Cron.CronScheduleGenerateOffCycleInvoice, GroupInvoice, generateOffCycleInvoices, "generateOffCycleInvoices")
-	addJob(cont.Cfg.App.Cron.CronScheduleGenerateNextPreviewInvoice, GroupInvoice, generateNextPreviewInvoices, "generateNextPreviewInvoices")
-	addJob(cont.Cfg.App.Cron.CronScheduleGenerateInvoicePaymentLink, GroupInvoice, generateInvoicePaymentLinks, "generateInvoicePaymentLinks")
-	addJob(cont.Cfg.App.Cron.CronScheduleCheckInvoiceFinalized, GroupInvoice, sendInvoiceFinalizedEvents, "sendInvoiceFinalizedEvents")
-	addJob(cont.Cfg.App.Cron.CronScheduleCleanupInvoices, GroupInvoice, cleanupInvoices, "cleanupInvoices")
-	addJob(cont.Cfg.App.Cron.CronScheduleAdjustInvoiceStatus, GroupInvoice, adjustInvoiceStatus, "adjustInvoiceStatus")
-	addJob(cont.Cfg.App.Cron.CronScheduleSendPayInvoiceNotification, GroupInvoice, sendPayInvoiceNotifications, "sendPayInvoiceNotifications")
-	addJob(cont.Cfg.App.Cron.CronScheduleSendRemindInvoiceNotification, GroupInvoice, sendRemindInvoiceNotifications, "sendRemindInvoiceNotifications")
-
-	// Contact Jobs
-	addJob(cont.Cfg.App.Cron.CronScheduleUpkeepContacts, GroupContact, upkeepContacts, "upkeepContacts")
-	addJob(cont.Cfg.App.Cron.CronScheduleAskForWorkEmailOnBetterContact, GroupContactBetter, askForWorkEmailOnBetterContactJob, "askForWorkEmailOnBetterContact")
-	addJob(cont.Cfg.App.Cron.CronScheduleEnrichWithWorkEmailFromBetterContact, GroupContactBetter, enrichWithWorkEmailFromBetterContactJob, "enrichWithWorkEmailFromBetterContact")
-	addJob(cont.Cfg.App.Cron.CronScheduleCheckBetterContactRequestsWithoutResponse, GroupContactBetter, checkBetterContactRequestsWithoutResponseJob, "checkBetterContactRequestsWithoutResponse")
-	addJob(cont.Cfg.App.Cron.CronScheduleAskForLinkedInConnections, GroupLinkedInAsk, askForLinkedInConnections, "askForLinkedInConnections")
-	addJob(cont.Cfg.App.Cron.CronScheduleProcessLinkedInConnections, GroupLinkedInProcess, processLinkedInConnections, "processLinkedInConnections")
-	addJob(cont.Cfg.App.Cron.CronScheduleEnrichContacts, GroupContactEnrich, enrichContacts, "enrichContacts")
-	addJob(cont.Cfg.App.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, GroupOrphanContacts, linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, "linkOrphanContacts")
-
-	// Email Jobs
-	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmails, GroupEmail, validateEmails, "validateEmails")
-	addJob(cont.Cfg.App.Cron.CronScheduleValidateEmailsFromBulkRequests, GroupEmailBulk, validateEmailsFromBulkRequests, "validateEmailsFromBulkRequests")
-	addJob(cont.Cfg.App.Cron.CronScheduleCheckScrubbyResult, GroupEmail, checkScrubbyResult, "checkScrubbyResult")
-	addJob(cont.Cfg.App.Cron.CronScheduleCheckEnrowResults, GroupEmail, checkEnrowResult, "checkEnrowResult")
-	addJob(cont.Cfg.App.Cron.CronScheduleCleanEmails, GroupEmail, cleanEmails, "cleanEmails")
-	addJob(cont.Cfg.App.Cron.CronScheduleSendEmails, GroupSendEmails, sendEmails, "sendEmails")
-	addJob(cont.Cfg.App.Cron.CronScheduleProcessSentEmails, GroupProcessEmails, processSentEmails, "processSentEmails")
-
-	// Flow Jobs
-	addJob(cont.Cfg.App.Cron.CronScheduleFlowExecution, GroupFlow, flowExecution, "flowExecution")
-	addJob(cont.Cfg.App.Cron.CronScheduleFlowStatistics, GroupFlowStats, flowStatistics, "flowStatistics")
-	addJob(cont.Cfg.App.Cron.CronScheduleRampUpMailboxes, GroupRampMailboxes, rampUpMailboxes, "rampUpMailboxes")
-
-	// Other Jobs
-	addJob(cont.Cfg.App.Cron.CronScheduleRefreshLastTouchpoint, GroupTouchpoint, refreshLastTouchpoint, "refreshLastTouchpoint")
-	addJob(cont.Cfg.App.Cron.CronScheduleGetCurrencyRatesECB, GroupCurrency, getCurrencyRatesECB, "getCurrencyRatesECB")
-	addJob(cont.Cfg.App.Cron.CronScheduleLinkUnthreadIssues, GroupUnthreadIssues, linkUnthreadIssues, "linkUnthreadIssues")
-	addJob(cont.Cfg.App.Cron.CronScheduleCheckDomains, GroupDomain, checkDomains, "checkDomains")
-	addJob(cont.Cfg.App.Cron.CronScheduleMailstackReputation, GroupMailstack, checkMailstackDomainReputation, "checkMailstackDomainReputation")
-	addJob(cont.Cfg.App.Cron.CronScheduleSendOrganizationsReminders, GroupReminder, sendReminders, "sendReminders")
-	addJob(cont.Cfg.App.Cron.CronScheduleProcessWebSessions, GroupWebSession, processWebSessions, "processWebSessions")
-	addJob(cont.Cfg.App.Cron.CronScheduleAnalyzeWebSessionIntent, GroupWebSession, analyzeWebSessionIntent, "analyzeWebSessionIntent")
+	//addJob(cont.Cfg.App.Cron.CronScheduleGenerateOffCycleInvoice, GroupInvoice, generateOffCycleInvoices, "generateOffCycleInvoices")
+	//addJob(cont.Cfg.App.Cron.CronScheduleGenerateNextPreviewInvoice, GroupInvoice, generateNextPreviewInvoices, "generateNextPreviewInvoices")
+	//addJob(cont.Cfg.App.Cron.CronScheduleGenerateInvoicePaymentLink, GroupInvoice, generateInvoicePaymentLinks, "generateInvoicePaymentLinks")
+	//addJob(cont.Cfg.App.Cron.CronScheduleCheckInvoiceFinalized, GroupInvoice, sendInvoiceFinalizedEvents, "sendInvoiceFinalizedEvents")
+	//addJob(cont.Cfg.App.Cron.CronScheduleCleanupInvoices, GroupInvoice, cleanupInvoices, "cleanupInvoices")
+	//addJob(cont.Cfg.App.Cron.CronScheduleAdjustInvoiceStatus, GroupInvoice, adjustInvoiceStatus, "adjustInvoiceStatus")
+	//addJob(cont.Cfg.App.Cron.CronScheduleSendPayInvoiceNotification, GroupInvoice, sendPayInvoiceNotifications, "sendPayInvoiceNotifications")
+	//addJob(cont.Cfg.App.Cron.CronScheduleSendRemindInvoiceNotification, GroupInvoice, sendRemindInvoiceNotifications, "sendRemindInvoiceNotifications")
+	//
+	//// Contact Jobs
+	//addJob(cont.Cfg.App.Cron.CronScheduleUpkeepContacts, GroupContact, upkeepContacts, "upkeepContacts")
+	//addJob(cont.Cfg.App.Cron.CronScheduleAskForWorkEmailOnBetterContact, GroupContactBetter, askForWorkEmailOnBetterContactJob, "askForWorkEmailOnBetterContact")
+	//addJob(cont.Cfg.App.Cron.CronScheduleEnrichWithWorkEmailFromBetterContact, GroupContactBetter, enrichWithWorkEmailFromBetterContactJob, "enrichWithWorkEmailFromBetterContact")
+	//addJob(cont.Cfg.App.Cron.CronScheduleCheckBetterContactRequestsWithoutResponse, GroupContactBetter, checkBetterContactRequestsWithoutResponseJob, "checkBetterContactRequestsWithoutResponse")
+	//addJob(cont.Cfg.App.Cron.CronScheduleAskForLinkedInConnections, GroupLinkedInAsk, askForLinkedInConnections, "askForLinkedInConnections")
+	//addJob(cont.Cfg.App.Cron.CronScheduleProcessLinkedInConnections, GroupLinkedInProcess, processLinkedInConnections, "processLinkedInConnections")
+	//addJob(cont.Cfg.App.Cron.CronScheduleEnrichContacts, GroupContactEnrich, enrichContacts, "enrichContacts")
+	//addJob(cont.Cfg.App.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, GroupOrphanContacts, linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, "linkOrphanContacts")
+	//
+	//// Email Jobs
+	//addJob(cont.Cfg.App.Cron.CronScheduleValidateEmails, GroupEmail, validateEmails, "validateEmails")
+	//addJob(cont.Cfg.App.Cron.CronScheduleValidateEmailsFromBulkRequests, GroupEmailBulk, validateEmailsFromBulkRequests, "validateEmailsFromBulkRequests")
+	//addJob(cont.Cfg.App.Cron.CronScheduleCheckScrubbyResult, GroupEmail, checkScrubbyResult, "checkScrubbyResult")
+	//addJob(cont.Cfg.App.Cron.CronScheduleCheckEnrowResults, GroupEmail, checkEnrowResult, "checkEnrowResult")
+	//addJob(cont.Cfg.App.Cron.CronScheduleCleanEmails, GroupEmail, cleanEmails, "cleanEmails")
+	//addJob(cont.Cfg.App.Cron.CronScheduleSendEmails, GroupSendEmails, sendEmails, "sendEmails")
+	//addJob(cont.Cfg.App.Cron.CronScheduleProcessSentEmails, GroupProcessEmails, processSentEmails, "processSentEmails")
+	//
+	//// Flow Jobs
+	//addJob(cont.Cfg.App.Cron.CronScheduleFlowExecution, GroupFlow, flowExecution, "flowExecution")
+	//addJob(cont.Cfg.App.Cron.CronScheduleFlowStatistics, GroupFlowStats, flowStatistics, "flowStatistics")
+	//addJob(cont.Cfg.App.Cron.CronScheduleRampUpMailboxes, GroupRampMailboxes, rampUpMailboxes, "rampUpMailboxes")
+	//
+	//// Other Jobs
+	//addJob(cont.Cfg.App.Cron.CronScheduleRefreshLastTouchpoint, GroupTouchpoint, refreshLastTouchpoint, "refreshLastTouchpoint")
+	//addJob(cont.Cfg.App.Cron.CronScheduleGetCurrencyRatesECB, GroupCurrency, getCurrencyRatesECB, "getCurrencyRatesECB")
+	//addJob(cont.Cfg.App.Cron.CronScheduleLinkUnthreadIssues, GroupUnthreadIssues, linkUnthreadIssues, "linkUnthreadIssues")
+	//addJob(cont.Cfg.App.Cron.CronScheduleCheckDomains, GroupDomain, checkDomains, "checkDomains")
+	//addJob(cont.Cfg.App.Cron.CronScheduleMailstackReputation, GroupMailstack, checkMailstackDomainReputation, "checkMailstackDomainReputation")
+	//addJob(cont.Cfg.App.Cron.CronScheduleSendOrganizationsReminders, GroupReminder, sendReminders, "sendReminders")
+	//addJob(cont.Cfg.App.Cron.CronScheduleProcessWebSessions, GroupWebSession, processWebSessions, "processWebSessions")
+	//addJob(cont.Cfg.App.Cron.CronScheduleAnalyzeWebSessionIntent, GroupWebSession, analyzeWebSessionIntent, "analyzeWebSessionIntent")
 }
 
 // HELPER FUNCTIONS

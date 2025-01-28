@@ -700,6 +700,8 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	amount, vat := float64(0), float64(0)
 	var invoiceLines []*invoicepb.InvoiceLine
 
@@ -810,6 +812,7 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 		if invoiceLineCalculationsReady {
 			amount += calculatedSLIAmount
 			vat += calculatedSLIVat
+
 			invoiceLine := invoicepb.InvoiceLine{
 				Name:                    sliEntity.Name,
 				Price:                   utils.RoundHalfUpFloat64(calculatePriceForBilledType(sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycleInMonths), 2),
@@ -820,6 +823,20 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 				ServiceLineItemId:       sliEntity.ID,
 				ServiceLineItemParentId: sliEntity.ParentID,
 			}
+
+			if sliEntity.SkuId != "" {
+				sku, err := h.postgresRepositories.SkuRepository.Get(ctx, tenant, sliEntity.SkuId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, nil, err
+				}
+				if sku != nil {
+					invoiceLine.SkuId = sku.ID
+					invoiceLine.SkuName = sku.Name
+					invoiceLine.Name = sku.Name
+				}
+			}
+
 			switch sliEntity.Billed {
 			case neo4jenum.BilledTypeMonthly:
 				invoiceLine.BilledType = commonpb.BilledType_MONTHLY_BILLED
@@ -854,6 +871,8 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
+
+	tenant := common.GetTenantFromContext(ctx)
 
 	// filter out not applicable SLIs
 	referenceDate := invoiceEntity.PeriodStartDate
@@ -981,6 +1000,20 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 			ServiceLineItemId:       sliEntityToInvoice.ID,
 			ServiceLineItemParentId: sliEntityToInvoice.ParentID,
 		}
+
+		if sliEntityToInvoice.SkuId != "" {
+			sku, err := h.postgresRepositories.SkuRepository.Get(ctx, tenant, sliEntityToInvoice.SkuId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, nil, err
+			}
+			if sku != nil {
+				invoiceLine.SkuId = sku.ID
+				invoiceLine.SkuName = sku.Name
+				invoiceLine.Name = sku.Name
+			}
+		}
+
 		switch sliEntityToInvoice.Billed {
 		case neo4jenum.BilledTypeMonthly:
 			invoiceLine.BilledType = commonpb.BilledType_MONTHLY_BILLED
