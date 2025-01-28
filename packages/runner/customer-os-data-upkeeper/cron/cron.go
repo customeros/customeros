@@ -231,35 +231,35 @@ func sendRemindInvoiceNotifications(cont *container.Container) {
 
 // Contact Jobs
 func upkeepContacts(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).UpkeepContacts()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices).UpkeepContacts()
 }
 
 func askForWorkEmailOnBetterContactJob(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).AskForWorkEmailOnBetterContact()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices).AskForWorkEmailOnBetterContact()
 }
 
 func enrichWithWorkEmailFromBetterContactJob(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).EnrichWithWorkEmailFromBetterContact()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices).EnrichWithWorkEmailFromBetterContact()
 }
 
 func checkBetterContactRequestsWithoutResponseJob(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).CheckBetterContactRequestsWithoutResponse()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices).CheckBetterContactRequestsWithoutResponse()
 }
 
 func askForLinkedInConnections(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).AskForLinkedInConnections()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices).AskForLinkedInConnections()
 }
 
 func processLinkedInConnections(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).ProcessLinkedInConnections()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices).ProcessLinkedInConnections()
 }
 
 func enrichContacts(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).EnrichContacts()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices).EnrichContacts()
 }
 
 func linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventBufferStoreService).LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices).LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
 }
 
 // Email Jobs

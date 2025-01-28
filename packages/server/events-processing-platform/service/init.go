@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/customeros/customeros/packages/server/events/eventstore"
-	genericServices "github.com/customeros/customeros/packages/server/events/services"
 
 	"github.com/customeros/customeros/packages/server/events-processing-platform/config"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/common/command"
@@ -13,9 +12,7 @@ import (
 type Services struct {
 	es eventstore.AggregateStore
 
-	EventStoreGenericService genericServices.EventStoreGenericService
-	EventStoreService        *eventStoreService
-	RequestHandler           *requestHandler // generic grpc request handler
+	RequestHandler *requestHandler // generic grpc request handler
 
 	// GRPC services
 	OrganizationService *organizationService
@@ -32,8 +29,6 @@ func InitServices(
 	services := Services{}
 
 	services.es = aggregateStore
-	services.EventStoreGenericService = genericServices.NewEventStoreGenericService(log, aggregateStore)
-	services.EventStoreService = NewEventStoreService(log, aggregateStore, services.EventStoreGenericService)
 	services.RequestHandler = NewRequestHandler(log, aggregateStore, &cfg.Utils)
 
 	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg, services.RequestHandler)
