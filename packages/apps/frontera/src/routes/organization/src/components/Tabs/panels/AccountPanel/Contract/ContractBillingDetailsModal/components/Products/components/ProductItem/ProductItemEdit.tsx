@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { toZonedTime } from 'date-fns-tz';
 import { observer } from 'mobx-react-lite';
 import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store';
@@ -15,7 +17,7 @@ import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline';
 
 import { BilledTypeEditField } from './BilledTypeEditField';
 
-interface ServiceItemProps {
+interface ProductItemProps {
   currency?: string;
   isModification?: boolean;
   service: ContractLineItemStore;
@@ -32,15 +34,17 @@ const inputClasses =
 const deleteButtonClasses =
   'border-none bg-transparent shadow-none text-gray-400 pr-3 pl-4 py-2 -mx-4 absolute -right-7 top-0 bottom-0 invisible group-hover:visible hover:bg-transparent';
 
-const formatPrice = (price: number | undefined): string => {
+const formatPrice = (price: number | undefined | string): string => {
   if (price === undefined || price === null) return '';
 
   const priceStr = price.toString();
 
   // If no decimal point, return as is
-  if (!priceStr.includes('.')) return priceStr;
+  if (!priceStr.includes('.')) return `${priceStr}`;
 
   const [whole, decimal] = priceStr.split('.');
+
+  if (!decimal) return `${whole}.`;
 
   // If decimal part exists and is single digit, add a zero
   if (decimal && decimal.length === 1) {
@@ -50,7 +54,7 @@ const formatPrice = (price: number | undefined): string => {
   return priceStr;
 };
 
-export const ServiceItemEdit = observer(
+export const ProductItemEdit = observer(
   ({
     service,
     allServices,
@@ -58,9 +62,11 @@ export const ServiceItemEdit = observer(
     isModification,
     type,
     contractStatus,
-  }: ServiceItemProps) => {
+  }: ProductItemProps) => {
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
-
+    const [displayPrice, setDisplayPrice] = useState(() =>
+      formatPrice(service.tempValue.price),
+    );
     const isDraft =
       contractStatus &&
       [ContractStatus.Draft, ContractStatus.Scheduled].includes(contractStatus);
@@ -228,21 +234,28 @@ export const ServiceItemEdit = observer(
 
           <MaskedResizableInput
             mask={`num`}
-            unmask={true}
             placeholder='0'
             className={inputClasses}
+            measureValue={displayPrice}
             onFocus={(e) => e.target.select()}
-            value={service?.tempValue?.price?.toString() || ''}
-            measureValue={formatPrice(service?.tempValue?.price) || ''}
-            onAccept={(val) => {
+            value={service.tempValue.price?.toString() || ''}
+            onAccept={(val, _d, e) => {
               updatePrice(val);
+
+              if ((e?.target as HTMLInputElement)?.value) {
+                setDisplayPrice(
+                  formatPrice((e?.target as HTMLInputElement).value),
+                );
+              } else {
+                setDisplayPrice(formatPrice(val));
+              }
             }}
             blocks={{
               num: {
                 mask: Number,
                 scale: 2,
                 radix: '.',
-                lazy: false,
+                lazy: true,
                 min: type === 'one-time' ? -9999999999 : 0,
                 placeholderChar: '#',
                 thousandsSeparator: ',',

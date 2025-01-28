@@ -34,12 +34,12 @@ export const ProductRow = observer(({ id }: { id: string }) => {
     <div className='grid grid-cols-[minmax(0,1fr)_minmax(0,108px)_minmax(0,118px)_28px] w-full text-sm group'>
       <div className='truncate flex items-center gap-2'>
         {row.value.type === SkuType.Subscription ? (
-          <RefreshCcw02 className='text-grayModern-500' />
+          <RefreshCcw02 className='min-w-4 text-grayModern-500' />
         ) : (
-          <CalendarDate className='text-grayModern-500' />
+          <CalendarDate className='min-w-4 text-grayModern-500' />
         )}
 
-        {row.value.name}
+        <span className='truncate'>{row.value.name}</span>
       </div>
       <div className='truncate flex items-center'>{row.typeLabel}</div>
       <div className='truncate flex items-center'>{row.formattedPrice}</div>
@@ -49,8 +49,8 @@ export const ProductRow = observer(({ id }: { id: string }) => {
             <IconButton
               size='xs'
               variant='ghost'
-              aria-label='Edit field'
               icon={<DotsVertical />}
+              aria-label='Edit product'
               className={cn('opacity-0 group-hover:opacity-100', {
                 'opacity-100': isMenuOpen,
               })}
@@ -70,7 +70,7 @@ export const ProductRow = observer(({ id }: { id: string }) => {
             >
               <div className='flex items-center'>
                 <Edit03 className='mr-2 text-gray-500 group-hover/edit:text-gray-700' />
-                Edit field
+                Edit product
               </div>
             </MenuItem>
             <MenuItem onClick={onOpenArchive} className='group/archive'>

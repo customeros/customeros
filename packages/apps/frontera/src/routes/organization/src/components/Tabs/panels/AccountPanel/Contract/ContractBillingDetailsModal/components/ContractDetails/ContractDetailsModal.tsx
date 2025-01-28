@@ -240,7 +240,7 @@ export const ContractDetailsModal = observer(
           ) {
             promises.push(
               contractLineItemsStore.createNewServiceLineItem(
-                itemStore?.tempValue,
+                itemStore.tempValue,
                 contractId,
               ),
             );
@@ -250,7 +250,7 @@ export const ContractDetailsModal = observer(
           ) {
             promises.push(
               contractLineItemsStore.createNewVersion(
-                itemStore?.tempValue,
+                itemStore.tempValue,
                 contractId,
               ),
             );

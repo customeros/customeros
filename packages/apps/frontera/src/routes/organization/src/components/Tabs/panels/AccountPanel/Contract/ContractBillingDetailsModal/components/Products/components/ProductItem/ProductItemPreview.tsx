@@ -13,7 +13,7 @@ import { FlipBackward } from '@ui/media/icons/FlipBackward.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
 import { currencySymbol } from '@shared/util/currencyOptions.ts';
 
-interface ServiceItemProps {
+interface ProductItemProps {
   isEnded?: boolean;
   currency?: string;
   service: ContractLineItemStore;
@@ -34,7 +34,7 @@ const billedTypeLabel: Record<
 const deleteButtonClasses =
   'border-none bg-transparent shadow-none text-gray-400 pr-3 pl-4 py-2 -mx-4 absolute -right-7 top-0 bottom-0 invisible group-hover:visible hover:bg-transparent';
 
-export const ServiceItemPreview: FC<ServiceItemProps> = observer(
+export const ProductItemPreview: FC<ProductItemProps> = observer(
   ({
     service,
     isEnded,

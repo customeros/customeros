@@ -1,4 +1,4 @@
-import React from 'react';
+import { Fragment } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { ContractStore } from '@store/Contracts/Contract.store';
@@ -7,16 +7,16 @@ import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem
 import { useStore } from '@shared/hooks/useStore';
 import { BilledType, ContractStatus, ServiceLineItem } from '@graphql/types';
 
-import { ServiceCard } from './ServiceCard';
+import { ProductCard } from './ProductCard.tsx';
 
-interface ServiceListProps {
+interface ProductListProps {
   id: string;
   currency?: string;
   contractStatus?: ContractStatus | null;
 }
 
-export const ServiceList = observer(
-  ({ id, currency, contractStatus }: ServiceListProps) => {
+export const ProductsList = observer(
+  ({ id, currency, contractStatus }: ProductListProps) => {
     const store = useStore();
     const ids = (
       store.contracts.value.get(id) as ContractStore
@@ -114,17 +114,17 @@ export const ServiceList = observer(
             return dateComparison;
           })
           .map((data) => (
-            <React.Fragment
+            <Fragment
               key={`subscription-card-item-${data[0]?.parentId}-${data[0].description}-${data[0].metadata.id}`}
             >
-              <ServiceCard
+              <ProductCard
                 contractId={id}
                 type='subscription'
                 currency={currency ?? 'USD'}
                 contractStatus={contractStatus}
                 ids={data.map((e) => e?.metadata?.id)}
               />
-            </React.Fragment>
+            </Fragment>
           ))}
 
         {groupedServicesByParentId.once.length !== 0 && (
@@ -147,17 +147,17 @@ export const ServiceList = observer(
             return dateComparison;
           })
           .map((data, i) => (
-            <React.Fragment
+            <Fragment
               key={`one-time-card-item-${data[0]?.parentId}-${data[0].description}-${i}`}
             >
-              <ServiceCard
+              <ProductCard
                 contractId={id}
                 type='one-time'
                 currency={currency ?? 'USD'}
                 contractStatus={contractStatus}
                 ids={data.map((e) => e?.metadata?.id)}
               />
-            </React.Fragment>
+            </Fragment>
           ))}
       </div>
     );
