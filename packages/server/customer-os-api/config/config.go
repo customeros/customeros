@@ -23,28 +23,30 @@ type CommonConfig struct {
 	Jaeger           tracing.JaegerConfig
 	GrpcClientConfig commonconf.GrpcClientConfig
 	RabbitMQConfig   commonconf.RabbitMQConfig
-	Anthropic        commonconf.AnthropicConfig
-	Deepseek         commonconf.DeepseekConfig
 	Postgres         commonconf.PostgresConfig
 	PostgresAsync    commonconf.PostgresAsyncConfig
 	Neo4j            commonconf.Neo4jConfig
-	Mailsherpa       commonconf.MailSherpaApiConfig
-	FileStore        commonconf.FileStoreConfig
-	Namecheap        commonconf.NamecheapConfig
-	OpenSRS          commonconf.OpenSRSConfig
-	Cloudflare       commonconf.CloudflareConfig
-	IpData           commonconf.IpDataConfig
-	Stripe           commonconf.StripeConfig
-	BetterContact    commonconf.BetterContactConfig
-	Scrapin          commonconf.ScrapinConfig
-	Postmark         commonconf.PostmarkConfig
-	SlackConfig      commonconf.SlackConfig
-	QuickbooksConfig commonconf.QuickbooksConfig
-	IntegrationApp   commonconf.IntegrationAppConfig
-	Novu             commonconf.NovuConfig
-	Temporal         commonconf.TemporalConfig
 	CosApi           commonconf.CustomerOsApiConfig
+
+	Anthropic        commonconf.AnthropicConfig
+	BetterContact    commonconf.BetterContactConfig
 	Brandfetch       commonconf.BrandfetchConfig
+	Cloudflare       commonconf.CloudflareConfig
+	Deepseek         commonconf.DeepseekConfig
+	FileStore        commonconf.FileStoreConfig
+	IntegrationApp   commonconf.IntegrationAppConfig
+	IpData           commonconf.IpDataConfig
+	Mailsherpa       commonconf.MailSherpaApiConfig
+	Mailstack        commonconf.MailstackConfig
+	Namecheap        commonconf.NamecheapConfig
+	Novu             commonconf.NovuConfig
+	OpenSRS          commonconf.OpenSRSConfig
+	Postmark         commonconf.PostmarkConfig
+	QuickbooksConfig commonconf.QuickbooksConfig
+	Stripe           commonconf.StripeConfig
+	Scrapin          commonconf.ScrapinConfig
+	SlackConfig      commonconf.SlackConfig
+	Temporal         commonconf.TemporalConfig
 }
 
 type AppConfig struct {
@@ -134,9 +136,10 @@ func InitConfig() (*Config, error) {
 			BrandfetchConfig:     cmnCfg.Brandfetch,
 		},
 		Internal: commonconf.InternalServicesConfig{
-			MailSherpaApiConfig: cmnCfg.Mailsherpa,
-			FileStoreConfig:     cmnCfg.FileStore,
 			CustomerOsApi:       cmnCfg.CosApi,
+			FileStoreConfig:     cmnCfg.FileStore,
+			MailSherpaApiConfig: cmnCfg.Mailsherpa,
+			MailstackConfig:     cmnCfg.Mailstack,
 		},
 	}
 

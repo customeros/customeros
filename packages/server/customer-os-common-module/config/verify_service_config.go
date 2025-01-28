@@ -14,7 +14,7 @@ type EmailConfig struct {
 }
 
 type MailstackConfig struct {
-	SupportedTlds []string `env:"MAILSTACK_SUPPORTED_TLDS" envDefault:"com"`
+	SupportedTlds []string `env:"MAILSTACK_SUPPORTED_TLD" envDefault:"com"`
 }
 
 type ScrubbyIoConfig struct {
