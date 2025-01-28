@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -21,7 +22,8 @@ type CreateOrganizationInput struct {
 	Domain string `json:"domain"`
 }
 
-type CreateOrganizationResult struct {
+type CreateOrganizationOutput struct {
+	CapabilityOutput
 	OrganizationID string `json:"organizationId"`
 }
 
@@ -39,6 +41,9 @@ func (c *CreateOrganizationCapability) ValidateInput(input CreateOrganizationInp
 	if input.Domain == "" {
 		return coserrors.ErrCapabilityDomainMissing
 	}
+	if !utils.IsValidDomain(input.Domain) {
+		return errors.New("Invalid domain format")
+	}
 	return nil
 }
 
@@ -51,16 +56,16 @@ func (c *CreateOrganizationCapability) GetConfig() any {
 }
 
 func (c *CreateOrganizationCapability) GetOutput() any {
-	return &CreateOrganizationResult{}
+	return &CreateOrganizationOutput{}
 }
 
 // Compile-time interface checks
 var (
-	_ interfaces.AgentCapabilityExecution[CreateOrganizationInput, CreateOrganizationResult, NoConfig] = (*CreateOrganizationCapability)(nil)
+	_ interfaces.AgentCapabilityExecution[CreateOrganizationInput, CreateOrganizationOutput, NoConfig] = (*CreateOrganizationCapability)(nil)
 	_ interfaces.AgentCapabilityUntyped                                                                = (*CreateOrganizationCapability)(nil)
 )
 
-func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateOrganizationInput, config NoConfig) (CreateOrganizationResult, error) {
+func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateOrganizationInput, config NoConfig) (CreateOrganizationOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateOrganizationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -68,7 +73,7 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateO
 	tracing.LogObjectAsJson(span, "input", data)
 	tracing.LogObjectAsJson(span, "config", config)
 
-	result := CreateOrganizationResult{}
+	result := CreateOrganizationOutput{}
 
 	if err := c.ValidateInput(data); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))

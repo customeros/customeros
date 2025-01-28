@@ -51,7 +51,7 @@ func (c *AnalyzeWebSessionCapability) GetConfig() any {
 }
 
 func (c *AnalyzeWebSessionCapability) GetOutput() any {
-	return &AnalyzeWebSessionResult{}
+	return &AnalyzeWebSessionOutput{}
 }
 
 func NewAnalyzeWebSessionCapability(
@@ -66,7 +66,7 @@ func NewAnalyzeWebSessionCapability(
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapabilityExecution[AnalyzeWebSessionInput, AnalyzeWebSessionResult, NoConfig] = (*AnalyzeWebSessionCapability)(nil)
+	_ interfaces.AgentCapabilityExecution[AnalyzeWebSessionInput, AnalyzeWebSessionOutput, NoConfig] = (*AnalyzeWebSessionCapability)(nil)
 	_ interfaces.AgentCapabilityUntyped                                                              = (*AnalyzeWebSessionCapability)(nil)
 )
 
@@ -77,7 +77,8 @@ type AnalyzeWebSessionInput struct {
 	Domain         string `json:"domain"`
 }
 
-type AnalyzeWebSessionResult struct {
+type AnalyzeWebSessionOutput struct {
+	CapabilityOutput
 	SessionID         string   `json:"sessionId"`
 	IsNewCompanyVisit bool     `json:"isNewCompanyVisit"`
 	IsNewPersonVisit  bool     `json:"isNewPersonVisit"`
@@ -88,7 +89,7 @@ type AnalyzeWebSessionResult struct {
 	Referrer          string   `json:"referrer"`
 }
 
-func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeWebSessionInput, config NoConfig) (AnalyzeWebSessionResult, error) {
+func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeWebSessionInput, config NoConfig) (AnalyzeWebSessionOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -98,25 +99,25 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeW
 
 	if err := c.ValidateConfig(config); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return AnalyzeWebSessionResult{}, err
+		return AnalyzeWebSessionOutput{}, err
 	}
 	if err := c.ValidateInput(data); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return AnalyzeWebSessionResult{}, err
+		return AnalyzeWebSessionOutput{}, err
 	}
 
 	// analyze session
 	result, err := c.sessionAnalytics(ctx, data.SessionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return AnalyzeWebSessionResult{}, err
+		return AnalyzeWebSessionOutput{}, err
 	}
 
 	// determine if a new company visit
 	isNewCompany, err := c.isNewCompanyVisit(ctx, data.Domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return AnalyzeWebSessionResult{}, err
+		return AnalyzeWebSessionOutput{}, err
 	}
 	result.IsNewCompanyVisit = isNewCompany
 
@@ -124,7 +125,7 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeW
 	isNewVisitor, err := c.isNewWebsiteVisitor(ctx, data.VisitorID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return AnalyzeWebSessionResult{}, err
+		return AnalyzeWebSessionOutput{}, err
 	}
 	result.IsNewPersonVisit = isNewVisitor
 
@@ -169,7 +170,7 @@ func (c *AnalyzeWebSessionCapability) writeSessionToTimeline(ctx context.Context
 	return nil
 }
 
-func (c *AnalyzeWebSessionCapability) sessionAnalytics(ctx context.Context, sessionID string) (AnalyzeWebSessionResult, error) {
+func (c *AnalyzeWebSessionCapability) sessionAnalytics(ctx context.Context, sessionID string) (AnalyzeWebSessionOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.sessionAnalytics")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -180,10 +181,10 @@ func (c *AnalyzeWebSessionCapability) sessionAnalytics(ctx context.Context, sess
 	}, nil)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return AnalyzeWebSessionResult{}, err
+		return AnalyzeWebSessionOutput{}, err
 	}
 	if session == nil {
-		return AnalyzeWebSessionResult{}, nil
+		return AnalyzeWebSessionOutput{}, nil
 	}
 
 	hostname := utils.CleanUrlBasePath(session.Hostname)
@@ -202,10 +203,10 @@ func (c *AnalyzeWebSessionCapability) sessionAnalytics(ctx context.Context, sess
 	sessionDuration, err := c.calculateSessionDuration(ctx, session)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return AnalyzeWebSessionResult{}, err
+		return AnalyzeWebSessionOutput{}, err
 	}
 
-	results := AnalyzeWebSessionResult{
+	results := AnalyzeWebSessionOutput{
 		SessionID:       sessionID,
 		PageViews:       session.UniquePageViews,
 		SessionDuration: sessionDuration,
@@ -308,7 +309,7 @@ func (c *AnalyzeWebSessionCapability) isNewWebsiteVisitor(ctx context.Context, v
 	return false, nil
 }
 
-func (c *AnalyzeWebSessionCapability) buildTimelineMessage(ctx context.Context, sessionID string, analysis AnalyzeWebSessionResult) (string, error) {
+func (c *AnalyzeWebSessionCapability) buildTimelineMessage(ctx context.Context, sessionID string, analysis AnalyzeWebSessionOutput) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.buildTimelineMessage")
 	defer span.Finish()
 	tracing.TagComponentService(span)

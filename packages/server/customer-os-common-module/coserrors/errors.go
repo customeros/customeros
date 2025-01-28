@@ -27,7 +27,8 @@ var (
 	ErrEmailUsed    = errors.New("Email is already used")
 
 	// Capability errors
-	ErrCapabilityDomainMissing = errors.New("Missing domain")
+	ErrCapabilityDomainMissing         = errors.New("Missing domain")
+	ErrCapabilityHostnameNotConfigured = errors.New("Hostname not configured")
 )
 
 func SkipTracing(err error) bool {
@@ -40,6 +41,7 @@ func SkipTracing(err error) bool {
 		ErrLinkedInUsed,
 		ErrEmailUsed,
 		ErrCapabilityDomainMissing,
+		ErrCapabilityHostnameNotConfigured,
 	}
 
 	for _, e := range errs {
