@@ -86,7 +86,7 @@ func OnRequestedEnrichOrganization(ctx context.Context, dependencies *model.Depe
 }
 
 func OnOrganizationCreated(ctx context.Context, dependencies *model.DependencyContainer, input any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnRequestedEnrichOrganization")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnOrganizationCreated")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
