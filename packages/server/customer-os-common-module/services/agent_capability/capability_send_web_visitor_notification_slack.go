@@ -3,16 +3,18 @@ package agent_capability
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"strings"
+	"time"
+
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
-	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type SendWebVisitorSlackNotificationCapability struct {
@@ -32,6 +34,7 @@ type SendWebVisitorSlackNotificationInput struct {
 
 type SendWebVisitorSlackNotificationResult struct {
 	Success bool `json:"success"`
+	Skipped bool `json:"skipped"`
 }
 
 type SendWebVisitorSlackNotificationConfig struct {
@@ -99,6 +102,7 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 
 	result := SendWebVisitorSlackNotificationResult{
 		Success: false,
+		Skipped: false,
 	}
 
 	if err := c.ValidateInput(data); err != nil {
@@ -129,6 +133,8 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		return result, err
 	}
 	if skip {
+		result.Success = true
+		result.Skipped = true
 		return result, nil
 	}
 
@@ -146,7 +152,6 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 	sendResult, err := c.sendSlackNotificationCapability.Execute(ctx, SendSlackNotificationInput{Message: message}, SendSlackNotificationConfig{ChannelID: config.ChannelID})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		result.Success = false
 		return result, err
 	}
 
@@ -205,7 +210,14 @@ func (c *SendWebVisitorSlackNotificationCapability) isWorkspaceDomain(ctx contex
 	defer span.Finish()
 
 	workspaceDomains, err := c.workspaceService.GetWorkspaceDomainsForTenant(ctx)
+	tracing.LogObjectAsJson(span, "workspaceDomains", workspaceDomains)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		return false
+	}
+
+	if len(workspaceDomains) == 0 {
+		err := errors.New("no workspace domains found for tenant")
 		tracing.TraceErr(span, err)
 		return false
 	}
