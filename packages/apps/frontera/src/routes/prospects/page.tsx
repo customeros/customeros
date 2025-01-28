@@ -36,6 +36,7 @@ export const ProspectsBoardPage = observer(() => {
           <ButtonGroup className='flex items-center w-[252px]'>
             <Button
               size='xs'
+              dataTest={'prospects-list-button'}
               className={cn('px-4 w-full flex-1', {
                 selected: showFinder,
               })}
@@ -48,6 +49,7 @@ export const ProspectsBoardPage = observer(() => {
             </Button>
             <Button
               size='xs'
+              dataTest='prospects-board-button'
               onClick={() => navigate('/prospects')}
               className={cn('px-4 w-full flex-1', {
                 selected: !showFinder,

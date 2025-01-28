@@ -15,11 +15,11 @@ export class FlowsPage {
     this.page = page;
   }
 
-  private finderTableFlows = 'div[data-test="finder-table-FLOW"]';
+  finderTableFlows = 'div[data-test="finder-table-FLOW"]';
   sideNavItemAllFlows = 'button[data-test="side-nav-item-all-flows"]';
   sideNavItemAllFlowsSelected =
     'button[data-test="side-nav-item-all-flows"] div[aria-selected="true"]';
-  private allOrgsSelectAllOrgs = 'button[data-test="all-orgs-select-all-orgs"]';
+  private allOrgsSelectAllOrgs = 'div[data-test="all-orgs-select-all-orgs"]';
   addNewFlow = 'button[data-test="add-new-flow"]';
   createNewFlowModalTitle = 'h1[data-test="create-new-flow-modal-title"]';
   createNewFlowName = 'input[data-test="create-new-flow-name"]';
@@ -183,38 +183,7 @@ export class FlowsPage {
       this.allOrgsSelectAllOrgs,
     );
 
-    try {
-      await allFlowsSelectAllContacts.waitFor({
-        state: 'visible',
-        timeout: 2000,
-      });
-
-      const isVisible = await allFlowsSelectAllContacts.isVisible();
-
-      if (isVisible) {
-        await allFlowsSelectAllContacts.click();
-
-        // Wait for a short time to allow for any asynchronous updates
-        await this.page.waitForTimeout(100);
-
-        // Check if the button is checked after clicking
-        return (
-          (await allFlowsSelectAllContacts.getAttribute('aria-checked')) ===
-            'true' ||
-          (await allFlowsSelectAllContacts.getAttribute('data-state')) ===
-            'checked'
-        );
-      }
-    } catch (error) {
-      if (error.name === 'TimeoutError') {
-        // Silently return false if the element is not found
-        return false;
-      }
-      // Re-throw any other errors
-      throw error;
-    }
-
-    return false;
+    await allFlowsSelectAllContacts.click();
   }
 
   async archiveOrgs() {

@@ -20,7 +20,7 @@ export class OrganizationsPage {
   private sideNavItemCustomersSelected =
     sideNavSelectors.sideNavItemCustomersSelected;
   private finderTableOrganizations = '[data-test="finder-table-ORGANIZATIONS"]';
-  private allOrgsAddOrg = 'button[data-test="all-orgs-add-org"]';
+  allOrgsAddOrg = 'button[data-test="all-orgs-add-org"]';
   private createOrganizationFromTable =
     'button[data-test="create-organization-from-table"]';
   private organizationsCreateNewOrgOrgName =
@@ -54,7 +54,7 @@ export class OrganizationsPage {
     'button[data-test="organization-relationship-button-in-all-orgs-table"]';
   private relationshipCustomer =
     'div[data-test="org-dashboard-relationship-CUSTOMER"]';
-  private allOrgsSelectAllOrgs = 'button[data-test="all-orgs-select-all-orgs"]';
+  private allOrgsSelectAllOrgs = 'div[data-test="all-orgs-select-all-orgs"]';
   private orgActionsArchive = 'button[data-test="org-actions-archive"]';
   private orgActionsConfirmArchive =
     'button[data-test="org-actions-confirm-archive"]';
@@ -356,33 +356,10 @@ export class OrganizationsPage {
       .click();
   }
 
-  async selectAllOrgs(): Promise<boolean> {
+  async selectAllOrgs() {
     const allOrgsSelectAllOrgs = this.page.locator(this.allOrgsSelectAllOrgs);
 
-    try {
-      await allOrgsSelectAllOrgs.waitFor({ state: 'visible', timeout: 10000 });
-
-      const isVisible = await allOrgsSelectAllOrgs.isVisible();
-
-      if (isVisible) {
-        await allOrgsSelectAllOrgs.click();
-
-        const isAllOrgsSelectAllOrgs = await allOrgsSelectAllOrgs.getAttribute(
-          'data-state',
-        );
-
-        return isAllOrgsSelectAllOrgs === 'checked';
-      }
-    } catch (error) {
-      if (error.name === 'TimeoutError') {
-        // Silently return false if the element is not found
-        return false;
-      }
-      // Re-throw any other errors
-      throw error;
-    }
-
-    return false;
+    await allOrgsSelectAllOrgs.click();
   }
 
   async archiveOrgs() {

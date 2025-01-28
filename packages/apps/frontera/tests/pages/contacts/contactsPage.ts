@@ -13,11 +13,11 @@ export class ContactsPage {
     'div[data-test="side-nav-item-all-contacts"]';
   sideNavItemAllContactsSelected =
     'div[data-test="side-nav-item-all-contacts"] div[aria-selected="true"]';
-  private allOrgsSelectAllOrgs = 'button[data-test="all-orgs-select-all-orgs"]';
+  private allOrgsSelectAllOrgs = 'div[data-test="all-orgs-select-all-orgs"]';
   private contactsActionsArchive = 'button[data-test="actions-archive"]';
   private orgActionsConfirmArchive =
     'button[data-test="org-actions-confirm-archive"]';
-  private finderTableContacts = 'div[data-test="finder-table-CONTACTS"]';
+  finderTableContacts = 'div[data-test="finder-table-CONTACTS"]';
   private addContactToFlowConfirmation =
     'button[data-test="add-contact-to-flow-confirmation"]';
   private contactNameInContactsTable =
@@ -44,37 +44,12 @@ export class ContactsPage {
     await clickLocatorsThatAreVisible(this.page, this.sideNavItemAllContacts);
   }
 
-  async selectAllContacts(): Promise<boolean> {
+  async selectAllContacts() {
     const allContactsSelectAllContacts = this.page.locator(
       this.allOrgsSelectAllOrgs,
     );
 
-    try {
-      await allContactsSelectAllContacts.waitFor({
-        state: 'visible',
-        timeout: 2000,
-      });
-
-      const isVisible = await allContactsSelectAllContacts.isVisible();
-
-      if (isVisible) {
-        await allContactsSelectAllContacts.click();
-
-        const isAllContactsSelectAllContacts =
-          await allContactsSelectAllContacts.getAttribute('data-state');
-
-        return isAllContactsSelectAllContacts === 'checked';
-      }
-    } catch (error) {
-      if (error.name === 'TimeoutError') {
-        // Silently return false if the element is not found
-        return false;
-      }
-      // Re-throw any other errors
-      throw error;
-    }
-
-    return false;
+    await allContactsSelectAllContacts.click();
   }
 
   async archiveOrgs() {

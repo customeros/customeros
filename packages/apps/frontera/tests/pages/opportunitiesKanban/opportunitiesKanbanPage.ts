@@ -14,10 +14,11 @@ export class OpportunitiesKanbanPage {
     this.page = page;
   }
 
-  private sideNavItemOpportunitiesKanban =
-    'button[data-test="side-nav-item-Opportunities"]';
+  private sideNavItemOpportunities =
+    'div[data-test="side-nav-item-opportunities"]';
   sideNavItemOpportunitiesSelected =
     'button[data-test="side-nav-item-Opportunities"] div[aria-selected="true"]';
+  private prospectsBoardButton = 'button[data-test="prospects-board-button"]';
   private oppsKanbanHeaderOppsCount =
     'span[data-test="opps-kanban-header-opps-count"]';
   private oppsKanbanHeaderOppsEstimate =
@@ -52,7 +53,8 @@ export class OpportunitiesKanbanPage {
   async goToOpportunitiesKanban() {
     await clickLocatorsThatAreVisible(
       this.page,
-      this.sideNavItemOpportunitiesKanban,
+      this.sideNavItemOpportunities,
+      this.prospectsBoardButton,
     );
   }
 
