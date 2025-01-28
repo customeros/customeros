@@ -18,7 +18,7 @@ type SendSlackNotificationCapability struct {
 }
 
 func (c *SendSlackNotificationCapability) ValidateConfig(config SendSlackNotificationConfig) error {
-	if config.ChannelID == "" {
+	if config.ChannelID.Value == "" {
 		return errors.New("ChannelID must be set")
 	}
 	return nil
@@ -64,7 +64,12 @@ type SendSlackNotificationResult struct {
 }
 
 type SendSlackNotificationConfig struct {
-	ChannelID string `json:"channelId"`
+	ChannelID SlackChannelIdConfig `json:"channelId"`
+}
+
+type SlackChannelIdConfig struct {
+	Value string `json:"value"`
+	Error string `json:"error"`
 }
 
 func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data SendSlackNotificationInput, config SendSlackNotificationConfig) (SendSlackNotificationResult, error) {
@@ -94,7 +99,7 @@ func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data Send
 		return result, err
 	}
 
-	err := c.notificationService.NotifySlackChannel(ctx, tenant, config.ChannelID, data.Message)
+	err := c.notificationService.NotifySlackChannel(ctx, tenant, config.ChannelID.Value, data.Message)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		result.Success = false

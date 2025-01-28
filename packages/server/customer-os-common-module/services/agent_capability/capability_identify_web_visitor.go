@@ -19,7 +19,28 @@ type IdentifyWebsiteVisitorCapability struct {
 	enrichmentService    interfaces.EnrichmentService
 }
 
-func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(config NoConfig) error {
+type IdentifyWebsiteVisitorInput struct {
+	SessionID string `json:"sessionId"`
+	IPAddress string `json:"ipAddress"`
+	VisitorID string `json:"visitorId"`
+	Website   string `json:"website"`
+}
+
+type IdentifyWebsiteVisitorResult struct {
+	Domain       string `json:"domain"`
+	LinkedInSlug string `json:"linkedinSlug"`
+}
+
+type IdentifyWebsiteVisitorConfig struct {
+	Websites WebsitesConfig `json:"websites"`
+}
+
+type WebsitesConfig struct {
+	Value []string `json:"value"`
+	Error string   `json:"error"`
+}
+
+func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(config IdentifyWebsiteVisitorConfig) error {
 	return nil
 }
 
@@ -41,7 +62,7 @@ func (c *IdentifyWebsiteVisitorCapability) GetInput() any {
 }
 
 func (c *IdentifyWebsiteVisitorCapability) GetConfig() any {
-	return &NoConfig{}
+	return &IdentifyWebsiteVisitorConfig{}
 }
 
 func (c *IdentifyWebsiteVisitorCapability) GetOutput() any {
@@ -60,22 +81,11 @@ func NewIdentifyWebsiteVisitorCapability(
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapabilityExecution[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorResult, NoConfig] = (*IdentifyWebsiteVisitorCapability)(nil)
-	_ interfaces.AgentCapabilityUntyped                                                                        = (*IdentifyWebsiteVisitorCapability)(nil)
+	_ interfaces.AgentCapabilityExecution[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorResult, IdentifyWebsiteVisitorConfig] = (*IdentifyWebsiteVisitorCapability)(nil)
+	_ interfaces.AgentCapabilityUntyped                                                                                            = (*IdentifyWebsiteVisitorCapability)(nil)
 )
 
-type IdentifyWebsiteVisitorInput struct {
-	SessionID string `json:"sessionId"`
-	IPAddress string `json:"ipAddress"`
-	VisitorID string `json:"visitorId"`
-}
-
-type IdentifyWebsiteVisitorResult struct {
-	Domain       string `json:"domain"`
-	LinkedInSlug string `json:"linkedinSlug"`
-}
-
-func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data IdentifyWebsiteVisitorInput, config NoConfig) (IdentifyWebsiteVisitorResult, error) {
+func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data IdentifyWebsiteVisitorInput, config IdentifyWebsiteVisitorConfig) (IdentifyWebsiteVisitorResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -147,9 +157,9 @@ func (c *IdentifyWebsiteVisitorCapability) ExecuteUntyped(ctx context.Context, i
 		return nil, fmt.Errorf("invalid input type: expected AnalyzeWebSessionInput")
 	}
 
-	typedConfig, ok := config.(*NoConfig)
+	typedConfig, ok := config.(*IdentifyWebsiteVisitorConfig)
 	if !ok || typedConfig == nil {
-		return nil, fmt.Errorf("invalid config type: expected NoCOnfig")
+		return nil, fmt.Errorf("invalid config type: expected IdentifyWebsiteVisitorConfig")
 	}
 
 	return c.Execute(ctx, *typedInput, *typedConfig)
