@@ -271,7 +271,7 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 		tracer := opentracing.GlobalTracer()
 		span := tracer.StartSpan("panic-recovery")
 		defer span.Finish()
-		field := log.String("stack", string(string(buf[:stackSize])))
+		field := log.String("stack", string(buf[:stackSize]))
 		tracing.TraceErr(span, e, field)
 
 		return gqlerror.Errorf("Internal server error!")
