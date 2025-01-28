@@ -258,8 +258,8 @@ Important: Always provide exactly three reasons, and format as valid JSON.`
         ICP Disqualification Criteria: %s
         Company Name: %s
         Company Domain: %s
-        Year Founded: %s
-        Employee Count: %s
+        Year Founded: %d
+        Employee Count: %d
         Location: %s, %s, %s
         Industry NAICS Code: %s
         Industry Name: %s
