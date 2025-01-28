@@ -25,6 +25,7 @@ export const CollapsibleSection = ({
         <span className='text-sm  text-gray-500'>{title}</span>
 
         <Icon
+          fill='currentColor'
           name='arrow-dropdown'
           className={cn('w-5 h-5', {
             'transform -rotate-90': !isOpen,
