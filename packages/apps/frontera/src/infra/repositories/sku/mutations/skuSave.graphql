@@ -1,0 +1,9 @@
+mutation skuSave($input: SkuInput!) {
+  sku_Save(input: $input) {
+    id
+    name
+    price
+    type
+    archived
+  }
+}

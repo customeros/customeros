@@ -25,11 +25,13 @@ import { AddLinkedinUrl } from './commands/contacts/AddLinkedin';
 import { EditLatestOrgActive } from './commands/contacts/EditLatestOrgActive';
 import {
   FlowHub,
+  EditSku,
   EditName,
   StopFlow,
   GlobalHub,
   EditEmail,
   StartFlow,
+  AddNewSku,
   ChangeTags,
   ContactHub,
   RenameFlow,
@@ -156,6 +158,10 @@ const Commands: Record<CommandMenuType, ReactElement> = {
 
   //TableViewDef
   RenameTableViewDef: <RenameTableViewDef />,
+
+  //SKU
+  EditSku: <EditSku />,
+  AddNewSku: <AddNewSku />,
 };
 
 export const CommandMenu = observer(() => {

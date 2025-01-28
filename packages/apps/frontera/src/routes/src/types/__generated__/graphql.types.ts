@@ -98,7 +98,6 @@ export type Agent = {
   id: Scalars['ID']['output'];
   isActive: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
-  tenant: Scalars['String']['output'];
   type: AgentType;
   updatedAt: Scalars['Time']['output'];
   visible: Scalars['Boolean']['output'];
@@ -107,16 +106,13 @@ export type Agent = {
 export type AgentSaveInput = {
   capabilities?: InputMaybe<Array<CapabilitySaveInput>>;
   color?: InputMaybe<Scalars['String']['input']>;
-  createdAt: Scalars['Time']['input'];
   flowId?: InputMaybe<Scalars['ID']['input']>;
   goal?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['ID']['input']>;
   isActive?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-  tenant?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<AgentType>;
-  updatedAt: Scalars['Time']['input'];
   visible?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
@@ -326,27 +322,30 @@ export enum CalendarType {
 export type Capability = {
   __typename?: 'Capability';
   action: Scalars['String']['output'];
+  active: Scalars['Boolean']['output'];
+  config: Scalars['String']['output'];
   errors?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-  optional: Scalars['Boolean']['output'];
   type: CapabilityType;
-  values: Scalars['String']['output'];
 };
 
 export type CapabilitySaveInput = {
   action?: InputMaybe<Scalars['String']['input']>;
+  active?: InputMaybe<Scalars['Boolean']['input']>;
+  config?: InputMaybe<Scalars['String']['input']>;
   errors?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['ID']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-  optional?: InputMaybe<Scalars['Boolean']['input']>;
   type?: InputMaybe<CapabilityType>;
-  values?: InputMaybe<Scalars['String']['input']>;
 };
 
 export enum CapabilityType {
+  AnalyzeWebSessionIntent = 'ANALYZE_WEB_SESSION_INTENT',
+  CreateOrganization = 'CREATE_ORGANIZATION',
+  IdentifyWebVisitor = 'IDENTIFY_WEB_VISITOR',
   SendSlackNotification = 'SEND_SLACK_NOTIFICATION',
-  WebsiteTracker = 'WEBSITE_TRACKER',
+  WebVisitorSendSlackNotification = 'WEB_VISITOR_SEND_SLACK_NOTIFICATION',
 }
 
 export type ColumnView = {
@@ -2015,10 +2014,13 @@ export type InvoiceCustomer = {
 export type InvoiceLine = MetadataInterface & {
   __typename?: 'InvoiceLine';
   contractLineItem: ServiceLineItem;
-  description: Scalars['String']['output'];
+  /** @deprecated use sku instead */
+  description?: Maybe<Scalars['String']['output']>;
   metadata: Metadata;
   price: Scalars['Float']['output'];
   quantity: Scalars['Int64']['output'];
+  sku?: Maybe<Sku>;
+  skuId?: Maybe<Scalars['ID']['output']>;
   subtotal: Scalars['Float']['output'];
   taxDue: Scalars['Float']['output'];
   total: Scalars['Float']['output'];
@@ -2560,7 +2562,6 @@ export type Mutation = {
   flow_Off: Flow;
   flow_On: Flow;
   interactionEvent_LinkAttachment: Result;
-  invoice_NextDryRunForContract: Scalars['ID']['output'];
   invoice_Pay: Invoice;
   invoice_Simulate: Array<InvoiceSimulate>;
   invoice_Update: Invoice;
@@ -2642,7 +2643,7 @@ export type Mutation = {
   removeTag?: Maybe<Result>;
   serviceLineItem_BulkUpdate: Array<Scalars['ID']['output']>;
   serviceLineItem_Delete: DeleteResponse;
-  sku_Delete: Result;
+  sku_Archive: Result;
   sku_Save: Sku;
   social_Remove: Result;
   social_Update: Social;
@@ -3000,10 +3001,6 @@ export type MutationInteractionEvent_LinkAttachmentArgs = {
   eventId: Scalars['ID']['input'];
 };
 
-export type MutationInvoice_NextDryRunForContractArgs = {
-  contractId: Scalars['ID']['input'];
-};
-
 export type MutationInvoice_PayArgs = {
   id: Scalars['ID']['input'];
 };
@@ -3338,7 +3335,7 @@ export type MutationServiceLineItem_DeleteArgs = {
   id: Scalars['ID']['input'];
 };
 
-export type MutationSku_DeleteArgs = {
+export type MutationSku_ArchiveArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -4548,6 +4545,7 @@ export type ServiceLineItem = MetadataInterface & {
   closed: Scalars['Boolean']['output'];
   comments: Scalars['String']['output'];
   createdBy?: Maybe<User>;
+  /** @deprecated use skuId */
   description: Scalars['String']['output'];
   externalLinks: Array<ExternalSystem>;
   metadata: Metadata;
@@ -4557,6 +4555,8 @@ export type ServiceLineItem = MetadataInterface & {
   quantity: Scalars['Int64']['output'];
   serviceEnded?: Maybe<Scalars['Time']['output']>;
   serviceStarted: Scalars['Time']['output'];
+  sku?: Maybe<Sku>;
+  skuId?: Maybe<Scalars['ID']['output']>;
   tax: Tax;
 };
 
@@ -4577,6 +4577,7 @@ export type ServiceLineItemBulkUpdateItem = {
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceLineItemId?: InputMaybe<Scalars['ID']['input']>;
   serviceStarted?: InputMaybe<Scalars['Time']['input']>;
+  skuId?: InputMaybe<Scalars['ID']['input']>;
   vatRate?: InputMaybe<Scalars['Float']['input']>;
 };
 
@@ -4595,6 +4596,7 @@ export type ServiceLineItemInput = {
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceEnded?: InputMaybe<Scalars['Time']['input']>;
   serviceStarted?: InputMaybe<Scalars['Time']['input']>;
+  skuId?: InputMaybe<Scalars['ID']['input']>;
   tax?: InputMaybe<TaxInput>;
 };
 
@@ -4606,6 +4608,7 @@ export type ServiceLineItemNewVersionInput = {
   price?: InputMaybe<Scalars['Float']['input']>;
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceStarted?: InputMaybe<Scalars['Time']['input']>;
+  skuId?: InputMaybe<Scalars['ID']['input']>;
   tax?: InputMaybe<TaxInput>;
 };
 
@@ -4621,21 +4624,30 @@ export type ServiceLineItemUpdateInput = {
   quantity?: InputMaybe<Scalars['Int64']['input']>;
   serviceEnded?: InputMaybe<Scalars['Time']['input']>;
   serviceStarted?: InputMaybe<Scalars['Time']['input']>;
+  skuId?: InputMaybe<Scalars['ID']['input']>;
   tax?: InputMaybe<TaxInput>;
 };
 
 export type Sku = {
   __typename?: 'Sku';
+  archived: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   price: Scalars['Float']['output'];
+  type: SkuType;
 };
 
 export type SkuInput = {
   id?: InputMaybe<Scalars['ID']['input']>;
   name: Scalars['String']['input'];
   price: Scalars['Float']['input'];
+  type: SkuType;
 };
+
+export enum SkuType {
+  OneTime = 'ONE_TIME',
+  Subscription = 'SUBSCRIPTION',
+}
 
 export type SlackChannel = {
   __typename?: 'SlackChannel';

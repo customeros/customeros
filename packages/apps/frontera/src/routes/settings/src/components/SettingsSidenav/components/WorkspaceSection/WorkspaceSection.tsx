@@ -42,6 +42,12 @@ export const WorkspaceSection = ({
           isActive={checkIsActive('mailboxes')}
           onClick={handleItemClick('mailboxes')}
         />
+        <SidenavItem
+          label='Products'
+          dataTest='sideNav-settings-products'
+          isActive={checkIsActive('products')}
+          onClick={handleItemClick('products')}
+        />
       </div>
     </div>
   );
