@@ -61,7 +61,7 @@ func (c *ICPQualificationCapability) ValidateConfig(config NoConfig) error {
 
 func (c *ICPQualificationCapability) ValidateInput(input ICPQualificationInput) error {
 	if input.OrganizationID == "" {
-		return errors.New("missing required input: PromaryDomain")
+		return errors.New("missing required input: OrganizationID")
 	}
 	return nil
 }
