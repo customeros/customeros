@@ -24,15 +24,8 @@ async function globalSetup() {
   // Archive organizations
   await organizationsPage.goToAllOrgs();
 
-  let isSelectAllOrgsClicked = false;
-
-  try {
-    isSelectAllOrgsClicked = await organizationsPage.selectAllOrgs(); // Returns true if successful
-  } catch (error) {
-    console.warn('Select All Orgs button not found or visible:', error);
-  }
-
-  if (isSelectAllOrgsClicked) {
+  if ((await page.locator(organizationsPage.allOrgsAddOrg).count()) === 0) {
+    await organizationsPage.selectAllOrgs();
     await organizationsPage.archiveOrgs();
     await organizationsPage.confirmArchiveOrgs();
     await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -41,15 +34,13 @@ async function globalSetup() {
   // Archive contacts
   await contactsPage.waitForPageLoad();
 
-  let isSelectAllContactsClicked = false;
-
-  try {
-    isSelectAllContactsClicked = await contactsPage.selectAllContacts(); // Returns true if successful
-  } catch (error) {
-    console.warn('Select All Contacts button not found or visible:', error);
-  }
-
-  if (isSelectAllContactsClicked) {
+  if (
+    (await page
+      .locator(contactsPage.finderTableContacts)
+      .locator('[data-index]')
+      .count()) > 0
+  ) {
+    await contactsPage.selectAllContacts(); // Returns true if successful
     await contactsPage.archiveOrgs();
     await contactsPage.confirmArchiveOrgs();
     await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -58,33 +49,28 @@ async function globalSetup() {
   // Archive flows
   await flowsPage.waitForPageLoad();
 
-  let isSelectAllFlowsClicked = false;
-
-  try {
-    isSelectAllFlowsClicked = await flowsPage.selectAllFlows(); // Returns true if successful
-  } catch (error) {
-    console.warn('Select All Flows button not found or visible:', error);
-  }
-
-  if (isSelectAllFlowsClicked) {
+  if (
+    (await page
+      .locator(flowsPage.finderTableFlows)
+      .locator('[data-index]')
+      .count()) > 0
+  ) {
+    await flowsPage.selectAllFlows();
     await flowsPage.archiveOrgs();
     await flowsPage.confirmArchiveOrgs();
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }
 
   // Archive opportunities
-  await opportunitiesPage.goToOpportunities();
+  await opportunitiesPage.goToOpportunitiesList();
 
-  let isSelectAllOpportunitiesClicked = false;
-
-  try {
-    isSelectAllOpportunitiesClicked =
-      await opportunitiesPage.selectAllOpportunities(); // Returns true if successful
-  } catch (error) {
-    console.warn('Select All Flows button not found or visible:', error);
-  }
-
-  if (isSelectAllOpportunitiesClicked) {
+  if (
+    (await page
+      .locator(opportunitiesPage.finderTableOpportunities)
+      .locator('[data-index]')
+      .count()) > 0
+  ) {
+    await opportunitiesPage.selectAllOpportunities();
     await opportunitiesPage.archiveOrgs();
     await opportunitiesPage.confirmArchiveOrgs();
     await new Promise((resolve) => setTimeout(resolve, 1500));
