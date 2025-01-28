@@ -24,8 +24,7 @@ export class OrganizationsCmdKPage {
     this.page = page;
   }
 
-  private sideNavItemCustomersSelected =
-    sideNavSelectors.sideNavItemCustomersSelected;
+  private sideNavItemCustomersSelected = sideNavSelectors.sideNavItemCustomers;
   private organizationsHub = 'div[data-test="organization-hub"]';
   private organizationsHubSpan = 'div[data-test="organization-hub"] span';
   private organizationHubInput = 'input[data-test="organization-hub-input"]';
@@ -73,27 +72,27 @@ export class OrganizationsCmdKPage {
     );
 
     const sideNavItemSelectedTextContent =
-      await sideNavItemSelectedVisible.getAttribute('aria-selected');
+      await sideNavItemSelectedVisible.getAttribute('class');
 
-    expect(sideNavItemSelectedTextContent).toBe('true');
+    expect(sideNavItemSelectedTextContent).toContain('font-medium');
   }
 
   private async verifyNavigationWithKeyboard(
     secondKey: string,
-    sideNavItemSelected: string,
+    sideNavItem: string,
   ) {
     await this.page.keyboard.press('KeyG');
     await this.page.keyboard.press(secondKey);
 
     const sideNavItemSelectedVisible = await ensureLocatorIsVisible(
       this.page,
-      sideNavItemSelected,
+      sideNavItem,
     );
 
     const sideNavItemSelectedTextContent =
-      await sideNavItemSelectedVisible.getAttribute('aria-selected');
+      await sideNavItemSelectedVisible.getAttribute('class');
 
-    expect(sideNavItemSelectedTextContent).toBe('true');
+    expect(sideNavItemSelectedTextContent).toContain('font-medium');
   }
 
   async accessCmdK() {
@@ -255,6 +254,7 @@ export class OrganizationsCmdKPage {
     await this.openCmdK();
     await organizationsPage.addOrganization(
       this.organizationHubAddNewOrgs,
+      false,
       testInfo,
     );
     await organizationsPage.goToAllOrgs();
@@ -266,7 +266,7 @@ export class OrganizationsCmdKPage {
 
     await this.verifyNavigationWithKeyboard(
       'KeyT',
-      targetsPage.sideNavItemTargetsSelected,
+      targetsPage.sideNavItemTargets,
     );
 
     await this.page.goBack();
@@ -275,7 +275,7 @@ export class OrganizationsCmdKPage {
     await this.openCmdK();
     await this.verifyNavigationWithClick(
       this.organizationHubGt,
-      targetsPage.sideNavItemTargetsSelected,
+      targetsPage.sideNavItemTargets,
     );
 
     await organizationsPage.goToAllOrgs();
@@ -287,7 +287,7 @@ export class OrganizationsCmdKPage {
 
     await this.verifyNavigationWithKeyboard(
       'KeyO',
-      opportunitiesPage.sideNavItemOpportunitiesSelected,
+      opportunitiesPage.sideNavItemOpportunities,
     );
 
     await this.page.goBack();
@@ -295,7 +295,7 @@ export class OrganizationsCmdKPage {
     await this.openCmdK();
     await this.verifyNavigationWithClick(
       this.organizationHubGo,
-      opportunitiesPage.sideNavItemOpportunitiesSelected,
+      opportunitiesPage.sideNavItemOpportunities,
     );
 
     await organizationsPage.goToAllOrgs();
@@ -327,7 +327,7 @@ export class OrganizationsCmdKPage {
 
     await this.verifyNavigationWithKeyboard(
       'KeyN',
-      contactsPage.sideNavItemAllContactsSelected,
+      contactsPage.sideNavItemAllContacts,
     );
 
     await this.page.goBack();
@@ -335,7 +335,7 @@ export class OrganizationsCmdKPage {
     await this.openCmdK();
     await this.verifyNavigationWithClick(
       this.organizationHubGn,
-      contactsPage.sideNavItemAllContactsSelected,
+      contactsPage.sideNavItemAllContacts,
     );
 
     await organizationsPage.goToAllOrgs();
@@ -347,7 +347,7 @@ export class OrganizationsCmdKPage {
 
     await this.verifyNavigationWithKeyboard(
       'KeyI',
-      invoicesPage.sideNavItemAllUpcomingSelected,
+      invoicesPage.sideNavItemAllUpcoming,
     );
 
     await this.page.goBack();
@@ -355,7 +355,7 @@ export class OrganizationsCmdKPage {
     await this.openCmdK();
     await this.verifyNavigationWithClick(
       this.organizationHubGi,
-      invoicesPage.sideNavItemAllUpcomingSelected,
+      invoicesPage.sideNavItemAllUpcoming,
     );
 
     await organizationsPage.goToAllOrgs();
@@ -367,7 +367,7 @@ export class OrganizationsCmdKPage {
 
     await this.verifyNavigationWithKeyboard(
       'KeyR',
-      contractsPage.sideNavItemAllContractsSelected,
+      contractsPage.sideNavItemAllContracts,
     );
 
     await this.page.goBack();
@@ -375,7 +375,7 @@ export class OrganizationsCmdKPage {
     await this.openCmdK();
     await this.verifyNavigationWithClick(
       this.organizationHubGr,
-      contractsPage.sideNavItemAllContractsSelected,
+      contractsPage.sideNavItemAllContracts,
     );
 
     await organizationsPage.goToAllOrgs();
@@ -387,7 +387,7 @@ export class OrganizationsCmdKPage {
 
     await this.verifyNavigationWithKeyboard(
       'KeyF',
-      flowsPage.sideNavItemAllFlowsSelected,
+      flowsPage.sideNavItemAllFlows,
     );
 
     await this.page.goBack();
@@ -395,7 +395,7 @@ export class OrganizationsCmdKPage {
     await this.openCmdK();
     await this.verifyNavigationWithClick(
       this.organizationHubGf,
-      flowsPage.sideNavItemAllFlowsSelected,
+      flowsPage.sideNavItemAllFlows,
     );
 
     await organizationsPage.goToAllOrgs();
@@ -407,7 +407,7 @@ export class OrganizationsCmdKPage {
 
     await this.verifyNavigationWithKeyboard(
       'KeyS',
-      settingsAccountsPage.settingsAccountsSelected,
+      settingsAccountsPage.settingsAccounts,
     );
 
     await this.page.goBack();
@@ -415,7 +415,7 @@ export class OrganizationsCmdKPage {
     await this.openCmdK();
     await this.verifyNavigationWithClick(
       this.organizationHubGs,
-      settingsAccountsPage.settingsAccountsSelected,
+      settingsAccountsPage.settingsAccounts,
     );
 
     await clickLocatorThatIsVisible(this.page, settingsPage.settingsGoBack);

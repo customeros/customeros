@@ -14,8 +14,7 @@ export class OpportunitiesKanbanPage {
     this.page = page;
   }
 
-  private sideNavItemOpportunities =
-    'div[data-test="side-nav-item-opportunities"]';
+  sideNavItemOpportunities = 'div[data-test="side-nav-item-opportunities"]';
   sideNavItemOpportunitiesSelected =
     'button[data-test="side-nav-item-Opportunities"] div[aria-selected="true"]';
   private prospectsBoardButton = 'button[data-test="prospects-board-button"]';

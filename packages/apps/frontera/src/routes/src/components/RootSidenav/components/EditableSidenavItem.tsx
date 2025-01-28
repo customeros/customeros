@@ -50,8 +50,8 @@ export const EditableSideNavItem = observer(
 
     return (
       <div
+        data-test={dataTest}
         onClick={handleClick}
-        data-test-id={dataTest}
         className={cn(
           buttonSize({ size: 'sm' }),
           (ghostButton({ colorScheme: 'grayModern' }),

@@ -12,7 +12,7 @@ export class OpportunitiesPage {
   private sideNavItemOpportunities =
     'div[data-test="side-nav-item-opportunities"]';
   finderTableOpportunities = 'div[data-test="finder-table-OPPORTUNITIES"]';
-  private allOrgsSelectAllOrgs = 'button[data-test="all-orgs-select-all-orgs"]';
+  private allOrgsSelectAllOrgs = 'div[data-test="all-orgs-select-all-orgs"]';
   private opportunitiesActionsArchive = 'button[data-test="actions-archive"]';
   private orgActionsConfirmArchive =
     'div[data-test="org-actions-confirm-archive"]';

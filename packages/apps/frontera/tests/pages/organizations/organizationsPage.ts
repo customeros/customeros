@@ -17,8 +17,7 @@ export class OrganizationsPage {
 
   private sideNavItemAllOrgs = sideNavSelectors.sideNavItemAllOrgs;
   private sideNavItemCustomers = sideNavSelectors.sideNavItemCustomers;
-  private sideNavItemCustomersSelected =
-    sideNavSelectors.sideNavItemCustomersSelected;
+  private sideNavItemCustomersSelected = sideNavSelectors.sideNavItemCustomers;
   private finderTableOrganizations = '[data-test="finder-table-ORGANIZATIONS"]';
   allOrgsAddOrg = 'button[data-test="all-orgs-add-org"]';
   private createOrganizationFromTable =
