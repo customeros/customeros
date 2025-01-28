@@ -23,7 +23,6 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OrganizationGrpcServiceClient interface {
 	RefreshRenewalSummary(ctx context.Context, in *RefreshRenewalSummaryGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
-	RefreshArr(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	CreateBillingProfile(ctx context.Context, in *CreateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	UpdateBillingProfile(ctx context.Context, in *UpdateBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	LinkEmailToBillingProfile(ctx context.Context, in *LinkEmailToBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
@@ -43,15 +42,6 @@ func NewOrganizationGrpcServiceClient(cc grpc.ClientConnInterface) OrganizationG
 func (c *organizationGrpcServiceClient) RefreshRenewalSummary(ctx context.Context, in *RefreshRenewalSummaryGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
 	out := new(OrganizationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/RefreshRenewalSummary", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *organizationGrpcServiceClient) RefreshArr(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/RefreshArr", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +107,6 @@ func (c *organizationGrpcServiceClient) UnlinkLocationFromBillingProfile(ctx con
 // for forward compatibility
 type OrganizationGrpcServiceServer interface {
 	RefreshRenewalSummary(context.Context, *RefreshRenewalSummaryGrpcRequest) (*OrganizationIdGrpcResponse, error)
-	RefreshArr(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	CreateBillingProfile(context.Context, *CreateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	UpdateBillingProfile(context.Context, *UpdateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	LinkEmailToBillingProfile(context.Context, *LinkEmailToBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
@@ -132,9 +121,6 @@ type UnimplementedOrganizationGrpcServiceServer struct {
 
 func (UnimplementedOrganizationGrpcServiceServer) RefreshRenewalSummary(context.Context, *RefreshRenewalSummaryGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RefreshRenewalSummary not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) RefreshArr(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RefreshArr not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) CreateBillingProfile(context.Context, *CreateBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateBillingProfile not implemented")
@@ -180,24 +166,6 @@ func _OrganizationGrpcService_RefreshRenewalSummary_Handler(srv interface{}, ctx
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OrganizationGrpcServiceServer).RefreshRenewalSummary(ctx, req.(*RefreshRenewalSummaryGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OrganizationGrpcService_RefreshArr_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrganizationIdGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).RefreshArr(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/RefreshArr",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).RefreshArr(ctx, req.(*OrganizationIdGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -320,10 +288,6 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RefreshRenewalSummary",
 			Handler:    _OrganizationGrpcService_RefreshRenewalSummary_Handler,
-		},
-		{
-			MethodName: "RefreshArr",
-			Handler:    _OrganizationGrpcService_RefreshArr_Handler,
 		},
 		{
 			MethodName: "CreateBillingProfile",

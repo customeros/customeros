@@ -134,7 +134,6 @@ message BillingProfileIdGrpcResponse {
 
 service organizationGrpcService {
   rpc RefreshRenewalSummary(RefreshRenewalSummaryGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc RefreshArr(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc CreateBillingProfile(CreateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc UpdateBillingProfile(UpdateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc LinkEmailToBillingProfile(LinkEmailToBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);

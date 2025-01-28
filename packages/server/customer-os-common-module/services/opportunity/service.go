@@ -476,7 +476,7 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 						return nil
 					}
 				} else if amountChanged {
-					s.sendEventToUpdateOrganizationArr(ctx, tenant, opportunityId, span)
+					s.updateOrganizationArr(ctx, tenant, opportunityId, span)
 				}
 				if input.RenewedAt != nil {
 					ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -688,7 +688,7 @@ func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *ut
 					tracing.TraceErr(span, err)
 					s.log.Errorf("RefreshRenewalSummary failed: %v", err.Error())
 				}
-				s.sendEventToUpdateOrganizationArr(ctx, tenant, opportunityId, span)
+				s.updateOrganizationArr(ctx, tenant, opportunityId, span)
 			}
 
 			// clean external stage
@@ -833,7 +833,7 @@ func (s *opportunityService) RolloutRenewalOpportunity(ctx context.Context, cont
 	return nil
 }
 
-func (s *opportunityService) sendEventToUpdateOrganizationArr(ctx context.Context, tenant, opportunityId string, span opentracing.Span) {
+func (s *opportunityService) updateOrganizationArr(ctx context.Context, tenant, opportunityId string, span opentracing.Span) {
 	// if amount changed, recalculate organization combined ARR forecast
 	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
 	if err != nil {
@@ -846,16 +846,10 @@ func (s *opportunityService) sendEventToUpdateOrganizationArr(ctx context.Contex
 	}
 	organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return s.grpc.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         tenant,
-			OrganizationId: organization.ID,
-			AppSource:      common.GetAppSourceFromContext(ctx),
-		})
-	})
+	err = s.neo4j.OrganizationWriteRepository.UpdateArr(ctx, tenant, organization.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("RefreshArr failed: %v", err.Error())
+		s.log.Errorf("Error while updating ARR for organization %s: %s", organization.ID, err.Error())
 	}
+
 }
