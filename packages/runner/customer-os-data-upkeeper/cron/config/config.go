@@ -3,7 +3,7 @@ package cron_config
 type Config struct {
 	// Contracts
 	// Defaults to each 15 minutes
-	CronScheduleUpdateContract string `env:"CRON_SCHEDULE_UPDATE_CONTRACT" envDefault:"0/5 * * * * *"`
+	CronScheduleUpdateContract string `env:"CRON_SCHEDULE_UPDATE_CONTRACT" envDefault:"0 */15 * * * *"`
 
 	// Organizations
 	CronScheduleRefreshLastTouchpoint      string `env:"CRON_SCHEDULE_REFRESH_LAST_TOUCHPOINT" envDefault:"30 */1 * * * *"`
@@ -27,7 +27,7 @@ type Config struct {
 
 	// Invoices
 	// Defaults to 8:15am
-	CronScheduleGenerateInvoice string `env:"CRON_SCHEDULE_GENERATE_INVOICE" envDefault:"0/5 * * * * *"`
+	CronScheduleGenerateInvoice string `env:"CRON_SCHEDULE_GENERATE_INVOICE" envDefault:"0 15 8 * * *"`
 	// Defaults to each 9:15am and 3:15pm
 	CronScheduleGenerateOffCycleInvoice string `env:"CRON_SCHEDULE_GENERATE_OFF_CYCLE_INVOICE" envDefault:"0 30 9,15 * * *"`
 	// Defaults to each 10 min
