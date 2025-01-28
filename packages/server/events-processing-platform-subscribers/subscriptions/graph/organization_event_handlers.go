@@ -2,16 +2,12 @@ package graph
 
 import (
 	"context"
-	"time"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	eventsSrv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
@@ -25,7 +21,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/caches"
-	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/logger"
 )
@@ -115,80 +110,6 @@ func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context
 	h.events.Publisher.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
-}
-
-func (h *OrganizationEventHandler) OnRefreshRenewalSummaryV1(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshRenewalSummaryV1")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationRefreshRenewalSummaryEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-
-	openRenewalOpportunityDbNodes, err := h.neo4j.OpportunityReadRepository.GetActiveRenewalOpportunitiesForOrganization(ctx, eventData.Tenant, organizationId, false)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Failed to get open renewal opportunities for organization %s: %s", organizationId, err.Error())
-		return nil
-	}
-	var nextRenewalDate *time.Time
-	var lowestRenewalLikelihood *string
-	var renewalLikelihoodOrder int64
-	if len(openRenewalOpportunityDbNodes) > 0 {
-		opportunities := make([]neo4jentity.OpportunityEntity, len(openRenewalOpportunityDbNodes))
-		for _, opportunityDbNode := range openRenewalOpportunityDbNodes {
-			opportunities = append(opportunities, *neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode))
-		}
-		for _, opportunity := range opportunities {
-			if opportunity.RenewalDetails.RenewedAt != nil && opportunity.RenewalDetails.RenewedAt.After(utils.Now()) {
-				if nextRenewalDate == nil || opportunity.RenewalDetails.RenewedAt.Before(*nextRenewalDate) {
-					nextRenewalDate = opportunity.RenewalDetails.RenewedAt
-				}
-			}
-			if opportunity.RenewalDetails.RenewalLikelihood != "" {
-				order := getOrderForRenewalLikelihood(opportunity.RenewalDetails.RenewalLikelihood.String())
-				if renewalLikelihoodOrder == 0 || renewalLikelihoodOrder > order {
-					renewalLikelihoodOrder = order
-					lowestRenewalLikelihood = utils.ToPtr(opportunity.RenewalDetails.RenewalLikelihood.ToV2().String())
-				}
-			}
-		}
-	}
-
-	renewalLikelihoodOrderPtr := utils.ToPtr[int64](renewalLikelihoodOrder)
-	if renewalLikelihoodOrder == 0 {
-		renewalLikelihoodOrderPtr = nil
-	}
-
-	if err := h.neo4j.OrganizationWriteRepository.UpdateRenewalSummary(ctx, eventData.Tenant, organizationId, lowestRenewalLikelihood, renewalLikelihoodOrderPtr, nextRenewalDate); err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Failed to update arr for tenant %s, organization %s: %s", eventData.Tenant, organizationId, err.Error())
-	}
-
-	h.events.Publisher.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
-}
-
-func getOrderForRenewalLikelihood(likelihood string) int64 {
-	switch likelihood {
-	case string(neo4jenum.RenewalLikelihoodHigh):
-		return constants.RenewalLikelihood_Order_High
-	case string(neo4jenum.RenewalLikelihoodMedium):
-		return constants.RenewalLikelihood_Order_Medium
-	case string(neo4jenum.RenewalLikelihoodLow):
-		return constants.RenewalLikelihood_Order_Low
-	case string(neo4jenum.RenewalLikelihoodZero):
-		return constants.RenewalLikelihood_Order_Zero
-	default:
-		return 0
-	}
 }
 
 type ActionOnboardingStatusMetadata struct {

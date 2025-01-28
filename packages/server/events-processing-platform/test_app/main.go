@@ -39,7 +39,6 @@ func InitClients() {
 func main() {
 	InitClients()
 
-	//testRefreshRenewalSummary()
 	//PleasePayInvoiceNotification()
 	//testCreateInvoice()
 }
@@ -76,15 +75,4 @@ func PleasePayInvoiceNotification() {
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
 	}
-}
-
-func testRefreshRenewalSummary() {
-	result, err := clients.OrganizationClient.RefreshRenewalSummary(context.Background(), &organizationpb.RefreshRenewalSummaryGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: orgId,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
 }

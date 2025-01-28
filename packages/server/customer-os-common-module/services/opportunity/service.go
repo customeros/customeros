@@ -9,7 +9,6 @@ import (
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -42,7 +41,7 @@ type opportunityService struct {
 	neo4j          *neo4j_repository.Repositories
 	events         *events.EventsService
 	contract       interfaces.ContractService
-	org            interfaces.OrganizationService
+	organization   interfaces.OrganizationService
 	tenantSettings interfaces.TenantSettingsService
 }
 
@@ -53,7 +52,7 @@ func NewOpportunityService(log logger.Logger, grpc *grpc_client.Clients, neo4j *
 		neo4j:          neo4j,
 		events:         events,
 		contract:       contract,
-		org:            org,
+		organization:   org,
 		tenantSettings: tenantSettings,
 	}
 }
@@ -63,7 +62,7 @@ func (s *opportunityService) SetContractService(contract interfaces.ContractServ
 }
 
 func (s *opportunityService) SetOrganizationService(org interfaces.OrganizationService) {
-	s.org = org
+	s.organization = org
 }
 
 func (s *opportunityService) IsInitialized() bool {
@@ -425,17 +424,10 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 
 				// refresh organization renewal summary
 				if likelihoodChanged {
-					ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-					_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-						return s.grpc.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
-							Tenant:         tenant,
-							OrganizationId: organizationEntity.ID,
-							AppSource:      common.GetAppSourceFromContext(ctx),
-						})
-					})
+					err = s.organization.UpdateRenewalSummary(ctx, organizationEntity.ID)
 					if err != nil {
 						tracing.TraceErr(span, err)
-						s.log.Errorf("RefreshRenewalSummary failed: %v", err.Error())
+						s.log.Errorf("Error while updating renewal summary for organization %s: %s", organizationEntity.ID, err.Error())
 					}
 				}
 				// likelihood change action
@@ -479,17 +471,10 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 					s.updateOrganizationArr(ctx, tenant, opportunityId, span)
 				}
 				if input.RenewedAt != nil {
-					ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-					_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-						return s.grpc.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
-							Tenant:         tenant,
-							OrganizationId: organizationEntity.ID,
-							AppSource:      common.GetAppSourceFromContext(ctx),
-						})
-					})
+					err = s.organization.UpdateRenewalSummary(ctx, organizationEntity.ID)
 					if err != nil {
 						tracing.TraceErr(span, err)
-						s.log.Errorf("RefreshRenewalSummary failed: %v", err.Error())
+						s.log.Errorf("Error while updating renewal summary for organization %s: %s", organizationEntity.ID, err.Error())
 					}
 
 					err = s.contract.UpdateActiveRenewalOpportunityLikelihood(ctx, tenant, contractEntity.Id)
@@ -590,7 +575,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 				organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 				// Make organization customer if it's not already
 				if organizationEntity.Relationship != neo4jenum.OrganizationRelationshipCustomer && organizationEntity.Stage != neo4jenum.Trial {
-					_, err := s.org.Save(ctx, txWithPostCommit, &organizationEntity.ID, data_fields.OrganizationFields{
+					_, err := s.organization.Save(ctx, txWithPostCommit, &organizationEntity.ID, data_fields.OrganizationFields{
 						Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipCustomer),
 						Stage:        utils.ToPtr(neo4jenum.OrganizationRelationshipCustomer.DefaultStage()),
 					})
@@ -676,17 +661,10 @@ func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *ut
 
 			// update organization ARR if opportunity is renewal
 			if opportunityEntity.IsRenewal() {
-				ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-				_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-					return s.grpc.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
-						Tenant:         tenant,
-						OrganizationId: organizationEntity.ID,
-						AppSource:      common.GetAppSourceFromContext(ctx),
-					})
-				})
+				err = s.organization.UpdateRenewalSummary(ctx, organizationEntity.ID)
 				if err != nil {
 					tracing.TraceErr(span, err)
-					s.log.Errorf("RefreshRenewalSummary failed: %v", err.Error())
+					s.log.Errorf("Error while updating renewal summary for organization %s: %s", organizationEntity.ID, err.Error())
 				}
 				s.updateOrganizationArr(ctx, tenant, opportunityId, span)
 			}
@@ -707,7 +685,7 @@ func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *ut
 			// set organization stage to target if still engaged
 			if opportunityEntity.IsNBO() {
 				if organizationEntity.Relationship == neo4jenum.OrganizationRelationshipProspect && organizationEntity.Stage == neo4jenum.Engaged {
-					_, err = s.org.Save(ctx, nil, &organizationEntity.ID, data_fields.OrganizationFields{
+					_, err = s.organization.Save(ctx, nil, &organizationEntity.ID, data_fields.OrganizationFields{
 						Stage: utils.ToPtr(neo4jenum.Target),
 					})
 					if err != nil {

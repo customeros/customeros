@@ -15,7 +15,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/pkg/errors"
 	"time"
 )
@@ -155,16 +154,14 @@ func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context)
 
 		//process organizations
 		for _, record := range records {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return s.eventsProcessingClient.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
-					Tenant:         record.Tenant,
-					OrganizationId: record.OrganizationId,
-					AppSource:      constants.AppSourceDataUpkeeper,
-				})
+
+			localCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant: record.Tenant,
 			})
+
+			err = s.commonServices.OrganizationService.UpdateRenewalSummary(localCtx, record.OrganizationId)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				s.log.Errorf("Error refreshing renewal summary for organization {%s}: %s", record.OrganizationId, err.Error())
 			}
 		}
 
