@@ -12,7 +12,7 @@ type SlackSettingsEntity struct {
 	UpdatedAt    time.Time `gorm:"column:updated_at;type:timestamp;DEFAULT:current_timestamp" json:"updatedAt"`
 	AppId        string    `gorm:"size:255;"`
 	AuthedUserId string    `gorm:"size:255;"`
-	Scope        string    `gorm:"size:255;"`
+	Scope        string    `gorm:"type:text;"`
 	TokenType    string    `gorm:"size:255;"`
 	AccessToken  string    `gorm:"size:255;"`
 	BotUserId    string    `gorm:"size:255;"`
