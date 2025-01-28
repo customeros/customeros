@@ -42,7 +42,7 @@ type SendWebVisitorSlackNotificationConfig struct {
 	CooldownHours SlackCooldownHoursConfig `json:"cooldownHours"`
 }
 type SlackCooldownHoursConfig struct {
-	Value int    `json:"value"`
+	Value int64  `json:"value"`
 	Error string `json:"error"`
 }
 
@@ -166,11 +166,11 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 	return result, nil
 }
 
-func (c *SendWebVisitorSlackNotificationCapability) skipNotification(ctx context.Context, domain string, cooldownInHrs int) (bool, error) {
+func (c *SendWebVisitorSlackNotificationCapability) skipNotification(ctx context.Context, domain string, cooldownInHrs int64) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendWebVisitorSlackNotificationCapability.skipNotification")
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	defer span.Finish()
-	span.LogFields(log.String("domain", domain), log.Int("cooldownInHrs", cooldownInHrs))
+	span.LogFields(log.String("domain", domain), log.Int64("cooldownInHrs", cooldownInHrs))
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {

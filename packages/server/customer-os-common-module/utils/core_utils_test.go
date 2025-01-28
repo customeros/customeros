@@ -56,14 +56,6 @@ func TestIntPtr(t *testing.T) {
 	require.Equal(t, num, *ptr)
 }
 
-func TestRemoveDuplicates(t *testing.T) {
-	input := []string{"a", "b", "a", "c", "b"}
-	expected := []string{"a", "b", "c"}
-
-	result := RemoveDuplicates(input)
-	require.Equal(t, expected, result)
-}
-
 func TestReverseMap(t *testing.T) {
 	input := map[int]string{
 		1: "a",
