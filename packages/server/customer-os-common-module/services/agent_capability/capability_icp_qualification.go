@@ -3,6 +3,8 @@ package agent_capability
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -63,6 +65,16 @@ func (c *ICPQualificationCapability) Execute(ctx context.Context, data ICPQualif
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.executeICPQualification")
 	defer span.Finish()
 	tracing.TagComponentService(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+
+	if err := c.ValidateInput(data); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		return ICPQualificationResult{}, err
+	}
+	if err := c.ValidateConfig(config); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		return ICPQualificationResult{}, err
+	}
 
 	// get ICP definition
 

@@ -6,7 +6,6 @@ import (
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
-	"github.com/customeros/customeros/packages/server/events/eventbuffer"
 )
 
 type Container struct {
@@ -15,5 +14,4 @@ type Container struct {
 	Repositories                  *repository.Repositories
 	CommonServices                *commonService.CommonServices
 	EventProcessingServicesClient *grpc_client.Clients
-	EventBufferStoreService       *eventbuffer.EventBufferStoreService
 }

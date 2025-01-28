@@ -3,8 +3,10 @@ package agent_capability
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -62,16 +64,19 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateO
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateOrganizationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.LogObjectAsJson(span, "input", data)
+	tracing.LogObjectAsJson(span, "config", config)
 
-	results := CreateOrganizationResult{}
+	result := CreateOrganizationResult{}
 
 	if err := c.ValidateInput(data); err != nil {
-		tracing.TraceErr(span, err)
-		return results, err
+		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		return result, err
 	}
 	if err := c.ValidateConfig(config); err != nil {
-		tracing.TraceErr(span, err)
-		return results, err
+		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		return result, err
 	}
 
 	orgID, err := c.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
@@ -79,12 +84,13 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateO
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return results, err
+		return result, err
 	}
 
-	results.OrganizationID = orgID
+	result.OrganizationID = orgID
 
-	return results, nil
+	tracing.LogObjectAsJson(span, "result", result)
+	return result, nil
 }
 
 // ExecuteUntyped implements the AgentCapabilityUntyped interface.

@@ -2,9 +2,9 @@ package agent_capability
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/pkg/errors"
 	"sort"
 	"strings"
 
@@ -92,18 +92,21 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeW
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.LogObjectAsJson(span, "input", data)
+	tracing.LogObjectAsJson(span, "config", config)
 
 	if err := c.ValidateConfig(config); err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
 		return AnalyzeWebSessionResult{}, err
 	}
 	if err := c.ValidateInput(data); err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
 		return AnalyzeWebSessionResult{}, err
 	}
 
 	// analyze session
-	results, err := c.sessionAnalytics(ctx, data.SessionID)
+	result, err := c.sessionAnalytics(ctx, data.SessionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return AnalyzeWebSessionResult{}, err
@@ -115,7 +118,7 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeW
 		tracing.TraceErr(span, err)
 		return AnalyzeWebSessionResult{}, err
 	}
-	results.IsNewCompanyVisit = isNewCompany
+	result.IsNewCompanyVisit = isNewCompany
 
 	// determene if a new person visit
 	isNewVisitor, err := c.isNewWebsiteVisitor(ctx, data.VisitorID)
@@ -123,23 +126,24 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeW
 		tracing.TraceErr(span, err)
 		return AnalyzeWebSessionResult{}, err
 	}
-	results.IsNewPersonVisit = isNewVisitor
+	result.IsNewPersonVisit = isNewVisitor
 
 	// build timeline event
-	timelineMessage, err := c.buildTimelineMessage(ctx, data.SessionID, results)
+	timelineMessage, err := c.buildTimelineMessage(ctx, data.SessionID, result)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return results, err
+		return result, err
 	}
 
 	// write event to timeline
 	err = c.writeSessionToTimeline(ctx, data.OrganizationID, timelineMessage)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return results, err
+		return result, err
 	}
 
-	return results, nil
+	tracing.LogObjectAsJson(span, "result", result)
+	return result, nil
 }
 
 func (c *AnalyzeWebSessionCapability) writeSessionToTimeline(ctx context.Context, orgID, timelineMessage string) error {
@@ -272,7 +276,7 @@ func (c *AnalyzeWebSessionCapability) isNewCompanyVisit(ctx context.Context, dom
 }
 
 func (c *AnalyzeWebSessionCapability) isNewWebsiteVisitor(ctx context.Context, visitorId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.isNewCompanyVisit")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.isNewWebsiteVisitor")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 

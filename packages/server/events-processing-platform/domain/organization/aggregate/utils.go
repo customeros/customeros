@@ -28,20 +28,3 @@ func LoadOrganizationAggregate(ctx context.Context, eventStore eventstore.Aggreg
 
 	return organizationAggregate, nil
 }
-
-func LoadOrganizationTempAggregate(ctx context.Context, eventStore eventstore.AggregateStore, tenant, objectID string, opts eventstore.LoadAggregateOptions) (*OrganizationTempAggregate, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "LoadOrganizationTempAggregate")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("ObjectID", objectID))
-
-	organizationTempAggregate := NewOrganizationTempAggregateWithTenantAndID(tenant, objectID)
-
-	err := eventstore.LoadAggregate(ctx, eventStore, organizationTempAggregate, opts)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return organizationTempAggregate, nil
-}

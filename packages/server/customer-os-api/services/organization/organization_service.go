@@ -3,8 +3,6 @@ package api_organization
 import (
 	"context"
 	"fmt"
-	"reflect"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -17,14 +15,13 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"reflect"
 
-	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/repository"
@@ -525,34 +522,16 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 	// Update last touchpoint
 	s.UpdateLastTouchpoint(ctx, primaryOrganizationId)
 
-	// Refresh forecast ARR
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return s.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			OrganizationId: primaryOrganizationId,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			AppSource:      constants.AppSourceCustomerOsApi,
-		})
-	})
+	err = s.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateArr(ctx, tenant, primaryOrganizationId)
 	if err != nil {
-		s.log.Errorf("error sending event to events-platform: {%s}", err.Error())
-		tracing.TraceErr(span, err, log.String("grpcMethod", "RefreshArr"))
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while updating ARR for organization %s: %s", primaryOrganizationId, err.Error())
 	}
 
-	// Refresh renewal likelihood
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return s.grpcClients.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			OrganizationId: primaryOrganizationId,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			AppSource:      constants.AppSourceCustomerOsApi,
-		})
-	})
+	err = s.organization.UpdateRenewalSummary(ctx, primaryOrganizationId)
 	if err != nil {
-		s.log.Errorf("error sending event to events-platform: {%s}", err.Error())
-		tracing.TraceErr(span, err, log.String("grpcMethod", "RefreshRenewalSummary"))
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while updating renewal summary for organization %s: %s", primaryOrganizationId, err.Error())
 	}
 
 	return err

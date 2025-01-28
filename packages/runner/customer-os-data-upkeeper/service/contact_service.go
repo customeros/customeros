@@ -21,7 +21,6 @@ import (
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/customeros/customeros/packages/server/events/eventbuffer"
 	"github.com/customeros/mailsherpa/emailparser"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
@@ -62,18 +61,16 @@ type ContactService interface {
 }
 
 type contactService struct {
-	cfg                *config.Config
-	log                logger.Logger
-	commonServices     *commonService.CommonServices
-	eventBufferService *eventbuffer.EventBufferStoreService
+	cfg            *config.Config
+	log            logger.Logger
+	commonServices *commonService.CommonServices
 }
 
-func NewContactService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices, eventBufferService *eventbuffer.EventBufferStoreService) ContactService {
+func NewContactService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices) ContactService {
 	return &contactService{
-		cfg:                cfg,
-		log:                log,
-		commonServices:     commonServices,
-		eventBufferService: eventBufferService,
+		cfg:            cfg,
+		log:            log,
+		commonServices: commonServices,
 	}
 }
 

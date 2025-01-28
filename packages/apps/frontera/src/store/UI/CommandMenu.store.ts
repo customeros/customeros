@@ -61,7 +61,9 @@ export type CommandMenuType =
   | 'ConfirmEmailContentChanges'
   | 'AddContactsBulk'
   | 'ContactBulkCommands'
-  | 'EditLatestOrgActive';
+  | 'EditLatestOrgActive'
+  | 'EditSku'
+  | 'AddNewSku';
 
 export type Context = {
   ids: Array<string>;

@@ -1,0 +1,100 @@
+import { RootStore } from '@store/root.ts';
+import { SkuService } from '@domain/services';
+import { action, computed, observable } from 'mobx';
+
+import { SkuType } from '@graphql/types';
+
+export class EditSkuUsecase {
+  private root = RootStore.getInstance();
+  private service = new SkuService();
+  @observable accessor productName: string = '';
+  @observable accessor price: number | undefined = undefined;
+  @observable accessor errors = {
+    productName: '',
+    price: '',
+  };
+  private skuId: string;
+
+  constructor(skuId: string) {
+    this.skuId = skuId;
+    this.editProductName = this.editProductName.bind(this);
+    this.editPrice = this.editPrice.bind(this);
+  }
+
+  @computed
+  get sku() {
+    if (!this.skuId) return;
+
+    return this.root.skus.getById(this.skuId);
+  }
+
+  @action
+  resetError() {
+    this.errors = {
+      productName: '',
+      price: '',
+    };
+  }
+
+  @action
+  reset() {
+    this.resetError();
+
+    this.productName = '';
+    this.price = 0;
+  }
+
+  @action
+  editProductName(name: string) {
+    this.productName = name;
+  }
+
+  @action
+  setInitial() {
+    this.price = this.sku?.value?.price ?? undefined;
+    this.productName = this.sku?.value?.name ?? '';
+  }
+
+  @action
+  editPrice(price: string) {
+    const parsedValue = parseFloat(price);
+
+    this.price = parsedValue;
+  }
+
+  @action
+  validate() {
+    if (!this.price) {
+      this.errors.price = 'Please enter a product price';
+    }
+
+    if (typeof this.price !== 'number') {
+      this.errors.price = 'Please enter a product price';
+
+      return;
+    }
+
+    if (!this.productName.trim().length) {
+      this.errors.productName = 'Please enter a product name';
+    }
+  }
+
+  @action
+  async editSku() {
+    if (typeof this.price !== 'number') {
+      return;
+    }
+    const [res, _err] = await this.service.editSku({
+      id: this.skuId,
+      type: this.sku?.value.type ?? SkuType.Subscription,
+      name: this.productName,
+      price: this.price,
+    });
+
+    if (res) {
+      this.reset();
+      this.root.ui.commandMenu.setOpen(false);
+      this.root.ui.commandMenu.clearContext();
+    }
+  }
+}

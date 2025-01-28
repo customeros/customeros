@@ -1409,6 +1409,79 @@ func (s *organizationService) UpdateDerivedData(ctx context.Context, organizatio
 	return nil
 }
 
+func (s *organizationService) UpdateRenewalSummary(ctx context.Context, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.UpdateRenewalSummary")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, organizationId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	openRenewalOpportunityDbNodes, err := s.neo4j.OpportunityReadRepository.GetActiveRenewalOpportunitiesForOrganization(ctx, tenant, organizationId, false)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	var nextRenewalDate *time.Time
+	var lowestRenewalLikelihood *string
+	var renewalLikelihoodOrder int64
+	if len(openRenewalOpportunityDbNodes) > 0 {
+		opportunities := make([]neo4jentity.OpportunityEntity, len(openRenewalOpportunityDbNodes))
+		for _, opportunityDbNode := range openRenewalOpportunityDbNodes {
+			opportunities = append(opportunities, *neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode))
+		}
+		for _, opportunity := range opportunities {
+			if opportunity.RenewalDetails.RenewedAt != nil && opportunity.RenewalDetails.RenewedAt.After(utils.Now()) {
+				if nextRenewalDate == nil || opportunity.RenewalDetails.RenewedAt.Before(*nextRenewalDate) {
+					nextRenewalDate = opportunity.RenewalDetails.RenewedAt
+				}
+			}
+			if opportunity.RenewalDetails.RenewalLikelihood != "" {
+				order := getOrderForRenewalLikelihood(opportunity.RenewalDetails.RenewalLikelihood.String())
+				if renewalLikelihoodOrder == 0 || renewalLikelihoodOrder > order {
+					renewalLikelihoodOrder = order
+					lowestRenewalLikelihood = utils.ToPtr(opportunity.RenewalDetails.RenewalLikelihood.ToV2().String())
+				}
+			}
+		}
+	}
+
+	renewalLikelihoodOrderPtr := utils.ToPtr[int64](renewalLikelihoodOrder)
+	if renewalLikelihoodOrder == 0 {
+		renewalLikelihoodOrderPtr = nil
+	}
+
+	if err := s.neo4j.OrganizationWriteRepository.UpdateRenewalSummary(ctx, tenant, organizationId, lowestRenewalLikelihood, renewalLikelihoodOrderPtr, nextRenewalDate); err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+
+	return nil
+}
+
+func getOrderForRenewalLikelihood(likelihood string) int64 {
+	switch likelihood {
+	case string(neo4jenum.RenewalLikelihoodHigh):
+		return 40
+	case string(neo4jenum.RenewalLikelihoodMedium):
+		return 30
+	case string(neo4jenum.RenewalLikelihoodLow):
+		return 20
+	case string(neo4jenum.RenewalLikelihoodZero):
+		return 10
+	default:
+		return 0
+	}
+}
+
 func (s *organizationService) calculateChurnedDate(ctx context.Context, organizationEntity *neo4jentity.OrganizationEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.calculateChurnedDate")
 	defer span.Finish()

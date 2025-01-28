@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	eventstorepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
 	"log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client/interceptor"
@@ -22,7 +21,6 @@ var orgId = "ceae019f-d1e3-49b3-87c5-35ebb68a5ff1"
 type Clients struct {
 	OrganizationClient organizationpb.OrganizationGrpcServiceClient
 	InvoiceClient      invoicepb.InvoiceGrpcServiceClient
-	EventStoreClient   eventstorepb.EventStoreGrpcServiceClient
 }
 
 var clients *Clients
@@ -35,14 +33,12 @@ func InitClients() {
 	clients = &Clients{
 		OrganizationClient: organizationpb.NewOrganizationGrpcServiceClient(conn),
 		InvoiceClient:      invoicepb.NewInvoiceGrpcServiceClient(conn),
-		EventStoreClient:   eventstorepb.NewEventStoreGrpcServiceClient(conn),
 	}
 }
 
 func main() {
 	InitClients()
 
-	//testRefreshRenewalSummary()
 	//PleasePayInvoiceNotification()
 	//testCreateInvoice()
 }
@@ -79,15 +75,4 @@ func PleasePayInvoiceNotification() {
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())
 	}
-}
-
-func testRefreshRenewalSummary() {
-	result, err := clients.OrganizationClient.RefreshRenewalSummary(context.Background(), &organizationpb.RefreshRenewalSummaryGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: orgId,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
 }

@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/mailsherpa/domaincheck"
@@ -18,7 +19,28 @@ type IdentifyWebsiteVisitorCapability struct {
 	enrichmentService    interfaces.EnrichmentService
 }
 
-func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(config NoConfig) error {
+type IdentifyWebsiteVisitorInput struct {
+	SessionID string `json:"sessionId"`
+	IPAddress string `json:"ipAddress"`
+	VisitorID string `json:"visitorId"`
+	Website   string `json:"website"`
+}
+
+type IdentifyWebsiteVisitorResult struct {
+	Domain       string `json:"domain"`
+	LinkedInSlug string `json:"linkedinSlug"`
+}
+
+type IdentifyWebsiteVisitorConfig struct {
+	Websites WebsitesConfig `json:"websites"`
+}
+
+type WebsitesConfig struct {
+	Value []string `json:"value"`
+	Error string   `json:"error"`
+}
+
+func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(config IdentifyWebsiteVisitorConfig) error {
 	return nil
 }
 
@@ -40,7 +62,7 @@ func (c *IdentifyWebsiteVisitorCapability) GetInput() any {
 }
 
 func (c *IdentifyWebsiteVisitorCapability) GetConfig() any {
-	return &NoConfig{}
+	return &IdentifyWebsiteVisitorConfig{}
 }
 
 func (c *IdentifyWebsiteVisitorCapability) GetOutput() any {
@@ -59,56 +81,49 @@ func NewIdentifyWebsiteVisitorCapability(
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapabilityExecution[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorResult, NoConfig] = (*IdentifyWebsiteVisitorCapability)(nil)
-	_ interfaces.AgentCapabilityUntyped                                                                        = (*IdentifyWebsiteVisitorCapability)(nil)
+	_ interfaces.AgentCapabilityExecution[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorResult, IdentifyWebsiteVisitorConfig] = (*IdentifyWebsiteVisitorCapability)(nil)
+	_ interfaces.AgentCapabilityUntyped                                                                                            = (*IdentifyWebsiteVisitorCapability)(nil)
 )
 
-type IdentifyWebsiteVisitorInput struct {
-	SessionID string `json:"sessionId"`
-	IPAddress string `json:"ipAddress"`
-	VisitorID string `json:"visitorId"`
-}
-
-type IdentifyWebsiteVisitorResult struct {
-	Domain       string `json:"domain"`
-	LinkedInSlug string `json:"linkedinSlug"`
-}
-
-func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data IdentifyWebsiteVisitorInput, config NoConfig) (IdentifyWebsiteVisitorResult, error) {
+func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data IdentifyWebsiteVisitorInput, config IdentifyWebsiteVisitorConfig) (IdentifyWebsiteVisitorResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.LogObjectAsJson(span, "input", data)
+	tracing.LogObjectAsJson(span, "config", config)
 
-	results := IdentifyWebsiteVisitorResult{}
+	result := IdentifyWebsiteVisitorResult{}
 
 	if err := c.ValidateInput(data); err != nil {
-		tracing.TraceErr(span, err)
-		return results, err
+		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		return result, err
 	}
 	if err := c.ValidateConfig(config); err != nil {
-		tracing.TraceErr(span, err)
-		return results, err
+		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		return result, err
 	}
 
 	domain, linkedInSlug, err := c.identifyIP(ctx, data.IPAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return results, err
+		return result, err
 	}
 	span.LogKV("domain", domain)
 
-	results.Domain = domain
-	results.LinkedInSlug = linkedInSlug
+	result.Domain = domain
+	result.LinkedInSlug = linkedInSlug
 
 	if domain != "" {
 		_, err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithDomain(ctx, data.SessionID, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return results, err
+			return result, err
 		}
 	}
 
-	return results, nil
+	tracing.LogObjectAsJson(span, "result", result)
+	return result, nil
 }
 
 func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug string, err error) {
@@ -142,9 +157,9 @@ func (c *IdentifyWebsiteVisitorCapability) ExecuteUntyped(ctx context.Context, i
 		return nil, fmt.Errorf("invalid input type: expected AnalyzeWebSessionInput")
 	}
 
-	typedConfig, ok := config.(*NoConfig)
+	typedConfig, ok := config.(*IdentifyWebsiteVisitorConfig)
 	if !ok || typedConfig == nil {
-		return nil, fmt.Errorf("invalid config type: expected NoCOnfig")
+		return nil, fmt.Errorf("invalid config type: expected IdentifyWebsiteVisitorConfig")
 	}
 
 	return c.Execute(ctx, *typedInput, *typedConfig)

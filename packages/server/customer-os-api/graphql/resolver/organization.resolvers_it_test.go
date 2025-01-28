@@ -1200,20 +1200,6 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 //
 //	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
 //
-//	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-//		RefreshArr: func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-//			return &organizationpb.OrganizationIdGrpcResponse{
-//				Id: parentOrgId,
-//			}, nil
-//		},
-//		RefreshRenewalSummary: func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-//			return &organizationpb.OrganizationIdGrpcResponse{
-//				Id: parentOrgId,
-//			}, nil
-//		},
-//	}
-//	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
-//
 //	rawResponse, err := c.RawPost(getQuery("organization/merge_organizations"),
 //		client.Var("parentOrganizationId", parentOrgId),
 //		client.Var("mergedOrganizationId1", mergedOrgId1),

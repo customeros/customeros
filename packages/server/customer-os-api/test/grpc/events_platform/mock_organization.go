@@ -7,8 +7,6 @@ import (
 )
 
 type MockOrganizationServiceCallbacks struct {
-	RefreshArr                       func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	RefreshRenewalSummary            func(ctx context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	CreateBillingProfile             func(ctx context.Context, proto *organizationpb.CreateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
 	UpdateBillingProfile             func(ctx context.Context, proto *organizationpb.UpdateBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
 	LinkEmailToBillingProfile        func(ctx context.Context, proto *organizationpb.LinkEmailToBillingProfileGrpcRequest) (*organizationpb.BillingProfileIdGrpcResponse, error)
@@ -67,17 +65,4 @@ func (MockOrganizationService) UnlinkLocationFromBillingProfile(context context.
 		panic("organizationCallbacks.UnlinkLocationFromBillingProfile is not set")
 	}
 	return organizationCallbacks.UnlinkLocationFromBillingProfile(context, proto)
-}
-func (MockOrganizationService) RefreshArr(context context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	if organizationCallbacks.RefreshArr == nil {
-		panic("organizationCallbacks.RefreshArr is not set")
-	}
-	return organizationCallbacks.RefreshArr(context, proto)
-}
-
-func (MockOrganizationService) RefreshRenewalSummary(context context.Context, proto *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	if organizationCallbacks.RefreshRenewalSummary == nil {
-		panic("organizationCallbacks.RefreshRenewalSummary is not set")
-	}
-	return organizationCallbacks.RefreshRenewalSummary(context, proto)
 }

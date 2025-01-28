@@ -13,20 +13,6 @@ enum BillingProfileFieldMask {
   BILLING_PROFILE_PROPERTY_TAX_ID = 3;
 }
 
-message OrganizationIdGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string loggedInUserId = 3;
-  string appSource = 4;
-}
-
-message RefreshRenewalSummaryGrpcRequest {
-  string tenant = 1;
-  string organizationId = 2;
-  string loggedInUserId = 3;
-  string appSource = 4;
-}
-
 message LinkEmailToBillingProfileGrpcRequest {
   string tenant = 1;
   string organizationId = 2;
@@ -133,8 +119,6 @@ message BillingProfileIdGrpcResponse {
 }
 
 service organizationGrpcService {
-  rpc RefreshRenewalSummary(RefreshRenewalSummaryGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc RefreshArr(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc CreateBillingProfile(CreateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc UpdateBillingProfile(UpdateBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc LinkEmailToBillingProfile(LinkEmailToBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);

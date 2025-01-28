@@ -6,7 +6,6 @@ import (
 	"github.com/customeros/customeros/packages/server/events/event/common"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/command"
 	localerror "github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/errors"
 	organizationEvents "github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/tracing"
@@ -33,19 +32,6 @@ func (a *OrganizationAggregate) HandleRequest(ctx context.Context, request any) 
 		return nil, a.LinkLocationToBillingProfile(ctx, r)
 	case *organizationpb.UnlinkLocationFromBillingProfileGrpcRequest:
 		return nil, a.UnlinkLocationFromBillingProfile(ctx, r)
-	default:
-		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
-		return nil, eventstore.ErrInvalidRequestType
-	}
-}
-
-func (a *OrganizationTempAggregate) HandleRequest(ctx context.Context, request any) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationTempAggregate.HandleRequest")
-	defer span.Finish()
-
-	switch r := request.(type) {
-	case *organizationpb.RefreshRenewalSummaryGrpcRequest:
-		return nil, a.refreshRenewalSummary(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -199,20 +185,6 @@ func (a *OrganizationAggregate) UnlinkLocationFromBillingProfile(ctx context.Con
 	return a.Apply(event)
 }
 
-func (a *OrganizationTempAggregate) HandleCommand(ctx context.Context, cmd eventstore.Command) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationTempAggregate.HandleCommand")
-	defer span.Finish()
-
-	switch c := cmd.(type) {
-	case *command.RefreshArrCommand:
-		return a.refreshArr(ctx, c)
-
-	default:
-		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
-		return eventstore.ErrInvalidCommandType
-	}
-}
-
 func (a *OrganizationAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, phoneNumberId, userId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.SetPhoneNumberNonPrimary")
 	defer span.Finish()
@@ -238,51 +210,4 @@ func (a *OrganizationAggregate) SetPhoneNumberNonPrimary(ctx context.Context, te
 		return a.Apply(event)
 	}
 	return nil
-}
-
-func (a *OrganizationTempAggregate) refreshArr(ctx context.Context, cmd *command.RefreshArrCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.refreshArr")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	event, err := organizationEvents.NewOrganizationRefreshArrEvent(a)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationRefreshArrEvent")
-	}
-
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: a.GetTenant(),
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.AppSource,
-	})
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationTempAggregate) refreshRenewalSummary(ctx context.Context, request *organizationpb.RefreshRenewalSummaryGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.refreshRenewalSummary")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	event, err := organizationEvents.NewOrganizationRefreshRenewalSummaryEvent(a)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationRefreshRenewalSummaryEvent")
-	}
-
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: a.GetTenant(),
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	return a.Apply(event)
 }

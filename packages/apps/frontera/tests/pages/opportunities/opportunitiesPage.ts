@@ -11,13 +11,19 @@ export class OpportunitiesPage {
 
   private sideNavItemOpportunities =
     'div[data-test="side-nav-item-opportunities"]';
+  finderTableOpportunities = 'div[data-test="finder-table-OPPORTUNITIES"]';
   private allOrgsSelectAllOrgs = 'button[data-test="all-orgs-select-all-orgs"]';
   private opportunitiesActionsArchive = 'button[data-test="actions-archive"]';
   private orgActionsConfirmArchive =
-    'button[data-test="org-actions-confirm-archive"]';
+    'div[data-test="org-actions-confirm-archive"]';
+  private prospectsListButton = 'button[data-test="prospects-list-button"]';
 
-  async goToOpportunities() {
-    await clickLocatorsThatAreVisible(this.page, this.sideNavItemOpportunities);
+  async goToOpportunitiesList() {
+    await clickLocatorsThatAreVisible(
+      this.page,
+      this.sideNavItemOpportunities,
+      this.prospectsListButton,
+    );
   }
 
   async selectAllOpportunities() {
@@ -25,40 +31,7 @@ export class OpportunitiesPage {
       this.allOrgsSelectAllOrgs,
     );
 
-    try {
-      await opportunitiesSelectAllOpportunities.waitFor({
-        state: 'visible',
-        timeout: 2000,
-      });
-
-      const isVisible = await opportunitiesSelectAllOpportunities.isVisible();
-
-      if (isVisible) {
-        await opportunitiesSelectAllOpportunities.click();
-
-        // Wait for a short time to allow for any asynchronous updates
-        await this.page.waitForTimeout(100);
-
-        // Check if the button is checked after clicking
-        return (
-          (await opportunitiesSelectAllOpportunities.getAttribute(
-            'aria-checked',
-          )) === 'true' ||
-          (await opportunitiesSelectAllOpportunities.getAttribute(
-            'data-state',
-          )) === 'checked'
-        );
-      }
-    } catch (error) {
-      if (error.name === 'TimeoutError') {
-        // Silently return false if the element is not found
-        return false;
-      }
-      // Re-throw any other errors
-      throw error;
-    }
-
-    return false;
+    await opportunitiesSelectAllOpportunities.click();
   }
 
   async archiveOrgs() {

@@ -2,7 +2,6 @@ package agent_capability
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -10,6 +9,7 @@ import (
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
@@ -34,11 +34,16 @@ type SendWebVisitorSlackNotificationInput struct {
 
 type SendWebVisitorSlackNotificationResult struct {
 	Success bool `json:"success"`
+	Skipped bool `json:"skipped"`
 }
 
 type SendWebVisitorSlackNotificationConfig struct {
-	ChannelID     string `json:"channelId"`
-	CooldownHours int    `json:"cooldownHours"`
+	ChannelID     SlackChannelIdConfig     `json:"channelId"`
+	CooldownHours SlackCooldownHoursConfig `json:"cooldownHours"`
+}
+type SlackCooldownHoursConfig struct {
+	Value int    `json:"value"`
+	Error string `json:"error"`
 }
 
 func NewSendWebVisitorSlackNotificationCapability(postgresRepositories *postgres_repository.Repositories,
@@ -60,10 +65,10 @@ var (
 )
 
 func (c *SendWebVisitorSlackNotificationCapability) ValidateConfig(config SendWebVisitorSlackNotificationConfig) error {
-	if config.ChannelID == "" {
+	if config.ChannelID.Value == "" {
 		return errors.New("ChannelID must be set")
 	}
-	if config.CooldownHours < 0 {
+	if config.CooldownHours.Value < 0 {
 		return errors.New("CooldownHours must be greater than or equal to 0")
 	}
 	return nil
@@ -95,17 +100,21 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendWebVisitorSlackNotificationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.LogObjectAsJson(span, "input", data)
+	tracing.LogObjectAsJson(span, "config", config)
 
 	result := SendWebVisitorSlackNotificationResult{
 		Success: false,
+		Skipped: false,
 	}
 
 	if err := c.ValidateInput(data); err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
 		return result, err
 	}
 	if err := c.ValidateConfig(config); err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
 		return result, err
 	}
 
@@ -122,12 +131,14 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 	span.LogKV("result.slackChannel", slackChannel.ChannelId)
 
 	// check if notification should be suppressed
-	skip, err := c.skipNotification(ctx, data.Domain, config.CooldownHours)
+	skip, err := c.skipNotification(ctx, data.Domain, config.CooldownHours.Value)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return result, err
 	}
 	if skip {
+		result.Success = true
+		result.Skipped = true
 		return result, nil
 	}
 
@@ -142,14 +153,16 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		return result, err
 	}
 
-	sendResult, err := c.sendSlackNotificationCapability.Execute(ctx, SendSlackNotificationInput{Message: message}, SendSlackNotificationConfig{ChannelID: config.ChannelID})
+	sendResult, err := c.sendSlackNotificationCapability.Execute(ctx, SendSlackNotificationInput{Message: message}, SendSlackNotificationConfig{ChannelID: SlackChannelIdConfig{
+		Value: config.ChannelID.Value,
+	}})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		result.Success = false
 		return result, err
 	}
 
 	result.Success = sendResult.Success
+	tracing.LogObjectAsJson(span, "result", result)
 	return result, nil
 }
 
@@ -203,7 +216,14 @@ func (c *SendWebVisitorSlackNotificationCapability) isWorkspaceDomain(ctx contex
 	defer span.Finish()
 
 	workspaceDomains, err := c.workspaceService.GetWorkspaceDomainsForTenant(ctx)
+	tracing.LogObjectAsJson(span, "workspaceDomains", workspaceDomains)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		return false
+	}
+
+	if len(workspaceDomains) == 0 {
+		err := errors.New("no workspace domains found for tenant")
 		tracing.TraceErr(span, err)
 		return false
 	}

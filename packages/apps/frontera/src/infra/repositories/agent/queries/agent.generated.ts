@@ -10,7 +10,6 @@ export type AgentQuery = {
     __typename?: 'Agent';
     id: string;
     type: Types.AgentType;
-    tenant: string;
     name: string;
     goal: string;
     isActive: boolean;
@@ -27,8 +26,6 @@ export type AgentQuery = {
       type: Types.CapabilityType;
       name: string;
       action: string;
-      optional: boolean;
-      values: string;
       errors?: string | null;
     }>;
   } | null;

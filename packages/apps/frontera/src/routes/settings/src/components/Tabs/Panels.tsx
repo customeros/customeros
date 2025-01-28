@@ -1,6 +1,7 @@
 import { AuthPanel } from './panels/AuthPanel';
 import { General } from './panels/Workspace/General';
 import { BillingPanel } from './panels/BillingPanel';
+import { Products } from './panels/Workspace/Products';
 import { Mailboxes } from './panels/Workspace/Mailboxes';
 import { ApiManager } from './panels/Workspace/ApiManager';
 import { TagsManager } from './panels/Workspace/TagsManager';
@@ -31,6 +32,8 @@ export const Panels = ({ tab }: PanelsProps) => {
     //   return <ContactFields />;
     case 'mailboxes':
       return <Mailboxes />;
+    case 'products':
+      return <Products />;
 
     default:
       return <AuthPanel />;

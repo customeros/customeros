@@ -11,7 +11,6 @@ import (
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -31,22 +30,22 @@ import (
 )
 
 type contractService struct {
-	log         logger.Logger
-	neo4j       *neoRepo.Repositories
-	events      *events.EventsService
-	grpc        *grpc_client.Clients
-	opportunity interfaces.OpportunityService
-	org         interfaces.OrganizationService
+	log          logger.Logger
+	neo4j        *neoRepo.Repositories
+	events       *events.EventsService
+	grpc         *grpc_client.Clients
+	opportunity  interfaces.OpportunityService
+	organization interfaces.OrganizationService
 }
 
 func NewContractService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService, grpc *grpc_client.Clients, opportunity interfaces.OpportunityService, org interfaces.OrganizationService) interfaces.ContractService {
 	return &contractService{
-		log:         log,
-		neo4j:       neo4j,
-		events:      events,
-		grpc:        grpc,
-		opportunity: opportunity,
-		org:         org,
+		log:          log,
+		neo4j:        neo4j,
+		events:       events,
+		grpc:         grpc,
+		opportunity:  opportunity,
+		organization: org,
 	}
 }
 
@@ -55,7 +54,7 @@ func (s *contractService) SetOpportunityService(opportunity interfaces.Opportuni
 }
 
 func (s *contractService) SetOrganizationService(org interfaces.OrganizationService) {
-	s.org = org
+	s.organization = org
 }
 
 func (s *contractService) IsInitialized() bool {
@@ -257,23 +256,11 @@ func (s *contractService) SoftDelete(ctx context.Context, contractId string) err
 		return err
 	}
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return s.grpc.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
-			Tenant:         tenant,
-			OrganizationId: organization.ID,
-			AppSource:      common.GetAppSourceFromContext(ctx),
-		})
-	})
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return s.grpc.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         tenant,
-			OrganizationId: organization.ID,
-			AppSource:      common.GetAppSourceFromContext(ctx),
-		})
-	})
+	err = s.organization.UpdateRenewalSummary(ctx, organization.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while updating renewal summary for organization %s: %s", organization.ID, err.Error())
+	}
 
 	err = s.neo4j.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, "")
 	if err != nil {
@@ -358,29 +345,18 @@ func (s *contractService) postUpdateContract(ctx context.Context, tenant string,
 		}
 		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.grpc.OrganizationClient.RefreshRenewalSummary(ctx, &organizationpb.RefreshRenewalSummaryGrpcRequest{
-				Tenant:         tenant,
-				OrganizationId: organization.ID,
-				AppSource:      common.GetAppSourceFromContext(ctx),
-			})
-		})
+		err = s.organization.UpdateRenewalSummary(ctx, organization.ID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("RefreshRenewalSummary failed: %v", err.Error())
+			s.log.Errorf("Error while updating renewal summary for organization %s: %s", organization.ID, err.Error())
 		}
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.grpc.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-				Tenant:         tenant,
-				OrganizationId: organization.ID,
-				AppSource:      common.GetAppSourceFromContext(ctx),
-			})
-		})
+
+		err = s.neo4j.OrganizationWriteRepository.UpdateArr(ctx, tenant, organization.ID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("RefreshArr failed: %v", err.Error())
+			s.log.Errorf("Error while updating ARR for organization %s: %s", organization.ID, err.Error())
 		}
+
 	} else {
 		if beforeUpdateContractEntity.LengthInMonths == 0 && afterUpdateContractEntity.LengthInMonths > 0 {
 			err = s.neo4j.ContractWriteRepository.ActivateSuspendedRenewalOpportunity(ctx, tenant, contractId)
@@ -550,7 +526,7 @@ func (s *contractService) updateOrganizationRelationship(ctx context.Context, te
 		}
 
 		if !activeContractFound {
-			_, err = s.org.Save(ctx, nil, &orgEntity.ID, data_fields.OrganizationFields{
+			_, err = s.organization.Save(ctx, nil, &orgEntity.ID, data_fields.OrganizationFields{
 				Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipFormerCustomer),
 				Stage:        utils.ToPtr(neo4jenum.Target),
 			})
@@ -559,7 +535,7 @@ func (s *contractService) updateOrganizationRelationship(ctx context.Context, te
 				s.log.Errorf("UpdateOrganization failed: %s", err.Error())
 				return errors.Wrap(err, "UpdateOrganization")
 			}
-			err = s.org.UpdateDerivedData(ctx, orgEntity.ID)
+			err = s.organization.UpdateDerivedData(ctx, orgEntity.ID)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("UpdateDerivedData failed: %s", err.Error())
@@ -595,7 +571,7 @@ func (s *contractService) startOnboardingIfEligible(ctx context.Context, tenant,
 			return
 		}
 		organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-		err = s.org.UpdateOnboardingStatus(ctx, nil, organization.ID, data_fields.OrganizationOnboardingStatusFields{
+		err = s.organization.UpdateOnboardingStatus(ctx, nil, organization.ID, data_fields.OrganizationOnboardingStatusFields{
 			CausedByContractId: &contractEntity.Id,
 			Status:             utils.ToPtr(neo4jenum.OnboardingStatusNotStarted),
 		})
@@ -1140,7 +1116,7 @@ func (s *contractService) RecalculateContractLtv(ctx context.Context, contractId
 
 	// request organization ltv refresh
 	if organizationEntity.ID != "" {
-		err = s.org.UpdateDerivedData(ctx, organizationEntity.ID)
+		err = s.organization.UpdateDerivedData(ctx, organizationEntity.ID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}

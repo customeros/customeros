@@ -3,79 +3,28 @@ package service
 import (
 	"context"
 
-	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	"github.com/customeros/customeros/packages/server/events/eventstore"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	"github.com/customeros/customeros/packages/server/events-processing-platform/config"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization"
-	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/command"
-	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/command_handler"
 	grpcerr "github.com/customeros/customeros/packages/server/events-processing-platform/grpc_errors"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/logger"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/tracing"
+	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	"github.com/customeros/customeros/packages/server/events/eventstore"
 )
 
 type organizationService struct {
 	organizationpb.UnimplementedOrganizationGrpcServiceServer
 	log                        logger.Logger
-	organizationCommands       *command_handler.CommandHandlers
 	organizationRequestHandler organization.OrganizationRequestHandler
 	requestHandlerService      RequestHandler
 }
 
-func NewOrganizationService(log logger.Logger, organizationCommands *command_handler.CommandHandlers, aggregateStore eventstore.AggregateStore, cfg *config.Config, req RequestHandler) *organizationService {
+func NewOrganizationService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config, req RequestHandler) *organizationService {
 	return &organizationService{
 		log:                        log,
-		organizationCommands:       organizationCommands,
 		organizationRequestHandler: organization.NewOrganizationRequestHandler(log, aggregateStore, cfg.Utils),
 		requestHandlerService:      req,
 	}
-}
-
-func (s *organizationService) RefreshRenewalSummary(ctx context.Context, request *organizationpb.RefreshRenewalSummaryGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RefreshRenewalSummary")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
-
-	// handle deadlines
-	if err := ctx.Err(); err != nil {
-		return nil, status.Error(codes.Canceled, "Context canceled")
-	}
-
-	_, err := s.organizationRequestHandler.HandleTempWithRetry(ctx, request.Tenant, request.OrganizationId, request)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed to refresh renewal summary for organization with id {%s} for tenant {%s}, err: %s", request.OrganizationId, request.Tenant, err.Error())
-		return nil, s.errResponse(err)
-	}
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
-func (s *organizationService) RefreshArr(ctx context.Context, request *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.RefreshArr")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-	span.SetTag(tracing.SpanTagEntityId, request.OrganizationId)
-
-	// handle deadlines
-	if err := ctx.Err(); err != nil {
-		return nil, status.Error(codes.Canceled, "Context canceled")
-	}
-
-	cmd := command.NewRefreshArrCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId, request.AppSource)
-	if err := s.organizationCommands.RefreshArr.Handle(ctx, cmd); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed to refresh ARR for organization with id  %s in tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
-		return nil, s.errResponse(err)
-	}
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
 func (s *organizationService) errResponse(err error) error {

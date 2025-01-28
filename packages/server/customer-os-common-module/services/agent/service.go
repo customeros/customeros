@@ -112,12 +112,15 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		if agentCapability.Name == "" {
 			agentCapability.Name = masterCapability.Type.GetName()
 		}
-		configBytes, err := json.Marshal(agent_capability.GetCapabilityConfigStruct(agentCapability.Type))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
+		config := agent_capability.GetCapabilityConfigStruct(agentCapability.Type)
+		if config != nil {
+			configBytes, err := json.Marshal(config)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+			agentCapability.Config = string(configBytes)
 		}
-		agentCapability.Config = string(configBytes)
 		agentCapabilities = append(agentCapabilities, agentCapability)
 	}
 	agent.CapabilitiesConfig = postgresentity.CapabilitiesConfig{

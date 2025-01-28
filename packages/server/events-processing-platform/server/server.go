@@ -10,7 +10,6 @@ import (
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
-	"github.com/customeros/customeros/packages/server/events/eventbuffer"
 	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/customeros/customeros/packages/server/events/eventstore/store"
 	"github.com/customeros/customeros/packages/server/events/eventstoredb"
@@ -20,7 +19,6 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/customeros/customeros/packages/server/events-processing-platform/config"
-	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/common/command"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/logger"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/repository"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/service"
@@ -31,13 +29,12 @@ const (
 )
 
 type Server struct {
-	Config          *config.Config
-	Log             logger.Logger
-	Repositories    *repository.Repositories
-	Services        *service.Services
-	CommandHandlers *command.CommandHandlers
-	AggregateStore  eventstore.AggregateStore
-	GrpcServer      *grpc.Server
+	Config         *config.Config
+	Log            logger.Logger
+	Repositories   *repository.Repositories
+	Services       *service.Services
+	AggregateStore eventstore.AggregateStore
+	GrpcServer     *grpc.Server
 
 	doneCh chan struct{}
 	//	metrics            *metrics.ESMicroserviceMetrics
@@ -96,9 +93,6 @@ func (server *Server) Start(parentCtx context.Context) error {
 
 	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
 
-	bufferService := eventbuffer.NewEventBufferStoreService(server.Repositories.PostgresRepositories.EventBufferRepository, server.Log)
-	server.CommandHandlers = command.NewCommandHandlers(server.Log, server.Config, server.AggregateStore, bufferService)
-
 	// Server.runMetrics(cancel)
 	// Server.runHealthCheck(ctx)
 
@@ -106,7 +100,6 @@ func (server *Server) Start(parentCtx context.Context) error {
 		server.Config,
 		server.Repositories,
 		server.AggregateStore,
-		server.CommandHandlers,
 		server.Log,
 	)
 
