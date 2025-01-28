@@ -344,13 +344,13 @@ func (c *AnalyzeWebSessionCapability) buildTimelineMessage(ctx context.Context, 
 // It casts the generic input and config to the specific types and delegates to the typed Execute method.
 func (c *AnalyzeWebSessionCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
 	typedInput, ok := input.(*AnalyzeWebSessionInput)
-	if !ok {
+	if !ok || typedInput == nil {
 		return nil, fmt.Errorf("invalid input type for AnalyzeWebSessionCapability: expected AnalyzeWebSessionInput")
 	}
 
 	typedConfig, ok := config.(*NoConfig)
-	if !ok {
-		return nil, fmt.Errorf("invalid config type for AnalyzeWebSessionCapability: expected NoCOnfig")
+	if !ok || typedConfig == nil {
+		return nil, fmt.Errorf("invalid config type for AnalyzeWebSessionCapability: expected NoConfig")
 	}
 
 	return c.Execute(ctx, *typedInput, *typedConfig)

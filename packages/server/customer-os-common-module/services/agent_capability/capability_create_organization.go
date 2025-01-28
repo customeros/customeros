@@ -91,12 +91,12 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateO
 // It casts the generic input and config to the specific types and delegates to the typed Execute method.
 func (c *CreateOrganizationCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
 	typedInput, ok := input.(*CreateOrganizationInput)
-	if !ok {
+	if !ok || typedInput == nil {
 		return nil, fmt.Errorf("invalid input type for CreateOrganizationCapability: expected CreateOrganizationInput")
 	}
 
 	typedConfig, ok := config.(*NoConfig)
-	if !ok {
+	if !ok || typedConfig == nil {
 		return nil, fmt.Errorf("invalid config type for CreateOrganizationCapability: expected CreateOrganizationConfig")
 	}
 

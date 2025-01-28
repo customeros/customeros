@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -24,6 +25,16 @@ func NewAgentRunnerService(
 	agentCapabilities *agent_capability.AgentCapabilities,
 	agentService interfaces.AgentService,
 ) *AgentRunnerService {
+	if postgresRepositories == nil {
+		panic("postgresRepositories cannot be nil")
+	}
+	if agentCapabilities == nil {
+		panic("agentCapabilities cannot be nil")
+	}
+	if agentService == nil {
+		panic("agentService cannot be nil")
+	}
+
 	return &AgentRunnerService{
 		postgresRepositories:     postgresRepositories,
 		agentCapabilitiesService: agentCapabilities,
@@ -72,14 +83,26 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 		if capErr != nil {
 			break
 		}
+		if capExecutor == nil {
+			capErr = fmt.Errorf("missing executor for capability type: %s", capType)
+			break
+		}
 
 		input := capExecutor.GetInput()
+		if input == nil {
+			capErr = fmt.Errorf("GetInput returned nil for capability type: %s", capType)
+			break
+		}
 		capErr = utils.MapToStruct(allParams, input)
 		if capErr != nil {
 			break
 		}
 
 		config := capExecutor.GetConfig()
+		if config == nil {
+			capErr = fmt.Errorf("GetConfig returned nil for capability type: %s", capType)
+			break
+		}
 		if capability.Config != "" {
 			data := []byte(capability.Config)
 			capErr = json.Unmarshal(data, config)
@@ -96,7 +119,7 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 
 		// Merge the output back into allParams for subsequent capabilities
 		if output != nil {
-			outputMap := make(map[string]any)
+			var outputMap map[string]any
 			outputMap, capErr = utils.StructToMap(output)
 			if capErr != nil {
 				break
@@ -106,8 +129,8 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	}
 
 	if capErr != nil {
-		tracing.TraceErr(span, err)
-		_, dbErr := a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, nil, utils.StringPtr(err.Error()), false)
+		tracing.TraceErr(span, capErr)
+		_, dbErr := a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, nil, utils.StringPtr(capErr.Error()), false)
 		if dbErr != nil {
 			tracing.TraceErr(span, errors.Wrap(dbErr, "unable to update agent execution record"))
 			return dbErr
