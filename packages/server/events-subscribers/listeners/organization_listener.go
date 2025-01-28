@@ -54,15 +54,19 @@ func OnRequestedEnrichOrganization(ctx context.Context, dependencies *model.Depe
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	message := input.(*dto.Event)
-	organizationId := message.Event.EntityId
-	// check message data type before conversion
-	if message.Event.Data == nil {
-		err := errors.New("message data is nil")
+	message, err := validateEvent(ctx, input)
+	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil
+		return err
 	}
-	messageData := message.Event.Data.(*dto.RequestEnrichOrganization)
+	organizationId := message.Event.EntityId
+
+	messageData, ok := message.Event.Data.(*dto.RequestEnrichOrganization)
+	if !ok {
+		err := errors.New("could not cast event data to *dto.RequestEnrichOrganization")
+		tracing.TraceErr(span, err)
+		return err
+	}
 
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
@@ -79,6 +83,34 @@ func OnRequestedEnrichOrganization(ctx context.Context, dependencies *model.Depe
 	}
 
 	return l.enrichOrganization(ctx, common.GetTenantFromContext(ctx), organizationId, domain)
+}
+
+func OnOrganizationCreated(ctx context.Context, dependencies *model.DependencyContainer, input any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnRequestedEnrichOrganization")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	message, err := validateEvent(ctx, input)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	organizationId := message.Event.EntityId
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	_, ok := message.Event.Data.(*dto.CreateOrganization)
+	if !ok {
+		err := errors.New("could not cast event data to *dto.CreateOrganization")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// lookup active ICP Qualification agents
+
+	// Send to agent for processing
+
+	return nil
 }
 
 func (l *organizationListenerImpl) enrichOrganization(ctx context.Context, tenant, organizationId, domain string) error {

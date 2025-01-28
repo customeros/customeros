@@ -16,6 +16,7 @@ type OrganizationService interface {
 	IsInitialized() bool
 
 	GetById(ctx context.Context, tenant, organizationId string) (*neo4j_entity.OrganizationEntity, error)
+	GetPrimaryDomainByOrgID(ctx context.Context, organizationId string) (string, error)
 
 	CreateFromGlobalOrganization(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, globalOrgId uint64, dataFields data_fields.OrganizationFields) (string, error)
 	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.OrganizationFields) (string, error)

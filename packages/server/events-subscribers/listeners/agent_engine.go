@@ -7,11 +7,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	neoEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/opentracing/opentracing-go"
@@ -248,12 +248,12 @@ func createOrgFromEmail(ctx context.Context, s *service.CommonServices, email st
 }
 
 func createMarkdownEvent(system commonenum.Source, eventData *data_fields.MeetingSummaryEvent) (data_fields.MarkdownEventFields, error) {
-	var sourceId neoEntity.DataSource
+	var sourceId enum.Source
 	switch system {
 	case commonenum.SourceFathom:
-		sourceId = neoEntity.DataSourceFathom
+		sourceId = enum.SourceFathom
 	case commonenum.SourceGrain:
-		sourceId = neoEntity.DataSourceGrain
+		sourceId = enum.SourceGrain
 	default:
 		return data_fields.MarkdownEventFields{}, fmt.Errorf("unsupported source: %v", system)
 	}
