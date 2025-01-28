@@ -36,6 +36,9 @@ func (c *AnalyzeWebSessionCapability) ValidateInput(data AnalyzeWebSessionInput)
 	if data.Domain == "" {
 		return coserrors.ErrCapabilityDomainMissing
 	}
+	if data.OrganizationID == "" {
+		return errors.New("missing required input data: OrganizationID")
+	}
 	return nil
 }
 
