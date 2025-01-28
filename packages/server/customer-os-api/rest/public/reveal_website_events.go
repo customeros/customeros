@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-api/caches"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"net/http"
 	"strings"
 
@@ -23,11 +25,13 @@ import (
 type WebsiteTrackerEventsHandler struct {
 	services        *cosapi_services.Services
 	responseHandler *response.Response
+	cache           *caches.OriginTenantCache
 }
 
 func NewWebsiteTrackerEventsHandler(services *cosapi_services.Services, responseHandler *response.Response) *WebsiteTrackerEventsHandler {
 	return &WebsiteTrackerEventsHandler{
 		services: services,
+		cache:    caches.NewOriginTenantCache(),
 	}
 }
 
@@ -117,18 +121,49 @@ func (h *WebsiteTrackerEventsHandler) validateTrackingAllowed(ctx context.Contex
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.assignEventsToSession")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
+	span.LogKV("origin", origin)
 
-	tenant, err := h.services.Repositories.PostgresRepositories.TrackingAllowedOriginRepository.GetTenantForOrigin(ctx, origin)
+	cleanedOrigin := utils.CleanUrlBasePath(origin)
+
+	tenant := h.cache.GetTenantForOrigin(cleanedOrigin)
+	if tenant != "" {
+		span.LogKV("result.tenant.cached", tenant)
+		return tenant, nil
+	}
+
+	agents, err := h.services.Repositories.PostgresRepositories.AgentsRepository.GetActiveAgentsByTypes(ctx, []enum.AgentType{enum.AgentVisitorID})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get tenant for origin"))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get agents"))
 		return "", err
+	}
+
+	// check if agent has intent to identify visitor
+	for _, agent := range agents {
+		for _, capability := range agent.CapabilitiesConfig.Capabilities {
+			if capability.Type == enum.CapabilityIdentifyWebVisitor {
+				// unmarshal capability config
+				var config agent_capability.IdentifyWebsiteVisitorConfig
+				if err = json.Unmarshal([]byte(capability.Config), &config); err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal capability config"))
+					return "", err
+				}
+				for _, website := range config.Websites.Value {
+					if utils.CleanUrlBasePath(website) == cleanedOrigin {
+						tenant = agent.Tenant
+						h.cache.SetTenantForOrigin(cleanedOrigin, tenant)
+						break
+					}
+				}
+			}
+		}
 	}
 
 	if tenant == "" {
-		err = fmt.Errorf("tenant not found for origin")
+		err = fmt.Errorf("tenant not found for origin: %s", origin)
 		tracing.TraceErr(span, err)
 		return "", err
 	}
+	span.LogKV("result.tenant", tenant)
 	return tenant, nil
 }
 
