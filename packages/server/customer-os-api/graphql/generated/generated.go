@@ -119,6 +119,11 @@ type ComplexityRoot struct {
 		Visible      func(childComplexity int) int
 	}
 
+	AgentSlackChannel struct {
+		ChannelID func(childComplexity int) int
+		Name      func(childComplexity int) int
+	}
+
 	Attachment struct {
 		AppSource     func(childComplexity int) int
 		BasePath      func(childComplexity int) int
@@ -1548,6 +1553,7 @@ type ComplexityRoot struct {
 		ServiceLineItem                    func(childComplexity int, id string) int
 		Skus                               func(childComplexity int) int
 		SlackChannels                      func(childComplexity int, pagination *model.Pagination) int
+		SlackChannelsWithBot               func(childComplexity int) int
 		TableViewDefs                      func(childComplexity int) int
 		Tags                               func(childComplexity int) int
 		TagsByEntityType                   func(childComplexity int, entityType model.EntityType) int
@@ -2160,6 +2166,7 @@ type PhoneNumberResolver interface {
 type QueryResolver interface {
 	Agents(ctx context.Context) ([]*model.Agent, error)
 	Agent(ctx context.Context, id string) (*model.Agent, error)
+	SlackChannelsWithBot(ctx context.Context) ([]*model.AgentSlackChannel, error)
 	Attachment(ctx context.Context, id string) (*model.Attachment, error)
 	BankAccounts(ctx context.Context) ([]*model.BankAccount, error)
 	GlobalCache(ctx context.Context) (*model.GlobalCache, error)
@@ -2472,6 +2479,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Agent.Visible(childComplexity), true
+
+	case "AgentSlackChannel.channelId":
+		if e.complexity.AgentSlackChannel.ChannelID == nil {
+			break
+		}
+
+		return e.complexity.AgentSlackChannel.ChannelID(childComplexity), true
+
+	case "AgentSlackChannel.name":
+		if e.complexity.AgentSlackChannel.Name == nil {
+			break
+		}
+
+		return e.complexity.AgentSlackChannel.Name(childComplexity), true
 
 	case "Attachment.appSource":
 		if e.complexity.Attachment.AppSource == nil {
@@ -11495,6 +11516,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.SlackChannels(childComplexity, args["pagination"].(*model.Pagination)), true
 
+	case "Query.slackChannelsWithBot":
+		if e.complexity.Query.SlackChannelsWithBot == nil {
+			break
+		}
+
+		return e.complexity.Query.SlackChannelsWithBot(childComplexity), true
+
 	case "Query.tableViewDefs":
 		if e.complexity.Query.TableViewDefs == nil {
 			break
@@ -13120,10 +13148,17 @@ enum ActionType {
 	{Name: "../schemas/agent.graphqls", Input: `extend type Query {
     agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    slackChannelsWithBot: [AgentSlackChannel!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
     agent_Save(input: AgentSaveInput!): Agent!@hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type AgentSlackChannel {
+    channelId: String!
+    name: String!
 }
 
 enum CapabilityType {
@@ -28019,6 +28054,94 @@ func (ec *executionContext) _Agent_icon(ctx context.Context, field graphql.Colle
 func (ec *executionContext) fieldContext_Agent_icon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AgentSlackChannel_channelId(ctx context.Context, field graphql.CollectedField, obj *model.AgentSlackChannel) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AgentSlackChannel_channelId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ChannelID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AgentSlackChannel_channelId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AgentSlackChannel",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AgentSlackChannel_name(ctx context.Context, field graphql.CollectedField, obj *model.AgentSlackChannel) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AgentSlackChannel_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AgentSlackChannel_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AgentSlackChannel",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -52856,6 +52979,10 @@ func (ec *executionContext) fieldContext_InvoiceLine_sku(_ context.Context, fiel
 				return ec.fieldContext_Sku_name(ctx, field)
 			case "price":
 				return ec.fieldContext_Sku_price(ctx, field)
+			case "type":
+				return ec.fieldContext_Sku_type(ctx, field)
+			case "archived":
+				return ec.fieldContext_Sku_archived(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Sku", field.Name)
 		},
@@ -90872,6 +90999,90 @@ func (ec *executionContext) fieldContext_Query_agent(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_slackChannelsWithBot(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_slackChannelsWithBot(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().SlackChannelsWithBot(rctx)
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"ADMIN", "USER"})
+			if err != nil {
+				var zeroVal []*model.AgentSlackChannel
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal []*model.AgentSlackChannel
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal []*model.AgentSlackChannel
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.AgentSlackChannel); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.AgentSlackChannel`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.AgentSlackChannel)
+	fc.Result = res
+	return ec.marshalNAgentSlackChannel2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentSlackChannelᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_slackChannelsWithBot(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "channelId":
+				return ec.fieldContext_AgentSlackChannel_channelId(ctx, field)
+			case "name":
+				return ec.fieldContext_AgentSlackChannel_name(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AgentSlackChannel", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_attachment(ctx, field)
 	if err != nil {
@@ -117569,6 +117780,50 @@ func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
+var agentSlackChannelImplementors = []string{"AgentSlackChannel"}
+
+func (ec *executionContext) _AgentSlackChannel(ctx context.Context, sel ast.SelectionSet, obj *model.AgentSlackChannel) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, agentSlackChannelImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AgentSlackChannel")
+		case "channelId":
+			out.Values[i] = ec._AgentSlackChannel_channelId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._AgentSlackChannel_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var attachmentImplementors = []string{"Attachment", "Node"}
 
 func (ec *executionContext) _Attachment(ctx context.Context, sel ast.SelectionSet, obj *model.Attachment) graphql.Marshaler {
@@ -128948,6 +129203,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "slackChannelsWithBot":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_slackChannelsWithBot(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "attachment":
 			field := field
 
@@ -133093,6 +133370,60 @@ func (ec *executionContext) marshalNAgent2ᚖgithubᚗcomᚋcustomerosᚋcustome
 func (ec *executionContext) unmarshalNAgentSaveInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentSaveInput(ctx context.Context, v any) (model.AgentSaveInput, error) {
 	res, err := ec.unmarshalInputAgentSaveInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAgentSlackChannel2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentSlackChannelᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AgentSlackChannel) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAgentSlackChannel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentSlackChannel(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAgentSlackChannel2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentSlackChannel(ctx context.Context, sel ast.SelectionSet, v *model.AgentSlackChannel) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AgentSlackChannel(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNAgentType2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentType(ctx context.Context, v any) (model.AgentType, error) {

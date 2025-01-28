@@ -14,9 +14,9 @@ type SlackService interface {
 	StoreSlackChannel(ctx context.Context, tenant, source, channelId, channelName string, organizationId *string) error
 	SendMessageFromBot(ctx context.Context, channel, blocks string) error
 	GetSlackSettings(ctx context.Context, tenant string) (*SlackSettingsResponse, error)
-	ListSlackChannelsWithBot(ctx context.Context, tenant string) ([]SlackChannelResponse, error)
-	JoinSlackChannelsWithBot(ctx context.Context, tenant, channelId string) error
-	LeaveSlackChannelsWithBot(ctx context.Context, tenant, channelId string) error
+	ListSlackChannelsWithBot(ctx context.Context) ([]SlackChannelResponse, error)
+	JoinSlackChannelsWithBot(ctx context.Context, channelId string) error
+	LeaveSlackChannelsWithBot(ctx context.Context, channelId string) error
 }
 
 type SlackSettingsResponse struct {
