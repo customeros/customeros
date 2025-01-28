@@ -15,6 +15,15 @@ type ICPQualificationCapability struct {
 	aiService            interfaces.AIService
 }
 
+type ICPQualificationInput struct {
+	QualificationCriteria    string `json:"qualificationCriteria"`
+	DisqualificationCriteria string `json:"disqualificationCriteria"`
+	PrimaryDomain            string `json:"primaryDomain"`
+}
+
+type ICPQualificationResult struct {
+}
+
 func (c *ICPQualificationCapability) ValidateConfig(config NoConfig) error {
 	//TODO implement me
 	panic("implement me")
@@ -49,14 +58,6 @@ var (
 	_ interfaces.AgentCapabilityExecution[ICPQualificationInput, ICPQualificationResult, NoConfig] = (*ICPQualificationCapability)(nil)
 	_ interfaces.AgentCapabilityUntyped                                                            = (*ICPQualificationCapability)(nil)
 )
-
-type ICPQualificationInput struct {
-	ICPDefinition string `json:"icpDefinition"`
-	PrimaryDomain string `json:"primaryDomain"`
-}
-
-type ICPQualificationResult struct {
-}
 
 func (c *ICPQualificationCapability) Execute(ctx context.Context, data ICPQualificationInput, config NoConfig) (ICPQualificationResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.executeICPQualification")
