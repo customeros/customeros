@@ -722,7 +722,7 @@ func (s *cloudflareService) addRedirectPageRule(ctx context.Context, zoneID stri
 			errMsg = addPageRuleResponse.Errors[0].Message
 		}
 		err = fmt.Errorf(errMsg)
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, err, tracingLog.String("responseBody", string(body)))
 		s.log.Error("Cloudflare API error: ", errMsg)
 		return err
 	}
