@@ -270,7 +270,6 @@ func (s *contractService) SoftDelete(ctx context.Context, contractId string) err
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error while updating ARR for organization %s: %s", organization.ID, err.Error())
-		return err
 	}
 
 	err = s.neo4j.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, "")
