@@ -8,6 +8,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -129,10 +130,8 @@ func (h *MailstackHandler) registerDomain(ctx context.Context, tenant, domain, w
 	// check if domain tld is supported
 	// Extract the TLD from the domain (e.g., "com" from "example.com")
 	tld := strings.Split(domain, ".")[1]
-	for _, supportedTld := range h.services.Cfg.Common.Internal.MailstackConfig.SupportedTlds {
-		if tld != supportedTld {
-			return registerNewDomainResponse, coserrors.ErrNotSupported
-		}
+	if !utils.IsStringInSlice(tld, h.services.Cfg.Common.Internal.MailstackConfig.SupportedTlds) {
+		return registerNewDomainResponse, coserrors.ErrNotSupported
 	}
 
 	// step 1 - check domain availability
