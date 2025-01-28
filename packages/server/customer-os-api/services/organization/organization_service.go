@@ -525,19 +525,10 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 	// Update last touchpoint
 	s.UpdateLastTouchpoint(ctx, primaryOrganizationId)
 
-	// Refresh forecast ARR
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return s.grpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			OrganizationId: primaryOrganizationId,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			AppSource:      constants.AppSourceCustomerOsApi,
-		})
-	})
+	err = s.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateArr(ctx, tenant, primaryOrganizationId)
 	if err != nil {
-		s.log.Errorf("error sending event to events-platform: {%s}", err.Error())
-		tracing.TraceErr(span, err, log.String("grpcMethod", "RefreshArr"))
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while updating ARR for organization %s: %s", primaryOrganizationId, err.Error())
 	}
 
 	// Refresh renewal likelihood
