@@ -25,53 +25,48 @@ export class AgentStore extends Store<AgentDatum, Agent> {
             id: '1',
             name: 'Track and identify website visitors',
             action: '',
-            optional: false,
             type: CapabilityType.WebVisitorSendSlackNotification,
-            values: JSON.stringify({
-              websites: {
-                value: [],
-              },
-            }),
+            // values: JSON.stringify({
+            //   websites: {
+            //     value: [],
+            //   },
+            // }),
             errors: null,
           },
           {
             id: '2',
             name: 'Log page views and session duration',
             action: '',
-            optional: false,
             type: CapabilityType.WebVisitorSendSlackNotification,
-            values: '',
+            // values: '',
             errors: null,
           },
           {
             id: '3',
             name: 'Create identified organizations as leads',
             action: '',
-            optional: false,
             type: CapabilityType.WebVisitorSendSlackNotification,
-            values: '',
+            // values: '',
             errors: null,
           },
           {
             id: '4',
             name: 'Analyze behaviour for intent signals',
             action: '',
-            optional: false,
             type: CapabilityType.WebVisitorSendSlackNotification,
-            values: '',
+            // values: '',
             errors: null,
           },
           {
             id: '5',
             name: 'Send Slack notification',
             action: '',
-            optional: true,
             type: CapabilityType.SendSlackNotification,
-            values: JSON.stringify({
-              slackId: {
-                value: [],
-              },
-            }),
+            // values: JSON.stringify({
+            //   slackId: {
+            //     value: [],
+            //   },
+            // }),
             errors: null,
           },
         ],
