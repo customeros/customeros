@@ -11,6 +11,7 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
+// Deprecated: to be removed
 type TrackingAllowedOriginRepository interface {
 	GetTenantForOrigin(ctx context.Context, origin string) (string, error)
 	Create(ctx context.Context, whitelist postgres_entity.TrackingAllowedOrigin) (*postgres_entity.TrackingAllowedOrigin, error)
