@@ -38,7 +38,7 @@ type SendWebVisitorSlackNotificationResult struct {
 
 type SendWebVisitorSlackNotificationConfig struct {
 	ChannelID     string `json:"channelId"`
-	CooldownHours int    `json:"cooldownHours" default:"12"`
+	CooldownHours int    `json:"cooldownHours"`
 }
 
 func NewSendWebVisitorSlackNotificationCapability(postgresRepositories *postgres_repository.Repositories,
