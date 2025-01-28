@@ -2,15 +2,12 @@ mutation saveAgent($input: AgentSaveInput!) {
   agent_Save(input: $input) {
     id
     type
-    tenant
     name
     capabilities {
       id
       type
       name
       action
-      optional
-      values
       errors
     }
     goal

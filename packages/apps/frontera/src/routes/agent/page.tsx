@@ -26,6 +26,7 @@ export const AgentPage = observer(() => {
 
   useEffect(() => {
     if (agent) {
+      // @ts-expect-error fix
       usecase.setActiveCapability(agent.value.capabilities[0]);
     }
   }, []);
@@ -53,6 +54,7 @@ export const AgentPage = observer(() => {
                 key={capability.id}
                 onClick={() => {
                   if (capability.values.length) {
+                    // @ts-expect-error fix
                     usecase.setActiveCapability(capability);
                   }
                 }}

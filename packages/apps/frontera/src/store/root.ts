@@ -1,5 +1,6 @@
 import { Transport } from '@infra/transport';
 import { when, makeAutoObservable } from 'mobx';
+import { SkusStore } from '@store/Sku/Skus.store.ts';
 
 import { Persister } from './persister';
 import { UIStore } from './UI/UI.store';
@@ -65,6 +66,7 @@ export class RootStore {
   mailboxes: MailboxesStore;
   externalSystemInstances: ExternalSystemInstancesStore;
   jobRoles: JobRolesStore;
+  skus: SkusStore;
 
   static instance: RootStore;
 
@@ -100,6 +102,7 @@ export class RootStore {
     this.timelineEvents = new TimelineEventsStore(this, this.transport);
     this.contractLineItems = new ContractLineItemsStore(this, this.transport);
     this.flowEmailVariables = new FlowEmailVariablesStore(this, this.transport);
+    this.skus = new SkusStore(this, this.transport);
 
     this.externalSystemInstances = new ExternalSystemInstancesStore(
       this,
@@ -139,6 +142,7 @@ export class RootStore {
       this.users.bootstrap(),
       this.flows.bootstrap(),
       this.flowEmailVariables.bootstrap(),
+      this.skus.bootstrap(),
     ]);
   }
 

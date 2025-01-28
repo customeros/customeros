@@ -1,0 +1,9 @@
+query skus {
+  skus {
+    id
+    price
+    type
+    archived
+    name
+  }
+}

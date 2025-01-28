@@ -6,10 +6,10 @@ export class AgentViewUsecase {
   @observable accessor activeCapability: Capability = {
     id: '',
     name: '',
-    type: CapabilityType.WebsiteTracker,
+    type: CapabilityType.IdentifyWebVisitor,
     action: '',
-    optional: false,
-    values: '',
+    active: false,
+    config: '',
     errors: null,
   };
 
