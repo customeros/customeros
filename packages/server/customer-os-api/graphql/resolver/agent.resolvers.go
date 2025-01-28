@@ -100,7 +100,7 @@ func (r *queryResolver) SlackChannelsWithBot(ctx context.Context) ([]*model.Agen
 	slackChannels, err := r.Services.CommonServices.SlackService.ListSlackChannelsWithBot(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get agent")
+		graphql.AddErrorf(ctx, "Failed to get slack channels")
 		return nil, nil
 	}
 
