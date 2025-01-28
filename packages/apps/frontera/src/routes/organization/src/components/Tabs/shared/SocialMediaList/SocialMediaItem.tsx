@@ -56,7 +56,11 @@ export const SocialMediaItem = observer(
               >
                 <Popover open={openActionBar} onOpenChange={setIsOpenActionBar}>
                   <PopoverTrigger>
-                    <Tooltip asChild label={formatSocialUrl(value)}>
+                    <Tooltip
+                      asChild
+                      label={value}
+                      className='max-w-[300px] truncate'
+                    >
                       <div>
                         <SocialIcon
                           url={value}
@@ -70,7 +74,10 @@ export const SocialMediaItem = observer(
                       </div>
                     </Tooltip>
                   </PopoverTrigger>
-                  <PopoverContent side='top' className='bg-gray-700'>
+                  <PopoverContent
+                    side='top'
+                    className='bg-gray-700 z-[99999999]'
+                  >
                     <div className=' flex items-center text-white'>
                       <span className=' mr-2 text-sm truncate w-[150px]'>
                         {formatSocialUrl(value)}
@@ -78,7 +85,7 @@ export const SocialMediaItem = observer(
                       <Divider className='bg-gray-500 w-3 rotate-90 h-[1px] border-0' />
                       <div className='flex gap-2'>
                         <IconButton
-                          size='xxs'
+                          size='xs'
                           variant='ghost'
                           icon={<Share03 />}
                           colorScheme={'white'}
@@ -88,7 +95,7 @@ export const SocialMediaItem = observer(
                           }
                         />
                         <IconButton
-                          size='xxs'
+                          size='xs'
                           variant='ghost'
                           icon={<Copy01 />}
                           colorScheme={'white'}
@@ -96,7 +103,7 @@ export const SocialMediaItem = observer(
                           onClick={() => copyToClipboard(value, 'Link copied')}
                         />
                         <IconButton
-                          size='xxs'
+                          size='xs'
                           variant='ghost'
                           icon={<Trash01 />}
                           colorScheme={'white'}
