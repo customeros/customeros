@@ -4,7 +4,6 @@ import (
 	"github.com/customeros/customeros/packages/server/events/eventstore"
 
 	"github.com/customeros/customeros/packages/server/events-processing-platform/config"
-	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/common/command"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/logger"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/repository"
 )
@@ -23,7 +22,6 @@ func InitServices(
 	cfg *config.Config,
 	repositories *repository.Repositories,
 	aggregateStore eventstore.AggregateStore,
-	commandHandlers *command.CommandHandlers,
 	log logger.Logger,
 ) *Services {
 	services := Services{}
@@ -31,7 +29,7 @@ func InitServices(
 	services.es = aggregateStore
 	services.RequestHandler = NewRequestHandler(log, aggregateStore, &cfg.Utils)
 
-	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg, services.RequestHandler)
+	services.OrganizationService = NewOrganizationService(log, aggregateStore, cfg, services.RequestHandler)
 
 	services.InvoiceService = NewInvoiceService(
 		repositories,

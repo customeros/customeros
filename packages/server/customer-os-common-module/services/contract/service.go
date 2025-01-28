@@ -266,14 +266,11 @@ func (s *contractService) SoftDelete(ctx context.Context, contractId string) err
 		})
 	})
 
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return s.grpc.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         tenant,
-			OrganizationId: organization.ID,
-			AppSource:      common.GetAppSourceFromContext(ctx),
-		})
-	})
+	err = s.neo4j.OrganizationWriteRepository.UpdateArr(ctx, tenant, organization.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error while updating ARR for organization %s: %s", organization.ID, err.Error())
+	}
 
 	err = s.neo4j.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, "")
 	if err != nil {
@@ -370,17 +367,13 @@ func (s *contractService) postUpdateContract(ctx context.Context, tenant string,
 			tracing.TraceErr(span, err)
 			s.log.Errorf("RefreshRenewalSummary failed: %v", err.Error())
 		}
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.grpc.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-				Tenant:         tenant,
-				OrganizationId: organization.ID,
-				AppSource:      common.GetAppSourceFromContext(ctx),
-			})
-		})
+
+		err = s.neo4j.OrganizationWriteRepository.UpdateArr(ctx, tenant, organization.ID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("RefreshArr failed: %v", err.Error())
+			s.log.Errorf("Error while updating ARR for organization %s: %s", organization.ID, err.Error())
 		}
+
 	} else {
 		if beforeUpdateContractEntity.LengthInMonths == 0 && afterUpdateContractEntity.LengthInMonths > 0 {
 			err = s.neo4j.ContractWriteRepository.ActivateSuspendedRenewalOpportunity(ctx, tenant, contractId)

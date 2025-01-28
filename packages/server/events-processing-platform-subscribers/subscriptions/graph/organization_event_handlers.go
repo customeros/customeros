@@ -117,35 +117,12 @@ func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context
 	return nil
 }
 
-func (h *OrganizationEventHandler) OnRefreshArr(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshArr")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationRefreshArrEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-
-	if err := h.neo4j.OrganizationWriteRepository.UpdateArr(ctx, eventData.Tenant, organizationId); err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Failed to update arr for tenant %s, organization %s: %s", eventData.Tenant, organizationId, err.Error())
-	}
-
-	h.events.Publisher.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
-}
-
 func (h *OrganizationEventHandler) OnRefreshRenewalSummaryV1(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshRenewalSummaryV1")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData events.OrganizationRefreshArrEvent
+	var eventData events.OrganizationRefreshRenewalSummaryEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
