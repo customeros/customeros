@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/mailsherpa/domaincheck"
@@ -23,10 +25,11 @@ type IdentifyWebsiteVisitorInput struct {
 	SessionID string `json:"sessionId"`
 	IPAddress string `json:"ipAddress"`
 	VisitorID string `json:"visitorId"`
-	Website   string `json:"website"`
+	Hostname  string `json:"hostname"`
 }
 
-type IdentifyWebsiteVisitorResult struct {
+type IdentifyWebsiteVisitorOutput struct {
+	CapabilityOutput
 	Domain       string `json:"domain"`
 	LinkedInSlug string `json:"linkedinSlug"`
 }
@@ -66,7 +69,7 @@ func (c *IdentifyWebsiteVisitorCapability) GetConfig() any {
 }
 
 func (c *IdentifyWebsiteVisitorCapability) GetOutput() any {
-	return &IdentifyWebsiteVisitorResult{}
+	return &IdentifyWebsiteVisitorOutput{}
 }
 
 func NewIdentifyWebsiteVisitorCapability(
@@ -81,11 +84,11 @@ func NewIdentifyWebsiteVisitorCapability(
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapabilityExecution[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorResult, IdentifyWebsiteVisitorConfig] = (*IdentifyWebsiteVisitorCapability)(nil)
+	_ interfaces.AgentCapabilityExecution[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorOutput, IdentifyWebsiteVisitorConfig] = (*IdentifyWebsiteVisitorCapability)(nil)
 	_ interfaces.AgentCapabilityUntyped                                                                                            = (*IdentifyWebsiteVisitorCapability)(nil)
 )
 
-func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data IdentifyWebsiteVisitorInput, config IdentifyWebsiteVisitorConfig) (IdentifyWebsiteVisitorResult, error) {
+func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data IdentifyWebsiteVisitorInput, config IdentifyWebsiteVisitorConfig) (IdentifyWebsiteVisitorOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -93,7 +96,7 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data Ide
 	tracing.LogObjectAsJson(span, "input", data)
 	tracing.LogObjectAsJson(span, "config", config)
 
-	result := IdentifyWebsiteVisitorResult{}
+	result := IdentifyWebsiteVisitorOutput{}
 
 	if err := c.ValidateInput(data); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
@@ -103,6 +106,15 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data Ide
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
 		return result, err
 	}
+
+	// check if website input hostname configured by current agent
+	err := c.acceptHostname(ctx, data.Hostname, config.Websites.Value)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return result, err
+	}
+
+	result.ExecutionValidated = true
 
 	domain, linkedInSlug, err := c.identifyIP(ctx, data.IPAddress)
 	if err != nil {
@@ -122,8 +134,28 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data Ide
 		}
 	}
 
+	result.Completed = true
 	tracing.LogObjectAsJson(span, "result", result)
 	return result, nil
+}
+
+func (c *IdentifyWebsiteVisitorCapability) acceptHostname(ctx context.Context, hostname string, websites []string) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "IdentifyWebsiteVisitorCapability.acceptHostname")
+	defer span.Finish()
+
+	accepted := false
+
+	for _, website := range websites {
+		if utils.CleanUrlBasePath(website) == utils.CleanUrlBasePath(hostname) {
+			accepted = true
+		}
+	}
+
+	if !accepted {
+		return coserrors.ErrCapabilityHostnameNotConfigured
+	}
+
+	return nil
 }
 
 func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug string, err error) {
