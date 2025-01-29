@@ -2,6 +2,11 @@ package listeners
 
 import (
 	"errors"
+	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go/log"
+	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -13,8 +18,8 @@ import (
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
 
-func OnIntentEventCreated(ctx context.Context, dependencies *model.DependencyContainer, input any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnWebhookEventCreated")
+func OnIntentEvent(ctx context.Context, dependencies *model.DependencyContainer, input any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnIntentEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
@@ -31,8 +36,9 @@ func OnIntentEventCreated(ctx context.Context, dependencies *model.DependencyCon
 		return err
 	}
 
-	ctx = common.SetTenantInContext(ctx, intentData.Tenant)
-
+	if common.GetTenantFromContext(ctx) == "" {
+		ctx = common.SetTenantInContext(ctx, intentData.Tenant)
+	}
 	return distributeIntentEventToSubscribers(ctx, dependencies, intentData)
 }
 
@@ -41,15 +47,38 @@ func distributeIntentEventToSubscribers(ctx context.Context, dep *model.Dependen
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
+	var agentTypes []enum.AgentType
 	switch intentData.IntentType {
 	case enum.IntentSupportRequired:
-		return dep.CommonServices.SupportAgent.ProcessIntentEvent(ctx, intentData)
-
+		agentTypes = append(agentTypes, enum.AgentSupport)
 	default:
 		err := errors.New("IntentType not supported")
 		tracing.TraceErr(span, err)
 		return err
 	}
+
+	if len(agentTypes) == 0 {
+		err := errors.New("No agent types configured for intent")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	activeAgents := lookupActiveAgents(ctx, dep, agentTypes)
+	var errs error
+	for _, agent := range activeAgents {
+		initialParams, err := utils.StructToMap(intentData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			errs = multierr.Append(errs, err)
+		}
+		err = dep.CommonServices.AgentRunnerService.Run(ctx, agent, intentData.IntentType.String(), initialParams)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			errs = multierr.Append(errs, err)
+		}
+	}
+
+	return errs
 }
 
 func validateIntentEvent(ctx context.Context, message *dto.Event) (*dto.IntentEvent, error) {
@@ -65,4 +94,18 @@ func validateIntentEvent(ctx context.Context, message *dto.Event) (*dto.IntentEv
 	}
 
 	return messageData, nil
+}
+
+func lookupActiveAgents(ctx context.Context, dep *model.DependencyContainer, agentTypes []enum.AgentType) []postgres_entity.Agents {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.lookupActiveAgents")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+	span.LogFields(log.String("agentTypes", fmt.Sprintf("%v", agentTypes)))
+
+	agents, err := dep.PostgresRepositories.AgentsRepository.GetActiveAgentsByTypes(ctx, agentTypes)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil
+	}
+	return agents
 }

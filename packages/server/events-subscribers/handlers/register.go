@@ -155,7 +155,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 	// Intent Handlers
 	eventsService.Subscriber.RegisterHandler(dto.IntentEvent{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
-			return listeners.OnIntentEventCreated(ctx, dependencies, event)
+			return listeners.OnIntentEvent(ctx, dependencies, event)
 		},
 		EventType: reflect.TypeOf(dto.IntentEvent{}).Name(),
 		DataType:  reflect.TypeOf(dto.IntentEvent{}),

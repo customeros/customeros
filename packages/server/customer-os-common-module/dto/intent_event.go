@@ -5,11 +5,11 @@ import (
 )
 
 type IntentEvent struct {
-	EventName      enum.AgentListenerEvent
-	Source         enum.Source
-	SourceID       string // Id of source record producing event
+	EventName      enum.AgentListenerEvent `json:"eventName"`
+	Source         enum.Source             `json:"source"`
+	SourceID       string                  `json:"sourceId"`
 	Tenant         string
-	IntentType     enum.IntentSignal
-	OrganizationID string
-	ContactID      string
+	IntentType     enum.IntentSignal `json:"intentType"`
+	OrganizationID string            `json:"organizationId"`
+	ContactID      string            `json:"contactId"`
 }

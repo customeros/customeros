@@ -137,7 +137,6 @@ type CommonServices struct {
 	// Agents
 	AgentCapabilities  *agent_capability.AgentCapabilities
 	AgentRunnerService *agent.AgentRunnerService
-	SupportAgent       *agent.SupportAgent
 }
 
 type InitOptions struct {
@@ -250,7 +249,6 @@ func InitCommonServices(
 	)
 
 	// initialize agents
-	supportAgentImpl := agent.NewSupportAgent(postgresRepositories, capabilityImpl, tagImpl)
 	agentRunnerImpl := agent.NewAgentRunnerService(postgresRepositories, capabilityImpl, agentImpl)
 
 	// Initialize CommonServices struct
@@ -320,8 +318,6 @@ func InitCommonServices(
 		// Agents
 		AgentCapabilities:  capabilityImpl,
 		AgentRunnerService: agentRunnerImpl,
-
-		SupportAgent: supportAgentImpl,
 	}
 
 	// Check that all services are initialized
