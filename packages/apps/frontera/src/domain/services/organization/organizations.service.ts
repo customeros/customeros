@@ -248,4 +248,34 @@ export class OrganizationService {
 
     return [res, err];
   }
+
+  public async updateOwner(organization: Organization, ownerId?: string) {
+    const previousOwnerId = organization.value.owner?.id;
+
+    organization.updateOwner(ownerId);
+
+    const [res, err] = await unwrap(
+      this.orgInfraRepo.saveOrganization({
+        input: {
+          id: organization.id,
+          ownerId,
+        },
+      }),
+    );
+
+    if (err) {
+      console.error(err);
+
+      organization.updateOwner(previousOwnerId);
+
+      this.root.ui.toastError(
+        "We couldn't update owner of this organization",
+        `${ownerId}-update-owner`,
+      );
+
+      return [null, err];
+    }
+
+    return [res, err];
+  }
 }

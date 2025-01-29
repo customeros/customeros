@@ -303,11 +303,7 @@ export const AboutPanel = observer(() => {
               </p>
             </Tooltip>
           )}
-          <OwnerInput
-            id={id}
-            dataTest='org-about-org-owner'
-            owner={organization?.value.owner}
-          />
+          <OwnerInput id={id} dataTest='org-about-org-owner' />
 
           {showParentRelationshipSelector &&
             organization?.value?.subsidiaries?.length > 0 && (

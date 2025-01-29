@@ -4,6 +4,7 @@ import AddDomainDocument from './mutations/addDomain.graphql';
 import CheckDomainDocument from './queries/checkDomain.graphql';
 import RemoveDomainDocument from './mutations/removeDomain.graphql';
 import RemoveDomainsDocument from './mutations/removeDomains.graphql';
+import SaveOrganizationDocument from './mutations/saveOrganization.graphql';
 import {
   CheckDomainQuery,
   CheckDomainQueryVariables,
@@ -20,6 +21,10 @@ import {
   RemoveDomainsMutation,
   RemoveDomainsMutationVariables,
 } from './mutations/removeDomains.generated';
+import {
+  SaveOrganizationMutation,
+  SaveOrganizationMutationVariables,
+} from './mutations/saveOrganization.generated.ts';
 
 export class OrganizationRepository {
   static instance: OrganizationRepository | null = null;
@@ -59,5 +64,12 @@ export class OrganizationRepository {
       RemoveDomainsMutation,
       RemoveDomainsMutationVariables
     >(RemoveDomainsDocument, payload);
+  }
+
+  async saveOrganization(payload: SaveOrganizationMutationVariables) {
+    return this.transport.graphql.request<
+      SaveOrganizationMutation,
+      SaveOrganizationMutationVariables
+    >(SaveOrganizationDocument, payload);
   }
 }

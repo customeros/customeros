@@ -290,6 +290,19 @@ export class Organization extends Entity<OrganizationDatum> {
     this.commit({ syncOnly: true });
   }
 
+  @action
+  public updateOwner(id?: string) {
+    this.draft();
+
+    if (!this.value.owner) {
+      this.value.owner = undefined;
+    }
+    this.value.owner = id
+      ? this.store.root.users.value.get(id)?.value
+      : undefined;
+    this.commit({ syncOnly: true });
+  }
+
   static default(
     payload?: OrganizationDatum | SaveOrganizationMutationVariables['input'],
   ): OrganizationDatum {

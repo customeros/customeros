@@ -1,0 +1,7 @@
+mutation saveOrganization($input: OrganizationSaveInput!) {
+  organization_Save(input: $input) {
+    metadata {
+      id
+    }
+  }
+}

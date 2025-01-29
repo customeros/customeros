@@ -44,7 +44,7 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
       getEmailParticipantsNameAndEmail(to || [])
         .map((e) => e.label || e.email)
         .filter((data) => Boolean(data)),
-    [cc],
+    [to],
   );
 
   const cleanCC = useMemo(
