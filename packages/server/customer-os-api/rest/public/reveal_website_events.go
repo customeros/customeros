@@ -86,7 +86,7 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 }
 
 func (h *WebsiteTrackerEventsHandler) validateHeaders(c *gin.Context) error {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "WebsiteTrackerEventsHandler.assignEventsToSession")
+	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "WebsiteTrackerEventsHandler.validateHeaders")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
@@ -117,7 +117,7 @@ func (h *WebsiteTrackerEventsHandler) validateHeaders(c *gin.Context) error {
 }
 
 func (h *WebsiteTrackerEventsHandler) validateTrackingAllowed(ctx context.Context, origin string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.assignEventsToSession")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.validateTrackingAllowed")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 	span.LogKV("origin", origin)
