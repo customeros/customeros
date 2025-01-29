@@ -104,9 +104,12 @@ export const Domains = observer(() => {
               </span>
             </a>
             <div
-              className={cn('flex opacity-0 group-hover:opacity-100 gap-1', {
-                '!opacity-100': showMenus[domainGroup.primaryDomain.domain],
-              })}
+              className={cn(
+                'flex opacity-0 group-hover:opacity-100 gap-1 items-center',
+                {
+                  '!opacity-100': showMenus[domainGroup.primaryDomain.domain],
+                },
+              )}
             >
               <div>
                 {domainGroup.subdomains?.length > 0 && (
@@ -131,6 +134,11 @@ export const Domains = observer(() => {
                   />
                 )}
               </div>
+              {domainGroup.subdomains?.length > 0 && (
+                <span className='text-xs font-medium mr-1'>
+                  +{domainGroup.subdomains.length}
+                </span>
+              )}
               <Menu
                 onOpenChange={(isOpen) =>
                   handleMenuOpen(domainGroup.primaryDomain.domain, isOpen)
