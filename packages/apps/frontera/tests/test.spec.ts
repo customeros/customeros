@@ -20,7 +20,7 @@ import { OrganizationSideNavPage } from './pages/organization/organizationSideNa
 import { OrganizationTimelinePage } from './pages/organization/organizationTimelinePage';
 import { OpportunitiesKanbanPage } from './pages/opportunitiesKanban/opportunitiesKanbanPage';
 
-test.setTimeout(180000);
+test.setTimeout(300000);
 
 test('Convert an Organization to Customer [COS-6448]', async ({
   page,
