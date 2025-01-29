@@ -53,7 +53,6 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 
 		tenant, err := h.validateTrackingAllowed(ctx, c.GetHeader("Origin"))
 		if err != nil {
-			tracing.TraceErr(span, err)
 			h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 			return
 		}
@@ -87,7 +86,7 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 }
 
 func (h *WebsiteTrackerEventsHandler) validateHeaders(c *gin.Context) error {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "WebsiteTrackerEventsHandler.assignEventsToSession")
+	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "WebsiteTrackerEventsHandler.validateHeaders")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
@@ -118,7 +117,7 @@ func (h *WebsiteTrackerEventsHandler) validateHeaders(c *gin.Context) error {
 }
 
 func (h *WebsiteTrackerEventsHandler) validateTrackingAllowed(ctx context.Context, origin string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.assignEventsToSession")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.validateTrackingAllowed")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 	span.LogKV("origin", origin)
@@ -160,7 +159,7 @@ func (h *WebsiteTrackerEventsHandler) validateTrackingAllowed(ctx context.Contex
 
 	if tenant == "" {
 		err = fmt.Errorf("tenant not found for origin: %s", origin)
-		tracing.TraceErr(span, err)
+		span.LogFields(log.Bool("result.tenant.found", false))
 		return "", err
 	}
 	span.LogKV("result.tenant", tenant)
