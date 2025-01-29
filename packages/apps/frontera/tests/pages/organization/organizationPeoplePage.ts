@@ -19,6 +19,8 @@ export class OrganizationPeoplePage {
 
   private orgPeopleAddSomeone = 'button[data-test="org-people-add-someone"]';
   private orgPeopleAddByName = 'button[data-test="org-people-add-by-name"]';
+  private confirmContactCreation =
+    'button[data-test="confirm-contact-creation"]';
   private orgPeopleAddContact =
     'button[data-test="org-people-add-new-contact"]';
   private orgPeopleCollapse = 'button[data-test="org-people-collapse"]';
@@ -27,10 +29,11 @@ export class OrganizationPeoplePage {
 
   private orgPeopleContactTitle = 'input[data-test="org-people-contact-title"]';
   private orgPeopleContactEmail = 'p[data-test="add-work-email"]';
-  private orgPeopleLinkedInUrl = 'p[data-test="org-people-linkedin"]';
+  private orgPeopleLinkedInUrl = 'span[data-test="org-people-linkedin"]';
   private orgPeopleLinkedInInput = 'input[data-test="linkedin-url-input"]';
   private orgPeopleConfirmLinkedInUrl = 'button[data-test="add-linkedin-url"]';
   private orgPeopleorgAboutTags = 'div[data-test="org-about-tags"]';
+  private orgPeopleContactTags = 'div[data-test="contact-tags"]';
 
   async addContact(contactCreation: string) {
     await clickLocatorsThatAreVisible(
@@ -39,9 +42,14 @@ export class OrganizationPeoplePage {
       this.orgPeopleAddByName,
     );
 
-    const contactName = await this.addNameToContact();
+    const contactName = createTinyUUID();
 
-    await clickLocatorsThatAreVisible(this.page, this.orgPeopleAddContact);
+    await this.page.fill(this.orgPeopleNameInput, contactName);
+    await clickLocatorThatIsVisible(this.page, this.confirmContactCreation);
+
+    // const contactName = await this.addNameToContact();
+    //
+    // await clickLocatorsThatAreVisible(this.page, this.orgPeopleAddContact);
 
     return contactName;
   }
@@ -113,7 +121,7 @@ export class OrganizationPeoplePage {
 
     page = await writeTextInLocator(
       page,
-      this.orgPeopleorgAboutTags,
+      this.orgPeopleContactTags,
       'testPersonas',
     );
 

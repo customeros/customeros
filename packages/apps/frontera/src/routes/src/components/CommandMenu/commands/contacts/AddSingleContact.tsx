@@ -222,7 +222,7 @@ export const AddSingleContact = observer(() => {
             variant='outline'
             className='w-full'
             colorScheme='primary'
-            data-test='contact-actions-confirm-flow-change'
+            dataTest='confirm-contact-creation'
             leftSpinner={<Spinner size='sm' label='creating contacts' />}
             onClick={() => {
               handleSubmit();

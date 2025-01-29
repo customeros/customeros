@@ -15,7 +15,7 @@ export class OpportunitiesPage {
   private allOrgsSelectAllOrgs = 'div[data-test="all-orgs-select-all-orgs"]';
   private opportunitiesActionsArchive = 'button[data-test="actions-archive"]';
   private orgActionsConfirmArchive =
-    'div[data-test="org-actions-confirm-archive"]';
+    'button[data-test="org-actions-confirm-archive"]';
   private prospectsListButton = 'button[data-test="prospects-list-button"]';
 
   async goToOpportunitiesList() {
