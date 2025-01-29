@@ -46,7 +46,6 @@ func RegisterRestRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 	registerIDRoutes(ctx, r, s, h)
 	registerMailstackRoutes(ctx, r, s, h)
 	registerOutreachRoutes(ctx, r, s, h)
-	registerRevealRoutes(ctx, r, s, h)
 	registerVerifyRoutes(ctx, r, s, h)
 }
 

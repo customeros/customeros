@@ -285,17 +285,6 @@ func registerOutreachRoutes(ctx context.Context, r *gin.Engine, s *cosapi_servic
 	})
 }
 
-func registerRevealRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
-	registerRoute(ctx, r, RouteConfig{
-		method:    "POST",
-		path:      fmt.Sprintf("%s/trackers", RevealPath),
-		handler:   h.WebTracker.ProvisionTracker(),
-		routeType: RouteCustomer,
-		services:  s,
-		cache:     s.Cache,
-	})
-}
-
 func registerVerifyRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",

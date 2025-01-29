@@ -77,7 +77,6 @@ type Repositories struct {
 	TenantSettingsRepository                     TenantSettingsRepository
 	TenantWebhookApiKeyRepository                TenantWebhookApiKeyRepository
 	TenantWebhookRepository                      TenantWebhookRepository
-	TrackingAllowedOriginRepository              TrackingAllowedOriginRepository
 	UserEmailImportPageTokenRepository           UserEmailImportStateRepository
 	UserWorkingScheduleRepository                UserWorkingScheduleRepository
 	QuickbooksSettingsRepository                 QuickbooksSettingsRepository
@@ -157,7 +156,6 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		TenantSettingsRepository:                     NewTenantSettingsRepository(postgresDB.GormDB),
 		TenantWebhookApiKeyRepository:                NewTenantWebhookApiKeyRepository(postgresDB.GormDB),
 		TenantWebhookRepository:                      NewTenantWebhookRepo(postgresDB.GormDB),
-		TrackingAllowedOriginRepository:              NewTrackingAllowedOriginRepository(postgresDB.GormDB),
 		UserWorkingScheduleRepository:                NewUserWorkingScheduleRepository(postgresDB.GormDB),
 		QuickbooksSettingsRepository:                 NewQuickbooksSettingsRepository(postgresDB.GormDB),
 		WebhooksRepository:                           NewWebhooksRepository(postgresDB.GormDB),
@@ -228,7 +226,6 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.TenantSettingsOpportunityStage{},
 		&postgres_entity.TenantWebhook{},
 		&postgres_entity.TenantWebhookApiKey{},
-		&postgres_entity.TrackingAllowedOrigin{},
 		&postgres_entity.UserWorkingSchedule{},
 		&postgres_entity.QuickbooksSettingsEntity{},
 		&postgres_entity.Webhooks{},

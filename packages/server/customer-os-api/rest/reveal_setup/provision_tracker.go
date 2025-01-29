@@ -5,13 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"net/http"
 	"strings"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/response"
@@ -55,63 +52,6 @@ const TrackerScript = `<!-- CustomerOS Visitor Reveal -->
    (document.body || document.head).appendChild(customerOS);
 })(window, "https://app.customeros.ai/analytics-0.1.js", "script");
 </script>`
-
-func (h *WebTrackerHandler) ProvisionTracker() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Reveal.ProvisionTracker", c.Request.Header)
-		defer span.Finish()
-		tracing.TagComponentRest(span)
-
-		tenant := common.GetTenantFromContext(ctx)
-		if tenant == "" {
-			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
-			return
-		}
-
-		payload, err := h.getTrackerRequestPayload(c)
-		if err != nil {
-			switch {
-			case err.Error() == "No domain":
-				message := "domain not provided"
-				h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
-				return
-			case err.Error() == "Invalid domain":
-				message := "domain is not valid"
-				h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
-				return
-			default:
-				message := "Could not parse request"
-				h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
-				return
-			}
-		}
-
-		// whitelist domain
-		whitelist := postgres_entity.TrackingAllowedOrigin{
-			Tenant:  tenant,
-			Origin:  payload.Domain,
-			Enabled: true,
-		}
-
-		record, err := h.services.Repositories.PostgresRepositories.TrackingAllowedOriginRepository.Create(ctx, whitelist)
-		if err != nil || record == nil {
-			message := "Could not create tracker"
-			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)
-			return
-		}
-
-		// return tracker
-
-		h.responseHandler.HandleSuccess(c, TrackerResponse{
-			Tracker: TrackerRecord{
-				ID:        record.ID,
-				Domain:    record.Origin,
-				CreatedAt: record.CreatedAt,
-				Code:      TrackerScript,
-			},
-		})
-	}
-}
 
 func (h *WebTrackerHandler) getTrackerRequestPayload(c *gin.Context) (TrackerRequest, error) {
 	span, _ := tracing.StartTracerSpan(c.Request.Context(), "Reveal.getTrackerRequestPayload")
