@@ -16,6 +16,7 @@ import (
 
 type CreateOrganizationCapability struct {
 	organizationService interfaces.OrganizationService
+	domainService       interfaces.DomainService
 }
 
 type CreateOrganizationInput struct {
@@ -27,9 +28,10 @@ type CreateOrganizationOutput struct {
 	OrganizationID string `json:"organizationId"`
 }
 
-func NewCreateOrganizationCapability(orgService interfaces.OrganizationService) *CreateOrganizationCapability {
+func NewCreateOrganizationCapability(orgService interfaces.OrganizationService, domainService interfaces.DomainService) *CreateOrganizationCapability {
 	return &CreateOrganizationCapability{
 		organizationService: orgService,
+		domainService:       domainService,
 	}
 }
 
@@ -84,6 +86,10 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateO
 		return result, err
 	}
 
+	result.ExecutionValidated = true
+
+	// TODO
+
 	orgID, err := c.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
 		Domains: []string{data.Domain},
 	})
@@ -94,6 +100,7 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateO
 
 	result.OrganizationID = orgID
 
+	result.Completed = true
 	tracing.LogObjectAsJson(span, "result", result)
 	return result, nil
 }

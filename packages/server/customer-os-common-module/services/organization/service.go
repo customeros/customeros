@@ -1661,3 +1661,30 @@ func (s *organizationService) GetOrganizationsByStage(ctx context.Context, stage
 
 	return &organizationEntities, nil
 }
+
+func (s *organizationService) GetOrganizationByDomain(ctx context.Context, domain string, includePrimaryDomainCheck bool) (*neo4jentity.OrganizationEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationByDomain")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("domain", domain), log.Bool("includePrimaryDomainCheck", includePrimaryDomainCheck))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	dbResult, err := s.neo4j.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if dbResult != nil {
+		return neo4jmapper.MapDbNodeToOrganizationEntity(dbResult), nil
+	}
+
+	if includePrimaryDomainCheck {
+		_, _, primaryDomain := s.domain.CheckDomainWithMailsherpa(ctx, domain)
+		if primaryDomain != "" && primaryDomain != domain {
+			return s.GetOrganizationByDomain(ctx, primaryDomain, false)
+		}
+	}
+
+	return nil, nil
+}

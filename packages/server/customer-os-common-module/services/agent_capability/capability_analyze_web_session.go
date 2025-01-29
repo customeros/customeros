@@ -97,35 +97,39 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeW
 	tracing.LogObjectAsJson(span, "input", data)
 	tracing.LogObjectAsJson(span, "config", config)
 
+	result := AnalyzeWebSessionOutput{}
+
 	if err := c.ValidateConfig(config); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return AnalyzeWebSessionOutput{}, err
+		return result, err
 	}
 	if err := c.ValidateInput(data); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return AnalyzeWebSessionOutput{}, err
+		return result, err
 	}
+
+	result.ExecutionValidated = true
 
 	// analyze session
 	result, err := c.sessionAnalytics(ctx, data.SessionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return AnalyzeWebSessionOutput{}, err
+		return result, err
 	}
 
 	// determine if a new company visit
 	isNewCompany, err := c.isNewCompanyVisit(ctx, data.Domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return AnalyzeWebSessionOutput{}, err
+		return result, err
 	}
 	result.IsNewCompanyVisit = isNewCompany
 
-	// determene if a new person visit
+	// determine if a new person visit
 	isNewVisitor, err := c.isNewWebsiteVisitor(ctx, data.VisitorID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return AnalyzeWebSessionOutput{}, err
+		return result, err
 	}
 	result.IsNewPersonVisit = isNewVisitor
 
@@ -143,6 +147,7 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeW
 		return result, err
 	}
 
+	result.Completed = true
 	tracing.LogObjectAsJson(span, "result", result)
 	return result, nil
 }
