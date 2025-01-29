@@ -69,6 +69,7 @@ func TestStartCron(t *testing.T) {
 				CronScheduleAnalyzeWebSessionIntent:                               "0 0 */1 * * *",
 				CronScheduleEnrichGlobalOrg:                                       "0 0 */1 * * *",
 				CronScheduleSyncFromGlobalOrgsToTenantOrgs:                        "0 0 */1 * * *",
+				CronScheduleCheckTenantOnboarding:                                 "0 0 */1 * * *",
 			},
 		},
 	}

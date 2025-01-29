@@ -48,6 +48,7 @@ const (
 	GroupWebSession     = "webSession"
 	GroupTouchpoint     = "refreshLastTouchpoint"
 	GroupUnthreadIssues = "linkUnthreadIssues"
+	GroupTenant         = "tenant"
 )
 
 // LOCK MANAGEMENT
@@ -80,6 +81,7 @@ var jobLocks = struct {
 		GroupMailstack:       {},
 		GroupReminder:        {},
 		GroupWebSession:      {},
+		GroupTenant:          {},
 	},
 }
 
@@ -153,6 +155,9 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleFlowExecution, GroupFlow, flowExecution, "flowExecution")
 	addJob(cont.Cfg.App.Cron.CronScheduleFlowStatistics, GroupFlowStats, flowStatistics, "flowStatistics")
 	addJob(cont.Cfg.App.Cron.CronScheduleRampUpMailboxes, GroupRampMailboxes, rampUpMailboxes, "rampUpMailboxes")
+
+	// Tenant Jobs
+	addJob(cont.Cfg.App.Cron.CronScheduleCheckTenantOnboarding, GroupTenant, checkTenantOnboarding, "checkTenantOnboarding")
 
 	// Other Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleRefreshLastTouchpoint, GroupTouchpoint, refreshLastTouchpoint, "refreshLastTouchpoint")
@@ -343,4 +348,8 @@ func analyzeWebSessionIntent(cont *container.Container) {
 
 func syncGlobalOrgsToTenantOrganizations(cont *container.Container) {
 	service.NewGlobalOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).SyncGlobalOrgsToTenantOrganizations()
+}
+
+func checkTenantOnboarding(cont *container.Container) {
+	service.NewTenantService(cont.Cfg, cont.Log, cont.CommonServices).CheckOnboarding()
 }
