@@ -23,6 +23,7 @@ const (
 	NotificationRoutingKey    = "notification"
 
 	EventsExchangeName                      = "customeros"
+	EventsDirectExchangeName                = "customeros-direct"
 	EventsRoutingKey                        = "event"
 	EventsQueueName                         = "events"
 	EventsFlowParticipantScheduleQueueName  = "events-flow-participant-schedule"

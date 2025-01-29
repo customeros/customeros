@@ -43,7 +43,7 @@ func Handle_FlowOn(ctx context.Context, services *service.CommonServices, input 
 	}
 
 	for _, v := range *flowParticipants {
-		err := services.Events.Publisher.PublishEventOnExchange(ctx, v.Id, model.FLOW_PARTICIPANT, dto.FlowParticipantSchedule{}, events.EventsExchangeName, events.EventsFlowParticipantScheduleRoutingKey)
+		err := services.Events.Publisher.PublishEventOnExchange(ctx, v.Id, model.FLOW_PARTICIPANT, dto.FlowParticipantSchedule{}, events.EventsDirectExchangeName, events.EventsFlowParticipantScheduleRoutingKey)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
