@@ -75,8 +75,16 @@ func (f *agentsRepository) GetAll(ctx context.Context) ([]*postgres_entity.Agent
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("Tenant not set")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	var agents []*postgres_entity.Agents
-	err := f.gormDb.Find(&agents).Error
+	query := f.gormDb.Where("tenant = ? ", tenant)
+	err := query.Find(&agents).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

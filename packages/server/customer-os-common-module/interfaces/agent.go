@@ -12,7 +12,7 @@ type AgentService interface {
 	CreateAgent(ctx context.Context, agentType enum.AgentType) (*postgresentity.Agents, error)
 	UpdateAgent(ctx context.Context, agent postgresentity.Agents) (*postgresentity.Agents, error)
 	GetAgentById(ctx context.Context, agentID string) (*postgresentity.Agents, error)
-	GetAllAgents(ctx context.Context) ([]*postgresentity.Agents, error)
+	GetAllAgentsByTenant(ctx context.Context) ([]*postgresentity.Agents, error)
 
 	CreateAgentExecutionRecord(ctx context.Context, agent postgresentity.Agents, triggerEvent string) (string, error)
 	SaveAgentExecutionCompleted(ctx context.Context, executionID string, goalAchieved bool) error

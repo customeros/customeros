@@ -48,8 +48,8 @@ func (a *agentService) GetAgentById(ctx context.Context, agentID string) (*postg
 	return agent, nil
 }
 
-func (a *agentService) GetAllAgents(ctx context.Context) ([]*postgresentity.Agents, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.GetAllAgents")
+func (a *agentService) GetAllAgentsByTenant(ctx context.Context) ([]*postgresentity.Agents, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.GetAllAgentsByTenant")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -172,6 +172,7 @@ func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent pos
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	agentExecutionRecord := postgresentity.AgentExecution{
+		Tenant:       agent.Tenant,
 		AgentID:      &agent.ID,
 		TriggerEvent: triggerEvent,
 		Status:       enum.AgentExecutionRunning.String(),
