@@ -16,7 +16,6 @@ import (
 
 type CreateOrganizationCapability struct {
 	organizationService interfaces.OrganizationService
-	domainService       interfaces.DomainService
 }
 
 type CreateOrganizationInput struct {
@@ -28,10 +27,9 @@ type CreateOrganizationOutput struct {
 	OrganizationID string `json:"organizationId"`
 }
 
-func NewCreateOrganizationCapability(orgService interfaces.OrganizationService, domainService interfaces.DomainService) *CreateOrganizationCapability {
+func NewCreateOrganizationCapability(orgService interfaces.OrganizationService) *CreateOrganizationCapability {
 	return &CreateOrganizationCapability{
 		organizationService: orgService,
-		domainService:       domainService,
 	}
 }
 
