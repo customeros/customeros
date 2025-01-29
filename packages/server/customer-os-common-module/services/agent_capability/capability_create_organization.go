@@ -88,7 +88,20 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateO
 
 	result.ExecutionValidated = true
 
-	// TODO
+	// Check if the domain is already linked to an organization
+	organizationEntity, err := c.organizationService.GetOrganizationByDomain(ctx, data.Domain, true)
+
+	// organization found
+	if organizationEntity != nil {
+		// if organization is hidden, return early
+		if organizationEntity.Hide {
+			return result, errors.New("Identified organization is archived")
+		}
+		result.OrganizationID = organizationEntity.ID
+		result.Completed = true
+		tracing.LogObjectAsJson(span, "result", result)
+		return result, nil
+	}
 
 	orgID, err := c.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
 		Domains: []string{data.Domain},
@@ -99,7 +112,6 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateO
 	}
 
 	result.OrganizationID = orgID
-
 	result.Completed = true
 	tracing.LogObjectAsJson(span, "result", result)
 	return result, nil

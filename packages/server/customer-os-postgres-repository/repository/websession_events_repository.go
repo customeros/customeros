@@ -23,6 +23,7 @@ type WebSessionRepository interface {
 	UpdateLastActivity(ctx context.Context, sessionID, eventType string) (*postgres_entity.WebSession, error)
 	UpdateSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error)
 	UpdateSessionWithDomain(ctx context.Context, sessionID, domain string) (*postgres_entity.WebSession, error)
+	UpdateSessionWithOrganization(ctx context.Context, sessionID, organizationId string) error
 	UpdateSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error)
 	UpdateIntentSignal(ctx context.Context, sessionID, tenant string, intentSignal int8) (*postgres_entity.WebSession, error)
 }
@@ -228,6 +229,25 @@ func (r *webSessionEventsRepository) UpdateSessionWithDomain(ctx context.Context
 	}
 
 	return &updatedSession, nil
+}
+
+func (r *webSessionEventsRepository) UpdateSessionWithOrganization(ctx context.Context, sessionID, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionWithOrganization")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	// Perform a single-column update on organization_id for the matching session
+	result := r.gormDb.Model(&postgres_entity.WebSession{}).
+		Where("id = ?", sessionID).
+		Update("organization_id", &organizationId)
+
+	if result.Error != nil {
+		// Log the error with tracing and return it
+		tracing.TraceErr(span, result.Error)
+		return result.Error
+	}
+
+	return nil
 }
 
 func (r *webSessionEventsRepository) UpdateSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error) {

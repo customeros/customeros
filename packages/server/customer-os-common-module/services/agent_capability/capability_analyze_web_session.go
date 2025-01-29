@@ -110,6 +110,15 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeW
 
 	result.ExecutionValidated = true
 
+	// update session with organization id
+	if data.OrganizationID != "" {
+		err := c.postgresRepositories.WebSessionRepository.UpdateSessionWithOrganization(ctx, data.SessionID, data.OrganizationID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return result, err
+		}
+	}
+
 	// analyze session
 	result, err := c.sessionAnalytics(ctx, data.SessionID)
 	if err != nil {
