@@ -13,6 +13,7 @@ type WebSession struct {
 	IP                    string         `gorm:"column:ip;type:varchar(255);" json:"ip"`
 	Hostname              string         `gorm:"column:hostname;type:varchar(255);" json:"hostname"`
 	Domain                *string        `gorm:"column:domain;type:varchar(255);index:idx_domain" json:"domain"`
+	OrganizationId        *string        `gorm:"column:organization_id;varchar(255);index:idx_organization_id" json:"organizationId"`
 	Referrer              *string        `gorm:"column:referrer;type:varchar(255);" json:"referrer"`
 	QueryParams           *string        `gorm:"column:query_params;type:varchar(255);" json:"queryParams"`
 	UniquePageViews       pq.StringArray `gorm:"column:unique_page_views;type:text[];" json:"uniquePageViews"`
@@ -25,7 +26,8 @@ type WebSession struct {
 	PublishedEvent        bool           `gorm:"column:published_event;type:boolean;default:false" json:"publishedEvent"`
 	SentSlackNotification *time.Time     `gorm:"column:sent_slack_notification;type:timestamp;" json:"sentSlackNotification"`
 	IntentSignals         int8           `gorm:"column:intent_signals;type:smallint;default:0" json:"intentSignals"`
-	CreatedAt             time.Time      `gorm:"default:CURRENT_TIMESTAMP"`
+	CreatedAt             time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedAt             *time.Time     `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
 }
 
 func (WebSession) TableName() string {
