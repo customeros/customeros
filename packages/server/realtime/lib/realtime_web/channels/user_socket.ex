@@ -73,6 +73,7 @@ defmodule RealtimeWeb.UserSocket do
   channel "Mailbox:*", RealtimeWeb.MailBoxChannel
   channel "Mailboxes:*", RealtimeWeb.MailboxesChannel
   channel "Agents:*", RealtimeWeb.AgentsChannel
+  channel "Skus:*", RealtimeWeb.SkusChannel
   channel "Industries:*", RealtimeWeb.IndustriesChannel
   channel "JobRoles:*", RealtimeWeb.JobRolesChannel
 
