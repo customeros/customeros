@@ -11,7 +11,9 @@ export type IconName =
   | 'chevron-down'
   | 'chevron-left'
   | 'chevron-right'
+  | 'copy-03'
   | 'download-04'
+  | 'dot-single'
   | 'dots-vertical'
   | 'cloud-off'
   | 'invoice'
@@ -23,6 +25,7 @@ export type IconName =
   | 'heart-hand'
   | 'signature'
   | 'target-05'
+  | 'plus-circle'
   | 'coins-stacked-01'
   | 'shuffle-01'
   | 'play'
@@ -44,7 +47,8 @@ export type IconName =
   | 'columns-03'
   | 'user-03'
   | 'user-01'
-  | 'activity';
+  | 'activity'
+  | 'x-circle';
 
 interface IconProps extends SVGAttributes<SVGElement> {
   name: IconName;
@@ -53,6 +57,7 @@ interface IconProps extends SVGAttributes<SVGElement> {
 
 export const Icon = ({
   name,
+  fill,
   width,
   height,
   stroke,
@@ -61,9 +66,9 @@ export const Icon = ({
   ...props
 }: IconProps) => (
   <svg
-    fill='none'
     viewBox='0 0 24 24'
     width={width ?? 24}
+    fill={fill ?? 'none'}
     height={height ?? 24}
     strokeLinecap='round'
     strokeLinejoin='round'

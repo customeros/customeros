@@ -1,14 +1,20 @@
+import { RootStore } from '@store/root';
 import { action, computed, observable } from 'mobx';
+import { AgentService } from '@domain/services/agent/agent.service';
 
 import { validateUrl } from '@utils/url';
+import { CapabilityType } from '@graphql/types';
 
 export class AddWebsiteToTrackUsecase {
+  private service = new AgentService();
+  private root = RootStore.getInstance();
+
   @observable accessor website: string = '';
   @observable accessor isOpen: boolean = false;
   @observable accessor websites: string[] = [];
   @observable accessor validationError: string = '';
 
-  constructor() {
+  constructor(private agentId: string) {
     this.toggle = this.toggle.bind(this);
     this.open = this.open.bind(this);
     this.close = this.close.bind(this);
@@ -79,6 +85,14 @@ export class AddWebsiteToTrackUsecase {
   }
 
   execute(opts?: { onInvalid?: () => void }) {
+    const agent = this.root.agents.getById(this.agentId);
+
+    if (!agent) {
+      console.error('AddWebsiteToTrack: Agent not found. aborting execution');
+
+      return;
+    }
+
     const isValid = this.validate();
 
     if (!isValid) {
@@ -90,6 +104,14 @@ export class AddWebsiteToTrackUsecase {
     if (isValid) {
       this.addWebsite();
       this.close();
+
+      agent?.setCapabilityConfig(
+        CapabilityType.IdentifyWebVisitor,
+        'websites',
+        this.websites,
+      );
+
+      this.service.saveAgent(agent);
     }
   }
 }

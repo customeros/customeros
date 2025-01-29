@@ -18,17 +18,18 @@ export class DevtoolsStore {
   @observable accessor openGqlOperationId: string | null = null;
   @observable accessor operationsSearchTerm = '';
   @observable accessor responseSearchTerm = '';
-  @observable accessor view: 'operations' | 'store' = 'operations';
+  @observable accessor view: 'operations' | 'store' | 'settings' = 'operations';
   @observable accessor detailedStore: string | null = null;
   @observable accessor detailedEntityId: string | null = null;
 
   visibleStores = [
-    'organizations',
-    'tableViewDefs',
+    'agents',
     'contacts',
     'contracts',
     'flows',
     'jobRoles',
+    'organizations',
+    'tableViewDefs',
     'tags',
   ];
 
@@ -72,7 +73,7 @@ export class DevtoolsStore {
   }
 
   @action
-  toggleView(view: 'operations' | 'store') {
+  toggleView(view: 'operations' | 'store' | 'settings') {
     this.view = view;
   }
 

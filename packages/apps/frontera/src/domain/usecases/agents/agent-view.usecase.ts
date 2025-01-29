@@ -1,3 +1,4 @@
+import { Tracer } from '@infra/tracer';
 import { action, observable } from 'mobx';
 
 import { Capability, CapabilityType } from '@graphql/types';
@@ -17,6 +18,7 @@ export class AgentViewUsecase {
 
   @action
   setActiveCapability(capability: Capability) {
+    Tracer.span('AgentViewUsecase.setActiveCapability', { capability });
     this.activeCapability = capability;
   }
 }

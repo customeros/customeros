@@ -25,7 +25,9 @@ export type SaveAgentMutation = {
       id: string;
       type: Types.CapabilityType;
       name: string;
+      active: boolean;
       action: string;
+      config: string;
       errors?: string | null;
     }>;
   };

@@ -8,6 +8,8 @@ query agent($id: ID!) {
       type
       name
       action
+      active
+      config
       errors
     }
     goal

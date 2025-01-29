@@ -1,16 +1,13 @@
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import { AddWebsiteToTrackUsecase } from '@domain/usecases/agents/capabilities/add-website-to-track.usecase';
 
+import { Icon } from '@ui/media/Icon';
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
-import { Copy03 } from '@ui/media/icons/Copy03';
 import { IconButton } from '@ui/form/IconButton';
-import { XCircle } from '@ui/media/icons/XCircle';
-import { DotSingle } from '@ui/media/icons/DotSingle';
-import { PlusCircle } from '@ui/media/icons/PlusCircle';
-import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   AlertDialog,
@@ -22,9 +19,10 @@ import {
   AlertDialogCloseIconButton,
 } from '@ui/overlay/AlertDialog/AlertDialog';
 
-const usecase = new AddWebsiteToTrackUsecase();
-
 export const WebsiteTrackerCapability = observer(() => {
+  const { id } = useParams<{ id: string }>();
+
+  const usecase = useMemo(() => new AddWebsiteToTrackUsecase(id!), [id]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -40,7 +38,7 @@ export const WebsiteTrackerCapability = observer(() => {
           {usecase.websites.map((website) => (
             <div key={website} className='flex items-center group'>
               <div className='mx-2'>
-                <DotSingle className='text-grayModern-500' />
+                <Icon name='dot-single' className='text-grayModern-500' />
               </div>
               <p className='text-sm cursor-default'>{website}</p>
 
@@ -50,13 +48,13 @@ export const WebsiteTrackerCapability = observer(() => {
                     size='xxs'
                     variant='ghost'
                     aria-label='more'
-                    icon={<DotsVertical />}
+                    icon={<Icon name='dots-vertical' />}
                     className='ml-2 invisible group-hover:visible'
                   />
                 </MenuButton>
                 <MenuList>
                   <MenuItem onClick={() => usecase.removeWebsite(website)}>
-                    <XCircle className='text-grayModern-500' />
+                    <Icon name='x-circle' className='text-grayModern-500' />
                     Remove
                   </MenuItem>
                 </MenuList>
@@ -69,7 +67,7 @@ export const WebsiteTrackerCapability = observer(() => {
             variant='ghost'
             className='w-fit'
             onClick={usecase.open}
-            leftIcon={<PlusCircle />}
+            leftIcon={<Icon name='plus-circle' />}
           >
             Add website
           </Button>
@@ -98,7 +96,7 @@ export const WebsiteTrackerCapability = observer(() => {
               size='xxs'
               variant='ghost'
               aria-label='copy'
-              icon={<Copy03 />}
+              icon={<Icon name='copy-03' />}
             />
           </div>
         </div>

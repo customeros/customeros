@@ -5,11 +5,13 @@ import { toJS } from 'mobx';
 import get from 'lodash/get';
 import { useKey } from 'rooks';
 import { match } from 'ts-pattern';
+import { Tracer } from '@infra/tracer';
 import { Observer, observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
 import { X } from '@ui/media/icons/X';
 import { Input } from '@ui/form/Input';
+import { Switch } from '@ui/form/Switch';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
@@ -89,6 +91,7 @@ export const Devtools = observer(() => {
       | (typeof store)['flows']
       | (typeof store)['jobRoles']
       | (typeof store)['tags']
+      | (typeof store)['agents']
       | null
     >()
     .with('tableViewDefs', () => store.tableViewDefs)
@@ -98,6 +101,7 @@ export const Devtools = observer(() => {
     .with('flows', () => store.flows)
     .with('jobRoles', () => store.jobRoles)
     .with('tags', () => store.tags)
+    .with('agents', () => store.agents)
     .otherwise(() => null);
 
   const getEntityName = (entity: Record<string, string>) =>
@@ -110,6 +114,7 @@ export const Devtools = observer(() => {
       .with('flows', () => get(entity, 'value.name', 'Unnamed'))
       .with('jobRoles', () => get(entity, 'value.jobTitle', 'Unnamed'))
       .with('tags', () => get(entity, 'value.name', 'Unnamed'))
+      .with('agents', () => get(entity, 'value.name', 'Unnamed'))
       .otherwise(() => 'Unnamed');
 
   return createPortal(
@@ -165,6 +170,16 @@ export const Devtools = observer(() => {
                       )}
                     >
                       Store
+                    </Button>
+                    <Button
+                      size='xxs'
+                      onClick={() => devTools.toggleView('settings')}
+                      className={cn(
+                        devTools.view === 'settings' &&
+                          'bg-primary-100 focus:bg-primary-200 hover:bg-primary-200',
+                      )}
+                    >
+                      Settings
                     </Button>
                   </ButtonGroup>
                 </div>
@@ -352,6 +367,60 @@ export const Devtools = observer(() => {
                               );
                             })}
                         </>
+                      )}
+                      {devTools.view === 'settings' && (
+                        <div className='w-full'>
+                          <p className='font-medium underline mb-2'>Settings</p>
+                          <div className='flex items-center justify-between w-full'>
+                            <span className='text-sm font-medium'>Tracer</span>
+
+                            <div className='flex items-center gap-2 mr-2'>
+                              <span
+                                className={cn(
+                                  'text-xs text-grayModern-500',
+                                  Tracer.enabled && 'text-primary-500',
+                                )}
+                              >
+                                {Tracer.enabled ? 'enabled' : 'disabled'}
+                              </span>
+                              <Switch
+                                checked={Tracer.enabled}
+                                onChange={() =>
+                                  Tracer.enabled
+                                    ? Tracer.disable()
+                                    : Tracer.enable()
+                                }
+                              />
+                            </div>
+                          </div>
+
+                          <div className='flex items-center justify-between w-full pl-4 mt-2'>
+                            <span className='text-xs font-medium'>
+                              Show Callstack
+                            </span>
+
+                            <div className='flex items-center gap-2 mr-2'>
+                              <span
+                                className={cn(
+                                  'text-xs text-grayModern-500',
+                                  Tracer.displayCallStack && 'text-primary-500',
+                                )}
+                              >
+                                {Tracer.displayCallStack
+                                  ? 'enabled'
+                                  : 'disabled'}
+                              </span>
+                              <Switch
+                                checked={Tracer.displayCallStack}
+                                onChange={() =>
+                                  Tracer.displayCallStack
+                                    ? Tracer.hideCallstack()
+                                    : Tracer.showCallstack()
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </ScrollAreaViewport>
                     <ScrollAreaScrollbar orientation='vertical'>

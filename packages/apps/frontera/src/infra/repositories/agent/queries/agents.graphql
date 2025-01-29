@@ -8,6 +8,8 @@ query agents {
       type
       name
       action
+      active
+      config
       errors
     }
     goal

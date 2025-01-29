@@ -143,6 +143,7 @@ export class RootStore {
       this.flows.bootstrap(),
       this.flowEmailVariables.bootstrap(),
       this.skus.bootstrap(),
+      this.agents.bootstrap(),
     ]);
   }
 
