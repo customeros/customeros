@@ -29,6 +29,7 @@ query getOrganizationsByIds($ids: [ID!]) {
       primary
       primaryDomain
     }
+    wrongIndustry
     createdAt
     updatedAt
     churnedAt

@@ -34,6 +34,7 @@ export type GetOrganizationsByIdsQuery = {
     ltv?: number | null;
     hide: boolean;
     domains: Array<string>;
+    wrongIndustry: boolean;
     createdAt: any;
     updatedAt: any;
     churnedAt?: any | null;

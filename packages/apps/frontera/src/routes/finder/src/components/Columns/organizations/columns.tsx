@@ -544,8 +544,16 @@ export const columns: Record<string, Column> = {
       cell: (props) => {
         const value = props.getValue();
         const isEnriching = props.row.original.isEnriching;
+        const flaggedArWrong = props.row.original.value.wrongIndustry;
 
-        return <IndustryCell value={value} enrichingStatus={isEnriching} />;
+        return (
+          <IndustryCell
+            value={value}
+            id={props.row.original.id}
+            enrichingStatus={isEnriching}
+            flaggedAsIncorrect={flaggedArWrong}
+          />
+        );
       },
       header: (props) => (
         <THead<HTMLInputElement>

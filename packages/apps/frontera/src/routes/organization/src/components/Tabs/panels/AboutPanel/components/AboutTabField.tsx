@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { FlagWrongFieldUsecase } from '@domain/usecases/organization-about-panel/flag-wrong-field.usecase';
+import { FlagWrongFieldUsecase } from '@domain/usecases/organization-industry-field/flag-wrong-field.usecase';
 
 import { FlagWrongFields } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton';
@@ -14,6 +14,7 @@ interface FieldMarkerProps {
   placeholder?: string;
   value?: string | null;
   field: FlagWrongFields;
+  flaggedAsIncorrect: boolean;
 }
 
 const flagWrongFieldUsecase = new FlagWrongFieldUsecase();
@@ -24,6 +25,7 @@ export const AboutTabField = ({
   value,
   dataTest,
   placeholder,
+  flaggedAsIncorrect,
 }: FieldMarkerProps) => {
   const id = useParams()?.id as string;
   const label = fieldLabels[field];
@@ -43,7 +45,13 @@ export const AboutTabField = ({
         </p>
       </Tooltip>
       {value && (
-        <Tooltip label={`This ${label.toLowerCase()} is incorrect`}>
+        <Tooltip
+          label={
+            flaggedAsIncorrect
+              ? 'Reported as incorrect before'
+              : `This ${label.toLowerCase()} is incorrect`
+          }
+        >
           <div>
             <IconButton
               size='xxs'

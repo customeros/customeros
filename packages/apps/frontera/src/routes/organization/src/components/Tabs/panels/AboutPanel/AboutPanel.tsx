@@ -280,6 +280,7 @@ export const AboutPanel = observer(() => {
             value={organization?.value?.industryName}
             field={FlagWrongFields.OrganizationIndustry}
             icon={<Building07 className='text-gray-500 mr-3 ' />}
+            flaggedAsIncorrect={organization?.value?.wrongIndustry ?? false}
           />
 
           {organization.country && (
