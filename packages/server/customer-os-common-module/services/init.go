@@ -223,7 +223,7 @@ func InitCommonServices(
 	flowImpl := flow.NewFlowService(neo4jRepositories, postgresRepositories, eventsImpl, flowExecutionImpl)
 	locationImpl := location.NewLocationService(log, neo4jRepositories, postgresRepositories, eventsImpl, &cfg.External.AnthropicConfig.Prompts, aiImpl, contactImpl, orgImpl)
 	actionImpl := action.NewActionService(log, neo4jRepositories, eventsImpl, orgImpl)
-	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailboxImpl, orgImpl, postmarkImpl, userImpl)
+	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailboxImpl, orgImpl, postmarkImpl, userImpl, agentImpl)
 
 	// Resolve circular dependencies
 	emailImpl.SetContactService(contactImpl)

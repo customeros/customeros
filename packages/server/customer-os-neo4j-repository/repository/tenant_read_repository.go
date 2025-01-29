@@ -2,10 +2,10 @@ package neo4j_repository
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -21,6 +21,7 @@ type TenantReadRepository interface {
 	GetTenantSettings(ctx context.Context, tenant string) (*dbtype.Node, error)
 	GetTenantBillingProfiles(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetTenantBillingProfileById(ctx context.Context, tenant, id string) (*dbtype.Node, error)
+	GetTenantsForOnboardingCheck(ctx context.Context, limit, delayFromPreviousCheckHours int) ([]*dbtype.Node, error)
 }
 
 type tenantReadRepository struct {
@@ -384,4 +385,44 @@ func (r *tenantReadRepository) GetTenantBillingProfileById(ctx context.Context, 
 
 	span.LogFields(log.Bool("result.found", result != nil))
 	return result.(*dbtype.Node), nil
+}
+
+func (r *tenantReadRepository) GetTenantsForOnboardingCheck(ctx context.Context, limit, delayFromPreviousCheckHours int) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantsForOnboardingCheck")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Int("limit", limit), log.Int("delayFromPreviousCheckHours", delayFromPreviousCheckHours))
+
+	cypher := `MATCH (t:Tenant)
+			WHERE t.active = true
+			AND t.createdAt < datetime() - duration({minutes: $delayFromCreationMin})
+			AND (t.techOnboardingCheckedAt IS NULL OR t.techOnboardingCheckedAt < datetime() - duration({hours: $delayFromPreviousCheckHours}))
+			RETURN t
+			ORDER BY CASE WHEN t.techOnboardingCheckedAt IS NULL THEN 0 ELSE 1 END, t.techOnboardingCheckedAt ASC
+			LIMIT $limit`
+	params := map[string]any{
+		"limit":                       limit,
+		"delayFromCreationMin":        15,
+		"delayFromPreviousCheckHours": delayFromPreviousCheckHours,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	if result == nil {
+		return nil, nil
+	}
+	return result.([]*dbtype.Node), nil
 }
