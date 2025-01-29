@@ -3,12 +3,12 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -66,6 +66,7 @@ type OrganizationReadRepository interface {
 	GetLinkedSubOrganizations(ctx context.Context, tenant string, parentOrganizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetLinkedParentOrganizations(ctx context.Context, tenant string, organizationIds []string, relationName string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetOrganizationsByDomainAcrossAllTenants(ctx context.Context, domain string) ([]TenantAndOrganizationId, error)
+	GetOrganizationsByStage(ctx context.Context, tenant string, stage neo4jenum.OrganizationStage) ([]*dbtype.Node, error)
 }
 
 type organizationReadRepository struct {
@@ -1369,4 +1370,41 @@ func (r *organizationReadRepository) GetOrganizationsByDomainAcrossAllTenants(ct
 	}
 	span.LogFields(log.Int("result.count", len(output)))
 	return output, nil
+}
+
+func (r *organizationReadRepository) GetOrganizationsByStage(ctx context.Context, tenant string, stage neo4jenum.OrganizationStage) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsByStage")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("stage", stage.String()))
+
+	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			WHERE org.hide = false AND org.stage = $stage
+			RETURN org ORDER BY org.createdAt DESC`
+	params := map[string]any{
+		"tenant": tenant,
+		"stage":  stage.String(),
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+
+	return result.([]*dbtype.Node), nil
 }

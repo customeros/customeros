@@ -1640,3 +1640,24 @@ func (s *organizationService) calculateLtv(ctx context.Context, tenant string, o
 
 	return nil
 }
+
+func (s *organizationService) GetOrganizationsByStage(ctx context.Context, stage neo4jenum.OrganizationStage) (*neo4jentity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetOrganizationsByStage")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("stage", stage.String()))
+
+	tenant := common.GetTenantFromContext(ctx)
+	dbResults, err := s.neo4j.OrganizationReadRepository.GetOrganizationsByStage(ctx, tenant, stage)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0)
+	for _, dbResult := range dbResults {
+		organizationEntities = append(organizationEntities, *neo4jmapper.MapDbNodeToOrganizationEntity(dbResult))
+	}
+
+	return &organizationEntities, nil
+}
