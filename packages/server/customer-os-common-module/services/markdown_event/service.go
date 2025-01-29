@@ -3,7 +3,6 @@ package markdown_event
 import (
 	"context"
 
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -59,7 +59,7 @@ func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils
 			input.CreatedAt = utils.NowPtr()
 		}
 		if input.Source == nil {
-			input.Source = utils.ToPtr(neo4jentity.DataSourceOpenline)
+			input.Source = utils.ToPtr(enum.SourceCustomerOS)
 		}
 		if utils.IfNotNilString(input.AppSource) == "" {
 			input.AppSource = utils.StringPtr(common.GetAppSourceFromContext(ctx))

@@ -53,7 +53,8 @@ func NewOrganizationService(log logger.Logger,
 	industry interfaces.IndustryService,
 	social interfaces.SocialService,
 	user interfaces.UserService,
-	currencyService interfaces.CurrencyService) interfaces.OrganizationService {
+	currencyService interfaces.CurrencyService,
+) interfaces.OrganizationService {
 	return &organizationService{
 		log:             log,
 		postgres:        postgres,
@@ -128,6 +129,28 @@ func (s *organizationService) GetById(ctx context.Context, tenant, organizationI
 	}
 
 	return neo4jmapper.MapDbNodeToOrganizationEntity(dbNode), nil
+}
+
+func (s *organizationService) GetPrimaryDomainByOrgID(ctx context.Context, organizationId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetPrimaryDomainByOrgID")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	domains, err := s.domain.GetAllDomainsForOrganizations(ctx, []string{organizationId})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	if domains == nil || len(*domains) == 0 {
+		return "", nil
+	}
+
+	for _, domain := range *domains {
+		if domain.PrimaryDomain != "" {
+			return domain.PrimaryDomain, nil
+		}
+	}
+	return "", nil
 }
 
 func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, input data_fields.OrganizationFields) (string, error) {

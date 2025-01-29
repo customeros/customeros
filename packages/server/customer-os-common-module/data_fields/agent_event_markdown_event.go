@@ -3,14 +3,15 @@ package data_fields
 import (
 	"time"
 
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 )
 
 // Nil fields wil be skipped from update
 type MarkdownEventFields struct {
 	AppSource      *string                    `json:"appSource,omitempty"`
-	Source         *neo4jentity.DataSource    `json:"source,omitempty"`
+	Source         *enum.Source               `json:"source,omitempty"`
 	CreatedAt      *time.Time                 `json:"createdAt,omitempty"`
 	OrganizationId *string                    `json:"organizationId,omitempty"`
 	Content        *string                    `json:"content,omitempty"`

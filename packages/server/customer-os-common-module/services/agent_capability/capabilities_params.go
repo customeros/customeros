@@ -1,20 +1,22 @@
 package agent_capability
 
 type CapabilityParams struct {
-	ExecutionValidated bool     `json:"executionValidated"`
 	Completed          bool     `json:"completed"`
-	SessionID          string   `json:"sessionId"`
-	IPAddress          string   `json:"ipAddress"`
-	VisitorID          string   `json:"visitorId"`
-	Hostname           string   `json:"hostname"`
 	Domain             string   `json:"domain"`
-	LinkedInSlug       string   `json:"linkedinSlug"`
-	OrganizationID     string   `json:"organizationId"`
+	ExecutionValidated bool     `json:"executionValidated"`
+	Hostname           string   `json:"hostname"`
+	IcpFitRationale    string   `json:"icpFitRationale"`
+	IPAddress          string   `json:"ipAddress"`
+	IsICPFit           string   `json:"isIcpFit"`
 	IsNewCompanyVisit  bool     `json:"isNewCompanyVisit"`
 	IsNewPersonVisit   bool     `json:"isNewPersonVisit"`
-	PageViews          []string `json:"pageViews"`
-	SessionDuration    string   `json:"sessionDuration"`
-	SlackNotification  string   `json:"slackNotification"`
-	Referrer           string   `json:"referrer"`
+	LinkedInSlug       string   `json:"linkedinSlug"`
 	Message            *string  `json:"message,omitempty"`
+	OrganizationID     string   `json:"organizationId"`
+	PageViews          []string `json:"pageViews"`
+	Referrer           string   `json:"referrer"`
+	SessionDuration    string   `json:"sessionDuration"`
+	SessionID          string   `json:"sessionId"`
+	SlackNotification  string   `json:"slackNotification"`
+	VisitorID          string   `json:"visitorId"`
 }

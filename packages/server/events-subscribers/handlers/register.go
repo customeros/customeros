@@ -8,6 +8,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 
+	"github.com/customeros/customeros/packages/server/events-subscribers/handlers/flow"
 	"github.com/customeros/customeros/packages/server/events-subscribers/listeners"
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
@@ -40,7 +41,7 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 
 	eventsService.Subscriber.RegisterHandler(dto.FlowParticipantGoalAchieved{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
-			return listeners.Handle_FlowParticipantGoalAchieved(ctx, dependencies, event)
+			return flow.Handle_FlowParticipantGoalAchieved(ctx, dependencies, event)
 		},
 		EventType: reflect.TypeOf(dto.FlowParticipantGoalAchieved{}).Name(),
 		DataType:  reflect.TypeOf(dto.FlowParticipantGoalAchieved{}),
