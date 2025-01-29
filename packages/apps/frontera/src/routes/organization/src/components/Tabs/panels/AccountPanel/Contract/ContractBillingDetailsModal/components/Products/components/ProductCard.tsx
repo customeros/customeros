@@ -1,23 +1,22 @@
-import { useState, ChangeEvent } from 'react';
+import { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store';
 
-import { cn } from '@ui/utils/cn.ts';
-import { DateTimeUtils } from '@utils/date.ts';
+import { cn } from '@ui/utils/cn';
+import { DateTimeUtils } from '@utils/date';
 import { ContractStatus } from '@graphql/types';
-import { Input } from '@ui/form/Input/Input.tsx';
 import { useStore } from '@shared/hooks/useStore';
-import { FlipBackward } from '@ui/media/icons/FlipBackward.tsx';
-import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
-import { ChevronExpand } from '@ui/media/icons/ChevronExpand.tsx';
-import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse.tsx';
-import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card.tsx';
+import { FlipBackward } from '@ui/media/icons/FlipBackward';
+import { IconButton } from '@ui/form/IconButton/IconButton';
+import { ChevronExpand } from '@ui/media/icons/ChevronExpand';
+import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse';
+import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card';
 
-import { ServiceItem } from './ServiceItem';
-import { ServiceItemMenu } from './ServiceItemMenu.tsx';
+import { ProductItem } from './ProductItem';
+import { ProductItemMenu } from './ProductItemMenu';
 
-interface ServiceCardProps {
+interface ProductCardProps {
   ids?: string[];
   currency: string;
   contractId: string;
@@ -25,13 +24,14 @@ interface ServiceCardProps {
   contractStatus?: ContractStatus | null;
 }
 
-export const ServiceCard = observer(
-  ({ ids, type, contractId, currency, contractStatus }: ServiceCardProps) => {
+export const ProductCard = observer(
+  ({ ids, type, contractId, currency, contractStatus }: ProductCardProps) => {
     const [showEnded, setShowEnded] = useState(false);
     const [allowIndividualRestore, setAllowIndividualRestore] = useState(true);
     const store = useStore();
     const contractLineItemsStore = store.contractLineItems;
     const contractLineItems = contractLineItemsStore.value;
+
     const thisGroupLineItems = ids?.map(
       (id) => contractLineItems.get(id) as ContractLineItemStore,
     );
@@ -52,27 +52,13 @@ export const ServiceCard = observer(
       (service) => service?.tempValue?.closed,
     );
 
-    const [description, setDescription] = useState(
-      liveServices?.[0]?.tempValue?.description || '',
-    );
+    const sku = liveServices?.[0]?.tempValue?.skuId
+      ? store.skus.getById(liveServices[0].tempValue.skuId)
+      : null;
 
     const isClosed = liveServices?.every(
       (service) => service?.tempValue?.closed,
     );
-
-    const handleDescriptionChange = (e: ChangeEvent<HTMLInputElement>) => {
-      if (!e.target.value?.length) {
-        setDescription('Unnamed');
-      }
-      const newName = !e.target.value?.length ? 'Unnamed' : e.target.value;
-
-      liveServices?.forEach((service) => {
-        (service as ContractLineItemStore)?.updateTemp((prev) => ({
-          ...prev,
-          description: newName,
-        }));
-      });
-    };
 
     const handleCloseChange = (closed: boolean) => {
       liveServices?.forEach((service) => {
@@ -109,20 +95,16 @@ export const ServiceCard = observer(
     return (
       <Card className='px-3 py-2 mb-2 rounded-lg'>
         <CardHeader className={cn('flex justify-between pb-0.5')}>
-          <Input
-            size='xs'
-            value={description ?? ''}
-            placeholder='Service name'
-            onBlur={handleDescriptionChange}
-            onFocus={(e) => e.target.select()}
-            onChange={(e) => setDescription(e.target.value)}
+          <p
             className={cn(
-              'text-base text-gray-700 min-w-2.5 w-full min-h-0 border-none hover:border-none focus:border-none flex-1',
+              'text-gray-700 min-w-2.5 w-full min-h-0 border-none hover:border-none focus:border-none flex-1',
               {
                 'text-gray-400 line-through': isClosed,
               },
             )}
-          />
+          >
+            {sku?.value?.name}
+          </p>
 
           <div className='flex items-baseline'>
             {endedServices && endedServices.length > 0 && (
@@ -156,7 +138,7 @@ export const ServiceCard = observer(
                 />
               </>
             ) : (
-              <ServiceItemMenu
+              <ProductItemMenu
                 contractId={contractId}
                 handleCloseService={handleCloseChange}
                 handlePauseService={handlePauseChange}
@@ -183,7 +165,7 @@ export const ServiceCard = observer(
             endedServices?.map(
               (service, serviceIndex) =>
                 service && (
-                  <ServiceItem
+                  <ProductItem
                     isEnded
                     type={type}
                     service={service}
@@ -198,7 +180,7 @@ export const ServiceCard = observer(
           {liveServices?.map(
             (service, serviceIndex) =>
               service && (
-                <ServiceItem
+                <ProductItem
                   type={type}
                   service={service}
                   currency={currency}

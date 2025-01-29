@@ -1,4 +1,4 @@
-import React from 'react';
+import { Fragment } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';
@@ -50,6 +50,14 @@ const ServiceItem = observer(
   }) => {
     const store = useStore();
     const contractLineItem = store.contractLineItems?.value.get(id)?.value;
+    const sku = contractLineItem?.skuId
+      ? store.skus.getById(contractLineItem.skuId)
+      : null;
+
+    const price =
+      typeof contractLineItem?.price === 'string'
+        ? parseFloat(contractLineItem.price)
+        : contractLineItem?.price;
 
     return (
       <>
@@ -57,9 +65,7 @@ const ServiceItem = observer(
           onClick={() => onOpen(contractLineItem as ServiceLineItem)}
           className='flex w-full justify-between cursor-pointer text-sm focus:outline-none'
         >
-          {contractLineItem?.description && (
-            <p>{contractLineItem?.description}</p>
-          )}
+          <p>{sku?.value?.name}</p>
           <div className='flex justify-between'>
             <p>
               {![BilledType.Usage, BilledType.None].includes(
@@ -71,7 +77,7 @@ const ServiceItem = observer(
                 </>
               )}
 
-              {formatCurrency(contractLineItem?.price ?? 0, currency || 'USD')}
+              {formatCurrency(price ?? 0, currency || 'USD')}
               {getBilledTypeLabel(contractLineItem?.billingCycle as BilledType)}
               {isPaused && (
                 <PauseCircle className='ml-2 text-gray-500 size-4' />
@@ -124,7 +130,7 @@ export const ServicesList = observer(
                 );
               })
               .map((service) => (
-                <React.Fragment
+                <Fragment
                   key={`service-item-${service?.currentLineItem?.metadata?.id}`}
                 >
                   <ServiceItem
@@ -133,7 +139,7 @@ export const ServicesList = observer(
                     id={service?.currentLineItem?.metadata?.id}
                     isPaused={service?.currentLineItem?.paused}
                   />
-                </React.Fragment>
+                </Fragment>
               ))}
           </article>
         )}
@@ -161,7 +167,7 @@ export const ServicesList = observer(
                 );
               })
               .map((service) => (
-                <React.Fragment
+                <Fragment
                   key={`service-item-${service?.currentLineItem?.metadata?.id}`}
                 >
                   <ServiceItem
@@ -169,7 +175,7 @@ export const ServicesList = observer(
                     onOpen={onModalOpen}
                     id={service?.currentLineItem?.metadata?.id}
                   />
-                </React.Fragment>
+                </Fragment>
               ))}
           </article>
         )}

@@ -6,8 +6,8 @@ import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem
 import { DateTimeUtils } from '@utils/date.ts';
 import { ContractStatus } from '@graphql/types';
 
-import { ServiceItemEdit } from './ServiceItemEdit.tsx';
-import { ServiceItemPreview } from './ServiceItemPreview.tsx';
+import { ProductItemEdit } from './ProductItemEdit.tsx';
+import { ProductItemPreview } from './ProductItemPreview.tsx';
 
 interface ServiceItemProps {
   isEnded?: boolean;
@@ -22,7 +22,7 @@ interface ServiceItemProps {
   contractStatus?: ContractStatus | null;
 }
 
-export const ServiceItem: FC<ServiceItemProps> = observer(
+export const ProductItem: FC<ServiceItemProps> = observer(
   ({
     service,
     allServices,
@@ -51,7 +51,7 @@ export const ServiceItem: FC<ServiceItemProps> = observer(
     return (
       <>
         {showEditView ? (
-          <ServiceItemEdit
+          <ProductItemEdit
             type={type}
             service={service}
             currency={currency}
@@ -60,7 +60,7 @@ export const ServiceItem: FC<ServiceItemProps> = observer(
             contractStatus={contractStatus}
           />
         ) : (
-          <ServiceItemPreview
+          <ProductItemPreview
             type={type}
             service={service}
             isEnded={isEnded}

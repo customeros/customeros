@@ -216,8 +216,8 @@ const CONTRACTS_QUERY = gql`
             appSource
             sourceOfTruth
           }
+          skuId
           paused
-          description
           billingCycle
           price
           quantity

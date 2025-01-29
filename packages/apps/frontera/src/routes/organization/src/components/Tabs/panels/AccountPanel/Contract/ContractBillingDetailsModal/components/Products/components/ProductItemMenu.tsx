@@ -2,19 +2,14 @@ import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn.ts';
 import { useStore } from '@shared/hooks/useStore';
-import { XSquare } from '@ui/media/icons/XSquare.tsx';
-import { PlayCircle } from '@ui/media/icons/PlayCircle.tsx';
-import { PauseCircle } from '@ui/media/icons/PauseCircle.tsx';
-import { BracketsPlus } from '@ui/media/icons/BracketsPlus.tsx';
-import { DotsVertical } from '@ui/media/icons/DotsVertical.tsx';
-import {
-  Menu,
-  MenuItem,
-  MenuList,
-  MenuButton,
-} from '@ui/overlay/Menu/Menu.tsx';
+import { XSquare } from '@ui/media/icons/XSquare';
+import { PlayCircle } from '@ui/media/icons/PlayCircle';
+import { PauseCircle } from '@ui/media/icons/PauseCircle';
+import { BracketsPlus } from '@ui/media/icons/BracketsPlus';
+import { DotsVertical } from '@ui/media/icons/DotsVertical';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
-interface ServiceItemMenuProps {
+interface ProductItemMenuProps {
   id: string;
   closed?: boolean;
   paused?: boolean;
@@ -25,7 +20,7 @@ interface ServiceItemMenuProps {
   handleCloseService: (isClosed: boolean) => void;
 }
 
-export const ServiceItemMenu = observer(
+export const ProductItemMenu = observer(
   ({
     id,
     contractId,
@@ -34,7 +29,7 @@ export const ServiceItemMenu = observer(
     handlePauseService,
     allowPausing,
     paused,
-  }: ServiceItemMenuProps) => {
+  }: ProductItemMenuProps) => {
     const store = useStore();
     const contractLineItemsStore = store.contractLineItems;
 
@@ -49,7 +44,7 @@ export const ServiceItemMenu = observer(
             <DotsVertical className='text-gray-400' />
           </MenuButton>
           <MenuList align='end' side='bottom' className='p-0'>
-            {allowAddModification && (
+            {allowAddModification ? (
               <MenuItem
                 className='flex items-center text-base'
                 onClick={() =>
@@ -62,9 +57,11 @@ export const ServiceItemMenu = observer(
                 <BracketsPlus className='mr-2 text-gray-500' />
                 Add modification
               </MenuItem>
+            ) : (
+              <div />
             )}
 
-            {allowPausing && (
+            {allowPausing ? (
               <MenuItem
                 className='flex items-center text-base'
                 onClick={() => handlePauseService(!paused)}
@@ -72,15 +69,17 @@ export const ServiceItemMenu = observer(
                 {paused ? (
                   <>
                     <PlayCircle className='mr-2 text-gray-500' />
-                    Resume this service
+                    Resume this product
                   </>
                 ) : (
                   <>
                     <PauseCircle className='mr-2 text-gray-500' />
-                    Pause this service
+                    Pause this product
                   </>
                 )}
               </MenuItem>
+            ) : (
+              <div />
             )}
 
             <MenuItem
