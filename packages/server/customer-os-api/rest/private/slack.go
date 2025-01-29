@@ -70,7 +70,7 @@ func RequestAccessSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		redirectUri := c.Query("redirect_uri")
 
 		if redirectUri != "" {
-			slackRequestAccessUrl += "&redirect_uri=" + redirectUri
+			slackRequestAccessUrl += "&redirect_uri=" + url.QueryEscape(redirectUri)
 		}
 
 		span.LogFields(log.Object("slackRequestAccessUrl", slackRequestAccessUrl))
