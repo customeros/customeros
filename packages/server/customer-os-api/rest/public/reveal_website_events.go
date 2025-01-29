@@ -53,7 +53,6 @@ func (h *WebsiteTrackerEventsHandler) Handle() gin.HandlerFunc {
 
 		tenant, err := h.validateTrackingAllowed(ctx, c.GetHeader("Origin"))
 		if err != nil {
-			tracing.TraceErr(span, err)
 			h.responseHandler.HandleError(c, http.StatusForbidden, nil)
 			return
 		}
@@ -160,7 +159,7 @@ func (h *WebsiteTrackerEventsHandler) validateTrackingAllowed(ctx context.Contex
 
 	if tenant == "" {
 		err = fmt.Errorf("tenant not found for origin: %s", origin)
-		tracing.TraceErr(span, err)
+		span.LogFields(log.Bool("result.tenant.found", false))
 		return "", err
 	}
 	span.LogKV("result.tenant", tenant)

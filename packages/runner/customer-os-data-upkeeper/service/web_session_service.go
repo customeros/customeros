@@ -93,7 +93,7 @@ func (s *webSessionService) ProcessIntentSignals() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.ProcessWebSessions")
+	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.ProcessIntentSignals")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
