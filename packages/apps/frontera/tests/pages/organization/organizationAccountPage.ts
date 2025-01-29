@@ -112,6 +112,7 @@ export class OrganizationAccountPage {
 
   async deleteContract(contractIndex: number) {
     await this.openContractDotsMenu(contractIndex);
+    await this.page.waitForTimeout(1000);
     await clickLocatorsThatAreVisible(
       this.page,
       this.contractMenuDeleteContract,
