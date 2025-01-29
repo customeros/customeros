@@ -3,11 +3,12 @@ package agent_capability
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 )
@@ -16,14 +17,35 @@ type ApplyTagCapability struct {
 	tagService interfaces.TagService
 }
 
-func (c *ApplyTagCapability) ValidateConfig(config NoConfig) error {
-	//TODO implement me
-	panic("implement me")
+type ApplyTagInput struct {
+	OrganizationID string `json:"organizationId"`
+}
+
+type ApplyTagOutput struct {
+	CapabilityOutput
+}
+
+type ApplyTagConfig struct {
+	TagName TagConfig `json:"tagName"`
+}
+
+type TagConfig struct {
+	Value string `json:"value"`
+	Error string `json:"error"`
+}
+
+func (c *ApplyTagCapability) ValidateConfig(config ApplyTagConfig) error {
+	if config.TagName.Value == "" {
+		return errors.New("Tag not configured")
+	}
+	return nil
 }
 
 func (c *ApplyTagCapability) ValidateInput(input ApplyTagInput) error {
-	//TODO implement me
-	panic("implement me")
+	if input.OrganizationID == "" {
+		return errors.New("OrganizationID cannot be empty")
+	}
+	return nil
 }
 
 func (c *ApplyTagCapability) GetInput() any {
@@ -31,11 +53,11 @@ func (c *ApplyTagCapability) GetInput() any {
 }
 
 func (c *ApplyTagCapability) GetConfig() any {
-	return &NoConfig{}
+	return &ApplyTagConfig{}
 }
 
 func (c *ApplyTagCapability) GetOutput() any {
-	return &ApplyTagResult{}
+	return &ApplyTagOutput{}
 }
 
 func NewApplyTagCapability(tagService interfaces.TagService) *ApplyTagCapability {
@@ -46,49 +68,78 @@ func NewApplyTagCapability(tagService interfaces.TagService) *ApplyTagCapability
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapabilityExecution[ApplyTagInput, ApplyTagResult, NoConfig] = (*ApplyTagCapability)(nil)
-	_ interfaces.AgentCapabilityUntyped                                            = (*ApplyTagCapability)(nil)
+	_ interfaces.AgentCapabilityExecution[ApplyTagInput, ApplyTagOutput, ApplyTagConfig] = (*ApplyTagCapability)(nil)
+	_ interfaces.AgentCapabilityUntyped                                                  = (*ApplyTagCapability)(nil)
 )
 
-type ApplyTagInput struct {
-	EntityType model.EntityType `json:"entityType"`
-	EntityID   string           `json:"entityId"`
-	TagID      string           `json:"tagId"`
-}
-
-type ApplyTagResult struct {
-	Success bool `json:"success"`
-}
-
-func (c *ApplyTagCapability) Execute(ctx context.Context, data ApplyTagInput, config NoConfig) (ApplyTagResult, error) {
+func (c *ApplyTagCapability) Execute(ctx context.Context, data ApplyTagInput, config ApplyTagConfig) (ApplyTagOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
+	result := ApplyTagOutput{}
+
 	if err := c.ValidateConfig(config); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return ApplyTagResult{}, err
+		return result, err
 	}
 	if err := c.ValidateInput(data); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return ApplyTagResult{}, err
+		return result, err
 	}
 
-	tenant := common.GetTenantFromContext(ctx)
-	if tenant == "" {
-		err := errors.New("Tenant not set on context")
-		tracing.TraceErr(span, err)
-		return ApplyTagResult{Success: false}, err
+	result.ExecutionValidated = true
+
+	var entityType model.EntityType
+	var entityID string
+	if data.OrganizationID != "" {
+		entityType = model.ORGANIZATION
+		entityID = data.OrganizationID
 	}
 
-	_, err := c.tagService.AddTagToEntity(ctx, nil, tenant, data.EntityID, data.EntityType, data.TagID, "")
+	err := c.applyTag(ctx, entityType, entityID, config.TagName.Value)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return ApplyTagResult{Success: false}, err
+		return result, err
 	}
 
-	return ApplyTagResult{Success: true}, nil
+	result.Completed = true
+	tracing.LogObjectAsJson(span, "result", result)
+	return result, nil
+}
+
+func (c *ApplyTagCapability) applyTag(ctx context.Context, entityType model.EntityType, entityId string, tagName string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.applyTag")
+	defer span.Finish()
+
+	// check if tag exists
+	tagEntity, err := c.tagService.GetTagByEntityTypeAndName(ctx, entityType, tagName)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if tagEntity == nil {
+		// create tag
+		input := neo4jentity.TagEntity{
+			Name:       tagName,
+			EntityType: entityType,
+		}
+		tagEntity, err = c.tagService.Save(ctx, nil, &input)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	_, err = c.tagService.AddTagToEntity(ctx, nil, common.GetTenantFromContext(ctx), entityId, entityType, tagEntity.Id, "")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
 
 // ExecuteUntyped implements the AgentCapabilityUntyped interface.
@@ -99,9 +150,9 @@ func (c *ApplyTagCapability) ExecuteUntyped(ctx context.Context, input any, conf
 		return nil, fmt.Errorf("invalid input type: expected ApplyTagInput")
 	}
 
-	typedConfig, ok := config.(*NoConfig)
+	typedConfig, ok := config.(*ApplyTagConfig)
 	if !ok || typedConfig == nil {
-		return nil, fmt.Errorf("invalid config type: expected NoCOnfig")
+		return nil, fmt.Errorf("invalid config type: expected ApplyTagConfig")
 	}
 
 	return c.Execute(ctx, *typedInput, *typedConfig)
