@@ -62,7 +62,7 @@ func (r *queryResolver) Agents(ctx context.Context) ([]*model.Agent, error) {
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	agentEntities, err := r.Services.CommonServices.AgentService.GetAllAgents(ctx)
+	agentEntities, err := r.Services.CommonServices.AgentService.GetAllAgentsByTenant(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get agents")
