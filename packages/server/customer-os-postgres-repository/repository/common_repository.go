@@ -123,7 +123,6 @@ func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string)
 		postgres_entity.TenantSettingsEmailExclusion{}.TableName(),
 		postgres_entity.TenantSettingsMailbox{}.TableName(),
 		postgres_entity.TenantSettingsOpportunityStage{}.TableName(),
-		postgres_entity.TrackingAllowedOrigin{}.TableName(),
 		postgres_entity.UserWorkingSchedule{}.TableName(),
 		postgres_entity.WebSession{}.TableName(),
 		postgres_entity.WebTrackerEvents{}.TableName(),
