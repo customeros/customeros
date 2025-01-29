@@ -1,119 +1,33 @@
-package listeners
+package enrichment
 
 import (
+	"context"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	neoenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
 
-	"github.com/customeros/customeros/packages/server/events-subscribers/constants"
-	"github.com/customeros/customeros/packages/server/events-subscribers/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-type ContactListener interface {
-	enrichContact(ctx context.Context, contactId, linkedInUrl string) error
-	getContactEmailAddress(ctx context.Context, contactId string) (string, error)
-}
-
-type contactListenerImpl struct {
-	dependencies *model.DependencyContainer
-	log          logger.Logger
-}
-
-func NewContactListener(dep *model.DependencyContainer, log logger.Logger) ContactListener {
-	return &contactListenerImpl{dependencies: dep, log: log}
-}
-
-func OnSocialAddedToContact(ctx context.Context, dependencies *model.DependencyContainer, input any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnSocialAddedToContact")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
-
-	message, err := validateEvent(ctx, input)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	messageData := message.Event.Data.(*dto.AddSocialToContact)
-	socialUrl := messageData.Social
-	contactId := message.Event.EntityId
-
-	span.SetTag(tracing.SpanTagEntityId, contactId)
-
-	c := NewContactListener(dependencies, dependencies.Logger)
-
-	if strings.Contains(socialUrl, "linkedin.com") {
-		err := c.enrichContact(ctx, contactId, socialUrl)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "enrichContact"))
-		}
-	}
-
-	return nil
-}
-
-func OnRequestedEnrichContact(ctx context.Context, dependencies *model.DependencyContainer, input any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnRequestedEnrichContact")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
-
-	message := input.(*dto.Event)
-	contactId := message.Event.EntityId
-
-	span.SetTag(tracing.SpanTagEntityId, contactId)
-
-	c := NewContactListener(dependencies, dependencies.Logger)
-
-	err := c.enrichContact(ctx, contactId, "")
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "enrichContact"))
-	}
-
-	return nil
-}
-
-func OnContactHidden(ctx context.Context, dependencies *model.DependencyContainer, input any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.OnContactHidden")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
-
-	message := input.(*dto.Event)
-	contactId := message.Event.EntityId
-
-	span.SetTag(tracing.SpanTagEntityId, contactId)
-
-	// recalculate contacts for organization
-	err := dependencies.Neo4jRepositories.OrganizationWriteRepository.RefreshContactCountByContactId(ctx, nil, common.GetTenantFromContext(ctx), contactId)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "OrganizationWriteRepository.RefreshContactCountByContactId"))
-	}
-	return nil
-}
-
-func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, linkedInUrl string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactListener.enrichContact")
+func (s *enrichmentService) EnrichContact(ctx context.Context, contactId, linkedInUrl string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "enrichmentService.enrichContact")
 	defer span.Finish()
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 	tracing.TagEntity(span, contactId)
@@ -122,7 +36,7 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 	tenant := common.GetTenantFromContext(ctx)
 
 	// skip enrichment if disabled in tenant settings
-	tenantSettings, err := c.dependencies.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
+	tenantSettings, err := s.neo4jRepository.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "TenantReadRepository.GetTenantSettings"))
 		return err
@@ -134,7 +48,7 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 	}
 
 	// skip enrichment if contact is already enriched
-	contactEntity, err := c.dependencies.CommonServices.ContactService.GetContactById(ctx, contactId)
+	contactEntity, err := s.contactService.GetContactById(ctx, contactId)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "ContactService.GetContactById"))
 		return nil
@@ -149,7 +63,7 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 	// if linkedInUrl is empty fetch all data for searching person
 	if linkedInUrl == "" {
 		// prepare linked in for searching person
-		socialDbNodes, err := c.dependencies.Neo4jRepositories.SocialReadRepository.GetAllForEntities(ctx, tenant, commonModel.CONTACT, []string{contactId})
+		socialDbNodes, err := s.neo4jRepository.SocialReadRepository.GetAllForEntities(ctx, tenant, commonModel.CONTACT, []string{contactId})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "SocialReadRepository.GetAllForEntities"))
 		} else {
@@ -163,18 +77,18 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 		}
 
 		// prepare email address for searching person
-		emailAddress, err = c.getContactEmailAddress(ctx, contactId)
+		emailAddress, err = s.getContactEmailAddress(ctx, contactId)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "getContactEmail"))
 			return err
 		}
 
 		// prepare organization name for searching person
-		result, err := c.dependencies.Neo4jRepositories.OrganizationReadRepository.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, tenant, []string{contactId})
+		result, err := s.neo4jRepository.OrganizationReadRepository.GetPrimaryOrganizationsWithJobRoleForContacts(ctx, tenant, []string{contactId})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetPrimaryOrganizationsWithJobRoleForContacts"))
 		}
-		var organizationEntity *neo4jentity.OrganizationEntity
+		var organizationEntity *neo4j_entity.OrganizationEntity
 		if len(result) > 0 && result[0].Pair.First != nil {
 			organizationEntity = neo4jmapper.MapDbNodeToOrganizationEntity(result[0].Pair.First)
 			companyName = organizationEntity.Name
@@ -182,7 +96,7 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 
 		// prepare domain for searching person
 		if organizationEntity != nil {
-			organizationDomainDbNodes, err := c.dependencies.Neo4jRepositories.DomainReadRepository.GetForOrganizations(ctx, tenant, []string{organizationEntity.ID})
+			organizationDomainDbNodes, err := s.neo4jRepository.DomainReadRepository.GetForOrganizations(ctx, tenant, []string{organizationEntity.ID})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "DomainReadRepository.GetForOrganizations"))
 			}
@@ -199,7 +113,7 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 		// if not found domain from organization, get one from email, check it's not a personal one
 		if domain == "" && emailAddress != "" {
 			emailDomain := utils.ExtractDomainFromEmail(emailAddress)
-			if !c.dependencies.CommonServices.Cache.IsPersonalEmailProvider(emailDomain) {
+			if !caches.IsPersonalEmailProvider(emailDomain) {
 				domain = emailDomain
 			}
 		}
@@ -214,11 +128,11 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 		log.String("domain", domain),
 		log.String("companyName", companyName))
 	if linkedInUrl != "" || emailAddress != "" || (firstName != "" && lastName != "" && domain != "" && companyName != "") {
-		err = c.dependencies.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonModel.NodeLabelContact, contactEntity.Id, string(neo4jentity.ContactPropertyEnrichRequestedAt), utils.NowPtr())
+		err = s.neo4jRepository.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonModel.NodeLabelContact, contactEntity.Id, string(neo4j_entity.ContactPropertyEnrichRequestedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich requested at"))
 		}
-		c.dependencies.CommonServices.Events.Publisher.PublishEventCompleted(ctx, tenant, contactId, commonModel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+		s.events.Publisher.PublishEventCompleted(ctx, tenant, contactId, commonModel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 
 		query := interfaces.PersonSearch{
 			LinkedinURL: linkedInUrl,
@@ -229,16 +143,16 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 			CompanyName: companyName,
 		}
 
-		recordID, scrapinResponseBody, err := c.dependencies.CommonServices.EnrichmentService.EnrichPerson(ctx, query)
+		recordID, scrapinResponseBody, err := s.EnrichPerson(ctx, query)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "callApiEnrichPerson"))
-			err = c.dependencies.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonModel.NodeLabelContact, contactEntity.Id, string(neo4jentity.ContactPropertyEnrichFailedAt), utils.NowPtr())
+			err = s.neo4jRepository.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonModel.NodeLabelContact, contactEntity.Id, string(neo4j_entity.ContactPropertyEnrichFailedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich failed at"))
 			}
 		}
 		if scrapinResponseBody != nil {
-			err = c.enrichContactWithScrapInEnrichDetails(ctx, tenant, contactEntity, scrapinResponseBody, utils.IfNotNilUint64(recordID))
+			err = s.enrichContactWithScrapInEnrichDetails(ctx, tenant, contactEntity, scrapinResponseBody, utils.IfNotNilUint64(recordID))
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "enrichContactWithScrapInEnrichDetails"))
 			}
@@ -250,14 +164,14 @@ func (c *contactListenerImpl) enrichContact(ctx context.Context, contactId, link
 	return nil
 }
 
-func (c *contactListenerImpl) getContactEmailAddress(ctx context.Context, contactId string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactListener.getContactEmailAddress")
+func (s *enrichmentService) getContactEmailAddress(ctx context.Context, contactId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "enrichmentService.getContactEmailAddress")
 	defer span.Finish()
 	span.LogFields(log.String("contactId", contactId))
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	records, err := c.dependencies.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, commonModel.CONTACT, []string{contactId})
+	records, err := s.neo4jRepository.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, commonModel.CONTACT, []string{contactId})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "EmailReadRepository.GetAllEmailNodesForLinkedEntityIds"))
 		return "", err
@@ -279,8 +193,8 @@ func (c *contactListenerImpl) getContactEmailAddress(ctx context.Context, contac
 	return foundEmailAddress, nil
 }
 
-func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.Context, tenant string, contact *neo4jentity.ContactEntity, enrichPersonResponse *postgres_entity.ScrapInResponseBody, recordID uint64) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactListener.enrichContactWithScrapInEnrichDetails")
+func (s *enrichmentService) enrichContactWithScrapInEnrichDetails(ctx context.Context, tenant string, contact *neo4j_entity.ContactEntity, enrichPersonResponse *postgres_entity.ScrapInResponseBody, recordID uint64) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "enrichmentService.enrichContactWithScrapInEnrichDetails")
 	defer span.Finish()
 	tracing.TagComponentListener(span)
 	tracing.TagTenant(span, tenant)
@@ -295,12 +209,12 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 		span.LogFields(log.String("result", "person not found"))
 
 		// mark contact as failed to enrich
-		err := c.dependencies.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonModel.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichFailedAt), utils.NowPtr())
+		err := s.neo4jRepository.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonModel.NodeLabelContact, contact.Id, string(neo4j_entity.ContactPropertyEnrichFailedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "CommonWriteRepository.UpdateTimeProperty"))
 		}
 
-		err = c.dependencies.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonModel.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichedScrapinRecordId), strconv.FormatUint(recordID, 10))
+		err = s.neo4jRepository.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonModel.NodeLabelContact, contact.Id, string(neo4j_entity.ContactPropertyEnrichedScrapinRecordId), strconv.FormatUint(recordID, 10))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "CommonWriteRepository.UpdateStringProperty"))
 		}
@@ -329,14 +243,14 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 
 	// add location
 	if scrapinContactResponse.Person.Location != "" {
-		contactLocation, err := c.dependencies.CommonServices.LocationService.ExtractAndEnrichLocation(ctx, tenant, scrapinContactResponse.Person.Location)
+		contactLocation, err := s.locationService.ExtractAndEnrichLocation(ctx, tenant, scrapinContactResponse.Person.Location)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "ExtractAndEnrichLocation"))
 		}
 		if contactLocation != nil {
 			contactLocation.RawAddress = scrapinContactResponse.Person.Location
-			contactLocation.AppSource = utils.StringPtr(constants.AppScrapin)
-			_, err := c.dependencies.CommonServices.LocationService.Create(ctx, nil, *contactLocation, &common_srv.LinkWith{
+			contactLocation.AppSource = utils.StringPtr(string(enum.SourceScrapin))
+			_, err := s.locationService.Create(ctx, nil, *contactLocation, &common_srv.LinkWith{
 				Id:   contact.Id,
 				Type: commonModel.CONTACT,
 			})
@@ -354,24 +268,24 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 	}
 
 	if updateContact {
-		_, err := c.dependencies.CommonServices.ContactService.Save(ctx, nil, &contact.Id, contactFields, false)
+		_, err := s.contactService.Save(ctx, nil, &contact.Id, contactFields, false)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "ContactService.Save"))
-			c.log.Errorf("Error updating contact: %s", err.Error())
+			s.log.Errorf("Error updating contact: %s", err.Error())
 		}
 	}
 
-	err := c.dependencies.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonModel.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichedScrapinRecordId), strconv.FormatUint(recordID, 10))
+	err := s.neo4jRepository.CommonWriteRepository.UpdateStringProperty(ctx, nil, tenant, commonModel.NodeLabelContact, contact.Id, string(neo4j_entity.ContactPropertyEnrichedScrapinRecordId), strconv.FormatUint(recordID, 10))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "CommonWriteRepository.UpdateStringProperty"))
-		c.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
+		s.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
 	}
 
 	// mark contact as enriched
-	err = c.dependencies.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonModel.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichedAt), utils.NowPtr())
+	err = s.neo4jRepository.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonModel.NodeLabelContact, contact.Id, string(neo4j_entity.ContactPropertyEnrichedAt), utils.NowPtr())
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "CommonWriteRepository.UpdateTimeProperty"))
-		c.log.Errorf("Error updating enriched at property: %s", err.Error())
+		s.log.Errorf("Error updating enriched at property: %s", err.Error())
 	}
 
 	// add additional enrich details after marking contact as enriched, to avoid re-enriching
@@ -390,7 +304,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 
 		// get social id by url if exist for current contact
 		socialId := ""
-		socialDbNodes, err := c.dependencies.Neo4jRepositories.SocialReadRepository.GetAllForEntities(ctx, tenant, commonModel.CONTACT, []string{contact.Id})
+		socialDbNodes, err := s.neo4jRepository.SocialReadRepository.GetAllForEntities(ctx, tenant, commonModel.CONTACT, []string{contact.Id})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "SocialReadRepository.GetAllForEntities"))
 		}
@@ -402,24 +316,24 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 			}
 		}
 
-		_, err = c.dependencies.CommonServices.SocialService.AddSocialToEntity(ctx,
+		_, err = s.socialService.AddSocialToEntity(ctx,
 			nil,
 			common_srv.LinkWith{
 				Id:   contact.Id,
 				Type: commonModel.CONTACT,
 			},
-			neo4jentity.SocialEntity{
+			neo4j_entity.SocialEntity{
 				Id:             socialId,
 				Url:            url,
 				Alias:          scrapinContactResponse.Person.PublicIdentifier,
 				ExternalId:     scrapinContactResponse.Person.LinkedInIdentifier,
 				FollowersCount: int64(scrapinContactResponse.Person.FollowerCount),
-				Source:         neo4jentity.DataSourceOpenline,
-				AppSource:      constants.AppScrapin,
+				Source:         neo4j_entity.DataSourceOpenline,
+				AppSource:      string(enum.SourceScrapin),
 			})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "SocialService.AddSocialToEntity"))
-			c.log.Errorf("Error adding social profile: %s", err.Error())
+			s.log.Errorf("Error adding social profile: %s", err.Error())
 		}
 	}
 
@@ -428,10 +342,10 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 		var organizationDbNode *dbtype.Node
 
 		// step1 - check org exists by linkedin url
-		organizationDbNodes, err := c.dependencies.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, scrapinContactResponse.Company.LinkedInUrl, scrapinContactResponse.Company.UniversalName, scrapinContactResponse.Company.LinkedInId)
+		organizationDbNodes, err := s.neo4jRepository.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, scrapinContactResponse.Company.LinkedInUrl, scrapinContactResponse.Company.UniversalName, scrapinContactResponse.Company.LinkedInId)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationsByLinkedIn"))
-			c.log.Errorf("Error getting organization by social url: %s", err.Error())
+			s.log.Errorf("Error getting organization by social url: %s", err.Error())
 		}
 		if len(organizationDbNodes) > 0 {
 			organizationDbNode = organizationDbNodes[0]
@@ -439,28 +353,28 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 
 		// step 2 - check org exists by domain
 		if organizationDbNodes == nil {
-			domain, _ := c.dependencies.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
+			domain, _ := s.domainService.GetPrimaryDomainForOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
 			span.LogFields(log.String("extractedDomainFromWebsite", domain))
 			if domain != "" {
-				organizationDbNode, err = c.dependencies.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
+				organizationDbNode, err = s.neo4jRepository.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
-					c.log.Errorf("Error getting organization by domain: %s", err.Error())
+					s.log.Errorf("Error getting organization by domain: %s", err.Error())
 					return err
 				}
 				if organizationDbNode != nil {
 					organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 					if organizationEntity.IsHidden() {
-						err = c.dependencies.CommonServices.OrganizationService.Show(ctx, nil, organizationEntity.ID)
+						err = s.organizationService.Show(ctx, nil, organizationEntity.ID)
 						if err != nil {
 							tracing.TraceErr(span, errors.Wrap(err, "OrganizationService.Show"))
 							return err
 						}
 					}
-					_, err = c.dependencies.CommonServices.SocialService.AddSocialToEntity(ctx, nil, common_srv.LinkWith{
+					_, err = s.socialService.AddSocialToEntity(ctx, nil, common_srv.LinkWith{
 						Id:   organizationEntity.ID,
 						Type: commonModel.ORGANIZATION,
-					}, neo4jentity.SocialEntity{
+					}, neo4j_entity.SocialEntity{
 						Url:            scrapinContactResponse.Company.LinkedInUrl,
 						Alias:          scrapinContactResponse.Company.UniversalName,
 						ExternalId:     scrapinContactResponse.Company.LinkedInId,
@@ -468,7 +382,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 					})
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "SocialService.AddSocialToEntity"))
-						c.log.Errorf("Error adding social profile: %s", err.Error())
+						s.log.Errorf("Error adding social profile: %s", err.Error())
 					}
 				}
 			}
@@ -476,24 +390,24 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 
 		// step 3 if not found - create organization
 		if organizationDbNode == nil {
-			orgId, err := c.dependencies.CommonServices.OrganizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
+			orgId, err := s.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
 				Name:         utils.StringPtr(scrapinContactResponse.Company.Name),
 				Website:      utils.StringPtr(scrapinContactResponse.Company.WebsiteUrl),
-				Relationship: utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
-				Stage:        utils.ToPtr(neo4jenum.Lead),
-				AppSource:    utils.StringPtr(constants.AppScrapin),
+				Relationship: utils.ToPtr(neoenum.OrganizationRelationshipProspect),
+				Stage:        utils.ToPtr(neoenum.Lead),
+				AppSource:    utils.StringPtr(string(enum.SourceScrapin)),
 			})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "OrganizationClient.UpsertOrganization"))
-				c.log.Errorf("Error creating organization: %s", err.Error())
+				s.log.Errorf("Error creating organization: %s", err.Error())
 			} else if orgId == "" {
 				tracing.TraceErr(span, errors.New("organization id is missing"))
 				return errors.New("organization id is missing")
 			} else {
-				_, err = c.dependencies.CommonServices.SocialService.AddSocialToEntity(ctx, nil, common_srv.LinkWith{
+				_, err = s.socialService.AddSocialToEntity(ctx, nil, common_srv.LinkWith{
 					Id:   orgId,
 					Type: commonModel.ORGANIZATION,
-				}, neo4jentity.SocialEntity{
+				}, neo4j_entity.SocialEntity{
 					Url:            scrapinContactResponse.Company.LinkedInUrl,
 					Alias:          scrapinContactResponse.Company.UniversalName,
 					ExternalId:     scrapinContactResponse.Company.LinkedInId,
@@ -501,7 +415,7 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 				})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "SocialService.AddSocialToEntity"))
-					c.log.Errorf("Error adding social profile: %s", err.Error())
+					s.log.Errorf("Error adding social profile: %s", err.Error())
 				}
 			}
 		}
@@ -519,15 +433,15 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 			position := scrapinContactResponse.Person.Positions.PositionHistory[i]
 
 			// find organization by linkedin url
-			organizationDbNodes, err := c.dependencies.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, position.LinkedInUrl, "", position.LinkedInId)
+			organizationDbNodes, err := s.neo4jRepository.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, position.LinkedInUrl, "", position.LinkedInId)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationsByLinkedIn"))
-				c.log.Errorf("Error getting organization by social url: %s", err.Error())
+				s.log.Errorf("Error getting organization by social url: %s", err.Error())
 			}
 			if len(organizationDbNodes) > 0 {
 				organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNodes[0])
 				if organizationEntity.IsHidden() {
-					err = c.dependencies.CommonServices.OrganizationService.Show(ctx, nil, organizationEntity.ID)
+					err = s.organizationService.Show(ctx, nil, organizationEntity.ID)
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "OrganizationService.Show"))
 						return err
@@ -543,11 +457,11 @@ func (c *contactListenerImpl) enrichContactWithScrapInEnrichDetails(ctx context.
 				}
 
 				// link contact with organization
-				err = c.dependencies.CommonServices.ContactService.LinkContactWithOrganization(ctx, nil, contact.Id, organizationEntity.ID, positionName, "",
-					neo4jentity.DataSourceOpenline.String(), false, positionStartedAt, positionEndedAt)
+				err = s.contactService.LinkContactWithOrganization(ctx, nil, contact.Id, organizationEntity.ID, positionName, "",
+					neo4j_entity.DataSourceOpenline.String(), false, positionStartedAt, positionEndedAt)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "ContactClient.LinkWithOrganization"))
-					c.log.Errorf("Error linking contact with organization: %s", err.Error())
+					s.log.Errorf("Error linking contact with organization: %s", err.Error())
 					return err
 				}
 			}

@@ -58,7 +58,6 @@ const (
 	DefaultMaxReconnectBackoff = 30 * time.Second
 )
 
-// PublisherConfig holds configuration for the RabbitMQ publisher
 type PublisherConfig struct {
 	MessageTTL          time.Duration
 	MaxRetries          int
@@ -67,7 +66,6 @@ type PublisherConfig struct {
 	MaxReconnectBackoff time.Duration
 }
 
-// RabbitMQPublisher implements the EventPublisher interface for RabbitMQ
 type RabbitMQPublisher struct {
 	connection      *amqp091.Connection
 	connectionMutex sync.Mutex
@@ -79,7 +77,6 @@ type RabbitMQPublisher struct {
 	config          PublisherConfig
 }
 
-// NewRabbitMQPublisher creates a new RabbitMQ publisher
 func NewRabbitMQPublisher(rabbitmqURL string, logger logger.Logger, config *PublisherConfig) (*RabbitMQPublisher, error) {
 	if config == nil {
 		config = &PublisherConfig{
@@ -109,7 +106,7 @@ func (r *RabbitMQPublisher) PublishCustomerOSEvent(ctx context.Context, entityId
 	return r.publishEventOnExchange(ctx, entityId, entityType, message, ExchangeCustomerOS, "")
 }
 
-func (r *RabbitMQPublisher) PublishCustomerOSDirectEvent(ctx context.Context, entityId string, entityType model.EntityType, message interface{}) error {
+func (r *RabbitMQPublisher) PublishDirectCustomerOSEvent(ctx context.Context, entityId string, entityType model.EntityType, message interface{}) error {
 	return r.publishEventOnExchange(ctx, entityId, entityType, message, ExchangeDirect, RoutingKeyFlowParticipantSchedule)
 }
 
@@ -430,13 +427,18 @@ func (r *RabbitMQPublisher) publishEventOnExchange(ctx context.Context, entityId
 
 	tracingData := tracing.ExtractTextMapCarrier((span).Context())
 
+	messageType := reflect.TypeOf(message)
+	if messageType.Kind() == reflect.Ptr {
+		messageType = messageType.Elem()
+	}
+
 	eventMessage := dto.Event{
 		Event: dto.EventDetails{
 			Id:         utils.GenerateNanoIdWithPrefix("event", 21),
 			EntityId:   entityId,
 			EntityType: entityType,
 			Tenant:     common.GetTenantFromContext(ctx),
-			EventType:  reflect.TypeOf(message).Name(),
+			EventType:  messageType.Name(),
 			Data:       message,
 		},
 		Metadata: dto.EventMetadata{

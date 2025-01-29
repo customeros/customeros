@@ -11,13 +11,13 @@ type EventsService struct {
 	Subscriber *RabbitMQSubscriber
 }
 
-func NewEventsService(rabbitmqURL string, log logger.Logger) (*EventsService, error) {
-	publisher, err := NewRabbitMQPublisher(rabbitmqURL, log)
+func NewEventsService(rabbitmqURL string, log logger.Logger, publisherConfig *PublisherConfig, subscriberConfig *SubscriberConfig) (*EventsService, error) {
+	publisher, err := NewRabbitMQPublisher(rabbitmqURL, log, publisherConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	subscriber, err := NewRabbitMQSubscriber(rabbitmqURL, log)
+	subscriber, err := NewRabbitMQSubscriber(rabbitmqURL, log, subscriberConfig)
 	if err != nil {
 		return nil, err
 	}

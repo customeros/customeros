@@ -14,6 +14,7 @@ type EnrichmentService interface {
 	EnrichPerson(ctx context.Context, person PersonSearch) (*uint64, *postgres_entity.ScrapInResponseBody, error)
 	IPIdentity(ctx context.Context, ipAddress string) (*SnitcherResponse, error)
 	FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) (dbID string, betterContactRequestID string, response *postgres_entity.BetterContactResponseBody, err error)
+	EnrichContact(ctx context.Context, contactId, linkedInUrl string) error
 
 	// only use if you must
 	GetBrandfetchByDomain(ctx context.Context, domain string) (*postgres_entity.BrandfetchResponseBody, error)

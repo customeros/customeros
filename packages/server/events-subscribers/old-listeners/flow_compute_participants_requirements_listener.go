@@ -1,4 +1,4 @@
-package listeners
+package oldlisteners
 
 import (
 	"context"
@@ -7,8 +7,9 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 	"github.com/opentracing/opentracing-go"
+
+	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
 
 func Handle_FlowComputeParticipantsRequirements(ctx context.Context, dependencies *model.DependencyContainer, input any) error {

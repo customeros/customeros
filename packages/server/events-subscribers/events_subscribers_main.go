@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,15 +19,10 @@ import (
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/events-subscribers/config"
-	"github.com/customeros/customeros/packages/server/events-subscribers/handlers"
+	"github.com/customeros/customeros/packages/server/events-subscribers/listeners"
 	"github.com/customeros/customeros/packages/server/events-subscribers/logger"
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
-
-type QueueConfig struct {
-	Events          string
-	FlowParticipant string
-}
 
 type App struct {
 	ctx           context.Context
@@ -40,7 +34,6 @@ type App struct {
 	events        *events.EventsService
 	postgresDB    *commonConfig.PostgresDB
 	neo4jDriver   *neo4j.DriverWithContext
-	queueConfig   QueueConfig
 }
 
 func NewApp() *App {
@@ -48,10 +41,6 @@ func NewApp() *App {
 	return &App{
 		ctx:    ctx,
 		cancel: cancel,
-		queueConfig: QueueConfig{
-			Events:          "events",
-			FlowParticipant: "events-flow-participant-schedule",
-		},
 	}
 }
 
@@ -153,35 +142,86 @@ func (a *App) initServices() error {
 		CommonServices:       commonServices,
 	}
 
-	// Initialize events service
+	// Initialize events service with configs
+	publisherConfig := &events.PublisherConfig{
+		MessageTTL:          events.DefaultMessageTTL,
+		MaxRetries:          events.DefaultMaxRetries,
+		PublishTimeout:      events.DefaultPublishTimeout,
+		ReconnectBackoff:    events.DefaultReconnectBackoff,
+		MaxReconnectBackoff: events.DefaultMaxReconnectBackoff,
+	}
+
+	subscriberConfig := &events.SubscriberConfig{
+		MaxRetries:          events.DefaultMaxRetries,
+		ReconnectBackoff:    events.DefaultReconnectBackoff,
+		MaxReconnectBackoff: events.DefaultMaxReconnectBackoff,
+	}
+
 	eventsService, err := events.NewEventsService(
 		a.config.Common.Infrastructure.RabbitMQConfig.Url,
 		a.logger,
+		publisherConfig,
+		subscriberConfig,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create events service: %w", err)
 	}
 	a.events = eventsService
 
-	// Initialize handlers
-	handlers.InitHandlerRegistration(a.events, a.deps)
+	// Register listeners instead of handlers
+	if err := a.initializeListeners(); err != nil {
+		return fmt.Errorf("failed to initialize listeners: %w", err)
+	}
+
+	return nil
+}
+
+func (a *App) initializeListeners() error {
+	// Create and register listeners for each event type
+
+	// Contact Listeners
+	a.events.Subscriber.RegisterListener(listeners.NewAddSocialToContactListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(listeners.NewHideContactListener(a.logger, a.deps))
+
+	// Enrichment Listeners
+	a.events.Subscriber.RegisterListener(listeners.NewRequestEnrichContactListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(listeners.NewRequestValidateEmailListener(a.logger, a.deps))
+
+	// SKU Listeners
+	a.events.Subscriber.RegisterListener(listeners.NewSkuUpdateListener(a.logger, a.deps))
 
 	return nil
 }
 
 func (a *App) Run() error {
-	// Start event listeners
-	errChan := make(chan error, 2)
+	// Start listening to queues
+	errChan := make(chan error, 4)
 
+	// CustomerOS Events Queue
 	go func() {
-		if err := a.events.Subscriber.ListenQueue(a.queueConfig.Events); err != nil {
-			errChan <- fmt.Errorf("failed to listen to queue %s: %w", a.queueConfig.Events, err)
+		if err := a.events.Subscriber.ListenQueue(events.QueueEvents); err != nil {
+			errChan <- fmt.Errorf("failed to listen to events queue: %w", err)
 		}
 	}()
 
+	// Agents Queue
 	go func() {
-		if err := a.events.Subscriber.ListenQueueExclusive(a.queueConfig.FlowParticipant); err != nil {
-			errChan <- fmt.Errorf("failed to listen to exclusive queue %s: %w", a.queueConfig.FlowParticipant, err)
+		if err := a.events.Subscriber.ListenQueue(events.QueueAgents); err != nil {
+			errChan <- fmt.Errorf("failed to listen to agents queue: %w", err)
+		}
+	}()
+
+	// Notifications Queue
+	go func() {
+		if err := a.events.Subscriber.ListenQueue(events.QueueNotifications); err != nil {
+			errChan <- fmt.Errorf("failed to listen to notifications queue: %w", err)
+		}
+	}()
+
+	// Flow Participant Queue (exclusive)
+	go func() {
+		if err := a.events.Subscriber.ListenQueueExclusive(events.QueueFlowParticipantSchedule); err != nil {
+			errChan <- fmt.Errorf("failed to listen to flow participant queue: %w", err)
 		}
 	}()
 
@@ -217,16 +257,3 @@ func (a *App) Shutdown() error {
 
 	return nil
 }
-
-func main() {
-	app := NewApp()
-
-	if err := app.Initialize(); err != nil {
-		log.Fatalf("Failed to initialize application: %v", err)
-	}
-
-	if err := app.Run(); err != nil {
-		log.Fatalf("Application error: %v", err)
-	}
-}
-
