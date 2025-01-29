@@ -131,7 +131,7 @@ func (h *WebsiteTrackerEventsHandler) validateTrackingAllowed(ctx context.Contex
 		return tenant, nil
 	}
 
-	agents, err := h.services.Repositories.PostgresRepositories.AgentsRepository.GetActiveAgentsByTypes(ctx, []enum.AgentType{enum.AgentVisitorID})
+	agents, err := h.services.Repositories.PostgresRepositories.AgentsRepository.GetActiveAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentVisitorID})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get agents"))
 		return "", err

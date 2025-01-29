@@ -109,9 +109,14 @@ func (s *webSessionService) ProcessIntentSignals() {
 	}
 
 	for _, session := range sessions {
-		err := s.commonServices.WebVisitProcessor.Process(ctx, session)
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    session.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+		err = s.commonServices.WebVisitProcessor.Process(innerCtx, session)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			continue
 		}
 	}
 }
