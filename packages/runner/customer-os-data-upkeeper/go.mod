@@ -19,7 +19,6 @@ require (
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
 	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
 	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
-	github.com/customeros/customeros/packages/server/events v0.0.0-00010101000000-000000000000
 	github.com/customeros/customeros/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c
 	github.com/customeros/mailsherpa v0.3.8
 	github.com/joho/godotenv v1.5.1
@@ -41,7 +40,6 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/Boostport/mjml-go v0.15.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
-	github.com/EventStore/EventStore-Client-Go/v3 v3.3.0 // indirect
 	github.com/PuerkitoBio/goquery v1.10.1 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
@@ -50,7 +48,7 @@ require (
 	github.com/bytedance/sonic v1.12.6 // indirect
 	github.com/bytedance/sonic/loader v0.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cloudflare/cloudflare-go v0.114.0 // indirect
+	github.com/cloudflare/cloudflare-go v0.115.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/coocood/freecache v1.2.4 // indirect
@@ -69,7 +67,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.24.0 // indirect
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
-	github.com/goccy/go-json v0.10.4 // indirect
+	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
