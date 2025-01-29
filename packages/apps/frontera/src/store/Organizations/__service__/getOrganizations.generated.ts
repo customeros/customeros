@@ -17,6 +17,7 @@ export type GetOrganizationsQuery = {
       name: string;
       notes?: string | null;
       hide: boolean;
+      wrongIndustry: boolean;
       stage?: Types.OrganizationStage | null;
       description?: string | null;
       industry?: string | null;

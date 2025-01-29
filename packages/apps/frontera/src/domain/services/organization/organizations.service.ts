@@ -91,6 +91,8 @@ export class OrganizationService {
   }
 
   public async flagWrongField(id: string, field: FlagWrongFields) {
+    const organization = this.root.organizations.getById(id);
+
     try {
       const { flagWrongField } = await this.orgRepo.flagWrongField({
         input: {
@@ -102,6 +104,7 @@ export class OrganizationService {
 
       runInAction(() => {
         if (flagWrongField?.result) {
+          organization?.flagIncorrectIndustry();
           this.root.ui.toastSuccess(
             `Noted, we're looking into it`,
             `flag-field-${field}`,

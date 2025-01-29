@@ -22,6 +22,7 @@ query getOrganizations(
           id
         }
       }
+      wrongIndustry
 
       parentCompanies {
         organization {
