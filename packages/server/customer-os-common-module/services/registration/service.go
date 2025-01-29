@@ -114,7 +114,7 @@ func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, log
 	}
 
 	if err = s.createDefaultAgents(ctx); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error creating postmark server during tenant onboarding"))
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating default agents during tenant onboarding"))
 	}
 
 	return nil
