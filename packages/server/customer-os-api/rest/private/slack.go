@@ -67,6 +67,12 @@ func RequestAccessSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 		slackRequestAccessUrl := "https://slack.com/oauth/v2/authorize?client_id=" + s.Cfg.Common.External.SlackConfig.ClientID + "&scope=" + strings.Join(scopes, ",") + "&user_scope="
 
+		redirectUri := c.Query("redirect_uri")
+
+		if redirectUri != "" {
+			slackRequestAccessUrl += "&redirect_uri=" + redirectUri
+		}
+
 		span.LogFields(log.Object("slackRequestAccessUrl", slackRequestAccessUrl))
 
 		c.JSON(http.StatusOK, gin.H{"url": slackRequestAccessUrl})
