@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"time"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -35,6 +36,7 @@ type OrganizationService interface {
 
 	GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error)
 	GetMergedOrganizationIds(ctx context.Context, mergedAfter time.Time) ([]string, error)
+	GetOrganizationsByStage(ctx context.Context, stage enum.OrganizationStage) (*neo4j_entity.OrganizationEntities, error)
 	RequestRefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	RefreshLastTouchpoint(ctx context.Context, organizationId string) error
 	CheckOrganizationExistsWithEmail(ctx context.Context, email string) (bool, string, error)
