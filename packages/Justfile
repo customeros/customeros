@@ -93,16 +93,11 @@ generate-api:
     cd ./server/customer-os-api && go run github.com/99designs/gqlgen generate
 
 jaeger:
-    open http://localhost:54847/
-
-jaeger-dev:
     open http://localhost:16686/search
 
-logs:
-    tail -f admin-api.log api.log events-subscribers.log
+jaeger-dev:
+    open http://localhost:54847/search
 
-os:
-    open https://165.22.117.75:5601/app/
 # Show outdated dependencies for all modules
 outdated:
     #!/usr/bin/env bash
@@ -118,43 +113,25 @@ outdated:
 ps:
 	cd ../deployment && podman-compose ps
 
-restart-api:
-    pkill -f "customer-os-platform-admin-api" || true
-    cd ./server/customer-os-platform-admin-api && go run . > ../../admin-api.log 2>&1 & echo $$! > admin-api.pid
-    pkill -f "customer-os-api" || true
-    cd ./server/customer-os-api && go run . > ../../api.log 2>&1 & echo $$! > api.pid
-    echo "CustomerOS API restarted"
-
 start:
-	cd ../deployment && podman-compose up rabbitmq jaeger postgres postgres-sidecar neo4j eventstore -d
+	cd ../deployment && podman-compose up rabbitmq jaeger postgres postgres-sidecar neo4j eventstore
 
 start-api:
-    cd ./server/customer-os-platform-admin-api && go run . > ../../admin-api.log 2>&1 & echo $$! > admin-api.pid
-    cd ./server/customer-os-api && go run . > ../../api.log 2>&1 & echo $$! > api.pid
+    cd ./server/customer-os-api && go run .
     echo "Services started."
 
 start-api-debug:
-    cd ./server/customer-os-api && dlv debug --headless --listen=:2345 --api-version=2 .
-
-start-be:
-	cd ../deployment && podman-compose up -d
+    cd ./server/customer-os-api && dlv debug .
 
 start-events:
-    cd ./server/events-subscribers && go run . > ../../events-subscribers.log 2>&1 & echo $$! > events-subscribers.pid
+    cd ./server/events-subscribers && go run . 
 
 start-fe:
     cd ../deployment && podman-compose up user-admin-api settings-api -d
     cd ./apps/frontera && npm run dev
 
 stop:
-	kill `cat api.pid` 2>/dev/null || true
-	kill `cat admin-api.pid` 2>/dev/null || true
-	kill `cat events-subscribers.pid` 2>/dev/null || true
-	rm -f *.pid
 	cd ../deployment && podman-compose down rabbitmq jaeger postgres postgres-sidecar neo4j eventstore customer-os-platform-admin-api user-admin-api settings-api
-
-test-flow SERVICE:
-	python3 server/customer-os-api/test/flows/{{SERVICE}}_test.py
 
 # Run tests for a specific service
 test SERVICE:
