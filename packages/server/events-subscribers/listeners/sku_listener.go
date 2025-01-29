@@ -6,6 +6,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
@@ -26,6 +27,17 @@ func OnSkuUpdate(ctx context.Context, dependencies *model.DependencyContainer, i
 		return err
 	}
 
+	quickbooksSettingsEntity, err := dependencies.CommonServices.PostgresRepositories.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if quickbooksSettingsEntity == nil {
+		span.LogFields(log.String("error", "Quickbooks settings not found"))
+		return nil
+	}
+
 	skuEntity, err := dependencies.CommonServices.PostgresRepositories.SkuRepository.Get(ctx, tenant, skuId)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -38,6 +50,13 @@ func OnSkuUpdate(ctx context.Context, dependencies *model.DependencyContainer, i
 		return err
 	}
 
+	if qbProduct == nil || qbProduct.Product == nil {
+		span.LogFields(log.Object("qbProduct", qbProduct))
+		err := errors.New("Quickbooks product could not be saved")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	if skuEntity != nil && skuEntity.QuickbooksId == "" {
 		skuEntity.QuickbooksId = qbProduct.Product.Id
 		_, err = dependencies.CommonServices.PostgresRepositories.SkuRepository.Save(ctx, skuEntity)
@@ -45,6 +64,8 @@ func OnSkuUpdate(ctx context.Context, dependencies *model.DependencyContainer, i
 			tracing.TraceErr(span, err)
 			return err
 		}
+	} else {
+		span.LogFields(log.String("info", "Quickbooks ID already exists"))
 	}
 
 	return nil
