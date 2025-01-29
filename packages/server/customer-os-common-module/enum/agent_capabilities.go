@@ -14,6 +14,7 @@ const (
 	CapabilityIdentifyWebVisitor              AgentCapabilityType = "identify_web_visitor"
 	CapabilitySendSlackNotification           AgentCapabilityType = "send_slack_notification"
 	CapabilitySendWebVisitorSlackNotification AgentCapabilityType = "send_web_visitor_slack_notification"
+	CapabilityApplyTag                        AgentCapabilityType = "apply_tag"
 )
 
 func (t AgentCapabilityType) String() string {
@@ -27,7 +28,8 @@ func GetAgentCapability(s string) (AgentCapabilityType, error) {
 		CapabilityCreateOrganization,
 		CapabilityIdentifyWebVisitor,
 		CapabilitySendSlackNotification,
-		CapabilitySendWebVisitorSlackNotification:
+		CapabilitySendWebVisitorSlackNotification,
+		CapabilityApplyTag:
 		return AgentCapabilityType(s), nil
 
 	default:

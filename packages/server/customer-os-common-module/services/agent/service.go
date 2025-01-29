@@ -112,14 +112,18 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		if agentCapability.Name == "" {
 			agentCapability.Name = masterCapability.Type.GetName()
 		}
-		config := agent_capability.GetCapabilityConfigStruct(agentCapability.Type)
-		if config != nil {
-			configBytes, err := json.Marshal(config)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
+		if masterCapability.Config != "" {
+			agentCapability.Config = masterCapability.Config
+		} else {
+			config := agent_capability.GetCapabilityConfigStruct(agentCapability.Type)
+			if config != nil {
+				configBytes, err := json.Marshal(config)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+				agentCapability.Config = string(configBytes)
 			}
-			agentCapability.Config = string(configBytes)
 		}
 		agentCapabilities = append(agentCapabilities, agentCapability)
 	}
