@@ -245,19 +245,19 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 		contractDataFields.SignedAt = input.ContractSigned
 	}
 	if input.ServiceStartedAt != nil && *input.ServiceStartedAt != zeroTime {
-		contractDataFields.SignedAt = input.ServiceStartedAt
+		contractDataFields.ServiceStartedAt = input.ServiceStartedAt
 	}
 	if input.ServiceStarted != nil && *input.ServiceStarted != zeroTime {
-		contractDataFields.SignedAt = input.ServiceStarted
+		contractDataFields.ServiceStartedAt = input.ServiceStarted
 	}
 	if input.EndedAt != nil && *input.EndedAt != zeroTime {
-		contractDataFields.SignedAt = input.EndedAt
+		contractDataFields.EndedAt = input.EndedAt
 	}
 	if input.ContractEnded != nil && *input.ContractEnded != zeroTime {
-		contractDataFields.SignedAt = input.ContractEnded
+		contractDataFields.EndedAt = input.ContractEnded
 	}
 	if input.InvoicingStartDate != nil && *input.InvoicingStartDate != zeroTime {
-		contractDataFields.SignedAt = input.InvoicingStartDate
+		contractDataFields.InvoicingStartDate = input.InvoicingStartDate
 	}
 	if input.BillingDetails != nil && input.BillingDetails.InvoicingStarted != nil {
 		if *input.BillingDetails.InvoicingStarted != zeroTime {
