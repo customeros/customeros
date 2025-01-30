@@ -44,7 +44,11 @@ export type IconName =
   | 'columns-03'
   | 'user-03'
   | 'user-01'
-  | 'activity';
+  | 'activity'
+  | 'radar'
+  | 'dot-live-primary'
+  | 'dot-live-success'
+  | 'radio-dot';
 
 interface IconProps extends SVGAttributes<SVGElement> {
   name: IconName;
