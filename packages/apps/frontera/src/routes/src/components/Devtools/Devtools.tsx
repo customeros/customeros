@@ -5,11 +5,15 @@ import { toJS } from 'mobx';
 import get from 'lodash/get';
 import { useKey } from 'rooks';
 import { match } from 'ts-pattern';
+import { Tracer } from '@infra/tracer';
+import { type RootStore } from '@store/root';
 import { Observer, observer } from 'mobx-react-lite';
+import { CommonStore } from '@store/Common/Common.store';
 
 import { cn } from '@ui/utils/cn';
 import { X } from '@ui/media/icons/X';
 import { Input } from '@ui/form/Input';
+import { Switch } from '@ui/form/Switch';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
@@ -23,10 +27,23 @@ import {
   ScrollAreaScrollbar,
 } from '@ui/utils/ScrollArea';
 
+import { Traces } from './Traces';
 import { DevtoolsStore } from './state';
 import { useStore } from '../../hooks/useStore';
 
 const devTools = new DevtoolsStore();
+
+type StoreReturnType =
+  | RootStore['organizations']
+  | RootStore['tableViewDefs']
+  | RootStore['contacts']
+  | RootStore['contracts']
+  | RootStore['flows']
+  | RootStore['jobRoles']
+  | RootStore['tags']
+  | RootStore['agents']
+  | RootStore['common']
+  | null;
 
 export const Devtools = observer(() => {
   const store = useStore();
@@ -81,16 +98,7 @@ export const Devtools = observer(() => {
     devTools.openGqlOperationId ?? '',
   );
   const detailedStore = match(devTools.detailedStore)
-    .returnType<
-      | (typeof store)['organizations']
-      | (typeof store)['tableViewDefs']
-      | (typeof store)['contacts']
-      | (typeof store)['contracts']
-      | (typeof store)['flows']
-      | (typeof store)['jobRoles']
-      | (typeof store)['tags']
-      | null
-    >()
+    .returnType<StoreReturnType>()
     .with('tableViewDefs', () => store.tableViewDefs)
     .with('organizations', () => store.organizations)
     .with('contacts', () => store.contacts)
@@ -98,7 +106,31 @@ export const Devtools = observer(() => {
     .with('flows', () => store.flows)
     .with('jobRoles', () => store.jobRoles)
     .with('tags', () => store.tags)
+    .with('agents', () => store.agents)
+    .with('common.slackChannels', () => store.common)
     .otherwise(() => null);
+
+  const getStoreValue = (store: StoreReturnType) => {
+    if (store instanceof CommonStore) {
+      return store.slackChannels;
+    }
+
+    return store?.value;
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getEntityValue = (entity: Record<string, any>) =>
+    match(devTools.detailedStore)
+      .with('organizations', () => get(entity, 'value', {}))
+      .with('tableViewDefs', () => get(entity, 'value', {}))
+      .with('contacts', () => get(entity, 'value', {}))
+      .with('contracts', () => get(entity, 'value', {}))
+      .with('flows', () => get(entity, 'value', {}))
+      .with('jobRoles', () => get(entity, 'value', {}))
+      .with('tags', () => get(entity, 'value', {}))
+      .with('agents', () => get(entity, 'value', {}))
+      .with('common.slackChannels', () => entity)
+      .otherwise(() => entity);
 
   const getEntityName = (entity: Record<string, string>) =>
     match(devTools.detailedStore)
@@ -110,6 +142,8 @@ export const Devtools = observer(() => {
       .with('flows', () => get(entity, 'value.name', 'Unnamed'))
       .with('jobRoles', () => get(entity, 'value.jobTitle', 'Unnamed'))
       .with('tags', () => get(entity, 'value.name', 'Unnamed'))
+      .with('agents', () => get(entity, 'value.name', 'Unnamed'))
+      .with('common.slackChannels', () => get(entity, 'name', 'Unnamed'))
       .otherwise(() => 'Unnamed');
 
   return createPortal(
@@ -165,6 +199,26 @@ export const Devtools = observer(() => {
                       )}
                     >
                       Store
+                    </Button>
+                    <Button
+                      size='xxs'
+                      onClick={() => devTools.toggleView('traces')}
+                      className={cn(
+                        devTools.view === 'traces' &&
+                          'bg-primary-100 focus:bg-primary-200 hover:bg-primary-200',
+                      )}
+                    >
+                      Traces
+                    </Button>
+                    <Button
+                      size='xxs'
+                      onClick={() => devTools.toggleView('settings')}
+                      className={cn(
+                        devTools.view === 'settings' &&
+                          'bg-primary-100 focus:bg-primary-200 hover:bg-primary-200',
+                      )}
+                    >
+                      Settings
                     </Button>
                   </ButtonGroup>
                 </div>
@@ -316,42 +370,103 @@ export const Devtools = observer(() => {
 
                           {detailedStore &&
                             // @ts-expect-error - TS is working against us here
-                            Array.from(detailedStore?.value)?.map(([k, v]) => {
-                              const isSelected =
-                                devTools.detailedEntityId === k;
-                              const name =
-                                getEntityName(
-                                  v as unknown as Record<string, string>,
-                                ) || 'Unnamed';
+                            Array.from(getStoreValue(detailedStore))?.map(
+                              ([k, v]) => {
+                                const isSelected =
+                                  devTools.detailedEntityId === k;
+                                const name =
+                                  getEntityName(
+                                    v as unknown as Record<string, string>,
+                                  ) || 'Unnamed';
 
-                              return (
-                                <div
-                                  key={k}
-                                  className='flex flex-col space-y-1'
-                                >
+                                return (
                                   <div
-                                    onClick={() => devTools.toggleEntity(k)}
-                                    className={cn(
-                                      'flex items-center border-b borde-b-gray-200 cursor-pointer hover:bg-gray-50 py-0.5',
-                                      isSelected && 'bg-gray-100',
-                                    )}
+                                    key={k}
+                                    className='flex flex-col space-y-1'
                                   >
-                                    <span className='text-xs font-medium mr-0.5'>
-                                      {name}
-                                    </span>
-                                    <span className='text-xs text-gray-500'>
-                                      ({k})
-                                    </span>
+                                    <div
+                                      onClick={() => devTools.toggleEntity(k)}
+                                      className={cn(
+                                        'flex items-center border-b borde-b-gray-200 cursor-pointer hover:bg-gray-50 py-0.5',
+                                        isSelected && 'bg-gray-100',
+                                      )}
+                                    >
+                                      <span className='text-xs font-medium mr-0.5'>
+                                        {name}
+                                      </span>
+                                      <span className='text-xs text-gray-500'>
+                                        ({k})
+                                      </span>
+                                    </div>
+                                    {isSelected && (
+                                      <pre className='text-xs'>
+                                        {JSON.stringify(
+                                          toJS(getEntityValue(v)),
+                                          null,
+                                          2,
+                                        )}
+                                      </pre>
+                                    )}
                                   </div>
-                                  {isSelected && (
-                                    <pre className='text-xs'>
-                                      {JSON.stringify(toJS(v?.value), null, 2)}
-                                    </pre>
-                                  )}
-                                </div>
-                              );
-                            })}
+                                );
+                              },
+                            )}
                         </>
+                      )}
+                      {devTools.view === 'traces' && <Traces />}
+                      {devTools.view === 'settings' && (
+                        <div className='w-full'>
+                          <p className='font-medium underline mb-2'>Settings</p>
+                          <div className='flex items-center justify-between w-full'>
+                            <span className='text-sm font-medium'>Tracer</span>
+
+                            <div className='flex items-center gap-2 mr-2'>
+                              <span
+                                className={cn(
+                                  'text-xs text-grayModern-500',
+                                  Tracer.enabled && 'text-primary-500',
+                                )}
+                              >
+                                {Tracer.enabled ? 'enabled' : 'disabled'}
+                              </span>
+                              <Switch
+                                checked={Tracer.enabled}
+                                onChange={() =>
+                                  Tracer.enabled
+                                    ? Tracer.disable()
+                                    : Tracer.enable()
+                                }
+                              />
+                            </div>
+                          </div>
+
+                          <div className='flex items-center justify-between w-full pl-4 mt-2'>
+                            <span className='text-xs font-medium'>
+                              Show Callstack
+                            </span>
+
+                            <div className='flex items-center gap-2 mr-2'>
+                              <span
+                                className={cn(
+                                  'text-xs text-grayModern-500',
+                                  Tracer.displayCallStack && 'text-primary-500',
+                                )}
+                              >
+                                {Tracer.displayCallStack
+                                  ? 'enabled'
+                                  : 'disabled'}
+                              </span>
+                              <Switch
+                                checked={Tracer.displayCallStack}
+                                onChange={() =>
+                                  Tracer.displayCallStack
+                                    ? Tracer.hideCallstack()
+                                    : Tracer.showCallstack()
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </ScrollAreaViewport>
                     <ScrollAreaScrollbar orientation='vertical'>

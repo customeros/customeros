@@ -1,5 +1,6 @@
 import type { RootStore } from '@store/root';
 
+import { Tracer } from '@infra/tracer';
 import { Transport } from '@infra/transport';
 import { runInAction, makeAutoObservable } from 'mobx';
 
@@ -22,12 +23,7 @@ export class Slack {
   }
 
   async load() {
-    if (this.root.demoMode) {
-      this.enabled = mock.slackEnabled;
-      this.isBootstrapped = true;
-
-      return;
-    }
+    const span = Tracer.span('Slack.load');
 
     try {
       this.isLoading = true;
@@ -52,6 +48,7 @@ export class Slack {
       runInAction(() => {
         this.isLoading = false;
       });
+      span.end();
     }
   }
 
@@ -73,12 +70,14 @@ export class Slack {
     }
   }
 
-  async enableSync() {
+  async enableSync(redirect_uri?: string) {
+    Tracer.span('Slack.enableSync');
+
     try {
       this.isLoading = true;
 
       const { data } = await this.transportLayer.http.get(
-        `/sa/slack/requestAccess`,
+        `/sa/slack/requestAccess?redirect_uri=${redirect_uri ?? '/settings'}`,
       );
 
       window.location.href = data.url;
@@ -94,6 +93,8 @@ export class Slack {
   }
 
   async disableSync() {
+    const span = Tracer.span('Slack.disableSync');
+
     this.isLoading = true;
     this.root.settings.revokeAccess('slack', {
       onSuccess: () => {
@@ -104,6 +105,7 @@ export class Slack {
           'revoke-slack-access',
         );
         this.load();
+        span.end();
       },
       onError: (err) => {
         this.error = err.message;
@@ -116,5 +118,3 @@ export class Slack {
     });
   }
 }
-
-const mock = { slackEnabled: true };

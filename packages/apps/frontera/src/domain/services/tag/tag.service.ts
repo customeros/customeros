@@ -2,7 +2,7 @@ import { RootStore } from '@store/root';
 import { TagDatum } from '@store/Tags/Tag.store';
 import { TagService as TagRepo } from '@store/Tags/__service__/Tag.service';
 
-import { unwrap } from '@shared/util/unwrap';
+import { unwrap } from '@utils/unwrap';
 
 export class TagService {
   private tagRepo = TagRepo.getInstance();
