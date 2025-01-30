@@ -1,6 +1,6 @@
 import { action } from 'mobx';
-import { RootStore } from '@store/root.ts';
-import { OrganizationService } from '@domain/services/organization/organizations.service.ts';
+import { RootStore } from '@store/root';
+import { OrganizationService } from '@domain/services';
 
 import { FlagWrongFields } from '@graphql/types';
 
