@@ -36,35 +36,3 @@ func MapAgentToModel(entity *postgresEntity.Agents) *model.Agent {
 	}
 	return &agentModel
 }
-
-func MapAgentSaveInputToEntity(input model.AgentSaveInput) *postgresEntity.Agents {
-	agentEntity := &postgresEntity.Agents{
-		ID:          utils.IfNotNilString(input.ID),
-		Name:        utils.IfNotNilString(input.Name),
-		Icon:        utils.IfNotNilString(input.Icon),
-		Color:       utils.IfNotNilString(input.Color),
-		Goal:        utils.IfNotNilString(input.Goal),
-		IsActive:    utils.IfNotNilBool(input.IsActive),
-		VisibleInUI: utils.IfNotNilBool(input.Visible),
-		FlowID:      utils.IfNotNilString(input.FlowID),
-	}
-	if input.Capabilities != nil {
-		capabilities := make([]postgresEntity.Capability, 0, len(input.Capabilities))
-		for _, capability := range input.Capabilities {
-			capabilities = append(capabilities, postgresEntity.Capability{
-				ID:     utils.IfNotNilString(capability.ID),
-				Name:   utils.IfNotNilString(capability.Name),
-				Error:  utils.IfNotNilString(capability.Errors),
-				Active: utils.IfNotNilBool(capability.Active),
-				Config: utils.IfNotNilString(capability.Config),
-			})
-			if capability.Type != nil {
-				capabilities[len(capabilities)-1].Type = enummapper.MapAgentCapabilityTypeFromModel(*capability.Type)
-			}
-		}
-		agentEntity.CapabilitiesConfig = postgresEntity.CapabilitiesConfig{
-			Capabilities: capabilities,
-		}
-	}
-	return agentEntity
-}

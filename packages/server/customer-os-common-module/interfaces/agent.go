@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
@@ -10,8 +11,8 @@ import (
 
 type AgentService interface {
 	CreateAgent(ctx context.Context, agentType enum.AgentType) (*postgresentity.Agents, error)
-	UpdateAgent(ctx context.Context, agent postgresentity.Agents) (*postgresentity.Agents, error)
-	GetAgentById(ctx context.Context, agentID string) (*postgresentity.Agents, error)
+	UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilities *postgresentity.CapabilitiesConfig) (*postgresentity.Agents, error)
+	GetAgentById(ctx context.Context, agentId string) (*postgresentity.Agents, error)
 	GetAllAgentsByTenant(ctx context.Context) ([]*postgresentity.Agents, error)
 
 	CreateAgentExecutionRecord(ctx context.Context, agent postgresentity.Agents, triggerEvent string) (string, error)

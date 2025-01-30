@@ -165,7 +165,7 @@ func InitCommonServices(
 	}
 
 	// Simple - Services that depend only on base services
-	agentImpl := agent.NewAgentService(postgresRepositories)
+	agentImpl := agent.NewAgentService(postgresRepositories, eventsImpl)
 	aiImpl := ai.NewAIService(log, &cfg.External.AnthropicConfig, &cfg.External.DeepseekConfig)
 	attachmentImpl := attachment.NewAttachmentService(neo4jRepositories)
 	azureImpl := azure.NewAzureService(&cfg.Infrastructure.AzureOAuthConfig, postgresRepositories, neo4jRepositories)
