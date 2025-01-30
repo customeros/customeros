@@ -62,10 +62,6 @@ type CreateOrganizationRequest struct {
 	// Relationship status of the organization
 	// example: customer
 	Relationship string `json:"relationship"`
-
-	// Indicates if the organization is an ICP (Ideal Customer Profile) fit
-	// example: true
-	IcpFit bool `json:"icpFit"`
 }
 
 // OrganizationRecord represents detailed organization information
@@ -106,10 +102,6 @@ type OrganizationRecord struct {
 	// Current stage in the organization lifecycle
 	// example: lead
 	Stage string `json:"stage,omitempty"`
-
-	// ICP fit indicator
-	// example: true
-	IcpFit bool `json:"icpFit,omitempty"`
 
 	// Associated domains
 	// example: ["customeros.com","customeros.ai"]

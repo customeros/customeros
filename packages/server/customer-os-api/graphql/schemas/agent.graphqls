@@ -36,6 +36,7 @@ type Capability {
 
 enum AgentType {
     WEB_VISIT_IDENTIFIER
+    TAG_SUPPORT
 }
 
 type Agent {

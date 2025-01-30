@@ -1405,6 +1405,9 @@ type ComplexityRoot struct {
 		Hide                            func(childComplexity int) int
 		ID                              func(childComplexity int) int
 		IconURL                         func(childComplexity int) int
+		IcpFit                          func(childComplexity int) int
+		IcpFitReasons                   func(childComplexity int) int
+		IcpFitUpdatedAt                 func(childComplexity int) int
 		Industry                        func(childComplexity int) int
 		IndustryCode                    func(childComplexity int) int
 		IndustryName                    func(childComplexity int) int
@@ -10330,6 +10333,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationUiDetails.IconURL(childComplexity), true
 
+	case "OrganizationUiDetails.icpFit":
+		if e.complexity.OrganizationUiDetails.IcpFit == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.IcpFit(childComplexity), true
+
+	case "OrganizationUiDetails.icpFitReasons":
+		if e.complexity.OrganizationUiDetails.IcpFitReasons == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.IcpFitReasons(childComplexity), true
+
+	case "OrganizationUiDetails.icpFitUpdatedAt":
+		if e.complexity.OrganizationUiDetails.IcpFitUpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.OrganizationUiDetails.IcpFitUpdatedAt(childComplexity), true
+
 	case "OrganizationUiDetails.industry":
 		if e.complexity.OrganizationUiDetails.Industry == nil {
 			break
@@ -13183,6 +13207,7 @@ type Capability {
 
 enum AgentType {
     WEB_VISIT_IDENTIFIER
+    TAG_SUPPORT
 }
 
 type Agent {
@@ -16062,7 +16087,7 @@ type Organization implements MetadataInterface {
     stageLastUpdated:       Time
     relationship:           OrganizationRelationship
     leadSource:             String
-    icpFit:                 Boolean!
+    icpFit:                 IcpFit
 
     hide:                   Boolean!
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
@@ -16207,7 +16232,7 @@ input OrganizationSaveInput {
     stage:              OrganizationStage
     relationship:       OrganizationRelationship
     leadSource:         String
-    icpFit:             Boolean
+    icpFit:             Boolean @deprecated
 
     ownerId:            String
 }
@@ -16296,7 +16321,7 @@ input OrganizationUpdateInput {
     slackChannelId:     String
     stage:              OrganizationStage
     relationship:       OrganizationRelationship
-    icpFit:             Boolean
+    icpFit:             Boolean @deprecated
 
     """
     Deprecated, use relationship instead
@@ -16475,6 +16500,9 @@ type OrganizationUiDetails {
     public:                 Boolean
     employees:              Int64
     yearFounded:            Int64
+    icpFit:                 IcpFit
+    icpFitUpdatedAt:        Time
+    icpFitReasons:          [String!]!
 
     enrichedAt: Time
     enrichedFailedAt: Time
@@ -16509,6 +16537,12 @@ type OrganizationUiDetails {
     parentId:             ID
     parentName:           String
     subsidiaries:         [String!]!
+}
+
+enum IcpFit {
+    ICP_FIT
+    ICP_NOT_FIT
+    ICP_NOT_SET
 }`, BuiltIn: false},
 	{Name: "../schemas/page_view.graphqls", Input: `type PageView implements Node & SourceFields {
     id: ID!
@@ -72637,6 +72671,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_SaveByGlobalOrgan
 				return ec.fieldContext_OrganizationUiDetails_employees(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_OrganizationUiDetails_yearFounded(ctx, field)
+			case "icpFit":
+				return ec.fieldContext_OrganizationUiDetails_icpFit(ctx, field)
+			case "icpFitUpdatedAt":
+				return ec.fieldContext_OrganizationUiDetails_icpFitUpdatedAt(ctx, field)
+			case "icpFitReasons":
+				return ec.fieldContext_OrganizationUiDetails_icpFitReasons(ctx, field)
 			case "enrichedAt":
 				return ec.fieldContext_OrganizationUiDetails_enrichedAt(ctx, field)
 			case "enrichedFailedAt":
@@ -84514,14 +84554,11 @@ func (ec *executionContext) _Organization_icpFit(ctx context.Context, field grap
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*model.IcpFit)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalOIcpFit2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIcpFit(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Organization_icpFit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -84531,7 +84568,7 @@ func (ec *executionContext) fieldContext_Organization_icpFit(_ context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
+			return nil, errors.New("field of type IcpFit does not have child fields")
 		},
 	}
 	return fc, nil
@@ -87800,6 +87837,132 @@ func (ec *executionContext) fieldContext_OrganizationUiDetails_yearFounded(_ con
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_icpFit(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_icpFit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IcpFit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.IcpFit)
+	fc.Result = res
+	return ec.marshalOIcpFit2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIcpFit(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_icpFit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type IcpFit does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_icpFitUpdatedAt(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_icpFitUpdatedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IcpFitUpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_icpFitUpdatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationUiDetails_icpFitReasons(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationUIDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationUiDetails_icpFitReasons(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IcpFitReasons, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationUiDetails_icpFitReasons(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationUiDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -97560,6 +97723,12 @@ func (ec *executionContext) fieldContext_Query_ui_organizations(ctx context.Cont
 				return ec.fieldContext_OrganizationUiDetails_employees(ctx, field)
 			case "yearFounded":
 				return ec.fieldContext_OrganizationUiDetails_yearFounded(ctx, field)
+			case "icpFit":
+				return ec.fieldContext_OrganizationUiDetails_icpFit(ctx, field)
+			case "icpFitUpdatedAt":
+				return ec.fieldContext_OrganizationUiDetails_icpFitUpdatedAt(ctx, field)
+			case "icpFitReasons":
+				return ec.fieldContext_OrganizationUiDetails_icpFitReasons(ctx, field)
 			case "enrichedAt":
 				return ec.fieldContext_OrganizationUiDetails_enrichedAt(ctx, field)
 			case "enrichedFailedAt":
@@ -128107,9 +128276,6 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_leadSource(ctx, field, obj)
 		case "icpFit":
 			out.Values[i] = ec._Organization_icpFit(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		case "hide":
 			out.Values[i] = ec._Organization_hide(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -128890,6 +129056,15 @@ func (ec *executionContext) _OrganizationUiDetails(ctx context.Context, sel ast.
 			out.Values[i] = ec._OrganizationUiDetails_employees(ctx, field, obj)
 		case "yearFounded":
 			out.Values[i] = ec._OrganizationUiDetails_yearFounded(ctx, field, obj)
+		case "icpFit":
+			out.Values[i] = ec._OrganizationUiDetails_icpFit(ctx, field, obj)
+		case "icpFitUpdatedAt":
+			out.Values[i] = ec._OrganizationUiDetails_icpFitUpdatedAt(ctx, field, obj)
+		case "icpFitReasons":
+			out.Values[i] = ec._OrganizationUiDetails_icpFitReasons(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "enrichedAt":
 			out.Values[i] = ec._OrganizationUiDetails_enrichedAt(ctx, field, obj)
 		case "enrichedFailedAt":
@@ -139855,6 +140030,22 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 	}
 	res := graphql.MarshalID(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOIcpFit2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIcpFit(ctx context.Context, v any) (*model.IcpFit, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.IcpFit)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOIcpFit2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐIcpFit(ctx context.Context, sel ast.SelectionSet, v *model.IcpFit) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v any) (*int, error) {

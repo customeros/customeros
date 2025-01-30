@@ -1,6 +1,7 @@
 package data_fields
 
 import (
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 )
@@ -36,7 +37,8 @@ type OrganizationFields struct {
 	EmployeeGrowthRate *string                             `json:"employeeGrowthRate,omitempty"`
 	SlackChannelId     *string                             `json:"slackChannelId,omitempty"`
 	LeadSource         *string                             `json:"leadSource,omitempty"`
-	IcpFit             *bool                               `json:"icpFit,omitempty"`
+	IcpFit             *enum.IcpFit                        `json:"icpFit,omitempty"`
+	IcpFitReasons      *[]string                           `json:"icpFitReasons,omitempty"`
 	EnrichDomain       *string                             `json:"enrichDomain,omitempty"`
 	EnrichSource       *string                             `json:"enrichSource,omitempty"`
 	OwnerId            *string                             `json:"ownerId,omitempty"`

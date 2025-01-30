@@ -87,7 +87,7 @@ type Organization implements MetadataInterface {
     stageLastUpdated:       Time
     relationship:           OrganizationRelationship
     leadSource:             String
-    icpFit:                 Boolean!
+    icpFit:                 IcpFit
 
     hide:                   Boolean!
     contacts(pagination: Pagination, where: Filter, sort: [SortBy!]): ContactsPage! @goField(forceResolver: true)
@@ -232,7 +232,7 @@ input OrganizationSaveInput {
     stage:              OrganizationStage
     relationship:       OrganizationRelationship
     leadSource:         String
-    icpFit:             Boolean
+    icpFit:             Boolean @deprecated
 
     ownerId:            String
 }
@@ -321,7 +321,7 @@ input OrganizationUpdateInput {
     slackChannelId:     String
     stage:              OrganizationStage
     relationship:       OrganizationRelationship
-    icpFit:             Boolean
+    icpFit:             Boolean @deprecated
 
     """
     Deprecated, use relationship instead

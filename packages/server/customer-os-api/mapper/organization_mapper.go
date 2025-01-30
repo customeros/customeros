@@ -44,7 +44,6 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		LogoURL:            utils.StringPtr(entity.LogoUrl),
 		Icon:               utils.StringPtr(entity.IconUrl),
 		IconURL:            utils.StringPtr(entity.IconUrl),
-		IcpFit:             entity.IcpFit,
 		ContactCount:       entity.DerivedData.ContactCount,
 		AccountDetails: &model.OrgAccountDetails{
 			RenewalSummary: &model.RenewalSummary{
@@ -138,7 +137,6 @@ func MapOrganizationSaveInputToEntity(input model.OrganizationSaveInput) *data_f
 		SlackChannelId:     input.SlackChannelID,
 		LeadSource:         input.LeadSource,
 		LastFundingAmount:  input.LastFundingAmount,
-		IcpFit:             input.IcpFit,
 		OwnerId:            input.OwnerID,
 	}
 

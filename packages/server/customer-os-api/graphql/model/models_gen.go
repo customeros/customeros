@@ -2107,7 +2107,7 @@ type Organization struct {
 	StageLastUpdated         *time.Time                    `json:"stageLastUpdated,omitempty"`
 	Relationship             *OrganizationRelationship     `json:"relationship,omitempty"`
 	LeadSource               *string                       `json:"leadSource,omitempty"`
-	IcpFit                   bool                          `json:"icpFit"`
+	IcpFit                   *IcpFit                       `json:"icpFit,omitempty"`
 	Hide                     bool                          `json:"hide"`
 	Contacts                 *ContactsPage                 `json:"contacts"`
 	JobRoles                 []*JobRole                    `json:"jobRoles"`
@@ -2301,6 +2301,9 @@ type OrganizationUIDetails struct {
 	Public                          *bool                         `json:"public,omitempty"`
 	Employees                       *int64                        `json:"employees,omitempty"`
 	YearFounded                     *int64                        `json:"yearFounded,omitempty"`
+	IcpFit                          *IcpFit                       `json:"icpFit,omitempty"`
+	IcpFitUpdatedAt                 *time.Time                    `json:"icpFitUpdatedAt,omitempty"`
+	IcpFitReasons                   []string                      `json:"icpFitReasons"`
 	EnrichedAt                      *time.Time                    `json:"enrichedAt,omitempty"`
 	EnrichedFailedAt                *time.Time                    `json:"enrichedFailedAt,omitempty"`
 	EnrichedRequestedAt             *time.Time                    `json:"enrichedRequestedAt,omitempty"`
@@ -3180,15 +3183,17 @@ type AgentType string
 
 const (
 	AgentTypeWebVisitIdentifier AgentType = "WEB_VISIT_IDENTIFIER"
+	AgentTypeTagSupport         AgentType = "TAG_SUPPORT"
 )
 
 var AllAgentType = []AgentType{
 	AgentTypeWebVisitIdentifier,
+	AgentTypeTagSupport,
 }
 
 func (e AgentType) IsValid() bool {
 	switch e {
-	case AgentTypeWebVisitIdentifier:
+	case AgentTypeWebVisitIdentifier, AgentTypeTagSupport:
 		return true
 	}
 	return false
@@ -4227,6 +4232,49 @@ func (e *FundingRound) UnmarshalGQL(v any) error {
 }
 
 func (e FundingRound) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type IcpFit string
+
+const (
+	IcpFitIcpFit    IcpFit = "ICP_FIT"
+	IcpFitIcpNotFit IcpFit = "ICP_NOT_FIT"
+	IcpFitIcpNotSet IcpFit = "ICP_NOT_SET"
+)
+
+var AllIcpFit = []IcpFit{
+	IcpFitIcpFit,
+	IcpFitIcpNotFit,
+	IcpFitIcpNotSet,
+}
+
+func (e IcpFit) IsValid() bool {
+	switch e {
+	case IcpFitIcpFit, IcpFitIcpNotFit, IcpFitIcpNotSet:
+		return true
+	}
+	return false
+}
+
+func (e IcpFit) String() string {
+	return string(e)
+}
+
+func (e *IcpFit) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = IcpFit(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid IcpFit", str)
+	}
+	return nil
+}
+
+func (e IcpFit) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
