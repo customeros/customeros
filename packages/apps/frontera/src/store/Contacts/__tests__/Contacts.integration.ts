@@ -1,13 +1,13 @@
 import { it, expect, describe } from 'vitest';
 import { VitestHelper } from '@store/vitest-helper.ts';
+import { OrganizationRepository } from '@infra/repositories/organization/organization.repository.ts';
 
 import { EmailLabel, EntityType, PhoneNumberLabel } from '@graphql/types';
 
 import { ContactService } from '../../Contacts/__service__/Contacts.service';
 import { JobRolesService } from '../../JobRoles/__service__/JobRoles.service.ts';
-import { OrganizationsService } from '../../Organizations/__service__/Organizations.service';
 
-const organizationsService = OrganizationsService.getInstance();
+const organizationsRepository = OrganizationRepository.getInstance();
 const contactService = ContactService.getInstance();
 const jobRolesService = JobRolesService.getInstance();
 
@@ -63,7 +63,7 @@ describe('ContactsService - Integration Tests', () => {
 
   it('creates contact for organization', async () => {
     const { id, name } = await VitestHelper.createOrganizationForTest(
-      organizationsService,
+      organizationsRepository,
     );
     const { contact_CreateForOrganization } =
       await contactService.createContactForOrganization({
@@ -79,7 +79,7 @@ describe('ContactsService - Integration Tests', () => {
 
   it('update contact', async () => {
     const { id } = await VitestHelper.createOrganizationForTest(
-      organizationsService,
+      organizationsRepository,
     );
     const contact_social_url = 'Vitest_' + crypto.randomUUID();
     const { contact_CreateForOrganization } =
@@ -123,7 +123,7 @@ describe('ContactsService - Integration Tests', () => {
 
   it('gets contacts', async () => {
     const { id } = await VitestHelper.createOrganizationForTest(
-      organizationsService,
+      organizationsRepository,
     );
 
     const contact_first_social_url = 'Vitest_' + crypto.randomUUID();
@@ -167,7 +167,7 @@ describe('ContactsService - Integration Tests', () => {
 
   it('adds job roles to contact', async () => {
     const { id, name } = await VitestHelper.createOrganizationForTest(
-      organizationsService,
+      organizationsRepository,
     );
     const contact_social_url = 'Vitest_' + crypto.randomUUID();
 
@@ -243,13 +243,13 @@ describe('ContactsService - Integration Tests', () => {
 
   it('links contact to organization', async () => {
     const { id, name } = await VitestHelper.createOrganizationForTest(
-      organizationsService,
+      organizationsRepository,
     );
     const { contact_Create } = await contactService.createContact({
       contactInput: {},
     });
 
-    await organizationsService.getOrganization(id);
+    await organizationsRepository.getOrganization(id);
 
     const contactBeforeLink = await contactService.getContact(contact_Create);
 
@@ -405,7 +405,7 @@ describe('ContactsService - Integration Tests', () => {
 
   it('checks successful response from better contact', async () => {
     const { id } = await VitestHelper.createOrganizationForTest(
-      organizationsService,
+      organizationsRepository,
     );
     const contact_social_url = 'Vitest_' + crypto.randomUUID();
 
@@ -430,7 +430,7 @@ describe('ContactsService - Integration Tests', () => {
 
   it('does CRUD ops for phone number', async () => {
     const { id } = await VitestHelper.createOrganizationForTest(
-      organizationsService,
+      organizationsRepository,
     );
     const contact_social_url = 'Vitest_' + crypto.randomUUID();
 
@@ -591,7 +591,7 @@ describe('ContactsService - Integration Tests', () => {
 
   // it('creates and updates social for contact', async () => {
   // const { id } = await VitestHelper.createOrganizationForTest(
-  //   organizationsService,
+  //   organizationsRepository,
   // );
 
   // const { contact_CreateForOrganization } =
@@ -687,7 +687,7 @@ describe('ContactsService - Integration Tests', () => {
 
   it('creates and updates tags for contact', async () => {
     const { id, name } = await VitestHelper.createOrganizationForTest(
-      organizationsService,
+      organizationsRepository,
     );
 
     const { contact_CreateForOrganization } =

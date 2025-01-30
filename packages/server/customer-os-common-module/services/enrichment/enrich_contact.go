@@ -352,7 +352,7 @@ func (s *enrichmentService) enrichContactWithScrapInEnrichDetails(ctx context.Co
 
 		// step 2 - check org exists by domain
 		if organizationDbNodes == nil {
-			domain, _ := s.domainService.GetPrimaryDomainForOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
+			domain := s.domainService.GetPrimaryDomainForOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
 			span.LogFields(log.String("extractedDomainFromWebsite", domain))
 			if domain != "" {
 				organizationDbNode, err = s.neo4jRepository.OrganizationReadRepository.GetOrganizationByDomain(ctx, nil, tenant, domain)

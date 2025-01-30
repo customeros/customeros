@@ -7,6 +7,7 @@ import (
 type AgentExecution struct {
 	ID           string     `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
 	AgentID      *string    `gorm:"column:agent_id;type:varchar(50);not null" json:"agent_id" binding:"required"`
+	Tenant       string     `gorm:"column:tenant;type:varchar(255)" json:"tenant"`
 	TriggerEvent string     `gorm:"column:trigger_event;type:varchar(50)" json:"triggerEvent"`
 	FlowID       *string    `gorm:"column:flow_id;type:varchar(255);" json:"flowId"`
 	Status       string     `gorm:"column:status;type:varchar(255);not null;default:'PENDING'" json:"status"`

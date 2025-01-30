@@ -23,6 +23,7 @@ type WebSessionRepository interface {
 	UpdateLastActivity(ctx context.Context, sessionID, eventType string) (*postgres_entity.WebSession, error)
 	UpdateSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error)
 	UpdateSessionWithDomain(ctx context.Context, sessionID, domain string) (*postgres_entity.WebSession, error)
+	UpdateSessionWithOrganization(ctx context.Context, sessionID, organizationId string) error
 	UpdateSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error)
 	UpdateIntentSignal(ctx context.Context, sessionID, tenant string, intentSignal int8) (*postgres_entity.WebSession, error)
 }
@@ -35,16 +36,11 @@ func NewWebSessionRepository(gormDb *gorm.DB) WebSessionRepository {
 	return &webSessionEventsRepository{gormDb: gormDb}
 }
 
-const (
-	IntentNotAnalyzed int8 = 0
-	IntentDetected    int8 = 1
-	NoIntentDetected  int8 = 2
-)
-
 func (r *webSessionEventsRepository) Create(ctx context.Context, webSessionData postgres_entity.WebSession) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	tracing.LogObjectAsJson(span, "webSessionData", webSessionData)
 
 	var created postgres_entity.WebSession
 	err := r.gormDb.Create(&webSessionData).Scan(&created).Error
@@ -101,9 +97,9 @@ func (r *webSessionEventsRepository) FindAllSessionsForIntentAnalysis(ctx contex
 
 	var results []postgres_entity.WebSession
 	err := r.gormDb.Model(&postgres_entity.WebSession{}).
-		Where("intent_signals = ?", IntentNotAnalyzed).
+		Where("intent_signals = ?", postgres_entity.IntentNotAnalyzed).
 		Where("is_active = ?", false).
-		Where("domain IS NOT NULL AND domain != ''").
+		Where("organization_id IS NOT NULL AND organization_id != ''").
 		Where("unique_page_views IS NOT NULL AND array_length(unique_page_views, 1) > 0").
 		Order("created_at DESC").
 		Find(&results).
@@ -230,6 +226,25 @@ func (r *webSessionEventsRepository) UpdateSessionWithDomain(ctx context.Context
 	return &updatedSession, nil
 }
 
+func (r *webSessionEventsRepository) UpdateSessionWithOrganization(ctx context.Context, sessionID, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionWithOrganization")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	// Perform a single-column update on organization_id for the matching session
+	result := r.gormDb.Model(&postgres_entity.WebSession{}).
+		Where("id = ?", sessionID).
+		Update("organization_id", &organizationId)
+
+	if result.Error != nil {
+		// Log the error with tracing and return it
+		tracing.TraceErr(span, result.Error)
+		return result.Error
+	}
+
+	return nil
+}
+
 func (r *webSessionEventsRepository) UpdateSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionPageViews")
 	defer span.Finish()
@@ -254,7 +269,7 @@ func (r *webSessionEventsRepository) UpdateIntentSignal(ctx context.Context, ses
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	if intentSignal != IntentDetected && intentSignal != NoIntentDetected {
+	if intentSignal != postgres_entity.IntentDetected && intentSignal != postgres_entity.NoIntentDetected {
 		err := errors.New("invalid intentSingal value")
 		tracing.TraceErr(span, err)
 		return nil, err

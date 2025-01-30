@@ -24,6 +24,8 @@ func GetCapabilityConfigStruct(capabilityType enum.AgentCapabilityType) any {
 		}
 	case enum.CapabilityIdentifyWebVisitor:
 		return &IdentifyWebsiteVisitorConfig{}
+	case enum.CapabilityApplyTag:
+		return &ApplyTagConfig{}
 	default:
 		return nil
 	}

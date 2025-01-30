@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -59,8 +58,6 @@ func (l *IntentDetectedListener) Handle(ctx context.Context, baseEvent any) erro
 		return err
 	}
 
-	ctx = common.SetTenantInContext(ctx, message.Tenant)
-
 	return l.handle(ctx, message)
 }
 
@@ -74,15 +71,7 @@ func (l *IntentDetectedListener) handle(ctx context.Context, message *dto.Intent
 		return nil
 	}
 
-	switch message.IntentType {
-	case enum.IntentSupportRequired:
-		return l.dependencies.CommonServices.SupportAgent.ProcessIntentEvent(ctx, message)
-
-	default:
-		err := errors.New("IntentType not supported")
-		tracing.TraceErr(span, err)
-		return err
-	}
+	return l.dependencies.CommonServices.SupportAgent.ProcessIntentEvent(ctx, message)
 }
 
 func (h *IntentDetectedListener) lookupActiveAgents(ctx context.Context) []postgres_entity.Agents {

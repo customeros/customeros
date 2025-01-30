@@ -1,5 +1,5 @@
 import { IMaskMixinProps } from 'react-imask';
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, ChangeEvent } from 'react';
 
 import { MaskElement } from 'imask';
 
@@ -28,7 +28,7 @@ export const MaskedResizableInput = ({ ...props }: MaskedInputProps) => {
     if (props.onChange) {
       props.onChange({
         target: { value: unmaskedValue },
-      } as React.ChangeEvent<HTMLInputElement>);
+      } as ChangeEvent<HTMLInputElement>);
     }
   };
 

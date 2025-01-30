@@ -3,6 +3,7 @@ package postgres_repository
 import (
 	"context"
 	"errors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -38,6 +39,9 @@ func (f *flowAgentExecutionRepository) Create(ctx context.Context, executionReco
 		err := errors.New("Agent or ExecutionID missing")
 		tracing.TraceErr(span, err)
 		return nil, err
+	}
+	if executionRecord.Tenant == "" {
+		executionRecord.Tenant = common.GetTenantFromContext(ctx)
 	}
 
 	err := f.gormDb.Create(&executionRecord).Error

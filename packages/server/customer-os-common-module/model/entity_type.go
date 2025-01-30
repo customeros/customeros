@@ -3,6 +3,8 @@ package model
 type EntityType string
 
 const (
+	AGENT EntityType = "AGENT"
+
 	ATTACHMENT               EntityType = "ATTACHMENT"
 	COMMENT                  EntityType = "COMMENT"
 	CONTACT                  EntityType = "CONTACT"

@@ -246,35 +246,7 @@ func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName s
 		request["Id"] = id
 	}
 
-	payload, err := json.Marshal(request)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	// Create a new HTTP request
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://sandbox-quickbooks.api.intuit.com/v3/company/%s/customer?minorversion=73", quickbooksSettingsEntity.RealmId), bytes.NewBuffer(payload))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	// Set headers
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+quickbooksSettingsEntity.AccessToken)
-
-	// Perform the HTTP request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Read response body
-	body, err := ioutil.ReadAll(resp.Body)
+	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://sandbox-quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/customer", "POST", request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -282,7 +254,7 @@ func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName s
 
 	// convert body to OauthSlackResponse
 	var quickbooksResponse interfaces.QuickbooksSaveCustomerResponse
-	err = json.Unmarshal(body, &quickbooksResponse)
+	err = json.Unmarshal(resp, &quickbooksResponse)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -296,7 +268,7 @@ func (s *quickbooksService) SaveCustomer(ctx context.Context, id, customerName s
 	return &quickbooksResponse, nil
 }
 
-func (s *quickbooksService) SaveInvoice(ctx context.Context, customerId string, invoiceDate time.Time, lines []interfaces.QuickbooksInvoiceLine) (*interfaces.QuickbooksSaveCustomerResponse, error) {
+func (s *quickbooksService) SaveInvoice(ctx context.Context, customerId string, invoiceDate time.Time, lines []interfaces.QuickbooksInvoiceLine) (*interfaces.QuickbooksSaveInvoiceResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.SaveInvoice")
 	defer span.Finish()
 
@@ -322,43 +294,135 @@ func (s *quickbooksService) SaveInvoice(ctx context.Context, customerId string, 
 		"Line":    lines,
 	}
 
-	payload, err := json.Marshal(request)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	// Create a new HTTP request
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://sandbox-quickbooks.api.intuit.com/v3/company/%s/customer?minorversion=73", quickbooksSettingsEntity.RealmId), bytes.NewBuffer(payload))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	// Set headers
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+quickbooksSettingsEntity.AccessToken)
-
-	// Perform the HTTP request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Read response body
-	body, err := ioutil.ReadAll(resp.Body)
+	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://sandbox-quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice", "POST", request)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	// convert body to OauthSlackResponse
-	var quickbooksResponse interfaces.QuickbooksSaveCustomerResponse
-	err = json.Unmarshal(body, &quickbooksResponse)
+	var quickbooksResponse interfaces.QuickbooksSaveInvoiceResponse
+	err = json.Unmarshal(resp, &quickbooksResponse)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if quickbooksResponse.Fault != nil {
+		span.LogFields(log.Object("error", quickbooksResponse.Fault))
+		return nil, fmt.Errorf("error: %s", quickbooksResponse.Fault.Error[0].Message)
+	}
+
+	return &quickbooksResponse, nil
+}
+
+func (s *quickbooksService) VoidInvoice(ctx context.Context, invoiceId string) (*interfaces.QuickbooksSaveInvoiceResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.VoidInvoice")
+	defer span.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	//TODO check how we return in case of missing integration
+	if quickbooksSettingsEntity == nil {
+		span.LogFields(log.String("error", "Quickbooks settings not found"))
+		return nil, nil
+	}
+
+	request := map[string]interface{}{
+		"Id": invoiceId,
+	}
+
+	if invoiceId != "" {
+		invoiceByIdUrl := fmt.Sprintf("https://sandbox-quickbooks.api.intuit.com/v3/company/%s/invoice/%s", quickbooksSettingsEntity.RealmId, invoiceId)
+		qbInvoiceResponse, err := s.performRequest(ctx, quickbooksSettingsEntity, invoiceByIdUrl, "GET", request)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		var qbInvoice interfaces.QuickbooksGetInvoiceResponse
+		err = json.Unmarshal(qbInvoiceResponse, &qbInvoice)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		request["SyncToken"] = qbInvoice.Invoice.SyncToken
+	}
+
+	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://sandbox-quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/invoice?operation=void", "POST", request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// convert body to OauthSlackResponse
+	var quickbooksResponse interfaces.QuickbooksSaveInvoiceResponse
+	err = json.Unmarshal(resp, &quickbooksResponse)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if quickbooksResponse.Fault != nil {
+		span.LogFields(log.Object("error", quickbooksResponse.Fault))
+		return nil, fmt.Errorf("error: %s", quickbooksResponse.Fault.Error[0].Message)
+	}
+
+	return &quickbooksResponse, nil
+}
+
+func (s *quickbooksService) PayInvoice(ctx context.Context, customerId, invoiceId string, totalAmount float64) (*interfaces.QuickbooksSavePaymentResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "QuickbooksService.PayInvoice")
+	defer span.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	quickbooksSettingsEntity, err := s.postgres.QuickbooksSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	//TODO check how we return in case of missing integration
+	if quickbooksSettingsEntity == nil {
+		span.LogFields(log.String("error", "Quickbooks settings not found"))
+		return nil, nil
+	}
+
+	request := map[string]interface{}{
+		"CustomerRef": map[string]interface{}{
+			"value": customerId,
+		},
+		"TotalAmt": totalAmount,
+		"Line": []map[string]interface{}{
+			{
+				"Amount": totalAmount,
+				"LinkedTxn": []map[string]interface{}{
+					{
+						"TxnId":   invoiceId,
+						"TxnType": "Invoice",
+					},
+				},
+			},
+		},
+	}
+
+	resp, err := s.performRequest(ctx, quickbooksSettingsEntity, "https://sandbox-quickbooks.api.intuit.com/v3/company/"+quickbooksSettingsEntity.RealmId+"/payment", "POST", request)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// convert body to OauthSlackResponse
+	var quickbooksResponse interfaces.QuickbooksSavePaymentResponse
+	err = json.Unmarshal(resp, &quickbooksResponse)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

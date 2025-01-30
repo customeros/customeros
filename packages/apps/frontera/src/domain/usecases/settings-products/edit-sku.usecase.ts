@@ -29,7 +29,7 @@ export class EditSkuUsecase {
   }
 
   @action
-  resetError() {
+  resetErrors() {
     this.errors = {
       productName: '',
       price: '',
@@ -37,8 +37,24 @@ export class EditSkuUsecase {
   }
 
   @action
+  resetPriceError() {
+    this.errors = {
+      ...this.errors,
+      price: '',
+    };
+  }
+
+  @action
+  resetNameError() {
+    this.errors = {
+      ...this.errors,
+      productName: '',
+    };
+  }
+
+  @action
   reset() {
-    this.resetError();
+    this.resetErrors();
 
     this.productName = '';
     this.price = 0;

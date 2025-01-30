@@ -1,9 +1,10 @@
 import { observer } from 'mobx-react-lite';
+import { useLocalStorage } from 'usehooks-ts';
 
 import { cn } from '@ui/utils/cn';
-import { Avatar } from '@ui/media/Avatar/Avatar';
+import { Image } from '@ui/media/Image/Image';
+import { User02 } from '@ui/media/icons/User02';
 import { useStore } from '@shared/hooks/useStore';
-import { User01 } from '@ui/media/icons/User01.tsx';
 
 interface AvatarCellProps {
   id: string;
@@ -19,36 +20,42 @@ export const AvatarCell = observer(
     const src = icon || logo;
     const fullName = name || 'Unnamed';
     const contactStore = store.contacts.value.get(id);
+    const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
     const isEnriching = contactStore?.isEnriching;
 
     return (
       <div className='items-center ml-[1px]'>
-        <Avatar
-          size='xs'
-          textSize='xs'
-          tabIndex={-1}
-          icon={<User01 />}
-          src={src || undefined}
-          variant='outlineCircle'
-          name={isEnriching ? '' : fullName}
-          className={cn(
-            'text-gray-700 cursor-pointer focus:outline-none',
-            !canNavigate && 'cursor-default',
-            isEnriching && 'animate-pulse',
-          )}
+        <div
           onClick={() => {
-            if (
-              store.ui.contactPreviewCardOpen === true &&
-              store.ui.focusRow === id
-            ) {
-              store.ui.setContactPreviewCardOpen(false);
+            if (previewCard === true && store.ui.focusRow === id) {
+              setPreviewCard(false);
             } else {
               store.ui.setFocusRow(id);
-              store.ui.setContactPreviewCardOpen(true);
+              setPreviewCard(true);
             }
           }}
-        />
+          className={cn(
+            'w-6 h-6 flex items-center justify-center rounded border border-gray-200 cursor-pointer focus:outline-none',
+            {
+              'animate-pulse': isEnriching,
+              'cursor-default': !canNavigate,
+            },
+          )}
+        >
+          {src ? (
+            <Image
+              src={src}
+              alt={fullName}
+              loading='lazy'
+              decoding='async'
+              fetchPriority='low'
+              className='w-full h-full object-contain'
+            />
+          ) : (
+            <User02 className='w-4 h-4 text-gray-700' />
+          )}
+        </div>
       </div>
     );
   },

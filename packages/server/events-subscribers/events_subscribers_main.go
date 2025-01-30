@@ -190,6 +190,11 @@ func (a *App) initializeListeners() error {
 	// SKU Listeners
 	a.events.Subscriber.RegisterListener(events_listeners.NewSkuUpdateListener(a.logger, a.deps))
 
+	// Invoice Listeners
+	a.events.Subscriber.RegisterListener(agent_listeners.NewInvoiceFinalizedListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(agent_listeners.NewInvoicePaidListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(agent_listeners.NewInvoiceVoidedListener(a.logger, a.deps))
+
 	// Flow Listeners
 	a.events.Subscriber.RegisterListener(events_listeners.NewFlowComputeParticipantsRequirementsListener(a.logger, a.deps))
 	a.events.Subscriber.RegisterListener(events_listeners.NewFlowOnListener(a.logger, a.deps))

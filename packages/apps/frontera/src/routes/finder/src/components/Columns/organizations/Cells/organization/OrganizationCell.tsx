@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
+import { Eye } from '@ui/media/icons/Eye';
+import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 
 interface OrganizationCellProps {
@@ -12,6 +14,7 @@ interface OrganizationCellProps {
 export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
   const store = useStore();
   const org = store.organizations.getById(id);
+  const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
   const name = org?.value?.name;
   const isEnriching = org?.isEnriching;
@@ -39,15 +42,30 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
   if (!org) return <p className='text-gray-400'>Not set</p>;
 
   return (
-    <span className='inline'>
-      <p
+    <div className='flex items-center gap-2 group w-full'>
+      <span
         onClick={handleNavigate}
         data-test='organization-name-in-all-orgs-table'
         className='overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer'
       >
         {fullName}
-      </p>
-    </span>
+      </span>
+      <IconButton
+        size='xs'
+        variant='ghost'
+        aria-label='preview organization'
+        icon={<Eye className='text-gray-500' />}
+        className='opacity-0 group-hover:opacity-100  cursor-pointer'
+        onClick={() => {
+          if (previewCard === true && store.ui.focusRow === id) {
+            setPreviewCard(false);
+          } else {
+            store.ui.setFocusRow(id);
+            setPreviewCard(true);
+          }
+        }}
+      />
+    </div>
   );
 });
 

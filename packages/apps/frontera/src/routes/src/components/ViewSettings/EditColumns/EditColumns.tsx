@@ -50,6 +50,7 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
           ![
             ColumnViewType.FlowTotalCount,
             ColumnViewType.OrganizationsWebsite,
+            ColumnViewType.OrganizationsParentOrganization,
           ].includes(c.columnType),
       )
       .map((c) => ({

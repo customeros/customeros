@@ -9,13 +9,14 @@ import (
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type WebVisitProcessor struct {
@@ -32,11 +33,6 @@ func NewWebVisitProcessor(postgresRepos *postgres_repository.Repositories, event
 	}
 }
 
-const (
-	IntentDetected   int8 = 1
-	NoIntentDetected int8 = 2
-)
-
 func (p *WebVisitProcessor) Process(ctx context.Context, webSession postgres_entity.WebSession) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebVisitProcessor.Process")
 	defer span.Finish()
@@ -50,14 +46,20 @@ func (p *WebVisitProcessor) processSupportSignal(ctx context.Context, webSession
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	err := p.validateWebSession(ctx, webSession)
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = p.validateWebSession(ctx, webSession)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	if !p.isSignal(ctx, webSession.UniquePageViews, "support") {
-		_, err := p.postgresRepositories.WebSessionRepository.UpdateIntentSignal(ctx, webSession.ID, webSession.Tenant, NoIntentDetected)
+		_, err := p.postgresRepositories.WebSessionRepository.UpdateIntentSignal(ctx, webSession.ID, webSession.Tenant, postgres_entity.NoIntentDetected)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -65,31 +67,22 @@ func (p *WebVisitProcessor) processSupportSignal(ctx context.Context, webSession
 		return nil
 	}
 
-	orgID, err := p.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
-		Domains: []string{*webSession.Domain},
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	event := dto.IntentDetected{
 		EventName:      enum.EventIntentSignal,
 		Source:         enum.SourceWebtracker,
 		SourceID:       webSession.ID,
-		Tenant:         webSession.Tenant,
 		IntentType:     enum.IntentSupportRequired,
-		OrganizationID: orgID,
+		OrganizationID: *webSession.OrganizationId,
 	}
 
-	err = p.events.Publisher.PublishFanoutEvent(ctx, orgID, model.INTENT_SIGNAL, &event)
+	err = p.events.Publisher.PublishFanoutEvent(ctx, *webSession.OrganizationId, model.INTENT_SIGNAL, &event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// update webSession record in database
-	_, err = p.postgresRepositories.WebSessionRepository.UpdateIntentSignal(ctx, webSession.ID, webSession.Tenant, IntentDetected)
+	_, err = p.postgresRepositories.WebSessionRepository.UpdateIntentSignal(ctx, webSession.ID, webSession.Tenant, postgres_entity.IntentDetected)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -114,16 +107,16 @@ func (p *WebVisitProcessor) validateWebSession(ctx context.Context, webSession p
 
 	switch {
 	case webSession.ID == "":
-		err := errors.New("Session ID cannot be empty")
+		err := errors.New("session ID cannot be empty")
 		return err
 	case webSession.Tenant == "":
-		err := errors.New("Tenant cannot be empty")
+		err := errors.New("tenant cannot be empty")
 		return err
 	case len(webSession.UniquePageViews) == 0:
-		err := errors.New("Unique page views cannot be empty")
+		err := errors.New("unique page views cannot be empty")
 		return err
-	case webSession.Domain == nil:
-		err := errors.New("domain cannot be empty")
+	case utils.IfNotNilString(webSession.OrganizationId) == "":
+		err := errors.New("organization id cannot be empty")
 		return err
 	default:
 		return nil

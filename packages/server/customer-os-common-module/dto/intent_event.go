@@ -7,9 +7,8 @@ import (
 type IntentDetected struct {
 	EventName      enum.AgentListenerEvent
 	Source         enum.Source
-	SourceID       string // Id of source record producing event
-	Tenant         string
-	IntentType     enum.IntentSignal
-	OrganizationID string
-	ContactID      string
+	SourceID       string            // Id of source record producing event
+	IntentType     enum.IntentSignal `json:"intentType"`
+	OrganizationID string            `json:"organizationId"`
+	ContactID      string            `json:"contactId"`
 }

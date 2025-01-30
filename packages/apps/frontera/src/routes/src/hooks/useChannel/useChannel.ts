@@ -80,5 +80,5 @@ export const useChannel = (channelName: string) => {
 };
 
 function parsePresentUsers(presenceState: PresenceState) {
-  return presenceState.map((p) => [p.metas?.[0]]);
+  return presenceState.map((p) => p.metas?.[0]);
 }

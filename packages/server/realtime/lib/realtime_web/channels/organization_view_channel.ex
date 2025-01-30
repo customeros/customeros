@@ -33,6 +33,7 @@ defmodule RealtimeWeb.OrganizationViewChannel do
         online_at: inspect(System.system_time(:second)),
         metadata: %{"source" => "customerOS"},
         username: socket.assigns.username,
+        user_id: socket.assigns.user_id,
         color: Map.get(socket.assigns.user_color, socket.assigns.user_id)
       })
 

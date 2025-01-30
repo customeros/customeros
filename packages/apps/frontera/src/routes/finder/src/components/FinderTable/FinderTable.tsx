@@ -10,6 +10,7 @@ import {
 import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
+import { useLocalStorage } from 'usehooks-ts';
 import { ColumnSort } from '@tanstack/table-core';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useColumnSizing } from '@finder/hooks/useColumnSizing';
@@ -17,7 +18,6 @@ import { useTableActions } from '@invoices/hooks/useTableActions';
 import { OpportunitiesTableActions } from '@finder/components/Actions/OpportunityActions';
 
 import { useStore } from '@shared/hooks/useStore';
-import { ContactDetails } from '@shared/components/ContactDetails';
 import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import {
@@ -41,6 +41,7 @@ export const FinderTable = observer(() => {
   const params = useParams();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const tableRef = useRef<TableInstance<object> | null>(null);
@@ -257,6 +258,12 @@ export const FinderTable = observer(() => {
     if (selectedIds.length > 0) return;
 
     if (tableType === TableViewType.Organizations) {
+      if (!previewCard) {
+        if (index !== null) {
+          store.ui.setFocusRow(data?.[index]?.id);
+        }
+      }
+
       if (typeof index !== 'number') {
         store.ui.commandMenu.setType('OrganizationHub');
 
@@ -273,7 +280,7 @@ export const FinderTable = observer(() => {
     }
 
     if (tableType === TableViewType.Contacts) {
-      if (!store.ui.contactPreviewCardOpen) {
+      if (!previewCard) {
         if (index !== null) {
           store.ui.setFocusRow(data?.[index]?.id);
         }
@@ -333,22 +340,22 @@ export const FinderTable = observer(() => {
 
   useEffect(() => {
     return () => {
-      store.ui.setContactPreviewCardOpen(false);
+      setPreviewCard(false);
     };
   }, [preset]);
 
   useKeyBindings(
     {
       Escape: () => {
-        store.ui.setContactPreviewCardOpen(false);
+        setPreviewCard(false);
       },
       Space: (e) => {
         e.preventDefault();
-        store.ui.setContactPreviewCardOpen(false);
+        setPreviewCard(false);
       },
     },
     {
-      when: store.ui.contactPreviewCardOpen,
+      when: previewCard,
     },
   );
 
@@ -400,7 +407,7 @@ export const FinderTable = observer(() => {
     .otherwise(() => false);
 
   return (
-    <div className='flex'>
+    <div className='flex w-full'>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <Table<any>
         data={data}
@@ -507,19 +514,7 @@ export const FinderTable = observer(() => {
           return <></>;
         }}
       />
-      {store.ui.contactPreviewCardOpen &&
-        !store.ui.isSearching &&
-        store.ui.contactPreviewCardOpen && (
-          <div
-            data-state={store.ui.contactPreviewCardOpen ? 'open' : 'closed'}
-            className='data-[state=open]:animate-slideLeftAndFade data-[state=closed]:animate-slideRightAndFade flex flex-col absolute right-0 -top-[-41px] bottom-0  max-w-[390px] min-w-[350px] border border-r-0 border-gray-200 z-[1] bg-white w-[390px]'
-          >
-            <ContactDetails
-              isExpandble={false}
-              id={String(store.ui.focusRow)}
-            />
-          </div>
-        )}
+
       {tableType === TableViewType.Invoices && (
         <ConfirmDeleteDialog
           onClose={reset}

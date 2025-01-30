@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -152,8 +151,8 @@ func (r *agentRegistryRepository) Initialize(ctx context.Context) error {
 	tracing.TagComponentPostgresRepository(span)
 
 	requiredAgents := []postgres_entity.AgentRegistry{
-		registerVisitorIdpostgres_entityAgent(),
-		// Add more agents here
+		registerVisitorIdAgent(),
+		registerSupportAgent(),
 	}
 
 	for _, agent := range requiredAgents {
@@ -179,12 +178,13 @@ func (r *agentRegistryRepository) Initialize(ctx context.Context) error {
 	return nil
 }
 
-func registerVisitorIdpostgres_entityAgent() postgres_entity.AgentRegistry {
+func registerVisitorIdAgent() postgres_entity.AgentRegistry {
 	return postgres_entity.AgentRegistry{
 		Type:     enum.AgentVisitorID,
 		Name:     "Identify website visitors",
 		Goal:     enum.AgentGoalIdentifyVisitors.String(),
-		Icon:     "",
+		Icon:     "radar",
+		Color:    "grayModern",
 		IsActive: true,
 		CapabilitiesConfig: postgres_entity.CapabilitiesConfig{
 			Capabilities: []postgres_entity.Capability{
@@ -203,6 +203,26 @@ func registerVisitorIdpostgres_entityAgent() postgres_entity.AgentRegistry {
 				{
 					Type:   enum.CapabilitySendWebVisitorSlackNotification,
 					Active: false,
+				},
+			},
+		},
+	}
+}
+
+func registerSupportAgent() postgres_entity.AgentRegistry {
+	return postgres_entity.AgentRegistry{
+		Type:     enum.AgentSupport,
+		Name:     "Tag support visitors",
+		Goal:     enum.AgentGoalTagSupport.String(),
+		Icon:     "life-buoy-01",
+		Color:    "pink",
+		IsActive: true,
+		CapabilitiesConfig: postgres_entity.CapabilitiesConfig{
+			Capabilities: []postgres_entity.Capability{
+				{
+					Type:   enum.CapabilityApplyTag,
+					Active: true,
+					Config: "{\"tagName\":{\"value\":\"Support\",\"error\":\"\"}}",
 				},
 			},
 		},

@@ -1,0 +1,151 @@
+query getOrganizations(
+  $pagination: Pagination!
+  $where: Filter
+  $sort: SortBy
+) {
+  dashboardView_Organizations(
+    pagination: $pagination
+    where: $where
+    sort: $sort
+  ) {
+    content {
+      name
+      notes
+      hide
+      metadata {
+        id
+        created
+        lastUpdated
+      }
+      contracts {
+        metadata {
+          id
+        }
+      }
+      wrongIndustry
+
+      parentCompanies {
+        organization {
+          metadata {
+            id
+          }
+          name
+        }
+      }
+      owner {
+        id
+        firstName
+        lastName
+        name
+      }
+      contacts(pagination: { page: 0, limit: 100 }) {
+        content {
+          id
+          metadata {
+            id
+          }
+        }
+      }
+      stage
+      description
+      industry
+      market
+      website
+      domains
+      logo
+      icon
+      relationship
+      lastFundingRound
+      leadSource
+      slackChannelId
+      public
+      enrichDetails {
+        enrichedAt
+        failedAt
+        requestedAt
+      }
+      socialMedia {
+        id
+        url
+        followersCount
+        alias
+      }
+      employees
+      tags {
+        name
+        entityType
+        metadata {
+          id
+        }
+      }
+      customerOsId
+      yearFounded
+      accountDetails {
+        ltv
+        churned
+        renewalSummary {
+          arrForecast
+          maxArrForecast
+          renewalLikelihood
+          nextRenewalDate
+        }
+        onboarding {
+          status
+          comments
+          updatedAt
+        }
+      }
+      locations {
+        id
+        name
+        country
+        region
+        locality
+        zip
+        street
+        postalCode
+        houseNumber
+        rawAddress
+        locality
+        countryCodeA2
+        countryCodeA3
+      }
+      subsidiaries {
+        organization {
+          metadata {
+            id
+          }
+          name
+          parentCompanies {
+            organization {
+              name
+              metadata {
+                id
+              }
+            }
+          }
+        }
+      }
+      wrongIndustry
+      parentCompanies {
+        organization {
+          metadata {
+            id
+          }
+        }
+      }
+      lastTouchpoint {
+        lastTouchPointAt
+        lastTouchPointType
+      }
+
+      contracts {
+        metadata {
+          id
+        }
+      }
+    }
+    totalElements
+    totalAvailable
+  }
+}

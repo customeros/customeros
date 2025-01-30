@@ -17,25 +17,25 @@ export const SocialMediaList = observer(
   ({ value, isReadOnly, dataTest, leftElement }: SocialMediaListProps) => {
     const store = useStore();
     const id = useParams()?.id as string;
-    const organization = store.organizations.getById(id);
+    const organization = store.organizations.getById(store.ui.focusRow ?? id);
 
     if (!organization || !organization?.value) return null;
 
     return (
-      <>
-        <div className='flex '>
-          {value?.map(({ value: v, label: l }) => (
+      <div className='flex flex-wrap gap-2'>
+        {value?.map(({ value: v, label: l }) => (
+          <div key={v} className='w-auto '>
             <SocialMediaItem
               id={v}
-              key={v}
               value={l}
               dataTest={dataTest}
               isReadOnly={isReadOnly}
               leftElement={leftElement}
+              organization={organization}
             />
-          ))}
-        </div>
-      </>
+          </div>
+        ))}
+      </div>
     );
   },
 );

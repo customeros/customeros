@@ -137,7 +137,6 @@ type CommonServices struct {
 	// Agents
 	AgentCapabilities  *agent_capability.AgentCapabilities
 	AgentRunnerService *agent.AgentRunnerService
-	SupportAgent       *agent.SupportAgent
 }
 
 type InitOptions struct {
@@ -181,7 +180,7 @@ func InitCommonServices(
 	}
 
 	// Simple - Services that depend only on base services
-	agentImpl := agent.NewAgentService(postgresRepositories)
+	agentImpl := agent.NewAgentService(postgresRepositories, eventsImpl)
 	aiImpl := ai.NewAIService(log, &cfg.External.AnthropicConfig, &cfg.External.DeepseekConfig)
 	attachmentImpl := attachment.NewAttachmentService(neo4jRepositories)
 	azureImpl := azure.NewAzureService(&cfg.Infrastructure.AzureOAuthConfig, postgresRepositories, neo4jRepositories)
@@ -238,7 +237,7 @@ func InitCommonServices(
 	enrichmentImpl := enrichment.NewEnrichmentService(log, &cfg.External, cacheImpl, eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, domainImpl, locationImpl, orgImpl, socialImpl)
 	verifyImpl := verify.NewVerifyService(log, postgresRepositories, cfg, enrichmentImpl)
 	actionImpl := action.NewActionService(log, neo4jRepositories, eventsImpl, orgImpl)
-	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailboxImpl, orgImpl, postmarkImpl, userImpl)
+	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailboxImpl, orgImpl, postmarkImpl, userImpl, agentImpl)
 
 	// Resolve circular dependencies
 	emailImpl.SetContactService(contactImpl)
@@ -265,7 +264,6 @@ func InitCommonServices(
 	)
 
 	// initialize agents
-	supportAgentImpl := agent.NewSupportAgent(postgresRepositories, capabilityImpl, tagImpl)
 	agentRunnerImpl := agent.NewAgentRunnerService(postgresRepositories, capabilityImpl, agentImpl)
 
 	// Initialize CommonServices struct
@@ -335,8 +333,6 @@ func InitCommonServices(
 		// Agents
 		AgentCapabilities:  capabilityImpl,
 		AgentRunnerService: agentRunnerImpl,
-
-		SupportAgent: supportAgentImpl,
 	}
 
 	// Check that all services are initialized

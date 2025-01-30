@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -27,6 +27,7 @@ type TenantWriteRepository interface {
 	HardDeleteTenant(ctx context.Context, tenant string) error
 
 	LinkWithWorkspace(ctx context.Context, tenant string, workspace neo4jentity.WorkspaceEntity) (bool, error)
+	MarkOnboardingChecked(ctx context.Context, tenant string) error
 }
 
 type tenantWriteRepository struct {
@@ -434,4 +435,19 @@ func (r *tenantWriteRepository) LinkWithWorkspace(ctx context.Context, tenant st
 		return false, nil
 	}
 	return true, nil
+}
+
+func (r *tenantWriteRepository) MarkOnboardingChecked(ctx context.Context, tenant string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.MarkOnboardingChecked")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})
+				SET t.techOnboardingCheckedAt=datetime()
+				RETURN t`
+	params := map[string]any{
+		"tenant": tenant,
+	}
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
 }

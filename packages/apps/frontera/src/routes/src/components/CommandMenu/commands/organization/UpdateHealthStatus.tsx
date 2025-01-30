@@ -1,7 +1,9 @@
-import set from 'lodash/set';
+import { useMemo } from 'react';
+
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { Organization } from '@store/Organizations/Organization.dto';
+import { EditOrganizationHealthUseCase } from '@domain/usecases/command-menu/edit-health-organization.usecase';
 
 import { Check } from '@ui/media/icons/Check';
 import { useStore } from '@shared/hooks/useStore';
@@ -36,6 +38,11 @@ export const UpdateHealthStatus = observer(() => {
 
     .otherwise(() => '');
 
+  const healthUseCase = useMemo(
+    () => new EditOrganizationHealthUseCase(context?.ids?.[0] as string),
+    [context?.ids?.[0]],
+  );
+
   const handleSelect =
     (renewalLikelihood: OpportunityRenewalLikelihood) => () => {
       if (!context.ids?.[0]) return;
@@ -44,32 +51,7 @@ export const UpdateHealthStatus = observer(() => {
 
       match(context.entity)
         .with('Organization', () => {
-          const organization = entity as Organization;
-          const potentialAmount =
-            organization.value.renewalSummaryMaxArrForecast ?? 0;
-
-          set(
-            organization.value,
-            'accountDetails.renewalSummary.renewalLikelihood',
-            renewalLikelihood,
-          );
-          set(
-            organization.value,
-            'accountDetails.renewalSummary.arrForecast',
-            (() => {
-              switch (renewalLikelihood) {
-                case OpportunityRenewalLikelihood.HighRenewal:
-                  return potentialAmount;
-                case OpportunityRenewalLikelihood.MediumRenewal:
-                  return (50 / 100) * potentialAmount;
-                case OpportunityRenewalLikelihood.LowRenewal:
-                  return (25 / 100) * potentialAmount;
-                default:
-                  return (50 / 100) * potentialAmount;
-              }
-            })(),
-          );
-          organization.commit();
+          healthUseCase.execute(renewalLikelihood);
         })
         .with('Organizations', () =>
           store.organizations.updateHealth(

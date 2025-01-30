@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { useLocalStorage } from 'usehooks-ts';
 import { useKeys, useKeyBindings } from 'rooks';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 import { Organization } from '@store/Organizations/Organization.dto';
@@ -38,6 +39,7 @@ export const OrganizationTableActions = observer(
     const store = useStore();
 
     const [_targetId, setTargetId] = useState<string | null>(null);
+    const [_, setPreviewCard] = useLocalStorage('previewCard', false);
 
     const selectCount = selection?.length;
 
@@ -184,6 +186,16 @@ export const OrganizationTableActions = observer(
         handleOpen('DeleteConfirmationModal');
       },
       { when: enableKeyboardShortcuts },
+    );
+    useKeyBindings(
+      {
+        Space: (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          setPreviewCard(true);
+        },
+      },
+      { when: !!focusedId },
     );
 
     return (

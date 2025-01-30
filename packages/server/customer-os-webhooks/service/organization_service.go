@@ -176,7 +176,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		for _, domainInput := range orgInput.Domains {
 			orgDomains = append(orgDomains, utils.ExtractDomain(domainInput))
 		}
-		primaryDomainFromWebsite, _ := s.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, orgInput.Website)
+		primaryDomainFromWebsite := s.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, orgInput.Website)
 		if primaryDomainFromWebsite != "" {
 			orgDomains = append(orgDomains, primaryDomainFromWebsite)
 		}

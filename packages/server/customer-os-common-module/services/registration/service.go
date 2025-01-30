@@ -3,6 +3,7 @@ package registration
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"strings"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -25,30 +26,42 @@ import (
 )
 
 type registrationService struct {
-	events   *events.EventsService
-	postgres *postgres_repository.Repositories
-	neo4j    *neo4j_repository.Repositories
-	contact  interfaces.ContactService
-	email    interfaces.EmailService
-	flow     interfaces.FlowService
-	mailbox  interfaces.MailboxService
-	org      interfaces.OrganizationService
-	postmark interfaces.PostmarkService
-	user     interfaces.UserService
+	events       *events.EventsService
+	postgres     *postgres_repository.Repositories
+	neo4j        *neo4j_repository.Repositories
+	contact      interfaces.ContactService
+	email        interfaces.EmailService
+	flow         interfaces.FlowService
+	mailbox      interfaces.MailboxService
+	org          interfaces.OrganizationService
+	postmark     interfaces.PostmarkService
+	user         interfaces.UserService
+	agentService interfaces.AgentService
 }
 
-func NewRegistrationService(events *events.EventsService, postgres *postgres_repository.Repositories, neo4j *neo4j_repository.Repositories, contact interfaces.ContactService, email interfaces.EmailService, flow interfaces.FlowService, mailbox interfaces.MailboxService, org interfaces.OrganizationService, postmark interfaces.PostmarkService, user interfaces.UserService) interfaces.RegistrationService {
+func NewRegistrationService(events *events.EventsService,
+	postgres *postgres_repository.Repositories,
+	neo4j *neo4j_repository.Repositories,
+	contact interfaces.ContactService,
+	email interfaces.EmailService,
+	flow interfaces.FlowService,
+	mailbox interfaces.MailboxService,
+	org interfaces.OrganizationService,
+	postmark interfaces.PostmarkService,
+	user interfaces.UserService,
+	agentService interfaces.AgentService) interfaces.RegistrationService {
 	return &registrationService{
-		events:   events,
-		postgres: postgres,
-		neo4j:    neo4j,
-		contact:  contact,
-		email:    email,
-		flow:     flow,
-		mailbox:  mailbox,
-		org:      org,
-		postmark: postmark,
-		user:     user,
+		events:       events,
+		postgres:     postgres,
+		neo4j:        neo4j,
+		contact:      contact,
+		email:        email,
+		flow:         flow,
+		mailbox:      mailbox,
+		org:          org,
+		postmark:     postmark,
+		user:         user,
+		agentService: agentService,
 	}
 }
 
@@ -87,24 +100,28 @@ func (s *registrationService) PrepareDefaultTenantSetup(ctx context.Context, log
 		return err
 	}
 
-	testUser, err := s.ConfigureTestMailbox(ctx)
+	testUser, err := s.configureTestMailbox(ctx)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error configuring test mailbox during tenant onboarding"))
 	}
 
-	if err = s.ConfigureDefaultFlowData(ctx, testUser); err != nil {
+	if err = s.configureDefaultFlowData(ctx, testUser); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error configuring test flow data during tenant onboarding"))
 	}
 
-	if err = s.CreatePostmarkServer(ctx); err != nil {
+	if err = s.createPostmarkServer(ctx); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error creating postmark server during tenant onboarding"))
+	}
+
+	if err = s.createDefaultAgents(ctx); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating default agents during tenant onboarding"))
 	}
 
 	return nil
 }
 
-func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, testUser *interfaces.TestUserSetup) error {
-	span, ctx := s.initializeTracing(ctx, "RegistrationService.ConfigureDefaultFlowData", nil)
+func (s *registrationService) configureDefaultFlowData(ctx context.Context, testUser *interfaces.TestUserSetup) error {
+	span, ctx := s.initializeTracing(ctx, "configureDefaultFlowData", nil)
 	defer span.Finish()
 
 	if err := common.ValidateTenant(ctx); err != nil {
@@ -409,8 +426,8 @@ func (s *registrationService) ConfigureDefaultFlowData(ctx context.Context, test
 	return nil
 }
 
-func (s *registrationService) ConfigureTestMailbox(ctx context.Context) (*interfaces.TestUserSetup, error) {
-	span, ctx := s.initializeTracing(ctx, "ConfigureTestMailbox", nil)
+func (s *registrationService) configureTestMailbox(ctx context.Context) (*interfaces.TestUserSetup, error) {
+	span, ctx := s.initializeTracing(ctx, "configureTestMailbox", nil)
 	defer span.Finish()
 
 	if err := common.ValidateTenant(ctx); err != nil {
@@ -432,8 +449,36 @@ func (s *registrationService) ConfigureTestMailbox(ctx context.Context) (*interf
 	return testUser, nil
 }
 
-func (s *registrationService) CreatePostmarkServer(ctx context.Context) error {
-	span, ctx := s.initializeTracing(ctx, "CreatePostmarkServer", nil)
+func (s *registrationService) createDefaultAgents(ctx context.Context) error {
+	span, ctx := s.initializeTracing(ctx, "createDefaultAgents", nil)
+	defer span.Finish()
+
+	if err := common.ValidateTenant(ctx); err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// get web visitor agents
+	webVisitorAgents, err := s.postgres.AgentsRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentVisitorID})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting web visitor agents"))
+		return err
+	}
+
+	if len(webVisitorAgents) > 0 {
+		return nil
+	}
+
+	_, err = s.agentService.CreateAgent(ctx, enum.AgentVisitorID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error creating web visitor agent"))
+	}
+
+	return nil
+}
+
+func (s *registrationService) createPostmarkServer(ctx context.Context) error {
+	span, ctx := s.initializeTracing(ctx, "createPostmarkServer", nil)
 	defer span.Finish()
 
 	if err := common.ValidateTenant(ctx); err != nil {

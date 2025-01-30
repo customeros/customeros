@@ -25,8 +25,8 @@ import {
   paymentDueOptions,
   contractBillingCycleOptions,
 } from '@organization/components/Tabs/panels/AccountPanel/utils.ts';
+import { Products } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/components/Products';
 
-import { Services } from '../Services';
 import { InlineSelect } from './InlineSelect.tsx';
 import { ContractUploader } from './ContractUploader.tsx';
 import { CommittedPeriodInput } from './CommittedPeriodInput.tsx';
@@ -115,14 +115,11 @@ export const ContractBillingDetailsForm = observer(
               </span>
 
               <DatePickerUnderline
-                value={toZonedTime(
-                  contractStore?.tempValue?.serviceStarted,
-                  'UTC',
-                )}
+                value={contractStore?.tempValue?.serviceStarted}
                 onChange={(date) =>
                   contractStore?.updateTemp((prev) => ({
                     ...prev,
-                    serviceStarted: date,
+                    serviceStarted: date ? date.toISOString() : null,
                   }))
                 }
               />
@@ -178,7 +175,7 @@ export const ContractBillingDetailsForm = observer(
             </div>
           </li>
         </ul>
-        <Services
+        <Products
           id={contractId}
           contractStatus={contractStatus}
           currency={currency ?? Currency.Usd}

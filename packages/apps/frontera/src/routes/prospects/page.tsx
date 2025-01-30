@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { FinderTable } from '@finder/components/FinderTable';
 import { FinderFilters } from '@finder/components/FinderFilters/FinderFilters';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { Menu01 } from '@ui/media/icons/Menu01';
 import { useStore } from '@shared/hooks/useStore';
@@ -36,6 +36,17 @@ export const ProspectsBoardPage = observer(() => {
           <ButtonGroup className='flex items-center w-[252px]'>
             <Button
               size='xs'
+              dataTest='prospects-board-button'
+              onClick={() => navigate('/prospects')}
+              className={cn('px-4 w-full flex-1', {
+                selected: !showFinder,
+              })}
+            >
+              <Columns03 />
+              Board
+            </Button>
+            <Button
+              size='xs'
               dataTest={'prospects-list-button'}
               className={cn('px-4 w-full flex-1', {
                 selected: showFinder,
@@ -46,17 +57,6 @@ export const ProspectsBoardPage = observer(() => {
             >
               <Menu01 />
               List
-            </Button>
-            <Button
-              size='xs'
-              dataTest='prospects-board-button'
-              onClick={() => navigate('/prospects')}
-              className={cn('px-4 w-full flex-1', {
-                selected: !showFinder,
-              })}
-            >
-              <Columns03 />
-              Board
             </Button>
           </ButtonGroup>
         </div>

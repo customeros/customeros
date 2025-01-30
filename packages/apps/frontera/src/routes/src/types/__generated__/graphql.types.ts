@@ -116,6 +116,12 @@ export type AgentSaveInput = {
   visible?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+export type AgentSlackChannel = {
+  __typename?: 'AgentSlackChannel';
+  channelId: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
 export enum AgentType {
   WebVisitIdentifier = 'WEB_VISIT_IDENTIFIER',
 }
@@ -4181,6 +4187,7 @@ export type Query = {
   remindersForOrganization: Array<Reminder>;
   serviceLineItem: ServiceLineItem;
   skus: Array<Sku>;
+  slackChannelsWithBot: Array<AgentSlackChannel>;
   slack_Channels: SlackChannelPage;
   tableViewDefs: Array<TableViewDef>;
   /** @deprecated Use tags_ByEntityType */

@@ -16,6 +16,7 @@ const (
 	InvoicePropertyPaymentLinkValidUntil                InvoiceProperty = "paymentLinkValidUntil"
 	InvoicePropertyLastRemindInvoiceNotificationSentAt  InvoiceProperty = "lastRemindInvoiceNotificationSentAt"
 	InvoicePropertyRemindInvoiceNotificationRequestedAt InvoiceProperty = "techRemindInvoiceNotificationRequestedAt"
+	InvoicePropertyQuickbooksInvoiceId                  InvoiceProperty = "quickbooksInvoiceId"
 )
 
 type InvoiceEntity struct {
@@ -39,6 +40,7 @@ type InvoiceEntity struct {
 	BillingCycleInMonths int64
 	Status               enum.InvoiceStatus `neo4jDb:"property:status;lookupName:STATUS;supportCaseSensitive:false"`
 	Note                 string
+	QuickbooksInvoiceId  string
 	PaymentDetails       PaymentDetails
 	OffCycle             bool
 	Postpaid             bool

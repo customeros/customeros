@@ -9,6 +9,7 @@ import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
+import { MaskedInput } from '@ui/form/Input/MaskedInput.tsx';
 import {
   Command,
   CommandCancelButton,
@@ -24,7 +25,7 @@ export const EditSku = observer(() => {
   }, []);
 
   const handleConfirm = async () => {
-    editSkuUsecase.resetError();
+    editSkuUsecase.resetErrors();
     editSkuUsecase.validate();
 
     if (editSkuUsecase.errors.productName || editSkuUsecase.errors.price) {
@@ -93,13 +94,17 @@ export const EditSku = observer(() => {
               dataTest='sku-product-name'
               value={editSkuUsecase.productName}
               placeholder='Name of product offering'
-              onChange={(e) => {
-                editSkuUsecase.editProductName(e.target.value);
-              }}
               className={cn({
                 'border-error-600 hover:!border-error-600 focus:!border-error-600 active:!border-error-600':
                   editSkuUsecase.errors.productName,
               })}
+              onChange={(e) => {
+                editSkuUsecase.editProductName(e.target.value);
+
+                if (e.target.value && editSkuUsecase.errors.productName) {
+                  editSkuUsecase.resetNameError();
+                }
+              }}
               onKeyDownCapture={(e) => {
                 e.stopPropagation();
 
@@ -114,7 +119,7 @@ export const EditSku = observer(() => {
             />
 
             {editSkuUsecase.errors.productName && (
-              <p className='text-xs text-error-600'>
+              <p className='text-xs text-error-600 pl-2.5'>
                 {editSkuUsecase.errors.productName}
               </p>
             )}
@@ -124,21 +129,26 @@ export const EditSku = observer(() => {
             <label htmlFor={'sku-price'} className='text-sm font-medium mb-1'>
               Price
             </label>
-            <Input
-              size={'sm'}
+            <MaskedInput
+              size='sm'
+              mask={`num`}
               id='sku-price'
-              type={'number'}
-              variant={'outline'}
+              variant='outline'
               dataTest='sku-price'
-              value={editSkuUsecase.price}
               placeholder='Price per unit'
-              onChange={(e) => {
-                editSkuUsecase.editPrice(e.target.value);
-              }}
+              defaultValue={formatInitialValue(editSkuUsecase.price)}
+              onFocus={(e) => (e.target as HTMLInputElement).select()}
               className={cn({
                 'border-error-600 hover:!border-error-600 focus:!border-error-600 active:!border-error-600':
                   editSkuUsecase.errors.price,
               })}
+              onAccept={(v, instance) => {
+                editSkuUsecase.editPrice(instance?.unmaskedValue || '');
+
+                if (v.length && editSkuUsecase.errors.price) {
+                  editSkuUsecase.resetPriceError();
+                }
+              }}
               onKeyDownCapture={(e) => {
                 e.stopPropagation();
 
@@ -150,15 +160,32 @@ export const EditSku = observer(() => {
                   handleClose();
                 }
               }}
+              blocks={{
+                num: {
+                  mask: Number,
+                  scale: 2,
+                  lazy: false,
+                  min: 0,
+                  radix: '.',
+                  placeholderChar: '#',
+                  thousandsSeparator: ',',
+                  normalizeZeros: true,
+                  padFractionalZeros: true,
+                  autofix: true,
+                },
+              }}
             />
             {editSkuUsecase.errors.price && (
-              <p className='text-xs text-error-600'>
+              <p className='text-xs text-error-600 pl-2.5'>
                 {editSkuUsecase.errors.price}
               </p>
             )}
-            <p className='text-xs text-grayModern-500'>
-              Product currency is set in your organization's contracts
-            </p>
+
+            {!editSkuUsecase.errors.price && (
+              <p className='text-xs text-grayModern-500 pl-2.5'>
+                Product currency is set in your organization's contracts
+              </p>
+            )}
           </div>
         </div>
 
@@ -171,10 +198,7 @@ export const EditSku = observer(() => {
             className='w-full'
             colorScheme='primary'
             onClick={handleConfirm}
-            dataTest={'add-domain'}
-            loadingText={'Adding domain...'}
-            // isLoading={editSkuUsecase.isValidating}
-            data-test='contact-actions-confirm-flow-change'
+            data-test='edit-sku-confirm'
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleConfirm();
@@ -188,3 +212,16 @@ export const EditSku = observer(() => {
     </Command>
   );
 });
+
+const formatInitialValue = (value?: string | number) => {
+  if (!value) return '';
+
+  const num = typeof value === 'number' ? value : parseFloat(value);
+
+  if (isNaN(num)) return '';
+
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(num);
+};

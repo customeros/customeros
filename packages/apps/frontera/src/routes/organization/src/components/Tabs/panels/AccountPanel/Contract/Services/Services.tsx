@@ -20,7 +20,7 @@ export const Services = ({
     <>
       <p className='w-full flex items-center justify-between'>
         {!data?.length && (
-          <span className='text-sm font-semibold mt-2'>No services</span>
+          <span className='text-sm font-semibold mt-2'>No products</span>
         )}
 
         {!data?.length && (

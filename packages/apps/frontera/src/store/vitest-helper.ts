@@ -1,15 +1,15 @@
 // import { expect } from 'vitest';
-import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service.ts';
+import { OrganizationRepository } from '@infra/repositories/organization';
 import { organizationsTestState } from '@store/Organizations/__tests__/organizationsTestState.ts';
 
 export class VitestHelper {
   static async createOrganizationForTest(
-    organizationsService: OrganizationsService,
+    organizationRepository: OrganizationRepository,
     input?: { input: { id?: string; name?: string; ownerId?: string } },
   ) {
     const organization_name = 'vitest-' + crypto.randomUUID();
     const organization_domain = 'vitest-' + crypto.randomUUID() + '.com';
-    const { organization_Save } = await organizationsService.saveOrganization(
+    const { organization_Save } = await organizationRepository.saveOrganization(
       input || {
         input: { name: organization_name, domains: [organization_domain] },
       },

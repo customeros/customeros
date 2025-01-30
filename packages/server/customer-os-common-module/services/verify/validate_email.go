@@ -248,6 +248,11 @@ func (s *verifyService) ValidateEmailWithTrueinbox(ctx context.Context, email st
 	defer span.Finish()
 	span.LogFields(log.String("email", email))
 
+	if !s.cfg.External.TrueInboxConfig.Enabled {
+		span.LogFields(log.String("TrueInbox", "disabled"))
+		return nil, nil
+	}
+
 	cachedTrueInboxRecord, err := s.postgres.CacheEmailTrueinboxRepository.GetLatestByEmail(ctx, email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))

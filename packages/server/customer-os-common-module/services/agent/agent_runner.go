@@ -128,7 +128,6 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 		}
 	}
 
-	// TODO handle cases for re-run
 	if capErr != nil {
 		tracing.TraceErr(span, capErr)
 		_, dbErr := a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, nil, utils.StringPtr(capErr.Error()), false)

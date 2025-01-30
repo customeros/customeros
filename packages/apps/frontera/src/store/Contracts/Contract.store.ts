@@ -587,7 +587,11 @@ const CONTRACT_QUERY = gql`
           appSource
           sourceOfTruth
         }
-        description
+        sku {
+          id
+          name
+        }
+        skuId
         billingCycle
         price
         quantity

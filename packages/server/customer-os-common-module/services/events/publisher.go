@@ -103,10 +103,18 @@ func NewRabbitMQPublisher(rabbitmqURL string, logger logger.Logger, config *Publ
 }
 
 func (r *RabbitMQPublisher) PublishFanoutEvent(ctx context.Context, entityId string, entityType model.EntityType, message interface{}) error {
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		return err
+	}
 	return r.publishEventOnExchange(ctx, entityId, entityType, message, ExchangeCustomerOS, "")
 }
 
 func (r *RabbitMQPublisher) PublishDirectEvent(ctx context.Context, entityId string, entityType model.EntityType, message interface{}) error {
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		return err
+	}
 	return r.publishEventOnExchange(ctx, entityId, entityType, message, ExchangeDirect, RoutingKeyFlowParticipantSchedule)
 }
 

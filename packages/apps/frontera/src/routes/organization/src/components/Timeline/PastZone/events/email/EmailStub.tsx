@@ -39,6 +39,14 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
     [email?.sentTo],
   );
 
+  const cleanTo = useMemo(
+    () =>
+      getEmailParticipantsNameAndEmail(to || [])
+        .map((e) => e.label || e.email)
+        .filter((data) => Boolean(data)),
+    [cc],
+  );
+
   const cleanCC = useMemo(
     () =>
       getEmailParticipantsNameAndEmail(cc || [])
@@ -77,19 +85,17 @@ export const EmailStub: FC<{ email: InteractionEventWithDate }> = ({
                 )}
               </span>{' '}
               <span className='text-[#6C757D]'>emailed</span>{' '}
-              <span className='font-medium mr-2'>
-                {getEmailParticipantsName(to)}
-              </span>{' '}
+              <span className='font-medium mr-2'>{cleanTo?.join(', ')}</span>{' '}
               {!!cleanBCC.length && (
                 <>
                   <span className='text-[#6C757D]'>BCC:</span>{' '}
-                  <span>{cleanBCC}</span>
+                  <span>{cleanBCC.join(', ')}</span>
                 </>
               )}
               {!!cleanCC.length && (
                 <>
                   <span className='text-[#6C757D]'>CC:</span>{' '}
-                  <span>{cleanCC}</span>
+                  <span>{cleanCC.join(', ')}</span>
                 </>
               )}
             </p>

@@ -62,7 +62,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       id: payload.parentId,
       price: payload.price,
       quantity: payload.quantity,
-      description: payload.description,
+      skuId: payload.skuId,
       serviceStarted: payload.serviceStarted,
     };
 
@@ -151,6 +151,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
       if (payload) {
         merge(newContractLineItem.tempValue, {
           ...payload,
+          skuId: payload.skuId,
           metadata: { id: tempId },
         });
       }
@@ -252,7 +253,7 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
   };
 
   createNewServiceLineItem = async (
-    payload: ServiceLineItem,
+    payload: ServiceLineItem & { price?: string | number },
     contractId: string,
   ) => {
     const newCli = new ContractLineItemStore(this.root, this.transport);
@@ -271,11 +272,14 @@ export class ContractLineItemsStore implements GroupStore<ServiceLineItem> {
               taxRate: payload.tax.taxRate,
             },
             contractId,
+            skuId: payload.skuId,
             billingCycle: payload.billingCycle,
-            price: payload.price,
+            price:
+              typeof payload.price === 'string'
+                ? parseFloat(payload.price)
+                : payload.price,
             quantity: payload.quantity,
             serviceEnded: payload.serviceEnded,
-            description: payload.description,
             serviceStarted: payload.serviceStarted,
           },
         });

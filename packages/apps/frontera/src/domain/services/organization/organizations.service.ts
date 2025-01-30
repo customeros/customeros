@@ -1,8 +1,10 @@
 import { runInAction } from 'mobx';
 import { RootStore } from '@store/root';
 import { TagStore } from '@store/Tags/Tag.store';
-import { Organization } from '@store/Organizations/Organization.dto';
-import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service';
+import {
+  Organization,
+  OrganizationDatum,
+} from '@store/Organizations/Organization.dto';
 import { OrganizationRepository } from '@infra/repositories/organization/organization.repository.ts';
 
 import { unwrap } from '@shared/util/unwrap';
@@ -12,13 +14,15 @@ import {
   EntityType,
   FlagWrongFields,
   SortingDirection,
+  OrganizationStage,
   ComparisonOperator,
+  OrganizationRelationship,
+  OpportunityRenewalLikelihood,
 } from '@shared/types/__generated__/graphql.types';
 
 export class OrganizationService {
   private root = RootStore.getInstance();
-  private orgRepo = OrganizationsService.getInstance();
-  private orgInfraRepo = OrganizationRepository.getInstance();
+  private orgRepo = OrganizationRepository.getInstance();
 
   constructor() {}
 
@@ -91,6 +95,8 @@ export class OrganizationService {
   }
 
   public async flagWrongField(id: string, field: FlagWrongFields) {
+    const organization = this.root.organizations.getById(id);
+
     try {
       const { flagWrongField } = await this.orgRepo.flagWrongField({
         input: {
@@ -102,6 +108,7 @@ export class OrganizationService {
 
       runInAction(() => {
         if (flagWrongField?.result) {
+          organization?.flagIncorrectIndustry();
           this.root.ui.toastSuccess(
             `Noted, we're looking into it`,
             `flag-field-${field}`,
@@ -196,7 +203,7 @@ export class OrganizationService {
     organization.addDomain(domain);
 
     const [res, err] = await unwrap(
-      this.orgInfraRepo.addDomain({
+      this.orgRepo.addDomain({
         organizationId: organization.id,
         domain: domain.domain,
       }),
@@ -225,7 +232,7 @@ export class OrganizationService {
     organization.deleteDomain(domain);
 
     const [res, err] = await unwrap(
-      this.orgInfraRepo.removeDomain({
+      this.orgRepo.removeDomain({
         organizationId: organization.id,
         domain: domain,
       }),
@@ -241,6 +248,141 @@ export class OrganizationService {
       this.root.ui.toastError(
         "We couldn't remove this domain",
         `${domain}-remove-domain`,
+      );
+
+      return [null, err];
+    }
+
+    return [res, err];
+  }
+
+  public async editOwner(orgId: string, ownerId: string) {
+    const prevOwner = this.root.organizations.getById(orgId)?.value.owner
+      ? this.root.organizations.getById(orgId)?.value.owner
+      : null;
+
+    this.root.organizations.getById(orgId)?.setOwner(ownerId);
+
+    const [res, err] = await unwrap(
+      this.orgRepo.saveOrganization({
+        input: {
+          id: orgId,
+          ownerId,
+        },
+      }),
+    );
+
+    if (err) {
+      console.error(err);
+      this.root.organizations.getById(orgId)?.setOwner(prevOwner?.id ?? '');
+
+      this.root.ui.toastError(
+        "We couldn't change the owner",
+        `${ownerId}-edit-owner`,
+      );
+
+      return [null, err];
+    }
+
+    if (res) {
+      this.root.ui.toastSuccess(
+        'Owner changed successfully',
+        `${ownerId}-edit-owner`,
+      );
+    }
+
+    return [res, err];
+  }
+
+  public async saveOragnization(
+    payload: Partial<OrganizationDatum>,
+    orgId: string,
+  ) {
+    const prevRelationship =
+      this.root.organizations.getById(orgId)?.value.relationship;
+
+    this.root.organizations
+      .getById(orgId)
+      ?.setRelationship(
+        payload.relationship ?? OrganizationRelationship.Prospect,
+      );
+    this.root.organizations
+      .getById(orgId)
+      ?.setStage(
+        payload.stage ??
+          this.root.organizations.getById(orgId)?.value.stage ??
+          OrganizationStage.Target,
+      );
+
+    const [res, err] = await unwrap(
+      this.orgRepo.saveOrganization({
+        input: {
+          id: orgId,
+          relationship:
+            payload.relationship ?? OrganizationRelationship.Prospect,
+          stage: this.root.organizations.getById(orgId)?.value.stage,
+        },
+      }),
+    );
+
+    if (err) {
+      console.error(err);
+      this.root.organizations
+        .getById(orgId)
+        ?.setRelationship(
+          prevRelationship ?? OrganizationRelationship.Prospect,
+        );
+    }
+
+    return [res, err];
+  }
+
+  public async updateOrganizationHealth(
+    orgId: string,
+    renewalLikelihood: OpportunityRenewalLikelihood,
+  ) {
+    const prevRenewalLikelihood =
+      this.root.organizations.getById(orgId)?.value
+        .renewalSummaryRenewalLikelihood;
+
+    this.root.organizations
+      .getById(orgId)
+      ?.setRenewalAdjustedRate(renewalLikelihood);
+
+    const amount =
+      this.root.organizations.getById(orgId)?.value.renewalSummaryArrForecast ??
+      0;
+    const potentialAmount =
+      this.root.organizations.getById(orgId)?.value
+        .renewalSummaryMaxArrForecast ?? 0;
+    const rate =
+      amount === 0 || potentialAmount === 0
+        ? 0
+        : (amount / potentialAmount) * 100;
+
+    const [res, err] = await unwrap(
+      this.orgRepo.updateAllOpportunityRenewals({
+        input: {
+          organizationId: orgId,
+          renewalAdjustedRate: rate,
+          renewalLikelihood:
+            this.root.organizations.getById(orgId)?.value
+              .renewalSummaryRenewalLikelihood,
+        },
+      }),
+    );
+
+    if (err) {
+      console.error(err);
+
+      this.root.organizations
+        .getById(orgId)
+        ?.setRenewalAdjustedRate(
+          prevRenewalLikelihood ?? OpportunityRenewalLikelihood.MediumRenewal,
+        );
+      this.root.ui.toastError(
+        'Failed to update opportunity renewals',
+        'update-opportunity-renewals',
       );
 
       return [null, err];

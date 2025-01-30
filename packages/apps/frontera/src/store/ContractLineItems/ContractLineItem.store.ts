@@ -109,7 +109,7 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
           id: this.id,
           price: this.tempValue.price,
           quantity: this.tempValue.quantity,
-          description: this.tempValue.description,
+          skuId: this.tempValue.skuId,
           serviceStarted: this.tempValue.serviceStarted,
           serviceEnded: this.tempValue.serviceEnded,
           tax: {
@@ -121,8 +121,12 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
       runInAction(() => {
         this.error = (err as Error)?.message;
         this.root.ui.toastError(
-          `We couldn't update the '${this.tempValue.description}' line item`,
-          'failed-to-update-service-line-item',
+          `We couldn't update the '${
+            this.tempValue.skuId
+              ? this.root.skus.getById(this.tempValue.skuId)?.value?.name
+              : ''
+          }' line item`,
+          'failed-to-update-product-line-item',
         );
       });
     } finally {
@@ -146,6 +150,7 @@ const defaultValue: ServiceLineItem = {
     sourceOfTruth: DataSource.Openline,
   },
   description: '',
+
   billingCycle: BilledType.Monthly,
   price: 0,
   quantity: 0,
@@ -159,6 +164,8 @@ const defaultValue: ServiceLineItem = {
     vat: false,
     taxRate: 0,
   },
+  sku: undefined,
+  skuId: undefined,
 };
 
 type CONTRACT_LINE_ITEM_QUERY_RESULT = {
@@ -176,7 +183,10 @@ const CONTRACT_LINE_ITEM_QUERY = gql`
         appSource
         sourceOfTruth
       }
-      description
+      sku {
+        id
+        name
+      }
       billingCycle
       price
       quantity
