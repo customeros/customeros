@@ -118,7 +118,8 @@ export const Devtools = observer(() => {
     return store?.value;
   };
 
-  const getEntityValue = (entity: Record<string, string>) =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getEntityValue = (entity: Record<string, any>) =>
     match(devTools.detailedStore)
       .with('organizations', () => get(entity, 'value', {}))
       .with('tableViewDefs', () => get(entity, 'value', {}))
