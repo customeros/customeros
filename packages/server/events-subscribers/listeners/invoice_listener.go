@@ -72,7 +72,7 @@ func OnInvoiceFinalized(ctx context.Context, dependencies *model.DependencyConta
 	//validate all invoice line have skuId and the skuId has been pushed to quickbooks
 	for _, invoiceLine := range *invoiceLines {
 		if invoiceLine.SkuId == "" {
-			span.LogFields(log.String("skip", fmt.Sprint("SkuId not found for invoice line %s", invoiceLine.Id)))
+			span.LogFields(log.String("skip", fmt.Sprintf("SkuId not found for invoice line %s", invoiceLine.Id)))
 			return nil
 		}
 
@@ -112,7 +112,7 @@ func OnInvoiceFinalized(ctx context.Context, dependencies *model.DependencyConta
 		quickbooksInvoiceLines = append(quickbooksInvoiceLines, quickbooksInvoiceLine)
 	}
 
-	organizationNode, err := dependencies.CommonServices.Neo4jRepositories.InvoiceReadRepository.GetOrganizationForInvoice(ctx, invoiceId)
+	organizationNode, err := dependencies.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -208,7 +208,7 @@ func OnInvoicePaid(ctx context.Context, dependencies *model.DependencyContainer,
 		return err
 	}
 
-	organizationNode, err := dependencies.CommonServices.Neo4jRepositories.InvoiceReadRepository.GetOrganizationForInvoice(ctx, invoiceId)
+	organizationNode, err := dependencies.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
