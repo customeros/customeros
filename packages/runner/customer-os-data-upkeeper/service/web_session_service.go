@@ -174,9 +174,10 @@ func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgr
 }
 
 func (s *webSessionService) processClosedSession(ctx context.Context, session postgres_entity.WebSession) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionService.processClosedSession")
+	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.processClosedSession")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 	if session.ID == "" {
 		err := errors.New("SessionID cannot be empty")

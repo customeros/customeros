@@ -72,7 +72,7 @@ func (l *AddSocialToContactListener) Handle(ctx context.Context, baseEvent any) 
 }
 
 func (l *AddSocialToContactListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.AddSocialToContact, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AddSocialToContactListener.Handle")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AddSocialToContactListener.validateMessage")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 

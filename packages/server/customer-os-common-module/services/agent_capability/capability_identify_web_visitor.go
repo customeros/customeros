@@ -140,7 +140,7 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data Ide
 }
 
 func (c *IdentifyWebsiteVisitorCapability) acceptHostname(ctx context.Context, hostname string, websites []string) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "IdentifyWebsiteVisitorCapability.acceptHostname")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.acceptHostname")
 	defer span.Finish()
 
 	accepted := false
@@ -159,7 +159,7 @@ func (c *IdentifyWebsiteVisitorCapability) acceptHostname(ctx context.Context, h
 }
 
 func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug string, err error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "IdentifyWebsiteVisitorCapability.identifyIP")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.identifyIP")
 	defer span.Finish()
 
 	snitcherData, err := c.enrichmentService.IPIdentity(ctx, ipAddress)
