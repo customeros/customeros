@@ -41,7 +41,7 @@ export const AddNewProductMenu = observer(
           <PopoverContent
             align='end'
             side='bottom'
-            className='py-1 min-w-[254px] z-[99999999]'
+            className='py-1 min-w-[254px] max-w-[420px] z-[99999999]'
           >
             <Combobox
               escapeClearsValue
@@ -51,14 +51,20 @@ export const AddNewProductMenu = observer(
               onKeyDown={(e) => {
                 if (e.key === 'Escape') setIsOpen(false);
               }}
-              formatOptionLabel={(option) =>
-                `${option.label} •  ${option.sku.typeLabel}`
-              }
               noOptionsMessage={() => (
-                <div className='py-2'>
+                <div className='py-2 cursor-default'>
                   {options.length
-                    ? 'No products found'
-                    : 'Create a product in Settings'}
+                    ? 'No products found.'
+                    : 'No products yet. Create them in Settings.'}
+                </div>
+              )}
+              formatOptionLabel={(option) => (
+                <div className='inline-flex items-center'>
+                  <span title={option.label} className='truncate max-w-[280px]'>
+                    {option.label}
+                  </span>
+                  <span className='mx-0.5'>•</span>
+                  <span className='text-gray-500'>{option.sku.typeLabel}</span>
                 </div>
               )}
               onChange={(newValue) => {
