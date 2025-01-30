@@ -1,69 +1,3 @@
-// import { action, observable } from 'mobx';
-
-// export class Tracer {
-//   @observable static accessor enabled: boolean = true;
-//   @observable static accessor displayCallStack: boolean = false;
-//   private start: number = -1;
-
-//   constructor(private name: string, attributes?: Record<string, unknown>) {
-//     if (!('tracer' in globalThis)) return;
-//     if (!Tracer.enabled) return;
-
-//     this.start = performance.now();
-
-//     // eslint-disable-next-line no-console
-//     console.groupCollapsed(`▶️ ${name}`);
-//     // eslint-disable-next-line no-console
-//     Tracer.displayCallStack && console.trace('🛠 Call stack:');
-//     attributes && this.logArgs(attributes);
-//   }
-
-//   logArgs(args: Record<string, unknown>) {
-//     console.info('📥 Attributes:', args);
-//   }
-
-//   end(result?: unknown) {
-//     if (!('tracer' in globalThis)) return;
-//     if (!Tracer.enabled) return;
-
-//     const duration = (performance.now() - this.start).toFixed(2);
-
-//     result && console.info('✅ Result:', result);
-//     console.info(`⏳ Duration: ${duration} ms`);
-//     // eslint-disable-next-line no-console
-//     console.groupEnd();
-
-//     return result;
-//   }
-
-//   public static span(name: string, attributes?: Record<string, unknown>) {
-//     return new Tracer(name, attributes);
-//   }
-
-//   @action
-//   public static enable() {
-//     Tracer.enabled = true;
-//   }
-
-//   @action
-//   public static disable() {
-//     Tracer.enabled = false;
-//   }
-
-//   @action
-//   public static showCallstack() {
-//     Tracer.displayCallStack = true;
-//   }
-
-//   @action
-//   public static hideCallstack() {
-//     Tracer.displayCallStack = false;
-//   }
-// }
-
-// // eslint-disable-next-line @typescript-eslint/no-explicit-any
-// (globalThis as any).tracer = Tracer;
-
 import { action, observable, runInAction } from 'mobx';
 
 export class TraceRecord {
@@ -98,8 +32,8 @@ export class Tracer {
   @observable static accessor enabled: boolean = true;
   @observable static accessor expandedTraces: Set<string> = new Set();
   @observable static accessor displayCallStack: boolean = false;
-  @observable static accessor traces: TraceRecord[] = []; // Stores all trace records
-  @observable private static accessor activeTraces: TraceRecord[] = []; // Stack for nested traces
+  @observable static accessor traces: TraceRecord[] = [];
+  @observable private static accessor activeTraces: TraceRecord[] = [];
 
   private start: number = -1;
   @observable private accessor traceRecord = new TraceRecord('', 0, null, null);
@@ -150,18 +84,16 @@ export class Tracer {
     runInAction(() => {
       this.traceRecord.duration = parseFloat(duration);
       this.traceRecord.result = result;
-      Tracer.activeTraces.pop(); // Remove from stack
+      Tracer.activeTraces.pop();
     });
 
     return result;
   }
 
-  /** Static method to start a span and track execution */
   public static span(name: string, attributes?: Record<string, unknown>) {
     return new Tracer(name, attributes);
   }
 
-  /** Static method to run an async function inside a span */
   public static async run<T>(
     name: string,
     attributes: Record<string, unknown>,
@@ -208,7 +140,6 @@ export class Tracer {
     Tracer.displayCallStack = false;
   }
 
-  /** Clears all traces */
   @action
   public static clear() {
     Tracer.traces = [];
