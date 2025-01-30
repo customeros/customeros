@@ -2,7 +2,6 @@ package graph
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -16,6 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/events-processing-platform/domain/invoice"
 	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/customeros/customeros/packages/server/events/event/common"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	"testing"

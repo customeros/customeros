@@ -3,11 +3,9 @@ package test
 import (
 	"context"
 	"fmt"
-	"github.com/rabbitmq/amqp091-go"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"log"
-	"time"
 )
 
 func InitTestRabbitMQ() (testcontainers.Container, string) {
@@ -41,57 +39,7 @@ func InitTestRabbitMQ() (testcontainers.Container, string) {
 	// Create connection string
 	connString := fmt.Sprintf("amqp://guest:guest@%s:%s/", host, port.Port())
 
-	// Attempt to connect to RabbitMQ with retries
-	var rabbitConn *amqp091.Connection
-	maxRetries := 3
-	for i := 0; i < maxRetries; i++ {
-		rabbitConn, err = amqp091.Dial(connString)
-		if err == nil {
-			// success, break out of loop
-			break
-		}
-		if i == maxRetries-1 {
-			// last attempt failed, panic
-			panic("Failed to connect to RabbitMQ after multiple attempts: " + err.Error())
-		}
-		// sleep before retrying
-		time.Sleep(1 * time.Second)
-	}
-
-	err = createQueues(rabbitConn)
-	if err != nil {
-		log.Panic("Failed to create queues:", err)
-	}
-
 	return rabbitmqContainer, connString
-}
-
-func createQueues(conn *amqp091.Connection) error {
-	channel, err := conn.Channel()
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	// Set up the exchange
-	customerosExchange := "customeros"
-	exchangeTypeDirect := "direct"
-	if err := declareExchange(channel, customerosExchange, exchangeTypeDirect); err != nil {
-		return fmt.Errorf("Failed to declare exchange: %v", err)
-	}
-
-	// Set up the queue
-	queueEvents, err := declareQueue(channel, "events")
-	if err != nil {
-		return fmt.Errorf("Failed to declare queue: %v", err)
-	}
-
-	// Bind the queue to the exchange
-	if err := bindQueue(channel, queueEvents.Name, customerosExchange, "event"); err != nil {
-		return fmt.Errorf("Failed to bind queue to exchange: %v", err)
-	}
-
-	return nil
 }
 
 func TerminateRabbitMQ(container testcontainers.Container, ctx context.Context) {
@@ -99,37 +47,4 @@ func TerminateRabbitMQ(container testcontainers.Container, ctx context.Context) 
 	if err != nil {
 		log.Fatal("Container should stop")
 	}
-}
-
-func declareExchange(channel *amqp091.Channel, exchangeName, exchangeType string) error {
-	return channel.ExchangeDeclare(
-		exchangeName, // name of the exchange
-		exchangeType, // type of exchange (e.g., "direct", "fanout", "topic")
-		true,         // durable
-		false,        // auto-deleted
-		false,        // internal
-		false,        // no-wait
-		nil,          // arguments
-	)
-}
-
-func declareQueue(channel *amqp091.Channel, queueName string) (amqp091.Queue, error) {
-	return channel.QueueDeclare(
-		queueName, // name of the queue
-		true,      // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
-	)
-}
-
-func bindQueue(channel *amqp091.Channel, queueName, exchangeName, routingKey string) error {
-	return channel.QueueBind(
-		queueName,    // name of the queue
-		routingKey,   // binding key
-		exchangeName, // source exchange
-		false,        // no-wait
-		nil,          // arguments
-	)
 }
