@@ -9,11 +9,6 @@ import (
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/mailbox"
@@ -22,6 +17,12 @@ import (
 	"github.com/google/uuid"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // Participants is the resolver for the participants field.
@@ -175,7 +176,7 @@ func (r *mutationResolver) FlowChangeName(ctx context.Context, id string, name s
 		return nil, err
 	}
 
-	r.Services.CommonServices.Events.Publisher.PublishEventCompleted(ctx, tenant, flow.Id, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+	r.Services.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, flow.Id, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 
 	flow.Name = name
 	return mapper.MapEntityToFlow(flow), nil
@@ -285,7 +286,7 @@ func (r *mutationResolver) FlowParticipantAdd(ctx context.Context, flowID string
 
 	if flowsUpdated != nil && len(flowsUpdated) > 0 {
 		for _, flowData := range flowsUpdated {
-			r.Services.CommonServices.Events.Publisher.PublishEventCompletedBulk(ctx, flowData.Tenant, flowData.Strings, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+			r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 
@@ -316,7 +317,7 @@ func (r *mutationResolver) FlowParticipantAddBulk(ctx context.Context, flowID st
 
 	if flowsUpdated != nil && len(flowsUpdated) > 0 {
 		for _, flowData := range flowsUpdated {
-			r.Services.CommonServices.Events.Publisher.PublishEventCompletedBulk(ctx, flowData.Tenant, flowData.Strings, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+			r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 
@@ -352,7 +353,7 @@ func (r *mutationResolver) FlowParticipantDelete(ctx context.Context, id string)
 
 	if flowsUpdated != nil && len(flowsUpdated) > 0 {
 		for _, flowData := range flowsUpdated {
-			r.Services.CommonServices.Events.Publisher.PublishEventCompletedBulk(ctx, flowData.Tenant, flowData.Strings, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+			r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 
@@ -390,7 +391,7 @@ func (r *mutationResolver) FlowParticipantDeleteBulk(ctx context.Context, id []s
 
 	if flowsUpdated != nil && len(flowsUpdated) > 0 {
 		for _, flowData := range flowsUpdated {
-			r.Services.CommonServices.Events.Publisher.PublishEventCompletedBulk(ctx, flowData.Tenant, flowData.Strings, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+			r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonModel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 
@@ -595,8 +596,10 @@ func (r *Resolver) FlowParticipant() generated.FlowParticipantResolver {
 // FlowSender returns generated.FlowSenderResolver implementation.
 func (r *Resolver) FlowSender() generated.FlowSenderResolver { return &flowSenderResolver{r} }
 
-type flowResolver struct{ *Resolver }
-type flowActionExecutionResolver struct{ *Resolver }
-type flowContactResolver struct{ *Resolver }
-type flowParticipantResolver struct{ *Resolver }
-type flowSenderResolver struct{ *Resolver }
+type (
+	flowResolver                struct{ *Resolver }
+	flowActionExecutionResolver struct{ *Resolver }
+	flowContactResolver         struct{ *Resolver }
+	flowParticipantResolver     struct{ *Resolver }
+	flowSenderResolver          struct{ *Resolver }
+)

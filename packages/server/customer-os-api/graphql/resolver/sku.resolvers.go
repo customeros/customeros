@@ -9,14 +9,15 @@ import (
 	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // SkuSave is the resolver for the sku_Save field.
@@ -61,7 +62,7 @@ func (r *mutationResolver) SkuSave(ctx context.Context, input model.SkuInput) (*
 		return nil, err
 	}
 
-	err = r.Services.CommonServices.Events.Publisher.PublishEvent(ctx, sku.ID, commonModel.SKU, dto.SkuUpdate{})
+	err = r.Services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, sku.ID, commonModel.SKU, dto.SkuUpdate{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -98,7 +99,7 @@ func (r *mutationResolver) SkuArchive(ctx context.Context, id string) (*model.Re
 		return nil, err
 	}
 
-	err = r.Services.CommonServices.Events.Publisher.PublishEvent(ctx, sku.ID, commonModel.SKU, dto.SkuUpdate{})
+	err = r.Services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, sku.ID, commonModel.SKU, dto.SkuUpdate{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}

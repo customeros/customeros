@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -174,9 +174,10 @@ func (s *webSessionService) closeSessions(ctx context.Context, sessions []postgr
 }
 
 func (s *webSessionService) processClosedSession(ctx context.Context, session postgres_entity.WebSession) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionService.processClosedSession")
+	span, ctx := tracing.StartTracerSpan(ctx, "WebSessionService.processClosedSession")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 	if session.ID == "" {
 		err := errors.New("SessionID cannot be empty")
@@ -203,13 +204,13 @@ func (s *webSessionService) processClosedSession(ctx context.Context, session po
 		return err
 	}
 
-	event, err := s.createCloseSessionWebhookEvent(ctx, *closedSession)
+	event, err := s.createCloseSessionEvent(ctx, *closedSession)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	err = s.commonServices.Events.Publisher.PublishWebhookEvent(ctx, event)
+	err = s.commonServices.Events.Publisher.PublishFanoutEvent(ctx, event.SessionID, model.WEB_SESSION, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -218,7 +219,7 @@ func (s *webSessionService) processClosedSession(ctx context.Context, session po
 	return nil
 }
 
-func (s *webSessionService) createCloseSessionWebhookEvent(ctx context.Context, session postgres_entity.WebSession) (dto.WebhookEvent, error) {
+func (s *webSessionService) createCloseSessionEvent(ctx context.Context, session postgres_entity.WebSession) (dto.WebsiteVisit, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionService.createCloseSessionWebhookEvent")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
@@ -226,10 +227,10 @@ func (s *webSessionService) createCloseSessionWebhookEvent(ctx context.Context, 
 	if session.ID == "" || session.Tenant == "" || session.IP == "" || session.VisitorID == "" {
 		err := errors.New("cannot build web visit event")
 		tracing.TraceErr(span, err)
-		return dto.WebhookEvent{}, err
+		return dto.WebsiteVisit{}, err
 	}
 
-	eventData := data_fields.WebsiteVisitEvent{
+	eventData := dto.WebsiteVisit{
 		SessionID: session.ID,
 		Tenant:    session.Tenant,
 		IPAddress: session.IP,
@@ -237,14 +238,7 @@ func (s *webSessionService) createCloseSessionWebhookEvent(ctx context.Context, 
 		Hostname:  session.Hostname,
 	}
 
-	event := dto.WebhookEvent{
-		ExternalSystemId: enum.SourceAgent,
-		Name:             enum.EventRevealWebsiteVisit,
-		DataType:         eventData.Type(),
-		Data:             &eventData,
-	}
-
-	return event, nil
+	return eventData, nil
 }
 
 func (c *webSessionService) processUniquePageViews(ctx context.Context, tenant, sessionID string) error {

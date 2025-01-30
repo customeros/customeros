@@ -130,18 +130,18 @@ func (s *commentService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			// send events
 			if createFlow {
-				err := s.events.Publisher.PublishEvent(ctx, commentId, model.COMMENT, dto.CreateComment{commentFields})
+				err := s.events.Publisher.PublishFanoutEvent(ctx, commentId, model.COMMENT, dto.CreateComment{commentFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateComment"))
 				}
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, commentId, model.COMMENT, utils.NewEventCompletedDetails().WithCreate())
+				s.events.Publisher.PublishNotification(ctx, tenant, commentId, model.COMMENT, utils.NewEventCompletedDetails().WithCreate())
 			} else {
-				err := s.events.Publisher.PublishEvent(ctx, commentId, model.COMMENT, dto.UpdateComment{commentFields})
+				err := s.events.Publisher.PublishFanoutEvent(ctx, commentId, model.COMMENT, dto.UpdateComment{commentFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateComment"))
 				}
 				if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
-					s.events.Publisher.PublishEventCompleted(ctx, tenant, commentId, model.COMMENT, utils.NewEventCompletedDetails().WithUpdate())
+					s.events.Publisher.PublishNotification(ctx, tenant, commentId, model.COMMENT, utils.NewEventCompletedDetails().WithUpdate())
 				}
 			}
 			return nil

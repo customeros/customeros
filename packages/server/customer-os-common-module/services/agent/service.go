@@ -3,21 +3,21 @@ package agent
 import (
 	"context"
 	"encoding/json"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
 
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
@@ -148,7 +148,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	}
 	tracing.TagEntity(span, newAgent.ID)
 
-	err = a.events.Publisher.PublishEvent(ctx, newAgent.ID, model.AGENT, dto.CreateAgent{
+	err = a.events.Publisher.PublishFanoutEvent(ctx, newAgent.ID, model.AGENT, dto.CreateAgent{
 		Active:       newAgent.IsActive,
 		Name:         newAgent.Name,
 		Type:         newAgent.Type.String(),
@@ -219,7 +219,7 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	}
 
 	eventFields := dto.UpdateAgent{agentFields, capabilitiesConfig}
-	err = a.events.Publisher.PublishEvent(ctx, agentId, model.AGENT, eventFields)
+	err = a.events.Publisher.PublishFanoutEvent(ctx, agentId, model.AGENT, eventFields)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateAgent"))
 	}

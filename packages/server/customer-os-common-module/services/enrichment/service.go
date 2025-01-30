@@ -6,29 +6,60 @@ import (
 	"strings"
 
 	"github.com/biter777/countries"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/multierr"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type enrichmentService struct {
-	log      logger.Logger
-	config   *config.ExternalServicesConfig
-	postgres *postgres_repository.Repositories
+	log                 logger.Logger
+	config              *config.ExternalServicesConfig
+	cache               *caches.Cache
+	events              *events.EventsService
+	postgres            *postgres_repository.Repositories
+	neo4jRepository     *neo4j_repository.Repositories
+	contactService      interfaces.ContactService
+	domainService       interfaces.DomainService
+	locationService     interfaces.LocationService
+	organizationService interfaces.OrganizationService
+	socialService       interfaces.SocialService
 }
 
-func NewEnrichmentService(log logger.Logger, config *config.ExternalServicesConfig, postgres *postgres_repository.Repositories) interfaces.EnrichmentService {
+func NewEnrichmentService(
+	log logger.Logger,
+	config *config.ExternalServicesConfig,
+	cache *caches.Cache,
+	events *events.EventsService,
+	postgres *postgres_repository.Repositories,
+	neo4j *neo4j_repository.Repositories,
+	contactService interfaces.ContactService,
+	domainService interfaces.DomainService,
+	locationService interfaces.LocationService,
+	organizationService interfaces.OrganizationService,
+	socialService interfaces.SocialService,
+) interfaces.EnrichmentService {
 	return &enrichmentService{
-		log:      log,
-		config:   config,
-		postgres: postgres,
+		log:                 log,
+		config:              config,
+		cache:               cache,
+		events:              events,
+		postgres:            postgres,
+		neo4jRepository:     neo4j,
+		contactService:      contactService,
+		domainService:       domainService,
+		locationService:     locationService,
+		organizationService: organizationService,
+		socialService:       socialService,
 	}
 }
 

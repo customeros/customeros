@@ -138,7 +138,7 @@ func (s *phoneNumberService) UpdatePhoneNumberFor(ctx context.Context, entityTyp
 		return err
 	}
 
-	s.events.Publisher.PublishEventCompleted(ctx, tenant, entityId, entityType, utils.NewEventCompletedDetails().WithUpdate())
+	s.events.Publisher.PublishNotification(ctx, tenant, entityId, entityType, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }

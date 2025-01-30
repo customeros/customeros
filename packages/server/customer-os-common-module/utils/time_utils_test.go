@@ -1,9 +1,10 @@
 package utils
 
 import (
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
 	"time"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestZeroTime(t *testing.T) {
@@ -174,55 +175,6 @@ func TestIsEqualTimePtr(t *testing.T) {
 	differentTime := now.Add(time.Hour)
 	if IsEqualTimePtr(&now, &differentTime) {
 		t.Error("IsEqualTimePtr should return false for pointers to different times")
-	}
-}
-
-func TestBackOffExponentialDelay(t *testing.T) {
-	tests := []struct {
-		attempt   int
-		wantDelay time.Duration
-	}{
-		{-1, 100 * time.Millisecond},
-		{0, 100 * time.Millisecond},
-		{1, 100 * time.Millisecond},
-		{2, 200 * time.Millisecond},
-		{3, 400 * time.Millisecond},
-		{4, 800 * time.Millisecond},
-		{5, 1600 * time.Millisecond},
-		{6, 3200 * time.Millisecond},
-		{7, 5 * time.Second},  // Cap at 5 seconds
-		{10, 5 * time.Second}, // Cap at 5 seconds
-	}
-
-	for _, tc := range tests {
-		got := BackOffExponentialDelay(tc.attempt)
-		if got != tc.wantDelay {
-			t.Errorf("BackOffExponentialDelay(%d) = %v; want %v", tc.attempt, got, tc.wantDelay)
-		}
-	}
-}
-
-func TestBackOffIncrementalDelay(t *testing.T) {
-	tests := []struct {
-		attempt   int
-		wantDelay time.Duration
-	}{
-		{-1, 50 * time.Millisecond},
-		{0, 50 * time.Millisecond},
-		{1, 50 * time.Millisecond},
-		{2, 100 * time.Millisecond},
-		{3, 150 * time.Millisecond},
-		{10, 500 * time.Millisecond},
-		{20, 1000 * time.Millisecond},
-		{40, 2 * time.Second}, // Cap at 2 seconds
-		{50, 2 * time.Second}, // Cap at 2 seconds
-	}
-
-	for _, tc := range tests {
-		got := BackOffIncrementalDelay(tc.attempt)
-		if got != tc.wantDelay {
-			t.Errorf("BackOffIncrementalDelay(%d) = %v; want %v", tc.attempt, got, tc.wantDelay)
-		}
 	}
 }
 

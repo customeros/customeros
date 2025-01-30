@@ -250,7 +250,7 @@ func (s *flowExecutionService) UpdateParticipantFlowRequirements(ctx context.Con
 			span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.UpdateParticipantFlowRequirements.postCommit")
 			defer span.Finish()
 
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, participant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, participant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
 
 			return nil
 		})
@@ -1325,7 +1325,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 		participant.Status = neo4j_entity.FlowParticipantStatusError
 		_, err = s.neo4j.FlowParticipantWriteRepository.Merge(ctx, nil, participant)
 
-		s.events.Publisher.PublishEventCompleted(ctx, tenant, participant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
+		s.events.Publisher.PublishNotification(ctx, tenant, participant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
 
 		return err
 	}

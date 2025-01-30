@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -20,15 +20,11 @@ import (
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/events-subscribers/config"
-	"github.com/customeros/customeros/packages/server/events-subscribers/handlers"
-	"github.com/customeros/customeros/packages/server/events-subscribers/logger"
+	agent_listeners "github.com/customeros/customeros/packages/server/events-subscribers/listeners/agents"
+	direct_listeners "github.com/customeros/customeros/packages/server/events-subscribers/listeners/direct"
+	events_listeners "github.com/customeros/customeros/packages/server/events-subscribers/listeners/events"
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
-
-type QueueConfig struct {
-	Events          string
-	FlowParticipant string
-}
 
 type App struct {
 	ctx           context.Context
@@ -40,7 +36,6 @@ type App struct {
 	events        *events.EventsService
 	postgresDB    *commonConfig.PostgresDB
 	neo4jDriver   *neo4j.DriverWithContext
-	queueConfig   QueueConfig
 }
 
 func NewApp() *App {
@@ -48,10 +43,6 @@ func NewApp() *App {
 	return &App{
 		ctx:    ctx,
 		cancel: cancel,
-		queueConfig: QueueConfig{
-			Events:          "events",
-			FlowParticipant: "events-flow-participant-schedule",
-		},
 	}
 }
 
@@ -60,7 +51,7 @@ func (a *App) Initialize() error {
 	a.config = config.Load()
 
 	// Initialize logger
-	a.logger = logger.NewExtendedAppLogger(&a.config.Common.Infrastructure.LoggerConfig)
+	a.logger = logger.NewAppLogger(&a.config.Common.Infrastructure.LoggerConfig)
 	a.logger.InitLogger()
 	a.logger.WithName("events-subscribers")
 
@@ -153,35 +144,102 @@ func (a *App) initServices() error {
 		CommonServices:       commonServices,
 	}
 
-	// Initialize events service
+	// Initialize events service with configs
+	publisherConfig := &events.PublisherConfig{
+		MessageTTL:          events.DefaultMessageTTL,
+		MaxRetries:          events.DefaultMaxRetries,
+		PublishTimeout:      events.DefaultPublishTimeout,
+		ReconnectBackoff:    events.DefaultReconnectBackoff,
+		MaxReconnectBackoff: events.DefaultMaxReconnectBackoff,
+	}
+
+	subscriberConfig := &events.SubscriberConfig{
+		MaxRetries:          events.DefaultMaxRetries,
+		ReconnectBackoff:    events.DefaultReconnectBackoff,
+		MaxReconnectBackoff: events.DefaultMaxReconnectBackoff,
+	}
+
 	eventsService, err := events.NewEventsService(
 		a.config.Common.Infrastructure.RabbitMQConfig.Url,
 		a.logger,
+		publisherConfig,
+		subscriberConfig,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create events service: %w", err)
 	}
 	a.events = eventsService
 
-	// Initialize handlers
-	handlers.InitHandlerRegistration(a.events, a.deps)
+	// Register listeners instead of handlers
+	if err := a.initializeListeners(); err != nil {
+		return fmt.Errorf("failed to initialize listeners: %w", err)
+	}
+
+	return nil
+}
+
+func (a *App) initializeListeners() error {
+	// Contact Listeners
+	a.events.Subscriber.RegisterListener(events_listeners.NewAddSocialToContactListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewHideContactListener(a.logger, a.deps))
+
+	// Enrichment Listeners
+	a.events.Subscriber.RegisterListener(events_listeners.NewRequestEnrichContactListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewRequestValidateEmailListener(a.logger, a.deps))
+
+	// SKU Listeners
+	a.events.Subscriber.RegisterListener(events_listeners.NewSkuUpdateListener(a.logger, a.deps))
+
+	// Invoice Listeners
+	a.events.Subscriber.RegisterListener(agent_listeners.NewInvoiceFinalizedListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(agent_listeners.NewInvoicePaidListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(agent_listeners.NewInvoiceVoidedListener(a.logger, a.deps))
+
+	// Flow Listeners
+	a.events.Subscriber.RegisterListener(events_listeners.NewFlowComputeParticipantsRequirementsListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewFlowOnListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(direct_listeners.NewFlowParcipantScheduleListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewFlowParticipantGoalAchievedListener(a.logger, a.deps))
+
+	// Mailstack Listeners
+	a.events.Subscriber.RegisterListener(events_listeners.NewMailstackProvisionBuyRequestListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewMailstackProvisionMailboxListener(a.logger, a.deps))
+
+	// Organization Listeners
+	a.events.Subscriber.RegisterListener(events_listeners.NewRequestEnrichOrganizationListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewRequestRefreshLastTouchpointListener(a.logger, a.deps))
+
+	// Webvisit Listeners
+	a.events.Subscriber.RegisterListener(agent_listeners.NewWebsiteVisitListener(a.logger, a.deps))
+
+	// Intent Listeners
+	a.events.Subscriber.RegisterListener(agent_listeners.NewIntentDetectedListener(a.logger, a.deps))
 
 	return nil
 }
 
 func (a *App) Run() error {
-	// Start event listeners
-	errChan := make(chan error, 2)
+	// Start listening to queues
+	errChan := make(chan error, 4)
 
+	// CustomerOS Events Queue
 	go func() {
-		if err := a.events.Subscriber.ListenQueue(a.queueConfig.Events); err != nil {
-			errChan <- fmt.Errorf("failed to listen to queue %s: %w", a.queueConfig.Events, err)
+		if err := a.events.Subscriber.ListenQueue(events.QueueEvents); err != nil {
+			errChan <- fmt.Errorf("failed to listen to events queue: %w", err)
 		}
 	}()
 
+	// Agents Queue
 	go func() {
-		if err := a.events.Subscriber.ListenQueueExclusive(a.queueConfig.FlowParticipant); err != nil {
-			errChan <- fmt.Errorf("failed to listen to exclusive queue %s: %w", a.queueConfig.FlowParticipant, err)
+		if err := a.events.Subscriber.ListenQueue(events.QueueAgents); err != nil {
+			errChan <- fmt.Errorf("failed to listen to agents queue: %w", err)
+		}
+	}()
+
+	// Flow Participant Queue (exclusive)
+	go func() {
+		if err := a.events.Subscriber.ListenQueueExclusive(events.QueueFlowParticipantSchedule); err != nil {
+			errChan <- fmt.Errorf("failed to listen to flow participant queue: %w", err)
 		}
 	}()
 
@@ -222,11 +280,12 @@ func main() {
 	app := NewApp()
 
 	if err := app.Initialize(); err != nil {
-		log.Fatalf("Failed to initialize application: %v", err)
+		fmt.Printf("Failed to initialize app: %v\n", err)
+		os.Exit(1)
 	}
 
 	if err := app.Run(); err != nil {
-		log.Fatalf("Application error: %v", err)
+		fmt.Printf("App failed to run: %v\n", err)
+		os.Exit(1)
 	}
 }
-

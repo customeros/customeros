@@ -5,12 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -452,7 +451,7 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 	}
 
 	// todo check if something is actually changed
-	err = s.events.Publisher.PublishEvent(ctx, e.Id, model.FLOW, dto.FlowComputeParticipantsRequirements{})
+	err = s.events.Publisher.PublishFanoutEvent(ctx, e.Id, model.FLOW, dto.FlowComputeParticipantsRequirements{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -641,10 +640,10 @@ func (s *flowService) FlowOn(ctx context.Context, id string) (*neo4jentity.FlowE
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, flow.Id, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
-			s.events.Publisher.PublishEventCompletedBulk(ctx, tenant, participantIdsUpdated, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, flow.Id, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotificationBulk(ctx, tenant, participantIdsUpdated, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
 
-			err = s.events.Publisher.PublishEvent(ctx, flow.Id, model.FLOW, dto.FlowOn{})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, flow.Id, model.FLOW, dto.FlowOn{})
 			if err != nil {
 				return err
 			}
@@ -948,7 +947,7 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 				span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowParticipantAdd.PostCommitAction")
 				defer span.Finish()
 
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, toStore.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithCreate())
+				s.events.Publisher.PublishNotification(ctx, tenant, toStore.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithCreate())
 
 				return nil
 			})
@@ -1091,7 +1090,7 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, txWithPostCommi
 		return err
 	}
 
-	s.events.Publisher.PublishEventCompleted(ctx, tenant, flowParticipant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithDelete())
+	s.events.Publisher.PublishNotification(ctx, tenant, flowParticipant.Id, model.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }

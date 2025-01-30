@@ -138,12 +138,12 @@ func (s *customFieldTemplateService) Save(ctx context.Context, id *string, input
 	}
 
 	if createFlow {
-		err = s.events.Publisher.PublishEvent(ctx, customFieldTemplateId, model.CUSTOM_FIELD_TEMPLATE, dto.New_CreateCustomFieldTemplate_From_CustomFieldTemplateSaveFields(input))
+		err = s.events.Publisher.PublishFanoutEvent(ctx, customFieldTemplateId, model.CUSTOM_FIELD_TEMPLATE, dto.New_CreateCustomFieldTemplate_From_CustomFieldTemplateSaveFields(input))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateCustomFieldTemplate"))
 		}
 	} else {
-		err = s.events.Publisher.PublishEvent(ctx, customFieldTemplateId, model.CUSTOM_FIELD_TEMPLATE, dto.New_UpdateCustomFieldTemplate_From_CustomFieldTemplateSaveFields(input))
+		err = s.events.Publisher.PublishFanoutEvent(ctx, customFieldTemplateId, model.CUSTOM_FIELD_TEMPLATE, dto.New_UpdateCustomFieldTemplate_From_CustomFieldTemplateSaveFields(input))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateCustomFieldTemplate"))
 		}
@@ -181,7 +181,7 @@ func (s *customFieldTemplateService) Delete(ctx context.Context, customFieldTemp
 		return err
 	}
 
-	err = s.events.Publisher.PublishEvent(ctx, customFieldTemplateId, model.CUSTOM_FIELD_TEMPLATE, dto.Delete{})
+	err = s.events.Publisher.PublishFanoutEvent(ctx, customFieldTemplateId, model.CUSTOM_FIELD_TEMPLATE, dto.Delete{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message"))
 	}

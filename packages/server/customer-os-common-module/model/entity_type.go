@@ -40,10 +40,10 @@ const (
 	TENANT                   EntityType = "TENANT"
 	TENANT_SETTINGS          EntityType = "TENANT_SETTINGS"
 	USER                     EntityType = "USER"
-	WEBHOOK_EVENT            EntityType = "WEBHOOK"
 	LOCATION                 EntityType = "LOCATION"
 	JOB_ROLE                 EntityType = "JOB_ROLE"
 	SKU                      EntityType = "SKU"
+	WEB_SESSION              EntityType = "WEB_SESSION"
 )
 
 func (entityType EntityType) String() string {

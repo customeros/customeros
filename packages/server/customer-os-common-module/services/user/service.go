@@ -112,12 +112,12 @@ func (s *userService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPo
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			if createFlow {
-				err = s.events.Publisher.PublishEvent(ctx, userId, model.USER, dto.CreateUser{userFields})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, userId, model.USER, dto.CreateUser{userFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateUser"))
 				}
 			} else {
-				err = s.events.Publisher.PublishEvent(ctx, userId, model.USER, dto.UpdateUser{userFields})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, userId, model.USER, dto.UpdateUser{userFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateUser"))
 				}

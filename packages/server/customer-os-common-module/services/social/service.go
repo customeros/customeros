@@ -135,7 +135,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 	if externalId != nil {
 		updateSocialDto.ExternalId = *externalId
 	}
-	err = s.events.Publisher.PublishEvent(ctx, socialEntity.Id, model.SOCIAL, updateSocialDto)
+	err = s.events.Publisher.PublishFanoutEvent(ctx, socialEntity.Id, model.SOCIAL, updateSocialDto)
 
 	// get linked entities
 	linkedEntities, err := s.neo4j.CommonReadRepository.GetDbNodesLinkedTo(ctx, tenant, socialEntity.Id, model.SOCIAL.Neo4jLabel(), "HAS")
@@ -149,7 +149,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 		id := utils.GetStringPropOrEmpty(props, "id")
 
 		if utils.Contains(labels, model.CONTACT.Neo4jLabel()) {
-			err = s.events.Publisher.PublishEvent(ctx, id, model.CONTACT, dto.UpdateSocialForContact{
+			err = s.events.Publisher.PublishFanoutEvent(ctx, id, model.CONTACT, dto.UpdateSocialForContact{
 				SocialId:  socialEntity.Id,
 				SocialUrl: socialEntity.Url,
 			})
@@ -157,10 +157,10 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateSocialForContact"))
 			}
 			if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 			}
 		} else if utils.Contains(labels, model.ORGANIZATION.Neo4jLabel()) {
-			err = s.events.Publisher.PublishEvent(ctx, id, model.ORGANIZATION, dto.UpdateSocialForOrganization{
+			err = s.events.Publisher.PublishFanoutEvent(ctx, id, model.ORGANIZATION, dto.UpdateSocialForOrganization{
 				SocialId:  socialEntity.Id,
 				SocialUrl: socialEntity.Url,
 			})
@@ -169,7 +169,7 @@ func (s *socialService) Update(ctx context.Context, socialEntity neo4jentity.Soc
 			}
 
 			if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			}
 		}
 	}
@@ -192,7 +192,7 @@ func (s *socialService) PermanentlyDelete(ctx context.Context, tenant string, so
 		return err
 	}
 
-	err = s.events.Publisher.PublishEvent(ctx, socialId, model.SOCIAL, dto.Delete{})
+	err = s.events.Publisher.PublishFanoutEvent(ctx, socialId, model.SOCIAL, dto.Delete{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteSocial"))
 	}
@@ -345,7 +345,7 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 		// send events for social entity
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			if createSocialFlow {
-				err = s.events.Publisher.PublishEvent(ctx, socialId, model.SOCIAL, dto.CreateSocial{
+				err = s.events.Publisher.PublishFanoutEvent(ctx, socialId, model.SOCIAL, dto.CreateSocial{
 					Url:           socialUrl,
 					Alias:         socialEntity.Alias,
 					ExtId:         socialEntity.ExternalId,
@@ -362,23 +362,23 @@ func (s *socialService) AddSocialToEntity(ctx context.Context, txWithPostCommit 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			switch linkWith.Type {
 			case model.CONTACT:
-				err = s.events.Publisher.PublishEvent(ctx, linkWith.Id, model.CONTACT, dto.AddSocialToContact{
+				err = s.events.Publisher.PublishFanoutEvent(ctx, linkWith.Id, model.CONTACT, dto.AddSocialToContact{
 					SocialId: socialId,
 					Social:   socialUrl,
 				})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToContact"))
 				}
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, linkWith.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, linkWith.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 			case model.ORGANIZATION:
-				err = s.events.Publisher.PublishEvent(ctx, linkWith.Id, model.ORGANIZATION, dto.AddSocialToOrganization{
+				err = s.events.Publisher.PublishFanoutEvent(ctx, linkWith.Id, model.ORGANIZATION, dto.AddSocialToOrganization{
 					SocialId: socialId,
 					Social:   socialUrl,
 				})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddSocialToOrganization"))
 				}
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, linkWith.Id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, linkWith.Id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			}
 			return nil
 		})
@@ -437,23 +437,23 @@ func (s *socialService) RemoveSocialFromEntity(ctx context.Context, txWithPostCo
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			switch linkWith.Type {
 			case model.CONTACT:
-				err = s.events.Publisher.PublishEvent(ctx, linkWith.Id, model.CONTACT, dto.RemoveSocialFromContact{
+				err = s.events.Publisher.PublishFanoutEvent(ctx, linkWith.Id, model.CONTACT, dto.RemoveSocialFromContact{
 					SocialId: socialId,
 					Social:   socialEntity.Url,
 				})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveSocialFromContact"))
 				}
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, linkWith.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, linkWith.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 			case model.ORGANIZATION:
-				err = s.events.Publisher.PublishEvent(ctx, linkWith.Id, model.ORGANIZATION, dto.RemoveSocialFromOrganization{
+				err = s.events.Publisher.PublishFanoutEvent(ctx, linkWith.Id, model.ORGANIZATION, dto.RemoveSocialFromOrganization{
 					SocialId: socialId,
 					Social:   socialEntity.Url,
 				})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveSocialFromOrganization"))
 				}
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, linkWith.Id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, linkWith.Id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			}
 			return nil
 		})

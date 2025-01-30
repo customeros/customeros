@@ -110,13 +110,13 @@ func (s *markdownEventService) Save(ctx context.Context, txWithPostCommit *utils
 			// send events
 			if createFlow {
 				// historify markdown event
-				err = s.events.Publisher.PublishEvent(ctx, markdownEventId, model.MARKDOWN_EVENT, input)
+				err = s.events.Publisher.PublishFanoutEvent(ctx, markdownEventId, model.MARKDOWN_EVENT, input)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContact"))
 				}
 
 				// send event completed for organization for refresh
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, *input.OrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, *input.OrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			}
 
 			return nil

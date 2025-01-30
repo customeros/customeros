@@ -496,18 +496,18 @@ func (s *opportunityService) Save(ctx context.Context, txWithPostCommit *utils.T
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			if createFlow {
-				err = s.events.Publisher.PublishEvent(ctx, opportunityId, commonModel.OPPORTUNITY, dto.CreateOpportunity{*input})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, opportunityId, commonModel.OPPORTUNITY, dto.CreateOpportunity{*input})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateOpportunity"))
 				}
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithCreate())
+				s.events.Publisher.PublishNotification(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithCreate())
 			} else {
-				err = s.events.Publisher.PublishEvent(ctx, opportunityId, commonModel.OPPORTUNITY, dto.UpdateOpportunity{*input})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, opportunityId, commonModel.OPPORTUNITY, dto.UpdateOpportunity{*input})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateOpportunity"))
 				}
 				if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-					s.events.Publisher.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
+					s.events.Publisher.PublishNotification(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
 				}
 			}
 
@@ -611,7 +611,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, txWithPostCommit *uti
 		})
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
 			return nil
 		})
 
@@ -697,7 +697,7 @@ func (s *opportunityService) CloseLost(ctx context.Context, txWithPostCommit *ut
 		})
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithUpdate())
 			return nil
 		})
 
@@ -740,7 +740,7 @@ func (s *opportunityService) Archive(ctx context.Context, tenant, opportunityId 
 		return err
 	}
 
-	s.events.Publisher.PublishEventCompleted(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithDelete())
+	s.events.Publisher.PublishNotification(ctx, tenant, opportunityId, commonModel.OPPORTUNITY, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }
@@ -806,7 +806,7 @@ func (s *opportunityService) RolloutRenewalOpportunity(ctx context.Context, cont
 		s.log.Errorf("Failed creating renewed action for contract %s: %s", contractId, err.Error())
 	}
 
-	s.events.Publisher.PublishEventCompleted(ctx, tenant, contractId, commonModel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+	s.events.Publisher.PublishNotification(ctx, tenant, contractId, commonModel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -829,5 +829,4 @@ func (s *opportunityService) updateOrganizationArr(ctx context.Context, tenant, 
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error while updating ARR for organization %s: %s", organization.ID, err.Error())
 	}
-
 }

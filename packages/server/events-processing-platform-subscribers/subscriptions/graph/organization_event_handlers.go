@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -107,7 +108,7 @@ func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context
 		tracing.TraceErr(span, err)
 	}
 
-	h.events.Publisher.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+	h.events.Publisher.PublishNotification(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -145,7 +146,7 @@ func (h *OrganizationEventHandler) OnCreateBillingProfile(ctx context.Context, e
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
-	h.events.Publisher.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+	h.events.Publisher.PublishNotification(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 	return nil
 }
 
@@ -172,7 +173,7 @@ func (h *OrganizationEventHandler) OnUpdateBillingProfile(ctx context.Context, e
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
-	h.events.Publisher.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+	h.events.Publisher.PublishNotification(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 	return nil
 }
 
@@ -193,7 +194,7 @@ func (h *OrganizationEventHandler) OnEmailLinkedToBillingProfile(ctx context.Con
 		tracing.TraceErr(span, err)
 	}
 
-	h.events.Publisher.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+	h.events.Publisher.PublishNotification(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -214,7 +215,7 @@ func (h *OrganizationEventHandler) OnEmailUnlinkedFromBillingProfile(ctx context
 		tracing.TraceErr(span, err)
 	}
 
-	h.events.Publisher.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+	h.events.Publisher.PublishNotification(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -236,7 +237,7 @@ func (h *OrganizationEventHandler) OnLocationLinkedToBillingProfile(ctx context.
 		tracing.TraceErr(span, err)
 	}
 
-	h.events.Publisher.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+	h.events.Publisher.PublishNotification(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -258,7 +259,7 @@ func (h *OrganizationEventHandler) OnLocationUnlinkedFromBillingProfile(ctx cont
 		h.log.Errorf("Failed to unlink location %s from billing profile %s: %s", eventData.LocationId, eventData.BillingProfileId, err.Error())
 	}
 
-	h.events.Publisher.PublishEventCompleted(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+	h.events.Publisher.PublishNotification(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }

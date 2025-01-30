@@ -1,6 +1,6 @@
-package data_fields
+package dto
 
-type WebsiteVisitEvent struct {
+type WebsiteVisit struct {
 	SessionID string `json:"sessionId"`
 	Tenant    string `json:"tenant"`
 	IPAddress string `json:"ipAddress"`
@@ -8,6 +8,6 @@ type WebsiteVisitEvent struct {
 	Hostname  string `json:"hostname"`
 }
 
-func (f WebsiteVisitEvent) Type() string {
-	return "WebsiteVisitEvent"
+func (f WebsiteVisit) Type() string {
+	return "WebsiteVisit"
 }

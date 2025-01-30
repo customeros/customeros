@@ -113,7 +113,7 @@ func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWith
 
 			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 				// send email event to rabbit mq
-				err = s.events.Publisher.PublishEvent(ctx, emailId, commonmodel.NodeLabelEmail, dto.NewRegisterEmailEvent(emailFields.Email, emailFields.Source.String()))
+				err = s.events.Publisher.PublishFanoutEvent(ctx, emailId, commonmodel.NodeLabelEmail, dto.NewRegisterEmailEvent(emailFields.Email, emailFields.Source.String()))
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddEmailEvent"))
 				}
@@ -323,13 +323,13 @@ func (s *emailService) linkEmail(ctx context.Context, txWithPostCommit *utils.Tx
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			// publish event to rabbit mq
-			err = s.events.Publisher.PublishEvent(ctx, linkWith.Id, linkWith.Type, dto.NewAddEmailEvent(email, primary))
+			err = s.events.Publisher.PublishFanoutEvent(ctx, linkWith.Id, linkWith.Type, dto.NewAddEmailEvent(email, primary))
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddEmailEvent"))
 			}
 
 			// publish completion event for linked entity
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, linkWith.Id, linkWith.Type, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, linkWith.Id, linkWith.Type, utils.NewEventCompletedDetails().WithUpdate())
 			return nil
 		})
 
@@ -408,13 +408,13 @@ func (s *emailService) UnlinkEmail(ctx context.Context, txWithPostCommit *utils.
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			// publish event to rabbit mq
-			err = s.events.Publisher.PublishEvent(ctx, linkWith.Id, linkWith.Type, dto.NewRemoveEmailEvent(email))
+			err = s.events.Publisher.PublishFanoutEvent(ctx, linkWith.Id, linkWith.Type, dto.NewRemoveEmailEvent(email))
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveEmailEvent"))
 			}
 
 			// publish event for completion
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, linkWith.Id, linkWith.Type, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, linkWith.Id, linkWith.Type, utils.NewEventCompletedDetails().WithUpdate())
 
 			return nil
 		})
@@ -482,7 +482,7 @@ func (s *emailService) DeleteOrphanEmail(ctx context.Context, emailId string) er
 		span.LogFields(log.Bool("result.deleted", false))
 	} else {
 		span.LogFields(log.Bool("result.deleted", true))
-		err = s.events.Publisher.PublishEvent(ctx, emailId, commonmodel.EMAIL, dto.Delete{})
+		err = s.events.Publisher.PublishFanoutEvent(ctx, emailId, commonmodel.EMAIL, dto.Delete{})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish event Delete"))
 		}
@@ -553,7 +553,7 @@ func (s *emailService) SetPrimary(ctx context.Context, email string, forEntity c
 		return err
 	}
 
-	s.events.Publisher.PublishEventCompleted(ctx, tenant, forEntity.Id, forEntity.Type, utils.NewEventCompletedDetails().WithUpdate())
+	s.events.Publisher.PublishNotification(ctx, tenant, forEntity.Id, forEntity.Type, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -642,7 +642,7 @@ func (s *emailService) RequestEmailValidation(ctx context.Context, emailId strin
 		return err
 	}
 
-	err = s.events.Publisher.PublishEvent(ctx, emailId, commonmodel.EMAIL, dto.RequestValidateEmail{})
+	err = s.events.Publisher.PublishFanoutEvent(ctx, emailId, commonmodel.EMAIL, dto.RequestValidateEmail{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error publishing email validation request"))
 	}

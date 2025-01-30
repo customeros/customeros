@@ -143,7 +143,7 @@ func (h *MailstackHandler) RegisterNewMailbox() gin.HandlerFunc {
 			return
 		}
 
-		err = h.services.CommonServices.Events.Publisher.PublishEvent(ctx, mailbox.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
+		err = h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, mailbox.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
 		if err != nil {
 			message := "Error provisioning mailbox"
 			h.responseHandler.HandleError(c, http.StatusInternalServerError, &message)

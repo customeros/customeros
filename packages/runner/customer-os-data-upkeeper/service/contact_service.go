@@ -1011,7 +1011,7 @@ func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
 				}
 			}
 		}
-		s.commonServices.Events.Publisher.PublishEventCompleted(ctx, record.Tenant, record.ContactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+		s.commonServices.Events.Publisher.PublishNotification(ctx, record.Tenant, record.ContactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 	}
 }
 
@@ -1164,7 +1164,7 @@ func (s *contactService) enrichContacts(ctx context.Context) {
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
 
-			err = s.commonServices.Events.Publisher.PublishEvent(innerCtx, record.ContactId, model.CONTACT, dto.RequestEnrichContact{})
+			err = s.commonServices.Events.Publisher.PublishFanoutEvent(innerCtx, record.ContactId, model.CONTACT, dto.RequestEnrichContact{})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RequestEnrichContact"))
 				s.log.Errorf("Error requesting enrich contact {%s}: %s", record.ContactId, err.Error())

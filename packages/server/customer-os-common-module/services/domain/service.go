@@ -192,7 +192,7 @@ func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain s
 		tracing.TraceErr(span, errors.Wrap(err, "Error while setting primary details asynchronously"))
 	}
 
-	_ = s.events.Publisher.PublishEvent(ctx, domain, model.DOMAIN, dto.UpdateDomain{Primary: isPrimary, PrimaryDomain: primaryDomain, Accessible: accessible})
+	_ = s.events.Publisher.PublishFanoutEvent(ctx, domain, model.DOMAIN, dto.UpdateDomain{Primary: isPrimary, PrimaryDomain: primaryDomain, Accessible: accessible})
 
 	// If the domain is not primary, trigger the domain merge
 	if !isPrimary && primaryDomain != "" {
@@ -232,7 +232,7 @@ func (s *domainService) MergeDomain(ctx context.Context, txWithPostCommit *utils
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			if domainJustCreated {
-				_ = s.events.Publisher.PublishEvent(ctx, domain, model.DOMAIN, dto.CreateDomain{Domain: domain, Source: neo4jentity.DataSourceOpenline.String()})
+				_ = s.events.Publisher.PublishFanoutEvent(ctx, domain, model.DOMAIN, dto.CreateDomain{Domain: domain, Source: neo4jentity.DataSourceOpenline.String()})
 			}
 			return nil
 		})

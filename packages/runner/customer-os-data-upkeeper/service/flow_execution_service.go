@@ -157,7 +157,7 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 
 	if flowsUpdated != nil && len(flowsUpdated) > 0 {
 		for _, flowData := range flowsUpdated {
-			s.commonServices.Events.Publisher.PublishEventCompletedBulk(ctx, flowData.Tenant, flowData.Strings, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+			s.commonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, model.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 }

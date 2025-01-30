@@ -7,8 +7,6 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -109,15 +107,7 @@ func (h *IntegrationHandler) publishGrainMeetingSummaryCreatedEvent(c *gin.Conte
 		meeting.Timestamp = utils.TimePtr(grainData.RecordingData.StartDatetime.UTC())
 	}
 
-	// build webhook event
-	event := dto.WebhookEvent{
-		ExternalSystemId: commonenum.SourceGrain,
-		Name:             commonenum.EventGrainMeetingSummaryCreated,
-		DataType:         "MeetingSummaryEvent",
-		Data:             &meeting,
-	}
-
-	pubErr := h.services.CommonServices.Events.Publisher.PublishWebhookEvent(ctx, event)
+	pubErr := h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, meeting.MeetingID, "", meeting)
 
 	if pubErr != nil {
 		tracing.TraceErr(span, errors.Wrap(pubErr, "failed to publish event"))

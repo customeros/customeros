@@ -456,7 +456,7 @@ func processMailstackReply(ctx context.Context, services *service.Services, tena
 				}
 			}
 
-			err = services.CommonServices.Events.Publisher.PublishEvent(ctx, flowActionExecution.FlowId, commonModel.FLOW, dto.FlowParticipantGoalAchieved{
+			err = services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, flowActionExecution.FlowId, commonModel.FLOW, dto.FlowParticipantGoalAchieved{
 				ParticipantId:   flowParticipant.EntityId,
 				ParticipantType: flowParticipant.EntityType,
 			})
@@ -464,7 +464,7 @@ func processMailstackReply(ctx context.Context, services *service.Services, tena
 				tracing.TraceErr(span, err)
 			}
 
-			services.CommonServices.Events.Publisher.PublishEventCompleted(ctx, tenant, flowParticipant.Id, commonModel.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
+			services.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, flowParticipant.Id, commonModel.FLOW_PARTICIPANT, utils.NewEventCompletedDetails().WithUpdate())
 		}
 
 	}

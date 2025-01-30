@@ -3,20 +3,20 @@ package intent_signals
 import (
 	"context"
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"strings"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type WebVisitProcessor struct {
@@ -67,16 +67,15 @@ func (p *WebVisitProcessor) processSupportSignal(ctx context.Context, webSession
 		return nil
 	}
 
-	event := dto.IntentEvent{
+	event := dto.IntentDetected{
 		EventName:      enum.EventIntentSignal,
 		Source:         enum.SourceWebtracker,
 		SourceID:       webSession.ID,
-		Tenant:         webSession.Tenant,
 		IntentType:     enum.IntentSupportRequired,
 		OrganizationID: *webSession.OrganizationId,
 	}
 
-	err = p.events.Publisher.PublishEvent(ctx, webSession.ID, model.INTENT_SIGNAL, &event)
+	err = p.events.Publisher.PublishFanoutEvent(ctx, *webSession.OrganizationId, model.INTENT_SIGNAL, &event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

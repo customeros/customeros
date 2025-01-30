@@ -281,17 +281,17 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					}
 				}
 
-				err = s.events.Publisher.PublishEvent(ctx, sliId, model.SERVICE_LINE_ITEM, dto.CreateServiceLineItem{dataFields})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, sliId, model.SERVICE_LINE_ITEM, dto.CreateServiceLineItem{dataFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateServiceLineItem for SLI"))
 				}
-				err = s.events.Publisher.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.CreateServiceLineItem{dataFields})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, contractEntity.Id, model.CONTRACT, dto.CreateServiceLineItem{dataFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateServiceLineItem for Contract"))
 				}
 
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, sliId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithCreate())
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, sliId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithCreate())
+				s.events.Publisher.PublishNotification(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 			} else {
 				name := "Unnamed service"
 				if utils.IfNotNilString(dataFields.Name) != "" {
@@ -417,17 +417,17 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					}
 				}
 
-				err = s.events.Publisher.PublishEvent(ctx, sliId, model.SERVICE_LINE_ITEM, dto.UpdateServiceLineItem{dataFields})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, sliId, model.SERVICE_LINE_ITEM, dto.UpdateServiceLineItem{dataFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateServiceLineItem for SLI"))
 				}
-				err = s.events.Publisher.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.UpdateServiceLineItem{dataFields})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, contractEntity.Id, model.CONTRACT, dto.UpdateServiceLineItem{dataFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateServiceLineItem for Contract"))
 				}
 
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, sliId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithUpdate())
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, sliId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 			}
 			return nil
 		})
@@ -558,16 +558,16 @@ func (s *serviceLineItemService) Pause(ctx context.Context, txWithPostCommit *ut
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err := s.events.Publisher.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.PauseServiceLineItem{})
+			err := s.events.Publisher.PublishFanoutEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.PauseServiceLineItem{})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message PauseServiceLineItem"))
 			}
-			err = s.events.Publisher.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.PauseServiceLineItem{ServiceLineItemId: serviceLineItemId})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, contractEntity.Id, model.CONTRACT, dto.PauseServiceLineItem{ServiceLineItemId: serviceLineItemId})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message PauseServiceLineItem for contract"))
 			}
 
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 
 			return nil
 		})
@@ -618,16 +618,16 @@ func (s *serviceLineItemService) Resume(ctx context.Context, txWithPostCommit *u
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err := s.events.Publisher.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.ResumeServiceLineItem{})
+			err := s.events.Publisher.PublishFanoutEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.ResumeServiceLineItem{})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message ResumeServiceLineItem"))
 			}
-			err = s.events.Publisher.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.ResumeServiceLineItem{ServiceLineItemId: serviceLineItemId})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, contractEntity.Id, model.CONTRACT, dto.ResumeServiceLineItem{ServiceLineItemId: serviceLineItemId})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message ResumeServiceLineItem for contract"))
 			}
 
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 
 			return nil
 		})
@@ -740,17 +740,17 @@ func (s *serviceLineItemService) Delete(ctx context.Context, txWithPostCommit *u
 		})
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err := s.events.Publisher.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.DeleteServiceLineItem{})
+			err := s.events.Publisher.PublishFanoutEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.DeleteServiceLineItem{})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteServiceLineItem"))
 			}
-			err = s.events.Publisher.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.DeleteServiceLineItem{ServiceLineItemId: serviceLineItemId})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, contractEntity.Id, model.CONTRACT, dto.DeleteServiceLineItem{ServiceLineItemId: serviceLineItemId})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteServiceLineItem for contract"))
 			}
 
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, serviceLineItemId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithDelete())
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, serviceLineItemId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithDelete())
+			s.events.Publisher.PublishNotification(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 			return nil
 		})
 
@@ -823,17 +823,17 @@ func (s *serviceLineItemService) Close(ctx context.Context, txWithPostCommit *ut
 		})
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err := s.events.Publisher.PublishEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.CloseServiceLineItem{})
+			err := s.events.Publisher.PublishFanoutEvent(ctx, serviceLineItemId, model.SERVICE_LINE_ITEM, dto.CloseServiceLineItem{})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CloseServiceLineItem"))
 			}
-			err = s.events.Publisher.PublishEvent(ctx, contractEntity.Id, model.CONTRACT, dto.CloseServiceLineItem{ServiceLineItemId: serviceLineItemId, EndedAt: endedAt})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, contractEntity.Id, model.CONTRACT, dto.CloseServiceLineItem{ServiceLineItemId: serviceLineItemId, EndedAt: endedAt})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CloseServiceLineItem for contract"))
 			}
 
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, serviceLineItemId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithUpdate())
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, serviceLineItemId, model.SERVICE_LINE_ITEM, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, contractEntity.Id, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 
 			return nil
 		})

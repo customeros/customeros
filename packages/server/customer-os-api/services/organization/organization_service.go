@@ -3,6 +3,8 @@ package api_organization
 import (
 	"context"
 	"fmt"
+	"reflect"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -20,7 +22,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"reflect"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
@@ -384,7 +385,7 @@ func (s *organizationService) GetMinMaxRenewalForecastArr(ctx context.Context) (
 }
 
 func (s *organizationService) GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*commonmodel.SortBy) (*utils.Pagination, error) {
-	var paginatedResult = utils.Pagination{
+	paginatedResult := utils.Pagination{
 		Limit: limit,
 		Page:  page,
 	}
@@ -433,7 +434,7 @@ func (s *organizationService) RemoveOwner(ctx context.Context, organizationID st
 }
 
 func (s *organizationService) FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*commonmodel.SortBy) (*utils.Pagination, error) {
-	var paginatedResult = utils.Pagination{
+	paginatedResult := utils.Pagination{
 		Limit: limit,
 		Page:  page,
 	}
@@ -510,7 +511,7 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 	})
 
 	// Send events to opensearch
-	err = s.events.Publisher.PublishEvent(ctx, primaryOrganizationId, commonmodel.ORGANIZATION,
+	err = s.events.Publisher.PublishFanoutEvent(ctx, primaryOrganizationId, commonmodel.ORGANIZATION,
 		dto.MergeOrganizations{
 			SourceOrgId: mergedOrganizationId,
 			TargetOrgId: primaryOrganizationId,
