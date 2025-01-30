@@ -257,6 +257,10 @@ export class OrganizationService {
   }
 
   public async editOwner(orgId: string, ownerId: string) {
+    const prevOwner = this.root.organizations.getById(orgId)?.value.owner
+      ? this.root.organizations.getById(orgId)?.value.owner
+      : null;
+
     this.root.organizations.getById(orgId)?.setOwner(ownerId);
 
     const [res, err] = await unwrap(
@@ -270,7 +274,7 @@ export class OrganizationService {
 
     if (err) {
       console.error(err);
-      this.root.organizations.getById(orgId)?.setOwner('');
+      this.root.organizations.getById(orgId)?.setOwner(prevOwner?.id ?? '');
 
       this.root.ui.toastError(
         "We couldn't change the owner",
@@ -337,6 +341,10 @@ export class OrganizationService {
     orgId: string,
     renewalLikelihood: OpportunityRenewalLikelihood,
   ) {
+    const prevRenewalLikelihood =
+      this.root.organizations.getById(orgId)?.value
+        .renewalSummaryRenewalLikelihood;
+
     this.root.organizations
       .getById(orgId)
       ?.setRenewalAdjustedRate(renewalLikelihood);
@@ -351,6 +359,7 @@ export class OrganizationService {
       amount === 0 || potentialAmount === 0
         ? 0
         : (amount / potentialAmount) * 100;
+
     const [res, err] = await unwrap(
       this.orgRepo.updateAllOpportunityRenewals({
         input: {
@@ -365,6 +374,12 @@ export class OrganizationService {
 
     if (err) {
       console.error(err);
+
+      this.root.organizations
+        .getById(orgId)
+        ?.setRenewalAdjustedRate(
+          prevRenewalLikelihood ?? OpportunityRenewalLikelihood.MediumRenewal,
+        );
       this.root.ui.toastError(
         'Failed to update opportunity renewals',
         'update-opportunity-renewals',
