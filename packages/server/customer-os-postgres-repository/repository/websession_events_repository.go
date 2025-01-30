@@ -36,12 +36,6 @@ func NewWebSessionRepository(gormDb *gorm.DB) WebSessionRepository {
 	return &webSessionEventsRepository{gormDb: gormDb}
 }
 
-const (
-	IntentNotAnalyzed int8 = 0
-	IntentDetected    int8 = 1
-	NoIntentDetected  int8 = 2
-)
-
 func (r *webSessionEventsRepository) Create(ctx context.Context, webSessionData postgres_entity.WebSession) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.Create")
 	defer span.Finish()
@@ -102,7 +96,7 @@ func (r *webSessionEventsRepository) FindAllSessionsForIntentAnalysis(ctx contex
 
 	var results []postgres_entity.WebSession
 	err := r.gormDb.Model(&postgres_entity.WebSession{}).
-		Where("intent_signals = ?", IntentNotAnalyzed).
+		Where("intent_signals = ?", postgres_entity.IntentNotAnalyzed).
 		Where("is_active = ?", false).
 		Where("organization_id IS NOT NULL AND organization_id != ''").
 		Where("unique_page_views IS NOT NULL AND array_length(unique_page_views, 1) > 0").
@@ -274,7 +268,7 @@ func (r *webSessionEventsRepository) UpdateIntentSignal(ctx context.Context, ses
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	if intentSignal != IntentDetected && intentSignal != NoIntentDetected {
+	if intentSignal != postgres_entity.IntentDetected && intentSignal != postgres_entity.NoIntentDetected {
 		err := errors.New("invalid intentSingal value")
 		tracing.TraceErr(span, err)
 		return nil, err

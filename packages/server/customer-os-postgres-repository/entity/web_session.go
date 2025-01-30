@@ -6,6 +6,12 @@ import (
 	"github.com/lib/pq"
 )
 
+const (
+	IntentNotAnalyzed int8 = 0
+	IntentDetected    int8 = 1
+	NoIntentDetected  int8 = 2
+)
+
 type WebSession struct {
 	ID                    string         `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
 	Tenant                string         `gorm:"column:tenant;type:varchar(255);index:idx_tenant" json:"tenant"`

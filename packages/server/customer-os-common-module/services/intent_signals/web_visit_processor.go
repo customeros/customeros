@@ -33,11 +33,6 @@ func NewWebVisitProcessor(postgresRepos *postgres_repository.Repositories, event
 	}
 }
 
-const (
-	IntentDetected   int8 = 1
-	NoIntentDetected int8 = 2
-)
-
 func (p *WebVisitProcessor) Process(ctx context.Context, webSession postgres_entity.WebSession) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebVisitProcessor.Process")
 	defer span.Finish()
@@ -64,7 +59,7 @@ func (p *WebVisitProcessor) processSupportSignal(ctx context.Context, webSession
 	}
 
 	if !p.isSignal(ctx, webSession.UniquePageViews, "support") {
-		_, err := p.postgresRepositories.WebSessionRepository.UpdateIntentSignal(ctx, webSession.ID, webSession.Tenant, NoIntentDetected)
+		_, err := p.postgresRepositories.WebSessionRepository.UpdateIntentSignal(ctx, webSession.ID, webSession.Tenant, postgres_entity.NoIntentDetected)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -88,7 +83,7 @@ func (p *WebVisitProcessor) processSupportSignal(ctx context.Context, webSession
 	}
 
 	// update webSession record in database
-	_, err = p.postgresRepositories.WebSessionRepository.UpdateIntentSignal(ctx, webSession.ID, webSession.Tenant, IntentDetected)
+	_, err = p.postgresRepositories.WebSessionRepository.UpdateIntentSignal(ctx, webSession.ID, webSession.Tenant, postgres_entity.IntentDetected)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
