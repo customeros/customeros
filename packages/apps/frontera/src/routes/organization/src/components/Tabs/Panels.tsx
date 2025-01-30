@@ -1,4 +1,5 @@
-import { AboutPanel } from './panels/AboutPanel';
+import { OrganizationDetails } from '@shared/components/OrganizationDetails';
+
 import { PeoplePanel } from './panels/PeoplePanel';
 import { IssuesPanel } from './panels/IssuesPanel';
 import { AccountPanel } from './panels/AccountPanel';
@@ -22,6 +23,6 @@ export const Panels = ({ tab }: PanelsProps) => {
     case 'invoices':
       return <InvoicesPanel />;
     default:
-      return <AboutPanel />;
+      return <OrganizationDetails />;
   }
 };

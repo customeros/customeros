@@ -1,60 +1,54 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
+import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
-import { EditOrganizationTagUsecase } from '@domain/usecases/organization-about-panel/edit-organization-tag.usecase';
+import { SaveOrganizationUseCase } from '@domain/usecases/organization-details/save-organization.usecase';
+import { EditOrganizationTagUsecase } from '@domain/usecases/organization-details/edit-organization-tag.usecase';
 
 import { cn } from '@ui/utils/cn';
+import { Icon } from '@ui/media/Icon';
 import { flags } from '@ui/media/flags';
-import { Tag01 } from '@ui/media/icons/Tag01';
 import { Spinner } from '@ui/feedback/Spinner';
+import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { Seeding } from '@ui/media/icons/Seeding';
-import { Share07 } from '@ui/media/icons/Share07';
-import { Users02 } from '@ui/media/icons/Users02';
-import { Target05 } from '@ui/media/icons/Target05';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { Building07 } from '@ui/media/icons/Building07';
-import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
-import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
-import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { SocialMediaList } from '@organization/components/Tabs';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { TruncatedText } from '@ui/presentation/TruncatedText/TruncatedText';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
-import { Domains } from '@organization/components/Tabs/panels/AboutPanel/components/domains';
-import { OwnerInput } from '@organization/components/Tabs/panels/AboutPanel/components/owner';
-import { Branches } from '@organization/components/Tabs/panels/AboutPanel/components/branches';
-import { AboutTabField } from '@organization/components/Tabs/panels/AboutPanel/components/AboutTabField';
+import { Domains } from '@shared/components/OrganizationDetails/components/domains';
+import { OwnerInput } from '@shared/components/OrganizationDetails/components/owner';
+import { Branches } from '@shared/components/OrganizationDetails/components/branches';
+import { AboutTabField } from '@shared/components/OrganizationDetails/components/AboutTabField';
+import {
+  EntityType,
+  FlagWrongFields,
+  OrganizationRelationship,
+} from '@shared/types/__generated__/graphql.types';
 import {
   stageOptions,
   getStageOptions,
   relationshipOptions,
 } from '@organization/components/Tabs/panels/AboutPanel/util';
-import {
-  EntityType,
-  FlagWrongFields,
-  OrganizationStage,
-  OrganizationRelationship,
-} from '@shared/types/__generated__/graphql.types';
 
 import { Tags } from '../Tags';
 
 const iconMap = {
-  Customer: <ActivityHeart className='text-gray-500' />,
-  Prospect: <Seeding className='text-gray-500' />,
-  'Not a fit': <MessageXCircle className='text-gray-500' />,
-  'Former Customer': <BrokenHeart className='text-gray-500' />,
-  unknown: <AlignHorizontalCentre02 className='text-gray-500' />,
+  Customer: <Icon name='activity-heart' className='text-gray-500' />,
+  Prospect: <Icon name='seeding' className='text-gray-500' />,
+  'Not a fit': <Icon name='message-x-circle' className='text-gray-500' />,
+  'Former Customer': <Icon name='broken-heart' className='text-gray-500' />,
+  unknown: <Icon className='text-gray-500' name='align-horizontal-centre-02' />,
 };
 
 export const OrganizationDetails = observer(() => {
   const store = useStore();
   const id = useParams()?.id as string;
+  const [__, setPreviewCard] = useLocalStorage('previewCard', false);
+
   const [_, copyToClipboard] = useCopyToClipboard();
 
   const showParentRelationshipSelector = useFeatureIsOn(
@@ -63,10 +57,9 @@ export const OrganizationDetails = observer(() => {
   const parentRelationshipReadOnly = useFeatureIsOn(
     'parent-relationship-selector-read-only',
   );
+  const organization = store.organizations.getById(store.ui.focusRow ?? id);
 
-  const organization = store.organizations.getById(id ?? store.ui.focusRow);
-
-  if (!organization || !organization?.value) return null;
+  if (!organization) return null;
 
   const selectedRelationshipOption = relationshipOptions.find(
     (option) => option.value === organization.value?.relationship,
@@ -81,7 +74,11 @@ export const OrganizationDetails = observer(() => {
   );
 
   const tagsUsecase = useMemo(
-    () => new EditOrganizationTagUsecase(String(id)),
+    () => new EditOrganizationTagUsecase(id ?? store.ui.focusRow),
+    [id],
+  );
+  const saveOrganizationUseCase = useMemo(
+    () => new SaveOrganizationUseCase(id ?? store.ui.focusRow),
     [id],
   );
 
@@ -108,7 +105,7 @@ export const OrganizationDetails = observer(() => {
   const isEnriching = organization.isEnriching;
 
   return (
-    <div className='flex pt-[6px] px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
+    <div className='flex pt-[6px] px-6 w-full h-full  flex-1 bg-gray-25 rounded-2xl'>
       <div className='flex h-full flex-col  overflow-visible w-full'>
         {isEnriching && (
           <div className='flex items-center justify-start gap-2 border-[1px] text-sm border-grayModern-100 bg-grayModern-50 rounded-[4px] py-1 px-2 '>
@@ -126,6 +123,15 @@ export const OrganizationDetails = observer(() => {
           <p className='font-semibold text-base mt-0.5 overflow-hidden overflow-ellipsis'>
             {organization?.value?.name ?? ''}
           </p>
+          {!id && (
+            <IconButton
+              size='xs'
+              variant='ghost'
+              icon={<Icon name='x-close' />}
+              onClick={() => setPreviewCard(false)}
+              aria-label='close preview organization'
+            />
+          )}
 
           {organization.value?.referenceId && (
             <div className='h-full ml-4'>
@@ -154,14 +160,14 @@ export const OrganizationDetails = observer(() => {
           {!!organization?.value?.description && (
             <TruncatedText
               maxLines={4}
-              className={'text-sm'}
+              className='text-sm'
               data-test='org-about-description'
               text={organization.value.description}
             />
           )}
           <SocialMediaList
             dataTest='org-about-social-link'
-            leftElement={<Share07 className='text-gray-500' />}
+            leftElement={<Icon name='share-07' className='text-gray-500' />}
             value={organization?.value.socialMedia.map((s) => ({
               value: s.id,
               label: s.url,
@@ -176,7 +182,9 @@ export const OrganizationDetails = observer(() => {
             value={tagsUsecase.selectedTags}
             inputValue={tagsUsecase.searchTerm}
             setInputValue={tagsUsecase.setSearchTerm}
-            leftAccessory={<Tag01 className='mr-3 text-gray-500' />}
+            leftAccessory={
+              <Icon name='tag-01' className='mr-3 text-gray-500' />
+            }
             onChange={(selection) => {
               tagsUsecase.select(selection.map((o) => o.value));
             }}
@@ -215,27 +223,9 @@ export const OrganizationDetails = observer(() => {
                     <MenuItem
                       key={option.value}
                       onClick={() => {
-                        organization.value!.relationship = option.value;
-                        organization.value!.stage = match(option.value)
-                          .with(
-                            OrganizationRelationship.Prospect,
-                            () => OrganizationStage.Lead,
-                          )
-                          .with(
-                            OrganizationRelationship.Customer,
-                            () => OrganizationStage.InitialValue,
-                          )
-                          .with(
-                            OrganizationRelationship.NotAFit,
-                            () => OrganizationStage.Unqualified,
-                          )
-                          .with(
-                            OrganizationRelationship.FormerCustomer,
-                            () => OrganizationStage.Target,
-                          )
-                          .otherwise(() => undefined);
-
-                        organization.commit();
+                        saveOrganizationUseCase.execute({
+                          relationship: option.value,
+                        });
                       }}
                     >
                       {iconMap[option.label as keyof typeof iconMap]}
@@ -254,7 +244,7 @@ export const OrganizationDetails = observer(() => {
                 <Menu>
                   <Tooltip label='Stage' align='start'>
                     <MenuButton className='min-h-[20px] outline-none focus:outline-none'>
-                      <Target05 className='text-gray-500 mb-0.5' />
+                      <Icon name='target-05' className='text-gray-500 mb-0.5' />
                       <span className='ml-3 text-sm'>
                         {selectedStageOption?.label || 'Stage'}
                       </span>
@@ -265,8 +255,9 @@ export const OrganizationDetails = observer(() => {
                       <MenuItem
                         key={option.value}
                         onClick={() => {
-                          organization.value!.stage = option.value;
-                          organization.commit();
+                          saveOrganizationUseCase.execute({
+                            stage: option.value,
+                          });
                         }}
                       >
                         {iconMap[option.label as keyof typeof iconMap]}
@@ -283,7 +274,8 @@ export const OrganizationDetails = observer(() => {
             placeholder='Industry not found yet'
             value={organization?.value?.industryName}
             field={FlagWrongFields.OrganizationIndustry}
-            icon={<Building07 className='text-gray-500 mr-3 ' />}
+            flaggedAsIncorrect={organization?.value?.wrongIndustry}
+            icon={<Icon name='building-07' className='text-gray-500 mr-3' />}
           />
 
           {organization.country && (
@@ -302,15 +294,14 @@ export const OrganizationDetails = observer(() => {
           {typeof organization.value!.employees === 'number' && (
             <Tooltip align='start' label='Number of employees'>
               <p className='text-sm flex items-center cursor-default '>
-                <Users02 className='text-gray-500 mr-3' />
+                <Icon name='users-02' className='text-gray-500 mr-3' />
                 {organization.value!.employees} employees
               </p>
             </Tooltip>
           )}
           <OwnerInput
-            id={id}
+            id={id ?? store.ui.focusRow}
             dataTest='org-about-org-owner'
-            owner={organization?.value.owner}
           />
 
           {showParentRelationshipSelector &&

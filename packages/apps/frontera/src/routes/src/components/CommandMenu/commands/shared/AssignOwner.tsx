@@ -1,7 +1,10 @@
+import { useMemo } from 'react';
+
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { Organization } from '@store/Organizations/Organization.dto';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store.ts';
+import { EditOwnerUseCase } from '@domain/usecases/command-menu/edit-owner-organization.usecase';
 
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
@@ -13,6 +16,11 @@ export const AssignOwner = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
   const users = store.users.tenantUsers;
+
+  const orgOwnerUseCase = useMemo(
+    () => new EditOwnerUseCase(context?.ids?.[0] as string),
+    [context?.ids?.[0]],
+  );
 
   const entity = match(context.entity)
     .returnType<
@@ -79,26 +87,16 @@ export const AssignOwner = observer(() => {
       })
       .with('Organization', () => {
         if (!entity) return;
-        const organization = entity as Organization;
 
-        organization.value.owner = user.value;
-        organization.commit({
-          onCompleted: () => {
-            store.ui.toastSuccess(
-              `Owner assigned to ${organization.value.name}`,
-              'owner-update-success',
-            );
-          },
-        });
+        orgOwnerUseCase.execute(user.value.id as string);
       })
       .with('Organizations', () => {
         if (!(entity as Organization[])?.length) return;
 
         const orgs = entity as Organization[];
 
-        orgs.forEach((o) => {
-          o.value.owner = user?.value;
-          o.commit();
+        orgs.forEach(() => {
+          orgOwnerUseCase.execute(user.value.id as string);
         });
 
         store.ui.toastSuccess(

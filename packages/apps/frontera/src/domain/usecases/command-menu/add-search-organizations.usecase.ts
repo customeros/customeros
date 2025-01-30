@@ -2,8 +2,8 @@ import { match } from 'ts-pattern';
 import { RootStore } from '@store/root';
 import { when, action, reaction, computed, observable } from 'mobx';
 import { Organization } from '@store/Organizations/Organization.dto';
-import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service';
-import { SearchGlobalOrganizationsQuery } from '@store/Organizations/__service__/searchGlobalOrganizations.generated';
+import { OrganizationRepository } from '@infra/repositories/organization';
+import { SearchGlobalOrganizationsQuery } from '@infra/repositories/organization/queries/searchGlobalOrganizations.generated';
 
 import { validateUrl } from '@utils/url';
 import {
@@ -25,7 +25,7 @@ type Status =
 
 export class AddSearchOrganizationsUsecase {
   private root = RootStore.getInstance();
-  private service = OrganizationsService.getInstance();
+  private service = OrganizationRepository.getInstance();
   @observable private accessor searchedIds: string[] = [];
 
   @observable accessor searchTerm = '';

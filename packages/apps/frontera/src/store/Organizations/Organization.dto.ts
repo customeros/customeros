@@ -1,6 +1,8 @@
 import type { UserStore } from '@store/Users/User.store';
 
+import { set } from 'lodash';
 import merge from 'lodash/merge';
+import { match } from 'ts-pattern';
 import { Entity } from '@store/record';
 import { ContactDatum } from '@store/Contacts/Contact.dto';
 import { countryMap } from '@assets/countries/countriesMap';
@@ -15,10 +17,11 @@ import {
   OrganizationStage,
   LastTouchpointType,
   OrganizationRelationship,
+  OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
-import type { GetOrganizationsByIdsQuery } from './__service__/getOrganizationsByIds.generated';
-import type { SaveOrganizationMutationVariables } from './__service__/saveOrganization.generated';
+import type { GetOrganizationsByIdsQuery } from '../../infra/repositories/organization/queries/getOrganizationsByIds.generated';
+import type { SaveOrganizationMutationVariables } from '../../infra/repositories/organization/mutations/saveOrganization.generated';
 
 import { OrganizationsStore } from './Organizations.store';
 
@@ -175,11 +178,14 @@ export class Organization extends Entity<OrganizationDatum> {
 
   @action
   public setOwner(userId: string) {
+    this.draft();
+
     const record = this.store.root.users.value.get(userId);
 
     if (!record) return;
 
     this.value.owner = record.value;
+    this.commit({ syncOnly: true });
   }
 
   @action
@@ -191,6 +197,60 @@ export class Organization extends Entity<OrganizationDatum> {
   public flagIncorrectIndustry() {
     this.draft();
     this.value.wrongIndustry = true;
+    this.commit({ syncOnly: true });
+  }
+
+  public setRenewalAdjustedRate(
+    renewalLikelihood: OpportunityRenewalLikelihood,
+  ) {
+    this.draft();
+
+    const potentialAmount = this.value.renewalSummaryMaxArrForecast ?? 0;
+
+    this.value.renewalSummaryRenewalLikelihood = renewalLikelihood;
+
+    set(this.value, 'renewalSummaryArrForecast', () => {
+      switch (renewalLikelihood) {
+        case OpportunityRenewalLikelihood.HighRenewal:
+          return potentialAmount;
+        case OpportunityRenewalLikelihood.MediumRenewal:
+          return (50 / 100) * potentialAmount;
+        case OpportunityRenewalLikelihood.LowRenewal:
+          return (25 / 100) * potentialAmount;
+        default:
+          return (50 / 100) * potentialAmount;
+      }
+    });
+
+    this.commit({ syncOnly: true });
+  }
+
+  @action
+  public setRelationship(relationship: OrganizationRelationship) {
+    this.draft();
+    this.value.relationship = relationship;
+    this.value.stage = match(relationship)
+      .with(OrganizationRelationship.Prospect, () => OrganizationStage.Lead)
+      .with(
+        OrganizationRelationship.Customer,
+        () => OrganizationStage.InitialValue,
+      )
+      .with(
+        OrganizationRelationship.NotAFit,
+        () => OrganizationStage.Unqualified,
+      )
+      .with(
+        OrganizationRelationship.FormerCustomer,
+        () => OrganizationStage.Target,
+      )
+      .otherwise(() => undefined);
+    this.commit({ syncOnly: true });
+  }
+
+  @action
+  public setStage(stage: OrganizationStage) {
+    this.draft();
+    this.value.stage = stage;
     this.commit({ syncOnly: true });
   }
 

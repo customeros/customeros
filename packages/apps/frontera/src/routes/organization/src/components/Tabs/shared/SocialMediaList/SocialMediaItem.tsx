@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { RemoveOrgSocialMediaItemUsecase } from '@domain/usecases/organization-about-panel/remove-org-social-media-item.usecase.ts';
+import { Organization } from '@store/Organizations/Organization.dto';
+import { RemoveOrgSocialMediaItemUsecase } from '@domain/usecases/organization-details/remove-org-social-media-item.usecase';
 
 import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
@@ -32,12 +33,18 @@ interface SocialMediaItemProps {
   index?: number;
   dataTest?: string;
   isReadOnly?: boolean;
+  organization: Organization;
   leftElement?: React.ReactNode;
 }
 
-const removeOrgSocialMediaItemUsecase = new RemoveOrgSocialMediaItemUsecase();
 export const SocialMediaItem = observer(
-  ({ value, dataTest, leftElement, id }: SocialMediaItemProps) => {
+  ({
+    value,
+    dataTest,
+    leftElement,
+    id,
+    organization,
+  }: SocialMediaItemProps) => {
     const [openActionBar, setIsOpenActionBar] = useState(false);
     const [_, copyToClipboard] = useCopyToClipboard();
     const { onClose, onOpen, open } = useDisclosure();
@@ -119,7 +126,12 @@ export const SocialMediaItem = observer(
           </div>
         </div>
 
-        <DeleteModal open={open} socialId={id} onClose={onClose} />
+        <DeleteModal
+          open={open}
+          socialId={id}
+          onClose={onClose}
+          organization={organization}
+        />
       </>
     );
   },
@@ -129,10 +141,16 @@ interface DeleteModalProps {
   open: boolean;
   socialId: string;
   onClose: () => void;
+  organization: Organization;
 }
 
 export const DeleteModal = observer(
-  ({ socialId, onClose, open }: DeleteModalProps) => {
+  ({ socialId, onClose, open, organization }: DeleteModalProps) => {
+    const removeOrgSocialMediaItemsUsecase = useMemo(
+      () => new RemoveOrgSocialMediaItemUsecase(organization.id),
+      [organization.id],
+    );
+
     return (
       <AlertDialog isOpen={open} onClose={onClose}>
         <AlertDialogOverlay>
@@ -146,7 +164,7 @@ export const DeleteModal = observer(
               <Button
                 colorScheme='primary'
                 onClick={() => {
-                  removeOrgSocialMediaItemUsecase.remove(socialId);
+                  removeOrgSocialMediaItemsUsecase.remove(socialId);
                 }}
               >
                 Confirm

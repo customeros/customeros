@@ -1,5 +1,4 @@
 import { action, observable } from 'mobx';
-import { RootStore } from '@store/root.ts';
 import { OrganizationService } from '@domain/services';
 import { Organization } from '@store/Organizations/Organization.dto';
 import { OrganizationRepository } from '@infra/repositories/organization/organization.repository.ts';
@@ -18,7 +17,6 @@ export class AddOrganizationDomainCase {
     primaryDomain: string;
   } = null;
   @observable accessor entity: Organization | null = null;
-  private root = RootStore.getInstance();
   private service = new OrganizationService();
   private repository = OrganizationRepository.getInstance();
 

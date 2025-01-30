@@ -10,11 +10,9 @@ import { InvoicesService } from './Invoices/__service__/Invoices.service';
 import { JobRolesService } from './JobRoles/__service__/JobRoles.service';
 import { MailboxesService } from './Settings/__service__/Mailboxes/Mailboxes.service';
 import { TableViewDefsService } from './TableViewDefs/__services__/TableViewDef.service';
-import { OrganizationsService } from './Organizations/__service__/Organizations.service';
 import { CustomFieldsService } from './Settings/__service__/CustomFields/CustomFields.service';
 
 export class GraphqlService {
-  private organizationsService: OrganizationsService;
   private customFieldsService: CustomFieldsService;
   private invoiceService: InvoicesService;
   private contactService: ContactService;
@@ -23,7 +21,6 @@ export class GraphqlService {
   private jobRolesService: JobRolesService;
 
   constructor(private root: RootStore, private transport: Transport) {
-    this.organizationsService = OrganizationsService.getInstance();
     this.customFieldsService = CustomFieldsService.getInstance(this.transport);
     this.invoiceService = InvoicesService.getInstance(this.transport);
     this.contactService = ContactService.getInstance();
@@ -41,16 +38,6 @@ export class GraphqlService {
     }
 
     return match(operation.entity)
-      .with('Organizations', async () => {
-        const store = this.getStore(operation, 'organizations');
-
-        if (!store) return;
-
-        return await this.organizationsService.mutateOperation(
-          operation,
-          store,
-        );
-      })
       .with('customFields', async () => {
         const store = this.getStore(operation, 'customFields');
 

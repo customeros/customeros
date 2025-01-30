@@ -1,15 +1,18 @@
+import { useMemo } from 'react';
+
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { Organization } from '@store/Organizations/Organization.dto';
+import { EditOrganizationRelationshipUseCase } from '@domain/usecases/command-menu/edit-organization-relationship.usecase';
 
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { Seeding } from '@ui/media/icons/Seeding';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
+import { OrganizationRelationship } from '@graphql/types';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
-import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 import { relationshipOptions } from '@organization/components/Tabs/panels/AboutPanel/util';
 const iconMap = {
   Customer: <ActivityHeart className='text-gray-500' />,
@@ -21,6 +24,11 @@ const iconMap = {
 export const ChangeRelationship = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
+
+  const relationshipUseCase = useMemo(
+    () => new EditOrganizationRelationshipUseCase(context?.ids?.[0] as string),
+    [context?.ids?.[0]],
+  );
 
   const entity = match(context.entity)
     .returnType<Organization | Organization[] | undefined>()
@@ -50,26 +58,7 @@ export const ChangeRelationship = observer(() => {
 
     match(context.entity)
       .with('Organization', () => {
-        const organization = entity as Organization;
-
-        organization.value.relationship = value;
-        organization.value.stage = match(value)
-          .with(OrganizationRelationship.Prospect, () => OrganizationStage.Lead)
-          .with(
-            OrganizationRelationship.Customer,
-            () => OrganizationStage.InitialValue,
-          )
-          .with(
-            OrganizationRelationship.NotAFit,
-            () => OrganizationStage.Unqualified,
-          )
-          .with(
-            OrganizationRelationship.FormerCustomer,
-            () => OrganizationStage.Target,
-          )
-          .otherwise(() => undefined);
-
-        organization.commit();
+        relationshipUseCase.execute(value);
       })
       .with('Organizations', () => {
         store.organizations?.updateRelationship(context.ids as string[], value);

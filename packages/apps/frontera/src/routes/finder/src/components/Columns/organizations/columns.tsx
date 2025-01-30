@@ -713,30 +713,6 @@ export const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
-
-  [ColumnViewType.OrganizationsParentOrganization]: columnHelper.accessor(
-    'value.parentId',
-    {
-      id: ColumnViewType.OrganizationsParentOrganization,
-      size: 108,
-      minSize: 108,
-      maxSize: 400,
-      enableResizing: true,
-      enableColumnFilter: false,
-      enableSorting: true,
-      cell: (props) => {
-        return <OrganizationCell id={props.getValue()} />;
-      },
-      header: (props) => (
-        <THead<HTMLInputElement>
-          title='Parent Org'
-          id={ColumnViewType.OrganizationsParentOrganization}
-          {...getTHeadProps<Organization>(props)}
-        />
-      ),
-      skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
-    },
-  ),
   [ColumnViewType.OrganizationsUpdatedDate]: columnHelper.accessor(
     'value.updatedAt',
     {
