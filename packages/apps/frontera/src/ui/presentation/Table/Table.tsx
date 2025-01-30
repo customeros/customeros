@@ -135,6 +135,7 @@ export const Table = <T extends object>({
   useKey(
     'Shift',
     (e) => {
+      e.preventDefault();
       setIsShiftPressed(e.type === 'keydown');
     },
     { eventTypes: ['keydown', 'keyup'] },
@@ -462,6 +463,7 @@ export const Table = <T extends object>({
           totalItems={totalItems}
           rowVirtualizer={rowVirtualizer}
           includesAvatar={includesAvatar}
+          isShiftPressed={isShiftPressed}
           focusedRowIndex={focusedRowIndex}
           fullRowSelection={fullRowSelection}
           setSelectedIndex={setSelectedIndex}
@@ -487,6 +489,7 @@ interface TableBodyProps<T extends object> {
   isLoading?: boolean;
   tableId?: TableIdType;
   table: TableInstance<T>;
+  isShiftPressed?: boolean;
   includesAvatar?: boolean;
   fullRowSelection?: boolean;
   enableRowSelection?: boolean;
@@ -510,6 +513,7 @@ const TableBody = <T extends object>({
   onFullRowSelection,
   setFocusedRowIndex,
   enableRowSelection,
+  isShiftPressed,
   includesAvatar,
   tableId,
 }: TableBodyProps<T>) => {
@@ -563,6 +567,7 @@ const TableBody = <T extends object>({
               focusStyle,
               'group/row',
               row?.getIsSelected() && 'bg-gray-50',
+              isShiftPressed && 'select-none',
             )}
             onClick={
               fullRowSelection
@@ -591,7 +596,9 @@ const TableBody = <T extends object>({
                         'cursor-pointer group-hover/row:opacity-100 group-hover/row:visible opacity-0',
                         row?.getIsSelected() && 'opacity-100',
                       )}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+
                         const isSelected = row?.getIsSelected();
 
                         row?.getToggleSelectedHandler()(!isSelected);
