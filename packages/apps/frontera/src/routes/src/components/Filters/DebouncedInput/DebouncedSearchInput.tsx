@@ -77,7 +77,7 @@ export const DebouncedSearchInput = memo(
                 size='xs'
                 variant='ghost'
                 onClick={handleClear}
-                aria-label='search organization'
+                aria-label='search company'
                 icon={<Delete className='text-gray-500' />}
               />
             </RightElement>

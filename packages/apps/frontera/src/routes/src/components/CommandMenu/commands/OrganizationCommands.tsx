@@ -30,7 +30,7 @@ export const OrganizationCommands = observer(() => {
   const selectedIds = store.ui.commandMenu.context.ids;
   const id = (store.ui.commandMenu.context.ids as string[])?.[0];
   const organization = store.organizations.getById(id);
-  const label = `Organization - ${organization?.value.name}`;
+  const label = `Company - ${organization?.value.name}`;
   const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
   return (
@@ -68,8 +68,8 @@ export const OrganizationCommands = observer(() => {
 
         {!!organization?.value?.tags?.length && (
           <CommandItem
-            leftAccessory={<Icon name='tag-01' />}
             keywords={['change', 'add', 'tags', 'update', 'edit']}
+            leftAccessory={<Icon name='tag-01' className='size-4' />}
             onSelect={() => {
               const tagCount = organization?.value?.tags?.length ?? 0;
 
@@ -158,7 +158,7 @@ export const OrganizationCommands = observer(() => {
             store.ui.commandMenu.setOpen(false);
           }}
         >
-          {previewCard ? 'Hide organization preview' : 'Preview organization'}
+          {previewCard ? 'Hide company preview' : 'Preview company'}
         </CommandItem>
 
         <CommandItem

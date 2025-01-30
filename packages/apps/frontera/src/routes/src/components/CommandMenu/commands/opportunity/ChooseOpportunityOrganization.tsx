@@ -79,9 +79,9 @@ export const ChooseOpportunityOrganization = observer(() => {
     <Command shouldFilter={false}>
       <CommandInput
         value={search}
-        label='Organization'
+        label='Company'
         onValueChange={handleSearch}
-        placeholder='Choose organization'
+        placeholder='Choose company'
         dataTest='opp-kanban-choose-organization'
       />
 

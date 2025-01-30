@@ -69,7 +69,7 @@ export const GeneralViewsSection = observer(
         {preferences.isViewsOpen && (
           <>
             <RootSidenavItem
-              label='Organizations'
+              label='Companies'
               dataTest={`side-nav-item-all-orgs`}
               id={allOrganizationsView?.[0]?.value?.id}
               isActive={checkIsActive('finder', {

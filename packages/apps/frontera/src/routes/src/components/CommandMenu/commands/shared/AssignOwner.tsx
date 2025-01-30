@@ -58,7 +58,7 @@ export const AssignOwner = observer(() => {
     )
     .with(
       'Organization',
-      () => `Organization - ${(entity as Organization)?.value?.name}`,
+      () => `Company - ${(entity as Organization)?.value?.name}`,
     )
     .with('Organizations', () => `${context.ids?.length} organizations`)
     .with('Opportunities', () => `${context.ids?.length} opportunities`)
@@ -100,7 +100,7 @@ export const AssignOwner = observer(() => {
         });
 
         store.ui.toastSuccess(
-          `Owner assigned to ${orgs.length} organizations`,
+          `Owner assigned to ${orgs.length} companies`,
           'owner-update-success',
         );
       })

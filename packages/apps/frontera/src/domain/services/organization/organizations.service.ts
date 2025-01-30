@@ -90,7 +90,7 @@ export class OrganizationService {
         }
       });
     } catch (err) {
-      throw new Error('Failed to merge organizations');
+      throw new Error('Failed to merge companies');
     }
   }
 

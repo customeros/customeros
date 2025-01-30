@@ -116,11 +116,8 @@ export const Search = observer(() => {
     .with(TableViewType.Contracts, () => 'by contract name...')
     .with(TableViewType.Organizations, () => '/ to search')
     .with(TableViewType.Invoices, () => 'by contract name...')
-    .with(
-      TableViewType.Opportunities,
-      () => 'by name, organization or owner...',
-    )
-    .otherwise(() => 'by organization name...');
+    .with(TableViewType.Opportunities, () => 'by name, company or owner...')
+    .otherwise(() => 'by company name...');
 
   const createNewEntityModalType:
     | null
@@ -161,7 +158,7 @@ export const Search = observer(() => {
       true,
       {
         leftIcon: <BuildingAdd />,
-        children: 'Add organization',
+        children: 'Add company',
         onClick: () => store.ui.commandMenu.toggle('AddNewOrganization'),
       },
       {

@@ -188,7 +188,7 @@ export const ContactCommands = observer(() => {
             store.ui.commandMenu.setType('EditLatestOrgActive');
           }}
         >
-          Edit organization
+          Edit company
         </CommandItem>
         {/* <CommandItem
           leftAccessory={<Phone />}

@@ -88,7 +88,7 @@ export const TableViewsToggleNavigation = observer(() => {
       return ['Upcoming', 'Past'];
     }
 
-    return ['Orgs', 'Contacts'];
+    return ['Companies', 'Contacts'];
   };
 
   const [firstButtonLabel, secondButtonLabel] = getButtonLabels();

@@ -117,7 +117,7 @@ export const GlobalSharedCommands = observer(
           rightAccessory={<KeyboardShortcut shortcut='Z' />}
           onSelect={() => handleGoTo('/finder', organizationsPreset)}
         >
-          Go to Organizations
+          Go to Companies
         </CommandItem>
         <CommandItem
           dataTest={`${dataTest}-gn`}

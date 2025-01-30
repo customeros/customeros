@@ -9,7 +9,7 @@ export const OrganizationHub = observer(() => {
   const store = useStore();
 
   return (
-    <CommandsContainer label={'Organizations'} dataTest={'organization-hub'}>
+    <CommandsContainer label={'Companies'} dataTest={'organization-hub'}>
       <CommandItem
         leftAccessory={<PlusCircle />}
         dataTest={'organization-hub-add-new-orgs'}
@@ -17,7 +17,7 @@ export const OrganizationHub = observer(() => {
           store.ui.commandMenu.setType('AddNewOrganization');
         }}
       >
-        Add new organizations...
+        Add new companies...
       </CommandItem>
     </CommandsContainer>
   );

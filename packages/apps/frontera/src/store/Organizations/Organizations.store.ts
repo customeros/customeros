@@ -450,7 +450,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
         this.root.ui.toastSuccess(
           `Archived ${ids.length} ${
-            ids.length > 1 ? 'organizations' : 'organization'
+            ids.length === 1 ? 'company' : 'companies'
           }`,
           crypto.randomUUID(),
         );
@@ -459,9 +459,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       runInAction(() => {
         this.error = (err as Error).message;
         this.root.ui.toastError(
-          `Failed archiving ${
-            ids.length > 1 ? 'organizations' : 'organization'
-          }`,
+          `Failed archiving ${ids.length === 1 ? 'company' : 'companies'}`,
           crypto.randomUUID(),
         );
       });
@@ -496,7 +494,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
         this.root.ui.toastSuccess(
           `Merged ${mergeIds.length} ${
-            mergeIds.length > 1 ? 'organizations' : 'organization'
+            mergeIds.length === 1 ? 'company' : 'companies'
           }`,
           primaryId,
         );
@@ -506,7 +504,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         this.error = (err as Error).message;
         this.root.ui.toastSuccess(
           `Failed merging ${mergeIds.length} ${
-            mergeIds.length > 1 ? 'organizations' : 'organization'
+            mergeIds.length === 1 ? 'company' : 'companies'
           }`,
           primaryId,
         );
