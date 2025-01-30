@@ -165,7 +165,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	return newAgent, nil
 }
 
-func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields) (*postgresentity.Agents, error) {
+func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilitiesConfig *postgresentity.CapabilitiesConfig) (*postgresentity.Agents, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.UpdateAgent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -203,8 +203,8 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	if agentFields.FlowID != nil {
 		agentEntity.FlowID = *agentFields.FlowID
 	}
-	if agentFields.CapabilitiesConfig != nil {
-		agentEntity.CapabilitiesConfig = *agentFields.CapabilitiesConfig
+	if capabilitiesConfig != nil {
+		agentEntity.CapabilitiesConfig = *capabilitiesConfig
 	}
 
 	// set default and non-updatable fields
@@ -214,7 +214,8 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 		return nil, err
 	}
 
-	err = a.events.Publisher.PublishEvent(ctx, agentId, model.AGENT, dto.UpdateAgent{agentFields})
+	eventFields := dto.UpdateAgent{agentFields, capabilitiesConfig}
+	err = a.events.Publisher.PublishEvent(ctx, agentId, model.AGENT, eventFields)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateAgent"))
 	}

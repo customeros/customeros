@@ -51,6 +51,7 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 		FlowID:      input.FlowID,
 		Goal:        input.Goal,
 	}
+	var capabilitiesConfig *postgresentity.CapabilitiesConfig
 	if input.Capabilities != nil {
 		capabilities := make([]postgresentity.Capability, 0, len(input.Capabilities))
 		for _, capability := range input.Capabilities {
@@ -65,12 +66,12 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 				capabilities[len(capabilities)-1].Type = enummapper.MapAgentCapabilityTypeFromModel(*capability.Type)
 			}
 		}
-		agentFields.CapabilitiesConfig = &postgresentity.CapabilitiesConfig{
+		capabilitiesConfig = &postgresentity.CapabilitiesConfig{
 			Capabilities: capabilities,
 		}
 	}
 
-	updatedAgentEntity, err := r.Services.CommonServices.AgentService.UpdateAgent(ctx, agentId, agentFields)
+	updatedAgentEntity, err := r.Services.CommonServices.AgentService.UpdateAgent(ctx, agentId, agentFields, capabilitiesConfig)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update agent")
