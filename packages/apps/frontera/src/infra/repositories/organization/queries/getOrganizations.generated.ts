@@ -23,7 +23,6 @@ export type GetOrganizationsQuery = {
       industry?: string | null;
       market?: Types.Market | null;
       website?: string | null;
-      wrongIndustry: boolean;
       domains: Array<string>;
       logo?: string | null;
       icon?: string | null;
