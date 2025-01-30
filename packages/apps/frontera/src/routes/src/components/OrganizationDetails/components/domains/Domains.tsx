@@ -33,9 +33,7 @@ export const Domains = observer(() => {
   >({});
   const [showMenus, setShowMenus] = useState<Record<string, boolean>>({});
 
-  const organization = store.organizations.getById(
-    String(store.ui.focusRow) ?? id,
-  );
+  const organization = store.organizations.getById(store.ui.focusRow ?? id);
 
   if (!organization || !organization?.value) return null;
 
