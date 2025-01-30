@@ -7,6 +7,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	common_model "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -37,7 +38,7 @@ func NewInvoiceFinalizedListener(logger logger.Logger, deps *model.DependencyCon
 }
 
 // Add all Agent types subscribed to this event here
-func (h *InvoicePaidListener) subscribedAgents() []enum.AgentType {
+func (h *InvoiceFinalizedListener) subscribedAgents() []enum.AgentType {
 	return []enum.AgentType{}
 }
 

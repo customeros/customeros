@@ -67,7 +67,7 @@ func (l *RequestEnrichOrganizationListener) Handle(ctx context.Context, baseEven
 	organizationId := event.Event.EntityId
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
-	domain, _ := l.dependencies.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, message.Url)
+	domain := l.dependencies.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, message.Url)
 	if domain == "" {
 		return nil
 	}
