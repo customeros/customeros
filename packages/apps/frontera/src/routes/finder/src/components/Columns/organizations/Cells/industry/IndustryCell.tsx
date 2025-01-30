@@ -24,7 +24,7 @@ export const IndustryCell = ({
     );
 
   return (
-    <div className='flex items-center gap-2 group'>
+    <div className='flex items-center gap-2 group/industry'>
       <p title={value} className='text-gray-700 cursor-default truncate group'>
         {value}
       </p>
@@ -44,7 +44,7 @@ export const IndustryCell = ({
           )
         }
       >
-        <ThumbsDown className='text-gray-500 hover:text-gray-700 opacity-0 group-hover:opacity-100 block size-3' />
+        <ThumbsDown className='text-gray-500 hover:text-gray-700 opacity-0 group-hover/industry:opacity-100 block size-3' />
       </div>
     </div>
   );

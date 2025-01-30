@@ -54,14 +54,12 @@ export const columns: Record<string, Column> = {
 
       const icon = enrichedOrg?.iconUrl;
       const logo = enrichedOrg?.logoUrl;
-      const description = enrichedOrg?.description;
       const isEnriching = props.getValue()?.isEnriching;
 
       return (
         <AvatarCell
           icon={icon}
           logo={logo}
-          description={description}
           isEnriching={isEnriching}
           id={props.getValue()?.value?.id}
           name={props.getValue()?.value?.name}
