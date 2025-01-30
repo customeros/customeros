@@ -9,14 +9,15 @@ import (
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	opentracing "github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // MailstackGetPaymentIntent is the resolver for the mailstack_GetPaymentIntent field.
@@ -92,7 +93,6 @@ func (r *mutationResolver) MailstackSetUser(ctx context.Context, mailbox string,
 	mailboxEntity.UserId = userID
 
 	err = r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, nil, mailboxEntity)
-
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to merge mailbox %s", mailbox)
@@ -100,8 +100,8 @@ func (r *mutationResolver) MailstackSetUser(ctx context.Context, mailbox string,
 		return &model.Result{Result: false}, nil
 	}
 
-	r.Services.CommonServices.Events.Publisher.PublishEventCompleted(ctx, tenant, oldUserID, commonModel.USER, utils.NewEventCompletedDetails().WithUpdate())
-	r.Services.CommonServices.Events.Publisher.PublishEventCompleted(ctx, tenant, userID, commonModel.USER, utils.NewEventCompletedDetails().WithUpdate())
+	r.Services.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, oldUserID, commonModel.USER, utils.NewEventCompletedDetails().WithUpdate())
+	r.Services.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, userID, commonModel.USER, utils.NewEventCompletedDetails().WithUpdate())
 
 	return &model.Result{Result: true}, nil
 }

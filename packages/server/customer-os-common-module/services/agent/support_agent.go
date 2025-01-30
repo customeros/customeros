@@ -36,7 +36,7 @@ func NewSupportAgent(
 	}
 }
 
-func (a *SupportAgent) ProcessIntentEvent(ctx context.Context, intentEvent *dto.IntentEvent) error {
+func (a *SupportAgent) ProcessIntentEvent(ctx context.Context, intentEvent *dto.IntentDetected) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SupportAgent.ProcessIntentEvent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -66,7 +66,7 @@ func (a *SupportAgent) ProcessIntentEvent(ctx context.Context, intentEvent *dto.
 	return errs
 }
 
-func (a *SupportAgent) Run(ctx context.Context, agentID string, intentEvent *dto.IntentEvent) error {
+func (a *SupportAgent) Run(ctx context.Context, agentID string, intentEvent *dto.IntentDetected) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SupportAgent.Run")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

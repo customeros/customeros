@@ -155,18 +155,18 @@ func (s *issueService) Save(ctx context.Context, txWithPostCommit *utils.TxWithP
 						tracing.TraceErr(span, errors.Wrap(err, "unable to request refresh last touchpoint"))
 					}
 				}
-				err := s.events.Publisher.PublishEvent(ctx, issueId, model.ISSUE, dto.CreateIssue{issueFields})
+				err := s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.CreateIssue{issueFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateIssue"))
 				}
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithCreate())
+				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithCreate())
 			} else {
-				err := s.events.Publisher.PublishEvent(ctx, issueId, model.ISSUE, dto.UpdateIssue{issueFields})
+				err := s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.UpdateIssue{issueFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateIssue"))
 				}
 				if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
-					s.events.Publisher.PublishEventCompleted(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
+					s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
 				}
 			}
 			return nil
@@ -227,12 +227,12 @@ func (s *issueService) AddUserAssignee(ctx context.Context, txWithPostCommit *ut
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err = s.events.Publisher.PublishEvent(ctx, issueId, model.ISSUE, dto.AddUserAssigneeToIssue{UserID: userId})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.AddUserAssigneeToIssue{UserID: userId})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddUserAssigneeToIssue"))
 			}
 			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
 			}
 			return nil
 		})
@@ -286,12 +286,12 @@ func (s *issueService) RemoveUserAssignee(ctx context.Context, txWithPostCommit 
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err = s.events.Publisher.PublishEvent(ctx, issueId, model.ISSUE, dto.RemoveUserAssigneeFromIssue{UserID: userId})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.RemoveUserAssigneeFromIssue{UserID: userId})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveUserAssigneeFromIssue"))
 			}
 			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
 			}
 			return nil
 		})
@@ -345,12 +345,12 @@ func (s *issueService) AddUserFollower(ctx context.Context, txWithPostCommit *ut
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err = s.events.Publisher.PublishEvent(ctx, issueId, model.ISSUE, dto.AddUserFollowerToIssue{UserID: userId})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.AddUserFollowerToIssue{UserID: userId})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddUserFollowerToIssue"))
 			}
 			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
 			}
 			return nil
 		})
@@ -404,12 +404,12 @@ func (s *issueService) RemoveUserFollower(ctx context.Context, txWithPostCommit 
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err = s.events.Publisher.PublishEvent(ctx, issueId, model.ISSUE, dto.RemoveUserFollowerFromIssue{UserID: userId})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, issueId, model.ISSUE, dto.RemoveUserFollowerFromIssue{UserID: userId})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveUserFollowerFromIssue"))
 			}
 			if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, issueId, model.ISSUE, utils.NewEventCompletedDetails().WithUpdate())
 			}
 			return nil
 		})

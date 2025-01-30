@@ -186,18 +186,18 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 
 	// send events
 	if createFlow {
-		err = s.events.Publisher.PublishEvent(ctx, contractId, model.CONTRACT, dto.CreateContract{dataFields})
+		err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.CreateContract{dataFields})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContract"))
 		}
-		s.events.Publisher.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithCreate())
+		s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithCreate())
 	} else {
-		err = s.events.Publisher.PublishEvent(ctx, contractId, model.CONTRACT, dto.UpdateContract{dataFields})
+		err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.UpdateContract{dataFields})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContract"))
 		}
 		if dataFields.AppSource == nil || *dataFields.AppSource != constants.AppSourceCustomerOsApi {
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 
@@ -215,7 +215,7 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 			s.log.Errorf("Error while post create contract %s: %s", contractId, err.Error())
 		}
 		if dataFields.AppSource == nil || *dataFields.AppSource != constants.AppSourceCustomerOsApi {
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 
@@ -269,7 +269,7 @@ func (s *contractService) SoftDelete(ctx context.Context, contractId string) err
 		return err
 	}
 
-	s.events.Publisher.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithDelete())
+	s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }
@@ -418,9 +418,9 @@ func (s *contractService) updateStatus(ctx context.Context, tenant, contractId s
 			return "", false, err
 		}
 
-		s.events.Publisher.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+		s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 
-		err = s.events.Publisher.PublishEvent(ctx, contractId, model.CONTRACT, dto.ChangeStatusForContract{Status: status})
+		err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.ChangeStatusForContract{Status: status})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message ChangeStatusForContract"))
 		}
@@ -1006,7 +1006,7 @@ func (s *contractService) RefreshContractStatus(ctx context.Context, contractId 
 		s.createActionForStatusChange(ctx, tenant, contractId, status, contractEntity.Name)
 
 		s.startOnboardingIfEligible(ctx, tenant, contractId, span)
-		s.events.Publisher.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+		s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	if status == neo4jenum.ContractStatusEnded.String() {
@@ -1122,7 +1122,7 @@ func (s *contractService) RecalculateContractLtv(ctx context.Context, contractId
 		}
 	}
 
-	s.events.Publisher.PublishEventCompleted(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+	s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }

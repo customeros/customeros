@@ -102,19 +102,19 @@ func NewRabbitMQPublisher(rabbitmqURL string, logger logger.Logger, config *Publ
 	return publisher, nil
 }
 
-func (r *RabbitMQPublisher) PublishCustomerOSEvent(ctx context.Context, entityId string, entityType model.EntityType, message interface{}) error {
+func (r *RabbitMQPublisher) PublishFanoutEvent(ctx context.Context, entityId string, entityType model.EntityType, message interface{}) error {
 	return r.publishEventOnExchange(ctx, entityId, entityType, message, ExchangeCustomerOS, "")
 }
 
-func (r *RabbitMQPublisher) PublishDirectCustomerOSEvent(ctx context.Context, entityId string, entityType model.EntityType, message interface{}) error {
+func (r *RabbitMQPublisher) PublishDirectEvent(ctx context.Context, entityId string, entityType model.EntityType, message interface{}) error {
 	return r.publishEventOnExchange(ctx, entityId, entityType, message, ExchangeDirect, RoutingKeyFlowParticipantSchedule)
 }
 
-func (r *RabbitMQPublisher) PublishEventCompleted(ctx context.Context, tenant string, entityId string, entityType model.EntityType, details *utils.EventCompletedDetails) {
-	r.PublishEventCompletedBulk(ctx, tenant, []string{entityId}, entityType, details)
+func (r *RabbitMQPublisher) PublishNotification(ctx context.Context, tenant string, entityId string, entityType model.EntityType, details *utils.EventCompletedDetails) {
+	r.PublishNotificationBulk(ctx, tenant, []string{entityId}, entityType, details)
 }
 
-func (r *RabbitMQPublisher) PublishEventCompletedBulk(ctx context.Context, tenant string, entityIds []string, entityType model.EntityType, details *utils.EventCompletedDetails) {
+func (r *RabbitMQPublisher) PublishNotificationBulk(ctx context.Context, tenant string, entityIds []string, entityType model.EntityType, details *utils.EventCompletedDetails) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQPublisher.PublishEventCompletedBulk")
 	defer span.Finish()
 	span.LogKV("tenant", tenant, "entityType", entityType, "entityIds", entityIds)

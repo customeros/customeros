@@ -185,7 +185,7 @@ func (s *mailstackService) RegisterBuyDomainsWithMailboxes(ctx context.Context, 
 	}
 
 	if !test {
-		err = s.events.Publisher.PublishEvent(ctx, mailstackBuyRequestId, model.MAILSTACK_BUY_REQUEST, dto.MailstackProvisionBuyRequest{})
+		err = s.events.Publisher.PublishFanoutEvent(ctx, mailstackBuyRequestId, model.MAILSTACK_BUY_REQUEST, dto.MailstackProvisionBuyRequest{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

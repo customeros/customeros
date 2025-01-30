@@ -10,6 +10,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -19,8 +20,9 @@ import (
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/events-subscribers/config"
-	"github.com/customeros/customeros/packages/server/events-subscribers/listeners"
-	"github.com/customeros/customeros/packages/server/events-subscribers/logger"
+	agent_listeners "github.com/customeros/customeros/packages/server/events-subscribers/listeners/agents"
+	direct_listeners "github.com/customeros/customeros/packages/server/events-subscribers/listeners/direct"
+	events_listeners "github.com/customeros/customeros/packages/server/events-subscribers/listeners/events"
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
 
@@ -49,7 +51,7 @@ func (a *App) Initialize() error {
 	a.config = config.Load()
 
 	// Initialize logger
-	a.logger = logger.NewExtendedAppLogger(&a.config.Common.Infrastructure.LoggerConfig)
+	a.logger = logger.NewAppLogger(&a.config.Common.Infrastructure.LoggerConfig)
 	a.logger.InitLogger()
 	a.logger.WithName("events-subscribers")
 
@@ -177,18 +179,36 @@ func (a *App) initServices() error {
 }
 
 func (a *App) initializeListeners() error {
-	// Create and register listeners for each event type
-
 	// Contact Listeners
-	a.events.Subscriber.RegisterListener(listeners.NewAddSocialToContactListener(a.logger, a.deps))
-	a.events.Subscriber.RegisterListener(listeners.NewHideContactListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewAddSocialToContactListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewHideContactListener(a.logger, a.deps))
 
 	// Enrichment Listeners
-	a.events.Subscriber.RegisterListener(listeners.NewRequestEnrichContactListener(a.logger, a.deps))
-	a.events.Subscriber.RegisterListener(listeners.NewRequestValidateEmailListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewRequestEnrichContactListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewRequestValidateEmailListener(a.logger, a.deps))
 
 	// SKU Listeners
-	a.events.Subscriber.RegisterListener(listeners.NewSkuUpdateListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewSkuUpdateListener(a.logger, a.deps))
+
+	// Flow Listeners
+	a.events.Subscriber.RegisterListener(events_listeners.NewFlowComputeParticipantsRequirementsListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewFlowOnListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(direct_listeners.NewFlowParcipantScheduleListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewFlowParticipantGoalAchievedListener(a.logger, a.deps))
+
+	// Mailstack Listeners
+	a.events.Subscriber.RegisterListener(events_listeners.NewMailstackProvisionBuyRequestListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewMailstackProvisionMailboxListener(a.logger, a.deps))
+
+	// Organization Listeners
+	a.events.Subscriber.RegisterListener(events_listeners.NewRequestEnrichOrganizationListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(events_listeners.NewRequestRefreshLastTouchpointListener(a.logger, a.deps))
+
+	// Webvisit Listeners
+	a.events.Subscriber.RegisterListener(agent_listeners.NewWebsiteVisitListener(a.logger, a.deps))
+
+	// Intent Listeners
+	a.events.Subscriber.RegisterListener(agent_listeners.NewIntentDetectedListener(a.logger, a.deps))
 
 	return nil
 }
@@ -256,4 +276,18 @@ func (a *App) Shutdown() error {
 	}
 
 	return nil
+}
+
+func main() {
+	app := NewApp()
+
+	if err := app.Initialize(); err != nil {
+		fmt.Printf("Failed to initialize app: %v\n", err)
+		os.Exit(1)
+	}
+
+	if err := app.Run(); err != nil {
+		fmt.Printf("App failed to run: %v\n", err)
+		os.Exit(1)
+	}
 }

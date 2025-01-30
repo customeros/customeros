@@ -114,11 +114,11 @@ func (s *actionService) CreateActionForOrganization(ctx context.Context, txWithP
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err = s.events.Publisher.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.AddActionToOrganization{actionFields})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.AddActionToOrganization{actionFields})
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			return nil
 		})
 

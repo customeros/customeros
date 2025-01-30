@@ -1,10 +1,11 @@
-package listeners
+package events_listeners
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -19,7 +20,7 @@ type RequestEnrichContactListener struct {
 	dependencies *model.DependencyContainer
 }
 
-func NewRequestEnrichContactListener(logger logger.Logger, deps *model.DependencyContainer) events.EventListener {
+func NewRequestEnrichContactListener(logger logger.Logger, deps *model.DependencyContainer) interfaces.EventListener {
 	return &RequestEnrichContactListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,

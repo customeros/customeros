@@ -4,7 +4,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 )
 
-type IntentEvent struct {
+type IntentDetected struct {
 	EventName      enum.AgentListenerEvent
 	Source         enum.Source
 	SourceID       string // Id of source record producing event

@@ -4,15 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/postmark"
-	webhook "github.com/customeros/customeros/packages/server/customer-os-common-module/webhook_temporal"
-	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/emersion/go-message/mail"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -24,21 +15,30 @@ import (
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	commonpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
+	"github.com/emersion/go-message/mail"
 	"github.com/google/uuid"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/postmark"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	webhook "github.com/customeros/customeros/packages/server/customer-os-common-module/webhook_temporal"
 )
 
 type invoiceService struct {
@@ -65,7 +65,8 @@ func NewInvoiceService(log logger.Logger,
 	sli interfaces.ServiceLineItemService,
 	tenantSettings interfaces.TenantSettingsService,
 	postmarkService interfaces.PostmarkService,
-	fileService interfaces.FileService) interfaces.InvoiceService {
+	fileService interfaces.FileService,
+) interfaces.InvoiceService {
 	return &invoiceService{
 		log:                  log,
 		grpc:                 grpc,
@@ -1125,7 +1126,6 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 	}
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
-
 		err = s.neo4j.InvoiceWriteRepository.UpdateInvoice(ctx, txWithPostCommit.Tx, tenant, invoiceId, data)
 		if err != nil {
 			return nil, err
@@ -1194,7 +1194,7 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 				updateDto.PaymentLinkValidUntil = data.PaymentLinkValidUntil
 			}
 
-			err = s.events.Publisher.PublishEvent(ctx, invoiceId, model.INVOICE, updateDto)
+			err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, updateDto)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateInvoice"))
 			}
@@ -1292,7 +1292,7 @@ func (s *invoiceService) sendPaidInvoiceNotification(ctx context.Context, invoic
 	var invoiceEntity *neo4jentity.InvoiceEntity
 	var contractEntity neo4jentity.ContractEntity
 
-	//load invoice details
+	// load invoice details
 	invoiceEntity, err := s.GetById(ctx, nil, invoiceId)
 	if err != nil {
 		return nil
@@ -1325,7 +1325,7 @@ func (s *invoiceService) sendPaidInvoiceNotification(ctx context.Context, invoic
 		return nil
 	}
 
-	//load tenant billing profile from neo4j
+	// load tenant billing profile from neo4j
 	tenantBillingProfileEntity, err := s.loadTenantBillingProfile(ctx, tenant, false)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "loadTenantBillingProfile"))

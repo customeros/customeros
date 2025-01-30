@@ -146,16 +146,16 @@ func (s *jobRoleService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err = s.events.Publisher.PublishEvent(ctx, jobRoleId, model.JOB_ROLE, dto.SaveJobRole{dataFields})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, jobRoleId, model.JOB_ROLE, dto.SaveJobRole{dataFields})
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
 
 			if utils.IfNotNilString(contactId) != "" {
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, utils.IfNotNilString(contactId), model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, utils.IfNotNilString(contactId), model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 			}
 			if utils.IfNotNilString(organizationId) != "" {
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, utils.IfNotNilString(organizationId), model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, utils.IfNotNilString(organizationId), model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 			}
 
 			return nil

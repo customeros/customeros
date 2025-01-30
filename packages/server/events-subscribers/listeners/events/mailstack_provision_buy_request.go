@@ -1,29 +1,66 @@
-package oldlisteners
+package events_listeners
 
 import (
 	"context"
-	"errors"
-	"strings"
+	"fmt"
 	"sync"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	common_model "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
 
-func Handle_MailstackProvisionBuyRequest(ctx context.Context, dependencies *model.DependencyContainer, input any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_MailstackProvisionBuyRequest")
+type MailstackProvisionBuyRequestListener struct {
+	events.BaseEventListener
+	dependencies *model.DependencyContainer
+}
+
+func NewMailstackProvisionBuyRequestListener(logger logger.Logger, deps *model.DependencyContainer) interfaces.EventListener {
+	return &MailstackProvisionBuyRequestListener{
+		BaseEventListener: events.NewBaseEventListener(
+			logger,
+			events.GetEventType[dto.MailstackProvisionBuyRequest](), // subscribed event
+			events.QueueEvents, // listening on CustomerOS Events queue
+		),
+		dependencies: deps,
+	}
+}
+
+func (l *MailstackProvisionBuyRequestListener) Handle(ctx context.Context, baseEvent any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackProvisionBuyRequestListener.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
+	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
 
-	message := input.(*dto.Event)
+	event, err := l.ValidateBaseEvent(ctx, baseEvent)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
-	mailstackBuyRequest, err := dependencies.PostgresRepositories.MailstackBuyRequestRepository.GetById(ctx, message.Event.EntityId)
+	_, err = l.validateMessage(ctx, event)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return l.handle(ctx, event.Event.EntityId)
+}
+
+func (l *MailstackProvisionBuyRequestListener) handle(ctx context.Context, entityId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackProvisionBuyRequestListener.handle")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	mailstackBuyRequest, err := l.dependencies.PostgresRepositories.MailstackBuyRequestRepository.GetById(ctx, entityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -41,20 +78,20 @@ func Handle_MailstackProvisionBuyRequest(ctx context.Context, dependencies *mode
 		return nil
 	}
 
-	err = processDomains(ctx, dependencies, mailstackBuyRequest)
+	err = l.processDomains(ctx, mailstackBuyRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	err = processMailboxes(ctx, dependencies, mailstackBuyRequest)
+	err = l.processMailboxes(ctx, mailstackBuyRequest)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// reload latest state for domains
-	domains, err := dependencies.PostgresRepositories.MailstackBuyRequestRepository.GetDomains(ctx, mailstackBuyRequest.ID)
+	domains, err := l.dependencies.PostgresRepositories.MailstackBuyRequestRepository.GetDomains(ctx, mailstackBuyRequest.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -65,7 +102,7 @@ func Handle_MailstackProvisionBuyRequest(ctx context.Context, dependencies *mode
 			continue
 		}
 
-		mailboxes, err := dependencies.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, domain.Domain)
+		mailboxes, err := l.dependencies.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, domain.Domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -76,7 +113,7 @@ func Handle_MailstackProvisionBuyRequest(ctx context.Context, dependencies *mode
 				continue
 			}
 
-			err := dependencies.CommonServices.Events.Publisher.PublishEvent(ctx, mailbox.ID, commonModel.MAILBOX, dto.MailstackProvisionMailbox{})
+			err := l.dependencies.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, mailbox.ID, common_model.MAILBOX, dto.MailstackProvisionMailbox{})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
@@ -99,7 +136,7 @@ func Handle_MailstackProvisionBuyRequest(ctx context.Context, dependencies *mode
 			mailstackBuyRequest.Status = postgres_entity.MailstackBuyRequestStatusCompleted
 		}
 
-		_, err = dependencies.PostgresRepositories.MailstackBuyRequestRepository.Store(ctx, nil, mailstackBuyRequest)
+		_, err = l.dependencies.PostgresRepositories.MailstackBuyRequestRepository.Store(ctx, nil, mailstackBuyRequest)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -108,12 +145,12 @@ func Handle_MailstackProvisionBuyRequest(ctx context.Context, dependencies *mode
 	return nil
 }
 
-func processDomains(ctx context.Context, dependencies *model.DependencyContainer, mailstackBuyRequest *postgres_entity.MailstackBuyRequest) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_MailstackProvisionBuyRequest.processDomains")
+func (l *MailstackProvisionBuyRequestListener) processDomains(ctx context.Context, mailstackBuyRequest *postgres_entity.MailstackBuyRequest) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackProvisionBuyRequestListener.processDomains")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	domains, err := dependencies.PostgresRepositories.MailstackBuyRequestRepository.GetDomains(ctx, mailstackBuyRequest.ID)
+	domains, err := l.dependencies.PostgresRepositories.MailstackBuyRequestRepository.GetDomains(ctx, mailstackBuyRequest.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -134,7 +171,7 @@ func processDomains(ctx context.Context, dependencies *model.DependencyContainer
 
 			// Step 1 - Purchase domain in Namecheap
 			if domain.Status == postgres_entity.MailstackBuyRequestDomainStatusPendingProvisioning {
-				err := dependencies.CommonServices.NamecheapService.PurchaseDomain(ctx, domain.Tenant, domain.Domain)
+				err := l.dependencies.CommonServices.NamecheapService.PurchaseDomain(ctx, domain.Tenant, domain.Domain)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					mailstackBuyRequest.Status = postgres_entity.MailstackBuyRequestStatusFailed
@@ -143,7 +180,7 @@ func processDomains(ctx context.Context, dependencies *model.DependencyContainer
 					domain.Status = postgres_entity.MailstackBuyRequestDomainStatusPendingConfiguration
 				}
 
-				err = dependencies.PostgresRepositories.CommonRepository.UpdateProperty(ctx, domain.Tenant, postgres_entity.MailstackBuyRequestDomain{}, domain.ID, "Status", domain.Status)
+				err = l.dependencies.PostgresRepositories.CommonRepository.UpdateProperty(ctx, domain.Tenant, postgres_entity.MailstackBuyRequestDomain{}, domain.ID, "Status", domain.Status)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return // Exit the goroutine on error
@@ -152,14 +189,14 @@ func processDomains(ctx context.Context, dependencies *model.DependencyContainer
 
 			// Step 2 - Configure domain in Mailstack
 			if domain.Status == postgres_entity.MailstackBuyRequestDomainStatusPendingConfiguration {
-				err := dependencies.CommonServices.MailstackService.ConfigureMailstackDomain(ctx, domain.Domain, domain.RedirectWebsite)
+				err := l.dependencies.CommonServices.MailstackService.ConfigureMailstackDomain(ctx, domain.Domain, domain.RedirectWebsite)
 				if err != nil {
 					tracing.TraceErr(span, err)
 				} else {
 					domain.Status = postgres_entity.MailstackBuyRequestDomainStatusCompleted
 				}
 
-				err = dependencies.PostgresRepositories.CommonRepository.UpdateProperty(ctx, domain.Tenant, postgres_entity.MailstackBuyRequestDomain{}, domain.ID, "Status", domain.Status)
+				err = l.dependencies.PostgresRepositories.CommonRepository.UpdateProperty(ctx, domain.Tenant, postgres_entity.MailstackBuyRequestDomain{}, domain.ID, "Status", domain.Status)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return // Exit the goroutine on error
@@ -172,12 +209,12 @@ func processDomains(ctx context.Context, dependencies *model.DependencyContainer
 	return nil
 }
 
-func processMailboxes(ctx context.Context, dependencies *model.DependencyContainer, mailstackBuyRequest *postgres_entity.MailstackBuyRequest) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_MailstackProvisionBuyRequest.processMailboxes")
+func (l *MailstackProvisionBuyRequestListener) processMailboxes(ctx context.Context, mailstackBuyRequest *postgres_entity.MailstackBuyRequest) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackProvisionBuyRequestListener.processMailboxes")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	domains, err := dependencies.PostgresRepositories.MailstackBuyRequestRepository.GetDomains(ctx, mailstackBuyRequest.ID)
+	domains, err := l.dependencies.PostgresRepositories.MailstackBuyRequestRepository.GetDomains(ctx, mailstackBuyRequest.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -200,7 +237,7 @@ func processMailboxes(ctx context.Context, dependencies *model.DependencyContain
 			sem <- struct{}{}        // Acquire semaphore
 			defer func() { <-sem }() // Release semaphore
 
-			mailboxes, err := dependencies.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, domain.Domain)
+			mailboxes, err := l.dependencies.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, domain.Domain)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return // Exit the goroutine on error
@@ -211,7 +248,7 @@ func processMailboxes(ctx context.Context, dependencies *model.DependencyContain
 					continue
 				}
 
-				err := dependencies.CommonServices.Events.Publisher.PublishEvent(ctx, mailbox.ID, commonModel.MAILBOX, dto.MailstackProvisionMailbox{})
+				err := l.dependencies.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, mailbox.ID, common_model.MAILBOX, dto.MailstackProvisionMailbox{})
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return
@@ -224,32 +261,23 @@ func processMailboxes(ctx context.Context, dependencies *model.DependencyContain
 	return nil
 }
 
-func Handle_MailstackProvisionMailbox(ctx context.Context, dependencies *model.DependencyContainer, input any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.Handle_MailstackProvisionMailbox")
+func (l *MailstackProvisionBuyRequestListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.MailstackProvisionBuyRequest, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MailstackProvisionBuyRequestListener.validateMessage")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
 
-	message := input.(*dto.Event)
-
-	mailbox, err := dependencies.PostgresRepositories.TenantSettingsMailboxRepository.GetById(ctx, message.Event.EntityId)
-	if err != nil {
+	message, ok := event.Event.Data.(*dto.MailstackProvisionBuyRequest)
+	if !ok {
+		err := fmt.Errorf("expected MailstackProvisionBuyRequest, got %T", event.Event.Data)
 		tracing.TraceErr(span, err)
-		return err
+		return nil, err
 	}
 
-	err = dependencies.CommonServices.OpenSRSService.SetupMailbox(ctx, mailbox.Tenant, mailbox.MailboxUsername, mailbox.MailboxPassword, strings.Split(mailbox.ForwardingTo, ","), mailbox.WebmailEnabled)
-	if err != nil {
+	if event.Event.EntityId == "" {
+		err := errors.New("EntityId not set on event")
 		tracing.TraceErr(span, err)
-		return err
+		return nil, err
 	}
 
-	mailbox.Status = postgres_entity.MailboxStatusProvisioned
-
-	err = dependencies.PostgresRepositories.CommonRepository.UpdateProperty(ctx, mailbox.Tenant, postgres_entity.TenantSettingsMailbox{}, mailbox.ID, "Status", mailbox.Status)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-
-	return nil
+	return message, nil
 }

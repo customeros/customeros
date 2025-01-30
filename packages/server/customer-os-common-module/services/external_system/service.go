@@ -74,7 +74,7 @@ func (s *externalSystemService) SetPrimaryExternalId(ctx context.Context, extern
 
 	// Send completion event if link with is an organization
 	if linkWith.Type == model.ORGANIZATION {
-		s.events.Publisher.PublishEventCompleted(ctx, tenant, linkWith.Id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+		s.events.Publisher.PublishNotification(ctx, tenant, linkWith.Id, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 	}
 	return nil
 }

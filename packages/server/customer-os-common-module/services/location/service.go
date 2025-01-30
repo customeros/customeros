@@ -284,13 +284,13 @@ func (s *locationService) Create(ctx context.Context, txWithPostCommit *utils.Tx
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			innerErr := s.events.Publisher.PublishEvent(ctx, locationId, model.CONTACT, dto.CreateLocation{locationFields})
+			innerErr := s.events.Publisher.PublishFanoutEvent(ctx, locationId, model.CONTACT, dto.CreateLocation{locationFields})
 			if innerErr != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateLocation"))
 			}
 
 			if linkWith != nil {
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, linkWith.Id, linkWith.Type, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, linkWith.Id, linkWith.Type, utils.NewEventCompletedDetails().WithUpdate())
 			}
 
 			return nil

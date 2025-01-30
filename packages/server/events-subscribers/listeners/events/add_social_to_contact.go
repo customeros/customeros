@@ -1,4 +1,4 @@
-package listeners
+package events_listeners
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -21,7 +22,7 @@ type AddSocialToContactListener struct {
 	dependencies *model.DependencyContainer
 }
 
-func NewAddSocialToContactListener(logger logger.Logger, deps *model.DependencyContainer) events.EventListener {
+func NewAddSocialToContactListener(logger logger.Logger, deps *model.DependencyContainer) interfaces.EventListener {
 	return &AddSocialToContactListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,

@@ -1,4 +1,4 @@
-package listeners
+package events_listeners
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -20,12 +21,12 @@ type SkuUpdateListener struct {
 	dependencies *model.DependencyContainer
 }
 
-func NewSkuUpdateListener(logger logger.Logger, deps *model.DependencyContainer) events.EventListener {
+func NewSkuUpdateListener(logger logger.Logger, deps *model.DependencyContainer) interfaces.EventListener {
 	return &SkuUpdateListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
-			events.GetEventType[dto.HideContact](), // subscribed event
-			events.QueueEvents,                     // listening on CustomerOS Events queue
+			events.GetEventType[dto.SkuUpdate](), // subscribed event
+			events.QueueEvents,                   // listening on CustomerOS Events queue
 		),
 		dependencies: deps,
 	}
@@ -59,11 +60,11 @@ func (l *SkuUpdateListener) Handle(ctx context.Context, baseEvent any) error {
 	skuId := event.Event.EntityId
 	span.SetTag(tracing.SpanTagEntityId, skuId)
 
-	return l.onSkuUpdate(ctx, skuId)
+	return l.handle(ctx, skuId)
 }
 
-func (l *SkuUpdateListener) onSkuUpdate(ctx context.Context, skuId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SkuUpdateListener.onSkuUpdate")
+func (l *SkuUpdateListener) handle(ctx context.Context, skuId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "SkuUpdateListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
@@ -113,14 +114,14 @@ func (l *SkuUpdateListener) onSkuUpdate(ctx context.Context, skuId string) error
 	return nil
 }
 
-func (l *SkuUpdateListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.HideContact, error) {
+func (l *SkuUpdateListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.SkuUpdate, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SkuUpdateListener.validateMessage")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	message, ok := event.Event.Data.(*dto.HideContact)
+	message, ok := event.Event.Data.(*dto.SkuUpdate)
 	if !ok {
-		err := fmt.Errorf("expected RequestEnrichContact, got %T", event.Event.Data)
+		err := fmt.Errorf("expected SkuUpdate, got %T", event.Event.Data)
 		tracing.TraceErr(span, err)
 		return nil, err
 	}

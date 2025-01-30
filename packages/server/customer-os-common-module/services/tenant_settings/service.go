@@ -93,7 +93,7 @@ func (s *tenantSettingsService) UpdateTenantSettings(ctx context.Context, dataFi
 	}
 
 	// send event to RabbitMQ
-	err = s.events.Publisher.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateTenantSettings{dataFields})
+	err = s.events.Publisher.PublishFanoutEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateTenantSettings{dataFields})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateTenantSettings"))
 	}
@@ -190,7 +190,7 @@ func (s *tenantSettingsService) CreateBankAccount(ctx context.Context, dataField
 	}
 
 	// send event to RabbitMQ
-	err = s.events.Publisher.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.CreateBankAccount{dataFields})
+	err = s.events.Publisher.PublishFanoutEvent(ctx, tenant, model.TENANT_SETTINGS, dto.CreateBankAccount{dataFields})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateBankAccount"))
 	}
@@ -235,7 +235,7 @@ func (s *tenantSettingsService) UpdateBankAccount(ctx context.Context, bankAccou
 	}
 
 	// send event to RabbitMQ
-	err = s.events.Publisher.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateBankAccount{dataFields})
+	err = s.events.Publisher.PublishFanoutEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateBankAccount{dataFields})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateBankAccount"))
 	}
@@ -273,7 +273,7 @@ func (s *tenantSettingsService) DeleteBankAccount(ctx context.Context, bankAccou
 	}
 
 	// send event to RabbitMQ
-	err = s.events.Publisher.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.DeleteBankAccount{ID: bankAccountId})
+	err = s.events.Publisher.PublishFanoutEvent(ctx, tenant, model.TENANT_SETTINGS, dto.DeleteBankAccount{ID: bankAccountId})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message DeleteBankAccount"))
 	}
@@ -321,7 +321,7 @@ func (s *tenantSettingsService) CreateTenantBillingProfile(ctx context.Context, 
 	}
 
 	// send event to RabbitMQ
-	err = s.events.Publisher.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.CreateTenantBillingProfile{dataFields})
+	err = s.events.Publisher.PublishFanoutEvent(ctx, tenant, model.TENANT_SETTINGS, dto.CreateTenantBillingProfile{dataFields})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateTenantBillingProfile"))
 	}
@@ -366,7 +366,7 @@ func (s *tenantSettingsService) UpdateTenantBillingProfile(ctx context.Context, 
 	}
 
 	// send event to RabbitMQ
-	err = s.events.Publisher.PublishEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateTenantBillingProfile{dataFields})
+	err = s.events.Publisher.PublishFanoutEvent(ctx, tenant, model.TENANT_SETTINGS, dto.UpdateTenantBillingProfile{dataFields})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateTenantBillingProfile"))
 	}

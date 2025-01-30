@@ -205,20 +205,20 @@ func (s *contactService) Save(ctx context.Context, txWithPostCommit *utils.TxWit
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			if createFlow {
-				err = s.events.Publisher.PublishEvent(ctx, contactId, model.CONTACT, dto.CreateContact{contactFields})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, contactId, model.CONTACT, dto.CreateContact{contactFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContact"))
 				}
 				if common_srv.PublishCompletedEvents(options...) {
-					s.events.Publisher.PublishEventCompleted(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithCreate())
+					s.events.Publisher.PublishNotification(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithCreate())
 				}
 			} else {
-				err = s.events.Publisher.PublishEvent(ctx, contactId, model.CONTACT, dto.UpdateContact{contactFields})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, contactId, model.CONTACT, dto.UpdateContact{contactFields})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContact"))
 				}
 				if common_srv.PublishCompletedEvents(options...) && common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-					s.events.Publisher.PublishEventCompleted(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+					s.events.Publisher.PublishNotification(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 				}
 			}
 
@@ -291,12 +291,12 @@ func (s *contactService) HideContact(ctx context.Context, txWithPostCommit *util
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err = s.events.Publisher.PublishEvent(ctx, contactId, model.CONTACT, dto.HideContact{})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, contactId, model.CONTACT, dto.HideContact{})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message HideContact"))
 			}
 
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithDelete())
+			s.events.Publisher.PublishNotification(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithDelete())
 			return nil
 		})
 		return nil, nil
@@ -337,12 +337,12 @@ func (s *contactService) ShowContact(ctx context.Context, txWithPostCommit *util
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			err = s.events.Publisher.PublishEvent(ctx, contactId, model.CONTACT, dto.ShowContact{})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, contactId, model.CONTACT, dto.ShowContact{})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message ShowContact"))
 			}
 
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithCreate())
+			s.events.Publisher.PublishNotification(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithCreate())
 
 			return nil
 		})
@@ -491,8 +491,8 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 		_ = s.neo4j.ContactWriteRepository.ResetEnrichAttempts(ctx, txWithPostCommit.Tx, tenant, contactId)
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, contactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 			// send 2 events, for contact another for organization
 			dtoData := dto.AddContactToOrganization{
@@ -505,11 +505,11 @@ func (s *contactService) LinkContactWithOrganization(ctx context.Context, txWith
 				EndedAt:        endedAt,
 			}
 
-			innerErr = s.events.Publisher.PublishEvent(ctx, contactId, model.CONTACT, dtoData)
+			innerErr = s.events.Publisher.PublishFanoutEvent(ctx, contactId, model.CONTACT, dtoData)
 			if innerErr != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddContactToOrganization for contact"))
 			}
-			innerErr = s.events.Publisher.PublishEvent(ctx, organizationId, model.ORGANIZATION, dtoData)
+			innerErr = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dtoData)
 			if innerErr != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddContactToOrganization for organization"))
 			}
@@ -623,7 +623,7 @@ func (s *contactService) CreateContactByLinkedIn(ctx context.Context, txWithPost
 						}
 						txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 							if common_srv.PublishCompletedEvents(options...) {
-								s.events.Publisher.PublishEventCompleted(ctx, tenant, existingContactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+								s.events.Publisher.PublishNotification(ctx, tenant, existingContactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 							}
 							return nil
 						})
@@ -728,7 +728,7 @@ func (s *contactService) CreateContactByEmail(ctx context.Context, txWithPostCom
 				}
 				txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 					if common_srv.PublishCompletedEvents(options...) {
-						s.events.Publisher.PublishEventCompleted(ctx, tenant, existingContactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+						s.events.Publisher.PublishNotification(ctx, tenant, existingContactId, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 					}
 					return nil
 				})

@@ -148,18 +148,18 @@ func (s *logEntryService) Save(ctx context.Context, id *string, logEntryFields d
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to request refresh last touchpoint"))
 		}
-		err = s.events.Publisher.PublishEvent(ctx, logEntryId, model.LOG_ENTRY, dto.CreateLogEntry{logEntryFields})
+		err = s.events.Publisher.PublishFanoutEvent(ctx, logEntryId, model.LOG_ENTRY, dto.CreateLogEntry{logEntryFields})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateLogEntry"))
 		}
-		s.events.Publisher.PublishEventCompleted(ctx, tenant, logEntryId, model.LOG_ENTRY, utils.NewEventCompletedDetails().WithCreate())
+		s.events.Publisher.PublishNotification(ctx, tenant, logEntryId, model.LOG_ENTRY, utils.NewEventCompletedDetails().WithCreate())
 	} else {
-		err = s.events.Publisher.PublishEvent(ctx, logEntryId, model.LOG_ENTRY, dto.UpdateLogEntry{logEntryFields})
+		err = s.events.Publisher.PublishFanoutEvent(ctx, logEntryId, model.LOG_ENTRY, dto.UpdateLogEntry{logEntryFields})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateLogEntry"))
 		}
 		if common.GetTenantFromContext(ctx) != constants.AppSourceCustomerOsApi {
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, logEntryId, model.LOG_ENTRY, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, logEntryId, model.LOG_ENTRY, utils.NewEventCompletedDetails().WithUpdate())
 		}
 	}
 

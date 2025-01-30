@@ -2,9 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
-	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
-	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -16,7 +15,10 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/pkg/errors"
-	"time"
+
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 )
 
 type OrganizationService interface {
@@ -78,7 +80,7 @@ func (s *organizationService) RefreshLastTouchpoint() {
 			return
 		}
 
-		//process organizations
+		// process organizations
 		for _, record := range records {
 			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 				Tenant:    record.Tenant,
@@ -152,7 +154,7 @@ func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context)
 			return
 		}
 
-		//process organizations
+		// process organizations
 		for _, record := range records {
 
 			localCtx := common.WithCustomContext(ctx, &common.CustomContext{
@@ -170,7 +172,7 @@ func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context)
 			return
 		}
 
-		//sleep for async processing, then check again
+		// sleep for async processing, then check again
 		time.Sleep(5 * time.Second)
 
 		// force exit after single iteration
@@ -207,7 +209,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 			return
 		}
 
-		//process organizations
+		// process organizations
 		for _, record := range records {
 			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 				Tenant:    record.Tenant,
@@ -278,13 +280,13 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 			return
 		}
 
-		//process organizations
+		// process organizations
 		for _, record := range records {
 			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 				Tenant:    record.Tenant,
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
-			err = s.commonServices.Events.Publisher.PublishEvent(innerCtx, record.OrganizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: record.Param1})
+			err = s.commonServices.Events.Publisher.PublishFanoutEvent(innerCtx, record.OrganizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: record.Param1})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error enriching organization {%s}: %s", record.OrganizationId, err.Error())
@@ -333,7 +335,7 @@ func (s *organizationService) removeEmptySocials(ctx context.Context) {
 		return
 	}
 
-	//remove socials from organization
+	// remove socials from organization
 	for _, record := range records {
 		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 			Tenant:    record.Tenant,
@@ -372,7 +374,7 @@ func (s *organizationService) removeDuplicatedSocials(ctx context.Context) {
 		return
 	}
 
-	//remove socials from organization
+	// remove socials from organization
 	for _, record := range records {
 		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 			Tenant:    record.Tenant,
@@ -391,7 +393,6 @@ func (s *organizationService) removeDuplicatedSocials(ctx context.Context) {
 			s.log.Errorf("Error removing social {%s}: %s", record.SocialId, err.Error())
 		}
 	}
-
 }
 
 func (s *organizationService) SendReminders() {

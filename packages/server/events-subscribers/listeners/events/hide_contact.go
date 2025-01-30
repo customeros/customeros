@@ -1,4 +1,4 @@
-package listeners
+package events_listeners
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -20,7 +21,7 @@ type HideContactListener struct {
 	dependencies *model.DependencyContainer
 }
 
-func NewHideContactListener(logger logger.Logger, deps *model.DependencyContainer) events.EventListener {
+func NewHideContactListener(logger logger.Logger, deps *model.DependencyContainer) interfaces.EventListener {
 	return &HideContactListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
@@ -66,7 +67,7 @@ func (l *HideContactListener) validateMessage(ctx context.Context, event *dto.Ev
 
 	message, ok := event.Event.Data.(*dto.HideContact)
 	if !ok {
-		err := fmt.Errorf("expected RequestEnrichContact, got %T", event.Event.Data)
+		err := fmt.Errorf("expected HideContact, got %T", event.Event.Data)
 		tracing.TraceErr(span, err)
 		return nil, err
 	}

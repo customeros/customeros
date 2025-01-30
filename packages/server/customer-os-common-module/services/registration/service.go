@@ -529,7 +529,7 @@ func (s *registrationService) createMailboxIfNotExists(ctx context.Context, span
 			return err
 		}
 
-		err = s.events.Publisher.PublishEvent(ctx, mailboxEntity.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
+		err = s.events.Publisher.PublishFanoutEvent(ctx, mailboxEntity.ID, model.MAILBOX, dto.MailstackProvisionMailbox{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

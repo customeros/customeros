@@ -1,4 +1,4 @@
-package listeners
+package events_listeners
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -23,7 +24,7 @@ type RequestValidateEmailListener struct {
 	dependencies *model.DependencyContainer
 }
 
-func NewRequestValidateEmailListener(logger logger.Logger, deps *model.DependencyContainer) events.EventListener {
+func NewRequestValidateEmailListener(logger logger.Logger, deps *model.DependencyContainer) interfaces.EventListener {
 	return &RequestValidateEmailListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
@@ -71,14 +72,14 @@ func (l *RequestValidateEmailListener) Handle(ctx context.Context, baseEvent any
 	return l.validateEmail(ctx, emailId, emailEntity.RawEmail)
 }
 
-func (l *RequestValidateEmailListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.RequestEnrichContact, error) {
+func (l *RequestValidateEmailListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.RequestValidateEmail, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestValidateEmailListener.validateMessage")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	message, ok := event.Event.Data.(*dto.RequestEnrichContact)
+	message, ok := event.Event.Data.(*dto.RequestValidateEmail)
 	if !ok {
-		err := fmt.Errorf("expected RequestEnrichContact, got %T", event.Event.Data)
+		err := fmt.Errorf("expected RequestValidateEmail, got %T", event.Event.Data)
 		tracing.TraceErr(span, err)
 		return nil, err
 	}

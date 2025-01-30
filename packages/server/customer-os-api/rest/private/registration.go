@@ -824,7 +824,7 @@ func initializeUser(c context.Context, services *cosapi_services.Services, provi
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
-		err = services.CommonServices.Events.Publisher.PublishEvent(innerCtx, userId, model.USER, dto.UserLogin{LoginEmail: email, Provider: provider, IdentityId: providerAccountId})
+		err = services.CommonServices.Events.Publisher.PublishFanoutEvent(innerCtx, userId, model.USER, dto.UserLogin{LoginEmail: email, Provider: provider, IdentityId: providerAccountId})
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}

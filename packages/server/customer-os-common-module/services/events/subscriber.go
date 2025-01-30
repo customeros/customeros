@@ -13,6 +13,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
@@ -29,7 +30,7 @@ type RabbitMQSubscriber struct {
 	url             string
 	logger          logger.Logger
 	config          SubscriberConfig
-	listeners       map[string]EventListener
+	listeners       map[string]interfaces.EventListener
 	listenerMutex   sync.RWMutex
 }
 
@@ -46,7 +47,7 @@ func NewRabbitMQSubscriber(rabbitmqURL string, logger logger.Logger, config *Sub
 		url:       rabbitmqURL,
 		logger:    logger,
 		config:    *config,
-		listeners: make(map[string]EventListener),
+		listeners: make(map[string]interfaces.EventListener),
 	}
 
 	err := subscriber.connect()
@@ -57,7 +58,7 @@ func NewRabbitMQSubscriber(rabbitmqURL string, logger logger.Logger, config *Sub
 	return subscriber, nil
 }
 
-func (r *RabbitMQSubscriber) RegisterListener(listener EventListener) {
+func (r *RabbitMQSubscriber) RegisterListener(listener interfaces.EventListener) {
 	r.listenerMutex.Lock()
 	defer r.listenerMutex.Unlock()
 

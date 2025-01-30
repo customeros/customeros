@@ -73,7 +73,7 @@ func (p *WebVisitProcessor) processSupportSignal(ctx context.Context, webSession
 		return err
 	}
 
-	event := dto.IntentEvent{
+	event := dto.IntentDetected{
 		EventName:      enum.EventIntentSignal,
 		Source:         enum.SourceWebtracker,
 		SourceID:       webSession.ID,
@@ -82,7 +82,7 @@ func (p *WebVisitProcessor) processSupportSignal(ctx context.Context, webSession
 		OrganizationID: orgID,
 	}
 
-	err = p.events.Publisher.PublishEvent(ctx, orgID, model.INTENT_SIGNAL, &event)
+	err = p.events.Publisher.PublishFanoutEvent(ctx, orgID, model.INTENT_SIGNAL, &event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

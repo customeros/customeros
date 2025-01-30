@@ -15,7 +15,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -113,7 +112,7 @@ func (s *enrichmentService) EnrichContact(ctx context.Context, contactId, linked
 		// if not found domain from organization, get one from email, check it's not a personal one
 		if domain == "" && emailAddress != "" {
 			emailDomain := utils.ExtractDomainFromEmail(emailAddress)
-			if !caches.IsPersonalEmailProvider(emailDomain) {
+			if !s.cache.IsPersonalEmailProvider(emailDomain) {
 				domain = emailDomain
 			}
 		}
@@ -132,7 +131,7 @@ func (s *enrichmentService) EnrichContact(ctx context.Context, contactId, linked
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich requested at"))
 		}
-		s.events.Publisher.PublishEventCompleted(ctx, tenant, contactId, commonModel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+		s.events.Publisher.PublishNotification(ctx, tenant, contactId, commonModel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 
 		query := interfaces.PersonSearch{
 			LinkedinURL: linkedInUrl,

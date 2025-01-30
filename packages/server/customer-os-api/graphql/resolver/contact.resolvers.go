@@ -13,14 +13,6 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
-	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -33,6 +25,15 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
+	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // Tags is the resolver for the tags field.
@@ -430,7 +431,7 @@ func (r *mutationResolver) ContactCreateBulkByLinkedIn(ctx context.Context, link
 
 			if flowsUpdated != nil && len(flowsUpdated) > 0 {
 				for _, flowData := range flowsUpdated {
-					r.Services.CommonServices.Events.Publisher.PublishEventCompletedBulk(ctx, flowData.Tenant, flowData.Strings, commonmodel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+					r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonmodel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 				}
 			}
 		}
@@ -526,7 +527,7 @@ func (r *mutationResolver) ContactCreateBulkByEmail(ctx context.Context, emails 
 
 			if flowsUpdated != nil && len(flowsUpdated) > 0 {
 				for _, flowData := range flowsUpdated {
-					r.Services.CommonServices.Events.Publisher.PublishEventCompletedBulk(ctx, flowData.Tenant, flowData.Strings, commonmodel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
+					r.Services.CommonServices.Events.Publisher.PublishNotificationBulk(ctx, flowData.Tenant, flowData.Strings, commonmodel.FLOW, utils.NewEventCompletedDetails().WithUpdate())
 				}
 			}
 		}
@@ -942,7 +943,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 				tracing.TraceErr(span, err)
 			}
 		}
-		r.Services.CommonServices.Events.Publisher.PublishEventCompleted(ctx, tenant, contactID, commonmodel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+		r.Services.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, contactID, commonmodel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 		return &model.ActionResponse{Accepted: true}, nil
 	}
 
@@ -1060,7 +1061,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		}
 	}
 
-	r.Services.CommonServices.Events.Publisher.PublishEventCompleted(ctx, tenant, contactID, commonmodel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+	r.Services.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, contactID, commonmodel.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 	return &model.ActionResponse{Accepted: true}, nil
 }
 

@@ -248,7 +248,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 								s.log.Errorf("Failed to update organization updated at property: %v", err.Error())
 							}
 							txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-								s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+								s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 								return nil
 							})
 						}
@@ -291,7 +291,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 								s.log.Errorf("Failed to update organization updated at property: %v", err.Error())
 							}
 							txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-								s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationByLinkedInEntity.ID, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+								s.events.Publisher.PublishNotification(ctx, tenant, organizationByLinkedInEntity.ID, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 								return nil
 							})
 						}
@@ -523,18 +523,18 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		// add post commit actions to send events
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			if createFlow {
-				err = s.events.Publisher.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.CreateOrganization{input})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.CreateOrganization{input})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateOrganization"))
 				}
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithCreate())
+				s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithCreate())
 			} else {
-				err = s.events.Publisher.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.UpdateOrganization{input})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.UpdateOrganization{input})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateOrganization"))
 				}
 				if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-					s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+					s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 				}
 			}
 			return nil
@@ -560,7 +560,7 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 				}
 				// invoke enrich organization by domain
 				if localPrimaryDomain != "" {
-					err = s.events.Publisher.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: localPrimaryDomain})
+					err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: localPrimaryDomain})
 					if err != nil {
 						tracing.TraceErr(span, err)
 					}
@@ -620,7 +620,7 @@ func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			// send event completed for organization
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithDelete())
+			s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithDelete())
 
 			// send event completed for all organization contacts
 			contactDbNodes, innerErr := s.neo4j.ContactReadRepository.GetActiveContactsForOrganizations(ctx, tenant, []string{organizationId})
@@ -629,7 +629,7 @@ func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.
 			} else {
 				for _, contactDbNode := range contactDbNodes {
 					contactEntity := neo4jmapper.MapDbNodeToContactEntity(contactDbNode.Node)
-					s.events.Publisher.PublishEventCompleted(ctx, tenant, contactEntity.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
+					s.events.Publisher.PublishNotification(ctx, tenant, contactEntity.Id, model.CONTACT, utils.NewEventCompletedDetails().WithUpdate())
 				}
 			}
 			return nil
@@ -678,7 +678,7 @@ func (s *organizationService) Show(ctx context.Context, txWithPostCommit *utils.
 		}
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithCreate())
+			s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithCreate())
 			err = s.RequestRefreshLastTouchpoint(ctx, organizationId)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -723,17 +723,17 @@ func (s *organizationService) AddParentOrganization(ctx context.Context, txWithP
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			// add events to both parent and sub organizations
-			err = s.events.Publisher.PublishEvent(ctx, parentOrganizationId, model.ORGANIZATION, dto.AddSubOrganization{SubOrganizationId: subOrganizationId})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, parentOrganizationId, model.ORGANIZATION, dto.AddSubOrganization{SubOrganizationId: subOrganizationId})
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
-			err = s.events.Publisher.PublishEvent(ctx, subOrganizationId, model.ORGANIZATION, dto.AddParentOrganization{ParentOrganizationId: parentOrganizationId})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, subOrganizationId, model.ORGANIZATION, dto.AddParentOrganization{ParentOrganizationId: parentOrganizationId})
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
 
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, parentOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, subOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, parentOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, subOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 			return nil
 		})
@@ -782,17 +782,17 @@ func (s *organizationService) RemoveParentOrganization(ctx context.Context, txWi
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			// add events to both parent and sub organizations
-			err = s.events.Publisher.PublishEvent(ctx, parentOrganizationId, model.ORGANIZATION, dto.RemoveSubOrganization{SubOrganizationId: subOrganizationId})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, parentOrganizationId, model.ORGANIZATION, dto.RemoveSubOrganization{SubOrganizationId: subOrganizationId})
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
-			err = s.events.Publisher.PublishEvent(ctx, subOrganizationId, model.ORGANIZATION, dto.RemoveParentOrganization{ParentOrganizationId: parentOrganizationId})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, subOrganizationId, model.ORGANIZATION, dto.RemoveParentOrganization{ParentOrganizationId: parentOrganizationId})
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
 
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, parentOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, subOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, parentOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, subOrganizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 			return nil
 		})
@@ -896,12 +896,12 @@ func (s *organizationService) UpdateOnboardingStatus(ctx context.Context, txWith
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			// add events to both parent and sub organizations
-			err = s.events.Publisher.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.UpdateOrganizationOnboardingStatus{dataFields})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.UpdateOrganizationOnboardingStatus{dataFields})
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
 
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 			return nil
 		})
@@ -1055,7 +1055,7 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 		if domainLinkedSuccessfully {
 			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 				// send organization enrich request
-				err = s.events.Publisher.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: domain})
+				err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestEnrichOrganization{Url: domain})
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to publish event RequestEnrichOrganization"))
 				}
@@ -1064,13 +1064,13 @@ func (s *organizationService) LinkWithDomain(ctx context.Context, txWithPostComm
 
 			txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 				// send event to rabbitmq
-				err = s.events.Publisher.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.NewAddDomainEvent(domain))
+				err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.NewAddDomainEvent(domain))
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to publish event AddDomain"))
 				}
 
 				// send event to events platform
-				s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+				s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 				return nil
 			})
@@ -1116,13 +1116,13 @@ func (s *organizationService) UnlinkDomain(ctx context.Context, txWithPostCommit
 
 		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			// send event to rabbitmq
-			err = s.events.Publisher.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RemoveDomain{Domain: domain})
+			err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.RemoveDomain{Domain: domain})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to publish event RemoveDomain"))
 			}
 
 			// send event to events platform
-			s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+			s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 			return nil
 		})
@@ -1180,7 +1180,7 @@ func (s *organizationService) RequestRefreshLastTouchpoint(ctx context.Context, 
 		return err
 	}
 
-	err = s.events.Publisher.PublishEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestRefreshLastTouchpoint{})
+	err = s.events.Publisher.PublishFanoutEvent(ctx, organizationId, model.ORGANIZATION, dto.RequestRefreshLastTouchpoint{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to publish event RequestRefreshLastTouchpoint"))
 		return err
@@ -1326,7 +1326,7 @@ func (s *organizationService) RefreshLastTouchpoint(ctx context.Context, organiz
 		return err
 	}
 
-	s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+	s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -1428,7 +1428,7 @@ func (s *organizationService) UpdateDerivedData(ctx context.Context, organizatio
 		tracing.TraceErr(span, errors.Wrap(err, "failed to calculate ltv"))
 	}
 
-	s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+	s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 	return nil
 }
 
@@ -1485,7 +1485,7 @@ func (s *organizationService) UpdateRenewalSummary(ctx context.Context, organiza
 		return err
 	}
 
-	s.events.Publisher.PublishEventCompleted(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
+	s.events.Publisher.PublishNotification(ctx, tenant, organizationId, model.ORGANIZATION, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }

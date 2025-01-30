@@ -88,7 +88,7 @@ func (s *tagService) Save(ctx context.Context, tx *neo4j.ManagedTransaction, inp
 		return nil, err
 	}
 
-	err = s.events.Publisher.PublishEvent(ctx, tagEntity.Id, model.TAG, dto.SaveTag{
+	err = s.events.Publisher.PublishFanoutEvent(ctx, tagEntity.Id, model.TAG, dto.SaveTag{
 		EntityType: utils.StringPtr(tagEntity.EntityType.String()),
 		Name:       utils.StringPtr(tagEntity.Name),
 		ColorCode:  utils.StringPtr(tagEntity.ColorCode),
@@ -149,13 +149,13 @@ func (s *tagService) AddTagToEntity(ctx context.Context, tx *neo4j.ManagedTransa
 	}
 
 	// event for tag added
-	err = s.events.Publisher.PublishEvent(ctx, entityId, entityType, dto.NewAddTagEvent(tagId, tagName))
+	err = s.events.Publisher.PublishFanoutEvent(ctx, entityId, entityType, dto.NewAddTagEvent(tagId, tagName))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddTagEvent"))
 	}
 
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-		s.events.Publisher.PublishEventCompleted(ctx, tenant, entityId, entityType, utils.NewEventCompletedDetails().WithUpdate())
+		s.events.Publisher.PublishNotification(ctx, tenant, entityId, entityType, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	return tagId, nil
@@ -198,13 +198,13 @@ func (s *tagService) RemoveTagFromEntity(ctx context.Context, tx *neo4j.ManagedT
 	}
 
 	// event for tag removed
-	err = s.events.Publisher.PublishEvent(ctx, entityId, entityType, dto.NewRemoveTagEvent(tagEntity.Id, tagEntity.Name))
+	err = s.events.Publisher.PublishFanoutEvent(ctx, entityId, entityType, dto.NewRemoveTagEvent(tagEntity.Id, tagEntity.Name))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveTagEvent"))
 	}
 
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
-		s.events.Publisher.PublishEventCompleted(ctx, tenant, entityId, entityType, utils.NewEventCompletedDetails().WithUpdate())
+		s.events.Publisher.PublishNotification(ctx, tenant, entityId, entityType, utils.NewEventCompletedDetails().WithUpdate())
 	}
 
 	return nil
@@ -243,7 +243,7 @@ func (s *tagService) Update(ctx context.Context, tagId string, name, colorCode *
 		return err
 	}
 
-	err = s.events.Publisher.PublishEvent(ctx, tagId, model.TAG, dto.SaveTag{
+	err = s.events.Publisher.PublishFanoutEvent(ctx, tagId, model.TAG, dto.SaveTag{
 		Name:      name,
 		ColorCode: colorCode,
 	})

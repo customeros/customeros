@@ -157,9 +157,24 @@ func InitCommonServices(
 
 	// Base services
 	cacheImpl := caches.NewCommonCache()
+
+	// events
+	publisherConfig := &events.PublisherConfig{
+		MessageTTL:          events.DefaultMessageTTL,
+		MaxRetries:          events.DefaultMaxRetries,
+		PublishTimeout:      events.DefaultPublishTimeout,
+		ReconnectBackoff:    events.DefaultReconnectBackoff,
+		MaxReconnectBackoff: events.DefaultMaxReconnectBackoff,
+	}
+
+	subscriberConfig := &events.SubscriberConfig{
+		MaxRetries:          events.DefaultMaxRetries,
+		ReconnectBackoff:    events.DefaultReconnectBackoff,
+		MaxReconnectBackoff: events.DefaultMaxReconnectBackoff,
+	}
 	eventsImpl := &events.EventsService{}
 	if cfg.Infrastructure.RabbitMQConfig.Url != "" {
-		eventsImpl, err = events.NewEventsService(cfg.Infrastructure.RabbitMQConfig.Url, log)
+		eventsImpl, err = events.NewEventsService(cfg.Infrastructure.RabbitMQConfig.Url, log, publisherConfig, subscriberConfig)
 		if err != nil {
 			log.Fatalf("Cannot start events service")
 		}
@@ -176,7 +191,6 @@ func InitCommonServices(
 	customFieldTemplateImpl := custom_fields.NewCustomFieldTemplateService(log, neo4jRepositories, eventsImpl)
 	domainImpl := domain.NewDomainService(log, cacheImpl, postgresRepositories, neo4jRepositories, eventsImpl)
 	emailingImpl := emailing.NewEmailingService(log, postgresRepositories)
-	enrichmentImpl := enrichment.NewEnrichmentService(log, &cfg.External, postgresRepositories)
 	externalSystemImpl := externalsystem.NewExternalSystemService(log, neo4jRepositories, eventsImpl)
 	googleImpl := google.NewGoogleService(&cfg.Infrastructure.GoogleOAuthConfig, postgresRepositories, neo4jRepositories)
 	industryImpl := industry.NewIndustryService(log, neo4jRepositories)
@@ -200,7 +214,6 @@ func InitCommonServices(
 	fileImpl := files.NewFileService(log, &cfg.Internal.FileStoreConfig, neo4jRepositories, attachmentImpl)
 	notificationImpl := notification.NewNotificationService(log, postgresRepositories, slackImpl)
 	reminderImpl := reminders.NewReminderService(neo4jRepositories, novuImpl)
-	verifyImpl := verify.NewVerifyService(log, postgresRepositories, cfg, enrichmentImpl)
 
 	// Complex dependencies (ordered by dependency chain)
 	emailImpl := email.NewEmailService(neo4jRepositories, eventsImpl, nil, nil, nil)
@@ -222,6 +235,8 @@ func InitCommonServices(
 	flowExecutionImpl := flow_execution.NewFlowExecutionService(neo4jRepositories, postgresRepositories, eventsImpl, emailImpl, nil, orgImpl, socialImpl)
 	flowImpl := flow.NewFlowService(neo4jRepositories, postgresRepositories, eventsImpl, flowExecutionImpl)
 	locationImpl := location.NewLocationService(log, neo4jRepositories, postgresRepositories, eventsImpl, &cfg.External.AnthropicConfig.Prompts, aiImpl, contactImpl, orgImpl)
+	enrichmentImpl := enrichment.NewEnrichmentService(log, &cfg.External, cacheImpl, eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, domainImpl, locationImpl, orgImpl, socialImpl)
+	verifyImpl := verify.NewVerifyService(log, postgresRepositories, cfg, enrichmentImpl)
 	actionImpl := action.NewActionService(log, neo4jRepositories, eventsImpl, orgImpl)
 	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailboxImpl, orgImpl, postmarkImpl, userImpl)
 
