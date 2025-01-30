@@ -53,6 +53,7 @@ type AgentRegistry struct {
 	Goal               string             `gorm:"column:goal;type:text" json:"goal"`
 	IsActive           bool               `gorm:"column:is_active;type:boolean;default:true" json:"isActive"`
 	Icon               string             `gorm:"column:icon;type:text" json:"icon"`
+	Color              string             `gorm:"column:color;type:text" json:"color"`
 }
 
 func (AgentRegistry) TableName() string {
