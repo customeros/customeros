@@ -276,37 +276,6 @@ services:
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
       - RABBITMQ_URL=amqp://host.docker.internal:5672
 
-  user-admin-api:
-    image: ghcr.io/customeros/customeros/user-admin-api:latest
-    networks:
-      - openline
-    ports:
-      - "4001:4001"
-    depends_on:
-      - customer-os-platform-admin-api
-    environment:
-      - POSTGRES_HOST=postgres
-      - NEO4J_TARGET=neo4j://neo4j:7687
-      - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
-      - CUSTOMER_OS_API=http://host.docker.internal:10000/admin/query
-      - RABBITMQ_URL=amqp://host.docker.internal:5672
-
-  file-store-api:
-    image: ghcr.io/customeros/customeros/file-store-api:latest
-    networks:
-      - openline
-    ports:
-      - "10001:10001"
-    depends_on:
-      - customer-os-platform-admin-api
-    environment:
-      - POSTGRES_HOST=postgres
-      - NEO4J_TARGET=neo4j://neo4j:7687
-      - CUSTOMER_OS_API=http://host.docker.internal:10000/query
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - RABBITMQ_URL=amqp://host.docker.internal:5672
-
   validation-api:
     image: ghcr.io/customeros/customeros/validation-api:latest
     networks:
@@ -326,32 +295,6 @@ services:
       - openline
     ports:
       - "10007:10007"
-    depends_on:
-      - customer-os-platform-admin-api
-    environment:
-      - POSTGRES_HOST=postgres
-      - NEO4J_TARGET=neo4j://neo4j:7687
-      - RABBITMQ_URL=amqp://host.docker.internal:5672
-
-  settings-api:
-    image: ghcr.io/customeros/customeros/settings-api:latest
-    networks:
-      - openline
-    ports:
-      - "10002:10002"
-    depends_on:
-      - customer-os-platform-admin-api
-    environment:
-      - POSTGRES_HOST=postgres
-      - NEO4J_TARGET=neo4j://neo4j:7687
-      - RABBITMQ_URL=amqp://host.docker.internal:5672
-
-  ai-api:
-    image: ghcr.io/customeros/customeros/ai-api:latest
-    networks:
-      - openline
-    ports:
-      - "10101:10101"
     depends_on:
       - customer-os-platform-admin-api
     environment:

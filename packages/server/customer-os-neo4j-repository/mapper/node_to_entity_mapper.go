@@ -122,6 +122,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *neo4j_entity.InvoiceEntity {
 		AppSource:            utils.GetStringPropOrEmpty(props, "appSource"),
 		Status:               enum.DecodeInvoiceStatus(utils.GetStringPropOrEmpty(props, "status")),
 		Note:                 utils.GetStringPropOrEmpty(props, "note"),
+		QuickbooksInvoiceId:  utils.GetStringPropOrEmpty(props, "quickbooksInvoiceId"),
 		Customer: neo4j_entity.InvoiceCustomer{
 			Name:         utils.GetStringPropOrEmpty(props, "customerName"),
 			Email:        utils.GetStringPropOrEmpty(props, "customerEmail"),

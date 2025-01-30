@@ -2,6 +2,7 @@ package neo4j_repository
 
 import (
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -35,6 +36,7 @@ type InvoiceReadRepository interface {
 	GetInvoicesForScheduled(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
 	GetReadyInvoicesForFinalizedEvent(ctx context.Context, delayInMinutes int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetNonDryRunInvoicesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
+	GetOrganizationForInvoice(ctx context.Context, invoiceId string) (*dbtype.Node, error)
 }
 
 type invoiceReadRepository struct {
@@ -848,4 +850,35 @@ func (r *invoiceReadRepository) GetNonDryRunInvoicesForOrganization(ctx context.
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
 	return result.([]*dbtype.Node), nil
+}
+
+func (r *invoiceReadRepository) GetOrganizationForInvoice(ctx context.Context, invoiceId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetOrganizationForInvoice")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.String("invoiceId", invoiceId))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_INVOICE]->(i:Invoice)
+			WHERE i.id = $invoiceId
+			RETURN o`
+	params := map[string]any{
+		"tenant":    tenant,
+		"invoiceId": invoiceId,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Bool("result.found", result != nil))
+	return result.(*dbtype.Node), nil
 }

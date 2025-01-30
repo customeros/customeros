@@ -4,12 +4,16 @@ import (
 	"context"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"net/url"
+	"time"
 )
 
 type QuickbooksService interface {
 	GetAndStoreAccessToken(ctx context.Context, realmId string, requestData url.Values) (*postgres_entity.QuickbooksSettingsEntity, error)
 	SaveProduct(ctx context.Context, id, productName string, archived bool) (*QuickbooksSaveProductResponse, error)
 	SaveCustomer(ctx context.Context, id, customerName string) (*QuickbooksSaveCustomerResponse, error)
+	SaveInvoice(ctx context.Context, customerId string, invoiceDate time.Time, lines []QuickbooksInvoiceLine) (*QuickbooksSaveInvoiceResponse, error)
+	PayInvoice(ctx context.Context, customerId, invoiceId string, totalAmount float64) (*QuickbooksSavePaymentResponse, error)
+	VoidInvoice(ctx context.Context, invoiceId string) (*QuickbooksSaveInvoiceResponse, error)
 }
 
 type QuickbooksInvoiceLine struct {
@@ -36,6 +40,28 @@ type QuickbooksSaveCustomerResponse struct {
 	Customer *struct {
 		Id string `json:"Id"`
 	} `json:"Customer"`
+}
+
+type QuickbooksSaveInvoiceResponse struct {
+	QuickbooksCheckFaultResponse
+	Invoice *struct {
+		Id string `json:"Id"`
+	} `json:"Invoice"`
+}
+
+type QuickbooksSavePaymentResponse struct {
+	QuickbooksCheckFaultResponse
+	Payment *struct {
+		Id string `json:"Id"`
+	} `json:"Payment"`
+}
+
+type QuickbooksGetInvoiceResponse struct {
+	QuickbooksCheckFaultResponse
+	Invoice *struct {
+		Id        string `json:"Id"`
+		SyncToken string `json:"SyncToken"`
+	} `json:"Invoice"`
 }
 
 type QuickbooksGetProductResponse struct {
