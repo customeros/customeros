@@ -255,6 +255,13 @@ export class Organization extends Entity<OrganizationDatum> {
   }
 
   @action
+  public flagIncorrectIndustry() {
+    this.draft();
+    this.value.wrongIndustry = true;
+    this.commit({ syncOnly: true });
+  }
+
+  @action
   public addSocial(url: string) {
     this.value.socialMedia.push({
       id: crypto.randomUUID(),
@@ -386,6 +393,7 @@ export class Organization extends Entity<OrganizationDatum> {
         enrichedRequestedAt: null,
         ltv: 0,
         hide: false,
+        wrongIndustry: false,
         domains: [],
         domainsDetails: [],
         createdAt: new Date().toISOString(),

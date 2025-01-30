@@ -274,7 +274,7 @@ export const OrganizationDetails = observer(() => {
             placeholder='Industry not found yet'
             value={organization?.value?.industryName}
             field={FlagWrongFields.OrganizationIndustry}
-            flaggedAsIncorrect={organization?.value?.wrongIndustry}
+            flaggedAsIncorrect={organization?.value?.wrongIndustry ?? false}
             icon={<Icon name='building-07' className='text-gray-500 mr-3' />}
           />
 

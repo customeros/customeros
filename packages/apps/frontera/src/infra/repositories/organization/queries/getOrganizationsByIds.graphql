@@ -45,6 +45,7 @@ query getOrganizationsByIds($ids: [ID!]) {
     lastTouchPointAt
     lastTouchPointType
     contactCount
+    wrongIndustry
     parentId
     parentName
     contracts

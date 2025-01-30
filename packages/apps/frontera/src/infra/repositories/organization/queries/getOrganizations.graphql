@@ -126,6 +126,7 @@ query getOrganizations(
           }
         }
       }
+      wrongIndustry
       parentCompanies {
         organization {
           metadata {
