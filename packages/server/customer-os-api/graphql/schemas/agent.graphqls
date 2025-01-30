@@ -63,14 +63,14 @@ input CapabilitySaveInput {
 }
 
 input AgentSaveInput {
-    id: ID
-    type: AgentType
-    name: String
-    capabilities: [CapabilitySaveInput!]
-    goal: String
-    isActive: Boolean
-    flowId: ID
-    visible: Boolean
-    color: String
-    icon: String
+    id:             ID
+    type:           AgentType @deprecated
+    name:           String
+    capabilities:   [CapabilitySaveInput!]
+    goal:           String
+    isActive:       Boolean
+    flowId:         ID
+    visible:        Boolean
+    color:          String
+    icon:           String
 }

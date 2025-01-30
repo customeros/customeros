@@ -1,6 +1,7 @@
 package postgres_entity
 
 import (
+	"encoding/json"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"time"
 
@@ -34,4 +35,12 @@ func (Agents) TableName() string {
 func (r *Agents) BeforeCreate(tx *gorm.DB) error {
 	r.ID = utils.GenerateNanoIdWithPrefix("agent", 16)
 	return nil
+}
+
+func (r *Agents) GetCapabilitiesConfigAsString() string {
+	bytes, err := json.Marshal(r.CapabilitiesConfig)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
 }
