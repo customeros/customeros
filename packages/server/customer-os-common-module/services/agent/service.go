@@ -101,8 +101,11 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		IsActive:    false,
 		VisibleInUI: true,
 		Icon:        agentRegistry.Icon,
-		Color:       utils.GetRandomColor(),
+		Color:       agentRegistry.Color,
 		RegistryID:  agentRegistry.ID,
+	}
+	if agent.Color == "" {
+		agent.Color = utils.GetRandomColor()
 	}
 
 	// build capabilities from registry
@@ -171,6 +174,7 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, agentId)
 	tracing.LogObjectAsJson(span, "agentFields", agentFields)
+	tracing.LogObjectAsJson(span, "capabilitiesConfig", capabilitiesConfig)
 
 	agentEntity, err := a.postgresRepositories.AgentsRepository.GetById(ctx, agentId)
 	if err != nil {

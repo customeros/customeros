@@ -183,7 +183,8 @@ func registerVisitorIdAgent() postgres_entity.AgentRegistry {
 		Type:     enum.AgentVisitorID,
 		Name:     "Identify website visitors",
 		Goal:     enum.AgentGoalIdentifyVisitors.String(),
-		Icon:     "",
+		Icon:     "radar",
+		Color:    "grayModern",
 		IsActive: true,
 		CapabilitiesConfig: postgres_entity.CapabilitiesConfig{
 			Capabilities: []postgres_entity.Capability{

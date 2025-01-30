@@ -205,6 +205,7 @@ func (f *agentsRepository) Update(ctx context.Context, agent postgres_entity.Age
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentsRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	tracing.LogObjectAsJson(span, "agentEntity", agent)
 
 	if agent.ID == "" {
 		err := errors.New("agent ID is missing") // Fixed error message to match the context
@@ -216,7 +217,7 @@ func (f *agentsRepository) Update(ctx context.Context, agent postgres_entity.Age
 	err := f.gormDb.
 		Model(&postgres_entity.Agents{}).
 		Where("id = ?", agent.ID).
-		Updates(agent).
+		Save(agent).
 		First(&updatedAgents, "id = ?", agent.ID).
 		Error
 	if err != nil {
