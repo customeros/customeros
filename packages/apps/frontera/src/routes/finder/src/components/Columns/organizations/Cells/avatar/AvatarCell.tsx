@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
 import { Image } from '@ui/media/Image/Image';
-import { Avatar } from '@ui/media/Avatar/Avatar';
 import { Building06 } from '@ui/media/icons/Building06';
 import {
   Popover,
@@ -45,21 +44,30 @@ export const AvatarCell = memo(
       <div className='items-center ml-[1px]'>
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger>
-            <Avatar
-              size='xs'
-              textSize='xs'
-              tabIndex={-1}
-              src={src || undefined}
-              variant='outlineSquare'
+            <div
               onClick={handleNavigate}
-              name={isEnriching ? '' : fullName}
               onMouseEnter={() => setIsOpen(true)}
               onMouseLeave={() => setIsOpen(false)}
-              icon={<Building06 className='text-gray-700' />}
-              className={cn('text-gray-700 cursor-pointer focus:outline-none', {
-                'animate-pulse': isEnriching,
-              })}
-            />
+              className={cn(
+                'w-6 h-6 flex items-center justify-center rounded border border-gray-200 cursor-pointer focus:outline-none',
+                {
+                  'animate-pulse': isEnriching,
+                },
+              )}
+            >
+              {src ? (
+                <Image
+                  src={src}
+                  alt={fullName}
+                  loading='lazy'
+                  decoding='async'
+                  fetchPriority='low'
+                  className='w-full h-full object-contain'
+                />
+              ) : (
+                <Building06 className='w-4 h-4 text-gray-700' />
+              )}
+            </div>
           </PopoverTrigger>
 
           <PopoverContent

@@ -1,9 +1,9 @@
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
-import { Avatar } from '@ui/media/Avatar/Avatar';
+import { Image } from '@ui/media/Image/Image';
+import { User02 } from '@ui/media/icons/User02';
 import { useStore } from '@shared/hooks/useStore';
-import { User01 } from '@ui/media/icons/User01.tsx';
 
 interface AvatarCellProps {
   id: string;
@@ -24,18 +24,13 @@ export const AvatarCell = observer(
 
     return (
       <div className='items-center ml-[1px]'>
-        <Avatar
-          size='xs'
-          textSize='xs'
-          tabIndex={-1}
-          icon={<User01 />}
-          src={src || undefined}
-          variant='outlineCircle'
-          name={isEnriching ? '' : fullName}
+        <div
           className={cn(
-            'text-gray-700 cursor-pointer focus:outline-none',
-            !canNavigate && 'cursor-default',
-            isEnriching && 'animate-pulse',
+            'w-6 h-6 flex items-center justify-center rounded border border-gray-200 cursor-pointer focus:outline-none',
+            {
+              'animate-pulse': isEnriching,
+              'cursor-default': !canNavigate,
+            },
           )}
           onClick={() => {
             if (
@@ -48,7 +43,20 @@ export const AvatarCell = observer(
               store.ui.setContactPreviewCardOpen(true);
             }
           }}
-        />
+        >
+          {src ? (
+            <Image
+              src={src}
+              alt={fullName}
+              loading='lazy'
+              decoding='async'
+              fetchPriority='low'
+              className='w-full h-full object-contain'
+            />
+          ) : (
+            <User02 className='w-4 h-4 text-gray-700' />
+          )}
+        </div>
       </div>
     );
   },
