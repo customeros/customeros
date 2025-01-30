@@ -29,7 +29,7 @@ func NewAgentService(postgresRepositories *postgresrepository.Repositories) inte
 }
 
 func (a *agentService) GetAgentById(ctx context.Context, agentID string) (*postgresentity.Agents, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.GetAgentById")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.GetAgentById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -49,7 +49,7 @@ func (a *agentService) GetAgentById(ctx context.Context, agentID string) (*postg
 }
 
 func (a *agentService) GetAllAgentsByTenant(ctx context.Context) ([]*postgresentity.Agents, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.GetAllAgentsByTenant")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.GetAllAgentsByTenant")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -142,9 +142,10 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 }
 
 func (a *agentService) UpdateAgent(ctx context.Context, agentFields postgresentity.Agents) (*postgresentity.Agents, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.UpdateAgent")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.UpdateAgent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "agentFields", agentFields)
 
 	existingAgentEntity, err := a.postgresRepositories.AgentsRepository.GetById(ctx, agentFields.ID)
 	if err != nil {
@@ -171,7 +172,7 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentFields postgresenti
 }
 
 func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent postgresentity.Agents, triggerEvent string) (string, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.CreateAgentExecutionRecord")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.CreateAgentExecutionRecord")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -199,7 +200,7 @@ func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent pos
 }
 
 func (a *agentService) SaveAgentExecutionCompleted(ctx context.Context, executionID string, goalAchieved bool) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.SaveAgentExecutionSuccess")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.SaveAgentExecutionSuccess")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -220,7 +221,7 @@ func (a *agentService) SaveAgentExecutionCompleted(ctx context.Context, executio
 }
 
 func (a *agentService) SaveAgentExecutionError(ctx context.Context, executionID, errorMessage string) error {
-	span, ctx := tracing.StartTracerSpan(ctx, "AgentService.SaveAgentExecutionError")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.SaveAgentExecutionError")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 

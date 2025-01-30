@@ -224,7 +224,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 				continue
 			}
 
-			primaryDomain, _ := s.commonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(innerCtx, organizationEntity.Website)
+			primaryDomain := s.commonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(innerCtx, organizationEntity.Website)
 			if primaryDomain != "" {
 				_, err = s.commonServices.OrganizationService.LinkWithDomain(innerCtx, nil, record.OrganizationId, primaryDomain)
 				if err != nil {

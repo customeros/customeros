@@ -77,7 +77,7 @@ func OnRequestedEnrichOrganization(ctx context.Context, dependencies *model.Depe
 		dependencies.CommonConfig,
 	)
 
-	domain, _ := dependencies.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, messageData.Url)
+	domain := dependencies.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, messageData.Url)
 	if domain == "" {
 		return nil
 	}

@@ -376,7 +376,7 @@ func (h *EnrichHandler) EnrichPerson() gin.HandlerFunc {
 		companyName, companyDomain := "", ""
 		if enrichPersonResponse.Company != nil {
 			companyName = enrichPersonResponse.Company.Name
-			companyDomain, _ = h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, enrichPersonResponse.Company.WebsiteUrl)
+			companyDomain = h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, enrichPersonResponse.Company.WebsiteUrl)
 		}
 
 		dbID, _, findWorkEmailResponse, err := h.services.CommonServices.EnrichmentService.FindWorkEmail(ctx,
