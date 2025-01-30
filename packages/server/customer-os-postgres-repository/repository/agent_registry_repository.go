@@ -214,7 +214,8 @@ func registerSupportAgent() postgres_entity.AgentRegistry {
 		Type:     enum.AgentSupport,
 		Name:     "Tag support visitors",
 		Goal:     enum.AgentGoalTagSupport.String(),
-		Icon:     "",
+		Icon:     "life-buoy-01",
+		Color:    "grayModern",
 		IsActive: true,
 		CapabilitiesConfig: postgres_entity.CapabilitiesConfig{
 			Capabilities: []postgres_entity.Capability{
