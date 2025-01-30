@@ -9,7 +9,7 @@ import (
 )
 
 type DomainService interface {
-	GetPrimaryDomainForOrganizationWebsite(ctx context.Context, websiteUrl string) (string, string)
+	GetPrimaryDomainForOrganizationWebsite(ctx context.Context, websiteUrl string) string
 	IsKnownCompanyHostingUrl(ctx context.Context, website string) bool
 	GetAllDomainsForOrganizations(ctx context.Context, organizationIds []string) (*neo4j_entity.DomainEntities, error)
 	UpdateDomainPrimaryDetails(ctx context.Context, domain string) error

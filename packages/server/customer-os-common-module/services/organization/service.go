@@ -176,9 +176,8 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	adjustedWebsite := utils.IfNotNilString(input.Website)
 	if input.GlobalOrgId == nil {
 		if utils.IfNotNilString(input.Website) != "" {
-			primaryDomain, adjustedWebsite = s.domain.GetPrimaryDomainForOrganizationWebsite(ctx, *input.Website)
+			primaryDomain = s.domain.GetPrimaryDomainForOrganizationWebsite(ctx, *input.Website)
 			span.LogFields(log.String("process.primaryDomainFromWebsite", primaryDomain))
-			span.LogFields(log.String("process.adjustedWebsite", adjustedWebsite))
 		}
 	}
 

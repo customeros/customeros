@@ -43,41 +43,40 @@ func NewDomainService(log logger.Logger, cache *caches.Cache, postgres *postgres
 	}
 }
 
-func (s *domainService) GetPrimaryDomainForOrganizationWebsite(ctx context.Context, websiteUrl string) (string, string) {
+func (s *domainService) GetPrimaryDomainForOrganizationWebsite(ctx context.Context, websiteUrl string) string {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.GetPrimaryDomainForOrganizationWebsite")
 	defer span.Finish()
 	span.LogKV("websiteUrl", websiteUrl)
-	returnedWebsiteUrl := websiteUrl
 
 	websiteUrl = strings.ToLower(websiteUrl)
 
 	if strings.TrimSpace(websiteUrl) == "" {
-		return "", ""
+		return ""
 	}
 
 	if s.IsKnownCompanyHostingUrl(ctx, websiteUrl) {
 		span.LogFields(log.Bool("isKnownCompanyHostingUrl", true))
-		return "", returnedWebsiteUrl
+		return ""
 	}
 
 	isPrimary, primaryDomain := domaincheck.PrimaryDomainCheck(websiteUrl)
 	span.LogFields(log.Bool("isPrimary", isPrimary), log.String("primaryDomain", primaryDomain))
-	if !isPrimary && primaryDomain != "" {
-		returnedWebsiteUrl = primaryDomain
-	}
 
 	if primaryDomain == "" {
-		return "", returnedWebsiteUrl
+		return ""
 	}
 
-	// TODO: this to be moved into linking org with domain
+	if !utils.IsValidDomain(primaryDomain) {
+		primaryDomain = utils.ExtractDomain(primaryDomain)
+	}
+
 	if !s.IsAcceptedDomainForOrganization(ctx, primaryDomain) {
-		return "", returnedWebsiteUrl
+		return ""
 	}
 
-	span.LogKV("result.primaryDomain", primaryDomain, "result.returnedWebsiteUrl", returnedWebsiteUrl)
+	span.LogKV("result.primaryDomain", primaryDomain)
 
-	return primaryDomain, returnedWebsiteUrl
+	return primaryDomain
 }
 
 func (s *domainService) IsKnownCompanyHostingUrl(ctx context.Context, website string) bool {

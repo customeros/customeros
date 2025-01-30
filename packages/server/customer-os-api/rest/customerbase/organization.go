@@ -212,7 +212,7 @@ func (h *OrganizationHandler) validateOrganizationRequest(c *gin.Context, reques
 	}
 
 	// Validate website domain
-	websiteDomain, _ := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, request.Website)
+	websiteDomain := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, request.Website)
 	if websiteDomain != "" {
 		if exists, err := h.checkOrganizationExistsByDomain(ctx, websiteDomain); err != nil {
 			message := "Failed to check organization domain"
