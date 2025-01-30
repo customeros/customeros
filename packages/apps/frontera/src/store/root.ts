@@ -12,6 +12,7 @@ import { FilesStore } from './Files/Files.store';
 import { FlowsStore } from './Flows/Flows.store';
 import { AgentStore } from './Agents/Agent.store';
 import { TransactionService } from './transaction';
+import { CommonStore } from './Common/Common.store';
 import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
 import { InvoicesStore } from './Invoices/Invoices.store';
@@ -45,6 +46,7 @@ export class RootStore {
   users: UsersStore;
   flows: FlowsStore;
   agents: AgentStore;
+  common: CommonStore;
   session: SessionStore;
   settings: SettingsStore;
   invoices: InvoicesStore;
@@ -75,6 +77,7 @@ export class RootStore {
 
     this.transactions = new TransactionService(this, this.transport);
 
+    this.common = new CommonStore(this);
     this.tableViewDefs = new TableViewDefStore(this, this.transport);
     this.ui = new UIStore(this, this.transport);
     this.windowManager = new WindowManager(this);
@@ -144,6 +147,7 @@ export class RootStore {
       this.flowEmailVariables.bootstrap(),
       this.skus.bootstrap(),
       this.agents.bootstrap(),
+      this.common.bootstrap(),
     ]);
   }
 

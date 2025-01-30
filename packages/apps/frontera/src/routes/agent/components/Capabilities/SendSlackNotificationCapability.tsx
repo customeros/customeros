@@ -8,24 +8,32 @@ import {
   AddSlackChannelUsecase,
 } from '@domain/usecases/agents/capabilities/add-slack-channel.usecase';
 
+import { Icon } from '@ui/media/Icon';
 import { Combobox } from '@ui/form/Combobox';
 import { Slack } from '@ui/media/logos/Slack';
 import { Button } from '@ui/form/Button/Button';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/overlay/Popover';
 
-export const SendSlackNotification = observer(() => {
+export const SendSlackNotificationCapability = observer(() => {
   const { id } = useParams<{ id: string }>();
 
   const usecase = useMemo(() => new AddSlackChannelUsecase(id!), [id]);
 
-  if (usecase.isSlackEnabled) {
+  if (!usecase.isSlackEnabled) {
     return (
       <div>
         <h2 className='text-sm font-medium mb-4'>
           Send Slack notification{` `}
           <span className='text-grayModern-500'>(optional)</span>
         </h2>
+
+        {usecase.capabilityErrors && (
+          <div className='bg-error-50 text-error-700 px-2 py-1 rounded-[4px] mb-4'>
+            <Icon stroke='none' className='mr-2' name='dot-single' />
+            <span className='text-sm'>{usecase.capabilityErrors}</span>
+          </div>
+        )}
 
         <div className='flex flex-col gap-4 w-full'>
           <div>

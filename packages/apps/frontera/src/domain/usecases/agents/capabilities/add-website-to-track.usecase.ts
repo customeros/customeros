@@ -1,4 +1,6 @@
+import { Tracer } from '@infra/tracer';
 import { RootStore } from '@store/root';
+import { Agent } from '@store/Agents/Agent.dto';
 import { action, computed, observable } from 'mobx';
 import { AgentService } from '@domain/services/agent/agent.service';
 
@@ -18,15 +20,27 @@ export class AddWebsiteToTrackUsecase {
     this.toggle = this.toggle.bind(this);
     this.open = this.open.bind(this);
     this.close = this.close.bind(this);
-    this.execute = this.execute.bind(this);
+    this.executeAdd = this.executeAdd.bind(this);
+    this.executeRemove = this.executeRemove.bind(this);
     this.validate = this.validate.bind(this);
     this.setWebsite = this.setWebsite.bind(this);
     this.removeWebsite = this.removeWebsite.bind(this);
+
+    this.init();
   }
 
   @computed
   get isInvalid() {
     return this.validationError.length > 0;
+  }
+
+  @computed
+  get capabilityErrors() {
+    return this.root.agents
+      .getById(this.agentId)
+      ?.value.capabilities.find(
+        (c) => c.type === CapabilityType.IdentifyWebVisitor,
+      )?.errors;
   }
 
   @action
@@ -53,42 +67,150 @@ export class AddWebsiteToTrackUsecase {
 
   @action
   addWebsite() {
+    const span = Tracer.span('AddWebsiteToTrackUsecase.addWebsite', {
+      websites: this.websites,
+    });
+
     this.websites.push(this.website);
+
+    span.end({
+      websites: this.websites,
+    });
   }
 
   @action
   removeWebsite(website: string) {
+    const span = Tracer.span('AddWebsiteToTrackUsecase.removeWebsite', {
+      websites: this.websites,
+    });
+
     this.websites = this.websites.filter((w) => w !== website);
+
+    span.end({
+      websites: this.websites,
+    });
   }
 
   @action
   validate() {
+    const span = Tracer.span('AddWebsiteToTrackUsecase.validate');
+
     if (this.website.length === 0) {
       this.validationError = 'Houston we have a blank';
+      span.end();
 
       return false;
     }
 
     if (!validateUrl(this.website)) {
       this.validationError = 'This domain appears to be invalid';
+      span.end();
 
       return false;
     }
 
     if (this.websites.includes(this.website)) {
       this.validationError = 'This website is already added';
+      span.end();
 
       return false;
     }
+    span.end();
 
     return true;
   }
 
-  execute(opts?: { onInvalid?: () => void }) {
+  @action
+  init() {
+    const span = Tracer.span('AddWebsiteToTrackUsecase.init', {
+      websites: this.websites,
+    });
     const agent = this.root.agents.getById(this.agentId);
 
     if (!agent) {
-      console.error('AddWebsiteToTrack: Agent not found. aborting execution');
+      console.error(
+        'AddWebsiteToTrackUsecase.init: Agent not found. aborting execution',
+      );
+
+      return;
+    }
+
+    const capability = agent.value.capabilities.find(
+      (c) => c.type === CapabilityType.IdentifyWebVisitor,
+    );
+
+    if (!capability) {
+      console.error(
+        'AddWebsiteToTrackUsecase.init: Capability not found. aborting execution',
+      );
+
+      return;
+    }
+
+    const config = Agent.parseCapabilityConfig(capability.config);
+
+    if (!config) {
+      console.error(
+        'AddWebsiteToTrackUsecase.init: Could not parse config. aborting',
+      );
+
+      return;
+    }
+
+    if (!config.websites) {
+      console.error(
+        'AddWebsiteToTrackUsecase.init: Websites not found in config. aborting execution',
+      );
+
+      return;
+    }
+
+    this.websites = config.websites.value as string[];
+    span.end({
+      websites: config.websites.value,
+    });
+  }
+
+  executeRemove(website: string) {
+    const span = Tracer.span('AddWebsiteToTrackUsecase.executeRemove', {
+      websites: this.websites,
+    });
+
+    this.removeWebsite(website);
+
+    const agent = this.root.agents.getById(this.agentId);
+
+    if (!agent) {
+      console.error(
+        'AddWebsiteToTrackUsecase.executeRemove: Agent not found. aborting execution',
+      );
+
+      return;
+    }
+
+    agent?.setCapabilityConfig(
+      CapabilityType.IdentifyWebVisitor,
+      'websites',
+      this.websites,
+    );
+
+    this.service.saveAgent(agent);
+
+    span.end({
+      websites: this.websites,
+    });
+  }
+
+  executeAdd(opts?: { onInvalid?: () => void }) {
+    const span = Tracer.span('AddWebsiteToTrackUsecase.executeAdd', {
+      websites: this.websites,
+    });
+    const agent = this.root.agents.getById(this.agentId);
+
+    if (!agent) {
+      console.error(
+        'AddWebsiteToTrackUsecase.executeAdd: Agent not found. aborting execution',
+      );
 
       return;
     }
@@ -113,5 +235,7 @@ export class AddWebsiteToTrackUsecase {
 
       this.service.saveAgent(agent);
     }
+
+    span.end();
   }
 }

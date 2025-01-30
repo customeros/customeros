@@ -1,10 +1,11 @@
 import set from 'lodash/set';
+import omit from 'lodash/omit';
 import merge from 'lodash/merge';
 import { Entity } from '@store/record';
+import { Tracer } from '@infra/tracer';
 import { action, computed, observable } from 'mobx';
 import { type AgentDatum } from '@infra/repositories/agent';
 
-import { unwrap, UnwrapResult } from '@utils/unwrap';
 import { AgentType, CapabilityType } from '@graphql/types';
 
 import { AgentStore } from './Agent.store';
@@ -21,7 +22,7 @@ export class Agent extends Entity<AgentDatum> {
 
   constructor(store: AgentStore, data: AgentDatum) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    super(store, data as any);
+    super(store as any, data);
   }
 
   @computed
@@ -35,12 +36,15 @@ export class Agent extends Entity<AgentDatum> {
     property: string,
     value: unknown,
   ) {
+    const span = Tracer.span('Agent.setCapabilityConfig');
     const foundIndex = this.value.capabilities.findIndex(
       (c) => c.type === capabilityType,
     );
 
     if (foundIndex === -1) {
-      console.error('Agent.setCapability: Capability not found. will not set');
+      console.error(
+        'Agent.setCapabilityConfig: Capability not found. will not set',
+      );
     }
 
     const config = Agent.parseCapabilityConfig(
@@ -48,34 +52,38 @@ export class Agent extends Entity<AgentDatum> {
     );
 
     if (!config) {
-      console.error('Agent.setCapability: Could not parse config');
+      console.error('Agent.setCapabilityConfig: Could not parse config');
 
       return;
     }
 
-    set(config, property, value);
+    set(config, `${property}.value`, value);
 
     this.draft();
     this.value.capabilities[foundIndex].config = JSON.stringify(config);
     this.commit({ syncOnly: true });
+
+    span.end();
+  }
+
+  public toggleStatus() {
+    this.draft();
+    this.value.isActive = !this.value.isActive;
+    this.commit({ syncOnly: true });
+  }
+
+  public toPayload(): Omit<AgentDatum, 'createdAt' | 'updatedAt'> {
+    return omit(this.value, ['createdAt', 'updatedAt', 'error']);
   }
 
   static parseCapabilityConfig(raw: string): CapabilityConfig | null {
-    let res: UnwrapResult<CapabilityConfig> = [null, null];
-    const [data, err] = res;
+    const span = Tracer.span('Agent.parseCapabilityConfig', { raw });
 
-    (async () => (res = await unwrap(JSON.parse(raw))))();
+    const parsed = JSON.parse(raw);
 
-    if (err) {
-      console.error(
-        'Agent.parseCapabilityConfig: Error parsing raw config',
-        err,
-      );
+    span.end();
 
-      return null;
-    }
-
-    return data;
+    return parsed;
   }
 
   static default(payload?: Partial<AgentDatum>): AgentDatum {

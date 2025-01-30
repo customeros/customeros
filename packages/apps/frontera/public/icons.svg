@@ -193,4 +193,22 @@
       <path
         d='M15 9L9 15M9 9L15 15M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z' />
     </symbol>
+    <symbol id='radar'>
+      <path
+        d='M22 12c0 5.523-4.477 10-10 10a9.954 9.954 0 0 1-5.251-1.488M18 12A6 6 0 1 1 6.749 9.095m6.574 1.405a2 2 0 1 0-2.646 3 2 2 0 0 0 2.646-3Zm0 0 2.119-3.415m0 0A5.972 5.972 0 0 0 12 6a5.972 5.972 0 0 0-3.001.803m6.443.282 2.127-3.392A9.954 9.954 0 0 0 12 2C6.477 2 2 6.477 2 12c0 2.394.841 4.592 2.244 6.313' />
+    </symbol>
+    <symbol id='dot-live-primary'>
+      <circle cx='12' cy='12' r='8.25' fill='#E9D7FE' stroke='#D6BBFB' strokeWidth='0.5' />
+      <circle r='4' cx='12' cy='12' fill='#7F56D9' />
+    </symbol>
+
+    <symbol id='dot-live-success'>
+      <circle cx='12' cy='12' r='8.25' fill='#ABEFC6' stroke='#75E0A7' strokeWidth='0.5' />
+      <circle r='4' cx='12' cy='12' fill='#17B26A' />
+    </symbol>
+    <symbol id='radio-dot'>
+      <circle cx="12" cy="12" r="4" fill="currentColor" />
+      <path
+        d='M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z' />
+    </symbol>
 </svg>

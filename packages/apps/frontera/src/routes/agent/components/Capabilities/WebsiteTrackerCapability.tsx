@@ -8,6 +8,7 @@ import { Icon } from '@ui/media/Icon';
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
+import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
 import {
   AlertDialog,
@@ -19,11 +20,21 @@ import {
   AlertDialogCloseIconButton,
 } from '@ui/overlay/AlertDialog/AlertDialog';
 
+const SCRIPT = `<script id="customeros-tracker" type="text/javascript">
+  (function (c, u, s, t, o, m, e, r, O, S) { 
+  var customerOS = document.createElement(s); 
+  customerOS.src = u; 
+  customerOS.async = true; 
+  (document.body || document.head).appendChild(customerOS); 
+})(window, "https://app.customeros.ai/analytics-0.1.js", "script");</script>`;
+
 export const WebsiteTrackerCapability = observer(() => {
   const { id } = useParams<{ id: string }>();
 
   const usecase = useMemo(() => new AddWebsiteToTrackUsecase(id!), [id]);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const [_, copyToClipboard] = useCopyToClipboard();
 
   return (
     <>
@@ -32,13 +43,24 @@ export const WebsiteTrackerCapability = observer(() => {
           Track and identify website visitors
         </h2>
 
+        {usecase.capabilityErrors && (
+          <div className='bg-error-50 text-error-700 px-2 py-1 rounded-[4px] mb-4'>
+            <Icon stroke='none' className='mr-2' name='dot-single' />
+            <span className='text-sm'>{usecase.capabilityErrors}</span>
+          </div>
+        )}
+
         <div className='flex flex-col gap-1'>
           <p className='text-sm font-medium'>Websites to track</p>
 
           {usecase.websites.map((website) => (
             <div key={website} className='flex items-center group'>
               <div className='mx-2'>
-                <Icon name='dot-single' className='text-grayModern-500' />
+                <Icon
+                  stroke='none'
+                  name='dot-single'
+                  className='text-grayModern-500'
+                />
               </div>
               <p className='text-sm cursor-default'>{website}</p>
 
@@ -53,7 +75,11 @@ export const WebsiteTrackerCapability = observer(() => {
                   />
                 </MenuButton>
                 <MenuList>
-                  <MenuItem onClick={() => usecase.removeWebsite(website)}>
+                  <MenuItem
+                    onClick={() => {
+                      usecase.executeRemove(website);
+                    }}
+                  >
                     <Icon name='x-circle' className='text-grayModern-500' />
                     Remove
                   </MenuItem>
@@ -97,6 +123,7 @@ export const WebsiteTrackerCapability = observer(() => {
               variant='ghost'
               aria-label='copy'
               icon={<Icon name='copy-03' />}
+              onClick={() => copyToClipboard(SCRIPT, 'Code copied')}
             />
           </div>
         </div>
@@ -131,7 +158,7 @@ export const WebsiteTrackerCapability = observer(() => {
               <Button
                 colorScheme='primary'
                 onClick={() =>
-                  usecase.execute({
+                  usecase.executeAdd({
                     onInvalid: () => inputRef.current?.focus(),
                   })
                 }

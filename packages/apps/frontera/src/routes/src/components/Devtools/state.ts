@@ -12,13 +12,15 @@ type GqlResponse = {
   data: Record<string, unknown> | null;
 };
 
+type View = 'operations' | 'store' | 'settings' | 'traces';
+
 export class DevtoolsStore {
   @observable accessor gqlOperations: GqlOperation[] = [];
   @observable accessor gqlResponses: Map<string, GqlResponse> = new Map();
   @observable accessor openGqlOperationId: string | null = null;
   @observable accessor operationsSearchTerm = '';
   @observable accessor responseSearchTerm = '';
-  @observable accessor view: 'operations' | 'store' | 'settings' = 'operations';
+  @observable accessor view: View = 'operations';
   @observable accessor detailedStore: string | null = null;
   @observable accessor detailedEntityId: string | null = null;
 
@@ -26,6 +28,7 @@ export class DevtoolsStore {
     'agents',
     'contacts',
     'contracts',
+    'common.slackChannels',
     'flows',
     'jobRoles',
     'organizations',
@@ -73,7 +76,7 @@ export class DevtoolsStore {
   }
 
   @action
-  toggleView(view: 'operations' | 'store' | 'settings') {
+  toggleView(view: View) {
     this.view = view;
   }
 

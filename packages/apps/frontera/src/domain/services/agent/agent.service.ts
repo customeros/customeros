@@ -1,3 +1,4 @@
+import { Tracer } from '@infra/tracer';
 import { type Agent } from '@store/Agents/Agent.dto';
 import { AgentRepository } from '@infra/repositories/agent';
 
@@ -7,6 +8,14 @@ export class AgentService {
   private repo = new AgentRepository();
 
   public async saveAgent(agent: Agent) {
-    return await unwrap(this.repo.saveAgent({ input: agent.value }));
+    const span = Tracer.span('AgentService.saveAgent', {
+      payload: agent.toPayload(),
+    });
+
+    const req = await unwrap(this.repo.saveAgent({ input: agent.toPayload() }));
+
+    span.end();
+
+    return req;
   }
 }
