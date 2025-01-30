@@ -275,7 +275,7 @@ const getFilterFn = (
           if (emailValidationData === undefined) return false;
 
           return match(filter.operation)
-            .with(ComparisonOperator.Contains, () =>
+            .with(ComparisonOperator.In, () =>
               filterValues?.some(
                 (id: string) =>
                   isDeliverableV2(id, emailValidationData) ||
@@ -283,12 +283,12 @@ const getFilterFn = (
                   isDeliverableUnknownV2(id, emailValidationData),
               ),
             )
-            .with(ComparisonOperator.NotContains, () =>
-              filterValues?.some(
+            .with(ComparisonOperator.NotIn, () =>
+              filterValues?.every(
                 (id: string) =>
-                  isDeliverableV2(id, emailValidationData) ||
-                  isNotDeliverableV2(id, emailValidationData) ||
-                  isDeliverableUnknownV2(id, emailValidationData),
+                  !isDeliverableV2(id, emailValidationData) &&
+                  !isNotDeliverableV2(id, emailValidationData) &&
+                  !isDeliverableUnknownV2(id, emailValidationData),
               ),
             )
             .with(

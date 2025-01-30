@@ -90,8 +90,7 @@ function checkEmailStatus(emailData?: EmailValidationDetails, email?: string) {
   if (emailData?.deliverable === EmailDeliverable.Deliverable) {
     if (emailData.isFirewalled) return emailStatuses.DELIVERABLE_FIREWALL;
     if (emailData.isFreeAccount) return emailStatuses.DELIVERABLE_FREE_ACCOUNT;
-
-    return emailStatuses.DELIVERABLE_NO_RISK;
+    if (!emailData.isRisky) return emailStatuses.DELIVERABLE_NO_RISK;
   }
 
   if (emailData?.deliverable === EmailDeliverable.Unknown) {
