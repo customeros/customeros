@@ -42,7 +42,7 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
   if (!org) return <p className='text-gray-400'>Not set</p>;
 
   return (
-    <div className='flex items-center gap-2 group w-full'>
+    <div className='flex items-center gap-2 group/orgName w-full'>
       <span
         onClick={handleNavigate}
         data-test='organization-name-in-all-orgs-table'
@@ -55,7 +55,7 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
         variant='ghost'
         aria-label='preview organization'
         icon={<Eye className='text-gray-500' />}
-        className='opacity-0 group-hover:opacity-100  cursor-pointer'
+        className='opacity-0 group-hover/orgName:opacity-100 cursor-pointer'
         onClick={() => {
           if (previewCard === true && store.ui.focusRow === id) {
             setPreviewCard(false);
