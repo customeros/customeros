@@ -40,6 +40,7 @@ func (r *webSessionEventsRepository) Create(ctx context.Context, webSessionData 
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	tracing.LogObjectAsJson(span, "webSessionData", webSessionData)
 
 	var created postgres_entity.WebSession
 	err := r.gormDb.Create(&webSessionData).Scan(&created).Error
