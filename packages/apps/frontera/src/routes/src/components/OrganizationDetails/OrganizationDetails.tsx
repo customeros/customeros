@@ -75,11 +75,11 @@ export const OrganizationDetails = observer(() => {
 
   const tagsUsecase = useMemo(
     () => new EditOrganizationTagUsecase(id ?? store.ui.focusRow),
-    [id],
+    [id, store.ui.focusRow],
   );
   const saveOrganizationUseCase = useMemo(
     () => new SaveOrganizationUseCase(id ?? store.ui.focusRow),
-    [id],
+    [id, store.ui.focusRow],
   );
 
   const handleCreateOption = (value: string) => {
