@@ -27,8 +27,8 @@ export const EmptyState = observer(() => {
         return {
           title: "Let's get started",
           description:
-            'Get started by manually adding an organization or connecting an app in Settings',
-          buttonLabel: 'Add organization',
+            'Get started by manually adding a company or connecting an app in Settings',
+          buttonLabel: 'Add company',
           dataTest: 'all-orgs-add-org',
           onClick: () => {
             store.ui.commandMenu.setType('AddNewOrganization');
@@ -51,7 +51,7 @@ export const EmptyState = observer(() => {
           title: 'Who will be first?',
           description:
             'No customers here yet. You can change prospects into customers by changing their relationship status in the About section.',
-          buttonLabel: 'Go to Organizations',
+          buttonLabel: 'Go to Companies',
           dataTest: 'customers-go-to-all-orgs',
           onClick: () => {
             navigate(`/finder?preset=${allOrgsView}`);
@@ -62,8 +62,8 @@ export const EmptyState = observer(() => {
         return {
           title: 'Bullseye pending',
           description:
-            'We’re sorting through your Leads in the Organizations view using your Ideal Company Profile. Once qualified, they will automatically show up here as Targets.',
-          buttonLabel: 'Go to Organizations',
+            'We’re sorting through your Leads in the Companies view using your Ideal Company Profile. Once qualified, they will automatically show up here as Targets.',
+          buttonLabel: 'Go to Companies',
           dataTest: 'targets-go-to-leads',
           onClick: () => {
             navigate(`/finder?preset=${allOrgsView}`);
@@ -73,8 +73,8 @@ export const EmptyState = observer(() => {
         return {
           title: 'No signatures yet',
           description:
-            'No contracts here yet. Once you create a contract for an organization, they will show up here.',
-          buttonLabel: 'Go to Organizations',
+            'No contracts here yet. Once you create a contract for a company, they will show up here.',
+          buttonLabel: 'Go to Companies',
           dataTest: 'contracts-go-to-all-orgs',
           onClick: () => {
             navigate(`/finder?preset=${allOrgsView}`);
@@ -86,7 +86,7 @@ export const EmptyState = observer(() => {
           title: 'No paper trails yet',
           description:
             'Once you generate an invoice from a customer’s contract, they will show up here.',
-          buttonLabel: 'Go to Organizations',
+          buttonLabel: 'Go to Companies',
           dataTest: 'invoices-go-to-all-orgs',
           onClick: () => {
             navigate(`/finder?preset=${allOrgsView}`);
@@ -118,10 +118,9 @@ export const EmptyState = observer(() => {
         };
       default:
         return {
-          title: "We couldn't find any organizations",
-          description:
-            'Manually add an organization or connect an app in Settings',
-          buttonLabel: 'Add organization',
+          title: "We couldn't find any companies",
+          description: 'Manually add a company or connect an app in Settings',
+          buttonLabel: 'Add company',
           dataTest: 'go-to-all-orgs',
           onClick: () => {
             store.ui.commandMenu.setType('AddNewOrganization');

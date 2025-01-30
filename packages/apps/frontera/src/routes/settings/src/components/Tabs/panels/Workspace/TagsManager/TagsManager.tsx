@@ -12,7 +12,7 @@ import { EntityType } from '@shared/types/__generated__/graphql.types';
 import { TagList } from './TagsList.tsx';
 
 const entityTypes = {
-  [EntityType.Organization]: { label: 'Organization' },
+  [EntityType.Organization]: { label: 'Company' },
   [EntityType.Contact]: { label: 'Contact' },
   [EntityType.LogEntry]: { label: 'Log entry' },
 };

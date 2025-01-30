@@ -72,7 +72,7 @@ export const DuplicateDomainInformation = observer(
         </div>
         <p className='mt-3 text-sm'>
           <span className='font-medium mr-1 '>{domain},</span>
-          is already associated with another existing organization,
+          is already associated with another existing company,
           <span className='font-medium mx-1'>{associatedOrg?.name}.</span>
         </p>
         <p className='mt-3 text-sm'>
@@ -98,7 +98,7 @@ export const DuplicateDomainInformation = observer(
               }
             }}
           >
-            Merge organizations
+            Merge companies
           </Button>
         </div>
       </article>

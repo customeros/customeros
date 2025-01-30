@@ -53,7 +53,7 @@ export const ContactCardMenu = observer(
             <MenuItem className='group/change' onClick={() => onOpen()}>
               <div>
                 <SwitchHorizontal02 className='mr-2 text-gray-500 group-hover/change:text-gray-700' />
-                <span>Change organization</span>
+                <span>Change company</span>
               </div>
             </MenuItem>
             <MenuItem

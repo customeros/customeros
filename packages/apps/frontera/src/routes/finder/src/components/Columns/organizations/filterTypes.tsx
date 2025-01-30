@@ -47,7 +47,7 @@ export const getFilterTypes = (store?: RootStore) => {
   const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     [ColumnViewType.OrganizationsName]: {
       filterType: 'text',
-      filterName: 'Organization name',
+      filterName: 'Company name',
       filterAccesor: ColumnViewType.OrganizationsName,
       filterOperators: [
         ComparisonOperator.Contains,

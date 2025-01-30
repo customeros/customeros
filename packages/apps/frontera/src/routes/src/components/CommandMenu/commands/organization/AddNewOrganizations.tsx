@@ -41,7 +41,7 @@ export const AddNewOrganization = observer(() => {
         onValueChange={usecase.setSearchTerm}
         placeholder='Search by name or website'
         dataTest={'organizations-create-new-org-org-name'}
-        label={<p className='font-medium'>Search 300,000+ organizations</p>}
+        label={<p className='font-medium'>Search 300,000+ companies</p>}
         rightElement={
           usecase.isValidatingDomain && (
             <Spinner

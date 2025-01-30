@@ -44,7 +44,7 @@ export const EditLatestOrgActive = observer(() => {
       <CommandInput
         label={label}
         value={usecase.searchTerm}
-        placeholder='Change organization'
+        placeholder='Change company'
         onValueChange={usecase.setSearchTerm}
         onKeyDownCapture={(e) => {
           if (e.key === ' ') {

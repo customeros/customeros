@@ -27,7 +27,7 @@ export const OrganizationBulkCommands = observer(() => {
   const store = useStore();
   const selectedIds = store.ui.commandMenu.context.ids;
 
-  const label = `${selectedIds?.length} organizations`;
+  const label = `${selectedIds?.length} companies`;
 
   return (
     <CommandsContainer label={label}>

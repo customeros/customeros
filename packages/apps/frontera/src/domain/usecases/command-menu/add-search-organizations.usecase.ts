@@ -162,7 +162,7 @@ export class AddSearchOrganizationsUsecase {
       );
       this.idle();
     } catch (_err) {
-      this.error('Could not search organizations');
+      this.error('Could not search companies');
     }
   }
 
@@ -215,7 +215,7 @@ export class AddSearchOrganizationsUsecase {
       this.setSearchedIds(results);
       this.idle();
     } catch (_err) {
-      this.error('Could not search organizations');
+      this.error('Could not search companies');
     }
   }
 

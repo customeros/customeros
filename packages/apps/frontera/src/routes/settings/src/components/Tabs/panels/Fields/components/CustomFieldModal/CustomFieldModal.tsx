@@ -149,14 +149,14 @@ export const CustomFieldModal = observer(
 
     const titleForNewCustomField = (() => {
       return match(view)
-        .with('organizations', () => 'New organization custom field')
+        .with('organizations', () => 'New company custom field')
         .with('contacts', () => 'New contact custom field')
         .otherwise(() => 'New custom field');
     })();
 
     const titleForEditMode = (() => {
       return match(view)
-        .with('organizations', () => 'Edit organization custom field')
+        .with('organizations', () => 'Edit company custom field')
         .with('contacts', () => 'Edit contact custom field')
         .otherwise(() => 'Edit custom field');
     })();

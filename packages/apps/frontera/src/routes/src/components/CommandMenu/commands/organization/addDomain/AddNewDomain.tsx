@@ -103,7 +103,7 @@ export const AddNewDomain = observer(() => {
               size={'sm'}
               ref={inputRef}
               dataTest='add-domain-input'
-              placeholder='Organization’s domain'
+              placeholder='Company’s domain'
               value={addNewDomainCase.inputValue}
               onChange={(e) => {
                 addNewDomainCase.setInputValue(e.target.value);

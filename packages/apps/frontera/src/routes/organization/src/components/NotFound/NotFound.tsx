@@ -21,11 +21,11 @@ export default function NotFound() {
           <SearchSm className='size-5' />
         </FeaturedIcon>
         <h2 className='text-5xl text-gray-900 py-6 font-semibold'>
-          This organization cannot be found
+          This company cannot be found
         </h2>
         <p className='text-gray-600 text-2xl pb-12 px-8 text-center'>
-          It appears the organization does not exist or you do not have
-          sufficient rights to preview it.
+          It appears the company does not exist or you do not have sufficient
+          rights to preview it.
         </p>
         <Button
           size='lg'

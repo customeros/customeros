@@ -21,11 +21,11 @@ export const invoicesOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.InvoicesIssueDate]: 'Issue Date',
   [ColumnViewType.InvoicesIssueDatePast]: 'Created At',
   [ColumnViewType.InvoicesInvoiceStatus]: 'Invoice Status',
-  [ColumnViewType.InvoicesOrganization]: 'Organization Name',
+  [ColumnViewType.InvoicesOrganization]: 'Company Name',
 };
 
 export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
-  [ColumnViewType.ContactsOrganization]: 'Organization',
+  [ColumnViewType.ContactsOrganization]: 'Company',
   [ColumnViewType.ContactsName]: 'Name',
   [ColumnViewType.ContactsLinkedin]: 'LinkedIn',
   [ColumnViewType.ContactsCity]: 'City',
@@ -86,7 +86,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsAvatar]: 'Logo',
   [ColumnViewType.OrganizationsForecastArr]: 'ARR Forecast',
   [ColumnViewType.OrganizationsLastTouchpoint]: 'Last Touchpoint',
-  [ColumnViewType.OrganizationsName]: 'Organization',
+  [ColumnViewType.OrganizationsName]: 'Company',
   [ColumnViewType.OrganizationsOwner]: 'Owner',
   [ColumnViewType.OrganizationsOnboardingStatus]: 'Onboarding',
   [ColumnViewType.OrganizationsRelationship]: 'Relationship',
@@ -200,7 +200,7 @@ export const contractsHelperTextMap: Record<string, string> = {
 
 export const opportunitiesMap: Record<string, string> = {
   [ColumnViewType.OpportunitiesName]: 'Name',
-  [ColumnViewType.OpportunitiesOrganization]: 'Organization',
+  [ColumnViewType.OpportunitiesOrganization]: 'Company',
   [ColumnViewType.OpportunitiesStage]: 'Stage',
   [ColumnViewType.OpportunitiesTimeInStage]: 'Time in Stage',
   [ColumnViewType.OpportunitiesEstimatedArr]: 'Estimated ARR',

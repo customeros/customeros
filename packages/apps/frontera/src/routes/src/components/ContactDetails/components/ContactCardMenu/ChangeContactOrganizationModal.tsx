@@ -33,20 +33,20 @@ export const ChangeContactOrganizationModal = observer(
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>
-            <p className='font-medium'>{`Change ${contactStore?.name}'s organization `}</p>
+            <p className='font-medium'>{`Change ${contactStore?.name}'s company`}</p>
             <ModalCloseButton asChild />
           </ModalHeader>
           <ModalBody>
             <div>
               <p>
-                Changing this contact’s organization will associate them with
-                the newly selected organization.
+                Changing this contact’s company will associate them with the
+                newly selected company.
               </p>
             </div>
 
             <Popover modal>
               <PopoverTrigger className='w-full flex items-start justify-start mt-4 text-gray-400'>
-                <p className='text-start w-full'>Contact's new organization</p>
+                <p className='text-start w-full'>Contact's new company</p>
               </PopoverTrigger>
               <PopoverContent
                 align='center'
@@ -78,7 +78,7 @@ export const ChangeContactOrganizationModal = observer(
               Cancel
             </Button>
             <Button className='w-full' colorScheme='primary'>
-              Change organization
+              Change company
             </Button>
           </ModalFooter>
         </ModalContent>

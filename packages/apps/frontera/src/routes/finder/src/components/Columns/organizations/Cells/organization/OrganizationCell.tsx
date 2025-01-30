@@ -53,7 +53,7 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
       <IconButton
         size='xs'
         variant='ghost'
-        aria-label='preview organization'
+        aria-label='preview company'
         icon={<Eye className='text-gray-500' />}
         className='opacity-0 group-hover:opacity-100  cursor-pointer'
         onClick={() => {

@@ -114,7 +114,7 @@ export const OrganizationDetails = observer(() => {
               className='text-grayModern-300 fill-grayModern-500 size-4'
             />
             <span className='font-medium'>
-              We're enriching this organizations's details...
+              We're enriching this company’s details.
             </span>
           </div>
         )}

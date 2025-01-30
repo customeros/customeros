@@ -62,7 +62,7 @@ export const OrganizationFields = observer(() => {
         title='Organization fields'
         numberOfCoreFields={coreFields.length}
         numberOfCustomFields={customFieldStore.length}
-        subTitle='Create and manage custom fields for organizations'
+        subTitle='Create and manage custom fields for companies'
       />
 
       <div className='flex items-center justify-between mt-4'>

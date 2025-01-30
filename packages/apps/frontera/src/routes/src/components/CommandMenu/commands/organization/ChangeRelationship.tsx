@@ -46,9 +46,9 @@ export const ChangeRelationship = observer(() => {
   const label = match(context.entity)
     .with(
       'Organization',
-      () => `Organization - ${(entity as Organization)?.value?.name}`,
+      () => `Company - ${(entity as Organization)?.value?.name}`,
     )
-    .with('Organizations', () => `${context.ids?.length} organizations`)
+    .with('Organizations', () => `${context.ids?.length} companies`)
     .otherwise(() => '');
 
   const handleSelect = (value: OrganizationRelationship) => () => {

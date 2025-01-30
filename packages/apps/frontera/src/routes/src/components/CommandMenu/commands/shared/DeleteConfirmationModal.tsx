@@ -165,10 +165,7 @@ export const DeleteConfirmationModal = observer(() => {
       'Organization',
       () => `Archive ${(entity as Organization)?.value.name || 'Unnamed'}?`,
     )
-    .with(
-      'Organizations',
-      () => `Archive ${context.ids?.length} organizations?`,
-    )
+    .with('Organizations', () => `Archive ${context.ids?.length} companies?`)
     .with(
       'Opportunities',
       () => `Archive ${context.ids?.length} opportunities?`,
