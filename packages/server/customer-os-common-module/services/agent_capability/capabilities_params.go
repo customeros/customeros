@@ -11,7 +11,8 @@ type CapabilityParams struct {
 	IsNewCompanyVisit  bool     `json:"isNewCompanyVisit"`
 	IsNewPersonVisit   bool     `json:"isNewPersonVisit"`
 	LinkedInSlug       string   `json:"linkedinSlug"`
-	Message            *string  `json:"message,omitempty"`
+	MarkdownEventID    string   `json:"markdownEventId"`
+	Message            string   `json:"message"`
 	OrganizationID     string   `json:"organizationId"`
 	PageViews          []string `json:"pageViews"`
 	Referrer           string   `json:"referrer"`

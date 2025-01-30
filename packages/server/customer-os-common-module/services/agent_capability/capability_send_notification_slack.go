@@ -25,7 +25,7 @@ func (c *SendSlackNotificationCapability) ValidateConfig(config SendSlackNotific
 }
 
 func (c *SendSlackNotificationCapability) ValidateInput(input SendSlackNotificationInput) error {
-	if input.Message == nil || utils.IfNotNilString(input.Message) == "" {
+	if utils.IfNotNilString(input.Message) == "" {
 		return errors.New("Message must be set")
 	}
 	return nil
@@ -56,7 +56,7 @@ var (
 )
 
 type SendSlackNotificationInput struct {
-	Message *string `json:"message,omitempty"`
+	Message string `json:"message"`
 }
 
 type SendSlackNotificationOutput struct {
@@ -99,7 +99,7 @@ func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data Send
 		return result, err
 	}
 
-	err := c.notificationService.NotifySlackChannel(ctx, tenant, config.ChannelID.Value, data.Message)
+	err := c.notificationService.NotifySlackChannel(ctx, tenant, config.ChannelID.Value, &data.Message)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return result, err

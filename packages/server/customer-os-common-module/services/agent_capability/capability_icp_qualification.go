@@ -36,6 +36,12 @@ type ICPQualificationOutput struct {
 	IcpFitRationale []string `json:"icpFitRationale"`
 }
 
+type ICPQualificationConfig struct {
+	QualificationCriteria    string `json:"qualificationCriteria"` // TODO valiudate this one only
+	DisqualificationCriteria string `json:"disqualificationCriteria"`
+	UserPrompt               string `json:"userPrompt"`
+}
+
 type ICPFit string
 
 const (

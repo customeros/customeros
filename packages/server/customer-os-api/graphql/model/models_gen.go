@@ -3315,6 +3315,8 @@ const (
 	CapabilityTypeAnalyzeWebSessionIntent         CapabilityType = "ANALYZE_WEB_SESSION_INTENT"
 	CapabilityTypeSendSLACkNotification           CapabilityType = "SEND_SLACK_NOTIFICATION"
 	CapabilityTypeWebVisitorSendSLACkNotification CapabilityType = "WEB_VISITOR_SEND_SLACK_NOTIFICATION"
+	CapabilityTypeApplyTag                        CapabilityType = "APPLY_TAG"
+	CapabilityTypeCreateMarkdownTimelineEvent     CapabilityType = "CREATE_MARKDOWN_TIMELINE_EVENT"
 )
 
 var AllCapabilityType = []CapabilityType{
@@ -3323,11 +3325,13 @@ var AllCapabilityType = []CapabilityType{
 	CapabilityTypeAnalyzeWebSessionIntent,
 	CapabilityTypeSendSLACkNotification,
 	CapabilityTypeWebVisitorSendSLACkNotification,
+	CapabilityTypeApplyTag,
+	CapabilityTypeCreateMarkdownTimelineEvent,
 }
 
 func (e CapabilityType) IsValid() bool {
 	switch e {
-	case CapabilityTypeIdentifyWebVisitor, CapabilityTypeCreateOrganization, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeSendSLACkNotification, CapabilityTypeWebVisitorSendSLACkNotification:
+	case CapabilityTypeIdentifyWebVisitor, CapabilityTypeCreateOrganization, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeSendSLACkNotification, CapabilityTypeWebVisitorSendSLACkNotification, CapabilityTypeApplyTag, CapabilityTypeCreateMarkdownTimelineEvent:
 		return true
 	}
 	return false
