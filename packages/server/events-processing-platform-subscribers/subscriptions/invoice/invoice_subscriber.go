@@ -46,6 +46,7 @@ func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config
 			service.CommonServices.InvoiceService,
 			service.CommonServices.FileService,
 			service.CommonServices.PostmarkService,
+			service.CommonServices.Events.Publisher,
 		),
 	}
 }

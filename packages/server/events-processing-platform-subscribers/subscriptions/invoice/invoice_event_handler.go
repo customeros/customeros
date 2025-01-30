@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"io/ioutil"
 	"net/http"
@@ -54,14 +55,15 @@ type InvoiceActionMetadata struct {
 }
 
 type InvoiceEventHandler struct {
-	log         logger.Logger
-	cfg         config.Config
-	grpcClients *grpc_client.Clients
-	neo4j       *neo4j_repository.Repositories
-	postgres    *postgres_repository.Repositories
-	invoice     interfaces.InvoiceService
-	fileStore   interfaces.FileService
-	postmark    interfaces.PostmarkService
+	log            logger.Logger
+	cfg            config.Config
+	grpcClients    *grpc_client.Clients
+	neo4j          *neo4j_repository.Repositories
+	postgres       *postgres_repository.Repositories
+	invoice        interfaces.InvoiceService
+	fileStore      interfaces.FileService
+	postmark       interfaces.PostmarkService
+	eventPublisher interfaces.EventPublisher
 }
 
 func NewInvoiceEventHandler(
@@ -73,16 +75,18 @@ func NewInvoiceEventHandler(
 	invoice interfaces.InvoiceService,
 	fileStore interfaces.FileService,
 	postmark interfaces.PostmarkService,
+	eventPublisher interfaces.EventPublisher,
 ) *InvoiceEventHandler {
 	return &InvoiceEventHandler{
-		log:         log,
-		cfg:         cfg,
-		grpcClients: grpcClients,
-		neo4j:       neo4j,
-		postgres:    postgres,
-		invoice:     invoice,
-		fileStore:   fileStore,
-		postmark:    postmark,
+		log:            log,
+		cfg:            cfg,
+		grpcClients:    grpcClients,
+		neo4j:          neo4j,
+		postgres:       postgres,
+		invoice:        invoice,
+		fileStore:      fileStore,
+		postmark:       postmark,
+		eventPublisher: eventPublisher,
 	}
 }
 
@@ -372,6 +376,12 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "slackInvoiceFinalizedWebhook"))
 		h.log.Errorf("error invoking slack invoice finalized webhook for invoice %s: %s", invoiceId, err.Error())
+	}
+
+	err = h.eventPublisher.PublishEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceFinalized{})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
+		h.log.Errorf("error publishing invoice finalized event for invoice %s: %s", invoiceId, err.Error())
 	}
 
 	// do not dispatch invoice finalized event if it was already dispatched
@@ -873,6 +883,12 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 
 	if invoiceEntity.DryRun || allInvoiceLinesEmpty {
 		return nil
+	}
+
+	err = h.eventPublisher.PublishEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceVoided{})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
+		h.log.Errorf("error publishing invoice voided event for invoice %s: %s", invoiceId, err.Error())
 	}
 
 	// void notification already sent, skip

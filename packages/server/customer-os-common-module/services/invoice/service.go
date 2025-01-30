@@ -667,6 +667,13 @@ func (s *invoiceService) PayInvoice(ctx context.Context, invoiceId string) error
 		s.log.Errorf("Error from events processing: %s", err.Error())
 		return err
 	}
+
+	err = s.events.Publisher.PublishEvent(ctx, invoiceId, model.INVOICE, dto.InvoicePaid{})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
+		s.log.Errorf("Error from events processing: %s", err.Error())
+	}
+
 	return nil
 }
 

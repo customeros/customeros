@@ -115,6 +115,29 @@ func InitHandlerRegistration(eventsService *events.EventsService, dependencies *
 		DataType:  reflect.TypeOf(dto.SkuUpdate{}),
 	})
 
+	// Invoice handlers
+	eventsService.Subscriber.RegisterHandler(dto.InvoiceFinalized{}, interfaces.EventHandler{
+		HandlerFunc: func(ctx context.Context, event any) error {
+			return listeners.OnInvoiceFinalized(ctx, dependencies, event)
+		},
+		EventType: reflect.TypeOf(dto.InvoiceFinalized{}).Name(),
+		DataType:  reflect.TypeOf(dto.InvoiceFinalized{}),
+	})
+	eventsService.Subscriber.RegisterHandler(dto.InvoicePaid{}, interfaces.EventHandler{
+		HandlerFunc: func(ctx context.Context, event any) error {
+			return listeners.OnInvoicePaid(ctx, dependencies, event)
+		},
+		EventType: reflect.TypeOf(dto.InvoicePaid{}).Name(),
+		DataType:  reflect.TypeOf(dto.InvoicePaid{}),
+	})
+	eventsService.Subscriber.RegisterHandler(dto.InvoiceVoided{}, interfaces.EventHandler{
+		HandlerFunc: func(ctx context.Context, event any) error {
+			return listeners.OnInvoiceVoided(ctx, dependencies, event)
+		},
+		EventType: reflect.TypeOf(dto.InvoiceVoided{}).Name(),
+		DataType:  reflect.TypeOf(dto.InvoiceVoided{}),
+	})
+
 	// Automation Engine
 	eventsService.Subscriber.RegisterHandler(dto.WebhookEvent{}, interfaces.EventHandler{
 		HandlerFunc: func(ctx context.Context, event any) error {
