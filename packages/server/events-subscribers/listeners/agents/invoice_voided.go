@@ -2,7 +2,6 @@ package agent_listeners
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -46,12 +45,6 @@ func (l *InvoiceVoidedListener) Handle(ctx context.Context, baseEvent any) error
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	_, err = l.validateMessage(ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -111,19 +104,4 @@ func (l *InvoiceVoidedListener) handle(ctx context.Context, invoiceId string) er
 	}
 
 	return nil
-}
-
-func (l *InvoiceVoidedListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.InvoiceVoided, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceVoidedListener.validateMessage")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	message, ok := event.Event.Data.(*dto.InvoiceVoided)
-	if !ok {
-		err := fmt.Errorf("expected InvoiceVoided, got %T", event.Event.Data)
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return message, nil
 }

@@ -2,9 +2,7 @@ package events_listeners
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -45,20 +43,13 @@ func (l *RequestEnrichOrganizationListener) Handle(ctx context.Context, baseEven
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
 
-	tenant := common.GetTenantFromContext(ctx)
-	if tenant == "" {
-		err := errors.New("Tenant not set on context")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	message, err := l.validateMessage(ctx, event)
+	data, err := events.DecodeEventData[dto.RequestEnrichOrganization](ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -67,12 +58,18 @@ func (l *RequestEnrichOrganizationListener) Handle(ctx context.Context, baseEven
 	organizationId := event.Event.EntityId
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
-	domain := l.dependencies.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, message.Url)
+	if data.Url == "" {
+		errors.New("Url is not set on event message")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	domain := l.dependencies.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, data.Url)
 	if domain == "" {
 		return nil
 	}
 
-	return l.enrichOrganization(ctx, tenant, organizationId, domain)
+	return l.enrichOrganization(ctx, event.Event.Tenant, organizationId, domain)
 }
 
 func (l *RequestEnrichOrganizationListener) enrichOrganization(ctx context.Context, tenant, organizationId, domain string) error {
@@ -255,25 +252,4 @@ func (l *RequestEnrichOrganizationListener) addSocial(ctx context.Context, organ
 		tracing.TraceErr(span, err)
 		l.dependencies.Logger.Errorf("Error adding %s social: %s", url, err.Error())
 	}
-}
-
-func (l *RequestEnrichOrganizationListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.RequestEnrichOrganization, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestEnrichOrganizationListener.validateMessage")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	message, ok := event.Event.Data.(*dto.RequestEnrichOrganization)
-	if !ok {
-		err := fmt.Errorf("expected RequestEnrichOrganization, got %T", event.Event.Data)
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	if event.Event.EntityId == "" {
-		err := errors.New("EntityId not set on event")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return message, nil
 }

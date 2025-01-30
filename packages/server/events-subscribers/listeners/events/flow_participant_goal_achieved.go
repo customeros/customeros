@@ -49,24 +49,28 @@ func (l *FlowParticipantGoalAchievedListener) Handle(ctx context.Context, baseEv
 		return err
 	}
 
-	if event.Event.Tenant == "" {
-		err := errors.New("Tenant not set on event")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	ctx = common.SetTenantInContext(ctx, event.Event.Tenant)
-
-	message, err := l.validateMessage(ctx, event)
+	data, err := events.DecodeEventData[dto.FlowParticipantGoalAchieved](ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	return l.handle(ctx, event.Event.EntityId, message)
+	if data.ParticipantId == "" {
+		err := errors.New("ParticipantID is empty")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if data.ParticipantType == "" {
+		err := errors.New("ParticipantType is empty")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return l.handle(ctx, event.Event.EntityId, data)
 }
 
-func (l *FlowParticipantGoalAchievedListener) handle(ctx context.Context, entityId string, message *dto.FlowParticipantGoalAchieved) error {
+func (l *FlowParticipantGoalAchievedListener) handle(ctx context.Context, entityId string, message dto.FlowParticipantGoalAchieved) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantGoalAchievedListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -215,25 +219,4 @@ func (l *FlowParticipantGoalAchievedListener) handle(ctx context.Context, entity
 	}
 
 	return nil
-}
-
-func (l *FlowParticipantGoalAchievedListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.FlowParticipantGoalAchieved, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantGoalAchievedListener.validateMessage")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	message, ok := event.Event.Data.(*dto.FlowParticipantGoalAchieved)
-	if !ok {
-		err := fmt.Errorf("expected HideContact, got %T", event.Event.Data)
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	if event.Event.EntityId == "" {
-		err := errors.New("EntityId not set on event")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return message, nil
 }

@@ -2,7 +2,6 @@ package events_listeners
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -39,12 +38,6 @@ func (l *FlowComputeParticipantsRequirementsListener) Handle(ctx context.Context
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	_, err = l.validateMessage(ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -98,25 +91,4 @@ func (l *FlowComputeParticipantsRequirementsListener) handle(ctx context.Context
 	}
 
 	return nil
-}
-
-func (l *FlowComputeParticipantsRequirementsListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.FlowComputeParticipantsRequirements, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowComputeParticipantsRequirementsListener.validateMessage")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	message, ok := event.Event.Data.(*dto.FlowComputeParticipantsRequirements)
-	if !ok {
-		err := fmt.Errorf("expected FlowComputeParticipantsRequirements, got %T", event.Event.Data)
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	if event.Event.EntityId == "" {
-		err := errors.New("EntityId not set on event")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return message, nil
 }

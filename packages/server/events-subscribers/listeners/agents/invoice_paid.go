@@ -2,7 +2,6 @@ package agent_listeners
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -47,12 +46,6 @@ func (l *InvoicePaidListener) Handle(ctx context.Context, baseEvent any) error {
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	_, err = l.validateMessage(ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -126,19 +119,4 @@ func (l *InvoicePaidListener) handle(ctx context.Context, invoiceId string) erro
 	}
 
 	return nil
-}
-
-func (l *InvoicePaidListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.InvoicePaid, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoicePaidListener.validateMessage")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	message, ok := event.Event.Data.(*dto.InvoicePaid)
-	if !ok {
-		err := fmt.Errorf("expected InvoicePaid, got %T", event.Event.Data)
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return message, nil
 }

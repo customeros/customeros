@@ -2,12 +2,13 @@ package events
 
 import (
 	"context"
-	"github.com/mitchellh/mapstructure"
-	"github.com/pkg/errors"
 	"reflect"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -48,6 +49,13 @@ func (b BaseEventListener) ValidateBaseEvent(ctx context.Context, input any) (*d
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Events.ValidateEvent")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("tenant not set on context")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
 
 	message, ok := input.(dto.Event)
 	if !ok {

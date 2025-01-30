@@ -55,16 +55,16 @@ func (l *IntentDetectedListener) Handle(ctx context.Context, baseEvent any) erro
 		return err
 	}
 
-	message, err := l.validateMessage(ctx, event)
+	data, err := events.DecodeEventData[dto.IntentDetected](ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	return l.handle(ctx, message)
+	return l.handle(ctx, data)
 }
 
-func (l *IntentDetectedListener) handle(ctx context.Context, message *dto.IntentDetected) error {
+func (l *IntentDetectedListener) handle(ctx context.Context, message dto.IntentDetected) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IntentDetectedListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -115,19 +115,4 @@ func (l *IntentDetectedListener) lookupActiveAgents(ctx context.Context, agentTy
 		return nil
 	}
 	return agents
-}
-
-func (l *IntentDetectedListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.IntentDetected, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IntentDetectedListener.validateMessage")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	message, ok := event.Event.Data.(*dto.IntentDetected)
-	if !ok {
-		err := fmt.Errorf("expected IntentDetected, got %T", event.Event.Data)
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return message, nil
 }

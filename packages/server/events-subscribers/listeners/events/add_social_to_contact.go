@@ -2,7 +2,6 @@ package events_listeners
 
 import (
 	"context"
-	"github.com/mitchellh/mapstructure"
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -10,6 +9,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/mitchellh/mapstructure"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 

@@ -2,7 +2,6 @@ package events_listeners
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -44,12 +43,6 @@ func (l *HideContactListener) Handle(ctx context.Context, baseEvent any) error {
 		return err
 	}
 
-	_, err = l.validateMessage(ctx, event)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	contactId := event.Event.EntityId
 
 	err = l.dependencies.Neo4jRepositories.OrganizationWriteRepository.RefreshContactCountByContactId(ctx, nil, common.GetTenantFromContext(ctx), contactId)
@@ -58,25 +51,4 @@ func (l *HideContactListener) Handle(ctx context.Context, baseEvent any) error {
 	}
 
 	return nil
-}
-
-func (l *HideContactListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.HideContact, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "HideContactListener.validateMessage")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	message, ok := event.Event.Data.(*dto.HideContact)
-	if !ok {
-		err := fmt.Errorf("expected HideContact, got %T", event.Event.Data)
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	if event.Event.EntityId == "" {
-		err := errors.New("EntityId not set on event")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return message, nil
 }

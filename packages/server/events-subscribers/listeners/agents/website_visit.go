@@ -2,9 +2,7 @@ package agent_listeners
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -55,18 +53,34 @@ func (l *WebsiteVisitListener) Handle(ctx context.Context, baseEvent any) error 
 		return err
 	}
 
-	message, err := l.validateMessage(ctx, event)
+	data, err := events.DecodeEventData[dto.WebsiteVisit](ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	ctx = common.SetTenantInContext(ctx, message.Tenant)
+	if data.Tenant == "" {
+		err := errors.New("Tenant not set on event")
+		tracing.TraceErr(span, err)
+		return err
+	}
 
-	return l.handle(ctx, message)
+	if data.SessionID == "" {
+		err := errors.New("SessionID not set on event")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if data.IPAddress == "" {
+		err := errors.New("IPAddress not set on event")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return l.handle(ctx, data)
 }
 
-func (l *WebsiteVisitListener) handle(ctx context.Context, message *dto.WebsiteVisit) error {
+func (l *WebsiteVisitListener) handle(ctx context.Context, message dto.WebsiteVisit) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteVisitListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -105,37 +119,4 @@ func (h *WebsiteVisitListener) lookupActiveAgents(ctx context.Context) []postgre
 		return nil
 	}
 	return agents
-}
-
-func (l *WebsiteVisitListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.WebsiteVisit, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteVisitListener.validateMessage")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	message, ok := event.Event.Data.(*dto.WebsiteVisit)
-	if !ok {
-		err := fmt.Errorf("expected WebsiteVisit, got %T", event.Event.Data)
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	if message.Tenant == "" {
-		err := errors.New("Tenant not set on event")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	if message.SessionID == "" {
-		err := errors.New("SessionID not set on event")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	if message.IPAddress == "" {
-		err := errors.New("IPAddress not set on event")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return message, nil
 }

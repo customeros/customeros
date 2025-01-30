@@ -2,7 +2,6 @@ package events_listeners
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
@@ -41,28 +40,16 @@ func (l *RequestValidateEmailListener) Handle(ctx context.Context, baseEvent any
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
 
-	tenant := common.GetTenantFromContext(ctx)
-	if tenant == "" {
-		err := errors.New("Missing tenant in email request validation event")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	_, err = l.validateMessage(ctx, event)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	emailId := event.Event.EntityId
+	span.LogKV("emailId", emailId)
 
-	emailDbNode, err := l.dependencies.Neo4jRepositories.EmailReadRepository.GetById(ctx, tenant, emailId)
+	emailDbNode, err := l.dependencies.Neo4jRepositories.EmailReadRepository.GetById(ctx, event.Event.Tenant, emailId)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Failed to get email node from neo4j"))
 		return err
@@ -70,27 +57,6 @@ func (l *RequestValidateEmailListener) Handle(ctx context.Context, baseEvent any
 	emailEntity := neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 
 	return l.validateEmail(ctx, emailId, emailEntity.RawEmail)
-}
-
-func (l *RequestValidateEmailListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.RequestValidateEmail, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "RequestValidateEmailListener.validateMessage")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	message, ok := event.Event.Data.(*dto.RequestValidateEmail)
-	if !ok {
-		err := fmt.Errorf("expected RequestValidateEmail, got %T", event.Event.Data)
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	if event.Event.EntityId == "" {
-		err := errors.New("EntityId not set on event")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return message, nil
 }
 
 func (l *RequestValidateEmailListener) validateEmail(ctx context.Context, emailId, emailAddressToValidate string) error {

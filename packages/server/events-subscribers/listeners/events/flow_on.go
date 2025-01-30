@@ -2,7 +2,6 @@ package events_listeners
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -40,12 +39,6 @@ func (l *FlowOnListener) Handle(ctx context.Context, baseEvent any) error {
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
 
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	_, err = l.validateMessage(ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -90,25 +83,4 @@ func (l *FlowOnListener) handle(ctx context.Context, entityId string) error {
 	}
 
 	return nil
-}
-
-func (l *FlowOnListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.FlowOn, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowOnListener.validateMessage")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	message, ok := event.Event.Data.(*dto.FlowOn)
-	if !ok {
-		err := fmt.Errorf("expected FlowOn, got %T", event.Event.Data)
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	if event.Event.EntityId == "" {
-		err := errors.New("EntityId not set on event")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return message, nil
 }

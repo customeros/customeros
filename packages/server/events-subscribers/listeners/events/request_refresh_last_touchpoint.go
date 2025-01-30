@@ -2,13 +2,15 @@ package events_listeners
 
 import (
 	"context"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 	"github.com/opentracing/opentracing-go"
+
+	"github.com/customeros/customeros/packages/server/events-subscribers/model"
 )
 
 type RequestRefreshLastTouchpointListener struct {

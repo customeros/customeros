@@ -2,7 +2,6 @@ package events_listeners
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -38,20 +37,7 @@ func (l *SkuUpdateListener) Handle(ctx context.Context, baseEvent any) error {
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
 
-	tenant := common.GetTenantFromContext(ctx)
-	if tenant == "" {
-		err := errors.New("Missing tenant in context")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	event, err := l.ValidateBaseEvent(ctx, baseEvent)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	_, err = l.validateMessage(ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -112,25 +98,4 @@ func (l *SkuUpdateListener) handle(ctx context.Context, skuId string) error {
 	}
 
 	return nil
-}
-
-func (l *SkuUpdateListener) validateMessage(ctx context.Context, event *dto.Event) (*dto.SkuUpdate, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SkuUpdateListener.validateMessage")
-	defer span.Finish()
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	message, ok := event.Event.Data.(*dto.SkuUpdate)
-	if !ok {
-		err := fmt.Errorf("expected SkuUpdate, got %T", event.Event.Data)
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	if event.Event.EntityId == "" {
-		err := errors.New("EntityId not set on event")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return message, nil
 }
