@@ -5,9 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"io/ioutil"
 	"net/http"
 	"net/mail"
@@ -16,10 +13,13 @@ import (
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/postmark"
+	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -378,7 +378,7 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 		h.log.Errorf("error invoking slack invoice finalized webhook for invoice %s: %s", invoiceId, err.Error())
 	}
 
-	err = h.eventPublisher.PublishEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceFinalized{})
+	err = h.eventPublisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceFinalized{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
 		h.log.Errorf("error publishing invoice finalized event for invoice %s: %s", invoiceId, err.Error())
@@ -885,7 +885,7 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 		return nil
 	}
 
-	err = h.eventPublisher.PublishEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceVoided{})
+	err = h.eventPublisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceVoided{})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
 		h.log.Errorf("error publishing invoice voided event for invoice %s: %s", invoiceId, err.Error())

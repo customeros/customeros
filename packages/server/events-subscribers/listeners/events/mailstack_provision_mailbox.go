@@ -23,7 +23,7 @@ type MailstackProvisionMailboxListener struct {
 }
 
 func NewMailstackProvisionMailboxListener(logger logger.Logger, deps *model.DependencyContainer) interfaces.EventListener {
-	return &MailstackProvisionBuyRequestListener{
+	return &MailstackProvisionMailboxListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
 			events.GetEventType[dto.MailstackProvisionBuyRequest](), // subscribed event
