@@ -55,6 +55,10 @@ func MapEntityToOrganizationUIDetails(entity *neo4jentity.OrganizationEntity, ou
 	output.LastTouchPointAt = entity.LastTouchpointAt
 	output.LastTouchPointType = enummapper.MapLastTouchpointTypeToModel(entity.LastTouchpointType)
 
+	output.IcpFit = utils.ToPtr(enummapper.MapIcpFitToModel(entity.IcpFit))
+	output.IcpFitUpdatedAt = entity.IcpFitUpdatedAt
+	output.IcpFitReasons = entity.IcpFitReasons
+
 	output.EnrichedAt = entity.EnrichDetails.EnrichedAt
 	output.EnrichedRequestedAt = entity.EnrichDetails.EnrichRequestedAt
 	output.EnrichedFailedAt = entity.EnrichDetails.EnrichFailedAt

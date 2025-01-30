@@ -44,6 +44,9 @@ type OrganizationUiDetails {
     public:                 Boolean
     employees:              Int64
     yearFounded:            Int64
+    icpFit:                 IcpFit
+    icpFitUpdatedAt:        Time
+    icpFitReasons:          [String!]!
 
     enrichedAt: Time
     enrichedFailedAt: Time
@@ -78,4 +81,10 @@ type OrganizationUiDetails {
     parentId:             ID
     parentName:           String
     subsidiaries:         [String!]!
+}
+
+enum IcpFit {
+    ICP_FIT
+    ICP_NOT_FIT
+    ICP_NOT_SET
 }

@@ -2,12 +2,12 @@ package neo4j_repository
 
 import (
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -196,7 +196,12 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 		}
 		if data.IcpFit != nil {
 			cypherUpdate += `org.icpFit = $icpFit,`
-			paramsUpdate["icpFit"] = *data.IcpFit
+			cypherUpdate += `org.icpFitUpdatedAt = CASE WHEN org.icpFit IS NULL OR org.icpFit <> $icpFit THEN datetime() ELSE org.icpFitUpdatedAt END,`
+			paramsUpdate["icpFit"] = (*data.IcpFit).String()
+		}
+		if data.IcpFitReasons != nil {
+			cypherUpdate += `org.icpFitReasons = $icpFitReasons,`
+			paramsUpdate["icpFitReasons"] = *data.IcpFitReasons
 		}
 		if utils.IfNotNilString(data.EnrichDomain) != "" && utils.IfNotNilString(data.EnrichSource) != "" {
 			cypherUpdate += `org.enrichDomain = $enrichDomain, org.enrichSource = $enrichSource, org.enrichedAt = $enrichedAt,`

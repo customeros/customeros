@@ -1,6 +1,7 @@
 package neo4j_entity
 
 import (
+	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
@@ -26,6 +27,8 @@ const (
 	OrganizationPropertyLastTouchpointType        OrganizationProperty = "lastTouchpointType"
 	OrganizationPropertyLastTouchpointAt          OrganizationProperty = "lastTouchpointAt"
 	OrganizationPropertyIcpFit                    OrganizationProperty = "icpFit"
+	OrganizationPropertyIcpFitUpdatedAt           OrganizationProperty = "icpFitUpdatedAt"
+	OrganizationPropertyIcpFitReasons             OrganizationProperty = "icpFitReasons"
 	OrganizationPropertyHiddenAt                  OrganizationProperty = "hiddenAt"
 	OrganizationPropertyEnrichRequestedAt         OrganizationProperty = "techEnrichRequestedAt"
 	OrganizationPropertyEnrichedAt                OrganizationProperty = "enrichedAt"
@@ -71,7 +74,9 @@ type OrganizationEntity struct {
 	Stage              enum.OrganizationStage        `neo4jDb:"property:stage;lookupName:STAGE;supportCaseSensitive:false"`
 	StageUpdatedAt     *time.Time
 	LeadSource         string `neo4jDb:"property:leadSource;lookupName:LEAD_SOURCE;supportCaseSensitive:true"`
-	IcpFit             bool
+	IcpFit             commonenum.IcpFit
+	IcpFitUpdatedAt    *time.Time
+	IcpFitReasons      []string
 	WrongIndustry      bool
 
 	LinkedOrganizationType *string

@@ -267,7 +267,6 @@ func (h *OrganizationHandler) buildOrganizationFields(request CreateOrganization
 		Source:       utils.StringPtr(string(neo4jentity.DataSourceOpenline)),
 		AppSource:    utils.StringPtr(constants.AppSourceCustomerOsApiRest),
 		LeadSource:   utils.StringPtr(request.LeadSource),
-		IcpFit:       utils.BoolPtr(request.IcpFit),
 		Relationship: utils.ToPtr(enummapper.MapRelationshipFromModel(relationship)),
 	}
 
@@ -439,7 +438,6 @@ func (h *OrganizationHandler) mapOrganizationEntityToResult(entity *neo4jentity.
 		Website:      entity.Website,
 		LeadSource:   entity.LeadSource,
 		Relationship: entity.Relationship.String(),
-		IcpFit:       entity.IcpFit,
 		Stage:        entity.Stage.String(),
 	}
 }

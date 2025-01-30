@@ -264,7 +264,9 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *neo4j_entity.Organizati
 		Stage:                enum.DecodeOrganizationStage(utils.GetStringPropOrEmpty(props, "stage")),
 		StageUpdatedAt:       utils.GetTimePropOrNil(props, "stageUpdatedAt"),
 		LeadSource:           utils.GetStringPropOrEmpty(props, "leadSource"),
-		IcpFit:               utils.GetBoolPropOrFalse(props, string(neo4j_entity.OrganizationPropertyIcpFit)),
+		IcpFit:               commonenum.DecodeIcpFit(utils.GetStringPropOrEmpty(props, string(neo4j_entity.OrganizationPropertyIcpFit))),
+		IcpFitUpdatedAt:      utils.GetTimePropOrNil(props, string(neo4j_entity.OrganizationPropertyIcpFitUpdatedAt)),
+		IcpFitReasons:        utils.GetListStringPropOrEmpty(props, string(neo4j_entity.OrganizationPropertyIcpFitReasons)),
 		WrongIndustry:        utils.GetBoolPropOrFalse(props, string(neo4j_entity.OrganizationPropertyWrongIndustry)),
 		QuickbooksCustomerId: utils.GetStringPropOrEmpty(props, string(neo4j_entity.OrganizationPropertyQuickbooksCustomerId)),
 		RenewalSummary: neo4j_entity.RenewalSummary{

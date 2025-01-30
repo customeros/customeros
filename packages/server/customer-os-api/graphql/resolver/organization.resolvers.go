@@ -530,7 +530,6 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		IconUrl:            input.Icon,
 		Headquarters:       input.Headquarters,
 		EmployeeGrowthRate: input.EmployeeGrowthRate,
-		IcpFit:             input.IcpFit,
 	}
 
 	// set stage if updated

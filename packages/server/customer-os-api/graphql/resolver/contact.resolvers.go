@@ -13,6 +13,14 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
+	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -25,15 +33,6 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
-
-	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
-	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // Tags is the resolver for the tags field.
