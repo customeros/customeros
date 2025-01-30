@@ -2,7 +2,7 @@ package events_listeners
 
 import (
 	"context"
-	"fmt"
+	"github.com/mitchellh/mapstructure"
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -45,16 +45,22 @@ func (l *AddSocialToContactListener) Handle(ctx context.Context, baseEvent any) 
 		return err
 	}
 
-	message, err := l.validateMessage(ctx, event)
+	data, err := events.DecodeEventData[dto.AddSocialToContact](ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	socialUrl := message.Social
+	if data.Social == "" {
+		err = errors.New("Social not set on event message")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	socialUrl := data.Social
 	contactId := event.Event.EntityId
 
-	if strings.Contains(message.Social, "linkedin.com") {
+	if strings.Contains(data.Social, "linkedin.com") {
 		err := l.dependencies.CommonServices.EnrichmentService.EnrichContact(ctx, contactId, socialUrl)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -70,24 +76,18 @@ func (l *AddSocialToContactListener) validateMessage(ctx context.Context, event 
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	message, ok := event.Event.Data.(*dto.AddSocialToContact)
-	if !ok {
-		err := fmt.Errorf("expected AddSocialToContact, got %T", event.Event.Data)
-		tracing.TraceErr(span, err)
+	// Decode the data into the specific event type
+	eventDataObj := dto.AddSocialToContact{}
+	if err := mapstructure.Decode(event.Event.Data, &eventDataObj); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Failed to decode data"))
 		return nil, err
 	}
 
-	if message.Social == "" {
+	if eventDataObj.Social == "" {
 		err := errors.New("Social not set on event message")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	if event.Event.EntityId == "" {
-		err := errors.New("EntityId not set on event")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return message, nil
+	return &eventDataObj, nil
 }

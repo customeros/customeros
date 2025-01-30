@@ -16,7 +16,7 @@ type EventPublisher interface {
 }
 
 type EventListener interface {
-	Handle(ctx context.Context, baseEvent any) error
+	Handle(ctx context.Context, event any) error
 	GetEventType() string
 	GetQueueName() string
 }

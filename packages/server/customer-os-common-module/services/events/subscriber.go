@@ -3,7 +3,6 @@ package events
 import (
 	"context"
 	"encoding/json"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -62,7 +61,7 @@ func (r *RabbitMQSubscriber) RegisterListener(listener interfaces.EventListener)
 	r.listenerMutex.Lock()
 	defer r.listenerMutex.Unlock()
 
-	eventType := reflect.TypeOf(listener.GetEventType()).Name()
+	eventType := listener.GetEventType()
 	r.listeners[eventType] = listener
 	r.logger.Infof("Registered listener for event type: %s on queue: %s",
 		eventType, listener.GetQueueName())
@@ -154,6 +153,8 @@ func (r *RabbitMQSubscriber) processMessage(d amqp091.Delivery, queueName string
 
 	ctx, span := tracing.StartRabbitMQMessageTracerSpanWithHeader(ctx, "RabbitMQSubscriber.ProcessMessage", event.Metadata.UberTraceId)
 	defer span.Finish()
+	span.LogKV("event_type", event.Event.EventType)
+	span.LogKV("queue_name", queueName)
 
 	// Find the appropriate listener
 	r.listenerMutex.RLock()
@@ -172,7 +173,7 @@ func (r *RabbitMQSubscriber) processMessage(d amqp091.Delivery, queueName string
 		return nil // Wrong queue, acknowledge the message
 	}
 
-	return listener.Handle(ctx, event.Event.Data)
+	return listener.Handle(ctx, event)
 }
 
 func (r *RabbitMQSubscriber) connect() error {

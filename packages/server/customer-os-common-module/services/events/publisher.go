@@ -27,7 +27,7 @@ const (
 	ExchangeDeadLetter    = "dead-letter"
 
 	// Notification queues
-	QueueNotifications = "all-notifications"
+	QueueNotifications = "notifications"
 
 	// CustomerOS queues
 	QueueEvents     = "events"
@@ -51,7 +51,7 @@ const (
 	RoutingKeyDeadLetter = "dead-letter"
 
 	// Default configurations
-	DefaultMessageTTL          = 24 * time.Hour // after TTL message moves to DLQ
+	DefaultMessageTTL          = 240 * time.Hour // after TTL message moves to DLQ
 	DefaultMaxRetries          = 3
 	DefaultPublishTimeout      = 5 * time.Second
 	DefaultReconnectBackoff    = time.Second

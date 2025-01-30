@@ -2,7 +2,8 @@ package events
 
 import (
 	"context"
-	"errors"
+	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
 	"reflect"
 
 	"github.com/opentracing/opentracing-go"
@@ -48,7 +49,7 @@ func (b BaseEventListener) ValidateBaseEvent(ctx context.Context, input any) (*d
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	message, ok := input.(*dto.Event)
+	message, ok := input.(dto.Event)
 	if !ok {
 		err := errors.New("unable to cast to event type")
 		tracing.TraceErr(span, err)
@@ -61,7 +62,41 @@ func (b BaseEventListener) ValidateBaseEvent(ctx context.Context, input any) (*d
 		return nil, err
 	}
 
-	return message, nil
+	if message.Event.EntityId == "" {
+		err := errors.New("entity id is empty")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if message.Event.Tenant == "" {
+		err := errors.New("tenant is empty")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if message.Event.EventType == "" {
+		err := errors.New("event type is empty")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &message, nil
+}
+
+func DecodeEventData[T any](ctx context.Context, event *dto.Event) (T, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Listener.DecodeEventData")
+	defer span.Finish()
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+
+	var decoded T
+	if err := mapstructure.Decode(event.Event.Data, &decoded); err != nil {
+		err = errors.Wrap(err, "failed to decode event data")
+		tracing.LogObjectAsJson(span, "event", event)
+		tracing.TraceErr(span, err)
+		return decoded, err
+	}
+
+	return decoded, nil
 }
 
 func GetEventType[T any]() string {

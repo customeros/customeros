@@ -236,13 +236,6 @@ func (a *App) Run() error {
 		}
 	}()
 
-	// Notifications Queue
-	go func() {
-		if err := a.events.Subscriber.ListenQueue(events.QueueNotifications); err != nil {
-			errChan <- fmt.Errorf("failed to listen to notifications queue: %w", err)
-		}
-	}()
-
 	// Flow Participant Queue (exclusive)
 	go func() {
 		if err := a.events.Subscriber.ListenQueueExclusive(events.QueueFlowParticipantSchedule); err != nil {

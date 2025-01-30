@@ -29,7 +29,7 @@ type RequestEnrichOrganizationListener struct {
 }
 
 func NewRequestEnrichOrganizationListener(logger logger.Logger, deps *model.DependencyContainer) interfaces.EventListener {
-	return &HideContactListener{
+	return &RequestEnrichOrganizationListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
 			events.GetEventType[dto.RequestEnrichOrganization](), // subscribed event

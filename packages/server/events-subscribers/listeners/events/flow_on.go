@@ -23,7 +23,7 @@ type FlowOnListener struct {
 }
 
 func NewFlowOnListener(logger logger.Logger, deps *model.DependencyContainer) interfaces.EventListener {
-	return &FlowComputeParticipantsRequirementsListener{
+	return &FlowOnListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
 			events.GetEventType[dto.FlowOn](), // subscribed event
