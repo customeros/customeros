@@ -1,4 +1,5 @@
-import { set, merge } from 'lodash';
+import set from 'lodash/set';
+import merge from 'lodash/merge';
 import { Entity } from '@store/record';
 import { Transport } from '@infra/transport';
 import { FlowStore } from '@store/Flows/Flow.store';

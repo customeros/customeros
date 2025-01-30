@@ -149,7 +149,7 @@ func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context,
 		return result, err
 	}
 
-	_, err = c.sendSlackNotificationCapability.Execute(ctx, SendSlackNotificationInput{Message: message}, SendSlackNotificationConfig{ChannelID: SlackChannelIdConfig{
+	_, err = c.sendSlackNotificationCapability.Execute(ctx, SendSlackNotificationInput{Message: *message}, SendSlackNotificationConfig{ChannelID: SlackChannelIdConfig{
 		Value: config.ChannelID.Value,
 	}})
 	if err != nil {

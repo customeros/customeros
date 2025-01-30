@@ -7,7 +7,7 @@ import {
 } from '@store/Organizations/Organization.dto';
 import { OrganizationRepository } from '@infra/repositories/organization/organization.repository.ts';
 
-import { unwrap } from '@shared/util/unwrap';
+import { unwrap } from '@utils/unwrap';
 import {
   Social,
   Domain,

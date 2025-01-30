@@ -307,7 +307,7 @@ export const ContractDetailsModal = observer(
               : null
           }
           className={cn(
-            'flex flex-col gap-4 px-6 pb-6 pt-4 bg-gray-25  rounded-lg justify-between relative h-[80vh] min-w-[460px] overflow-y-auto overflow-x-hidden',
+            'flex flex-col gap-4 px-6 pb-6 pt-4 bg-gray-25  rounded-lg justify-between relative h-[80vh] w-[460px] overflow-y-auto overflow-x-hidden',
             {
               'cursor-pointer': editModalMode === EditModalMode.BillingDetails,
             },

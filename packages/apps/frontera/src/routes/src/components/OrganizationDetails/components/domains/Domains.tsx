@@ -7,6 +7,7 @@ import { cn } from '@ui/utils/cn.ts';
 import { Domain } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { Button } from '@ui/form/Button/Button.tsx';
 import { XCircle } from '@ui/media/icons/XCircle.tsx';
 import { Globe01 } from '@ui/media/icons/Globe01.tsx';
 import { getExternalUrl } from '@utils/getExternalLink.ts';
@@ -113,7 +114,7 @@ export const Domains = observer(() => {
             >
               <div>
                 {domainGroup.subdomains?.length > 0 && (
-                  <IconButton
+                  <Button
                     size='xxs'
                     variant='ghost'
                     onClick={() =>
@@ -124,21 +125,23 @@ export const Domains = observer(() => {
                         ? 'Collapse'
                         : 'Expand'
                     }
-                    icon={
+                    leftIcon={
                       expandedDomains[domainGroup.primaryDomain.domain] ? (
                         <ChevronCollapse />
                       ) : (
                         <ChevronExpand />
                       )
                     }
-                  />
+                  >
+                    {domainGroup.subdomains?.length > 0 && (
+                      <span className='text-xs font-medium mr-1'>
+                        +{domainGroup.subdomains.length}
+                      </span>
+                    )}
+                  </Button>
                 )}
               </div>
-              {domainGroup.subdomains?.length > 0 && (
-                <span className='text-xs font-medium mr-1'>
-                  +{domainGroup.subdomains.length}
-                </span>
-              )}
+
               <Menu
                 onOpenChange={(isOpen) =>
                   handleMenuOpen(domainGroup.primaryDomain.domain, isOpen)

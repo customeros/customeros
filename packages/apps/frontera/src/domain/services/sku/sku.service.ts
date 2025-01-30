@@ -1,7 +1,7 @@
 import { RootStore } from '@store/root';
 import { SkuRepository } from '@infra/repositories/sku';
 
-import { unwrap } from '@shared/util/unwrap';
+import { unwrap } from '@utils/unwrap';
 import { SkuInput } from '@shared/types/__generated__/graphql.types';
 
 export class SkuService {

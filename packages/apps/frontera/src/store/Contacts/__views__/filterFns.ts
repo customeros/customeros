@@ -275,7 +275,7 @@ const getFilterFn = (
           if (emailValidationData === undefined) return false;
 
           return match(filter.operation)
-            .with(ComparisonOperator.Contains, () =>
+            .with(ComparisonOperator.In, () =>
               filterValues?.some(
                 (id: string) =>
                   isDeliverableV2(id, emailValidationData) ||
@@ -283,12 +283,12 @@ const getFilterFn = (
                   isDeliverableUnknownV2(id, emailValidationData),
               ),
             )
-            .with(ComparisonOperator.NotContains, () =>
-              filterValues?.some(
+            .with(ComparisonOperator.NotIn, () =>
+              filterValues?.every(
                 (id: string) =>
-                  isDeliverableV2(id, emailValidationData) ||
-                  isNotDeliverableV2(id, emailValidationData) ||
-                  isDeliverableUnknownV2(id, emailValidationData),
+                  !isDeliverableV2(id, emailValidationData) &&
+                  !isNotDeliverableV2(id, emailValidationData) &&
+                  !isDeliverableUnknownV2(id, emailValidationData),
               ),
             )
             .with(
@@ -467,7 +467,8 @@ function isDeliverableV2(
     return false;
 
   const statusChecks: Record<string, () => boolean> = {
-    [EmailVerificationStatus.NoRisk]: () => !data.isRisky,
+    [EmailVerificationStatus.NoRisk]: () =>
+      data?.deliverable === EmailDeliverable.Deliverable, // validation rules https://www.figma.com/design/uWolaNIV9vDhQ5PfQGNC7o/Views?node-id=3127-7449&p=f&t=at3ByiH8XZGopHZV-0
     [EmailVerificationStatus.FirewallProtected]: () => !!data.isFirewalled,
     [EmailVerificationStatus.FreeAccount]: () => !!data.isFreeAccount,
     [EmailVerificationStatus.GroupMailbox]: () => data.verifyingCheckAll,

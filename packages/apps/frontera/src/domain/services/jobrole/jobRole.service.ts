@@ -3,7 +3,7 @@ import { RootStore } from '@store/root';
 import { JobRolesService as JobRoleRepo } from '@store/JobRoles/__service__/JobRoles.service';
 import { SaveJobRolesMutationVariables } from '@store/JobRoles/__service__/saveJobRole.generated';
 
-import { unwrap } from '@shared/util/unwrap';
+import { unwrap } from '@utils/unwrap';
 
 type SaveJobRolePayload = SaveJobRolesMutationVariables['input'];
 

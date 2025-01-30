@@ -1,3 +1,4 @@
+import { Tracer } from '@infra/tracer';
 import { RootStore } from '@store/root';
 import { TagStore } from '@store/Tags/Tag.store';
 import { action, computed, reaction, observable } from 'mobx';
@@ -167,6 +168,8 @@ export class EditOrganizationTagUsecase {
 
   @action
   public select(id?: string) {
+    const span = Tracer.span('EditOrganizationTagUsecase.select', { id });
+
     if (!id || !this.organization) {
       console.error(
         'EditOrganizationTagUsecase: select called without id or organization',
@@ -192,6 +195,8 @@ export class EditOrganizationTagUsecase {
     if (!this.shouldPreventClose) {
       this.close();
     }
+
+    span.end();
   }
 
   @action

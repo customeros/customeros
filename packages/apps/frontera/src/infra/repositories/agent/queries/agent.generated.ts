@@ -26,6 +26,8 @@ export type AgentQuery = {
       type: Types.CapabilityType;
       name: string;
       action: string;
+      active: boolean;
+      config: string;
       errors?: string | null;
     }>;
   } | null;

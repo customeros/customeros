@@ -1,22 +1,61 @@
-import { action, observable } from 'mobx';
+import { Tracer } from '@infra/tracer';
+import { RootStore } from '@store/root';
+import { action, computed, observable } from 'mobx';
+import { AgentService } from '@domain/services/agent/agent.service';
 
-import { Capability, CapabilityType } from '@graphql/types';
+import { Capability } from '@graphql/types';
 
 export class AgentViewUsecase {
-  @observable accessor activeCapability: Capability = {
-    id: '',
-    name: '',
-    type: CapabilityType.IdentifyWebVisitor,
-    action: '',
-    active: false,
-    config: '',
-    errors: null,
-  };
+  private service = new AgentService();
+  private root = RootStore.getInstance();
+  @observable private accessor _activeCapabilityId: string = '';
 
-  constructor() {}
+  constructor(private id: string) {
+    this.toggleActive = this.toggleActive.bind(this);
+    this.setActiveCapability = this.setActiveCapability.bind(this);
+  }
+
+  @computed
+  get agent() {
+    return this.root.agents.getById(this.id);
+  }
+
+  @computed
+  get activeCapability() {
+    if (!this.agent) return null;
+
+    if (!this._activeCapabilityId) {
+      return this.agent?.value.capabilities[0];
+    }
+
+    return this.agent?.value.capabilities.find(
+      (c) => c.id === this._activeCapabilityId,
+    );
+  }
 
   @action
   setActiveCapability(capability: Capability) {
-    this.activeCapability = capability;
+    const span = Tracer.span('AgentViewUsecase.setActiveCapability', {
+      previousActiveCapability: this.activeCapability?.type,
+    });
+
+    this._activeCapabilityId = capability.id;
+
+    span.end({ currentActiveCapability: this.activeCapability?.type });
+  }
+
+  toggleActive() {
+    const span = Tracer.span('AgentViewUsecase.toggleActive');
+
+    if (!this.agent) {
+      console.error('AgentViewUsecase.toggleActive: Agent not found. Aborting');
+
+      return;
+    }
+
+    this.agent.toggleStatus();
+    this.service.saveAgent(this.agent);
+
+    span.end();
   }
 }

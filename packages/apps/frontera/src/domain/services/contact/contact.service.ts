@@ -3,7 +3,7 @@ import { TagStore } from '@store/Tags/Tag.store';
 import { Contact } from '@store/Contacts/Contact.dto';
 import { ContactService as ContactRepo } from '@store/Contacts/__service__/Contacts.service';
 
-import { unwrap } from '@shared/util/unwrap';
+import { unwrap } from '@utils/unwrap';
 
 export class ContactService {
   private store = RootStore.getInstance();

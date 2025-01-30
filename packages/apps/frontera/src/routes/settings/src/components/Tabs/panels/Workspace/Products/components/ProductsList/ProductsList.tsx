@@ -31,7 +31,7 @@ export const ProductsList = observer(
 
     return (
       <div>
-        <div className='grid grid-cols-[minmax(0,1fr)_minmax(0,108px)_minmax(0,118px)_28px] w-full text-sm'>
+        <div className='grid grid-cols-[minmax(0,1fr)_minmax(0,100px)_minmax(0,110px)_28px] w-full text-sm gap-x-2'>
           <div className='font-medium flex items-center'>Product</div>
           <div className='font-medium flex items-center'>Type</div>
           <div className='font-medium flex items-center'>Price</div>

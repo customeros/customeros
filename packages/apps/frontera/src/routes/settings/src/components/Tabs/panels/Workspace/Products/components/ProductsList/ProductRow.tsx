@@ -4,13 +4,10 @@ import { observer } from 'mobx-react-lite';
 import { ArchiveSkuUsecase } from '@domain/usecases/settings-products/archive-sku.usecase';
 
 import { cn } from '@ui/utils/cn';
-import { SkuType } from '@graphql/types';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Archive } from '@ui/media/icons/Archive';
-import { CalendarDate } from '@ui/media/icons/CalendarDate';
-import { RefreshCcw02 } from '@ui/media/icons/RefreshCcw02';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
@@ -31,14 +28,8 @@ export const ProductRow = observer(({ id }: { id: string }) => {
   if (!row || !row?.id) return null;
 
   return (
-    <div className='grid grid-cols-[minmax(0,1fr)_minmax(0,108px)_minmax(0,118px)_28px] w-full text-sm group'>
-      <div className='truncate flex items-center gap-2'>
-        {row.value.type === SkuType.Subscription ? (
-          <RefreshCcw02 className='min-w-4 text-grayModern-500' />
-        ) : (
-          <CalendarDate className='min-w-4 text-grayModern-500' />
-        )}
-
+    <div className='grid grid-cols-[minmax(0,1fr)_minmax(0,100px)_minmax(0,110px)_28px] w-full text-sm group gap-x-2'>
+      <div title={row.value.name} className='truncate flex items-center'>
         <span className='truncate'>{row.value.name}</span>
       </div>
       <div className='truncate flex items-center'>{row.typeLabel}</div>
