@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { useLocalStorage } from 'usehooks-ts';
 
 import { cn } from '@ui/utils/cn';
 import { useStore } from '@shared/hooks/useStore';
@@ -12,6 +13,7 @@ interface ContactNameCellProps {
 export const ContactNameCell = observer(
   ({ contactId }: ContactNameCellProps) => {
     const store = useStore();
+    const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
     const contactStore = store.contacts.value.get(contactId);
     const contactName = contactStore?.name;
@@ -28,14 +30,11 @@ export const ContactNameCell = observer(
           <p
             className='text-gray-700 font-medium no-underline hover:no-underline cursor-pointer'
             onClick={() => {
-              if (
-                store.ui.contactPreviewCardOpen === true &&
-                store.ui.focusRow === contactId
-              ) {
-                store.ui.setContactPreviewCardOpen(false);
+              if (previewCard === true && store.ui.focusRow === contactId) {
+                setPreviewCard(false);
               } else {
                 store.ui.setFocusRow(contactId);
-                store.ui.setContactPreviewCardOpen(true);
+                setPreviewCard(true);
               }
             }}
           >
@@ -50,14 +49,11 @@ export const ContactNameCell = observer(
               'overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline',
             )}
             onClick={() => {
-              if (
-                store.ui.contactPreviewCardOpen === true &&
-                store.ui.focusRow === contactId
-              ) {
-                store.ui.setContactPreviewCardOpen(false);
+              if (previewCard === true && store.ui.focusRow === contactId) {
+                setPreviewCard(false);
               } else {
                 store.ui.setFocusRow(contactId);
-                store.ui.setContactPreviewCardOpen(true);
+                setPreviewCard(true);
               }
             }}
           >

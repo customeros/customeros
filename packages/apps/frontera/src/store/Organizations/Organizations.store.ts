@@ -4,6 +4,8 @@ import type { Transport } from '@infra/transport';
 import set from 'lodash/set';
 import { Store } from '@store/_store';
 import { action, computed, observable, runInAction } from 'mobx';
+import { OrganizationRepository } from '@infra/repositories/organization';
+import { SaveOrganizationMutationVariables } from '@infra/repositories/organization/mutations/saveOrganization.generated';
 
 import {
   relationshipStageMap,
@@ -17,8 +19,6 @@ import {
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
-import type { SaveOrganizationMutationVariables } from './__service__/saveOrganization.generated';
-
 import { TeamViews } from './__views__/Team.view';
 import { CustomView } from './__views__/Custom.view';
 import { ProfileView } from './__views__/Profile.view';
@@ -26,13 +26,12 @@ import { TargetsView } from './__views__/Targets.view';
 import { CustomersView } from './__views__/Customers.view';
 import { AllOrganizationsView } from './__views__/AllOrganizations.view';
 import { Organization, type OrganizationDatum } from './Organization.dto';
-import { OrganizationsService } from './__service__/Organizations.service';
 
 type SaveOrganizationPayload = SaveOrganizationMutationVariables['input'];
 
 export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
   chunkSize = 50;
-  private service = OrganizationsService.getInstance();
+  private repository = OrganizationRepository.getInstance();
   @observable accessor searchResults: Map<string, string[]> = new Map();
   @observable accessor cursors: Map<string, number> = new Map();
   @observable accessor availableCounts: Map<string, number> = new Map();
@@ -131,12 +130,12 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       };
 
       const { organizations_HiddenAfter: idsToDrop } =
-        await this.service.getArchivedOrganizationsAfter({
+        await this.repository.getArchivedOrganizationsAfter({
           date: lastActiveAtUTC,
         });
 
       const { ui_organizations_search } =
-        await this.service.searchOrganizations({
+        await this.repository.searchOrganizations({
           limit: this.chunkSize,
           where,
         });
@@ -188,7 +187,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       const payload = viewDef.toSearchPayload();
 
       const { ui_organizations_search: searchResult } =
-        await this.service.searchOrganizations({ ...payload });
+        await this.repository.searchOrganizations({ ...payload });
 
       if (cursor === 0) {
         const ids = (searchResult?.ids ?? []).slice(
@@ -229,12 +228,10 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     if (ids.length === 0) return;
     const invalidIds = ids.filter((id) => id.length !== 36);
 
-    if (invalidIds.length > 0) {
-      throw new Error(`Invalid IDs found: ${invalidIds.join(', ')}`);
-    }
+    if (invalidIds.length > 0) return;
 
     try {
-      const { ui_organizations } = await this.service.getOrganizationsByIds({
+      const { ui_organizations } = await this.repository.getOrganizationsByIds({
         ids,
       });
 
@@ -301,7 +298,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
     if (!id) return;
 
     try {
-      const { ui_organizations } = await this.service.getOrganizationsByIds({
+      const { ui_organizations } = await this.repository.getOrganizationsByIds({
         ids: [id],
       });
 
@@ -341,7 +338,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       this.value.set(record.id, record);
       tempId = record.id;
 
-      const { organization_Save } = await this.service.saveOrganization({
+      const { organization_Save } = await this.repository.saveOrganization({
         input: payload,
       });
 
@@ -383,7 +380,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
     try {
       const { organization_SaveByGlobalOrganization } =
-        await this.service.importOrganization({
+        await this.repository.importOrganization({
           globalOrganizationId: globalId,
           input: {
             relationship: payload?.relationship,
@@ -446,7 +443,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
     try {
       this.isLoading = true;
-      await this.service.hideOrganizations({ ids });
+      await this.repository.hideOrganizations({ ids });
 
       runInAction(() => {
         this.sync({ action: 'DELETE', ids });
@@ -488,7 +485,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
 
     try {
       this.isLoading = true;
-      await this.service.mergeOrganizations({
+      await this.repository.mergeOrganizations({
         primaryOrganizationId: primaryId,
         mergedOrganizationIds: mergeIds,
       });

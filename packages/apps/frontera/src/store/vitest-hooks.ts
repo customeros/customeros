@@ -1,10 +1,10 @@
 import { afterAll } from 'vitest';
-import { OrganizationsService } from '@store/Organizations/__service__/Organizations.service.ts';
+import { OrganizationRepository } from '@infra/repositories/organization';
 import { organizationsTestState } from '@store/Organizations/__tests__/organizationsTestState.ts';
 
 import { TagService } from './Tags/__service__/Tag.service';
 
-const organizationsService = OrganizationsService.getInstance();
+const organizationsRepository = OrganizationRepository.getInstance();
 const tagService = TagService.getInstance();
 
 afterAll(async () => {
@@ -26,7 +26,7 @@ afterAll(async () => {
 
   for (const id of organizationIds) {
     try {
-      await organizationsService.hideOrganizations({ ids: [id] });
+      await organizationsRepository.hideOrganizations({ ids: [id] });
     } catch (error) {
       console.error(`Failed to cleanup organization ${id}:`, error);
     }

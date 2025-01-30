@@ -1,6 +1,0 @@
-mutation addSocial($organizationId: ID!, $input: SocialInput!) {
-  organization_AddSocial(organizationId: $organizationId, input: $input) {
-    id
-    url
-  }
-}

@@ -1,17 +1,11 @@
 import { observer } from 'mobx-react-lite';
+import { useLocalStorage } from 'usehooks-ts';
 
-import { Tag01 } from '@ui/media/icons/Tag01';
-import { User01 } from '@ui/media/icons/User01';
+import { Icon } from '@ui/media/Icon';
 import { Delete } from '@ui/media/icons/Delete';
-import { User03 } from '@ui/media/icons/User03';
-import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
-import { Activity } from '@ui/media/icons/Activity';
-import { Columns03 } from '@ui/media/icons/Columns03';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp';
-import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
 import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
-import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import {
   InternalType,
   InternalStage,
@@ -37,13 +31,14 @@ export const OrganizationCommands = observer(() => {
   const id = (store.ui.commandMenu.context.ids as string[])?.[0];
   const organization = store.organizations.getById(id);
   const label = `Organization - ${organization?.value.name}`;
+  const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
   return (
     <CommandsContainer label={label}>
       <>
         <CommandItem
-          leftAccessory={<User03 />}
           rightAccessory={<Kbd>C</Kbd>}
+          leftAccessory={<Icon name='user-03' />}
           keywords={organizationKeywords.add_contact}
           onSelect={() => {
             store.ui.commandMenu.setType('AddContactsBulk');
@@ -53,7 +48,7 @@ export const OrganizationCommands = observer(() => {
         </CommandItem>
 
         <CommandItem
-          leftAccessory={<Tag01 />}
+          leftAccessory={<Icon name='tag-01' />}
           keywords={organizationKeywords.change_or_add_tags}
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeTags');
@@ -73,7 +68,7 @@ export const OrganizationCommands = observer(() => {
 
         {!!organization?.value?.tags?.length && (
           <CommandItem
-            leftAccessory={<Tag01 />}
+            leftAccessory={<Icon name='tag-01' />}
             keywords={['change', 'add', 'tags', 'update', 'edit']}
             onSelect={() => {
               const tagCount = organization?.value?.tags?.length ?? 0;
@@ -95,7 +90,7 @@ export const OrganizationCommands = observer(() => {
         )}
 
         <CommandItem
-          leftAccessory={<AlignHorizontalCentre02 />}
+          leftAccessory={<Icon name='align-horizontal-centre-02' />}
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeRelationship');
           }}
@@ -122,7 +117,7 @@ export const OrganizationCommands = observer(() => {
         {organization?.value?.relationship ===
           OrganizationRelationship.Prospect && (
           <CommandItem
-            leftAccessory={<Columns03 />}
+            leftAccessory={<Icon name='columns-03' />}
             keywords={organizationKeywords.change_org_stage}
             onSelect={() => {
               store.ui.commandMenu.setType('ChangeStage');
@@ -138,7 +133,7 @@ export const OrganizationCommands = observer(() => {
         />
 
         <CommandItem
-          leftAccessory={<Archive />}
+          leftAccessory={<Icon name='archive' />}
           keywords={organizationKeywords.archive_org}
           onSelect={() => {
             store.ui.commandMenu.setType('DeleteConfirmationModal');
@@ -156,7 +151,18 @@ export const OrganizationCommands = observer(() => {
         </CommandItem>
 
         <CommandItem
-          leftAccessory={<Activity />}
+          leftAccessory={<Icon name={previewCard ? 'eye-off' : 'eye'} />}
+          rightAccessory={<Kbd className='size-auto h-5 px-1.5'>Space</Kbd>}
+          onSelect={() => {
+            setPreviewCard(!previewCard);
+            store.ui.commandMenu.setOpen(false);
+          }}
+        >
+          {previewCard ? 'Hide organization preview' : 'Preview organization'}
+        </CommandItem>
+
+        <CommandItem
+          leftAccessory={<Icon name='activity' />}
           keywords={organizationKeywords.change_health_status}
           onSelect={() => {
             store.ui.commandMenu.setType('UpdateHealthStatus');
@@ -171,7 +177,7 @@ export const OrganizationCommands = observer(() => {
         />
 
         <CommandItem
-          leftAccessory={<User01 />}
+          leftAccessory={<Icon name='user-01' />}
           keywords={organizationKeywords.assign_owner}
           onSelect={() => {
             store.ui.commandMenu.setType('AssignOwner');
@@ -191,7 +197,7 @@ export const OrganizationCommands = observer(() => {
 
         <CommandItem
           rightAccessory={<Kbd>O</Kbd>}
-          leftAccessory={<CoinsStacked01 />}
+          leftAccessory={<Icon name='coins-stacked-01' />}
           keywords={organizationKeywords.create_new_opportunity}
           onSelect={() => {
             store.opportunities.create({

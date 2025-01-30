@@ -21,9 +21,8 @@ export class UIStore {
   isEditingTableCell: boolean = false;
   dirtyEditor: string | null = null;
   activeConfirmation: string | null = null;
-  contactPreviewCardOpen: boolean = false;
   movedIcpOrganization: number = 0;
-  focusRow: number | string | null = null;
+  focusRow: string | null = null;
   emailAdress: string = '';
   commandMenu = new CommandMenuStore();
   selectionId: number | null = null;
@@ -106,11 +105,7 @@ export class UIStore {
     this.movedIcpOrganization = value;
   }
 
-  setContactPreviewCardOpen(value: boolean) {
-    this.contactPreviewCardOpen = value;
-  }
-
-  setFocusRow(value: number | string | null) {
+  setFocusRow(value: string | null) {
     this.focusRow = value;
   }
 

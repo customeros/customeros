@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { useLocalStorage } from 'usehooks-ts';
 import { useKeys, useKeyBindings } from 'rooks';
 import { Contact } from '@store/Contacts/Contact.dto';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
@@ -29,6 +30,7 @@ export const ContactTableActions = observer(
     const [targetId, setTargetId] = useState<string | null>(null);
     const store = useStore();
     const selectCount = selection?.length;
+    const [_, setPreviewCard] = useLocalStorage('previewCard', false);
 
     const clearSelection = () => table.resetRowSelection();
 
@@ -154,7 +156,7 @@ export const ContactTableActions = observer(
         Space: (e) => {
           e.stopPropagation();
           e.preventDefault();
-          store.ui.setContactPreviewCardOpen(true);
+          setPreviewCard(true);
         },
       },
       { when: !!focusedId },

@@ -1,7 +1,0 @@
-mutation updateOrganization($input: OrganizationUpdateInput!) {
-  organization_Update(input: $input) {
-    metadata {
-      id
-    }
-  }
-}

@@ -1,4 +1,5 @@
 import { observer } from 'mobx-react-lite';
+import { useLocalStorage } from 'usehooks-ts';
 
 import { cn } from '@ui/utils/cn';
 import { Image } from '@ui/media/Image/Image';
@@ -19,12 +20,21 @@ export const AvatarCell = observer(
     const src = icon || logo;
     const fullName = name || 'Unnamed';
     const contactStore = store.contacts.value.get(id);
+    const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
     const isEnriching = contactStore?.isEnriching;
 
     return (
       <div className='items-center ml-[1px]'>
         <div
+          onClick={() => {
+            if (previewCard === true && store.ui.focusRow === id) {
+              setPreviewCard(false);
+            } else {
+              store.ui.setFocusRow(id);
+              setPreviewCard(true);
+            }
+          }}
           className={cn(
             'w-6 h-6 flex items-center justify-center rounded border border-gray-200 cursor-pointer focus:outline-none',
             {
@@ -32,17 +42,6 @@ export const AvatarCell = observer(
               'cursor-default': !canNavigate,
             },
           )}
-          onClick={() => {
-            if (
-              store.ui.contactPreviewCardOpen === true &&
-              store.ui.focusRow === id
-            ) {
-              store.ui.setContactPreviewCardOpen(false);
-            } else {
-              store.ui.setFocusRow(id);
-              store.ui.setContactPreviewCardOpen(true);
-            }
-          }}
         >
           {src ? (
             <Image

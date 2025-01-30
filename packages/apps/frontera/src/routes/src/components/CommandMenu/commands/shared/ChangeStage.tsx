@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
+
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { Organization } from '@store/Organizations/Organization.dto';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 import { getStageFromColumn } from '@opportunities/components/ProspectsBoard/columns';
+import { EditOrganizationStageUseCase } from '@domain/usecases/command-menu/edit-organization-stage.usecase';
 
 import { Check } from '@ui/media/icons/Check';
 import { useStore } from '@shared/hooks/useStore';
@@ -29,6 +32,11 @@ export const ChangeStage = observer(() => {
       value: getStageFromColumn(column),
       label: column.name,
     }));
+
+  const editStageUseCase = useMemo(
+    () => new EditOrganizationStageUseCase(context?.ids?.[0] as string),
+    [context?.ids?.[0]],
+  );
 
   const entity = match(context.entity)
     .returnType<
@@ -113,11 +121,7 @@ export const ChangeStage = observer(() => {
 
     match(context.entity)
       .with('Organization', () => {
-        const organization = entity as Organization;
-
-        organization.draft();
-        organization!.value.stage = value as OrganizationStage;
-        organization.commit();
+        editStageUseCase.execute(value as OrganizationStage);
       })
       .with('Organizations', () => {
         store.organizations.updateStage(

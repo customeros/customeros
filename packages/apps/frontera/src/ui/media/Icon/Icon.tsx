@@ -29,7 +29,22 @@ export type IconName =
   | 'log-out-01'
   | 'layers-two-01'
   | 'settings-02'
-  | 'x-close';
+  | 'x-close'
+  | 'share-07'
+  | 'tag-01'
+  | 'activity-heart'
+  | 'seeding'
+  | 'message-x-circle'
+  | 'broken-heart'
+  | 'align-horizontal-centre-02'
+  | 'users-02'
+  | 'key-01'
+  | 'eye-off'
+  | 'eye'
+  | 'columns-03'
+  | 'user-03'
+  | 'user-01'
+  | 'activity';
 
 interface IconProps extends SVGAttributes<SVGElement> {
   name: IconName;
