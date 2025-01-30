@@ -15,6 +15,7 @@ const (
 	CapabilitySendSlackNotification           AgentCapabilityType = "send_slack_notification"
 	CapabilitySendWebVisitorSlackNotification AgentCapabilityType = "send_web_visitor_slack_notification"
 	CapabilityApplyTag                        AgentCapabilityType = "apply_tag"
+	CapabilityCreateMarkdownTimelineEvent     AgentCapabilityType = "create_markdown_timeline_event"
 )
 
 func (t AgentCapabilityType) String() string {
@@ -29,7 +30,8 @@ func GetAgentCapability(s string) (AgentCapabilityType, error) {
 		CapabilityIdentifyWebVisitor,
 		CapabilitySendSlackNotification,
 		CapabilitySendWebVisitorSlackNotification,
-		CapabilityApplyTag:
+		CapabilityApplyTag,
+		CapabilityCreateMarkdownTimelineEvent:
 		return AgentCapabilityType(s), nil
 
 	default:
