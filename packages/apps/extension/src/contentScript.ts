@@ -1,6 +1,6 @@
 function sendSessionData() {
   console.log("Attempting to send session data from content script");
-  const request: IDBOpenDBRequest = indexedDB.open("customerDB", 2);
+  const request: IDBOpenDBRequest = indexedDB.open("customerDB_shared");
 
   request.onerror = function (event: Event) {
     console.error(
@@ -10,15 +10,14 @@ function sendSessionData() {
   };
 
   request.onsuccess = function (event: Event) {
+    console.log("IndexedDB opened successfully");
     const db: IDBDatabase = (event.target as IDBOpenDBRequest).result;
 
-    const transaction: IDBTransaction = db.transaction(
-      ["customer_os"],
-      "readonly"
-    );
-    const objectStore: IDBObjectStore = transaction.objectStore("customer_os");
+    const transaction: IDBTransaction = db.transaction(["Session"], "readonly");
 
-    const getRequest: IDBRequest = objectStore.get("SessionStore");
+    const objectStore: IDBObjectStore = transaction.objectStore("Session");
+    console.log(objectStore, "aici");
+    const getRequest: IDBRequest = objectStore.get("value");
 
     getRequest.onerror = function (event: Event) {
       console.error(
@@ -31,20 +30,34 @@ function sendSessionData() {
       const sessionData = (event.target as IDBRequest).result;
       console.log("Session data retrieved from IndexedDB:", sessionData);
 
-      if (sessionData) {
-        const email: string | null = sessionData.value.profile.email || null;
-        const apiKey: string | null = sessionData.tenantApiKey || null;
+      if (sessionData && sessionData.profile) {
+        const email: string | null = sessionData.profile.email || null;
+        const apiKeyRequest: IDBRequest = objectStore.get("tenantApiKey");
 
-        console.log("Sending session data to background:", { email, apiKey });
-        if (email && apiKey) {
-          chrome.runtime.sendMessage({
-            action: "COS_SESSION_DATA",
-            email,
-            apiKey,
-          });
-        }
+        apiKeyRequest.onerror = function (event: Event) {
+          console.error(
+            "Error reading tenantApiKey from IndexedDB:",
+            (event.target as IDBRequest)?.error
+          );
+        };
+
+        apiKeyRequest.onsuccess = function (event: Event) {
+          const apiKey = (event.target as IDBRequest).result;
+          console.log("tenantApiKey retrieved from IndexedDB:", apiKey);
+
+          console.log("Sending session data to background:", { email, apiKey });
+          if (email && apiKey) {
+            chrome.runtime.sendMessage({
+              action: "COS_SESSION_DATA",
+              email,
+              apiKey,
+            });
+          }
+        };
       } else {
-        console.log("No session data found in IndexedDB");
+        console.log(
+          "No session data found in IndexedDB or session data is incomplete"
+        );
       }
     };
   };
