@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useMemo, useEffect } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import get from 'lodash/get';
 import { observer } from 'mobx-react-lite';
@@ -18,11 +18,16 @@ const goalMap = {
 
 export const AgentPage = observer(() => {
   const store = useStore();
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const [queryParams, setQueryParams] = useSearchParams();
 
   const agent = id ? store.agents.getById(id) : null;
 
-  const usecase = useMemo(() => new AgentViewUsecase(id ?? ''), [id]);
+  const usecase = useMemo(
+    () => new AgentViewUsecase(id ?? '', queryParams.get('cid')),
+    [id],
+  );
 
   const ActiveCapability = useMemo(
     () =>
@@ -31,6 +36,17 @@ export const AgentPage = observer(() => {
         : () => null,
     [usecase?.activeCapability?.type],
   );
+
+  useEffect(() => {
+    if (!queryParams.get('cid')) {
+      setQueryParams((params) => {
+        if (!usecase.activeCapability) return params;
+        params.set('cid', usecase.activeCapability?.id);
+
+        return params;
+      });
+    }
+  }, []);
 
   if (!id) {
     throw new Error('No id provided');
@@ -62,6 +78,7 @@ export const AgentPage = observer(() => {
                 onClick={() => {
                   if (capability.config.length) {
                     usecase.setActiveCapability(capability);
+                    navigate(`?cid=${capability.id}`);
                   }
                 }}
                 className={cn(
@@ -82,7 +99,7 @@ export const AgentPage = observer(() => {
                         : 'text-grayModern-500'
                     }
                   />
-                  <p>{capability.name ?? 'Unknown'}</p>
+                  <p className='text-sm'>{capability.name ?? 'Unknown'}</p>
                 </div>
 
                 {capability.config.length > 0 && (

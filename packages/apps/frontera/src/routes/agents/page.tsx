@@ -3,6 +3,7 @@ import { useLocalStorage } from 'usehooks-ts';
 
 import { useStore } from '@shared/hooks/useStore';
 
+import { useSlackOauthCallback } from './hooks';
 import { Header, AgentCard, EmptyState } from './components';
 
 export const AgentsPage = observer(() => {
@@ -13,6 +14,8 @@ export const AgentsPage = observer(() => {
   );
 
   const agents = store.agents.toArray();
+
+  useSlackOauthCallback();
 
   if (!firstView) {
     return (
