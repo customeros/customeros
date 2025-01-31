@@ -464,14 +464,24 @@ func (s *registrationService) createDefaultAgents(ctx context.Context) error {
 		tracing.TraceErr(span, errors.Wrap(err, "error getting web visitor agents"))
 		return err
 	}
-
-	if len(webVisitorAgents) > 0 {
-		return nil
+	if len(webVisitorAgents) == 0 {
+		_, err = s.agentService.CreateAgent(ctx, enum.AgentVisitorID)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error creating web visitor agent"))
+		}
 	}
 
-	_, err = s.agentService.CreateAgent(ctx, enum.AgentVisitorID)
+	// get icp qualification agents
+	icpQualificationAgents, err := s.postgres.AgentsRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualification})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error creating web visitor agent"))
+		tracing.TraceErr(span, errors.Wrap(err, "error getting icp qualification agents"))
+		return err
+	}
+	if len(icpQualificationAgents) == 0 {
+		_, err = s.agentService.CreateAgent(ctx, enum.AgentICPQualification)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error creating ICP qualification agent"))
+		}
 	}
 
 	return nil
