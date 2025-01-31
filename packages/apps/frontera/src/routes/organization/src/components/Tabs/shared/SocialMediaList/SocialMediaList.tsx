@@ -6,6 +6,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { SelectOption } from '@shared/types/SelectOptions.ts';
 import { Social } from '@shared/types/__generated__/graphql.types.ts';
 
+import { isKnownUrl } from './util.ts';
 import { SocialMediaItem } from './SocialMediaItem.tsx';
 
 interface SocialMediaListProps {
@@ -55,33 +56,7 @@ export const SocialMediaList = observer(
 const getSocialDomain = (url: string) => {
   if (!url || typeof url !== 'string') return null;
 
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    url = `https://${url}`;
-  }
-
-  const domainMap = {
-    twitter: 'twitter',
-    facebook: 'facebook',
-    linkedin: 'linkedin',
-    github: 'github',
-    instagram: 'instagram',
-    youtube: 'youtube',
-    pinterest: 'pinterest',
-    angel: 'angellist',
-    notion: 'notion',
-    clubhouse: 'clubhouse',
-    discord: 'discord',
-    slack: 'slack',
-    tiktok: 'tiktok',
-    telegram: 'telegram',
-    snapchat: 'snapchat',
-    reddit: 'reddit',
-    google: 'google',
-  };
-
-  const hostname = new URL(url).hostname;
-
-  return Object.keys(domainMap).find((key) => hostname.includes(key)) || null;
+  return isKnownUrl(url.trim().toLowerCase()) || null;
 };
 
 const filterUniqueSocials = (socialArray = []) => {
