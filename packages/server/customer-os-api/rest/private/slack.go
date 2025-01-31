@@ -94,6 +94,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 
 		code := c.Request.URL.Query().Get("code")
+		span.LogKV("code", code)
 
 		requestData := url.Values{}
 		requestData.Set("code", code)
@@ -106,6 +107,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		request, err := http.NewRequest("POST", "https://slack.com/api/oauth.v2.access", nil)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		request.Body = ioutil.NopCloser(strings.NewReader(requestBody))
@@ -118,6 +120,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		resp, err := client.Do(request)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		defer resp.Body.Close()
@@ -126,6 +129,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -134,6 +138,7 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		err = json.Unmarshal(body, &slackResponse)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -156,8 +161,14 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 			_, err := s.Repositories.PostgresRepositories.SlackSettingsRepository.Save(ctx, entity)
 			if err != nil {
 				tracing.TraceErr(span, err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
+		} else {
+			span.LogKV("slackResponse", slackResponse)
+
+			c.JSON(http.StatusInternalServerError, gin.H{"error": slackResponse.Error})
+			return
 		}
 
 		c.JSON(http.StatusOK, gin.H{})
