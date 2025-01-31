@@ -20,6 +20,8 @@ export const useSlackOauthCallback = () => {
     const capabilityId = queryParams.get('cid');
     const slackCode = queryParams.get('code');
 
+    if (!store.session.isAuthenticated) return;
+
     if (slackCode) {
       store.settings.slack.oauthCallback(slackCode);
     }
@@ -29,5 +31,5 @@ export const useSlackOauthCallback = () => {
         `/agents/${agentId}${capabilityId ? `?cid=${capabilityId}` : ''}`,
       );
     }
-  }, []);
+  }, [store.session.isAuthenticated]);
 };
