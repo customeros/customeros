@@ -2,16 +2,17 @@ import { useRef, useEffect, MouseEvent, KeyboardEvent } from 'react';
 
 import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
-import { CreateContact } from '@domain/usecases/contact-details/create-contact.usecase.ts';
+import { CreateContact } from '@domain/usecases/contact-details/create-contact.usecase';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Button } from '@ui/form/Button/Button';
+import { Mail01 } from '@ui/media/icons/Mail01';
 import { useStore } from '@shared/hooks/useStore';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { useModKey } from '@shared/hooks/useModKey';
-import { Signature } from '@ui/media/icons/Signature.tsx';
+import { Signature } from '@ui/media/icons/Signature';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 import { Command, CommandCancelIconButton } from '@ui/overlay/CommandMenu';
 
@@ -90,7 +91,9 @@ export const AddSingleContact = observer(() => {
     <Command shouldFilter={false} label='Add contacts'>
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100 max-h-[580px]'>
         <div className='flex items-center justify-between mb-2'>
-          <h1 className='text-base font-medium'>Add a contact using their..</h1>
+          <h1 className='text-base font-medium'>
+            Add a contact using their...
+          </h1>
           <CommandCancelIconButton onClose={handleClose} />
         </div>
 
@@ -98,9 +101,9 @@ export const AddSingleContact = observer(() => {
           <ButtonGroup className='flex items-center w-full'>
             <Button
               size='xs'
-              leftIcon={<LinkedinOutline />}
               onClick={() => contactCreate.setType('linkedin')}
               data-inactive={contactCreate.getType !== 'linkedin'}
+              leftIcon={<LinkedinOutline className='text-inherit' />}
               className={cn('w-full', {
                 selected: contactCreate.getType === 'linkedin',
               })}
@@ -109,8 +112,8 @@ export const AddSingleContact = observer(() => {
             </Button>
             <Button
               size='xs'
-              leftIcon={<Signature />}
               onClick={() => contactCreate.setType('email')}
+              leftIcon={<Mail01 className='text-inherit' />}
               data-inactive={contactCreate.getType !== 'email'}
               className={cn('w-full', {
                 selected: contactCreate.getType === 'email',
@@ -120,10 +123,10 @@ export const AddSingleContact = observer(() => {
             </Button>
             <Button
               size='xs'
-              leftIcon={<Signature />}
               dataTest='org-people-add-by-name'
               onClick={() => contactCreate.setType('name')}
               data-inactive={contactCreate.getType !== 'name'}
+              leftIcon={<Signature className='text-inherit' />}
               className={cn('w-full', {
                 selected: contactCreate.getType === 'name',
               })}
