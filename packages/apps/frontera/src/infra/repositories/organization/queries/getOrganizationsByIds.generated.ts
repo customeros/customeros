@@ -34,6 +34,9 @@ export type GetOrganizationsByIdsQuery = {
     ltv?: number | null;
     hide: boolean;
     domains: Array<string>;
+    icpFit?: Types.IcpFit | null;
+    icpFitReasons: Array<string>;
+    icpFitUpdatedAt?: any | null;
     wrongIndustry: boolean;
     createdAt: any;
     updatedAt: any;

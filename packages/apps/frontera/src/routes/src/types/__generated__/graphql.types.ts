@@ -123,6 +123,8 @@ export type AgentSlackChannel = {
 };
 
 export enum AgentType {
+  IcpQualifier = 'ICP_QUALIFIER',
+  TagSupport = 'TAG_SUPPORT',
   WebVisitIdentifier = 'WEB_VISIT_IDENTIFIER',
 }
 
@@ -348,7 +350,10 @@ export type CapabilitySaveInput = {
 
 export enum CapabilityType {
   AnalyzeWebSessionIntent = 'ANALYZE_WEB_SESSION_INTENT',
+  ApplyTag = 'APPLY_TAG',
+  CreateMarkdownTimelineEvent = 'CREATE_MARKDOWN_TIMELINE_EVENT',
   CreateOrganization = 'CREATE_ORGANIZATION',
+  IcpQualify = 'ICP_QUALIFY',
   IdentifyWebVisitor = 'IDENTIFY_WEB_VISITOR',
   SendSlackNotification = 'SEND_SLACK_NOTIFICATION',
   WebVisitorSendSlackNotification = 'WEB_VISITOR_SEND_SLACK_NOTIFICATION',
@@ -1885,6 +1890,12 @@ export type GlobalOrganization = {
   primaryDomain: Scalars['String']['output'];
   website: Scalars['String']['output'];
 };
+
+export enum IcpFit {
+  IcpFit = 'ICP_FIT',
+  IcpNotFit = 'ICP_NOT_FIT',
+  IcpNotSet = 'ICP_NOT_SET',
+}
 
 export type Industry = {
   __typename?: 'Industry';
@@ -3634,7 +3645,7 @@ export type Organization = MetadataInterface & {
   /** @deprecated Use logo */
   icon?: Maybe<Scalars['String']['output']>;
   iconUrl?: Maybe<Scalars['String']['output']>;
-  icpFit: Scalars['Boolean']['output'];
+  icpFit?: Maybe<IcpFit>;
   /**
    * Deprecated
    * @deprecated Use metadata.id
@@ -3903,6 +3914,9 @@ export type OrganizationUiDetails = {
   enrichedRequestedAt?: Maybe<Scalars['Time']['output']>;
   hide: Scalars['Boolean']['output'];
   iconUrl?: Maybe<Scalars['String']['output']>;
+  icpFit?: Maybe<IcpFit>;
+  icpFitReasons: Array<Scalars['String']['output']>;
+  icpFitUpdatedAt?: Maybe<Scalars['Time']['output']>;
   id: Scalars['ID']['output'];
   /** @deprecated Use industryCode */
   industry?: Maybe<Scalars['String']['output']>;

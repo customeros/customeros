@@ -44,6 +44,8 @@ export type IconName =
   | 'message-x-circle'
   | 'broken-heart'
   | 'align-horizontal-centre-02'
+  | 'check-verified-02'
+  | 'target-04'
   | 'users-02'
   | 'key-01'
   | 'eye-off'
@@ -52,6 +54,8 @@ export type IconName =
   | 'user-03'
   | 'user-01'
   | 'activity'
+  | 'thumbs-down'
+  | 'message-question-circle'
   | 'x-circle';
 
 interface IconProps extends SVGAttributes<SVGElement> {
