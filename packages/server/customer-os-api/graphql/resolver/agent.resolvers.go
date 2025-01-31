@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -121,6 +122,19 @@ func (r *queryResolver) SlackChannelsWithBot(ctx context.Context) ([]*model.Agen
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.SlackChannelsWithBot", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	slackSettingsEntity, err := r.Services.Repositories.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get slack settings")
+		return nil, nil
+	}
+
+	if slackSettingsEntity == nil {
+		return []*model.AgentSlackChannel{}, nil
+	}
 
 	slackChannels, err := r.Services.CommonServices.SlackService.ListSlackChannelsWithBot(ctx)
 	if err != nil {
