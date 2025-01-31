@@ -49,7 +49,7 @@ interface OrganizationDetailsProps {
 export const OrganizationDetails = observer(
   ({ id }: OrganizationDetailsProps) => {
     const store = useStore();
-    const [__, setPreviewCard] = useLocalStorage('previewCard', false);
+    const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
     const [_, copyToClipboard] = useCopyToClipboard();
 
@@ -106,7 +106,7 @@ export const OrganizationDetails = observer(
             <p className='font-semibold text-base mt-0.5 overflow-hidden overflow-ellipsis'>
               {organization?.value?.name ?? ''}
             </p>
-            {!id && (
+            {previewCard && (
               <IconButton
                 size='xs'
                 variant='ghost'
