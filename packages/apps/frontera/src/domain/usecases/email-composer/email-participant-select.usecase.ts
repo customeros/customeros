@@ -1,6 +1,5 @@
 import { RootStore } from '@store/root';
 import { action, computed, reaction, observable } from 'mobx';
-import { TagService, OrganizationService } from '@domain/services';
 
 import { validateEmail } from '@utils/email.ts';
 import { SelectOption } from '@ui/utils/types.ts';
@@ -16,8 +15,6 @@ export class EmailParticipantSelectUsecase {
     [];
 
   private root = RootStore.getInstance();
-  private tagService = new TagService();
-  private organizationService = new OrganizationService();
   private organizationId: string;
 
   constructor(organizationId: string) {

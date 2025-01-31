@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import { useParams } from 'react-router-dom';
 
 import { FlagWrongFieldUsecase } from '@domain/usecases/organization-industry-field/flag-wrong-field.usecase';
 
@@ -9,6 +8,7 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { ThumbsDown } from '@ui/media/icons/ThumbsDown';
 
 interface FieldMarkerProps {
+  id: string;
   icon: ReactNode;
   dataTest?: string;
   placeholder?: string;
@@ -26,8 +26,8 @@ export const AboutTabField = ({
   dataTest,
   placeholder,
   flaggedAsIncorrect,
+  id,
 }: FieldMarkerProps) => {
-  const id = useParams()?.id as string;
   const label = fieldLabels[field];
 
   return (
