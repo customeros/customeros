@@ -75,10 +75,12 @@ func (c *IdentifyWebsiteVisitorCapability) GetOutput() any {
 func NewIdentifyWebsiteVisitorCapability(
 	postgresRepositories *postgres_repository.Repositories,
 	enrichmentService interfaces.EnrichmentService,
+	domainService interfaces.DomainService,
 ) *IdentifyWebsiteVisitorCapability {
 	return &IdentifyWebsiteVisitorCapability{
 		postgresRepositories: postgresRepositories,
 		enrichmentService:    enrichmentService,
+		domainService:        domainService,
 	}
 }
 
