@@ -77,7 +77,9 @@ export class Slack {
       this.isLoading = true;
 
       const { data } = await this.transportLayer.http.get(
-        `/sa/slack/requestAccess?redirect_uri=${redirect_uri ?? '/settings'}`,
+        `/sa/slack/requestAccess?redirect_uri=${
+          redirect_uri ?? 'https://app.customeros.ai/settings'
+        }`,
       );
 
       window.location.href = data.url;

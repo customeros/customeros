@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
@@ -44,219 +43,189 @@ const iconMap = {
   unknown: <Icon className='text-gray-500' name='align-horizontal-centre-02' />,
 };
 
-export const OrganizationDetails = observer(() => {
-  const store = useStore();
-  const id = useParams()?.id as string;
-  const [__, setPreviewCard] = useLocalStorage('previewCard', false);
+interface OrganizationDetailsProps {
+  id: string;
+}
 
-  const [_, copyToClipboard] = useCopyToClipboard();
+export const OrganizationDetails = observer(
+  ({ id }: OrganizationDetailsProps) => {
+    const store = useStore();
+    const [__, setPreviewCard] = useLocalStorage('previewCard', false);
 
-  const showParentRelationshipSelector = useFeatureIsOn(
-    'show-parent-relationship-selector',
-  );
-  const parentRelationshipReadOnly = useFeatureIsOn(
-    'parent-relationship-selector-read-only',
-  );
-  const organization = store.organizations.getById(store.ui.focusRow ?? id);
+    const [_, copyToClipboard] = useCopyToClipboard();
 
-  if (!organization) return null;
-
-  const selectedRelationshipOption = relationshipOptions.find(
-    (option) => option.value === organization.value?.relationship,
-  );
-
-  const selectedStageOption = stageOptions.find(
-    (option) => option.value === organization.value?.stage,
-  );
-
-  const applicableStageOptions = getStageOptions(
-    organization.value?.relationship,
-  );
-
-  const tagsUsecase = useMemo(
-    () => new EditOrganizationTagUsecase(id ?? store.ui.focusRow),
-    [id, store.ui.focusRow],
-  );
-  const saveOrganizationUseCase = useMemo(
-    () => new SaveOrganizationUseCase(id ?? store.ui.focusRow),
-    [id, store.ui.focusRow],
-  );
-
-  const handleCreateOption = (value: string) => {
-    store.tags?.create(
-      { name: value },
-      {
-        onSucces: (id) => {
-          organization.draft();
-          organization?.value?.tags?.push({
-            name: value,
-            colorCode: store.tags.getById(id)?.value?.colorCode ?? 'grayModern',
-            metadata: {
-              id,
-            },
-            entityType: EntityType.Organization,
-          });
-          organization.commit();
-        },
-      },
+    const showParentRelationshipSelector = useFeatureIsOn(
+      'show-parent-relationship-selector',
     );
-  };
+    const parentRelationshipReadOnly = useFeatureIsOn(
+      'parent-relationship-selector-read-only',
+    );
+    const organization = store.organizations.getById(id);
 
-  const isEnriching = organization.isEnriching;
+    if (!organization) return null;
 
-  return (
-    <div className='flex pt-[6px] px-6 w-full h-full  flex-1 bg-gray-25 rounded-2xl'>
-      <div className='flex h-full flex-col  overflow-visible w-full'>
-        {isEnriching && (
-          <div className='flex items-center justify-start gap-2 border-[1px] text-sm border-grayModern-100 bg-grayModern-50 rounded-[4px] py-1 px-2 '>
-            <Spinner
-              label='enriching org'
-              className='text-grayModern-300 fill-grayModern-500 size-4'
-            />
-            <span className='font-medium'>
-              We're enriching this company’s details.
-            </span>
-          </div>
-        )}
+    const selectedRelationshipOption = relationshipOptions.find(
+      (option) => option.value === organization.value?.relationship,
+    );
 
-        <div className='flex items-center justify-between'>
-          <p className='font-semibold text-base mt-0.5 overflow-hidden overflow-ellipsis'>
-            {organization?.value?.name ?? ''}
-          </p>
-          {!id && (
-            <IconButton
-              size='xs'
-              variant='ghost'
-              icon={<Icon name='x-close' />}
-              onClick={() => setPreviewCard(false)}
-              aria-label='close preview organization'
-            />
-          )}
+    const selectedStageOption = stageOptions.find(
+      (option) => option.value === organization.value?.stage,
+    );
 
-          {organization.value?.referenceId && (
-            <div className='h-full ml-4'>
-              <Tooltip asChild={false} label={'Copy ID'}>
-                <Tag
-                  variant='outline'
-                  colorScheme='gray'
-                  className='rounded-full cursor-pointer'
-                  onClick={() => {
-                    copyToClipboard(
-                      organization.value?.referenceId ?? '',
-                      'Reference ID copied ',
-                    );
-                  }}
-                >
-                  <TagLabel>{organization.value?.referenceId}</TagLabel>
-                </Tag>
-              </Tooltip>
+    const applicableStageOptions = getStageOptions(
+      organization.value?.relationship,
+    );
+
+    const tagsUsecase = useMemo(() => new EditOrganizationTagUsecase(id), [id]);
+    const saveOrganizationUseCase = useMemo(
+      () => new SaveOrganizationUseCase(id),
+      [id],
+    );
+
+    const handleCreateOption = (value: string) => {
+      store.tags?.create(
+        { name: value },
+        {
+          onSucces: (id) => {
+            organization.draft();
+            organization?.value?.tags?.push({
+              name: value,
+              colorCode:
+                store.tags.getById(id)?.value?.colorCode ?? 'grayModern',
+              metadata: {
+                id,
+              },
+              entityType: EntityType.Organization,
+            });
+            organization.commit();
+          },
+        },
+      );
+    };
+
+    const isEnriching = organization.isEnriching;
+
+    return (
+      <div className='flex pt-[6px] px-6 w-full h-full  flex-1 bg-gray-25 rounded-2xl'>
+        <div className='flex h-full flex-col  overflow-visible w-full'>
+          {isEnriching && (
+            <div className='flex items-center justify-start gap-2 border-[1px] text-sm border-grayModern-100 bg-grayModern-50 rounded-[4px] py-1 px-2 '>
+              <Spinner
+                label='enriching org'
+                className='text-grayModern-300 fill-grayModern-500 size-4'
+              />
+              <span className='font-medium'>
+                We're enriching this company’s details.
+              </span>
             </div>
           )}
-        </div>
 
-        <Domains />
+          <div className='flex items-center justify-between'>
+            <p className='font-semibold text-base mt-0.5 overflow-hidden overflow-ellipsis'>
+              {organization?.value?.name ?? ''}
+            </p>
+            {!id && (
+              <IconButton
+                size='xs'
+                variant='ghost'
+                icon={<Icon name='x-close' />}
+                onClick={() => setPreviewCard(false)}
+                aria-label='close preview organization'
+              />
+            )}
 
-        <div className='flex flex-col w-full flex-1 items-start justify-start gap-3 mt-2'>
-          {!!organization?.value?.description && (
-            <TruncatedText
-              maxLines={4}
-              className='text-sm'
-              data-test='org-about-description'
-              text={organization.value.description}
-            />
-          )}
-          <SocialMediaList
-            dataTest='org-about-social-link'
-            leftElement={<Icon name='share-07' className='text-gray-500' />}
-            value={organization?.value.socialMedia.map((s) => ({
-              value: s.id,
-              label: s.url,
-            }))}
-          />
-          <Tags
-            dataTest='org-about-tags'
-            inputPlaceholder='Search...'
-            onCreate={handleCreateOption}
-            options={tagsUsecase.tagList}
-            placeholder='Organization tags'
-            value={tagsUsecase.selectedTags}
-            inputValue={tagsUsecase.searchTerm}
-            setInputValue={tagsUsecase.setSearchTerm}
-            leftAccessory={
-              <Icon name='tag-01' className='mr-3 text-gray-500' />
-            }
-            onChange={(selection) => {
-              tagsUsecase.select(selection.map((o) => o.value));
-            }}
-          />
-
-          <div className='flex items-center justify-center w-full '>
-            <div
-              data-test='org-about-relationship'
-              className='flex-2 flex items-center'
-            >
-              <Menu>
-                <Tooltip align='start' label='Relationship'>
-                  <MenuButton
-                    data-test='org-about-relationship'
-                    className='min-h-[20px] text-md outline-none focus:outline-none items-center'
+            {organization.value?.referenceId && (
+              <div className='h-full ml-4'>
+                <Tooltip asChild={false} label={'Copy ID'}>
+                  <Tag
+                    variant='outline'
+                    colorScheme='gray'
+                    className='rounded-full cursor-pointer'
+                    onClick={() => {
+                      copyToClipboard(
+                        organization.value?.referenceId ?? '',
+                        'Reference ID copied ',
+                      );
+                    }}
                   >
-                    {
-                      iconMap[
-                        (selectedRelationshipOption?.label ??
-                          'unknown') as keyof typeof iconMap
-                      ]
-                    }
-                    {''}
-                    <span
-                      className={cn(
-                        'ml-3 text-sm',
-                        !selectedRelationshipOption?.label && 'text-gray-400',
-                      )}
-                    >
-                      {selectedRelationshipOption?.label ?? 'Relationship'}
-                    </span>
-                  </MenuButton>
+                    <TagLabel>{organization.value?.referenceId}</TagLabel>
+                  </Tag>
                 </Tooltip>
-                <MenuList side='bottom' align='start'>
-                  {relationshipOptions.map((option) => (
-                    <MenuItem
-                      key={option.value}
-                      onClick={() => {
-                        saveOrganizationUseCase.execute({
-                          relationship: option.value,
-                        });
-                      }}
-                    >
-                      {iconMap[option.label as keyof typeof iconMap]}
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </MenuList>
-              </Menu>
-            </div>
-            {selectedRelationshipOption?.value !==
-              OrganizationRelationship.Customer && (
+              </div>
+            )}
+          </div>
+
+          <Domains />
+
+          <div className='flex flex-col w-full flex-1 items-start justify-start gap-3 mt-2'>
+            {!!organization?.value?.description && (
+              <TruncatedText
+                maxLines={4}
+                className='text-sm'
+                data-test='org-about-description'
+                text={organization.value.description}
+              />
+            )}
+            <SocialMediaList
+              dataTest='org-about-social-link'
+              leftElement={<Icon name='share-07' className='text-gray-500' />}
+              value={organization?.value.socialMedia.map((s) => ({
+                value: s.id,
+                label: s.url,
+              }))}
+            />
+            <Tags
+              dataTest='org-about-tags'
+              inputPlaceholder='Search...'
+              onCreate={handleCreateOption}
+              options={tagsUsecase.tagList}
+              placeholder='Organization tags'
+              value={tagsUsecase.selectedTags}
+              inputValue={tagsUsecase.searchTerm}
+              setInputValue={tagsUsecase.setSearchTerm}
+              leftAccessory={
+                <Icon name='tag-01' className='mr-3 text-gray-500' />
+              }
+              onChange={(selection) => {
+                tagsUsecase.select(selection.map((o) => o.value));
+              }}
+            />
+
+            <div className='flex items-center justify-center w-full '>
               <div
-                data-test='org-about-stage'
-                className='flex-1 flex items-center'
+                data-test='org-about-relationship'
+                className='flex-2 flex items-center'
               >
                 <Menu>
-                  <Tooltip label='Stage' align='start'>
-                    <MenuButton className='min-h-[20px] outline-none focus:outline-none'>
-                      <Icon name='target-05' className='text-gray-500 mb-0.5' />
-                      <span className='ml-3 text-sm'>
-                        {selectedStageOption?.label || 'Stage'}
+                  <Tooltip align='start' label='Relationship'>
+                    <MenuButton
+                      data-test='org-about-relationship'
+                      className='min-h-[20px] text-md outline-none focus:outline-none items-center'
+                    >
+                      {
+                        iconMap[
+                          (selectedRelationshipOption?.label ??
+                            'unknown') as keyof typeof iconMap
+                        ]
+                      }
+                      {''}
+                      <span
+                        className={cn(
+                          'ml-3 text-sm',
+                          !selectedRelationshipOption?.label && 'text-gray-400',
+                        )}
+                      >
+                        {selectedRelationshipOption?.label ?? 'Relationship'}
                       </span>
                     </MenuButton>
                   </Tooltip>
                   <MenuList side='bottom' align='start'>
-                    {applicableStageOptions.map((option) => (
+                    {relationshipOptions.map((option) => (
                       <MenuItem
                         key={option.value}
                         onClick={() => {
                           saveOrganizationUseCase.execute({
-                            stage: option.value,
+                            relationship: option.value,
                           });
                         }}
                       >
@@ -267,64 +236,100 @@ export const OrganizationDetails = observer(() => {
                   </MenuList>
                 </Menu>
               </div>
+              {selectedRelationshipOption?.value !==
+                OrganizationRelationship.Customer && (
+                <div
+                  data-test='org-about-stage'
+                  className='flex-1 flex items-center'
+                >
+                  <Menu>
+                    <Tooltip label='Stage' align='start'>
+                      <MenuButton className='min-h-[20px] outline-none focus:outline-none'>
+                        <Icon
+                          name='target-05'
+                          className='text-gray-500 mb-0.5'
+                        />
+                        <span className='ml-3 text-sm'>
+                          {selectedStageOption?.label || 'Stage'}
+                        </span>
+                      </MenuButton>
+                    </Tooltip>
+                    <MenuList side='bottom' align='start'>
+                      {applicableStageOptions.map((option) => (
+                        <MenuItem
+                          key={option.value}
+                          onClick={() => {
+                            saveOrganizationUseCase.execute({
+                              stage: option.value,
+                            });
+                          }}
+                        >
+                          {iconMap[option.label as keyof typeof iconMap]}
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </MenuList>
+                  </Menu>
+                </div>
+              )}
+            </div>
+            <AboutTabField
+              dataTest={'org-about-industry'}
+              placeholder='Industry not found yet'
+              value={organization?.value?.industryName}
+              field={FlagWrongFields.OrganizationIndustry}
+              flaggedAsIncorrect={organization?.value?.wrongIndustry ?? false}
+              icon={<Icon name='building-07' className='text-gray-500 mr-3' />}
+            />
+
+            {organization.country && (
+              <Tooltip align='start' label='Country'>
+                <p className='text-sm flex items-center cursor-default'>
+                  <span className='flex items-center mr-3'>
+                    {organization.value.locations?.[0]?.countryCodeA2 &&
+                      flags[organization.value.locations?.[0]?.countryCodeA2]}
+                  </span>
+
+                  {organization.country}
+                </p>
+              </Tooltip>
             )}
+
+            {typeof organization.value!.employees === 'number' && (
+              <Tooltip align='start' label='Number of employees'>
+                <p className='text-sm flex items-center cursor-default '>
+                  <Icon name='users-02' className='text-gray-500 mr-3' />
+                  {organization.value!.employees} employees
+                </p>
+              </Tooltip>
+            )}
+            <OwnerInput
+              id={id ?? store.ui.focusRow}
+              dataTest='org-about-org-owner'
+            />
+
+            {showParentRelationshipSelector &&
+              organization?.value?.subsidiaries?.length > 0 && (
+                <Branches id={id} isReadOnly={parentRelationshipReadOnly} />
+              )}
           </div>
-          <AboutTabField
-            dataTest={'org-about-industry'}
-            placeholder='Industry not found yet'
-            value={organization?.value?.industryName}
-            field={FlagWrongFields.OrganizationIndustry}
-            flaggedAsIncorrect={organization?.value?.wrongIndustry ?? false}
-            icon={<Icon name='building-07' className='text-gray-500 mr-3' />}
-          />
-
-          {organization.country && (
-            <Tooltip align='start' label='Country'>
-              <p className='text-sm flex items-center cursor-default'>
-                <span className='flex items-center mr-3'>
-                  {organization.value.locations?.[0]?.countryCodeA2 &&
-                    flags[organization.value.locations?.[0]?.countryCodeA2]}
-                </span>
-
-                {organization.country}
-              </p>
+          {organization?.value.customerOsId && (
+            <Tooltip label='Copy ID'>
+              <span
+                className='py-3 w-fit text-gray-400 cursor-pointer text-sm'
+                onClick={() =>
+                  copyToClipboard(
+                    organization.value?.customerOsId ?? '',
+                    'CustomerOS ID copied',
+                  )
+                }
+              >
+                CustomerOS ID: {organization?.value.customerOsId}
+              </span>
             </Tooltip>
           )}
-
-          {typeof organization.value!.employees === 'number' && (
-            <Tooltip align='start' label='Number of employees'>
-              <p className='text-sm flex items-center cursor-default '>
-                <Icon name='users-02' className='text-gray-500 mr-3' />
-                {organization.value!.employees} employees
-              </p>
-            </Tooltip>
-          )}
-          <OwnerInput
-            id={id ?? store.ui.focusRow}
-            dataTest='org-about-org-owner'
-          />
-
-          {showParentRelationshipSelector &&
-            organization?.value?.subsidiaries?.length > 0 && (
-              <Branches id={id} isReadOnly={parentRelationshipReadOnly} />
-            )}
         </div>
-        {organization?.value.customerOsId && (
-          <Tooltip label='Copy ID'>
-            <span
-              className='py-3 w-fit text-gray-400 cursor-pointer text-sm'
-              onClick={() =>
-                copyToClipboard(
-                  organization.value?.customerOsId ?? '',
-                  'CustomerOS ID copied',
-                )
-              }
-            >
-              CustomerOS ID: {organization?.value.customerOsId}
-            </span>
-          </Tooltip>
-        )}
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
