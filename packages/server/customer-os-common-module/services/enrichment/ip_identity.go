@@ -32,7 +32,7 @@ func (s *enrichmentService) IPIdentity(c context.Context, ip string) (*interface
 		tracing.TraceErr(span, err)
 	}
 
-	if results != nil && results.SnitcherData == "" {
+	if results != nil && results.SnitcherData != "" {
 		var snitcherResponse interfaces.SnitcherResponse
 		err := json.Unmarshal([]byte(results.SnitcherData), &snitcherResponse)
 		if err != nil {
