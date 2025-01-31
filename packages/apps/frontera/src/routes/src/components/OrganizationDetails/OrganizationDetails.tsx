@@ -151,10 +151,6 @@ export const OrganizationDetails = observer(
             <SocialMediaList
               dataTest='org-about-social-link'
               leftElement={<Icon name='share-07' className='text-gray-500' />}
-              value={organization?.value.socialMedia.map((s) => ({
-                value: s.id,
-                label: s.url,
-              }))}
             />
             <Tags
               dataTest='org-about-tags'
