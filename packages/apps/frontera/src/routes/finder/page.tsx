@@ -121,8 +121,10 @@ export const FinderPage = observer(() => {
                   id={String(store.ui.focusRow)}
                 />
               )}
-              {tableViewDef?.value.tableType ===
-                TableViewType.Organizations && <OrganizationDetails />}
+              {tableViewDef?.value.tableType === TableViewType.Organizations &&
+                store.ui.focusRow && (
+                  <OrganizationDetails id={store.ui.focusRow} />
+                )}
             </PreviewCard>
           )}
         </div>

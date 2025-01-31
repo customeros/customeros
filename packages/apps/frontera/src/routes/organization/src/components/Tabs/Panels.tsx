@@ -1,3 +1,5 @@
+import { useParams } from 'react-router-dom';
+
 import { OrganizationDetails } from '@shared/components/OrganizationDetails';
 
 import { PeoplePanel } from './panels/PeoplePanel';
@@ -11,6 +13,8 @@ interface PanelsProps {
 }
 
 export const Panels = ({ tab }: PanelsProps) => {
+  const { id } = useParams<{ id: string }>();
+
   switch (tab) {
     case 'account':
       return <AccountPanel />;
@@ -23,6 +27,6 @@ export const Panels = ({ tab }: PanelsProps) => {
     case 'invoices':
       return <InvoicesPanel />;
     default:
-      return <OrganizationDetails />;
+      return id ? <OrganizationDetails id={id} /> : null;
   }
 };

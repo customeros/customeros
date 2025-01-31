@@ -178,7 +178,9 @@ export class AddSlackChannelUsecase {
   }
 
   enableSlack() {
-    this.root.settings.slack.enableSync();
+    this.root.settings.slack.enableSync(
+      `https://app.customeros.ai${window.location.pathname}`,
+    );
   }
 
   disableSlack() {
