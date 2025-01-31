@@ -13193,6 +13193,7 @@ enum CapabilityType {
     WEB_VISITOR_SEND_SLACK_NOTIFICATION
     APPLY_TAG
     CREATE_MARKDOWN_TIMELINE_EVENT
+    ICP_QUALIFY
 }
 
 type Capability {
@@ -13208,6 +13209,7 @@ type Capability {
 enum AgentType {
     WEB_VISIT_IDENTIFIER
     TAG_SUPPORT
+    ICP_QUALIFIER
 }
 
 type Agent {

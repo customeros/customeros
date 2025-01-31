@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"strings"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -16,13 +18,11 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type ICPQualificationCapability struct {
 	postgresRepositories *postgres_repository.Repositories
 	aiService            interfaces.AIService
-	markdownEventService interfaces.MarkdownEventService
 	organizationService  interfaces.OrganizationService
 }
 
@@ -32,36 +32,50 @@ type ICPQualificationInput struct {
 
 type ICPQualificationOutput struct {
 	CapabilityOutput
-	IsICPFit        string   `json:"isIcpFit"`
-	IcpFitRationale []string `json:"icpFitRationale"`
+	IcpFit          enum.IcpFit `json:"icpFit"`
+	IcpFitRationale []string    `json:"icpFitRationale"`
 }
 
 type ICPQualificationConfig struct {
-	QualificationCriteria    string `json:"qualificationCriteria"` // TODO valiudate this one only
+	QualificationCriteria    string `json:"qualificationCriteria"`
 	DisqualificationCriteria string `json:"disqualificationCriteria"`
-	UserPrompt               string `json:"userPrompt"`
 }
 
-type ICPFit string
-
-const (
-	ICPIsFit   ICPFit = "icp_fit"
-	ICPNotAFit ICPFit = "icp_not_a_fit"
-	ICPNotSet  ICPFit = "not_set"
-)
+func NewICPQualificationCapability(postgres *postgres_repository.Repositories, aiService interfaces.AIService, organizationServices interfaces.OrganizationService) *ICPQualificationCapability {
+	return &ICPQualificationCapability{
+		postgresRepositories: postgres,
+		aiService:            aiService,
+		organizationService:  organizationServices,
+	}
+}
 
 type ICPAnswer struct {
 	ICPFit  bool     `json:"icp_fit"`
 	Reasons []string `json:"reasons"`
 }
 
-func (c *ICPQualificationCapability) ValidateConfig(config NoConfig) error {
-	// if config.QualificationCriteria == "" {
-	// 	return errors.New("missing required input: QualificationCriteria")
-	// }
-	// if config.DisqualificationCriteria == "" {
-	// 	return errors.New("missing required input: DisqualificationCriteria")
-	// }
+func (c *ICPQualificationCapability) GetInput() any {
+	return &ICPQualificationInput{}
+}
+
+func (c *ICPQualificationCapability) GetConfig() any {
+	return &ICPQualificationConfig{}
+}
+
+func (c *ICPQualificationCapability) GetOutput() any {
+	return &ICPQualificationOutput{}
+}
+
+// Compile-time interface check
+var (
+	_ interfaces.AgentCapabilityExecution[ICPQualificationInput, ICPQualificationOutput, ICPQualificationConfig] = (*ICPQualificationCapability)(nil)
+	_ interfaces.AgentCapabilityUntyped                                                                          = (*ICPQualificationCapability)(nil)
+)
+
+func (c *ICPQualificationCapability) ValidateConfig(config ICPQualificationConfig) error {
+	if config.QualificationCriteria == "" {
+		return errors.New("missing required config: QualificationCriteria")
+	}
 	return nil
 }
 
@@ -72,54 +86,28 @@ func (c *ICPQualificationCapability) ValidateInput(input ICPQualificationInput) 
 	return nil
 }
 
-func (c *ICPQualificationCapability) GetInput() any {
-	return &ICPQualificationInput{}
-}
-
-func (c *ICPQualificationCapability) GetConfig() any {
-	return &NoConfig{}
-}
-
-func (c *ICPQualificationCapability) GetOutput() any {
-	return &ICPQualificationOutput{}
-}
-
-func NewICPQualificationCapability(postgres *postgres_repository.Repositories, aiService interfaces.AIService) *ICPQualificationCapability {
-	return &ICPQualificationCapability{
-		postgresRepositories: postgres,
-		aiService:            aiService,
-	}
-}
-
-// Compile-time interface check
-var (
-	_ interfaces.AgentCapabilityExecution[ICPQualificationInput, ICPQualificationOutput, NoConfig] = (*ICPQualificationCapability)(nil)
-	_ interfaces.AgentCapabilityUntyped                                                            = (*ICPQualificationCapability)(nil)
-)
-
-func (c *ICPQualificationCapability) Execute(ctx context.Context, data ICPQualificationInput, config NoConfig) (ICPQualificationOutput, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityService.executeICPQualification")
+func (c *ICPQualificationCapability) Execute(ctx context.Context, data ICPQualificationInput, config ICPQualificationConfig) (ICPQualificationOutput, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ICPQualificationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
-
-	tenant := common.GetTenantFromContext(ctx)
-	tracing.TagTenant(span, tenant)
+	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tracing.LogObjectAsJson(span, "input", data)
+	tracing.LogObjectAsJson(span, "config", config)
 
 	result := ICPQualificationOutput{
-		IsICPFit: string(ICPNotSet),
+		IcpFit: enum.IcpNotSet,
 	}
 
-	err := c.runExecutionValidation(ctx, data, config)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		result.CapabilityOutput.ExecutionValidated = false
+	if err := c.ValidateInput(data); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
 		return result, err
 	}
-	result.CapabilityOutput.ExecutionValidated = true
+	if err := c.ValidateConfig(config); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		return result, err
+	}
 
-	// get ICP definition
-	icpQualification := ""
-	icpDisqualification := ""
+	result.ExecutionValidated = true
 
 	// get all company context
 	primaryDomain, err := c.organizationService.GetPrimaryDomainByOrgID(ctx, data.OrganizationID)
@@ -142,7 +130,7 @@ func (c *ICPQualificationCapability) Execute(ctx context.Context, data ICPQualif
 	}
 
 	// build prompt
-	systemPrompt, content := c.buildPrompts(icpQualification, icpDisqualification, company)
+	systemPrompt, content := c.buildPrompts(config.QualificationCriteria, config.DisqualificationCriteria, company)
 
 	// askAI
 	answer, err := c.aiService.AskAI(ctx, enum.AIModelAnthropicHaiku, systemPrompt, content)
@@ -156,54 +144,43 @@ func (c *ICPQualificationCapability) Execute(ctx context.Context, data ICPQualif
 	parsedAnswer, err := c.parseAnswer(ctx, *answer)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		result.CapabilityOutput.Completed = false
 		return result, err
 	}
 	result.IcpFitRationale = parsedAnswer.Reasons
 
-	// save to timeline
-	timelineContent := c.buildTimelineEvent(parsedAnswer)
-	source := enum.SourceAgent
-	_, err = c.markdownEventService.Save(ctx, nil, nil, data_fields.MarkdownEventFields{
-		Source:         &source,
-		OrganizationId: &data.OrganizationID,
-		Content:        &timelineContent,
-		CreatedAt:      utils.NowPtr(),
-	})
-
 	// disqualify as lead if not a fit
 	if parsedAnswer.ICPFit {
-		result.IsICPFit = string(ICPIsFit)
-		err := c.processICPFit(ctx, data.OrganizationID)
+		err = c.processICPFit(ctx, data.OrganizationID, parsedAnswer.Reasons)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			result.CapabilityOutput.Completed = false
 			return result, err
 		}
+		result.IcpFit = enum.IcpIsFit
 	} else {
-		result.IsICPFit = string(ICPNotAFit)
-		err := c.processICPNotAFit(ctx, data.OrganizationID)
+		err = c.processICPNotAFit(ctx, data.OrganizationID, parsedAnswer.Reasons)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			result.CapabilityOutput.Completed = false
 			return result, err
 		}
+		result.IcpFit = enum.IcpNotFit
 	}
+	result.IcpFitRationale = parsedAnswer.Reasons
 
-	result.CapabilityOutput.Completed = true
+	result.Completed = true
+	tracing.LogObjectAsJson(span, "result", result)
 	return result, nil
 }
 
-func (c *ICPQualificationCapability) processICPFit(ctx context.Context, organizationID string) error {
+func (c *ICPQualificationCapability) processICPFit(ctx context.Context, organizationID string, reasons []string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ICPQualificationCapability.processICPFit")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
-	relationship := neo4jenum.OrganizationRelationshipProspect
-	stage := neo4jenum.Target
 	_, err := c.organizationService.Save(ctx, nil, &organizationID, data_fields.OrganizationFields{
-		Relationship: &relationship,
-		Stage:        &stage,
+		Relationship:  utils.ToPtr(neo4jenum.OrganizationRelationshipProspect),
+		Stage:         utils.ToPtr(neo4jenum.Target),
+		IcpFit:        utils.ToPtr(enum.IcpIsFit),
+		IcpFitReasons: &reasons,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -212,16 +189,16 @@ func (c *ICPQualificationCapability) processICPFit(ctx context.Context, organiza
 	return nil
 }
 
-func (c *ICPQualificationCapability) processICPNotAFit(ctx context.Context, organizationID string) error {
+func (c *ICPQualificationCapability) processICPNotAFit(ctx context.Context, organizationID string, reasons []string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ICPQualificationCapability.processICPFit")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
-	relationship := neo4jenum.OrganizationRelationshipNotAFit
-	stage := neo4jenum.Unqualified
 	_, err := c.organizationService.Save(ctx, nil, &organizationID, data_fields.OrganizationFields{
-		Relationship: &relationship,
-		Stage:        &stage,
+		Relationship:  utils.ToPtr(neo4jenum.OrganizationRelationshipNotAFit),
+		Stage:         utils.ToPtr(neo4jenum.Unqualified),
+		IcpFit:        utils.ToPtr(enum.IcpNotFit),
+		IcpFitReasons: &reasons,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -230,21 +207,7 @@ func (c *ICPQualificationCapability) processICPNotAFit(ctx context.Context, orga
 	return nil
 }
 
-func (c *ICPQualificationCapability) buildTimelineEvent(answer *ICPAnswer) string {
-	md := fmt.Sprintf("**ICP Fit:** %v\n", answer.ICPFit)
-
-	// Add reasons if there are any
-	if len(answer.Reasons) > 0 {
-		md += "**Reasons:**\n"
-		for _, reason := range answer.Reasons {
-			md += fmt.Sprintf("* %s\n", reason)
-		}
-	}
-
-	return md
-}
-
-func (c ICPQualificationCapability) buildPrompts(icpQualification, icpDisqualification string, company *postgres_entity.GlobalOrganization) (string, string) {
+func (c *ICPQualificationCapability) buildPrompts(icpQualification, icpDisqualification string, company *postgres_entity.GlobalOrganization) (string, string) {
 	systemPrompt := `You are a world class company analyst. Your objective is to determine whether the company I provide you fits our ideal customer profile or not. I will provide you with three datasets: 1. a description of our ideal customer, 2. criteria that automatically disqualifies companies, and 3. all the context I have about the company, including their name, location, and several descriptions taken from their website and linkedin pages.
 
 Analyze the company and respond in this exact JSON format:
@@ -259,6 +222,15 @@ Analyze the company and respond in this exact JSON format:
 
 Important: Always provide exactly three reasons, and format as valid JSON.`
 
+	var descLines []string
+	descriptions := []string{company.SourceDescription1, company.SourceDescription2, company.SourceDescription3, company.SourceDescription4, company.SourceDescription5}
+	for i, d := range descriptions {
+		if strings.TrimSpace(d) != "" {
+			descLines = append(descLines, fmt.Sprintf("Description Line %d: %s", i+1, d))
+		}
+	}
+	additionalCompanyDescriptions := strings.Join(descLines, ";")
+
 	content := fmt.Sprintf(`
         ICP Qualificaton Criteria: %s
         ICP Disqualification Criteria: %s
@@ -269,34 +241,14 @@ Important: Always provide exactly three reasons, and format as valid JSON.`
         Location: %s, %s, %s
         Industry NAICS Code: %s
         Industry Name: %s
-        Company Description 1: %s
-        Company Description 2: %s
-        Company Description 3: %s
-        Company Description 4: %s
-        Company Description 5: %s
+		Company Description: %s
+		Additional Company Descriptions: %s
         `, icpQualification, icpDisqualification,
 		company.Name, company.PrimaryDomain, company.YearFounded, company.EmployeeCount,
 		company.City, company.Region, company.CountryA2, company.IndustryNaicsCode,
-		company.IndustryNaicsName, company.Description, company.SourceDescription1,
-		company.SourceDescription2, company.SourceDescription3, company.SourceDescription4)
+		company.IndustryNaicsName, company.Description, additionalCompanyDescriptions)
 
 	return systemPrompt, content
-}
-
-func (c *ICPQualificationCapability) runExecutionValidation(ctx context.Context, data ICPQualificationInput, config NoConfig) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ICPQualificationCapability.runValidation")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-
-	if err := c.ValidateInput(data); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return err
-	}
-	if err := c.ValidateConfig(config); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return err
-	}
-	return nil
 }
 
 func (c *ICPQualificationCapability) parseAnswer(ctx context.Context, answer string) (*ICPAnswer, error) {
@@ -326,9 +278,9 @@ func (c *ICPQualificationCapability) ExecuteUntyped(ctx context.Context, input a
 		return nil, fmt.Errorf("invalid input type: expected ICPQualificationInput")
 	}
 
-	typedConfig, ok := config.(*NoConfig)
+	typedConfig, ok := config.(*ICPQualificationConfig)
 	if !ok || typedConfig == nil {
-		return nil, fmt.Errorf("invalid config type: expected NoCOnfig")
+		return nil, fmt.Errorf("invalid config type: expected ICPQualificationConfig")
 	}
 
 	return c.Execute(ctx, *typedInput, *typedConfig)

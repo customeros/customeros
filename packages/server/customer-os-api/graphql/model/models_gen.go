@@ -3184,16 +3184,18 @@ type AgentType string
 const (
 	AgentTypeWebVisitIdentifier AgentType = "WEB_VISIT_IDENTIFIER"
 	AgentTypeTagSupport         AgentType = "TAG_SUPPORT"
+	AgentTypeIcpQualifier       AgentType = "ICP_QUALIFIER"
 )
 
 var AllAgentType = []AgentType{
 	AgentTypeWebVisitIdentifier,
 	AgentTypeTagSupport,
+	AgentTypeIcpQualifier,
 }
 
 func (e AgentType) IsValid() bool {
 	switch e {
-	case AgentTypeWebVisitIdentifier, AgentTypeTagSupport:
+	case AgentTypeWebVisitIdentifier, AgentTypeTagSupport, AgentTypeIcpQualifier:
 		return true
 	}
 	return false
@@ -3322,6 +3324,7 @@ const (
 	CapabilityTypeWebVisitorSendSLACkNotification CapabilityType = "WEB_VISITOR_SEND_SLACK_NOTIFICATION"
 	CapabilityTypeApplyTag                        CapabilityType = "APPLY_TAG"
 	CapabilityTypeCreateMarkdownTimelineEvent     CapabilityType = "CREATE_MARKDOWN_TIMELINE_EVENT"
+	CapabilityTypeIcpQualify                      CapabilityType = "ICP_QUALIFY"
 )
 
 var AllCapabilityType = []CapabilityType{
@@ -3332,11 +3335,12 @@ var AllCapabilityType = []CapabilityType{
 	CapabilityTypeWebVisitorSendSLACkNotification,
 	CapabilityTypeApplyTag,
 	CapabilityTypeCreateMarkdownTimelineEvent,
+	CapabilityTypeIcpQualify,
 }
 
 func (e CapabilityType) IsValid() bool {
 	switch e {
-	case CapabilityTypeIdentifyWebVisitor, CapabilityTypeCreateOrganization, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeSendSLACkNotification, CapabilityTypeWebVisitorSendSLACkNotification, CapabilityTypeApplyTag, CapabilityTypeCreateMarkdownTimelineEvent:
+	case CapabilityTypeIdentifyWebVisitor, CapabilityTypeCreateOrganization, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeSendSLACkNotification, CapabilityTypeWebVisitorSendSLACkNotification, CapabilityTypeApplyTag, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeIcpQualify:
 		return true
 	}
 	return false

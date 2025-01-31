@@ -14,6 +14,7 @@ var agentCapabilityTypeByModel = map[model.CapabilityType]enum.AgentCapabilityTy
 	model.CapabilityTypeWebVisitorSendSLACkNotification: enum.CapabilitySendWebVisitorSlackNotification,
 	model.CapabilityTypeApplyTag:                        enum.CapabilityApplyTag,
 	model.CapabilityTypeCreateMarkdownTimelineEvent:     enum.CapabilityCreateMarkdownTimelineEvent,
+	model.CapabilityTypeIcpQualify:                      enum.CapabilityIcpQualify,
 }
 
 var agentCapabilityTypeByValue = utils.ReverseMap(agentCapabilityTypeByModel)
