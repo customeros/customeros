@@ -21,6 +21,7 @@ func InitCapabilities(
 	tagService interfaces.TagService,
 	workspaceService interfaces.WorkspaceService,
 	markdownService interfaces.MarkdownEventService,
+	domainService interfaces.DomainService,
 
 ) *AgentCapabilities {
 
@@ -31,7 +32,7 @@ func InitCapabilities(
 	// Register each capability with its corresponding type.
 	executors[enum.CapabilityAnalyzeWebSessionIntent] = NewAnalyzeWebSessionCapability(postgresRepositories, actionService)
 	executors[enum.CapabilityCreateOrganization] = NewCreateOrganizationCapability(organizationService)
-	executors[enum.CapabilityIdentifyWebVisitor] = NewIdentifyWebsiteVisitorCapability(postgresRepositories, enrichmentService)
+	executors[enum.CapabilityIdentifyWebVisitor] = NewIdentifyWebsiteVisitorCapability(postgresRepositories, enrichmentService, domainService)
 	executors[enum.CapabilitySendSlackNotification] = NewSendSlackNotificationCapability(notificationService)
 	executors[enum.CapabilitySendWebVisitorSlackNotification] = NewSendWebVisitorSlackNotificationCapability(postgresRepositories, notificationService, workspaceService)
 	executors[enum.CapabilityApplyTag] = NewApplyTagCapability(tagService)

@@ -316,6 +316,9 @@ func (s *domainService) CheckDomainWithMailsherpa(ctx context.Context, domain st
 		if err != nil {
 			s.log.Errorf("Error while checking domain primary exception: %v", err.Error())
 		}
+		if accessible {
+			primaryDomain = domain
+		}
 	}
 	return accessible, isPrimary, primaryDomain
 }

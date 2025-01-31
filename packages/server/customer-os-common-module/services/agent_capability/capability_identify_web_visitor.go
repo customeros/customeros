@@ -8,7 +8,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -19,6 +18,7 @@ import (
 type IdentifyWebsiteVisitorCapability struct {
 	postgresRepositories *postgres_repository.Repositories
 	enrichmentService    interfaces.EnrichmentService
+	domainService        interfaces.DomainService
 }
 
 type IdentifyWebsiteVisitorInput struct {
@@ -43,7 +43,7 @@ type WebsitesConfig struct {
 	Error string   `json:"error"`
 }
 
-func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(config IdentifyWebsiteVisitorConfig) error {
+func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(IdentifyWebsiteVisitorConfig) error {
 	return nil
 }
 
@@ -75,10 +75,12 @@ func (c *IdentifyWebsiteVisitorCapability) GetOutput() any {
 func NewIdentifyWebsiteVisitorCapability(
 	postgresRepositories *postgres_repository.Repositories,
 	enrichmentService interfaces.EnrichmentService,
+	domainService interfaces.DomainService,
 ) *IdentifyWebsiteVisitorCapability {
 	return &IdentifyWebsiteVisitorCapability{
 		postgresRepositories: postgresRepositories,
 		enrichmentService:    enrichmentService,
+		domainService:        domainService,
 	}
 }
 
@@ -111,6 +113,7 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data Ide
 	err := c.acceptHostname(ctx, data.Hostname, config.Websites.Value)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		tracing.LogObjectAsJson(span, "result", result)
 		return result, err
 	}
 
@@ -119,6 +122,7 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data Ide
 	domain, linkedInSlug, err := c.identifyIP(ctx, data.IPAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		tracing.LogObjectAsJson(span, "result", result)
 		return result, err
 	}
 	span.LogKV("domain", domain)
@@ -130,6 +134,7 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data Ide
 		_, err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithDomain(ctx, data.SessionID, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
+			tracing.LogObjectAsJson(span, "result", result)
 			return result, err
 		}
 	}
@@ -158,9 +163,10 @@ func (c *IdentifyWebsiteVisitorCapability) acceptHostname(ctx context.Context, h
 	return nil
 }
 
-func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug string, err error) {
+func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAddress string) (primaryDomain, linkedinSlug string, err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.identifyIP")
 	defer span.Finish()
+	span.LogKV("ipAddress", ipAddress)
 
 	snitcherData, err := c.enrichmentService.IPIdentity(ctx, ipAddress)
 	if err != nil {
@@ -172,7 +178,7 @@ func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAdd
 		return "", "", nil
 	}
 
-	_, primaryDomain := domaincheck.PrimaryDomainCheck(snitcherData.Company.Domain)
+	_, _, primaryDomain = c.domainService.CheckDomainWithMailsherpa(ctx, snitcherData.Company.Domain)
 
 	if snitcherData.Company.Profiles != nil && snitcherData.Company.Profiles.LinkedIn != nil {
 		linkedinSlug = snitcherData.Company.Profiles.LinkedIn.Handle
