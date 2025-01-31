@@ -239,8 +239,8 @@ func registerIcpAgent() postgres_entity.AgentRegistry {
 		Type:     enum.AgentICPQualification,
 		Name:     "ICP qualification",
 		Goal:     enum.AgentGoalQualifyICP.String(),
-		Icon:     "",
-		Color:    "",
+		Icon:     "target-04",
+		Color:    "success",
 		IsActive: true,
 		CapabilitiesConfig: postgres_entity.CapabilitiesConfig{
 			Capabilities: []postgres_entity.Capability{

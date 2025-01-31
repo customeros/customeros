@@ -30,7 +30,7 @@ export const LinkedInDisplay = ({
     : '';
 
   return (
-    <div className='flex items-center group'>
+    <div className='flex items-center group/linkedin'>
       <Tooltip label={url ?? ''}>
         <p
           onClick={() => window.open(url, '_blank', 'noopener')}
@@ -46,7 +46,7 @@ export const LinkedInDisplay = ({
         aria-label='social-link'
         icon={<Copy02 className='text-gray-500' />}
         onClick={() => copyToClipboard(url, 'LinkedIn profile copied')}
-        className='ml-1 rounded-[5px] opacity-0 group-hover:opacity-100'
+        className='ml-1 rounded-[5px] opacity-0 group-hover/linkedin:opacity-100'
       />
     </div>
   );

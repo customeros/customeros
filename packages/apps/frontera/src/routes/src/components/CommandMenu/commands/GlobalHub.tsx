@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { useStore } from '@shared/hooks/useStore';
 import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
@@ -43,6 +44,7 @@ export const GlobalSharedCommands = observer(
   ({ dataTest }: GlobalSharedCommandsProps) => {
     const store = useStore();
     const navigate = useNavigate();
+    const showCustomerMap = useFeatureIsOn('show-customer-map');
 
     const targetsPreset = store.tableViewDefs.targetsPreset;
     const customersPreset = store.tableViewDefs.customersPreset;
@@ -165,15 +167,17 @@ export const GlobalSharedCommands = observer(
         >
           Go to Settings
         </CommandItem>
-        <CommandItem
-          dataTest={`${dataTest}-gd`}
-          leftAccessory={<ArrowNarrowRight />}
-          onSelect={() => handleGoTo('/customer-map')}
-          keywords={navigationKeywords.go_to_customer_map}
-          rightAccessory={<KeyboardShortcut shortcut='D' />}
-        >
-          Go to Customer map
-        </CommandItem>
+        {showCustomerMap && (
+          <CommandItem
+            dataTest={`${dataTest}-gd`}
+            leftAccessory={<ArrowNarrowRight />}
+            onSelect={() => handleGoTo('/customer-map')}
+            keywords={navigationKeywords.go_to_customer_map}
+            rightAccessory={<KeyboardShortcut shortcut='D' />}
+          >
+            Go to Customer map
+          </CommandItem>
+        )}
         <CommandItem
           onSelect={handleResync}
           keywords={resyncKeywords}

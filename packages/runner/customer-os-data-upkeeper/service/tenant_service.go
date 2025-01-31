@@ -75,13 +75,16 @@ func (s *tenantService) CheckOnboarding() {
 			continue
 		}
 
-		// check web visit agents
+		// check web visitor agents
 		s.checkWebVisitorAgents(innerCtx, tenantEntity.Name)
+
+		// check icp qualification agents
+		s.checkIcpQualificationAgents(innerCtx, tenantEntity.Name)
 	}
 }
 
 func (s *tenantService) checkWebVisitorAgents(ctx context.Context, tenant string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.CheckOnboarding.CheckWebVisitorAgents")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.checkWebVisitorAgents")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 	tracing.TagTenant(span, tenant)
@@ -104,5 +107,32 @@ func (s *tenantService) checkWebVisitorAgents(ctx context.Context, tenant string
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error creating web visitor agent"))
 		s.log.Errorf("Error creating web visitor agents: %s", err.Error())
+	}
+}
+
+func (s *tenantService) checkIcpQualificationAgents(ctx context.Context, tenant string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.checkIcpQualificationAgents")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+	tracing.TagTenant(span, tenant)
+
+	// get icp qualification agents
+	icpQualificationAgents, err := s.commonServices.PostgresRepositories.AgentsRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualification})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting icp qualification agents"))
+		s.log.Errorf("Error getting icp qualification agents: %s", err.Error())
+		return
+	}
+
+	if len(icpQualificationAgents) > 0 {
+		span.LogFields(log.Bool("result.onboarded", true))
+		return
+	}
+
+	// create icp qualification agents
+	_, err = s.commonServices.AgentService.CreateAgent(ctx, enum.AgentICPQualification)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error creating icp qualification agent"))
+		s.log.Errorf("Error creating icp qualification agents: %s", err.Error())
 	}
 }

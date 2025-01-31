@@ -49,7 +49,7 @@ interface OrganizationDetailsProps {
 export const OrganizationDetails = observer(
   ({ id }: OrganizationDetailsProps) => {
     const store = useStore();
-    const [__, setPreviewCard] = useLocalStorage('previewCard', false);
+    const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
     const [_, copyToClipboard] = useCopyToClipboard();
 
@@ -106,7 +106,7 @@ export const OrganizationDetails = observer(
             <p className='font-semibold text-base mt-0.5 overflow-hidden overflow-ellipsis'>
               {organization?.value?.name ?? ''}
             </p>
-            {!id && (
+            {previewCard && (
               <IconButton
                 size='xs'
                 variant='ghost'
@@ -151,10 +151,6 @@ export const OrganizationDetails = observer(
             <SocialMediaList
               dataTest='org-about-social-link'
               leftElement={<Icon name='share-07' className='text-gray-500' />}
-              value={organization?.value.socialMedia.map((s) => ({
-                value: s.id,
-                label: s.url,
-              }))}
             />
             <Tags
               dataTest='org-about-tags'

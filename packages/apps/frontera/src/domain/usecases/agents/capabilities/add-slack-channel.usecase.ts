@@ -178,8 +178,20 @@ export class AddSlackChannelUsecase {
   }
 
   enableSlack() {
+    const capabilityId = new URLSearchParams(window.location.search).get('cid');
+
+    if (!capabilityId) {
+      console.error(
+        'AddSlackChannelUsecase.enableSlack: Capability ID not found',
+      );
+
+      return;
+    }
+
     this.root.settings.slack.enableSync(
-      `https://app.customeros.ai${window.location.pathname}`,
+      `https://app.customeros.ai/agents?state=${encodeURIComponent(
+        `${this.agentId}:cid=${capabilityId}`,
+      )}`,
     );
   }
 

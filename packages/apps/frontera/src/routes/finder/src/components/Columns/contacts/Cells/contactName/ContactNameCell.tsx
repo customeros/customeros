@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
 import { cn } from '@ui/utils/cn';
+import { Icon } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
 
 interface ContactNameCellProps {
@@ -25,7 +26,7 @@ export const ContactNameCell = observer(
     if (!contactStore) return;
 
     return (
-      <div ref={ref} className='flex'>
+      <div ref={ref} className='flex group/contact-preview items-center'>
         {!contactName && (
           <p
             className='text-gray-700 font-medium no-underline hover:no-underline cursor-pointer'
@@ -60,6 +61,18 @@ export const ContactNameCell = observer(
             {contactName}
           </p>
         )}
+        <Icon
+          name={'eye'}
+          className='text-gray-400 ml-2 opacity-0 group-hover/contact-preview:opacity-100 cursor-pointer'
+          onClick={() => {
+            if (previewCard === true && store.ui.focusRow === contactId) {
+              setPreviewCard(false);
+            } else {
+              store.ui.setFocusRow(contactId);
+              setPreviewCard(true);
+            }
+          }}
+        />
       </div>
     );
   },

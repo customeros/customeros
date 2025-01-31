@@ -10,7 +10,10 @@ export class AgentViewUsecase {
   private root = RootStore.getInstance();
   @observable private accessor _activeCapabilityId: string = '';
 
-  constructor(private id: string) {
+  constructor(private id: string, private defaultCapabilityId?: string | null) {
+    if (this.defaultCapabilityId?.length) {
+      this._activeCapabilityId = this.defaultCapabilityId;
+    }
     this.toggleActive = this.toggleActive.bind(this);
     this.setActiveCapability = this.setActiveCapability.bind(this);
   }

@@ -310,7 +310,12 @@ func (s *domainService) CheckDomainWithMailsherpa(ctx context.Context, domain st
 
 	accessible := true
 	if !isPrimary && primaryDomain == "" {
-		accessible = false
+		// check if current domain is an exception case
+		var err error
+		accessible, err = s.postgres.DomainPrimaryExceptionRepository.Exists(ctx, domain)
+		if err != nil {
+			s.log.Errorf("Error while checking domain primary exception: %v", err.Error())
+		}
 	}
 	return accessible, isPrimary, primaryDomain
 }
