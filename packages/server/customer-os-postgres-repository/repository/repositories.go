@@ -36,6 +36,7 @@ type Repositories struct {
 	CosApiEnrichPersonTempResultRepository       CosApiEnrichPersonTempResultRepository
 	CurrencyRateRepository                       CurrencyRateRepository
 	CustomerOsIdsRepository                      CustomerOsIdsRepository
+	DomainPrimaryExceptionRepository             DomainPrimaryExceptionRepository
 	EmailLookupRepository                        EmailLookupRepository
 	EmailMessageRepository                       EmailMessageRepository
 	EmailTrackingRepository                      EmailTrackingRepository
@@ -118,6 +119,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		CosApiEnrichPersonTempResultRepository:       NewCosApiEnrichPersonTempResultRepository(postgresDB.GormDB),
 		CurrencyRateRepository:                       NewCurrencyRateRepository(postgresDB.GormDB),
 		CustomerOsIdsRepository:                      NewCustomerOsIdsRepository(postgresDB.GormDB),
+		DomainPrimaryExceptionRepository:             NewDomainPrimaryExceptionRepository(postgresDB.GormDB),
 		EmailLookupRepository:                        NewEmailLookupRepository(postgresDB.GormDB),
 		EmailMessageRepository:                       NewEmailMessageRepository(postgresDB.GormDB),
 		EmailTrackingRepository:                      NewEmailTrackingRepository(postgresDB.GormDB),
@@ -185,6 +187,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.CosApiEnrichPersonTempResult{},
 		&postgres_entity.CurrencyRate{},
 		&postgres_entity.CustomerOsIds{},
+		&postgres_entity.DomainPrimaryException{},
 		&postgres_entity.DMARCMonitoring{},
 		&postgres_entity.EmailLookup{},
 		&postgres_entity.EmailMessage{},
