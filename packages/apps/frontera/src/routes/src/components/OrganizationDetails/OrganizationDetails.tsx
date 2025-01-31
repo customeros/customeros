@@ -23,7 +23,6 @@ import { OwnerInput } from '@shared/components/OrganizationDetails/components/ow
 import { Branches } from '@shared/components/OrganizationDetails/components/branches';
 import { AboutTabField } from '@shared/components/OrganizationDetails/components/AboutTabField';
 import {
-  EntityType,
   FlagWrongFields,
   OrganizationRelationship,
 } from '@shared/types/__generated__/graphql.types';
@@ -82,25 +81,8 @@ export const OrganizationDetails = observer(
       [id],
     );
 
-    const handleCreateOption = (value: string) => {
-      store.tags?.create(
-        { name: value },
-        {
-          onSucces: (id) => {
-            organization.draft();
-            organization?.value?.tags?.push({
-              name: value,
-              colorCode:
-                store.tags.getById(id)?.value?.colorCode ?? 'grayModern',
-              metadata: {
-                id,
-              },
-              entityType: EntityType.Organization,
-            });
-            organization.commit();
-          },
-        },
-      );
+    const handleCreateOption = () => {
+      tagsUsecase.create();
     };
 
     const isEnriching = organization.isEnriching;
@@ -274,6 +256,7 @@ export const OrganizationDetails = observer(
               )}
             </div>
             <AboutTabField
+              id={store.ui.focusRow ?? id}
               dataTest={'org-about-industry'}
               placeholder='Industry not found yet'
               value={organization?.value?.industryName}
