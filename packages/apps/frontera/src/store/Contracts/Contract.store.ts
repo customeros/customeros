@@ -591,6 +591,7 @@ const CONTRACT_QUERY = gql`
           id
           name
         }
+        description
         skuId
         billingCycle
         price

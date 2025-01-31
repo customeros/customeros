@@ -65,7 +65,7 @@ const ServiceItem = observer(
           onClick={() => onOpen(contractLineItem as ServiceLineItem)}
           className='flex w-full justify-between cursor-pointer text-sm focus:outline-none'
         >
-          <p>{sku?.value?.name}</p>
+          <p>{sku?.value?.name || contractLineItem?.description}</p>
           <div className='flex justify-between'>
             <p>
               {![BilledType.Usage, BilledType.None].includes(
