@@ -163,7 +163,7 @@ func (c *IdentifyWebsiteVisitorCapability) acceptHostname(ctx context.Context, h
 	return nil
 }
 
-func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAddress string) (domain, linkedinSlug string, err error) {
+func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAddress string) (primaryDomain, linkedinSlug string, err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.identifyIP")
 	defer span.Finish()
 	span.LogKV("ipAddress", ipAddress)
@@ -178,7 +178,7 @@ func (c *IdentifyWebsiteVisitorCapability) identifyIP(ctx context.Context, ipAdd
 		return "", "", nil
 	}
 
-	_, _, primaryDomain := c.domainService.CheckDomainWithMailsherpa(ctx, domain)
+	_, _, primaryDomain = c.domainService.CheckDomainWithMailsherpa(ctx, snitcherData.Company.Domain)
 
 	if snitcherData.Company.Profiles != nil && snitcherData.Company.Profiles.LinkedIn != nil {
 		linkedinSlug = snitcherData.Company.Profiles.LinkedIn.Handle
