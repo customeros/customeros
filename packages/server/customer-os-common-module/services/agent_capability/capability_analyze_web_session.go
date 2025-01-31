@@ -3,16 +3,16 @@ package agent_capability
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
-	"github.com/pkg/errors"
 	"sort"
 	"strings"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -332,9 +332,9 @@ func (c *AnalyzeWebSessionCapability) buildTimelineMessage(ctx context.Context, 
 	var baseMessage string
 	switch {
 	case analysis.Referrer == "":
-		baseMessage = fmt.Sprintf("A visitor referred by **%s** browsed for %s", analysis.Referrer, analysis.SessionDuration)
-	default:
 		baseMessage = fmt.Sprintf("A visitor browsed for %s", analysis.SessionDuration)
+	default:
+		baseMessage = fmt.Sprintf("A visitor referred by **%s** browsed for %s", analysis.Referrer, analysis.SessionDuration)
 	}
 
 	// Sort pages by length and alphabetically
