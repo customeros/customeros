@@ -16,9 +16,9 @@ export const useSlackOauthCallback = () => {
   const [queryParams] = useSearchParams();
 
   useEffect(() => {
-    const agentId = queryParams.get('id');
-    const capabilityId = queryParams.get('cid');
+    const state = queryParams.get('state');
     const slackCode = queryParams.get('code');
+    const path = decodeURIComponent(state ?? '');
 
     if (!store.session.isAuthenticated) return;
 
@@ -26,10 +26,8 @@ export const useSlackOauthCallback = () => {
       store.settings.slack.oauthCallback(slackCode);
     }
 
-    if (agentId) {
-      navigate(
-        `/agents/${agentId}${capabilityId ? `?cid=${capabilityId}` : ''}`,
-      );
+    if (path) {
+      navigate(`/agents/${path}`);
     }
   }, [store.session.isAuthenticated]);
 };
