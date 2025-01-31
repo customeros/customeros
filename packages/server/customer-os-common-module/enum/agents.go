@@ -34,6 +34,7 @@ type AgentGoal string
 const (
 	AgentGoalIdentifyVisitors AgentGoal = "identify_web_visitor"
 	AgentGoalTagSupport       AgentGoal = "tag_support"
+	AgentGoalQualifyICP       AgentGoal = "qualify_icp"
 )
 
 func (t AgentGoal) String() string {

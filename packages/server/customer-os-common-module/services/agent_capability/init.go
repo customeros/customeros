@@ -36,6 +36,7 @@ func InitCapabilities(
 	executors[enum.CapabilitySendWebVisitorSlackNotification] = NewSendWebVisitorSlackNotificationCapability(postgresRepositories, notificationService, workspaceService)
 	executors[enum.CapabilityApplyTag] = NewApplyTagCapability(tagService)
 	executors[enum.CapabilityCreateMarkdownTimelineEvent] = NewCreateMarkdownTimelineEventCapability(markdownService)
+	executors[enum.CapabilityIcpQualify] = NewICPQualificationCapability(postgresRepositories, aiService, organizationService)
 	// Continue registering other capabilities here...
 	capabilities.executors = executors
 

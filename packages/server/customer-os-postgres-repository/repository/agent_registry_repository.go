@@ -153,6 +153,7 @@ func (r *agentRegistryRepository) Initialize(ctx context.Context) error {
 	requiredAgents := []postgres_entity.AgentRegistry{
 		registerVisitorIdAgent(),
 		registerSupportAgent(),
+		registerIcpAgent(),
 	}
 
 	for _, agent := range requiredAgents {
@@ -190,18 +191,22 @@ func registerVisitorIdAgent() postgres_entity.AgentRegistry {
 			Capabilities: []postgres_entity.Capability{
 				{
 					Type:   enum.CapabilityIdentifyWebVisitor,
+					Name:   "Identify website visitors",
 					Active: true,
 				},
 				{
 					Type:   enum.CapabilityCreateOrganization,
+					Name:   "Create organizations",
 					Active: true,
 				},
 				{
 					Type:   enum.CapabilityAnalyzeWebSessionIntent,
+					Name:   "Analyze web sessions for intent",
 					Active: true,
 				},
 				{
 					Type:   enum.CapabilitySendWebVisitorSlackNotification,
+					Name:   "Send Slack notifications (optional)",
 					Active: false,
 				},
 			},
@@ -223,6 +228,26 @@ func registerSupportAgent() postgres_entity.AgentRegistry {
 					Type:   enum.CapabilityApplyTag,
 					Active: true,
 					Config: "{\"tagName\":{\"value\":\"Support\",\"error\":\"\"}}",
+				},
+			},
+		},
+	}
+}
+
+func registerIcpAgent() postgres_entity.AgentRegistry {
+	return postgres_entity.AgentRegistry{
+		Type:     enum.AgentICPQualification,
+		Name:     "ICP qualification",
+		Goal:     enum.AgentGoalQualifyICP.String(),
+		Icon:     "",
+		Color:    "",
+		IsActive: true,
+		CapabilitiesConfig: postgres_entity.CapabilitiesConfig{
+			Capabilities: []postgres_entity.Capability{
+				{
+					Type:   enum.CapabilityIcpQualify,
+					Name:   "ICP qualify",
+					Active: true,
 				},
 			},
 		},
