@@ -110,6 +110,7 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
           price: this.tempValue.price,
           quantity: this.tempValue.quantity,
           skuId: this.tempValue.skuId,
+          description: this.tempValue?.description || '',
           serviceStarted: this.tempValue.serviceStarted,
           serviceEnded: this.tempValue.serviceEnded,
           tax: {
@@ -187,6 +188,7 @@ const CONTRACT_LINE_ITEM_QUERY = gql`
         id
         name
       }
+      description
       billingCycle
       price
       quantity

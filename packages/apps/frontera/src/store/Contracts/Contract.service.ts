@@ -218,6 +218,7 @@ const CONTRACTS_QUERY = gql`
           }
           skuId
           paused
+          description
           billingCycle
           price
           quantity
