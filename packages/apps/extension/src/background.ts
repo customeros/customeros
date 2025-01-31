@@ -39,7 +39,10 @@ async function getCookiesFromLinkedInTab() {
       }
     );
 
+    console.log("CustomerOS tab found:", customerOSTab);
+
     await new Promise<void>((resolve, reject) => {
+      console.log("Attempting to inject content script...");
       chrome.scripting.executeScript(
         {
           target: { tabId: customerOSTab.id as any },
@@ -47,20 +50,27 @@ async function getCookiesFromLinkedInTab() {
         },
         () => {
           if (chrome.runtime.lastError) {
+            console.error(
+              "Error injecting content script:",
+              chrome.runtime.lastError.message
+            );
             reject(
               new Error(
                 `Error injecting content script: ${chrome.runtime.lastError.message}`
               )
             );
           } else {
+            console.log("Content script injected successfully");
             resolve();
           }
         }
       );
     });
 
+    // Retrieve session data
     const sessionData = await new Promise<SessionData | null>((resolve) => {
       const onMessage = (message: any) => {
+        console.log("Message received:", message); // Added log to check incoming message
         if (message.action === "COS_SESSION_DATA") {
           chrome.runtime.onMessage.removeListener(onMessage);
           resolve({ email: message.email, apiKey: message.apiKey });
@@ -69,6 +79,12 @@ async function getCookiesFromLinkedInTab() {
 
       chrome.runtime.onMessage.addListener(onMessage);
     });
+
+    console.log("Session Data:", sessionData);
+    if (!sessionData) {
+      console.error("Error: sessionData is null");
+      return;
+    }
 
     const userNameCustomerOs = sessionData?.email;
     const apiKey = sessionData?.apiKey;
@@ -96,9 +112,12 @@ async function getCookiesFromLinkedInTab() {
       }
     );
 
+    console.log("LinkedIn Cookies:", cookies);
+
     if (!cookies) return;
 
     const liAtCookie = cookies?.find((cookie) => cookie.name === "li_at");
+    console.log("li_at Cookie:", liAtCookie);
 
     if (!liAtCookie) return;
 
@@ -113,8 +132,11 @@ async function getCookiesFromLinkedInTab() {
       }
 
       if (previousCookies && previousCookies.value === liAtCookie.value) {
+        console.log("Cookie is the same, no update needed");
         return;
       }
+
+      console.log("Sending new cookie data...");
 
       const response = await fetch(`${BASE_URL}/browser/config`, {
         headers: {
@@ -129,7 +151,7 @@ async function getCookiesFromLinkedInTab() {
         const prevLiAtCookie = data?.data?.cookies;
 
         if (prevLiAtCookie !== liAtCookie.value) {
-          console.log("Different cookie detected");
+          console.log("Different cookie detected, updating...");
 
           await fetch(`${BASE_URL}/browser/config`, {
             method: "PATCH",
