@@ -189,7 +189,9 @@ export class AddSlackChannelUsecase {
     }
 
     this.root.settings.slack.enableSync(
-      `https://app.customeros.ai/agents?id=${this.agentId}&cid=${capabilityId}`,
+      `https://app.customeros.ai/agents?state=${encodeURIComponent(
+        `${this.agentId}?cid=${capabilityId}`,
+      )}`,
     );
   }
 
