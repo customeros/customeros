@@ -14,11 +14,7 @@ export const AuthPanel = observer(() => {
   const [queryParams] = useSearchParams();
 
   useEffect(() => {
-    if (
-      queryParams &&
-      queryParams.has('redirect_slack') &&
-      queryParams.has('code')
-    ) {
+    if (queryParams && queryParams.has('code')) {
       store.settings.slack.oauthCallback(queryParams.get('code') as string);
     }
   }, [queryParams]);

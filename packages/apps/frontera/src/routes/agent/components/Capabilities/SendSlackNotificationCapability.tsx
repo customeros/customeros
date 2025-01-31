@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useMemo, useEffect } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 import {
@@ -12,13 +12,22 @@ import { Icon } from '@ui/media/Icon';
 import { Combobox } from '@ui/form/Combobox';
 import { Slack } from '@ui/media/logos/Slack';
 import { Button } from '@ui/form/Button/Button';
+import { useStore } from '@shared/hooks/useStore';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/overlay/Popover';
 
 export const SendSlackNotificationCapability = observer(() => {
   const { id } = useParams<{ id: string }>();
+  const [queryParams] = useSearchParams();
+  const store = useStore();
 
   const usecase = useMemo(() => new AddSlackChannelUsecase(id!), [id]);
+
+  useEffect(() => {
+    if (queryParams && queryParams.has('code')) {
+      store.settings.slack.oauthCallback(queryParams.get('code') as string);
+    }
+  }, [queryParams]);
 
   if (!usecase.isSlackEnabled) {
     return (
