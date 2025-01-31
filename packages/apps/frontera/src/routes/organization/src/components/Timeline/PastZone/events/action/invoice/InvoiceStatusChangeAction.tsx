@@ -81,29 +81,28 @@ const formatInvoiceText = (
   const { number, amount, currency } = metadata;
   const formattedAmount = formatCurrency(amount, 2, currency);
 
-  const invoiceNumberRegex = /N°\s+(\w+-\d+)/;
-  const amountRegex = new RegExp(
-    `\\$?${amount.toString().replace('.', '\\.')}`,
-  );
+  const invoiceNumberRegex = /N°\s+\w+-\d+/;
+  const amountRegex = /\$?\d+(?:\.\d+)?/;
 
   const invoiceNumberMatch = text.match(invoiceNumberRegex);
   const amountMatch = text.match(amountRegex);
 
   if (!invoiceNumberMatch || !amountMatch) return text;
 
-  const invoiceNumberIndex = invoiceNumberMatch.index!;
-  const amountIndex = amountMatch.index!;
+  const parts = text.split(invoiceNumberRegex);
+
+  if (parts.length !== 2) return text;
+
+  const [beforeInvoice, afterInvoice] = parts;
+  const amountParts = afterInvoice.split(amountRegex);
 
   return (
     <>
-      {text.substring(0, invoiceNumberIndex)}
-      <span className='font-medium'>N° {number}</span>
-      {text.substring(
-        invoiceNumberIndex + invoiceNumberMatch[0].length,
-        amountIndex,
-      )}
-      <span className='font-medium'>{formattedAmount}</span>
-      {text.substring(amountIndex + amountMatch[0].length)}
+      {beforeInvoice?.trim()}
+      <span className='font-medium mx-1'>N° {number}</span>
+      {amountParts?.[0]?.trim()}
+      <span className='font-medium mx-1'>{formattedAmount}</span>
+      {amountParts?.[1]?.trim()}
     </>
   );
 };
