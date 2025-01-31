@@ -18,16 +18,19 @@ export const useSlackOauthCallback = () => {
   useEffect(() => {
     const state = queryParams.get('state');
     const slackCode = queryParams.get('code');
-    const path = decodeURIComponent(state ?? '');
+    const [id, cid] = decodeURIComponent(state ?? '').split(':');
 
     if (!store.session.isAuthenticated) return;
 
     if (slackCode) {
-      store.settings.slack.oauthCallback(slackCode);
+      store.settings.slack.oauthCallback(
+        slackCode,
+        `https://app.customeros.ai/agents?state=${state}`,
+      );
     }
 
-    if (path) {
-      navigate(`/agents/${path}`);
+    if (id) {
+      navigate(`/agents/${id}?cid=${cid}`);
     }
   }, [store.session.isAuthenticated]);
 };

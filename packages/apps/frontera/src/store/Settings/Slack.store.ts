@@ -52,11 +52,11 @@ export class Slack {
     }
   }
 
-  async oauthCallback(code: string) {
+  async oauthCallback(code: string, redirect_uri?: string) {
     try {
       this.isLoading = true;
       await this.transportLayer.http.post(
-        `/sa/slack/oauth/callback?code=${code}`,
+        `/sa/slack/oauth/callback?code=${code}&redirect_uri=${redirect_uri}`,
       );
       this.load();
       this.root.common.fetchSlackChannels();
