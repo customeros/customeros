@@ -61,7 +61,7 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	}
 
 	// create execution record
-	executionID, err := a.createAgentExecutionRecord(ctx, agent.ID, eventType)
+	executionID, err := a.createAgentExecutionRecord(ctx, agent.ID, eventType, tracing.GetTraceId(span))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to create agent execution record"))
 		return err
@@ -148,11 +148,11 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	return nil
 }
 
-func (a *AgentRunnerService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEventType string) (string, error) {
+func (a *AgentRunnerService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEventType, traceId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.createAgentExecutionRecord")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("agentID", agentID, "triggerEventType", triggerEventType)
+	span.LogKV("agentID", agentID, "triggerEventType", triggerEventType, "traceId", traceId)
 
 	agent, err := a.postgresRepositories.AgentsRepository.Find(ctx, postgres_entity.Agents{
 		ID: agentID,
@@ -168,5 +168,5 @@ func (a *AgentRunnerService) createAgentExecutionRecord(ctx context.Context, age
 		return "", err
 	}
 
-	return a.agentService.CreateAgentExecutionRecord(ctx, *agent, triggerEventType)
+	return a.agentService.CreateAgentExecutionRecord(ctx, *agent, triggerEventType, traceId)
 }

@@ -9,6 +9,7 @@ type Config struct {
 	CronScheduleRefreshLastTouchpoint      string `env:"CRON_SCHEDULE_REFRESH_LAST_TOUCHPOINT" envDefault:"30 */1 * * * *"`
 	CronScheduleUpdateOrganization         string `env:"CRON_SCHEDULE_UPDATE_ORGANIZATION" envDefault:"0 */15 * * * *"`
 	CronScheduleSendOrganizationsReminders string `env:"CRON_SCHEDULE_SEND_ORGANIZATIONS_REMINDERS" envDefault:"0 */1 * * * *"`
+	CronScheduleIcpCheck                   string `env:"CRON_SCHEDULE_ICP_CHECK" envDefault:"0 */5 * * * *"`
 
 	// Global Organizations
 	CronScheduleProcessWebsiteForGlobalOrgs    string `env:"CRON_SCHEDULE_PROCESS_WEBSITE_FOR_GLOBAL_ORGS" envDefault:"0 */1 * * * *"`

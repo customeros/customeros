@@ -16,7 +16,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
-const CACHE_LOOKBACK = 90 // days
+const CACHE_LOOKBACK = 30 // days
 
 func (s *enrichmentService) IPIdentity(c context.Context, ip string) (*interfaces.SnitcherResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "EnrichmentService.GetSnitcherData")

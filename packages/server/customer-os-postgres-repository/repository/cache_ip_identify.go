@@ -6,7 +6,6 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
@@ -30,10 +29,10 @@ func (r *cacheIPIdentifyRepository) Create(ctx context.Context, ipData postgres_
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CacheSnitcherRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	tracing.LogObjectAsJson(span, "ipData", ipData)
 
-	if ipData.IPAddress == "" || ipData.Domain == "" {
-		span.LogFields(log.Object("ipData", ipData))
-		err := errors.New("IP address or domain missing")
+	if ipData.IPAddress == "" {
+		err := errors.New("IP address missing")
 		tracing.TraceErr(span, err)
 		return err
 	}

@@ -207,18 +207,17 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	if agentFields.FlowID != nil {
 		agentEntity.FlowID = *agentFields.FlowID
 	}
-	if capabilitiesConfig != nil {
+	if capabilitiesConfig != nil && len(capabilitiesConfig.Capabilities) > 0 {
 		agentEntity.CapabilitiesConfig = *capabilitiesConfig
 	}
 
-	// set default and non-updatable fields
 	updatedAgent, err := a.postgresRepositories.AgentsRepository.Update(ctx, *agentEntity)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	eventFields := dto.UpdateAgent{agentFields, capabilitiesConfig}
+	eventFields := dto.UpdateAgent{AgentFields: agentFields, Capabilities: capabilitiesConfig}
 	err = a.events.Publisher.PublishFanoutEvent(ctx, agentId, model.AGENT, eventFields)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateAgent"))
@@ -227,7 +226,7 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	return updatedAgent, nil
 }
 
-func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent postgresentity.Agents, triggerEvent string) (string, error) {
+func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent postgresentity.Agents, triggerEvent, traceId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.CreateAgentExecutionRecord")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -238,6 +237,7 @@ func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent pos
 		TriggerEvent: triggerEvent,
 		Status:       enum.AgentExecutionRunning.String(),
 		StartedAt:    utils.NowPtr(),
+		TraceId:      traceId,
 	}
 
 	createdRecord, err := a.postgresRepositories.AgentExecutionRepository.Create(ctx, agentExecutionRecord)

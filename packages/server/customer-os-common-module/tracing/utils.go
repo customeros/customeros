@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"runtime"
 	"runtime/debug"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/machinebox/graphql"
@@ -253,6 +254,11 @@ func ExtractTextMapCarrier(spanCtx opentracing.SpanContext) opentracing.TextMapC
 		return make(opentracing.TextMapCarrier)
 	}
 	return textMapCarrier
+}
+
+func GetTraceId(span opentracing.Span) string {
+	tracingData := ExtractTextMapCarrier((span).Context())
+	return strings.Split(tracingData["uber-trace-id"], ":")[0]
 }
 
 func TagComponentPostgresRepository(span opentracing.Span) {

@@ -25,6 +25,7 @@ type OrganizationService interface {
 	RefreshLastTouchpoint()
 	UpkeepOrganizations()
 	SendReminders()
+	IcpCheck()
 }
 
 type organizationService struct {
@@ -41,6 +42,10 @@ func NewOrganizationService(cfg *config.Config, log logger.Logger, commonService
 		commonServices:         commonServices,
 		eventsProcessingClient: client,
 	}
+}
+
+func (s *organizationService) IcpCheck() {
+	// TODO: Implement IcpCheck
 }
 
 func (s *organizationService) RefreshLastTouchpoint() {

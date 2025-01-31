@@ -17,6 +17,7 @@ type AgentExecution struct {
 	CompletedAt  *time.Time `gorm:"column:completed_at" json:"completedAt"`
 	ErrorMessage *string    `gorm:"column:error_message;type:text" json:"errorMessage"`
 	GoalAchieved bool       `gorm:"column:goalAchieved;type:boolean" json:"goalAchieved"`
+	TraceId      string     `gorm:"column:trace_id;type:varchar(255)" json:"traceId"`
 }
 
 func (AgentExecution) TableName() string {
