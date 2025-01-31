@@ -319,23 +319,6 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	}
 	tracing.TagEntity(span, organizationId)
 
-	// validate stage and relationship combination all the time (from input or existing computed )
-	stageStr := input.GetStageStr()
-	relationshipStr := input.GetRelationshipStr()
-	if stageStr != "" || relationshipStr != "" {
-		if stageStr == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Stage != "" {
-			stageStr = existingOrganizationEntity.Stage.String()
-		}
-		if relationshipStr == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Relationship != "" {
-			relationshipStr = existingOrganizationEntity.Relationship.String()
-		}
-	}
-	if !neo4jentity.OrganizationStageAndRelationshipCompatible(ctx, stageStr, relationshipStr) {
-		err := errors.New("Stage and Relationship are not compatible")
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
 	// adapt fields for creating new organization
 	if createFlow {
 		if utils.IfNotNilString(input.AppSource) == "" {
@@ -348,6 +331,36 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 				input.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
 			}
 		}
+
+		input.Hide = utils.BoolPtr(false)
+
+		// load initial data from global organizations by domains
+		if input.GlobalOrgId == nil {
+			globalOrganizations, err := s.postgres.GlobalOrganizationRepository.GetByPrimaryDomains(ctx, domains)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to get global orgs by primary domains"))
+			}
+			if globalOrganizations != nil && len(globalOrganizations) > 0 {
+				globalOrganization := (globalOrganizations)[0]
+				input.Name = utils.StringPtr(globalOrganization.Name)
+				input.PrimaryDomain = utils.StringPtr(globalOrganization.PrimaryDomain)
+				input.Description = utils.StringPtr(globalOrganization.Description)
+				input.Website = utils.StringPtr(globalOrganization.Website)
+				input.LogoUrl = utils.StringPtr(globalOrganization.LogoUrl)
+				input.IconUrl = utils.StringPtr(globalOrganization.IconUrl)
+				input.LinkedInUrl = utils.StringPtr(globalOrganization.LinkedInUrl)
+				input.LinkedInAlias = utils.StringPtr(globalOrganization.LinkedInAlias)
+				input.Domains = utils.StringToSlice(globalOrganization.OtherDomains)
+				input.IndustryCode = utils.StringPtrNillable(globalOrganization.IndustryNaicsCode)
+				if globalOrganization.YearFounded > 0 {
+					input.YearFounded = utils.Int64Ptr(int64(globalOrganization.YearFounded))
+				}
+				if globalOrganization.EmployeeCount > 0 {
+					input.Employees = utils.Int64Ptr(int64(globalOrganization.EmployeeCount))
+				}
+			}
+		}
+
 		// if no name is provided, we try to extract if from domain
 		if utils.IfNotNilString(input.Name) == "" {
 			domain := primaryDomain
@@ -363,13 +376,19 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 				input.Name = utils.StringPtr(utils.CapitalizeAllParts(utils.GetDomainWithoutTLD(websiteDomain), []string{"-", "_", "."}))
 			}
 		}
-		input.Hide = utils.BoolPtr(false)
+
 		if input.Relationship == nil {
 			input.Relationship = utils.ToPtr(neo4jenum.OrganizationRelationshipProspect)
 		}
 		if input.Stage == nil {
 			input.Stage = utils.ToPtr(input.Relationship.DefaultStage())
 		}
+	}
+
+	err = s.validateRelationshipAndStageCompatibility(ctx, input, existingOrganizationEntity)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	// generate customerOsId if not provided or if it is empty in the db
@@ -589,6 +608,29 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 	}
 
 	return organizationId, nil
+}
+
+func (s *organizationService) validateRelationshipAndStageCompatibility(ctx context.Context, input data_fields.OrganizationFields, existingOrganizationEntity *neo4jentity.OrganizationEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.validateRelationshipAndStageCompatibility")
+	defer span.Finish()
+
+	// validate stage and relationship combination all the time (from input or existing computed )
+	stageStr := input.GetStageStr()
+	relationshipStr := input.GetRelationshipStr()
+	if stageStr != "" || relationshipStr != "" {
+		if stageStr == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Stage != "" {
+			stageStr = existingOrganizationEntity.Stage.String()
+		}
+		if relationshipStr == "" && existingOrganizationEntity != nil && existingOrganizationEntity.Relationship != "" {
+			relationshipStr = existingOrganizationEntity.Relationship.String()
+		}
+	}
+	if !neo4jentity.OrganizationStageAndRelationshipCompatible(ctx, stageStr, relationshipStr) {
+		err := errors.New("Stage and Relationship are not compatible")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return nil
 }
 
 func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, organizationId string) error {
