@@ -401,7 +401,11 @@ func (s *organizationService) Save(ctx context.Context, txWithPostCommit *utils.
 		input.CustomerOsId = utils.StringPtr(customerOsId)
 	}
 
-	// Adjust input fields
+	if !createFlow {
+		s.adjustIcpFitFields(ctx, &input, existingOrganizationEntity)
+	}
+
+	// Adjust name if it is empty
 	if common.GetAppSourceFromContext(ctx) != constants.AppSourceCustomerOsApi {
 		if input.Name != nil {
 			input.Name = utils.StringPtr(utils.CleanName(*input.Name))
@@ -1728,4 +1732,37 @@ func (s *organizationService) GetOrganizationByDomain(ctx context.Context, domai
 	}
 
 	return nil, nil
+}
+
+func (s *organizationService) adjustIcpFitFields(ctx context.Context, dataFields *data_fields.OrganizationFields, currentOrganizationEntity *neo4jentity.OrganizationEntity) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.adjustIcpFitFields")
+	defer span.Finish()
+
+	if dataFields.Relationship != nil {
+		if *dataFields.Relationship == neo4jenum.OrganizationRelationshipNotAFit {
+			dataFields.IcpFit = utils.ToPtr(enum.IcpNotFit)
+			if currentOrganizationEntity.IcpFit == enum.IcpIsFit && dataFields.IcpFitReasons == nil {
+				dataFields.IcpFitReasons = utils.ToPtr([]string{})
+			}
+		}
+		if *dataFields.Relationship == neo4jenum.OrganizationRelationshipCustomer {
+			dataFields.IcpFit = utils.ToPtr(enum.IcpIsFit)
+			if currentOrganizationEntity.IcpFit == enum.IcpNotFit && dataFields.IcpFitReasons == nil {
+				dataFields.IcpFitReasons = utils.ToPtr([]string{})
+			}
+		}
+		if *dataFields.Relationship == neo4jenum.OrganizationRelationshipProspect || *dataFields.Relationship == neo4jenum.OrganizationRelationshipFormerCustomer {
+			if dataFields.Stage != nil {
+				if *dataFields.Stage == neo4jenum.Lead {
+					dataFields.IcpFit = utils.ToPtr(enum.IcpNotSet)
+					dataFields.IcpFitReasons = utils.ToPtr([]string{})
+				} else if *dataFields.Stage != neo4jenum.Lead {
+					dataFields.IcpFit = utils.ToPtr(enum.IcpIsFit)
+					if currentOrganizationEntity.IcpFit == enum.IcpNotFit && dataFields.IcpFitReasons == nil {
+						dataFields.IcpFitReasons = utils.ToPtr([]string{})
+					}
+				}
+			}
+		}
+	}
 }
