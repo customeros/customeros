@@ -114,14 +114,11 @@ ps:
 	cd ../deployment && podman-compose ps
 
 start:
-	cd ../deployment && podman-compose up rabbitmq jaeger postgres postgres-sidecar neo4j eventstore
+	cd ../deployment && podman-compose up rabbitmq jaeger postgres postgres-sidecar neo4j eventstore -d
 
 start-api:
     cd ./server/customer-os-api && go run .
     echo "Services started."
-
-start-api-debug:
-    cd ./server/customer-os-api && dlv debug .
 
 start-events:
     cd ./server/events-subscribers && go run . 
@@ -130,8 +127,12 @@ start-fe:
     cd ../deployment && podman-compose up user-admin-api settings-api -d
     cd ./apps/frontera && npm run dev
 
+start-upkeeper:
+    cd ./runner/customer-os-upkeeper && go run .
+    echo "Services started."
+
 stop:
-	cd ../deployment && podman-compose down rabbitmq jaeger postgres postgres-sidecar neo4j eventstore customer-os-platform-admin-api user-admin-api settings-api
+	cd ../deployment && podman-compose down rabbitmq jaeger postgres postgres-sidecar neo4j eventstore 
 
 # Run tests for a specific service
 test SERVICE:
