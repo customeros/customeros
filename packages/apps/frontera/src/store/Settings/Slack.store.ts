@@ -59,6 +59,7 @@ export class Slack {
         `/sa/slack/oauth/callback?code=${code}`,
       );
       this.load();
+      this.root.common.fetchSlackChannels();
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
