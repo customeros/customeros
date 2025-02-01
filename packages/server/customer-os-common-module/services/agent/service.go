@@ -34,12 +34,12 @@ func NewAgentService(postgresRepositories *postgresrepository.Repositories, even
 	}
 }
 
-func (a *agentService) GetAgentById(ctx context.Context, agentID string) (*postgresentity.Agents, error) {
+func (a *agentService) GetAgentById(ctx context.Context, agentID string) (*postgresentity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.GetAgentById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	agent, err := a.postgresRepositories.AgentsRepository.GetById(ctx, agentID)
+	agent, err := a.postgresRepositories.AgentRepository.GetById(ctx, agentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -54,12 +54,12 @@ func (a *agentService) GetAgentById(ctx context.Context, agentID string) (*postg
 	return agent, nil
 }
 
-func (a *agentService) GetAllAgentsByTenant(ctx context.Context) ([]*postgresentity.Agents, error) {
+func (a *agentService) GetAllAgentsByTenant(ctx context.Context) ([]*postgresentity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.GetAllAgentsByTenant")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	agents, err := a.postgresRepositories.AgentsRepository.GetAll(ctx)
+	agents, err := a.postgresRepositories.AgentRepository.GetAll(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -68,7 +68,7 @@ func (a *agentService) GetAllAgentsByTenant(ctx context.Context) ([]*postgresent
 	return agents, nil
 }
 
-func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType) (*postgresentity.Agents, error) {
+func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType) (*postgresentity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.CreateAgent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -93,7 +93,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	}
 
 	// build new agent
-	agent := postgresentity.Agents{
+	agent := postgresentity.Agent{
 		Type:        agentType,
 		Tenant:      tenant,
 		Name:        agentRegistry.Name,
@@ -141,7 +141,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	}
 
 	// create agent instance in database
-	newAgent, err := a.postgresRepositories.AgentsRepository.Create(ctx, agent)
+	newAgent, err := a.postgresRepositories.AgentRepository.Create(ctx, agent)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -168,7 +168,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	return newAgent, nil
 }
 
-func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilitiesConfig *postgresentity.CapabilitiesConfig) (*postgresentity.Agents, error) {
+func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilitiesConfig *postgresentity.CapabilitiesConfig) (*postgresentity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.UpdateAgent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -176,7 +176,7 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	tracing.LogObjectAsJson(span, "agentFields", agentFields)
 	tracing.LogObjectAsJson(span, "capabilitiesConfig", capabilitiesConfig)
 
-	agentEntity, err := a.postgresRepositories.AgentsRepository.GetById(ctx, agentId)
+	agentEntity, err := a.postgresRepositories.AgentRepository.GetById(ctx, agentId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -211,7 +211,7 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 		agentEntity.CapabilitiesConfig = *capabilitiesConfig
 	}
 
-	updatedAgent, err := a.postgresRepositories.AgentsRepository.Update(ctx, *agentEntity)
+	updatedAgent, err := a.postgresRepositories.AgentRepository.Update(ctx, *agentEntity)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -226,7 +226,7 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	return updatedAgent, nil
 }
 
-func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent postgresentity.Agents, triggerEvent, traceId string) (string, error) {
+func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent postgresentity.Agent, triggerEvent, traceId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.CreateAgentExecutionRecord")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

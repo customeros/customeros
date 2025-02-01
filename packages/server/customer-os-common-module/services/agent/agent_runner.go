@@ -42,7 +42,7 @@ func NewAgentRunnerService(
 	}
 }
 
-func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agents, eventType string, initialParams map[string]any) error {
+func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agent, eventType string, initialParams map[string]any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.Run")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -154,7 +154,7 @@ func (a *AgentRunnerService) createAgentExecutionRecord(ctx context.Context, age
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("agentID", agentID, "triggerEventType", triggerEventType, "traceId", traceId)
 
-	agent, err := a.postgresRepositories.AgentsRepository.Find(ctx, postgres_entity.Agents{
+	agent, err := a.postgresRepositories.AgentRepository.Find(ctx, postgres_entity.Agent{
 		ID: agentID,
 	})
 	if err != nil {

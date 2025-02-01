@@ -106,7 +106,7 @@ func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string)
 
 	tableNamesWithTenantColumn := []string{
 		postgres_entity.AgentExecution{}.TableName(),
-		postgres_entity.Agents{}.TableName(),
+		postgres_entity.Agent{}.TableName(),
 		postgres_entity.AiPromptLog{}.TableName(),
 		postgres_entity.ApiBillableEvent{}.TableName(),
 		postgres_entity.BrowserAutomationsRun{}.TableName(),
