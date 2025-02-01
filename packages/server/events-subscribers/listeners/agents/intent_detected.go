@@ -111,7 +111,7 @@ func (l *IntentDetectedListener) lookupActiveAgents(ctx context.Context, agentTy
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	span.LogFields(log.String("agentTypes", fmt.Sprintf("%v", agentTypes)))
 
-	agents, err := l.dependencies.PostgresRepositories.AgentRepository.GetActiveAgentsByTypes(ctx, agentTypes)
+	agents, err := l.dependencies.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, agentTypes)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil

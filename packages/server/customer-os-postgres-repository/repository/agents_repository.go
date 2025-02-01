@@ -21,8 +21,8 @@ type AgentRepository interface {
 	GetById(ctx context.Context, id string) (*postgres_entity.Agent, error)
 	GetAll(ctx context.Context) ([]*postgres_entity.Agent, error)
 	GetAllAgentsByTypes(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
-	GetActiveAgentsByTypes(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
-	GetActiveAgentsByTypesCrossTenant(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
+	GetActiveConfiguredAgentsByTypes(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
+	GetActiveConfiguredAgentsByTypesCrossTenant(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
 	Update(ctx context.Context, agent postgres_entity.Agent) (*postgres_entity.Agent, error)
 }
 
@@ -124,14 +124,14 @@ func (f *agentsRepository) GetAllAgentsByTypes(ctx context.Context, agentTypes [
 	return records, nil
 }
 
-func (f *agentsRepository) GetActiveAgentsByTypes(ctx context.Context, agentTypes []enum.AgentType) ([]postgres_entity.Agent, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetActiveAgentsByTypes")
+func (f *agentsRepository) GetActiveConfiguredAgentsByTypes(ctx context.Context, agentTypes []enum.AgentType) ([]postgres_entity.Agent, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetActiveConfiguredAgentsByTypes")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
-		err := errors.New("Tenant not set")
+		err := errors.New("tenant not set")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (f *agentsRepository) GetActiveAgentsByTypes(ctx context.Context, agentType
 		types[i] = agentType.String()
 	}
 
-	query := f.gormDb.Where("tenant = ? AND is_active = ?", tenant, true)
+	query := f.gormDb.Where("tenant = ? AND is_active = ? AND configured = ?", tenant, true, true)
 	if len(types) > 0 {
 		query = query.Where("type IN (?)", types)
 	}
@@ -156,8 +156,8 @@ func (f *agentsRepository) GetActiveAgentsByTypes(ctx context.Context, agentType
 	return records, nil
 }
 
-func (f *agentsRepository) GetActiveAgentsByTypesCrossTenant(ctx context.Context, agentTypes []enum.AgentType) ([]postgres_entity.Agent, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetActiveAgentsByTypesCrossTenant")
+func (f *agentsRepository) GetActiveConfiguredAgentsByTypesCrossTenant(ctx context.Context, agentTypes []enum.AgentType) ([]postgres_entity.Agent, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -168,7 +168,7 @@ func (f *agentsRepository) GetActiveAgentsByTypesCrossTenant(ctx context.Context
 		types[i] = agentType.String()
 	}
 
-	query := f.gormDb.Where("is_active = ?", true)
+	query := f.gormDb.Where("is_active = ? AND configured = ?", true, true)
 	if len(types) > 0 {
 		query = query.Where("type IN (?)", types)
 	}

@@ -54,7 +54,7 @@ func (s *organizationService) IcpCheck() {
 	tracing.TagComponentCronJob(span)
 
 	// get active icp agents
-	icpAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetActiveAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentICPQualification})
+	icpAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentICPQualification})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error getting icp agents: %v", err)

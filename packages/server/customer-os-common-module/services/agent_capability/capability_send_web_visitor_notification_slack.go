@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"strings"
 	"time"
 
@@ -43,6 +44,30 @@ type SendWebVisitorSlackNotificationConfig struct {
 type SlackCooldownHoursConfig struct {
 	Value int64  `json:"value"`
 	Error string `json:"error"`
+}
+
+func (c *SendWebVisitorSlackNotificationConfig) Validate() bool {
+	isValid := true
+
+	// validate channel ID has slack channel format
+	if utils.IsBlank(c.ChannelID.Value) {
+		c.ChannelID.Error = "Please provide a Slack channel ID."
+		isValid = false
+	} else if !strings.HasPrefix(c.ChannelID.Value, "C") {
+		c.ChannelID.Error = "Channel ID must start with 'C'."
+		isValid = false
+	} else {
+		c.ChannelID.Error = ""
+	}
+
+	if c.CooldownHours.Value < 0 {
+		c.CooldownHours.Error = "Please enter a positive number of hours for the cooldown."
+		isValid = false
+	} else {
+		c.CooldownHours.Error = ""
+	}
+
+	return isValid
 }
 
 func NewSendWebVisitorSlackNotificationCapability(postgresRepositories *postgres_repository.Repositories,
