@@ -3,6 +3,7 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
+	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -58,6 +59,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationsWithWebsiteAndWithoutDomains(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationId, error)
 	GetOrganizationsForEnrichByDomain(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error)
 	GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error)
+	GetOrganizationsForIcpCheck(ctx context.Context, tenants []string, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error)
 	GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodePairAndId, error)
 	GetHiddenOrganizationIds(ctx context.Context, tenant string, hiddenAfter time.Time) ([]string, error)
 	GetMergedOrganizationIds(ctx context.Context, tenant string, mergedAfter time.Time) ([]string, error)
@@ -1056,7 +1058,7 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateLastTouchpoint(ctx
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForUpdateLastTouchpoint")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.Int("limit", limit))
+	span.LogFields(log.Int("limit", limit), log.Int("delayFromPreviousCheckMin", delayFromPreviousCheckMin))
 
 	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
 				WHERE org.hide = false AND
@@ -1068,6 +1070,60 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateLastTouchpoint(ctx
 	params := map[string]any{
 		"limit":                     limit,
 		"delayFromPreviousCheckMin": delayFromPreviousCheckMin,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndOrganizationId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndOrganizationId{
+				Tenant:         v.Values[0].(string),
+				OrganizationId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
+}
+
+func (r *organizationReadRepository) GetOrganizationsForIcpCheck(ctx context.Context, tenants []string, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForIcpCheck")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Int("limit", limit), log.Int("delayFromPreviousCheckMin", delayFromPreviousCheckMin))
+
+	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
+				WHERE t.name IN $tenants AND 
+				org.hide = false AND
+				org.techIcpCheckedAt IS NULL AND
+				(org.icpFit IS NULL OR org.icpFit = $icpNotSet) AND
+				org.stage = $leadStage AND
+				org.createdAt < datetime() - duration({minutes: $delayFromCreatedAt}) AND
+				(org.techIcpCheckRequestedAt IS NULL OR org.techIcpCheckRequestedAt < datetime() - duration({minutes: $delayFromPreviousCheckMin}))
+				RETURN t.name, org.id
+				ORDER BY CASE WHEN org.techIcpCheckRequestedAt IS NULL THEN 0 ELSE 1 END, org.techIcpCheckRequestedAt ASC
+				LIMIT $limit`
+
+	params := map[string]any{
+		"tenants":                   tenants,
+		"limit":                     limit,
+		"delayFromPreviousCheckMin": delayFromPreviousCheckMin,
+		"delayFromCreatedAt":        10,
+		"icpNotSet":                 commonenum.IcpNotSet.String(),
+		"leadStage":                 neo4jenum.Lead.String(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

@@ -38,6 +38,8 @@ const (
 	OrganizationPropertyContactCount              OrganizationProperty = "derivedContactCount"
 	OrganizationPropertyLeadSource                OrganizationProperty = "leadSource"
 	OrganizationPropertyQuickbooksCustomerId      OrganizationProperty = "quickbooksCustomerId"
+	OrganizationPropertyIcpCheckedAt              OrganizationProperty = "techIcpCheckedAt"
+	OrganizationPropertyIcpCheckRequestedAt       OrganizationProperty = "techIcpCheckRequestedAt"
 )
 
 type OrganizationEntity struct {
@@ -131,6 +133,8 @@ type OrganizationInternalFields struct {
 	DomainCheckedAt           *time.Time
 	LastTouchpointRequestedAt *time.Time
 	HiddenAt                  *time.Time
+	IcpCheckedAt              *time.Time
+	IcpCheckRequestedAt       *time.Time
 }
 
 type OrganizationEntities []OrganizationEntity

@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
@@ -45,7 +48,97 @@ func NewOrganizationService(cfg *config.Config, log logger.Logger, commonService
 }
 
 func (s *organizationService) IcpCheck() {
-	// TODO: Implement IcpCheck
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.IcpCheck")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	// get active icp agents
+	icpAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetActiveAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentICPQualification})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting icp agents: %v", err)
+		return
+	}
+	var tenants []string
+	for _, agent := range icpAgents {
+		tenants = append(tenants, agent.Tenant)
+	}
+
+	if len(tenants) == 0 {
+		span.LogKV("message", "No active icp agents found")
+		return
+	}
+
+	limit := 100
+	delayFromPreviousCheckRequestInMinutes := 24 * 60 // 24 hours
+
+	records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForIcpCheck(ctx, tenants, limit, delayFromPreviousCheckRequestInMinutes)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting organizations for renewals: %v", err)
+		return
+	}
+
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	// process organizations
+	for _, record := range records {
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    record.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+		recordSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "OrganizationService.IcpCheck.Record")
+		tracing.TagEntity(recordSpan, record.OrganizationId)
+		tracing.TagTenant(recordSpan, record.Tenant)
+
+		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelOrganization, record.OrganizationId, string(neo4jentity.OrganizationPropertyIcpCheckRequestedAt), utils.NowPtr())
+		if err != nil {
+			tracing.TraceErr(recordSpan, err)
+			s.log.Errorf("Error updating icp check requested at: %s", err.Error())
+			continue
+		}
+
+		// check if organization domain is known global org
+		domainDbNodes, err := s.commonServices.Neo4jRepositories.DomainReadRepository.GetForOrganizations(innerCtx, record.Tenant, []string{record.OrganizationId})
+		if err != nil {
+			tracing.TraceErr(recordSpan, err)
+			s.log.Errorf("Error getting domains for organization {%s}: %v", record.OrganizationId, err)
+			continue
+		}
+		var domains []string
+		for _, domainDbNode := range domainDbNodes {
+			domainEntity := neo4jmapper.MapDbNodeToDomainEntity(domainDbNode.Node)
+			domains = append(domains, domainEntity.Domain)
+		}
+		span.LogFields(log.String("domains", fmt.Sprintf("%v", domains)))
+		if len(domains) == 0 {
+			span.LogKV("message", "No domains found for organization")
+			continue
+		}
+		globalOrg, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomains(innerCtx, domains)
+		if err != nil {
+			tracing.TraceErr(recordSpan, err)
+			s.log.Errorf("Error getting global organization by primary domains: %v", err)
+			continue
+		}
+		if len(globalOrg) == 0 {
+			span.LogKV("message", "No global organization found for domains")
+			continue
+		}
+
+		err = s.commonServices.OrganizationService.RequestRefreshLastTouchpoint(innerCtx, record.OrganizationId)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "error refreshing last touchpoint"))
+			s.log.Errorf("Error refreshing last touchpoint for organization {%s}: %s", record.OrganizationId, err.Error())
+		}
+	}
+
 }
 
 func (s *organizationService) RefreshLastTouchpoint() {
