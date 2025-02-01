@@ -2,21 +2,22 @@ package enum
 
 import (
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"strings"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type AgentCapabilityType string
 
 const (
 	CapabilityAnalyzeWebSessionIntent         AgentCapabilityType = "analyze_web_session_for_intent"
-	CapabilityCreateOrganization              AgentCapabilityType = "create_organization"
+	CapabilityCreateAndEnrichCompany          AgentCapabilityType = "create_and_enrich_company"
 	CapabilityIdentifyWebVisitor              AgentCapabilityType = "identify_web_visitor"
 	CapabilitySendSlackNotification           AgentCapabilityType = "send_slack_notification"
 	CapabilitySendWebVisitorSlackNotification AgentCapabilityType = "send_web_visitor_slack_notification"
 	CapabilityApplyTag                        AgentCapabilityType = "apply_tag"
 	CapabilityCreateMarkdownTimelineEvent     AgentCapabilityType = "create_markdown_timeline_event"
-	CapabilityIcpQualify                      AgentCapabilityType = "icp_qualify"
+	CapabilityEvaluateCompanyICPFit           AgentCapabilityType = "evaluate_company_icp_fit"
 )
 
 func (t AgentCapabilityType) String() string {
@@ -27,13 +28,13 @@ func GetAgentCapability(s string) (AgentCapabilityType, error) {
 	switch AgentCapabilityType(s) {
 	case
 		CapabilityAnalyzeWebSessionIntent,
-		CapabilityCreateOrganization,
+		CapabilityCreateAndEnrichCompany,
 		CapabilityIdentifyWebVisitor,
 		CapabilitySendSlackNotification,
 		CapabilitySendWebVisitorSlackNotification,
 		CapabilityApplyTag,
 		CapabilityCreateMarkdownTimelineEvent,
-		CapabilityIcpQualify:
+		CapabilityEvaluateCompanyICPFit:
 		return AgentCapabilityType(s), nil
 
 	default:

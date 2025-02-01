@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -181,9 +182,9 @@ func (r *agentRegistryRepository) Initialize(ctx context.Context) error {
 
 func registerVisitorIdAgent() postgres_entity.AgentRegistry {
 	return postgres_entity.AgentRegistry{
-		Type:     enum.AgentVisitorID,
-		Name:     "Identify website visitors",
-		Goal:     enum.AgentGoalIdentifyVisitors.String(),
+		Type:     enum.AgentWebVisitorIdentifier,
+		Name:     "Web visitor identifier",
+		Goal:     enum.AgentGoalIdentifyWebVisitor.String(),
 		Icon:     "radar",
 		Color:    "grayModern",
 		IsActive: true,
@@ -195,8 +196,8 @@ func registerVisitorIdAgent() postgres_entity.AgentRegistry {
 					Active: true,
 				},
 				{
-					Type:   enum.CapabilityCreateOrganization,
-					Name:   "Create organizations",
+					Type:   enum.CapabilityCreateAndEnrichCompany,
+					Name:   "Create and enrich company",
 					Active: true,
 				},
 				{
@@ -206,7 +207,7 @@ func registerVisitorIdAgent() postgres_entity.AgentRegistry {
 				},
 				{
 					Type:   enum.CapabilitySendWebVisitorSlackNotification,
-					Name:   "Send Slack notifications (optional)",
+					Name:   "Send Slack notification (optional)",
 					Active: false,
 				},
 			},
@@ -216,9 +217,9 @@ func registerVisitorIdAgent() postgres_entity.AgentRegistry {
 
 func registerSupportAgent() postgres_entity.AgentRegistry {
 	return postgres_entity.AgentRegistry{
-		Type:     enum.AgentSupport,
-		Name:     "Tag support visitors",
-		Goal:     enum.AgentGoalTagSupport.String(),
+		Type:     enum.AgentSupportSignalDetector,
+		Name:     "Support Signal Detector",
+		Goal:     enum.AgentGoalDetectSupportSignal.String(),
 		Icon:     "life-buoy-01",
 		Color:    "pink",
 		IsActive: true,
@@ -236,17 +237,17 @@ func registerSupportAgent() postgres_entity.AgentRegistry {
 
 func registerIcpAgent() postgres_entity.AgentRegistry {
 	return postgres_entity.AgentRegistry{
-		Type:     enum.AgentICPQualification,
-		Name:     "ICP qualification",
-		Goal:     enum.AgentGoalQualifyICP.String(),
+		Type:     enum.AgentICPQualifier,
+		Name:     "ICP qualifier",
+		Goal:     enum.AgentGoalEvaluateICPFit.String(),
 		Icon:     "target-04",
 		Color:    "success",
 		IsActive: true,
 		CapabilitiesConfig: postgres_entity.CapabilitiesConfig{
 			Capabilities: []postgres_entity.Capability{
 				{
-					Type:   enum.CapabilityIcpQualify,
-					Name:   "ICP qualify",
+					Type:   enum.CapabilityEvaluateCompanyICPFit,
+					Name:   "Evaluate company ICP fit",
 					Active: true,
 				},
 			},

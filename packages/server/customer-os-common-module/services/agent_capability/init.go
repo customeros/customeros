@@ -2,9 +2,11 @@ package agent_capability
 
 import (
 	"fmt"
+
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
 
 type AgentCapabilities struct {
@@ -22,22 +24,20 @@ func InitCapabilities(
 	workspaceService interfaces.WorkspaceService,
 	markdownService interfaces.MarkdownEventService,
 	domainService interfaces.DomainService,
-
 ) *AgentCapabilities {
-
 	capabilities := AgentCapabilities{}
 
 	executors := make(map[enum.AgentCapabilityType]interfaces.AgentCapabilityUntyped)
 
 	// Register each capability with its corresponding type.
 	executors[enum.CapabilityAnalyzeWebSessionIntent] = NewAnalyzeWebSessionCapability(postgresRepositories, actionService)
-	executors[enum.CapabilityCreateOrganization] = NewCreateOrganizationCapability(organizationService)
+	executors[enum.CapabilityCreateAndEnrichCompany] = NewCreateOrganizationCapability(organizationService)
 	executors[enum.CapabilityIdentifyWebVisitor] = NewIdentifyWebsiteVisitorCapability(postgresRepositories, enrichmentService, domainService)
 	executors[enum.CapabilitySendSlackNotification] = NewSendSlackNotificationCapability(notificationService)
 	executors[enum.CapabilitySendWebVisitorSlackNotification] = NewSendWebVisitorSlackNotificationCapability(postgresRepositories, notificationService, workspaceService)
 	executors[enum.CapabilityApplyTag] = NewApplyTagCapability(tagService)
 	executors[enum.CapabilityCreateMarkdownTimelineEvent] = NewCreateMarkdownTimelineEventCapability(markdownService)
-	executors[enum.CapabilityIcpQualify] = NewICPQualificationCapability(postgresRepositories, aiService, organizationService)
+	executors[enum.CapabilityEvaluateCompanyICPFit] = NewICPQualificationCapability(postgresRepositories, aiService, organizationService)
 	// Continue registering other capabilities here...
 	capabilities.executors = executors
 

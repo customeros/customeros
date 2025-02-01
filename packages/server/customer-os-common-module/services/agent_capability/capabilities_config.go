@@ -30,7 +30,7 @@ func GetCapabilityConfigStruct(capabilityType enum.AgentCapabilityType) any {
 		}
 	case enum.CapabilityApplyTag:
 		return &ApplyTagConfig{}
-	case enum.CapabilityIcpQualify:
+	case enum.CapabilityEvaluateCompanyICPFit:
 		return &ICPQualificationConfig{}
 	default:
 		return nil

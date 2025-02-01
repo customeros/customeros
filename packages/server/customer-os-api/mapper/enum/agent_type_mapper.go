@@ -1,15 +1,16 @@
 package enummapper
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
 var agentTypeByModel = map[model.AgentType]enum.AgentType{
-	model.AgentTypeWebVisitIdentifier: enum.AgentVisitorID,
-	model.AgentTypeTagSupport:         enum.AgentSupport,
-	model.AgentTypeIcpQualifier:       enum.AgentICPQualification,
+	model.AgentTypeWebVisitIdentifier: enum.AgentWebVisitorIdentifier,
+	model.AgentTypeTagSupport:         enum.AgentSupportSignalDetector,
+	model.AgentTypeIcpQualifier:       enum.AgentICPQualifier,
 }
 
 var agentTypeByValue = utils.ReverseMap(agentTypeByModel)
