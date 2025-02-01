@@ -2,9 +2,7 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/opentracing/opentracing-go/log"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
@@ -104,41 +102,31 @@ func (s *organizationService) IcpCheck() {
 			continue
 		}
 
-		// check if organization domain is known global org
-		domainDbNodes, err := s.commonServices.Neo4jRepositories.DomainReadRepository.GetForOrganizations(innerCtx, record.Tenant, []string{record.OrganizationId})
+		// check if any organization domain is known global org
+		globalOrgs, err := s.commonServices.OrganizationService.GetGlobalOrganizationsByTenantOrganizationId(innerCtx, record.OrganizationId)
 		if err != nil {
 			tracing.TraceErr(recordSpan, err)
-			s.log.Errorf("Error getting domains for organization {%s}: %v", record.OrganizationId, err)
+			s.log.Errorf("Error getting global organizations: %v", err)
 			continue
 		}
-		var domains []string
-		for _, domainDbNode := range domainDbNodes {
-			domainEntity := neo4jmapper.MapDbNodeToDomainEntity(domainDbNode.Node)
-			domains = append(domains, domainEntity.Domain)
-		}
-		span.LogFields(log.String("domains", fmt.Sprintf("%v", domains)))
-		if len(domains) == 0 {
-			span.LogKV("message", "No domains found for organization")
-			continue
-		}
-		globalOrg, err := s.commonServices.PostgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomains(innerCtx, domains)
-		if err != nil {
-			tracing.TraceErr(recordSpan, err)
-			s.log.Errorf("Error getting global organization by primary domains: %v", err)
-			continue
-		}
-		if len(globalOrg) == 0 {
-			span.LogKV("message", "No global organization found for domains")
+		if len(globalOrgs) == 0 {
+			span.LogKV("message", "Organization is not a global organization")
 			continue
 		}
 
-		err = s.commonServices.OrganizationService.RequestRefreshLastTouchpoint(innerCtx, record.OrganizationId)
+		event := dto.IntentDetected{
+			EventName:      enum.EventIntentSignal,
+			IntentType:     enum.IntentIcpCheck,
+			OrganizationID: record.OrganizationId,
+		}
+
+		err = s.commonServices.Events.Publisher.PublishFanoutEvent(ctx, record.OrganizationId, model.INTENT_SIGNAL, &event)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error refreshing last touchpoint"))
-			s.log.Errorf("Error refreshing last touchpoint for organization {%s}: %s", record.OrganizationId, err.Error())
+			tracing.TraceErr(span, errors.Wrap(err, "error publishing icp check event"))
+			s.log.Errorf("Error publishing icp check event: %v", err)
+			continue
 		}
 	}
-
 }
 
 func (s *organizationService) RefreshLastTouchpoint() {

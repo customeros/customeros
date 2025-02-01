@@ -73,6 +73,8 @@ func (l *IntentDetectedListener) handle(ctx context.Context, message dto.IntentD
 	switch message.IntentType {
 	case enum.IntentSupportRequired:
 		agentTypes = append(agentTypes, enum.AgentSupport)
+	case enum.IntentIcpCheck:
+		agentTypes = append(agentTypes, enum.AgentICPQualification)
 	default:
 		err := errors.New("IntentType not supported")
 		tracing.TraceErr(span, err)
@@ -103,13 +105,13 @@ func (l *IntentDetectedListener) handle(ctx context.Context, message dto.IntentD
 	return errs
 }
 
-func (l *IntentDetectedListener) lookupActiveAgents(ctx context.Context, agentTypes []enum.AgentType) []postgres_entity.Agents {
+func (l *IntentDetectedListener) lookupActiveAgents(ctx context.Context, agentTypes []enum.AgentType) []postgres_entity.Agent {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Listeners.lookupActiveAgents")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	span.LogFields(log.String("agentTypes", fmt.Sprintf("%v", agentTypes)))
 
-	agents, err := l.dependencies.PostgresRepositories.AgentsRepository.GetActiveAgentsByTypes(ctx, agentTypes)
+	agents, err := l.dependencies.PostgresRepositories.AgentRepository.GetActiveAgentsByTypes(ctx, agentTypes)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil

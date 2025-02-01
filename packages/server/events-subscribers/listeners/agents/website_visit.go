@@ -108,12 +108,12 @@ func (l *WebsiteVisitListener) handle(ctx context.Context, message dto.WebsiteVi
 	return errs
 }
 
-func (h *WebsiteVisitListener) lookupActiveAgents(ctx context.Context) []postgres_entity.Agents {
+func (h *WebsiteVisitListener) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebsiteVisitListener.lookupActiveAgents")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	agents, err := h.dependencies.PostgresRepositories.AgentsRepository.GetActiveAgentsByTypes(ctx, h.subscribedAgents())
+	agents, err := h.dependencies.PostgresRepositories.AgentRepository.GetActiveAgentsByTypes(ctx, h.subscribedAgents())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil

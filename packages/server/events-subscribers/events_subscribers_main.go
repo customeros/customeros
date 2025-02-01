@@ -211,6 +211,7 @@ func (a *App) initializeListeners() error {
 
 	// Webvisit Listeners
 	a.events.Subscriber.RegisterListener(agent_listeners.NewWebsiteVisitListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(agent_listeners.NewWebsiteVisitGoalAchievedListener(a.logger, a.deps))
 
 	// Intent Listeners
 	a.events.Subscriber.RegisterListener(agent_listeners.NewIntentDetectedListener(a.logger, a.deps))

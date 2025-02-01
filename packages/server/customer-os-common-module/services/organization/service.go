@@ -3,6 +3,7 @@ package organization
 import (
 	"context"
 	"fmt"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"strings"
 	"time"
 
@@ -1765,4 +1766,37 @@ func (s *organizationService) adjustIcpFitFields(ctx context.Context, dataFields
 			}
 		}
 	}
+}
+
+func (s *organizationService) GetGlobalOrganizationsByTenantOrganizationId(ctx context.Context, organizationId string) ([]*postgres_entity.GlobalOrganization, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetGlobalOrganizationsByTenantOrganizationId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	domainDbNodes, err := s.neo4j.DomainReadRepository.GetForOrganizations(ctx, tenant, []string{organizationId})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting domains for organization {%s}: %v", organizationId, err)
+		return nil, err
+	}
+	var domains []string
+	for _, domainDbNode := range domainDbNodes {
+		domainEntity := neo4jmapper.MapDbNodeToDomainEntity(domainDbNode.Node)
+		domains = append(domains, domainEntity.Domain)
+	}
+	span.LogFields(log.String("domains", fmt.Sprintf("%v", domains)))
+	if len(domains) == 0 {
+		span.LogKV("message", "No domains found for organization")
+		return nil, nil
+	}
+	globalOrgs, err := s.postgres.GlobalOrganizationRepository.GetByPrimaryDomains(ctx, domains)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting global organization by primary domains: %v", err)
+		return nil, err
+	}
+
+	return globalOrgs, nil
 }
