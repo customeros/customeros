@@ -140,6 +140,9 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		Capabilities: agentCapabilities,
 	}
 
+	// validate capabilities
+	a.ValidateCapabilities(ctx, &agent)
+
 	// create agent instance in database
 	newAgent, err := a.postgresRepositories.AgentRepository.Create(ctx, agent)
 	if err != nil {
@@ -207,8 +210,14 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	if agentFields.FlowID != nil {
 		agentEntity.FlowID = *agentFields.FlowID
 	}
+	validateCapabilities := false
 	if capabilitiesConfig != nil && len(capabilitiesConfig.Capabilities) > 0 {
 		agentEntity.CapabilitiesConfig = *capabilitiesConfig
+		validateCapabilities = true
+	}
+
+	if validateCapabilities {
+		a.ValidateCapabilities(ctx, agentEntity)
 	}
 
 	updatedAgent, err := a.postgresRepositories.AgentRepository.Update(ctx, *agentEntity)
@@ -224,6 +233,58 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	}
 
 	return updatedAgent, nil
+}
+
+func (a *agentService) ValidateCapabilities(ctx context.Context, agentEntity *postgresentity.Agent) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.ValidateCapabilities")
+	defer span.Finish()
+
+	capabilities := agentEntity.CapabilitiesConfig.Capabilities // []Capability
+	allCapabilitiesValid := true
+
+	for i := range capabilities {
+		capability := &capabilities[i] // pointer so we can update error
+		if !capability.Active {
+			// Not active => auto valid
+			continue
+		}
+
+		// decode JSON config into typed struct (example)
+		typedConfig, decodeErr := decodeConfigForCapability(capability.Type, capability.Config)
+		if decodeErr != nil {
+			tracing.TraceErr(span, decodeErr)
+			continue
+		}
+		if typedConfig == nil {
+			continue
+		}
+
+		// see if typedConfig implements ConfigValidator
+		if validator, ok := typedConfig.(agent_capability.ConfigValidator); ok {
+			if !validator.Validate() {
+				allCapabilitiesValid = false
+			}
+			newConfigJson, _ := json.Marshal(typedConfig)
+			capability.Config = string(newConfigJson)
+		}
+	}
+
+	agentEntity.CapabilitiesConfig.Capabilities = capabilities
+	agentEntity.CapabilitiesConfigured = allCapabilitiesValid
+}
+
+func decodeConfigForCapability(capType enum.AgentCapabilityType, configJSON string) (any, error) {
+	c := agent_capability.GetCapabilityConfigStruct(capType)
+	if c == nil {
+		return nil, nil
+	}
+
+	err := json.Unmarshal([]byte(configJSON), c)
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent postgresentity.Agent, triggerEvent, traceId string) (string, error) {

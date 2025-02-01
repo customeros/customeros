@@ -113,7 +113,7 @@ func (h *WebsiteVisitListener) lookupActiveAgents(ctx context.Context) []postgre
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	agents, err := h.dependencies.PostgresRepositories.AgentRepository.GetActiveAgentsByTypes(ctx, h.subscribedAgents())
+	agents, err := h.dependencies.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, h.subscribedAgents())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil

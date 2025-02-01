@@ -6,9 +6,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/pkg/errors"
-
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -37,10 +36,22 @@ type IdentifyWebsiteVisitorOutput struct {
 type IdentifyWebsiteVisitorConfig struct {
 	Websites WebsitesConfig `json:"websites"`
 }
-
 type WebsitesConfig struct {
 	Value []string `json:"value"`
 	Error string   `json:"error"`
+}
+
+func (c *IdentifyWebsiteVisitorConfig) Validate() bool {
+	isValid := true
+
+	if len(c.Websites.Value) == 0 {
+		c.Websites.Error = "Please provide at least one website for tracking."
+		isValid = false
+	} else {
+		c.Websites.Error = ""
+	}
+
+	return isValid
 }
 
 func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(IdentifyWebsiteVisitorConfig) error {

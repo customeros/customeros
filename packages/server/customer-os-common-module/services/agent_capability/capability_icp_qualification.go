@@ -37,8 +37,30 @@ type ICPQualificationOutput struct {
 }
 
 type ICPQualificationConfig struct {
-	QualificationCriteria    string `json:"qualificationCriteria"`
-	DisqualificationCriteria string `json:"disqualificationCriteria"`
+	QualificationCriteria    QualificationCriteriaConfig    `json:"qualificationCriteria"`
+	DisqualificationCriteria DisqualificationCriteriaConfig `json:"disqualificationCriteria"`
+}
+type QualificationCriteriaConfig struct {
+	Value string `json:"value"`
+	Error string `json:"error"`
+}
+type DisqualificationCriteriaConfig struct {
+	Value string `json:"value"`
+	Error string `json:"error"`
+}
+
+func (c *ICPQualificationConfig) Validate() bool {
+	isValid := true
+
+	// validate qualification criteria is not empty
+	if c.QualificationCriteria.Value == "" {
+		c.QualificationCriteria.Error = "Please provide qualification criteria."
+		isValid = false
+	} else {
+		c.QualificationCriteria.Error = ""
+	}
+
+	return isValid
 }
 
 func NewICPQualificationCapability(postgres *postgres_repository.Repositories, aiService interfaces.AIService, organizationServices interfaces.OrganizationService) *ICPQualificationCapability {
@@ -73,7 +95,7 @@ var (
 )
 
 func (c *ICPQualificationCapability) ValidateConfig(config ICPQualificationConfig) error {
-	if config.QualificationCriteria == "" {
+	if config.QualificationCriteria.Value == "" {
 		return errors.New("missing required config: QualificationCriteria")
 	}
 	return nil
@@ -130,7 +152,7 @@ func (c *ICPQualificationCapability) Execute(ctx context.Context, data ICPQualif
 	}
 
 	// build prompt
-	systemPrompt, content := c.buildPrompts(config.QualificationCriteria, config.DisqualificationCriteria, company)
+	systemPrompt, content := c.buildPrompts(config.QualificationCriteria.Value, config.DisqualificationCriteria.Value, company)
 
 	// askAI
 	answer, err := c.aiService.AskAI(ctx, enum.AIModelAnthropicHaiku, systemPrompt, content)
