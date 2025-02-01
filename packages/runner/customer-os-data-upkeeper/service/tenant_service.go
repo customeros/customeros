@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
+	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 )
 
@@ -90,7 +91,7 @@ func (s *tenantService) checkWebVisitorAgents(ctx context.Context, tenant string
 	tracing.TagTenant(span, tenant)
 
 	// get web visitor agents
-	webVisitorAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentVisitorID})
+	webVisitorAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentWebVisitorIdentifier})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error getting web visitor agents"))
 		s.log.Errorf("Error getting web visitor agents: %s", err.Error())
@@ -103,7 +104,7 @@ func (s *tenantService) checkWebVisitorAgents(ctx context.Context, tenant string
 	}
 
 	// create web visitor agents
-	_, err = s.commonServices.AgentService.CreateAgent(ctx, enum.AgentVisitorID)
+	_, err = s.commonServices.AgentService.CreateAgent(ctx, enum.AgentWebVisitorIdentifier)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error creating web visitor agent"))
 		s.log.Errorf("Error creating web visitor agents: %s", err.Error())
@@ -117,7 +118,7 @@ func (s *tenantService) checkIcpQualificationAgents(ctx context.Context, tenant 
 	tracing.TagTenant(span, tenant)
 
 	// get icp qualification agents
-	icpQualificationAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualification})
+	icpQualificationAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualifier})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error getting icp qualification agents"))
 		s.log.Errorf("Error getting icp qualification agents: %s", err.Error())
@@ -130,7 +131,7 @@ func (s *tenantService) checkIcpQualificationAgents(ctx context.Context, tenant 
 	}
 
 	// create icp qualification agents
-	_, err = s.commonServices.AgentService.CreateAgent(ctx, enum.AgentICPQualification)
+	_, err = s.commonServices.AgentService.CreateAgent(ctx, enum.AgentICPQualifier)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error creating icp qualification agent"))
 		s.log.Errorf("Error creating icp qualification agents: %s", err.Error())

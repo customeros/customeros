@@ -3,7 +3,6 @@ package registration
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"strings"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -16,6 +15,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
@@ -49,7 +49,8 @@ func NewRegistrationService(events *events.EventsService,
 	org interfaces.OrganizationService,
 	postmark interfaces.PostmarkService,
 	user interfaces.UserService,
-	agentService interfaces.AgentService) interfaces.RegistrationService {
+	agentService interfaces.AgentService,
+) interfaces.RegistrationService {
 	return &registrationService{
 		events:       events,
 		postgres:     postgres,
@@ -459,26 +460,26 @@ func (s *registrationService) createDefaultAgents(ctx context.Context) error {
 	}
 
 	// get web visitor agents
-	webVisitorAgents, err := s.postgres.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentVisitorID})
+	webVisitorAgents, err := s.postgres.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentWebVisitorIdentifier})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error getting web visitor agents"))
 		return err
 	}
 	if len(webVisitorAgents) == 0 {
-		_, err = s.agentService.CreateAgent(ctx, enum.AgentVisitorID)
+		_, err = s.agentService.CreateAgent(ctx, enum.AgentWebVisitorIdentifier)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "error creating web visitor agent"))
 		}
 	}
 
 	// get icp qualification agents
-	icpQualificationAgents, err := s.postgres.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualification})
+	icpQualificationAgents, err := s.postgres.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualifier})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error getting icp qualification agents"))
 		return err
 	}
 	if len(icpQualificationAgents) == 0 {
-		_, err = s.agentService.CreateAgent(ctx, enum.AgentICPQualification)
+		_, err = s.agentService.CreateAgent(ctx, enum.AgentICPQualifier)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "error creating ICP qualification agent"))
 		}

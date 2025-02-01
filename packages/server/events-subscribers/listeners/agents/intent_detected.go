@@ -39,7 +39,7 @@ func NewIntentDetectedListener(logger logger.Logger, deps *model.DependencyConta
 // Add all Agent types subscribed to this event here
 func (h *IntentDetectedListener) subscribedAgents() []enum.AgentType {
 	return []enum.AgentType{
-		enum.AgentVisitorID,
+		enum.AgentWebVisitorIdentifier,
 	}
 }
 
@@ -72,9 +72,9 @@ func (l *IntentDetectedListener) handle(ctx context.Context, message dto.IntentD
 	var agentTypes []enum.AgentType
 	switch message.IntentType {
 	case enum.IntentSupportRequired:
-		agentTypes = append(agentTypes, enum.AgentSupport)
+		agentTypes = append(agentTypes, enum.AgentSupportSignalDetector)
 	case enum.IntentIcpCheck:
-		agentTypes = append(agentTypes, enum.AgentICPQualification)
+		agentTypes = append(agentTypes, enum.AgentICPQualifier)
 	default:
 		err := errors.New("IntentType not supported")
 		tracing.TraceErr(span, err)

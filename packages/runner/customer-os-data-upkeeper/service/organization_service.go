@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
@@ -54,7 +54,7 @@ func (s *organizationService) IcpCheck() {
 	tracing.TagComponentCronJob(span)
 
 	// get active icp agents
-	icpAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentICPQualification})
+	icpAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentICPQualifier})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error getting icp agents: %v", err)

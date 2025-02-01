@@ -37,7 +37,7 @@ func NewWebsiteVisitListener(logger logger.Logger, deps *model.DependencyContain
 // Add all Agent types subscribed to this event here
 func (h *WebsiteVisitListener) subscribedAgents() []enum.AgentType {
 	return []enum.AgentType{
-		enum.AgentVisitorID,
+		enum.AgentWebVisitorIdentifier,
 	}
 }
 
