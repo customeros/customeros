@@ -7,7 +7,7 @@ import (
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
-func MapAgentToModel(entity *postgresEntity.Agents) *model.Agent {
+func MapAgentToModel(entity *postgresEntity.Agent) *model.Agent {
 	if entity == nil {
 		return nil
 	}

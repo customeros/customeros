@@ -3,6 +3,7 @@ package neo4j_repository
 import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/constants"
@@ -197,7 +198,14 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 		if data.IcpFit != nil {
 			cypherUpdate += `org.icpFit = $icpFit,`
 			cypherUpdate += `org.icpFitUpdatedAt = CASE WHEN org.icpFit IS NULL OR org.icpFit <> $icpFit THEN datetime() ELSE org.icpFitUpdatedAt END,`
+			cypherUpdate += `org.icpCheckedAt = CASE 
+			WHEN $icpFit = $icp_Fit OR $icpFit = $icp_NotFit THEN datetime() ELSE
+				CASE WHEN $icpFit = $icp_NotSet THEN NULL ELSE org.icpCheckedAt END
+			END,`
 			paramsUpdate["icpFit"] = (*data.IcpFit).String()
+			paramsUpdate["icp_Fit"] = enum.IcpIsFit.String()
+			paramsUpdate["icp_NotFit"] = enum.IcpNotFit.String()
+			paramsUpdate["icp_NotSet"] = enum.IcpNotSet.String()
 		}
 		if data.IcpFitReasons != nil {
 			cypherUpdate += `org.icpFitReasons = $icpFitReasons,`

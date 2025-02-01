@@ -459,7 +459,7 @@ func (s *registrationService) createDefaultAgents(ctx context.Context) error {
 	}
 
 	// get web visitor agents
-	webVisitorAgents, err := s.postgres.AgentsRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentVisitorID})
+	webVisitorAgents, err := s.postgres.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentVisitorID})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error getting web visitor agents"))
 		return err
@@ -472,7 +472,7 @@ func (s *registrationService) createDefaultAgents(ctx context.Context) error {
 	}
 
 	// get icp qualification agents
-	icpQualificationAgents, err := s.postgres.AgentsRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualification})
+	icpQualificationAgents, err := s.postgres.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualification})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error getting icp qualification agents"))
 		return err
