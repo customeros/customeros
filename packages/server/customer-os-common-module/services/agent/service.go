@@ -270,7 +270,7 @@ func (a *agentService) ValidateCapabilities(ctx context.Context, agentEntity *po
 	}
 
 	agentEntity.CapabilitiesConfig.Capabilities = capabilities
-	agentEntity.CapabilitiesConfigured = allCapabilitiesValid
+	agentEntity.Configured = allCapabilitiesValid
 }
 
 func decodeConfigForCapability(capType enum.AgentCapabilityType, configJSON string) (any, error) {
