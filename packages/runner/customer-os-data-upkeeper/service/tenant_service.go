@@ -90,7 +90,7 @@ func (s *tenantService) checkWebVisitorAgents(ctx context.Context, tenant string
 	tracing.TagTenant(span, tenant)
 
 	// get web visitor agents
-	webVisitorAgents, err := s.commonServices.PostgresRepositories.AgentsRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentVisitorID})
+	webVisitorAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentVisitorID})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error getting web visitor agents"))
 		s.log.Errorf("Error getting web visitor agents: %s", err.Error())
@@ -117,7 +117,7 @@ func (s *tenantService) checkIcpQualificationAgents(ctx context.Context, tenant 
 	tracing.TagTenant(span, tenant)
 
 	// get icp qualification agents
-	icpQualificationAgents, err := s.commonServices.PostgresRepositories.AgentsRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualification})
+	icpQualificationAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetAllAgentsByTypes(ctx, []enum.AgentType{enum.AgentICPQualification})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error getting icp qualification agents"))
 		s.log.Errorf("Error getting icp qualification agents: %s", err.Error())
