@@ -7,6 +7,7 @@ type IntentSignal string
 const (
 	IntentChurnRisk       IntentSignal = "churn_risk"
 	IntentSupportRequired IntentSignal = "support_required"
+	IntentIcpCheck        IntentSignal = "icp_check"
 )
 
 func (t IntentSignal) String() string {
@@ -16,6 +17,7 @@ func (t IntentSignal) String() string {
 func GetIntentSignal(s string) (IntentSignal, error) {
 	switch IntentSignal(s) {
 	case
+		IntentIcpCheck,
 		IntentChurnRisk,
 		IntentSupportRequired:
 

@@ -45,5 +45,5 @@ type OrganizationService interface {
 	CheckOrganizationExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
 	GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, contactIds []string) (*neo4j_entity.OrganizationWithJobRoleEntities, error)
 	ValidateOrganizationExists(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId string) error
-	GetGlobalOrganizationsByTenantOrganizationId(ctx context.Context, organizationId string) ([]postgresentity.GlobalOrganization, error)
+	GetGlobalOrganizationsByTenantOrganizationId(ctx context.Context, organizationId string) ([]*postgresentity.GlobalOrganization, error)
 }
