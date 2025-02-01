@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Agents struct {
+type Agent struct {
 	ID                 string             `gorm:"primaryKey;type:varchar(32)" json:"id"`
 	Type               enum.AgentType     `gorm:"column:type;type:varchar(50);not null;" json:"type"`
 	Tenant             string             `gorm:"column:tenant;type:varchar(255);not null;uniqueIndex:idx_tenant_name" json:"tenant" binding:"required"`
@@ -28,16 +28,16 @@ type Agents struct {
 	RegistryID         string             `gorm:"column:registry_id;type:varchar(32)" json:"registryId"`
 }
 
-func (Agents) TableName() string {
+func (Agent) TableName() string {
 	return "agents"
 }
 
-func (r *Agents) BeforeCreate(tx *gorm.DB) error {
+func (r *Agent) BeforeCreate(tx *gorm.DB) error {
 	r.ID = utils.GenerateNanoIdWithPrefix("agent", 16)
 	return nil
 }
 
-func (r *Agents) GetCapabilitiesConfigAsString() string {
+func (r *Agent) GetCapabilitiesConfigAsString() string {
 	bytes, err := json.Marshal(r.CapabilitiesConfig)
 	if err != nil {
 		return ""

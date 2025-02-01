@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"time"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -44,4 +45,5 @@ type OrganizationService interface {
 	CheckOrganizationExistsWithLinkedIn(ctx context.Context, url, alias, externalId string) (bool, string, error)
 	GetPrimaryOrganizationsWithJobRoleForContacts(ctx context.Context, contactIds []string) (*neo4j_entity.OrganizationWithJobRoleEntities, error)
 	ValidateOrganizationExists(ctx context.Context, tx *neo4j.ManagedTransaction, organizationId string) error
+	GetGlobalOrganizationsByTenantOrganizationId(ctx context.Context, organizationId string) ([]postgresentity.GlobalOrganization, error)
 }

@@ -14,7 +14,7 @@ type Repositories struct {
 	AsyncDb *gorm.DB
 
 	AgentCapabilityRegistryRepository            AgentCapabilityRegistryRepository
-	AgentsRepository                             AgentsRepository
+	AgentRepository                              AgentRepository
 	AgentExecutionRepository                     AgentExecutionRepository
 	AgentRegistryRepository                      AgentRegistryRepository
 	AiLocationMappingRepository                  AiLocationMappingRepository
@@ -97,7 +97,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 		UserEmailImportPageTokenRepository: NewUserEmailImportStateRepository(postgresDB.AsyncGormDB),
 
 		AgentCapabilityRegistryRepository:            NewAgentCapabilityRegistryRepository(postgresDB.GormDB),
-		AgentsRepository:                             NewAgentsRepository(postgresDB.GormDB),
+		AgentRepository:                              NewAgentRepository(postgresDB.GormDB),
 		AgentExecutionRepository:                     NewAgentExecutionRepository(postgresDB.GormDB),
 		AgentRegistryRepository:                      NewAgentRegistryRepository(postgresDB.GormDB),
 		AiLocationMappingRepository:                  NewAiLocationMappingRepository(postgresDB.GormDB),
@@ -172,7 +172,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 	err := postgresDB.GormDB.AutoMigrate(
 		&postgres_entity.AgentRegistry{},
 		&postgres_entity.AgentExecution{},
-		&postgres_entity.Agents{},
+		&postgres_entity.Agent{},
 		&postgres_entity.AiLocationMapping{},
 		&postgres_entity.AiPromptLog{},
 		&postgres_entity.ApiBillableEvent{},
