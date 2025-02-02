@@ -363,26 +363,6 @@ func CreateLogEntry(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return logEntryId
 }
 
-func CreateBillingProfileForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, billingProfile neo4j_entity.BillingProfileEntity) string {
-	billingProfileId := CreateBillingProfile(ctx, driver, tenant, billingProfile)
-	LinkNodes(ctx, driver, orgId, billingProfileId, "HAS_BILLING_PROFILE")
-	return billingProfileId
-}
-
-func CreateBillingProfile(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, billingProfile neo4j_entity.BillingProfileEntity) string {
-	billingProfileId := utils.NewUUIDIfEmpty(billingProfile.Id)
-	query := fmt.Sprintf(`
-			  MERGE (bp:BillingProfile {id:$id})
-				SET bp:BillingProfile_%s
-				`, tenant)
-
-	ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"tenant": tenant,
-		"id":     billingProfileId,
-	})
-	return billingProfileId
-}
-
 func CreateLogEntryForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, orgId string, logEntry neo4j_entity.LogEntryEntity) string {
 	logEntryId := CreateLogEntry(ctx, driver, tenant, logEntry)
 	LinkNodes(ctx, driver, orgId, logEntryId, "LOGGED")
