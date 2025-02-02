@@ -21,13 +21,12 @@ func MapCustomFieldInputsToEntities(inputs []*model.CustomFieldInput) *entity.Cu
 
 func MapCustomFieldInputToEntity(input *model.CustomFieldInput) *entity.CustomFieldEntity {
 	customFieldEntity := entity.CustomFieldEntity{
-		Id:            input.ID,
-		Name:          utils.IfNotNilString(input.Name),
-		Value:         input.Value,
-		DataType:      input.Datatype.String(),
-		TemplateId:    input.TemplateID,
-		Source:        neo4jentity.DataSourceOpenline,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
+		Id:         input.ID,
+		Name:       utils.IfNotNilString(input.Name),
+		Value:      input.Value,
+		DataType:   input.Datatype.String(),
+		TemplateId: input.TemplateID,
+		Source:     neo4jentity.DataSourceOpenline,
 	}
 	customFieldEntity.AdjustValueByDatatype()
 	return &customFieldEntity
@@ -35,11 +34,10 @@ func MapCustomFieldInputToEntity(input *model.CustomFieldInput) *entity.CustomFi
 
 func MapCustomFieldUpdateInputToEntity(input *model.CustomFieldUpdateInput) *entity.CustomFieldEntity {
 	customFieldEntity := entity.CustomFieldEntity{
-		Id:            utils.StringPtr(input.ID),
-		Name:          input.Name,
-		DataType:      input.Datatype.String(),
-		Value:         input.Value,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
+		Id:       utils.StringPtr(input.ID),
+		Name:     input.Name,
+		DataType: input.Datatype.String(),
+		Value:    input.Value,
 	}
 	customFieldEntity.AdjustValueByDatatype()
 	return &customFieldEntity

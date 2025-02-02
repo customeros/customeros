@@ -3,8 +3,6 @@ package api_calendar
 import (
 	"context"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-api/repository"
@@ -13,6 +11,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -55,15 +55,14 @@ func (s *calendarService) GetAllForUsers(ctx context.Context, userIds []string) 
 func (s *calendarService) mapDbNodeToCalendarEntity(node dbtype.Node) *entity.CalendarEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.CalendarEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		CalType:       utils.GetStringPropOrEmpty(props, "calType"),
-		Link:          utils.GetStringPropOrEmpty(props, "link"),
-		Primary:       utils.GetBoolPropOrFalse(props, "primary"),
-		Source:        neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		CalType:   utils.GetStringPropOrEmpty(props, "calType"),
+		Link:      utils.GetStringPropOrEmpty(props, "link"),
+		Primary:   utils.GetBoolPropOrFalse(props, "primary"),
+		Source:    neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 	}
 	return &result
 }

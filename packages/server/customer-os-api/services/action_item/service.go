@@ -3,11 +3,11 @@ package api_action_item
 import (
 	"context"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
@@ -52,12 +52,11 @@ func (s *actionItemService) MapDbNodeToActionItemEntity(node dbtype.Node) *entit
 	props := utils.GetPropsFromNode(node)
 	createdAt := utils.GetTimePropOrEpochStart(props, "createdAt")
 	entity := entity.ActionItemEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:     &createdAt,
-		Content:       utils.GetStringPropOrEmpty(props, "content"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt: &createdAt,
+		Content:   utils.GetStringPropOrEmpty(props, "content"),
+		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:    neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 	}
 	return &entity
 }

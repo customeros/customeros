@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
@@ -51,14 +51,13 @@ func (r *customFieldRepository) MergeCustomFieldToContactInTx(ctx context.Contex
 			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=datetime() "+
 			" RETURN f", entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
 		map[string]any{
-			"tenant":        tenant,
-			"contactId":     contactId,
-			"name":          entity.Name,
-			"datatype":      entity.DataType,
-			"value":         entity.Value.RealValue(),
-			"source":        entity.Source,
-			"sourceOfTruth": entity.SourceOfTruth,
-			"now":           utils.Now(),
+			"tenant":    tenant,
+			"contactId": contactId,
+			"name":      entity.Name,
+			"datatype":  entity.DataType,
+			"value":     entity.Value.RealValue(),
+			"source":    entity.Source,
+			"now":       utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
@@ -81,14 +80,13 @@ func (r *customFieldRepository) MergeCustomFieldInTx(ctx context.Context, tx neo
 			" ON MATCH SET f.%s=$value, f.sourceOfTruth=$sourceOfTruth, f.updatedAt=datetime() "+
 			" RETURN f", obj.EntityType, rel, entity.NodeLabel(), entity.PropertyName(), "CustomField_"+tenant, entity.PropertyName()),
 		map[string]any{
-			"tenant":        tenant,
-			"Id":            obj.ID,
-			"name":          entity.Name,
-			"datatype":      entity.DataType,
-			"value":         entity.Value.RealValue(),
-			"source":        entity.Source,
-			"sourceOfTruth": entity.SourceOfTruth,
-			"now":           utils.Now(),
+			"tenant":   tenant,
+			"Id":       obj.ID,
+			"name":     entity.Name,
+			"datatype": entity.DataType,
+			"value":    entity.Value.RealValue(),
+			"source":   entity.Source,
+			"now":      utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
@@ -252,13 +250,12 @@ func (r *customFieldRepository) UpdateForContactInTx(ctx context.Context, tx neo
 			" f.updatedAt=datetime() "+
 			" RETURN f", entity.NodeLabel(), entity.PropertyName()),
 		map[string]any{
-			"tenant":        tenant,
-			"contactId":     contactId,
-			"fieldId":       entity.Id,
-			"name":          entity.Name,
-			"sourceOfTruth": entity.SourceOfTruth,
-			"value":         entity.Value.RealValue(),
-			"now":           utils.Now(),
+			"tenant":    tenant,
+			"contactId": contactId,
+			"fieldId":   entity.Id,
+			"name":      entity.Name,
+			"value":     entity.Value.RealValue(),
+			"now":       utils.Now(),
 		})
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
