@@ -9,7 +9,7 @@ type CapabilityOutput struct {
 	Completed          bool `json:"completed"`
 }
 
-func GetCapabilityConfigStruct(capabilityType enum.AgentCapabilityType) any {
+func GetCapabilityConfigStruct(capabilityType enum.AgentCapability) any {
 	switch capabilityType {
 	case enum.CapabilitySendSlackNotification:
 		return &SendSlackNotificationConfig{}

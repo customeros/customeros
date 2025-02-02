@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"net/http"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/gin-gonic/gin"
@@ -57,7 +57,7 @@ func (a *AgentHandler) createMasterAgent(ctx context.Context, agent RegisterMast
 	var capabilities []postgres_entity.Capability
 	for _, inputCapability := range agent.DefaultCapabilities {
 		capability := postgres_entity.Capability{
-			Type:        enum.AgentCapabilityType(inputCapability.Type),
+			Type:        enum.AgentCapability(inputCapability.Type),
 			Description: inputCapability.Description,
 			Active:      inputCapability.Active,
 			Name:        inputCapability.Name,

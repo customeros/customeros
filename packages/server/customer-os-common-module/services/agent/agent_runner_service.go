@@ -2,28 +2,30 @@ package agent
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type AgentRunnerService struct {
-	postgresRepositories     *postgres_repository.Repositories
-	agentCapabilitiesService *agent_capability.AgentCapabilities
-	agentService             interfaces.AgentService
+	postgresRepositories       *postgres_repository.Repositories
+	agentCapabilitiesService   *agent_capability.AgentCapabilities
+	agentService               interfaces.AgentService
+	capabilityExecutionService interfaces.AgentCapabilityExecutionService
 }
 
 func NewAgentRunnerService(
 	postgresRepositories *postgres_repository.Repositories,
 	agentCapabilities *agent_capability.AgentCapabilities,
 	agentService interfaces.AgentService,
+	capabilityExecution interfaces.AgentCapabilityExecutionService,
 ) *AgentRunnerService {
 	if postgresRepositories == nil {
 		panic("postgresRepositories cannot be nil")
@@ -36,9 +38,10 @@ func NewAgentRunnerService(
 	}
 
 	return &AgentRunnerService{
-		postgresRepositories:     postgresRepositories,
-		agentCapabilitiesService: agentCapabilities,
-		agentService:             agentService,
+		postgresRepositories:       postgresRepositories,
+		agentCapabilitiesService:   agentCapabilities,
+		agentService:               agentService,
+		capabilityExecutionService: capabilityExecution,
 	}
 }
 
@@ -46,6 +49,7 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.Run")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	if agent.ID == "" {
 		err := errors.New("agent ID cannot be empty")
 		tracing.TraceErr(span, err)
@@ -77,55 +81,14 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 			continue
 		}
 
-		capType := capability.Type
-		var capExecutor interfaces.AgentCapabilityUntyped
-		capExecutor, capErr = a.agentCapabilitiesService.GetExecutor(capType)
-		if capErr != nil {
-			break
-		}
-		if capExecutor == nil {
-			capErr = fmt.Errorf("missing executor for capability type: %s", capType)
+		output, err := a.capabilityExecutionService.Execute(ctx, capability, allParams, a.agentCapabilitiesService.GetExecutors())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			capErr = err
 			break
 		}
 
-		input := capExecutor.GetInput()
-		if input == nil {
-			capErr = fmt.Errorf("GetInput returned nil for capability type: %s", capType)
-			break
-		}
-		capErr = utils.MapToStruct(allParams, input)
-		if capErr != nil {
-			break
-		}
-
-		config := capExecutor.GetConfig()
-		if config == nil {
-			capErr = fmt.Errorf("GetConfig returned nil for capability type: %s", capType)
-			break
-		}
-		if capability.Config != "" {
-			data := []byte(capability.Config)
-			capErr = json.Unmarshal(data, config)
-			if capErr != nil {
-				break
-			}
-		}
-
-		var output any
-		output, capErr = capExecutor.ExecuteUntyped(ctx, input, config)
-		if capErr != nil {
-			break
-		}
-
-		// Merge the output back into allParams for subsequent capabilities
-		if output != nil {
-			var outputMap map[string]any
-			outputMap, capErr = utils.StructToMap(output)
-			if capErr != nil {
-				break
-			}
-			utils.MergeMapToMap(outputMap, allParams)
-		}
+		utils.MergeMapToMap(output, allParams)
 	}
 
 	if capErr != nil {

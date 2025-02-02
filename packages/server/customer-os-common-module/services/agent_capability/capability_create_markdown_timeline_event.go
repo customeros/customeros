@@ -2,16 +2,16 @@ package agent_capability
 
 import (
 	"context"
-	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/pkg/errors"
 
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type CreateMarkdownTimelineEventCapability struct {
@@ -34,23 +34,26 @@ func NewCreateMarkdownTimelineEventCapability(markdownService interfaces.Markdow
 	}
 }
 
-func (c *CreateMarkdownTimelineEventCapability) GetInput() any {
-	return &CreateMarkdownTimelineEventInput{}
+func (c *CreateMarkdownTimelineEventCapability) GetInput() CreateMarkdownTimelineEventInput {
+	return CreateMarkdownTimelineEventInput{}
 }
 
-func (c *CreateMarkdownTimelineEventCapability) GetConfig() any {
-	return &NoConfig{}
+func (c *CreateMarkdownTimelineEventCapability) GetConfig() NoConfig {
+	return NoConfig{}
 }
 
-func (c *CreateMarkdownTimelineEventCapability) GetOutput() any {
-	return &CreateMarkdownTimelineEventOutput{}
+func (c *CreateMarkdownTimelineEventCapability) GetOutput() CreateMarkdownTimelineEventOutput {
+	return CreateMarkdownTimelineEventOutput{}
 }
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapabilityExecution[CreateMarkdownTimelineEventInput, CreateMarkdownTimelineEventOutput, NoConfig] = (*CreateMarkdownTimelineEventCapability)(nil)
-	_ interfaces.AgentCapabilityUntyped                                                                                  = (*CreateMarkdownTimelineEventCapability)(nil)
+	_ interfaces.AgentCapability[CreateMarkdownTimelineEventInput, CreateMarkdownTimelineEventOutput, NoConfig] = (*CreateMarkdownTimelineEventCapability)(nil)
 )
+
+func (c *CreateMarkdownTimelineEventCapability) Type() enum.AgentCapability {
+	return enum.CapabilityCreateMarkdownTimelineEvent
+}
 
 func (c *CreateMarkdownTimelineEventCapability) ValidateConfig(config NoConfig) error {
 	return nil
@@ -106,20 +109,4 @@ func (c *CreateMarkdownTimelineEventCapability) Execute(ctx context.Context, dat
 	result.MarkdownEventID = markdownEventId
 	tracing.LogObjectAsJson(span, "result", result)
 	return result, nil
-}
-
-// ExecuteUntyped implements the AgentCapabilityUntyped interface.
-// It casts the generic input and config to the specific types and delegates to the typed Execute method.
-func (c *CreateMarkdownTimelineEventCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
-	typedInput, ok := input.(*CreateMarkdownTimelineEventInput)
-	if !ok || typedInput == nil {
-		return nil, fmt.Errorf("invalid input type: expected CreateMarkdownTimelineEventInput")
-	}
-
-	typedConfig, ok := config.(*NoConfig)
-	if !ok || typedConfig == nil {
-		return nil, fmt.Errorf("invalid config type: expected NoConfig")
-	}
-
-	return c.Execute(ctx, *typedInput, *typedConfig)
 }

@@ -10,7 +10,7 @@ import (
 )
 
 type AgentCapabilities struct {
-	executors map[enum.AgentCapabilityType]interfaces.AgentCapabilityUntyped
+	executors map[enum.AgentCapability]interfaces.AgentCapabilityUntyped
 }
 
 func InitCapabilities(
@@ -25,31 +25,51 @@ func InitCapabilities(
 	markdownService interfaces.MarkdownEventService,
 	domainService interfaces.DomainService,
 ) *AgentCapabilities {
-	capabilities := AgentCapabilities{}
-
-	executors := make(map[enum.AgentCapabilityType]interfaces.AgentCapabilityUntyped)
+	capabilities := &AgentCapabilities{
+		executors: make(map[enum.AgentCapability]interfaces.AgentCapabilityUntyped),
+	}
 
 	// Register each capability with its corresponding type.
-	executors[enum.CapabilityAnalyzeWebSessionIntent] = NewAnalyzeWebSessionCapability(postgresRepositories, actionService)
-	executors[enum.CapabilityCreateAndEnrichCompany] = NewCreateOrganizationCapability(organizationService)
-	executors[enum.CapabilityIdentifyWebVisitor] = NewIdentifyWebsiteVisitorCapability(postgresRepositories, enrichmentService, domainService)
-	executors[enum.CapabilitySendSlackNotification] = NewSendSlackNotificationCapability(notificationService)
-	executors[enum.CapabilitySendWebVisitorSlackNotification] = NewSendWebVisitorSlackNotificationCapability(postgresRepositories, notificationService, workspaceService)
-	executors[enum.CapabilityApplyTag] = NewApplyTagCapability(tagService)
-	executors[enum.CapabilityCreateMarkdownTimelineEvent] = NewCreateMarkdownTimelineEventCapability(markdownService)
-	executors[enum.CapabilityEvaluateCompanyICPFit] = NewICPQualificationCapability(postgresRepositories, aiService, organizationService)
+	capabilities.executors[enum.CapabilityAnalyzeWebSessionIntent] = NewAnalyzeWebSessionCapability(postgresRepositories, actionService)
+	capabilities.executors[enum.CapabilityCreateAndEnrichCompany] = NewCreateOrganizationCapability(organizationService)
+	capabilities.executors[enum.CapabilityIdentifyWebVisitor] = NewIdentifyWebsiteVisitorCapability(postgresRepositories, enrichmentService, domainService)
+	capabilities.executors[enum.CapabilitySendSlackNotification] = NewSendSlackNotificationCapability(notificationService)
+	capabilities.executors[enum.CapabilitySendWebVisitorSlackNotification] = NewSendWebVisitorSlackNotificationCapability(postgresRepositories, notificationService, workspaceService)
+	capabilities.executors[enum.CapabilityApplyTag] = NewApplyTagCapability(tagService)
+	capabilities.executors[enum.CapabilityCreateMarkdownTimelineEvent] = NewCreateMarkdownTimelineEventCapability(markdownService)
+	capabilities.executors[enum.CapabilityEvaluateCompanyICPFit] = NewICPQualificationCapability(postgresRepositories, aiService, organizationService)
 	// Continue registering other capabilities here...
-	capabilities.executors = executors
 
-	return &capabilities
+	return capabilities
 }
 
 // GetExecutor retrieves the untyped executor based on the capability type.
 // Returns an error if the capability type is unsupported.
-func (c *AgentCapabilities) GetExecutor(capType enum.AgentCapabilityType) (interfaces.AgentCapabilityUntyped, error) {
+func (c *AgentCapabilities) GetExecutor(capType enum.AgentCapability) (interfaces.AgentCapabilityUntyped, error) {
 	executor, exists := c.executors[capType]
 	if !exists {
 		return nil, fmt.Errorf("unsupported capability type: %s", capType)
 	}
 	return executor, nil
+}
+
+func (c *AgentCapabilities) GetExecutors() map[enum.AgentCapability]interfaces.AgentCapabilityUntyped {
+	return c.executors
+}
+
+func GetTypedExecutor[I, O, C any](
+	executors map[enum.AgentCapability]interfaces.AgentCapabilityUntyped,
+	capType enum.AgentCapability,
+) (interfaces.AgentCapability[I, O, C], bool) {
+	key := enum.AgentCapability(capType)
+	executor, exists := executors[key]
+	if !exists {
+		return nil, false
+	}
+
+	cap, ok := executor.(interfaces.AgentCapability[I, O, C])
+	if !ok {
+		return nil, false
+	}
+	return cap, true
 }

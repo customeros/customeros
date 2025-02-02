@@ -2,29 +2,21 @@ package agent_capability
 
 import (
 	"context"
-	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type CreateOrganizationCapability struct {
 	organizationService interfaces.OrganizationService
-}
-
-type CreateOrganizationInput struct {
-	Domain string `json:"domain"`
-}
-
-type CreateOrganizationOutput struct {
-	CapabilityOutput
-	OrganizationID string `json:"organizationId"`
 }
 
 func NewCreateOrganizationCapability(orgService interfaces.OrganizationService) *CreateOrganizationCapability {
@@ -33,8 +25,17 @@ func NewCreateOrganizationCapability(orgService interfaces.OrganizationService) 
 	}
 }
 
-func (c *CreateOrganizationCapability) ValidateConfig(config NoConfig) error {
-	return nil
+// Compile-time interface checks
+var (
+	_ interfaces.AgentCapability[CreateOrganizationInput, CreateOrganizationOutput, NoConfig] = (*CreateOrganizationCapability)(nil)
+)
+
+func (c *CreateOrganizationCapability) Type() enum.AgentCapability {
+	return enum.CapabilityCreateAndEnrichCompany
+}
+
+func (c *CreateOrganizationCapability) GetInput() CreateOrganizationInput {
+	return CreateOrganizationInput{}
 }
 
 func (c *CreateOrganizationCapability) ValidateInput(input CreateOrganizationInput) error {
@@ -47,23 +48,26 @@ func (c *CreateOrganizationCapability) ValidateInput(input CreateOrganizationInp
 	return nil
 }
 
-func (c *CreateOrganizationCapability) GetInput() any {
-	return &CreateOrganizationInput{}
+func (c *CreateOrganizationCapability) GetConfig() NoConfig {
+	return NoConfig{}
 }
 
-func (c *CreateOrganizationCapability) GetConfig() any {
-	return &NoConfig{}
+func (c *CreateOrganizationCapability) ValidateConfig(config NoConfig) error {
+	return nil
 }
 
-func (c *CreateOrganizationCapability) GetOutput() any {
-	return &CreateOrganizationOutput{}
+func (c *CreateOrganizationCapability) GetOutput() CreateOrganizationOutput {
+	return CreateOrganizationOutput{}
 }
 
-// Compile-time interface checks
-var (
-	_ interfaces.AgentCapabilityExecution[CreateOrganizationInput, CreateOrganizationOutput, NoConfig] = (*CreateOrganizationCapability)(nil)
-	_ interfaces.AgentCapabilityUntyped                                                                = (*CreateOrganizationCapability)(nil)
-)
+type CreateOrganizationInput struct {
+	Domain string `json:"domain"`
+}
+
+type CreateOrganizationOutput struct {
+	CapabilityOutput
+	OrganizationID string `json:"organizationId"`
+}
 
 func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateOrganizationInput, config NoConfig) (CreateOrganizationOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateOrganizationCapability.Execute")
@@ -113,20 +117,4 @@ func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateO
 	result.Completed = true
 	tracing.LogObjectAsJson(span, "result", result)
 	return result, nil
-}
-
-// ExecuteUntyped implements the AgentCapabilityUntyped interface.
-// It casts the generic input and config to the specific types and delegates to the typed Execute method.
-func (c *CreateOrganizationCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
-	typedInput, ok := input.(*CreateOrganizationInput)
-	if !ok || typedInput == nil {
-		return nil, fmt.Errorf("invalid input type for CreateOrganizationCapability: expected CreateOrganizationInput")
-	}
-
-	typedConfig, ok := config.(*NoConfig)
-	if !ok || typedConfig == nil {
-		return nil, fmt.Errorf("invalid config type for CreateOrganizationCapability: expected CreateOrganizationConfig")
-	}
-
-	return c.Execute(ctx, *typedInput, *typedConfig)
 }

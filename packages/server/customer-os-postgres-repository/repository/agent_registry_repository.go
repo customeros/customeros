@@ -20,10 +20,9 @@ var (
 )
 
 type AgentRegistryRepository interface {
-	Initialize(ctx context.Context) error
 	Create(ctx context.Context, agent postgres_entity.AgentRegistry) (*postgres_entity.AgentRegistry, error)
 	Update(ctx context.Context, agent postgres_entity.AgentRegistry) (*postgres_entity.AgentRegistry, error)
-	Find(ctx context.Context, agentType enum.AgentType) (*postgres_entity.AgentRegistry, error)
+	FindByType(ctx context.Context, agentType enum.AgentType) (*postgres_entity.AgentRegistry, error)
 	FindAll(ctx context.Context) ([]postgres_entity.AgentRegistry, error)
 }
 
@@ -55,7 +54,7 @@ func (r *agentRegistryRepository) FindAll(ctx context.Context) ([]postgres_entit
 	return agents, nil
 }
 
-func (r *agentRegistryRepository) Find(ctx context.Context, agentType enum.AgentType) (*postgres_entity.AgentRegistry, error) {
+func (r *agentRegistryRepository) FindByType(ctx context.Context, agentType enum.AgentType) (*postgres_entity.AgentRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -144,113 +143,4 @@ func (r *agentRegistryRepository) Update(ctx context.Context, agent postgres_ent
 	}
 
 	return &updatedAgent, nil
-}
-
-func (r *agentRegistryRepository) Initialize(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Initialize")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-
-	requiredAgents := []postgres_entity.AgentRegistry{
-		registerVisitorIdAgent(),
-		registerSupportAgent(),
-		registerIcpAgent(),
-	}
-
-	for _, agent := range requiredAgents {
-		// Look for existing agent by type (not ID since it might not be set yet)
-		existingAgent, err := r.Find(ctx, agent.Type)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return fmt.Errorf("failed to check existing agent: %w", err)
-		}
-
-		// Skip if agent already exists
-		if existingAgent != nil {
-			continue
-		}
-
-		// Create new agent
-		if _, err := r.Create(ctx, agent); err != nil {
-			tracing.TraceErr(span, err)
-			return fmt.Errorf("failed to initialize agent: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func registerVisitorIdAgent() postgres_entity.AgentRegistry {
-	return postgres_entity.AgentRegistry{
-		Type:     enum.AgentWebVisitorIdentifier,
-		Name:     "Web visitor identifier",
-		Goal:     enum.AgentGoalIdentifyWebVisitor.String(),
-		Icon:     "radar",
-		Color:    "grayModern",
-		IsActive: true,
-		CapabilitiesConfig: postgres_entity.CapabilitiesConfig{
-			Capabilities: []postgres_entity.Capability{
-				{
-					Type:   enum.CapabilityIdentifyWebVisitor,
-					Name:   "Identify website visitors",
-					Active: true,
-				},
-				{
-					Type:   enum.CapabilityCreateAndEnrichCompany,
-					Name:   "Create and enrich company",
-					Active: true,
-				},
-				{
-					Type:   enum.CapabilityAnalyzeWebSessionIntent,
-					Name:   "Analyze web sessions for intent",
-					Active: true,
-				},
-				{
-					Type:   enum.CapabilitySendWebVisitorSlackNotification,
-					Name:   "Send Slack notification (optional)",
-					Active: false,
-				},
-			},
-		},
-	}
-}
-
-func registerSupportAgent() postgres_entity.AgentRegistry {
-	return postgres_entity.AgentRegistry{
-		Type:     enum.AgentSupportSignalDetector,
-		Name:     "Support Signal Detector",
-		Goal:     enum.AgentGoalDetectSupportSignal.String(),
-		Icon:     "life-buoy-01",
-		Color:    "pink",
-		IsActive: true,
-		CapabilitiesConfig: postgres_entity.CapabilitiesConfig{
-			Capabilities: []postgres_entity.Capability{
-				{
-					Type:   enum.CapabilityApplyTag,
-					Active: true,
-					Config: "{\"tagName\":{\"value\":\"Support\",\"error\":\"\"}}",
-				},
-			},
-		},
-	}
-}
-
-func registerIcpAgent() postgres_entity.AgentRegistry {
-	return postgres_entity.AgentRegistry{
-		Type:     enum.AgentICPQualifier,
-		Name:     "ICP qualifier",
-		Goal:     enum.AgentGoalEvaluateICPFit.String(),
-		Icon:     "target-04",
-		Color:    "success",
-		IsActive: true,
-		CapabilitiesConfig: postgres_entity.CapabilitiesConfig{
-			Capabilities: []postgres_entity.Capability{
-				{
-					Type:   enum.CapabilityEvaluateCompanyICPFit,
-					Name:   "Evaluate company ICP fit",
-					Active: true,
-				},
-			},
-		},
-	}
 }
