@@ -14,7 +14,7 @@ type BillingProfile implements SourceFields & Node {
     legalName:          String!
     taxId:              String!
     source:             DataSource!
-    sourceOfTruth:      DataSource!
+    sourceOfTruth:      DataSource! @deprecated
     appSource:          String!
 }
 

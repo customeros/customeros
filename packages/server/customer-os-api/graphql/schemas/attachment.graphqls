@@ -16,7 +16,7 @@ type Attachment implements Node {
     size: Int64!
 
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
 }
 

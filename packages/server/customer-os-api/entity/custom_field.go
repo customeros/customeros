@@ -38,15 +38,14 @@ func (p propertyName) String() string {
 }
 
 type CustomFieldEntity struct {
-	Id            *string
-	Name          string
-	DataType      string
-	Value         model.AnyTypeValue
-	TemplateId    *string
-	Source        neo4jentity.DataSource
-	SourceOfTruth neo4jentity.DataSource
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	Id         *string
+	Name       string
+	DataType   string
+	Value      model.AnyTypeValue
+	TemplateId *string
+	Source     neo4jentity.DataSource
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type CustomFieldEntities []CustomFieldEntity

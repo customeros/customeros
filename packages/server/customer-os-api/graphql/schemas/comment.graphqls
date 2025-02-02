@@ -6,7 +6,7 @@ type Comment {
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 }

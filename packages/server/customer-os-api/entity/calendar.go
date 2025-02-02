@@ -8,15 +8,14 @@ import (
 
 // Deprecated, use neo4j module instead
 type CalendarEntity struct {
-	Id            string
-	CalType       string
-	Link          string
-	Primary       bool
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Source        neo4jentity.DataSource
-	SourceOfTruth neo4jentity.DataSource
-	AppSource     string
+	Id        string
+	CalType   string
+	Link      string
+	Primary   bool
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Source    neo4jentity.DataSource
+	AppSource string
 
 	DataloaderKey string
 }

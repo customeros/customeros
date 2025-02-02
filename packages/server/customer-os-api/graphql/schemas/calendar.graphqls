@@ -12,7 +12,7 @@ type Calendar {
     primary: Boolean!
 
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
 }
 

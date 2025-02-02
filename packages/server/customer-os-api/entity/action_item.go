@@ -14,9 +14,8 @@ type ActionItemEntity struct {
 
 	Content string
 
-	Source        neo4jentity.DataSource
-	SourceOfTruth neo4jentity.DataSource
-	AppSource     string
+	Source    neo4jentity.DataSource
+	AppSource string
 
 	DataloaderKey string
 }
