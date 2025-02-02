@@ -602,44 +602,28 @@ func (s *emailService) deleteOrphanEmails() {
 	limit := 500
 	delayFromLastUpdateInHours := 24 // 24 hours
 
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		records, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetOrphanEmailNodes(ctx, limit, delayFromLastUpdateInHours)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error getting orphan emails"))
-			return
-		}
-
-		// no record
-		if len(records) == 0 {
-			return
-		}
-
-		for _, record := range records {
-			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-				Tenant:    record.Tenant,
-				AppSource: constants.AppSourceDataUpkeeper,
-			})
-
-			err = s.commonServices.EmailService.DeleteOrphanEmail(innerCtx, record.EmailId)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error deleting orphan email"))
-				s.log.Errorf("Error deleting orphan email {%s}: %s", record.EmailId, err.Error())
-			}
-		}
-		if len(records) < limit {
-			return
-		}
-
-		// force exit after single iteration
+	records, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetOrphanEmailNodes(ctx, limit, delayFromLastUpdateInHours)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting orphan emails"))
 		return
+	}
+
+	// no record
+	if len(records) == 0 {
+		return
+	}
+
+	for _, record := range records {
+		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    record.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
+		err = s.commonServices.EmailService.DeleteOrphanEmail(innerCtx, record.EmailId)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Error deleting orphan email"))
+			s.log.Errorf("Error deleting orphan email {%s}: %s", record.EmailId, err.Error())
+		}
 	}
 }
 
