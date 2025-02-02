@@ -3,7 +3,6 @@ package agent_capability
 import (
 	"context"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"strings"
 	"time"
 
@@ -14,8 +13,10 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type SendWebVisitorSlackNotificationCapability struct {
@@ -38,9 +39,10 @@ type SendWebVisitorSlackNotificationOutput struct {
 }
 
 type SendWebVisitorSlackNotificationConfig struct {
-	ChannelID     SlackChannelIdConfig     `json:"channelId"`
-	CooldownHours SlackCooldownHoursConfig `json:"cooldownHours"`
+	ChannelID     SlackChannelIdConfig     `json:"channelId" toml:"slack_channel_id"`
+	CooldownHours SlackCooldownHoursConfig `json:"cooldownHours" toml:"notification_cooldown_in_hrs"`
 }
+
 type SlackCooldownHoursConfig struct {
 	Value int64  `json:"value"`
 	Error string `json:"error"`
@@ -84,9 +86,12 @@ func NewSendWebVisitorSlackNotificationCapability(postgresRepositories *postgres
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapabilityExecution[SendWebVisitorSlackNotificationInput, SendWebVisitorSlackNotificationOutput, SendWebVisitorSlackNotificationConfig] = (*SendWebVisitorSlackNotificationCapability)(nil)
-	_ interfaces.AgentCapabilityUntyped                                                                                                                       = (*SendWebVisitorSlackNotificationCapability)(nil)
+	_ interfaces.AgentCapability[SendWebVisitorSlackNotificationInput, SendWebVisitorSlackNotificationOutput, SendWebVisitorSlackNotificationConfig] = (*SendWebVisitorSlackNotificationCapability)(nil)
 )
+
+func (c *SendWebVisitorSlackNotificationCapability) Type() enum.AgentCapability {
+	return enum.CapabilitySendWebVisitorSlackNotification
+}
 
 func (c *SendWebVisitorSlackNotificationCapability) ValidateConfig(config SendWebVisitorSlackNotificationConfig) error {
 	if config.ChannelID.Value == "" {
@@ -108,16 +113,16 @@ func (c *SendWebVisitorSlackNotificationCapability) ValidateInput(input SendWebV
 	return nil
 }
 
-func (c *SendWebVisitorSlackNotificationCapability) GetInput() any {
-	return &SendWebVisitorSlackNotificationInput{}
+func (c *SendWebVisitorSlackNotificationCapability) GetInput() SendWebVisitorSlackNotificationInput {
+	return SendWebVisitorSlackNotificationInput{}
 }
 
-func (c *SendWebVisitorSlackNotificationCapability) GetConfig() any {
-	return &SendWebVisitorSlackNotificationConfig{}
+func (c *SendWebVisitorSlackNotificationCapability) GetConfig() SendWebVisitorSlackNotificationConfig {
+	return SendWebVisitorSlackNotificationConfig{}
 }
 
-func (c *SendWebVisitorSlackNotificationCapability) GetOutput() any {
-	return &SendWebVisitorSlackNotificationOutput{}
+func (c *SendWebVisitorSlackNotificationCapability) GetOutput() SendWebVisitorSlackNotificationOutput {
+	return SendWebVisitorSlackNotificationOutput{}
 }
 
 func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context, data SendWebVisitorSlackNotificationInput, config SendWebVisitorSlackNotificationConfig) (SendWebVisitorSlackNotificationOutput, error) {

@@ -81,7 +81,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	}
 
 	// get config from registry
-	agentRegistry, err := a.postgresRepositories.AgentRegistryRepository.Find(ctx, agentType)
+	agentRegistry, err := a.postgresRepositories.AgentRegistryRepository.FindByType(ctx, agentType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -273,7 +273,7 @@ func (a *agentService) ValidateCapabilities(ctx context.Context, agentEntity *po
 	agentEntity.Configured = allCapabilitiesValid
 }
 
-func decodeConfigForCapability(capType enum.AgentCapabilityType, configJSON string) (any, error) {
+func decodeConfigForCapability(capType enum.AgentCapability, configJSON string) (any, error) {
 	c := agent_capability.GetCapabilityConfigStruct(capType)
 	if c == nil {
 		return nil, nil

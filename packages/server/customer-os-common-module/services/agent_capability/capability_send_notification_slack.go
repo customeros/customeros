@@ -2,15 +2,15 @@ package agent_capability
 
 import (
 	"context"
-	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	"github.com/pkg/errors"
 
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type SendSlackNotificationCapability struct {
@@ -31,16 +31,20 @@ func (c *SendSlackNotificationCapability) ValidateInput(input SendSlackNotificat
 	return nil
 }
 
-func (c *SendSlackNotificationCapability) GetInput() any {
-	return &SendSlackNotificationInput{}
+func (c *SendSlackNotificationCapability) Type() enum.AgentCapability {
+	return enum.CapabilitySendSlackNotification
 }
 
-func (c *SendSlackNotificationCapability) GetConfig() any {
-	return &SendSlackNotificationConfig{}
+func (c *SendSlackNotificationCapability) GetInput() SendSlackNotificationInput {
+	return SendSlackNotificationInput{}
 }
 
-func (c *SendSlackNotificationCapability) GetOutput() any {
-	return &SendSlackNotificationOutput{}
+func (c *SendSlackNotificationCapability) GetConfig() SendSlackNotificationConfig {
+	return SendSlackNotificationConfig{}
+}
+
+func (c *SendSlackNotificationCapability) GetOutput() SendSlackNotificationOutput {
+	return SendSlackNotificationOutput{}
 }
 
 func NewSendSlackNotificationCapability(notificationService interfaces.NotificationService) *SendSlackNotificationCapability {
@@ -51,8 +55,7 @@ func NewSendSlackNotificationCapability(notificationService interfaces.Notificat
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapabilityExecution[SendSlackNotificationInput, SendSlackNotificationOutput, SendSlackNotificationConfig] = (*SendSlackNotificationCapability)(nil)
-	_ interfaces.AgentCapabilityUntyped                                                                                         = (*SendSlackNotificationCapability)(nil)
+	_ interfaces.AgentCapability[SendSlackNotificationInput, SendSlackNotificationOutput, SendSlackNotificationConfig] = (*SendSlackNotificationCapability)(nil)
 )
 
 type SendSlackNotificationInput struct {
@@ -108,20 +111,4 @@ func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data Send
 	result.Completed = true
 	tracing.LogObjectAsJson(span, "result", result)
 	return result, nil
-}
-
-// ExecuteUntyped implements the AgentCapabilityUntyped interface.
-// It casts the generic input and config to the specific types and delegates to the typed Execute method.
-func (c *SendSlackNotificationCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
-	typedInput, ok := input.(*SendSlackNotificationInput)
-	if !ok || typedInput == nil {
-		return nil, fmt.Errorf("invalid input type: expected SendSlackNotificationInput")
-	}
-
-	typedConfig, ok := config.(*SendSlackNotificationConfig)
-	if !ok || typedConfig == nil {
-		return nil, fmt.Errorf("invalid config type: expected SendSlackNotificationConfig")
-	}
-
-	return c.Execute(ctx, *typedInput, *typedConfig)
 }

@@ -3,14 +3,16 @@ package server
 import (
 	"bytes"
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/config"
-	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/constants"
-	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/service"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
@@ -18,10 +20,10 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/config"
+	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/constants"
+	"github.com/customeros/customeros/packages/server/customer-os-platform-admin-api/service"
 )
 
 type server struct {
@@ -57,7 +59,6 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	postgresRepositories := postgresRepository.InitRepositories(postgresDb)
 	postgresRepositories.Migration(postgresDb)
-	postgresRepositories.InitData(ctx, postgresRepositories)
 
 	// Setting up Neo4j
 	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.cfg.Common.Infrastructure.Neo4jConfig)
@@ -151,8 +152,8 @@ func registerPrometheusMetrics() {
 func prometheusMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func(start time.Time) {
-			//TODO implement metrics COS-314 https://linear.app/customer-os/issue/COS-314/add-prometheus-metrics-on-success-and-failed-webhook-rest-api-calls
-			//TODO count duration / success / failed requests
+			// TODO implement metrics COS-314 https://linear.app/customer-os/issue/COS-314/add-prometheus-metrics-on-success-and-failed-webhook-rest-api-calls
+			// TODO count duration / success / failed requests
 		}(time.Now())
 		c.Next()
 	}

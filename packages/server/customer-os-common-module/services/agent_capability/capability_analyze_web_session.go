@@ -25,8 +25,27 @@ type AnalyzeWebSessionCapability struct {
 	actionService        interfaces.ActionService
 }
 
-func (c *AnalyzeWebSessionCapability) ValidateConfig(config NoConfig) error {
-	return nil
+func NewAnalyzeWebSessionCapability(
+	postgresRepositories *postgres_repository.Repositories,
+	actionService interfaces.ActionService,
+) *AnalyzeWebSessionCapability {
+	return &AnalyzeWebSessionCapability{
+		postgresRepositories: postgresRepositories,
+		actionService:        actionService,
+	}
+}
+
+// Compile-time interface checks
+var (
+	_ interfaces.AgentCapability[AnalyzeWebSessionInput, AnalyzeWebSessionOutput, NoConfig] = (*AnalyzeWebSessionCapability)(nil)
+)
+
+func (c *AnalyzeWebSessionCapability) Type() enum.AgentCapability {
+	return enum.CapabilityAnalyzeWebSessionIntent
+}
+
+func (c *AnalyzeWebSessionCapability) GetInput() AnalyzeWebSessionInput {
+	return AnalyzeWebSessionInput{}
 }
 
 func (c *AnalyzeWebSessionCapability) ValidateInput(data AnalyzeWebSessionInput) error {
@@ -42,33 +61,17 @@ func (c *AnalyzeWebSessionCapability) ValidateInput(data AnalyzeWebSessionInput)
 	return nil
 }
 
-func (c *AnalyzeWebSessionCapability) GetInput() any {
-	return &AnalyzeWebSessionInput{}
+func (c *AnalyzeWebSessionCapability) GetConfig() NoConfig {
+	return NoConfig{}
 }
 
-func (c *AnalyzeWebSessionCapability) GetConfig() any {
-	return &NoConfig{}
+func (c *AnalyzeWebSessionCapability) ValidateConfig(config NoConfig) error {
+	return nil
 }
 
-func (c *AnalyzeWebSessionCapability) GetOutput() any {
-	return &AnalyzeWebSessionOutput{}
+func (c *AnalyzeWebSessionCapability) GetOutput() AnalyzeWebSessionOutput {
+	return AnalyzeWebSessionOutput{}
 }
-
-func NewAnalyzeWebSessionCapability(
-	postgresRepositories *postgres_repository.Repositories,
-	actionService interfaces.ActionService,
-) *AnalyzeWebSessionCapability {
-	return &AnalyzeWebSessionCapability{
-		postgresRepositories: postgresRepositories,
-		actionService:        actionService,
-	}
-}
-
-// Compile-time interface check
-var (
-	_ interfaces.AgentCapabilityExecution[AnalyzeWebSessionInput, AnalyzeWebSessionOutput, NoConfig] = (*AnalyzeWebSessionCapability)(nil)
-	_ interfaces.AgentCapabilityUntyped                                                              = (*AnalyzeWebSessionCapability)(nil)
-)
 
 type AnalyzeWebSessionInput struct {
 	SessionID      string `json:"sessionId"`
@@ -360,20 +363,4 @@ func (c *AnalyzeWebSessionCapability) buildTimelineMessage(ctx context.Context, 
 	}
 
 	return fullMessage.String(), nil
-}
-
-// ExecuteUntyped implements the AgentCapabilityUntyped interface.
-// It casts the generic input and config to the specific types and delegates to the typed Execute method.
-func (c *AnalyzeWebSessionCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
-	typedInput, ok := input.(*AnalyzeWebSessionInput)
-	if !ok || typedInput == nil {
-		return nil, fmt.Errorf("invalid input type for AnalyzeWebSessionCapability: expected AnalyzeWebSessionInput")
-	}
-
-	typedConfig, ok := config.(*NoConfig)
-	if !ok || typedConfig == nil {
-		return nil, fmt.Errorf("invalid config type for AnalyzeWebSessionCapability: expected NoConfig")
-	}
-
-	return c.Execute(ctx, *typedInput, *typedConfig)
 }

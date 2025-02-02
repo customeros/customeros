@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"strings"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
@@ -18,6 +17,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type ICPQualificationCapability struct {
@@ -40,10 +40,12 @@ type ICPQualificationConfig struct {
 	QualificationCriteria    QualificationCriteriaConfig    `json:"qualificationCriteria"`
 	DisqualificationCriteria DisqualificationCriteriaConfig `json:"disqualificationCriteria"`
 }
+
 type QualificationCriteriaConfig struct {
 	Value string `json:"value"`
 	Error string `json:"error"`
 }
+
 type DisqualificationCriteriaConfig struct {
 	Value string `json:"value"`
 	Error string `json:"error"`
@@ -76,23 +78,26 @@ type ICPAnswer struct {
 	Reasons []string `json:"reasons"`
 }
 
-func (c *ICPQualificationCapability) GetInput() any {
-	return &ICPQualificationInput{}
+func (c *ICPQualificationCapability) GetInput() ICPQualificationInput {
+	return ICPQualificationInput{}
 }
 
-func (c *ICPQualificationCapability) GetConfig() any {
-	return &ICPQualificationConfig{}
+func (c *ICPQualificationCapability) GetConfig() ICPQualificationConfig {
+	return ICPQualificationConfig{}
 }
 
-func (c *ICPQualificationCapability) GetOutput() any {
-	return &ICPQualificationOutput{}
+func (c *ICPQualificationCapability) GetOutput() ICPQualificationOutput {
+	return ICPQualificationOutput{}
 }
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapabilityExecution[ICPQualificationInput, ICPQualificationOutput, ICPQualificationConfig] = (*ICPQualificationCapability)(nil)
-	_ interfaces.AgentCapabilityUntyped                                                                          = (*ICPQualificationCapability)(nil)
+	_ interfaces.AgentCapability[ICPQualificationInput, ICPQualificationOutput, ICPQualificationConfig] = (*ICPQualificationCapability)(nil)
 )
+
+func (c *ICPQualificationCapability) Type() enum.AgentCapability {
+	return enum.CapabilityEvaluateCompanyICPFit
+}
 
 func (c *ICPQualificationCapability) ValidateConfig(config ICPQualificationConfig) error {
 	if config.QualificationCriteria.Value == "" {
@@ -290,20 +295,4 @@ func (c *ICPQualificationCapability) parseAnswer(ctx context.Context, answer str
 	}
 
 	return &result, nil
-}
-
-// ExecuteUntyped implements the AgentCapabilityUntyped interface.
-// It casts the generic input and config to the specific types and delegates to the typed Execute method.
-func (c *ICPQualificationCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
-	typedInput, ok := input.(*ICPQualificationInput)
-	if !ok || typedInput == nil {
-		return nil, fmt.Errorf("invalid input type: expected ICPQualificationInput")
-	}
-
-	typedConfig, ok := config.(*ICPQualificationConfig)
-	if !ok || typedConfig == nil {
-		return nil, fmt.Errorf("invalid config type: expected ICPQualificationConfig")
-	}
-
-	return c.Execute(ctx, *typedInput, *typedConfig)
 }

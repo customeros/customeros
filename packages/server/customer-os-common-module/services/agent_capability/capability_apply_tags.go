@@ -2,15 +2,16 @@ package agent_capability
 
 import (
 	"context"
-	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
 )
 
 type ApplyTagCapability struct {
@@ -48,16 +49,16 @@ func (c *ApplyTagCapability) ValidateInput(input ApplyTagInput) error {
 	return nil
 }
 
-func (c *ApplyTagCapability) GetInput() any {
-	return &ApplyTagInput{}
+func (c *ApplyTagCapability) GetInput() ApplyTagInput {
+	return ApplyTagInput{}
 }
 
-func (c *ApplyTagCapability) GetConfig() any {
-	return &ApplyTagConfig{}
+func (c *ApplyTagCapability) GetConfig() ApplyTagConfig {
+	return ApplyTagConfig{}
 }
 
-func (c *ApplyTagCapability) GetOutput() any {
-	return &ApplyTagOutput{}
+func (c *ApplyTagCapability) GetOutput() ApplyTagOutput {
+	return ApplyTagOutput{}
 }
 
 func NewApplyTagCapability(tagService interfaces.TagService) *ApplyTagCapability {
@@ -68,9 +69,12 @@ func NewApplyTagCapability(tagService interfaces.TagService) *ApplyTagCapability
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapabilityExecution[ApplyTagInput, ApplyTagOutput, ApplyTagConfig] = (*ApplyTagCapability)(nil)
-	_ interfaces.AgentCapabilityUntyped                                                  = (*ApplyTagCapability)(nil)
+	_ interfaces.AgentCapability[ApplyTagInput, ApplyTagOutput, ApplyTagConfig] = (*ApplyTagCapability)(nil)
 )
+
+func (c *ApplyTagCapability) Type() enum.AgentCapability {
+	return enum.CapabilityApplyTag
+}
 
 func (c *ApplyTagCapability) Execute(ctx context.Context, data ApplyTagInput, config ApplyTagConfig) (ApplyTagOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.Execute")
@@ -140,20 +144,4 @@ func (c *ApplyTagCapability) applyTag(ctx context.Context, entityType model.Enti
 	}
 
 	return nil
-}
-
-// ExecuteUntyped implements the AgentCapabilityUntyped interface.
-// It casts the generic input and config to the specific types and delegates to the typed Execute method.
-func (c *ApplyTagCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
-	typedInput, ok := input.(*ApplyTagInput)
-	if !ok || typedInput == nil {
-		return nil, fmt.Errorf("invalid input type: expected ApplyTagInput")
-	}
-
-	typedConfig, ok := config.(*ApplyTagConfig)
-	if !ok || typedConfig == nil {
-		return nil, fmt.Errorf("invalid config type: expected ApplyTagConfig")
-	}
-
-	return c.Execute(ctx, *typedInput, *typedConfig)
 }

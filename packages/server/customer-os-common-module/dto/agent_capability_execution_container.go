@@ -5,7 +5,7 @@ import "github.com/customeros/customeros/packages/server/customer-os-common-modu
 type CapabilityExecutionContainer struct {
 	AgentID               string
 	AgentExecutionID      string
-	Capability            enum.AgentCapabilityType
+	Capability            enum.AgentCapability
 	CapabilityExecutionID string
 	InputData             any
 	OutputData            any

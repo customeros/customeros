@@ -7,7 +7,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 )
 
-var agentCapabilityTypeByModel = map[model.CapabilityType]enum.AgentCapabilityType{
+var agentCapabilityTypeByModel = map[model.CapabilityType]enum.AgentCapability{
 	model.CapabilityTypeSendSLACkNotification:           enum.CapabilitySendSlackNotification,
 	model.CapabilityTypeAnalyzeWebSessionIntent:         enum.CapabilityAnalyzeWebSessionIntent,
 	model.CapabilityTypeCreateOrganization:              enum.CapabilityCreateAndEnrichCompany,
@@ -20,10 +20,10 @@ var agentCapabilityTypeByModel = map[model.CapabilityType]enum.AgentCapabilityTy
 
 var agentCapabilityTypeByValue = utils.ReverseMap(agentCapabilityTypeByModel)
 
-func MapAgentCapabilityTypeFromModel(input model.CapabilityType) enum.AgentCapabilityType {
+func MapAgentCapabilityTypeFromModel(input model.CapabilityType) enum.AgentCapability {
 	return agentCapabilityTypeByModel[input]
 }
 
-func MapAgentCapabilityTypeToModel(input enum.AgentCapabilityType) model.CapabilityType {
+func MapAgentCapabilityTypeToModel(input enum.AgentCapability) model.CapabilityType {
 	return agentCapabilityTypeByValue[input]
 }

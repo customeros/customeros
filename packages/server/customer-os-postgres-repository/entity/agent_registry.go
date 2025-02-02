@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"gorm.io/gorm"
@@ -14,13 +15,13 @@ type CapabilitiesConfig struct {
 }
 
 type Capability struct {
-	ID          string                   `json:"id"`
-	Name        string                   `json:"name"`
-	Type        enum.AgentCapabilityType `json:"type"`
-	Error       string                   `json:"error"`
-	Config      string                   `json:"config"`
-	Active      bool                     `json:"active"`
-	Description string                   `json:"description"`
+	ID          string               `json:"id"`
+	Name        string               `json:"name"`
+	Type        enum.AgentCapability `json:"type"`
+	Error       string               `json:"error"`
+	Config      string               `json:"config"`
+	Active      bool                 `json:"active"`
+	Description string               `json:"description"`
 }
 
 // Scan implements the sql.Scanner interface so GORM can read from the DB.

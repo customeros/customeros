@@ -2,28 +2,26 @@ package interfaces
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 )
 
-type AgentCapabilityRegistry interface {
-	RegisterCapability(ctx context.Context, capabilityRecord postgres_entity.AgentCapabilityRegistry) error
-	ExecuteCapability(ctx context.Context, executionContainer *dto.CapabilityExecutionContainer) error
-}
-
-type AgentCapabilityExecution[I any, O any, C any] interface {
+type AgentCapability[I, O, C any] interface {
+	AgentCapabilityUntyped
+	GetInput() I
+	GetConfig() C
+	GetOutput() O
 	Execute(ctx context.Context, inputData I, configData C) (outputData O, error error)
 	ValidateConfig(C) error
 	ValidateInput(I) error
 }
 
 type AgentCapabilityUntyped interface {
-	Capability
-	ExecuteUntyped(ctx context.Context, input any, config any) (any, error)
+	Type() enum.AgentCapability
 }
 
-type Capability interface {
-	GetInput() any
-	GetConfig() any
-	GetOutput() any
+type AgentCapabilityExecutionService interface {
+	Execute(ctx context.Context, capability postgres_entity.Capability, params map[string]any, executors map[enum.AgentCapability]AgentCapabilityUntyped) (map[string]any, error)
 }

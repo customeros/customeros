@@ -14,7 +14,7 @@ import (
 
 type AgentCapabilityRegistryRepository interface {
 	Create(ctx context.Context, agent postgres_entity.AgentCapabilityRegistry) (*postgres_entity.AgentCapabilityRegistry, error)
-	Find(ctx context.Context, agentID enum.AgentCapabilityType) (*postgres_entity.AgentCapabilityRegistry, error)
+	Find(ctx context.Context, agentID enum.AgentCapability) (*postgres_entity.AgentCapabilityRegistry, error)
 	FindAll(ctx context.Context) ([]postgres_entity.AgentCapabilityRegistry, error)
 }
 
@@ -43,7 +43,7 @@ func (r *agentCapabilityRegistryRepository) FindAll(ctx context.Context) ([]post
 	return capabilities, nil
 }
 
-func (r *agentCapabilityRegistryRepository) Find(ctx context.Context, capability enum.AgentCapabilityType) (*postgres_entity.AgentCapabilityRegistry, error) {
+func (r *agentCapabilityRegistryRepository) Find(ctx context.Context, capability enum.AgentCapability) (*postgres_entity.AgentCapabilityRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentCapabilityRegistryRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)

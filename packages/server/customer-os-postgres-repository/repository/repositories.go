@@ -1,8 +1,6 @@
 package postgres_repository
 
 import (
-	"context"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"gorm.io/gorm"
 
@@ -246,18 +244,6 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.UserEmailImportState{},
 		&postgres_entity.UserEmailImportStateHistory{},
 	)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (r *Repositories) InitData(ctx context.Context, postgresRepos *Repositories) {
-	err := r.AgentRegistryRepository.Initialize(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	err = r.FlowTransitionsRegistryRepository.Initialize(ctx)
 	if err != nil {
 		panic(err)
 	}

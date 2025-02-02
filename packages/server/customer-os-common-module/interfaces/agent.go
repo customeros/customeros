@@ -2,10 +2,10 @@ package interfaces
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 )
 
@@ -19,3 +19,5 @@ type AgentService interface {
 	SaveAgentExecutionCompleted(ctx context.Context, executionID string, goalAchieved bool) error
 	SaveAgentExecutionError(ctx context.Context, executionID, errorMessage string) error
 }
+
+type AgentRegistry interface{}
