@@ -14,7 +14,6 @@ type Repositories struct {
 	AttachmentWriteRepository                AttachmentWriteRepository
 	BankAccountReadRepository                BankAccountReadRepository
 	BankAccountWriteRepository               BankAccountWriteRepository
-	BillingProfileWriteRepository            BillingProfileWriteRepository
 	CommentReadRepository                    CommentReadRepository
 	CommentWriteRepository                   CommentWriteRepository
 	CommonReadRepository                     CommonReadRepository
@@ -108,7 +107,6 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		AttachmentWriteRepository:                NewAttachmentWriteRepository(driver, neo4jDatabase),
 		BankAccountReadRepository:                NewBankAccountReadRepository(driver, neo4jDatabase),
 		BankAccountWriteRepository:               NewBankAccountWriteRepository(driver, neo4jDatabase),
-		BillingProfileWriteRepository:            NewBillingProfileWriteRepository(driver, neo4jDatabase),
 		CommentReadRepository:                    NewCommentReadRepository(driver, neo4jDatabase),
 		CommentWriteRepository:                   NewCommentWriteRepository(driver, neo4jDatabase),
 		CommonReadRepository:                     NewCommonReadRepository(driver, neo4jDatabase),

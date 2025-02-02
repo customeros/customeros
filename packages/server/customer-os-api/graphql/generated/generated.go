@@ -13269,7 +13269,7 @@ type Attachment implements Node {
     size: Int64!
 
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
 }
 
@@ -13334,12 +13334,12 @@ input BankAccountUpdateInput {
     otherDetails:           String
 }`, BuiltIn: false},
 	{Name: "../schemas/billing_profile.graphqls", Input: `extend type Mutation {
-    billingProfile_Create(input: BillingProfileInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    billingProfile_Update(input: BillingProfileUpdateInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    billingProfile_LinkEmail(input: BillingProfileLinkEmailInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    billingProfile_UnlinkEmail(input: BillingProfileLinkEmailInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    billingProfile_LinkLocation(input: BillingProfileLinkLocationInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    billingProfile_UnlinkLocation(input: BillingProfileLinkLocationInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    billingProfile_Create(input: BillingProfileInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    billingProfile_Update(input: BillingProfileUpdateInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    billingProfile_LinkEmail(input: BillingProfileLinkEmailInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    billingProfile_UnlinkEmail(input: BillingProfileLinkEmailInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    billingProfile_LinkLocation(input: BillingProfileLinkLocationInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    billingProfile_UnlinkLocation(input: BillingProfileLinkLocationInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
 }
 
 type BillingProfile implements SourceFields & Node {
@@ -13349,7 +13349,7 @@ type BillingProfile implements SourceFields & Node {
     legalName:          String!
     taxId:              String!
     source:             DataSource!
-    sourceOfTruth:      DataSource!
+    sourceOfTruth:      DataSource! @deprecated
     appSource:          String!
 }
 
@@ -13418,7 +13418,7 @@ type Calendar {
     primary: Boolean!
 
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
 }
 
@@ -13434,7 +13434,7 @@ enum CalendarType {
     updatedAt: Time!
     createdBy: User @goField(forceResolver: true)
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 }`, BuiltIn: false},
@@ -15162,7 +15162,7 @@ type InteractionSession implements Node {
     channel: String
     channelData: String
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
     events: [InteractionEvent!]! @goField(forceResolver: true)
     attendedBy: [InteractionSessionParticipant!]! @goField(forceResolver: true)
@@ -15188,7 +15188,7 @@ type InteractionEvent implements Node {
     actions: [Action!] @goField(forceResolver: true)
     actionItems: [ActionItem!] @goField(forceResolver: true)
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
     eventType: String
     externalLinks:  [ExternalSystem!]! @goField(forceResolver: true)
@@ -15253,13 +15253,13 @@ interface Node {
 interface SourceFields implements Node {
     id: ID!
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
 }
 
 interface SourceFieldsInterface {
     source:         DataSource!
-    sourceOfTruth:  DataSource!
+    sourceOfTruth:  DataSource! @deprecated
     appSource:      String!
 }`, BuiltIn: false},
 	{Name: "../schemas/invoice.graphqls", Input: `extend type Query {
@@ -15455,7 +15455,7 @@ type Issue implements SourceFields & Node {
     followedBy: [IssueParticipant!]! @goField(forceResolver: true)
 
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
 
     """
@@ -15546,7 +15546,7 @@ type Location implements SourceFields & Node {
     createdAt: Time!
     updatedAt: Time!
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
 
     name: String
@@ -15623,7 +15623,7 @@ type LogEntry {
     createdBy: User @goField(forceResolver: true)
     tags: [Tag!]! @goField(forceResolver: true)
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 }
@@ -15783,7 +15783,7 @@ type Meeting implements Node {
     recording: Attachment @goField(forceResolver: true)
     appSource: String!
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     agenda: String
     agendaContentType: String
     externalSystem:  [ExternalSystem!]! @goField(forceResolver: true)
@@ -15820,7 +15820,7 @@ type Note {
     createdBy: User @goField(forceResolver: true)
     includes: [Attachment!]! @goField(forceResolver: true)
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
 }
 
@@ -15899,7 +15899,7 @@ type Opportunity implements MetadataInterface {
     """
     Deprecated, use metadata
     """
-    sourceOfTruth:      DataSource
+    sourceOfTruth:      DataSource @deprecated
     """
     Deprecated, use metadata
     """
@@ -16557,7 +16557,7 @@ enum IcpFit {
     orderInSession: Int64!
     engagedTime: Int64!
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
 }`, BuiltIn: false},
 	{Name: "../schemas/phone.graphqls", Input: `extend type Query {
@@ -16864,7 +16864,7 @@ type Social implements SourceFields & Node {
     createdAt:      Time!
     updatedAt:      Time!
     source:         DataSource!
-    sourceOfTruth:  DataSource!
+    sourceOfTruth:  DataSource! @deprecated
     appSource:      String!
 }
 
@@ -16999,7 +16999,7 @@ type TenantBillingProfile implements SourceFields & Node {
     createdAt:          Time!
     updatedAt:          Time!
     source:             DataSource!
-    sourceOfTruth:      DataSource!
+    sourceOfTruth:      DataSource! @deprecated
     appSource:          String!
     """
     Deprecated
@@ -17259,7 +17259,7 @@ type User {
     calendars: [Calendar!]! @goField(forceResolver: true)
 
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
 }
 

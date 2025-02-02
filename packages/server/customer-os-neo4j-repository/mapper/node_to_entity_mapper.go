@@ -307,24 +307,6 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *neo4j_entity.Organizati
 	return &organizationEntity
 }
 
-func MapDbNodeToBillingProfileEntity(dbNode *dbtype.Node) *neo4j_entity.BillingProfileEntity {
-	if dbNode == nil {
-		return &neo4j_entity.BillingProfileEntity{}
-	}
-	props := utils.GetPropsFromNode(*dbNode)
-	billingProfileEntity := neo4j_entity.BillingProfileEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		LegalName:     utils.GetStringPropOrEmpty(props, "legalName"),
-		TaxId:         utils.GetStringPropOrEmpty(props, "taxId"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-	}
-	return &billingProfileEntity
-}
-
 func MapDbNodeToTenantEntity(dbNode *dbtype.Node) *neo4j_entity.TenantEntity {
 	if dbNode == nil {
 		return &neo4j_entity.TenantEntity{}

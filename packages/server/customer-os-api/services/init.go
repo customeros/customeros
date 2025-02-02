@@ -14,7 +14,6 @@ import (
 	api_action_item "github.com/customeros/customeros/packages/server/customer-os-api/services/action_item"
 	api_bank_account "github.com/customeros/customeros/packages/server/customer-os-api/services/bank_account"
 	api_billable "github.com/customeros/customeros/packages/server/customer-os-api/services/billable"
-	api_billing_profile "github.com/customeros/customeros/packages/server/customer-os-api/services/billing_profile"
 	api_calendar "github.com/customeros/customeros/packages/server/customer-os-api/services/calendar"
 	api_comment "github.com/customeros/customeros/packages/server/customer-os-api/services/comment"
 	api_contact "github.com/customeros/customeros/packages/server/customer-os-api/services/contact"
@@ -54,7 +53,6 @@ type Services struct {
 	ActionItemService           cosapi_interfaces.ActionItemService
 	BankAccountService          cosapi_interfaces.BankAccountService
 	BillableService             cosapi_interfaces.BillableService
-	BillingProfileService       cosapi_interfaces.BillingProfileService
 	CalendarService             cosapi_interfaces.CalendarService
 	CommentService              cosapi_interfaces.CommentService
 	ContactService              cosapi_interfaces.ContactService
@@ -105,7 +103,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 		ActionItemService:           api_action_item.NewActionItemService(log, repositories),
 		BankAccountService:          api_bank_account.NewBankAccountService(log, repositories),
 		BillableService:             api_billable.NewBillableService(log, repositories),
-		BillingProfileService:       api_billing_profile.NewBillingProfileService(log, repositories, grpcClients),
 		CalendarService:             api_calendar.NewCalendarService(log, repositories),
 		CommentService:              api_comment.NewCommentService(log, repositories),
 		CountryService:              api_country.NewCountryService(log, repositories),

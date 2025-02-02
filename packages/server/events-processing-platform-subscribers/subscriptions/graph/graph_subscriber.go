@@ -8,7 +8,6 @@ import (
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	invoiceevents "github.com/customeros/customeros/packages/server/events-processing-platform/domain/invoice"
-	orgevents "github.com/customeros/customeros/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -24,21 +23,19 @@ import (
 )
 
 type GraphSubscriber struct {
-	log                      logger.Logger
-	db                       *esdb.Client
-	cfg                      *config.Config
-	organizationEventHandler *OrganizationEventHandler
-	invoiceEventHandler      *InvoiceEventHandler
-	services                 *service.Services
+	log                 logger.Logger
+	db                  *esdb.Client
+	cfg                 *config.Config
+	invoiceEventHandler *InvoiceEventHandler
+	services            *service.Services
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
 	return &GraphSubscriber{
-		log:                      log,
-		db:                       db,
-		cfg:                      cfg,
-		organizationEventHandler: NewOrganizationEventHandler(log, grpcClients, cache, services.CommonServices.Events, services.Neo4jRepositories, services.PostgresRepositories, services.CommonServices.CurrencyService),
-		invoiceEventHandler:      NewInvoiceEventHandler(log, grpcClients, services.Neo4jRepositories),
+		log:                 log,
+		db:                  db,
+		cfg:                 cfg,
+		invoiceEventHandler: NewInvoiceEventHandler(log, grpcClients, services.Neo4jRepositories),
 	}
 }
 
@@ -137,28 +134,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	defer cancel()
 
 	switch evt.GetEventType() {
-
-	case orgevents.OrganizationPhoneNumberLinkV1:
-		_ = s.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
-		return nil
-	case orgevents.OrganizationCreateBillingProfileV1:
-		_ = s.organizationEventHandler.OnCreateBillingProfile(ctx, evt)
-		return nil
-	case orgevents.OrganizationUpdateBillingProfileV1:
-		_ = s.organizationEventHandler.OnUpdateBillingProfile(ctx, evt)
-		return nil
-	case orgevents.OrganizationEmailLinkToBillingProfileV1:
-		_ = s.organizationEventHandler.OnEmailLinkedToBillingProfile(ctx, evt)
-		return nil
-	case orgevents.OrganizationEmailUnlinkFromBillingProfileV1:
-		_ = s.organizationEventHandler.OnEmailUnlinkedFromBillingProfile(ctx, evt)
-		return nil
-	case orgevents.OrganizationLocationLinkToBillingProfileV1:
-		_ = s.organizationEventHandler.OnLocationLinkedToBillingProfile(ctx, evt)
-		return nil
-	case orgevents.OrganizationLocationUnlinkFromBillingProfileV1:
-		_ = s.organizationEventHandler.OnLocationUnlinkedFromBillingProfile(ctx, evt)
-		return nil
 
 	case invoiceevents.InvoiceCreateForContractV1:
 		_ = s.invoiceEventHandler.OnInvoiceCreateForContractV1(ctx, evt)
