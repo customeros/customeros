@@ -200,7 +200,6 @@ func insertTenantDataWithNodeChecks(ctx context.Context, t *testing.T, tenant, u
 	})
 	neo4jtest.CreateTenantSettings(ctx, driver, tenant, neo4jentity.TenantSettingsEntity{})
 	neo4jtest.CreateTenantBillingProfile(ctx, driver, tenant, neo4jentity.TenantBillingProfileEntity{})
-	neo4jtest.CreateBillingProfile(ctx, driver, tenant, neo4jentity.BillingProfileEntity{})
 	neo4jtest.CreateBankAccount(ctx, driver, tenant, neo4jentity.BankAccountEntity{})
 	neo4jtest.CreateContact(ctx, driver, tenant, neo4jentity.ContactEntity{})
 	neo4jtest.CreateSocial(ctx, driver, tenant, neo4jentity.SocialEntity{})
