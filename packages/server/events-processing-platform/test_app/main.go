@@ -8,7 +8,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	commonpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"google.golang.org/grpc"
 )
 
@@ -19,8 +18,7 @@ var tenant = "customerosai"
 var orgId = "ceae019f-d1e3-49b3-87c5-35ebb68a5ff1"
 
 type Clients struct {
-	OrganizationClient organizationpb.OrganizationGrpcServiceClient
-	InvoiceClient      invoicepb.InvoiceGrpcServiceClient
+	InvoiceClient invoicepb.InvoiceGrpcServiceClient
 }
 
 var clients *Clients
@@ -31,8 +29,7 @@ func InitClients() {
 			interceptor.ApiKeyEnricher(grpcApiKey),
 		))
 	clients = &Clients{
-		OrganizationClient: organizationpb.NewOrganizationGrpcServiceClient(conn),
-		InvoiceClient:      invoicepb.NewInvoiceGrpcServiceClient(conn),
+		InvoiceClient: invoicepb.NewInvoiceGrpcServiceClient(conn),
 	}
 }
 
