@@ -6,105 +6,37 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 // BillingProfileCreate is the resolver for the billingProfile_Create field.
 func (r *mutationResolver) BillingProfileCreate(ctx context.Context, input model.BillingProfileInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BillingProfileCreate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	billingProfileId, err := r.Services.BillingProfileService.CreateBillingProfile(ctx, input.OrganizationID, utils.IfNotNilString(input.LegalName), utils.IfNotNilString(input.TaxID), input.CreatedAt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to create billing profile")
-		return "", nil
-	}
-	return billingProfileId, nil
+	panic(fmt.Errorf("not implemented: BillingProfileCreate - billingProfile_Create"))
 }
 
 // BillingProfileUpdate is the resolver for the billingProfile_Update field.
 func (r *mutationResolver) BillingProfileUpdate(ctx context.Context, input model.BillingProfileUpdateInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BillingProfileUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	err := r.Services.BillingProfileService.UpdateBillingProfile(ctx, input.OrganizationID, input.BillingProfileID, input.LegalName, input.TaxID, input.UpdatedAt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to update billing profile")
-		return "", nil
-	}
-	return input.BillingProfileID, nil
+	panic(fmt.Errorf("not implemented: BillingProfileUpdate - billingProfile_Update"))
 }
 
 // BillingProfileLinkEmail is the resolver for the billingProfile_LinkEmail field.
 func (r *mutationResolver) BillingProfileLinkEmail(ctx context.Context, input model.BillingProfileLinkEmailInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BillingProfileLinkEmail", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	err := r.Services.BillingProfileService.LinkEmailToBillingProfile(ctx, input.OrganizationID, input.BillingProfileID, input.EmailID, utils.IfNotNilBool(input.Primary))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to link email to billing profile")
-		return "", nil
-	}
-	return input.BillingProfileID, nil
+	panic(fmt.Errorf("not implemented: BillingProfileLinkEmail - billingProfile_LinkEmail"))
 }
 
 // BillingProfileUnlinkEmail is the resolver for the billingProfile_UnlinkEmail field.
 func (r *mutationResolver) BillingProfileUnlinkEmail(ctx context.Context, input model.BillingProfileLinkEmailInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BillingProfileUnlinkEmail", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	err := r.Services.BillingProfileService.UnlinkEmailFromBillingProfile(ctx, input.OrganizationID, input.BillingProfileID, input.EmailID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to unlink email from billing profile")
-		return "", nil
-	}
-	return input.BillingProfileID, nil
+	panic(fmt.Errorf("not implemented: BillingProfileUnlinkEmail - billingProfile_UnlinkEmail"))
 }
 
 // BillingProfileLinkLocation is the resolver for the billingProfile_LinkLocation field.
 func (r *mutationResolver) BillingProfileLinkLocation(ctx context.Context, input model.BillingProfileLinkLocationInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BillingProfileLinkLocation", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	err := r.Services.BillingProfileService.LinkLocationToBillingProfile(ctx, input.OrganizationID, input.BillingProfileID, input.LocationID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to link location to billing profile")
-		return "", nil
-	}
-	return input.BillingProfileID, nil
+	panic(fmt.Errorf("not implemented: BillingProfileLinkLocation - billingProfile_LinkLocation"))
 }
 
 // BillingProfileUnlinkLocation is the resolver for the billingProfile_UnlinkLocation field.
 func (r *mutationResolver) BillingProfileUnlinkLocation(ctx context.Context, input model.BillingProfileLinkLocationInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.BillingProfileUnlinkLocation", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	err := r.Services.BillingProfileService.UnlinkLocationFromBillingProfile(ctx, input.OrganizationID, input.BillingProfileID, input.LocationID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to unlink location from billing profile")
-		return "", nil
-	}
-	return input.BillingProfileID, nil
+	panic(fmt.Errorf("not implemented: BillingProfileUnlinkLocation - billingProfile_UnlinkLocation"))
 }

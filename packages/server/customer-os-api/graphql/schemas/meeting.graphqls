@@ -103,7 +103,7 @@ type Meeting implements Node {
     recording: Attachment @goField(forceResolver: true)
     appSource: String!
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     agenda: String
     agendaContentType: String
     externalSystem:  [ExternalSystem!]! @goField(forceResolver: true)

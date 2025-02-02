@@ -1,10 +1,10 @@
 extend type Mutation {
-    billingProfile_Create(input: BillingProfileInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    billingProfile_Update(input: BillingProfileUpdateInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    billingProfile_LinkEmail(input: BillingProfileLinkEmailInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    billingProfile_UnlinkEmail(input: BillingProfileLinkEmailInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    billingProfile_LinkLocation(input: BillingProfileLinkLocationInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
-    billingProfile_UnlinkLocation(input: BillingProfileLinkLocationInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant
+    billingProfile_Create(input: BillingProfileInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    billingProfile_Update(input: BillingProfileUpdateInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    billingProfile_LinkEmail(input: BillingProfileLinkEmailInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    billingProfile_UnlinkEmail(input: BillingProfileLinkEmailInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    billingProfile_LinkLocation(input: BillingProfileLinkLocationInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    billingProfile_UnlinkLocation(input: BillingProfileLinkLocationInput!): ID!  @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
 }
 
 type BillingProfile implements SourceFields & Node {
@@ -14,7 +14,7 @@ type BillingProfile implements SourceFields & Node {
     legalName:          String!
     taxId:              String!
     source:             DataSource!
-    sourceOfTruth:      DataSource!
+    sourceOfTruth:      DataSource! @deprecated
     appSource:          String!
 }
 

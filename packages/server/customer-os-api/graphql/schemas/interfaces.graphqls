@@ -28,12 +28,12 @@ interface Node {
 interface SourceFields implements Node {
     id: ID!
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
 }
 
 interface SourceFieldsInterface {
     source:         DataSource!
-    sourceOfTruth:  DataSource!
+    sourceOfTruth:  DataSource! @deprecated
     appSource:      String!
 }

@@ -24,7 +24,7 @@ type LogEntry {
     createdBy: User @goField(forceResolver: true)
     tags: [Tag!]! @goField(forceResolver: true)
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 }

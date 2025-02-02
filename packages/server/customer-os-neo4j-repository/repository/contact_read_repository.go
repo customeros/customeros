@@ -829,8 +829,10 @@ func (r *contactReadRepository) GetDistinctContactRegions(ctx context.Context, t
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetDistinctContactRegions")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {active:true, name: $tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact_%s)--(l:Location) return distinct l.region`, tenant)
+	cypher := `MATCH (t:Tenant {active:true, name: $tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(l:Location) 
+			WHERE c.hide = false AND l.region IS NOT NULL AND l.region <> '' RETURN DISTINCT l.region`
 	params := map[string]any{
 		"tenant": tenant,
 	}
@@ -859,8 +861,10 @@ func (r *contactReadRepository) GetDistinctContactCities(ctx context.Context, te
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetDistinctContactCities")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {active:true, name: $tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact_%s)--(l:Location) return distinct l.locality`, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {active:true, name: $tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact_%s)--(l:Location) 
+				WHERE c.hide = false and l.locality IS NOT NULL AND l.locality <> '' RETURN distinct l.locality`, tenant)
 	params := map[string]any{
 		"tenant": tenant,
 	}

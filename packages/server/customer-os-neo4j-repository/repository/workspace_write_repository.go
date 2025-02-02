@@ -2,6 +2,7 @@ package neo4j_repository
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -13,7 +14,7 @@ import (
 )
 
 type WorkspaceWriteRepository interface {
-	Merge(ctx context.Context, workspace neo4j_entity.WorkspaceEntity) (*dbtype.Node, error)
+	Merge(ctx context.Context, tenant string, workspace neo4j_entity.WorkspaceEntity) (*dbtype.Node, error)
 }
 
 type workspaceWriteRepository struct {
@@ -28,33 +29,36 @@ func NewWorkspaceWriteRepository(driver *neo4j.DriverWithContext, database strin
 	}
 }
 
-func (r *workspaceWriteRepository) Merge(ctx context.Context, workspace neo4j_entity.WorkspaceEntity) (*dbtype.Node, error) {
+func (r *workspaceWriteRepository) Merge(ctx context.Context, tenant string, workspace neo4j_entity.WorkspaceEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.TagTenant(span, tenant)
+
+	cypher := `MERGE (w:Workspace {name:$name, provider:$provider}) 
+		 ON CREATE SET 
+		  w.id=randomUUID(), 
+		  w.createdAt=datetime(), 
+		  w.updatedAt=datetime(), 
+		  w.source=$source, 
+		  w.sourceOfTruth=$sourceOfTruth, 
+		  w.appSource=$appSource 
+		 RETURN w`
+	params := map[string]any{
+		"name":          workspace.Name,
+		"provider":      workspace.Provider,
+		"source":        utils.StringFirstNonEmpty(workspace.Source.String(), neo4j_entity.DataSourceOpenline.String()),
+		"sourceOfTruth": utils.StringFirstNonEmpty(workspace.SourceOfTruth.String(), neo4j_entity.DataSourceOpenline.String()),
+		"appSource":     workspace.AppSource,
+	}
+	tracing.LogObjectAsJson(span, "params", params)
+	span.LogFields(log.String("cypher", cypher))
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MERGE (w:Workspace {name:$name, provider:$provider}) " +
-		" ON CREATE SET " +
-		"  w.id=randomUUID(), " +
-		"  w.createdAt=datetime(), " +
-		"  w.updatedAt=datetime(), " +
-		"  w.source=$source, " +
-		"  w.sourceOfTruth=$sourceOfTruth, " +
-		"  w.appSource=$appSource " +
-		" RETURN w"
-
 	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"name":          workspace.Name,
-				"provider":      workspace.Provider,
-				"source":        utils.StringFirstNonEmpty(workspace.Source.String(), neo4j_entity.DataSourceOpenline.String()),
-				"sourceOfTruth": utils.StringFirstNonEmpty(workspace.SourceOfTruth.String(), neo4j_entity.DataSourceOpenline.String()),
-				"appSource":     workspace.AppSource,
-			})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
 		return nil, err

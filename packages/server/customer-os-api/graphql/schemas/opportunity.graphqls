@@ -56,7 +56,7 @@ type Opportunity implements MetadataInterface {
     """
     Deprecated, use metadata
     """
-    sourceOfTruth:      DataSource
+    sourceOfTruth:      DataSource @deprecated
     """
     Deprecated, use metadata
     """

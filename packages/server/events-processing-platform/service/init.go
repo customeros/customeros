@@ -14,8 +14,7 @@ type Services struct {
 	RequestHandler *requestHandler // generic grpc request handler
 
 	// GRPC services
-	OrganizationService *organizationService
-	InvoiceService      *invoiceService
+	InvoiceService *invoiceService
 }
 
 func InitServices(
@@ -28,9 +27,6 @@ func InitServices(
 
 	services.es = aggregateStore
 	services.RequestHandler = NewRequestHandler(log, aggregateStore, &cfg.Utils)
-
-	services.OrganizationService = NewOrganizationService(log, aggregateStore, cfg, services.RequestHandler)
-
 	services.InvoiceService = NewInvoiceService(
 		repositories,
 		log,

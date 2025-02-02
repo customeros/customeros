@@ -4,7 +4,6 @@ import (
 	"github.com/customeros/customeros/packages/server/events-processing-platform/interceptors"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/service"
 	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-	organizationpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/customeros/customeros/packages/server/events/constants"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -58,6 +57,5 @@ func (server *Server) NewEventProcessorGrpcServer() (func() error, *grpc.Server,
 }
 
 func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
-	organizationpb.RegisterOrganizationGrpcServiceServer(grpcServer, services.OrganizationService)
 	invoicepb.RegisterInvoiceGrpcServiceServer(grpcServer, services.InvoiceService)
 }

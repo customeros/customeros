@@ -13,7 +13,7 @@ type Social implements SourceFields & Node {
     createdAt:      Time!
     updatedAt:      Time!
     source:         DataSource!
-    sourceOfTruth:  DataSource!
+    sourceOfTruth:  DataSource! @deprecated
     appSource:      String!
 }
 

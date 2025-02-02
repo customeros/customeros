@@ -48,7 +48,7 @@ func (s *workspaceService) CheckEmailBelongsToTenant(ctx context.Context, email 
 }
 
 func (s *workspaceService) MergeToTenant(ctx context.Context, workspaceEntity neo4jentity.WorkspaceEntity, tenant string) (bool, error) {
-	_, err := s.neo4j.WorkspaceWriteRepository.Merge(ctx, workspaceEntity)
+	_, err := s.neo4j.WorkspaceWriteRepository.Merge(ctx, tenant, workspaceEntity)
 	if err != nil {
 		return false, fmt.Errorf("MergeToTenant: %w", err)
 	}

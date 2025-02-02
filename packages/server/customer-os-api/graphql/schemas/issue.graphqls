@@ -22,7 +22,7 @@ type Issue implements SourceFields & Node {
     followedBy: [IssueParticipant!]! @goField(forceResolver: true)
 
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
 
     """

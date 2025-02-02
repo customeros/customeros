@@ -3,12 +3,12 @@ package api_customfields
 import (
 	"context"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/entity"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -144,13 +144,12 @@ func (s *customFieldService) DeleteByIdFromContact(ctx context.Context, contactI
 func (s *customFieldService) mapDbNodeToCustomFieldEntity(node dbtype.Node) *entity.CustomFieldEntity {
 	props := utils.GetPropsFromNode(node)
 	result := entity.CustomFieldEntity{
-		Id:            utils.StringPtr(utils.GetStringPropOrEmpty(props, "id")),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		DataType:      utils.GetStringPropOrEmpty(props, "datatype"),
-		Source:        neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Id:        utils.StringPtr(utils.GetStringPropOrEmpty(props, "id")),
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		DataType:  utils.GetStringPropOrEmpty(props, "datatype"),
+		Source:    neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Value: model.AnyTypeValue{
 			Str:   utils.GetStringPropOrNil(props, entity.CustomFieldTextProperty.String()),
 			Time:  utils.GetTimePropOrNil(props, entity.CustomFieldTimeProperty.String()),

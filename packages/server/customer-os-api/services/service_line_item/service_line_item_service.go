@@ -237,7 +237,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 
 	sliDataFields := data_fields.SLIFields{
 		ContractId: utils.StringPtr(contractEntity.Id),
-		ParentId:   utils.StringPtr(baseServiceLineItemEntity.ID),
+		ParentId:   utils.StringPtr(baseServiceLineItemEntity.ParentID),
 		SkuId:      utils.StringPtr(utils.StringFirstNonEmpty(data.SkuId, baseServiceLineItemEntity.SkuId)),
 		Name:       utils.StringPtr(utils.StringFirstNonEmpty(data.Name, baseServiceLineItemEntity.Name)),
 		Quantity:   utils.Int64Ptr(data.Quantity),

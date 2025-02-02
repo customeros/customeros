@@ -22,7 +22,7 @@ type InteractionSession implements Node {
     channel: String
     channelData: String
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
     events: [InteractionEvent!]! @goField(forceResolver: true)
     attendedBy: [InteractionSessionParticipant!]! @goField(forceResolver: true)
@@ -48,7 +48,7 @@ type InteractionEvent implements Node {
     actions: [Action!] @goField(forceResolver: true)
     actionItems: [ActionItem!] @goField(forceResolver: true)
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
     eventType: String
     externalLinks:  [ExternalSystem!]! @goField(forceResolver: true)

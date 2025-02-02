@@ -9,6 +9,6 @@ type PageView implements Node & SourceFields {
     orderInSession: Int64!
     engagedTime: Int64!
     source: DataSource!
-    sourceOfTruth: DataSource!
+    sourceOfTruth: DataSource! @deprecated
     appSource: String!
 }
