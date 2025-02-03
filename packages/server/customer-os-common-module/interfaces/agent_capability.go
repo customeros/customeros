@@ -12,7 +12,6 @@ type AgentCapability[I, O, C any] interface {
 	AgentCapabilityUntyped
 	GetInput() I
 	GetConfig() C
-	GetOutput() O
 	Execute(ctx context.Context, inputData I, configData C) (outputData O, error error)
 	ValidateConfig(C) error
 	ValidateInput(I) error
@@ -20,6 +19,7 @@ type AgentCapability[I, O, C any] interface {
 
 type AgentCapabilityUntyped interface {
 	Type() enum.AgentCapability
+	GetConfig() any
 }
 
 type AgentCapabilityExecutionService interface {

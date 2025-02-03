@@ -121,10 +121,6 @@ func (c *SendWebVisitorSlackNotificationCapability) GetConfig() SendWebVisitorSl
 	return SendWebVisitorSlackNotificationConfig{}
 }
 
-func (c *SendWebVisitorSlackNotificationCapability) GetOutput() SendWebVisitorSlackNotificationOutput {
-	return SendWebVisitorSlackNotificationOutput{}
-}
-
 func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context, data SendWebVisitorSlackNotificationInput, config SendWebVisitorSlackNotificationConfig) (SendWebVisitorSlackNotificationOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendWebVisitorSlackNotificationCapability.Execute")
 	defer span.Finish()

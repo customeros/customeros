@@ -23,14 +23,20 @@ import (
 )
 
 type agentService struct {
-	postgresRepositories *postgresrepository.Repositories
-	events               *events.EventsService
+	postgresRepositories     *postgresrepository.Repositories
+	events                   *events.EventsService
+	agentCapabilityExecutors map[enum.AgentCapability]interfaces.AgentCapabilityUntyped
 }
 
-func NewAgentService(postgresRepositories *postgresrepository.Repositories, events *events.EventsService) interfaces.AgentService {
+func NewAgentService(
+	postgresRepositories *postgresrepository.Repositories,
+	events *events.EventsService,
+	executors map[enum.AgentCapability]interfaces.AgentCapabilityUntyped,
+) interfaces.AgentService {
 	return &agentService{
-		postgresRepositories: postgresRepositories,
-		events:               events,
+		postgresRepositories:     postgresRepositories,
+		events:                   events,
+		agentCapabilityExecutors: executors,
 	}
 }
 
@@ -96,7 +102,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	agent := postgresentity.Agent{
 		Type:        agentType,
 		Tenant:      tenant,
-		Name:        agentRegistry.Name,
+		Name:        agentRegistry.Nam,
 		Goal:        agentRegistry.Goal,
 		IsActive:    false,
 		VisibleInUI: true,
@@ -124,7 +130,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		if masterCapability.Config != "" {
 			agentCapability.Config = masterCapability.Config
 		} else {
-			config := agent_capability.GetCapabilityConfigStruct(agentCapability.Type)
+			config := agent_capability.Gen(agentCapability.Type)
 			if config != nil {
 				configBytes, err := json.Marshal(config)
 				if err != nil {

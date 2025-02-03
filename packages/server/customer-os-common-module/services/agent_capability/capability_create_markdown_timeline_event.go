@@ -42,10 +42,6 @@ func (c *CreateMarkdownTimelineEventCapability) GetConfig() NoConfig {
 	return NoConfig{}
 }
 
-func (c *CreateMarkdownTimelineEventCapability) GetOutput() CreateMarkdownTimelineEventOutput {
-	return CreateMarkdownTimelineEventOutput{}
-}
-
 // Compile-time interface check
 var (
 	_ interfaces.AgentCapability[CreateMarkdownTimelineEventInput, CreateMarkdownTimelineEventOutput, NoConfig] = (*CreateMarkdownTimelineEventCapability)(nil)

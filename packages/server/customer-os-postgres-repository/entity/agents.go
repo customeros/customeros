@@ -2,12 +2,26 @@ package postgres_entity
 
 import (
 	"encoding/json"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"gorm.io/gorm"
 )
+
+type CapabilitiesConfig struct {
+	Capabilities []Capability `json:"capabilities"`
+}
+
+type Capability struct {
+	ID          string               `json:"id"`
+	Name        string               `json:"name"`
+	Type        enum.AgentCapability `json:"type"`
+	Error       string               `json:"error"`
+	Config      string               `json:"config"`
+	Active      bool                 `json:"active"`
+	Description string               `json:"description"`
+}
 
 type Agent struct {
 	ID                 string             `gorm:"primaryKey;type:varchar(32)" json:"id"`

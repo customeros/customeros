@@ -86,10 +86,6 @@ func (c *ICPQualificationCapability) GetConfig() ICPQualificationConfig {
 	return ICPQualificationConfig{}
 }
 
-func (c *ICPQualificationCapability) GetOutput() ICPQualificationOutput {
-	return ICPQualificationOutput{}
-}
-
 // Compile-time interface check
 var (
 	_ interfaces.AgentCapability[ICPQualificationInput, ICPQualificationOutput, ICPQualificationConfig] = (*ICPQualificationCapability)(nil)

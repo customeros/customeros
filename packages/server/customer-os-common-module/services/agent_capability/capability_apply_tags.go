@@ -57,10 +57,6 @@ func (c *ApplyTagCapability) GetConfig() ApplyTagConfig {
 	return ApplyTagConfig{}
 }
 
-func (c *ApplyTagCapability) GetOutput() ApplyTagOutput {
-	return ApplyTagOutput{}
-}
-
 func NewApplyTagCapability(tagService interfaces.TagService) *ApplyTagCapability {
 	return &ApplyTagCapability{
 		tagService: tagService,
