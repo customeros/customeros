@@ -32,21 +32,77 @@ func (f *agentCapabilityExecutionService) Execute(
 
 	switch capability.Type {
 	case enum.CapabilityAnalyzeWebSessionIntent:
-		executor, ok := GetTypedExecutor[AnalyzeWebSessionInput, AnalyzeWebSessionOutput, NoConfig](
-			executors,
-			capability.Type,
-		)
+		executor, ok := GetTypedExecutor[AnalyzeWebSessionInput, AnalyzeWebSessionOutput, NoConfig](executors, capability.Type)
 		if !ok {
-			err := fmt.Errorf("failed to get typed executor for AnalyzeWebSession")
-			tracing.TraceErr(span, err)
-			return nil, err
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityAnalyzeWebSessionIntent)
+		}
+		return executeCapability(ctx, capability, params, executor)
+
+	case enum.CapabilityApplyTag:
+		executor, ok := GetTypedExecutor[ApplyTagInput, ApplyTagOutput, ApplyTagConfig](executors, capability.Type)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityApplyTag)
+		}
+		return executeCapability(ctx, capability, params, executor)
+
+	case enum.CapabilityCreateAndEnrichCompany:
+		executor, ok := GetTypedExecutor[CreateOrganizationInput, CreateOrganizationOutput, NoConfig](executors, capability.Type)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityCreateAndEnrichCompany)
+		}
+		return executeCapability(ctx, capability, params, executor)
+
+	case enum.CapabilityCreateMarkdownTimelineEvent:
+		executor, ok := GetTypedExecutor[CreateMarkdownTimelineEventInput, CreateMarkdownTimelineEventOutput, NoConfig](executors, capability.Type)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityCreateMarkdownTimelineEvent)
+		}
+		return executeCapability(ctx, capability, params, executor)
+
+	case enum.CapabilityEvaluateCompanyICPFit:
+		executor, ok := GetTypedExecutor[ICPQualificationInput, ICPQualificationOutput, ICPQualificationConfig](executors, capability.Type)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityEvaluateCompanyICPFit)
+		}
+		return executeCapability(ctx, capability, params, executor)
+
+	case enum.CapabilityIdentifyWebVisitor:
+		executor, ok := GetTypedExecutor[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorOutput, IdentifyWebsiteVisitorConfig](executors, capability.Type)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityIdentifyWebVisitor)
+		}
+		return executeCapability(ctx, capability, params, executor)
+
+	case enum.CapabilitySendSlackNotification:
+		executor, ok := GetTypedExecutor[SendSlackNotificationInput, SendSlackNotificationOutput, SendSlackNotificationConfig](executors, capability.Type)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendSlackNotification)
+		}
+		return executeCapability(ctx, capability, params, executor)
+
+	case enum.CapabilitySendWebVisitorSlackNotification:
+		executor, ok := GetTypedExecutor[SendWebVisitorSlackNotificationInput, SendWebVisitorSlackNotificationOutput, SendWebVisitorSlackNotificationConfig](executors, capability.Type)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
 		}
 		return executeCapability(ctx, capability, params, executor)
 
 	default:
-
-		return nil, nil
+		err := fmt.Errorf("capability not configured")
+		span.LogKV("capability", capability.Type)
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
+}
+
+func (f *agentCapabilityExecutionService) handleGetTypedExecutorError(ctx context.Context, capability enum.AgentCapability) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "agentCapabilityExecutionService.handleGetTypedExecutorError")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	err := fmt.Errorf("failed to get typed executor for %s", capability.String())
+	tracing.TraceErr(span, err)
+	return err
 }
 
 func executeCapability[I, O, C any](
