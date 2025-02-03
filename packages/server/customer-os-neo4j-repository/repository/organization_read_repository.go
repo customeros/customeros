@@ -884,7 +884,7 @@ func (r *organizationReadRepository) GetAllForSlackChannels(ctx context.Context,
 
 	cypher := `MATCH (t:Tenant {name:$tenant})-[:ORGANIZATION_BELONGS_TO_TENANT]->(o:Organization)
 				WHERE o.slackChannelId IN $slackChannelIds
-				RETURN o, i.id`
+				RETURN o, o.slackChannelId`
 	params := map[string]any{
 		"tenant":          tenant,
 		"slackChannelIds": slackChannelIds,
