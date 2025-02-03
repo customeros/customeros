@@ -14,6 +14,8 @@ type ContractService interface {
 	IsInitialized() bool
 
 	GetById(ctx context.Context, contactId string) (*neo4j_entity.ContractEntity, error)
+	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*neo4j_entity.ContractEntities, error)
+
 	Save(ctx context.Context, contactId *string, dataFields data_fields.ContractSaveFields) (string, error)
 	SoftDelete(ctx context.Context, contractId string) error
 	RefreshContractStatus(ctx context.Context, contractId string) error

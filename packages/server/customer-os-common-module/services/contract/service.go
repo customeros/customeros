@@ -1160,3 +1160,22 @@ func daysBetween(start, end time.Time) int {
 	duration := end.Sub(start)
 	return int(duration.Hours() / 24)
 }
+
+func (s *contractService) GetContractsForOrganizations(ctx context.Context, organizationIDs []string) (*neo4jentity.ContractEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetContractsForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("organizationIDs", organizationIDs))
+
+	contracts, err := s.neo4j.ContractReadRepository.GetContractsForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
+	if err != nil {
+		return nil, err
+	}
+	contractEntities := make(neo4jentity.ContractEntities, 0, len(contracts))
+	for _, v := range contracts {
+		contractEntity := neo4jmapper.MapDbNodeToContractEntity(v.Node)
+		contractEntity.DataloaderKey = v.LinkedNodeId
+		contractEntities = append(contractEntities, *contractEntity)
+	}
+	return &contractEntities, nil
+}

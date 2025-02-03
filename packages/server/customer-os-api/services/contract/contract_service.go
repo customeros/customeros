@@ -52,6 +52,7 @@ func NewContractService(
 		grpcClients:    grpcClients,
 		tenantSettings: tenantSettings,
 		contract:       contract,
+		opportunity:    opportunity,
 	}
 }
 
@@ -346,24 +347,6 @@ func (s *contractService) GetById(ctx context.Context, contractId string) (*neo4
 	} else {
 		return neo4jmapper.MapDbNodeToContractEntity(contractDbNode), nil
 	}
-}
-
-func (s *contractService) GetContractsForOrganizations(ctx context.Context, organizationIDs []string) (*neo4jentity.ContractEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.GetContractsForOrganizations")
-	defer span.Finish()
-	span.LogFields(log.Object("organizationIDs", organizationIDs))
-
-	contracts, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIDs)
-	if err != nil {
-		return nil, err
-	}
-	contractEntities := make(neo4jentity.ContractEntities, 0, len(contracts))
-	for _, v := range contracts {
-		contractEntity := neo4jmapper.MapDbNodeToContractEntity(v.Node)
-		contractEntity.DataloaderKey = v.LinkedNodeId
-		contractEntities = append(contractEntities, *contractEntity)
-	}
-	return &contractEntities, nil
 }
 
 func (s *contractService) GetContractsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.ContractEntities, error) {
