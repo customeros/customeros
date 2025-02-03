@@ -11,6 +11,7 @@ import { action, computed, observable, runInAction } from 'mobx';
 import {
   Social,
   Domain,
+  IcpFit,
   FundingRound,
   type Contract,
   OnboardingStatus,
@@ -373,6 +374,8 @@ export class Organization extends Entity<OrganizationDatum> {
         iconUrl: '',
         wrongIndustry: false,
         public: false,
+        icpFit: IcpFit.IcpNotSet,
+        icpFitReasons: [],
         stage: OrganizationStage.Target,
         relationship: OrganizationRelationship.Prospect,
         lastFundingRound: FundingRound.PreSeed,

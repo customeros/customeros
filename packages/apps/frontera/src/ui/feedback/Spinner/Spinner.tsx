@@ -11,6 +11,7 @@ import { cva, VariantProps } from 'class-variance-authority';
 const spinnerSize = cva([], {
   variants: {
     size: {
+      xs: ['w-3', 'h-3'],
       sm: ['w-4', 'h-4'],
       md: ['w-8', 'h-8'],
       lg: ['w-10', 'h-10'],
