@@ -2,10 +2,10 @@ package dataloader
 
 import (
 	"context"
-	"github.com/graph-gophers/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -98,8 +98,20 @@ func (i *Loaders) GetOrganizationForInvoice(ctx context.Context, invoiceId strin
 	return result.(*neo4jentity.OrganizationEntity), nil
 }
 
+func (i *Loaders) GetOrganizationForContract(ctx context.Context, contractId string) (*neo4jentity.OrganizationEntity, error) {
+	thunk := i.OrganizationForContract.Load(ctx, dataloader.StringKey(contractId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*neo4jentity.OrganizationEntity), nil
+}
+
 func (i *Loaders) GetOrganizationForSlackChannel(ctx context.Context, slackChannelId string) (*neo4jentity.OrganizationEntity, error) {
-	thunk := i.OrganizationForInvoice.Load(ctx, dataloader.StringKey(slackChannelId))
+	thunk := i.OrganizationForSlackChannel.Load(ctx, dataloader.StringKey(slackChannelId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
@@ -471,6 +483,52 @@ func (b *organizationBatcher) getOrganizationsForInvoices(ctx context.Context, k
 	return results
 }
 
+func (b *organizationBatcher) getOrganizationsForContracts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForContracts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	organizationEntities, err := b.commonOrganizationService.GetOrganizationsForContracts(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get organizations for contracts")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	organizationEntityByContractId := make(map[string]neo4jentity.OrganizationEntity)
+	for _, val := range *organizationEntities {
+		organizationEntityByContractId[val.DataloaderKey] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for jobRoleId, _ := range organizationEntityByContractId {
+		if ix, ok := keyOrder[jobRoleId]; ok {
+			val := organizationEntityByContractId[jobRoleId]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, jobRoleId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Int("result.length", len(results)))
+
+	return results
+}
+
 func (b *organizationBatcher) getOrganizationsForSlackChannels(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForSlackChannels")
 	defer span.Finish()
@@ -484,7 +542,7 @@ func (b *organizationBatcher) getOrganizationsForSlackChannels(ctx context.Conte
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get organizations for invoices")}}
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get organizations for slack channels")}}
 		}
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}

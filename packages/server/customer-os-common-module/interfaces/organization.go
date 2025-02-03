@@ -37,6 +37,7 @@ type OrganizationService interface {
 	UpdateDerivedData(ctx context.Context, organizationId string) error
 	UpdateRenewalSummary(ctx context.Context, organizationId string) error
 
+	GetOrganizationsForContracts(ctx context.Context, contractIds []string) (*neo4j_entity.OrganizationEntities, error)
 	GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error)
 	GetMergedOrganizationIds(ctx context.Context, mergedAfter time.Time) ([]string, error)
 	GetOrganizationsByStage(ctx context.Context, stage enum.OrganizationStage) (*neo4j_entity.OrganizationEntities, error)

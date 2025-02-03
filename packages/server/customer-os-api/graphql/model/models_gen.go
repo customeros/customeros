@@ -586,6 +586,7 @@ type Contract struct {
 	Invoices                []*Invoice         `json:"invoices"`
 	UpcomingInvoices        []*Invoice         `json:"upcomingInvoices"`
 	Ltv                     float64            `json:"ltv"`
+	Organization            *Organization      `json:"organization"`
 	// Deprecated, use committedPeriodInMonths instead.
 	CommittedPeriods *int64 `json:"committedPeriods,omitempty"`
 	// Deprecated, use committedPeriodInMonths instead.

@@ -91,6 +91,7 @@ type Loaders struct {
 	OutboundCommsCountForOrganization           *dataloader.Loader
 	OrganizationForJobRole                      *dataloader.Loader
 	OrganizationForInvoice                      *dataloader.Loader
+	OrganizationForContract                     *dataloader.Loader
 	OrganizationForOpportunity                  *dataloader.Loader
 	OrganizationForSlackChannel                 *dataloader.Loader
 	LatestOrganizationWithJobRoleForContact     *dataloader.Loader
@@ -400,6 +401,7 @@ func NewDataLoader(services *cosapi_services.Services) *Loaders {
 		OutboundCommsCountForOrganization:           dataloader.NewBatchedLoader(timelineEventBatcher.getOutboundCommsCountForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForJobRole:                      dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForJobRoles, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForInvoice:                      dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForInvoices, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		OrganizationForContract:                     dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForOpportunity:                  dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForOpportunities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForSlackChannel:                 dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForSlackChannels, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		LatestOrganizationWithJobRoleForContact:     dataloader.NewBatchedLoader(organizationBatcher.getLatestOrganizationWithJobRoleForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

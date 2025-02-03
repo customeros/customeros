@@ -359,6 +359,7 @@ type ComplexityRoot struct {
 		Metadata                func(childComplexity int) int
 		Name                    func(childComplexity int) int
 		Opportunities           func(childComplexity int) int
+		Organization            func(childComplexity int) int
 		OrganizationLegalName   func(childComplexity int) int
 		Owner                   func(childComplexity int) int
 		RenewalCycle            func(childComplexity int) int
@@ -1855,6 +1856,8 @@ type ContractResolver interface {
 	Attachments(ctx context.Context, obj *model.Contract) ([]*model.Attachment, error)
 	Invoices(ctx context.Context, obj *model.Contract) ([]*model.Invoice, error)
 	UpcomingInvoices(ctx context.Context, obj *model.Contract) ([]*model.Invoice, error)
+
+	Organization(ctx context.Context, obj *model.Contract) (*model.Organization, error)
 
 	ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error)
 }
@@ -3876,6 +3879,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contract.Opportunities(childComplexity), true
+
+	case "Contract.organization":
+		if e.complexity.Contract.Organization == nil {
+			break
+		}
+
+		return e.complexity.Contract.Organization(childComplexity), true
 
 	case "Contract.organizationLegalName":
 		if e.complexity.Contract.OrganizationLegalName == nil {
@@ -13859,6 +13869,7 @@ type Contract implements MetadataInterface {
     invoices:           [Invoice!]! @goField(forceResolver: true)
     upcomingInvoices:   [Invoice!]! @goField(forceResolver: true)
     ltv:                Float!
+    organization:       Organization! @goField(forceResolver: true)
 
     """
     Deprecated, use committedPeriodInMonths instead.
@@ -37229,6 +37240,198 @@ func (ec *executionContext) fieldContext_Contract_ltv(_ context.Context, field g
 	return fc, nil
 }
 
+func (ec *executionContext) _Contract_organization(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contract_organization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contract().Organization(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contract_organization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contract",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Organization_metadata(ctx, field)
+			case "accountDetails":
+				return ec.fieldContext_Organization_accountDetails(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
+			case "opportunities":
+				return ec.fieldContext_Organization_opportunities(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "wrongIndustry":
+				return ec.fieldContext_Organization_wrongIndustry(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastTouchpoint":
+				return ec.fieldContext_Organization_lastTouchpoint(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "logo":
+				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
+			case "icon":
+				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "parentCompanies":
+				return ec.fieldContext_Organization_parentCompanies(ctx, field)
+			case "public":
+				return ec.fieldContext_Organization_public(ctx, field)
+			case "socialMedia":
+				return ec.fieldContext_Organization_socialMedia(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
+			case "icpFit":
+				return ec.fieldContext_Organization_icpFit(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
+			case "inboundCommsCount":
+				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
+			case "outboundCommsCount":
+				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "note":
+				return ec.fieldContext_Organization_note(ctx, field)
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contract_committedPeriods(ctx context.Context, field graphql.CollectedField, obj *model.Contract) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contract_committedPeriods(ctx, field)
 	if err != nil {
@@ -38442,6 +38645,8 @@ func (ec *executionContext) fieldContext_ContractPage_content(_ context.Context,
 				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "ltv":
 				return ec.fieldContext_Contract_ltv(ctx, field)
+			case "organization":
+				return ec.fieldContext_Contract_organization(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -51310,6 +51515,8 @@ func (ec *executionContext) fieldContext_Invoice_contract(_ context.Context, fie
 				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "ltv":
 				return ec.fieldContext_Contract_ltv(ctx, field)
+			case "organization":
+				return ec.fieldContext_Contract_organization(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -64220,6 +64427,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Create(ctx context.Co
 				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "ltv":
 				return ec.fieldContext_Contract_ltv(ctx, field)
+			case "organization":
+				return ec.fieldContext_Contract_organization(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -64407,6 +64616,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Update(ctx context.Co
 				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "ltv":
 				return ec.fieldContext_Contract_ltv(ctx, field)
+			case "organization":
+				return ec.fieldContext_Contract_organization(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -64689,6 +64900,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_Renew(ctx context.Con
 				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "ltv":
 				return ec.fieldContext_Contract_ltv(ctx, field)
+			case "organization":
+				return ec.fieldContext_Contract_organization(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -64876,6 +65089,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_AddAttachment(ctx con
 				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "ltv":
 				return ec.fieldContext_Contract_ltv(ctx, field)
+			case "organization":
+				return ec.fieldContext_Contract_organization(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -65063,6 +65278,8 @@ func (ec *executionContext) fieldContext_Mutation_contract_RemoveAttachment(ctx 
 				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "ltv":
 				return ec.fieldContext_Contract_ltv(ctx, field)
+			case "organization":
+				return ec.fieldContext_Contract_organization(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -82582,6 +82799,8 @@ func (ec *executionContext) fieldContext_Organization_contracts(_ context.Contex
 				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "ltv":
 				return ec.fieldContext_Contract_ltv(ctx, field)
+			case "organization":
+				return ec.fieldContext_Contract_organization(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -92637,6 +92856,8 @@ func (ec *executionContext) fieldContext_Query_contract(ctx context.Context, fie
 				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "ltv":
 				return ec.fieldContext_Contract_ltv(ctx, field)
+			case "organization":
+				return ec.fieldContext_Contract_organization(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -100350,6 +100571,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_contract(_ context.Contex
 				return ec.fieldContext_Contract_upcomingInvoices(ctx, field)
 			case "ltv":
 				return ec.fieldContext_Contract_ltv(ctx, field)
+			case "organization":
+				return ec.fieldContext_Contract_organization(ctx, field)
 			case "committedPeriods":
 				return ec.fieldContext_Contract_committedPeriods(ctx, field)
 			case "contractRenewalCycle":
@@ -120130,6 +120353,42 @@ func (ec *executionContext) _Contract(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "organization":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contract_organization(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "committedPeriods":
 			out.Values[i] = ec._Contract_committedPeriods(ctx, field, obj)
 		case "contractRenewalCycle":
