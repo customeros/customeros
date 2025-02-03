@@ -63,7 +63,7 @@ func (h *WebhookHandler) CreateWebhook(baseURL, flowsPath string) gin.HandlerFun
 
 		var req CreateWebhookRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			message := "Missing parameter: intergration"
+			message := "Missing parameter: integration"
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}

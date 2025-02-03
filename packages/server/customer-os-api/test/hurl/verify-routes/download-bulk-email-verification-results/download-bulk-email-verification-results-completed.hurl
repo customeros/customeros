@@ -1,14 +1,15 @@
-# Test: Download Bulk Email Verification Results - completed
+# Test: Download Bulk Email Verification Results - completed [BUG COS-6737]
 POST {{cos_url}}/verify/v1/email/bulk
 Content-Type: multipart/form-data
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [MultipartFormData]
 file: file,download-bulk-email-verification-results-completed.csv;
 
-HTTP 200
+HTTP *
 [Captures]
 job_id: jsonpath "$.jobId"
 [Asserts]
+status == 200
 jsonpath "$.message" == "File uploaded successfully"
 
 GET {{cos_url}}/verify/v1/email/bulk/results/{{job_id}}/download
@@ -17,8 +18,9 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 [Options]
 delay: 30000
 
-HTTP 200
+HTTP *
 [Asserts]
+status == 200
 header "Content-Type" contains "text/csv"
 header "Content-Description" == "File Transfer"
 header "Content-Transfer-Encoding" == "binary"

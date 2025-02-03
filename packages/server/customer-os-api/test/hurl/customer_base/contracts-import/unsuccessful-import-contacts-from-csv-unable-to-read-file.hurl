@@ -5,8 +5,9 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 [MultipartFormData]
 file: file,unsuccessful-import-contacts-from-csv-unable-to-read-file.csv;
 
-HTTP 400
+HTTP *
 [Asserts]
+status == 400
 jsonpath "$.requestId" exists
 jsonpath "$.status" == "error"
 jsonpath "$.message" == "Unable to read file"

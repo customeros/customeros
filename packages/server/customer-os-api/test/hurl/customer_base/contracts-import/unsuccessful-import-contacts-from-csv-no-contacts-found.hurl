@@ -5,8 +5,9 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 [MultipartFormData]
 file: file,unsuccessful-import-contacts-from-csv-no-contacts-found.csv;
 
-HTTP 400
+HTTP *
 [Asserts]
+status == 400
 jsonpath "$.requestId" exists
 jsonpath "$.status" == "error"
 jsonpath "$.message" == "No valid contacts found in request"

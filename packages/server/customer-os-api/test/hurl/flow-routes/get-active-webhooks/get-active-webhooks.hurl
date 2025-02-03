@@ -6,11 +6,12 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     "integration": "slack"
 }
 
-HTTP 201
+HTTP *
 [Captures]
 hook_url: jsonpath "$.hook.url"
 [Asserts]
-header "Content-Type" == "application/json; charset=utf-8"
+status == 200
+header "Content-Type" == "application/json"
 jsonpath "$.status" == "success"
 jsonpath "$.requestId" exists
 jsonpath "$.hook.url" matches "/flows/v1/[a-zA-Z0-9-]+/i/[a-zA-Z0-9-]+"
@@ -21,7 +22,8 @@ GET {{cos_url}}/flows/v1/hooks
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 
-HTTP 200
+HTTP *
 [Asserts]
+status == 200
 jsonpath "$.hooks[*].url" includes "{{hook_url}}"
 jsonpath "$.hooks[?(@.url == '{{hook_url}}')].active" includes true

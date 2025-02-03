@@ -5,10 +5,11 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 [MultipartFormData]
 file: file,download-bulk-email-verification-results-processing.csv;
 
-HTTP 200
+HTTP *
 [Captures]
 job_id: jsonpath "$.jobId"
 [Asserts]
+status == 200
 jsonpath "$.message" == "File uploaded successfully"
 
 GET {{cos_url}}/verify/v1/email/bulk/results/{{job_id}}/download
@@ -17,8 +18,9 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 [Options]
 #delay: 30000
 
-HTTP 202
+HTTP *
 [Asserts]
+status == 202
 header "Content-Type" contains "application/json"
 jsonpath "$.requestId" exists
 jsonpath "$.status" == "processing"

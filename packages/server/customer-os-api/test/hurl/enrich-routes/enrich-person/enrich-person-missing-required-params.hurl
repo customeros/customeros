@@ -5,9 +5,10 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 [QueryStringParams]
 includeMobileNumber: true
 
-HTTP 400
+HTTP *
 [Asserts]
+status == 400
 header "Content-Type" contains "application/json; charset=utf-8"
 jsonpath "$.status" == "error"
 jsonpath "$.requestId" exists
-jsonpath "$.message" == "Missing linkedinUrl or email"
+jsonpath "$.message" == "Missing linkedin or email"

@@ -2,8 +2,9 @@
 GET {{cos_url}}/verify/v1/ip?address=8.8.8.8
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 
-HTTP 200
+HTTP *
 [Asserts]
+status == 200
 header "Content-Type" contains "application/json"
 jsonpath "$.status" == "success"
 jsonpath "$.requestId" exists

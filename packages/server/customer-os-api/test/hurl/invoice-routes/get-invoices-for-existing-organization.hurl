@@ -3,8 +3,9 @@ GET {{cos_url}}/billing/v1/organizations/f75add8c-4f00-442d-8bc5-e739a655baff/in
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 
-HTTP/2 200
+HTTP/2 *
 [Asserts]
+status == 200
 jsonpath "$.status" == "success"
 jsonpath "$.requestId" exists
 jsonpath "$.invoices" count == 4

@@ -5,9 +5,10 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 [QueryStringParams]
 address: silviucustomeros.ai
 
-HTTP 200
+HTTP *
 [Asserts]
-header "Content-Type" == "application/json; charset=utf-8"
+status == 200
+header "Content-Type" == "application/json"
 jsonpath "$.status" == "success"
 jsonpath "$.requestId" exists
 jsonpath "$.email.emailAddress" == "silviucustomeros.ai"

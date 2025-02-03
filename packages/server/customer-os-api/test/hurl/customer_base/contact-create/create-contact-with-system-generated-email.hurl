@@ -6,8 +6,9 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     "email": "{{custom_id}}@example.com"
 }
 
-HTTP/2 400
+HTTP/2 *
 [Asserts]
+status == 400
 jsonpath "$.status" exists
 jsonpath "$.status" == "error"
 jsonpath "$.requestId" exists

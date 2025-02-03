@@ -5,8 +5,9 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 [MultipartFormData]
 file: file,successful-import-contacts-from-csv.csv;
 
-HTTP 201
+HTTP *
 [Asserts]
+status == 201
 jsonpath "$.status" == "success"
 jsonpath "$.requestId" exists
 jsonpath "$.summary.total" == 2

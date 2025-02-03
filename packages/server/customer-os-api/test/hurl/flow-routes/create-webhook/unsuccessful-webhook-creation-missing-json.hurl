@@ -1,14 +1,11 @@
-# Test: Unsuccessful webhook creation missing json
+# Test: Unsuccessful webhook creation missing json X
 POST {{cos_url}}/flows/v1/hooks
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 
-HTTP 400
-#[Captures]
-#hook_url: jsonpath "$.hook.url"
-#hook_secret: jsonpath "$.hook.secret"
-
+HTTP *
 [Asserts]
+status == 400
 header "Content-Type" == "application/json; charset=utf-8"
 jsonpath "$.status" == "error"
 jsonpath "$.requestId" exists

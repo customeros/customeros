@@ -22,9 +22,9 @@ while IFS= read -r test_file
 do
     echo "Running tests from file: $test_file" | tee -a test-output.txt
 
-    # Generate a new UUID for this specific test
-    NEW_UUID=$(uuidgen | tr '[:upper:]' '[:lower:]')  # Generate lowercase UUID
-    capitalized_custom_id=$(echo "$NEW_UUID" | awk 'BEGIN{FS=OFS="-"} {for (i=1; i<=NF; i++) { sub(/[a-z]/, toupper(substr($i, match($i, /[a-z]/), 1)), $i) }} 1')
+    # Generate timestamp for this specific test
+    TIMESTAMP=$(date +%s)
+    capitalized_custom_id="AGENT_${TIMESTAMP}"  # Adding AGENT_ prefix for clarity
     RANDOM_STRING=$(openssl rand -base64 12 | tr -dc 'a-z' | fold -w 10 | head -n 1)
 
     # Get the test name from the file
@@ -41,6 +41,8 @@ do
     hurl --very-verbose --test --continue-on-error --variable "custom_id=$capitalized_custom_id" --variable "random_str=$RANDOM_STRING" --variable "cos_url=$COS_URL" --variable "api_key=$HURL_TENANT_API_KEY" "$test_file" > temp_output.txt 2>&1
 
     TEST_EXIT_CODE=$?
+
+    # [Rest of the script remains unchanged...]
 
     # Determine test status
     if [ $TEST_EXIT_CODE -eq 0 ]; then

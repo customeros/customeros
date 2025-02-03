@@ -5,7 +5,8 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 [QueryStringParams]
 address: silviu@customeros.ai
 
-HTTP 303
+HTTP *
 [Asserts]
+status == 303
 header "Content-Type" == "text/html; charset=utf-8"
 body == "<a href=\"https://customeros.ai/payments/status/paid/\">See Other</a>.\n\n"

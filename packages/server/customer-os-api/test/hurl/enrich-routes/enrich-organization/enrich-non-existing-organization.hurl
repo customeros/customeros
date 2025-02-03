@@ -4,10 +4,10 @@ Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [QueryStringParams]
 linkedinUrl: https://www.linkedin.com/company/customer-osasd/
-includeMobileNumber: true
 
-HTTP 404
+HTTP *
 [Asserts]
+status == 404
 header "Content-Type" contains "application/json; charset=utf-8"
 jsonpath "$.status" == "warning"
 jsonpath "$.requestId" exists
