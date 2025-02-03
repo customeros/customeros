@@ -93,7 +93,7 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 	createFlow := false
 	contractId := ""
 
-	if id == nil || *id == "" {
+	if utils.IfNotNilString(id) == "" {
 		createFlow = true
 		span.LogKV("flow", "create")
 		contractId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelContract)
@@ -101,7 +101,7 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 			tracing.TraceErr(span, err)
 			return "", err
 		}
-		// set missing fields for create flow
+		// set default fields for create flow
 		if dataFields.CreatedAt == nil {
 			dataFields.CreatedAt = utils.NowPtr()
 		} else {
@@ -112,6 +112,17 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 		}
 		if utils.IfNotNilString(dataFields.Source) == "" {
 			dataFields.Source = utils.StringPtr(neo4jentity.DataSourceOpenline.String())
+		}
+		if utils.IfNotNilString(dataFields.Name) == "" {
+			if utils.IfNotNilString(dataFields.OrganizationId) != "" {
+				organizationEntity, err := s.organization.GetById(ctx, tenant, utils.IfNotNilString(dataFields.OrganizationId))
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to get organization"))
+					s.log.Errorf("unable to get organization: %s", err.Error())
+					return "", err
+				}
+				dataFields.Name = utils.StringPtr(organizationEntity.Name)
+			}
 		}
 	} else {
 		span.LogKV("flow", "update")
