@@ -52,28 +52,22 @@ export class CreateContactUsecase {
   }
 
   @action
-  private validateInput(): boolean {
+  private validateInput() {
     const error = this.errors[this.type];
 
     if (!this.inputValue) {
       error.isEmpty = true;
-
-      return false;
     }
 
     if (this.type === 'name') {
-      return true;
+      return;
     }
 
     const pattern = this.PATTERNS[this.type];
 
     if (!pattern.test(this.inputValue)) {
       error.isInvalid = true;
-
-      return false;
     }
-
-    return true;
   }
 
   @action
@@ -123,6 +117,9 @@ export class CreateContactUsecase {
         this.root.ui.commandMenu.clearContext();
         this.root.ui.toastSuccess('Contact created', 'contact-email-created');
       },
+      onError: () => {
+        this.isLoading = false;
+      },
     };
 
     switch (this.type) {
@@ -168,14 +165,17 @@ export class CreateContactUsecase {
   async submit() {
     this.clearErrors();
     this.isLoading = true;
+    this.validateInput();
 
-    if (!this.validateInput()) {
+    if (this.errors[this.type].isEmpty || this.errors[this.type].isInvalid) {
       this.isLoading = false;
 
       return;
     }
 
     if (this.type !== 'name' && !(await this.checkExisting())) {
+      this.isLoading = false;
+
       return;
     }
 

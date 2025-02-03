@@ -302,7 +302,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
   @action
   async create(
     organizationId: string,
-    options?: { onSuccess?: (serverId: string) => void },
+    options?: { onError?: () => void; onSuccess?: (serverId: string) => void },
     input?: ContactInput,
   ) {
     let serverId: string | undefined;
@@ -332,6 +332,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       });
     } catch (e) {
       runInAction(() => {
+        options?.onError?.();
         this.error = (e as Error)?.message;
       });
     } finally {
@@ -344,7 +345,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
   @action
   async createWithEmail(
     organizationId: string,
-    options?: { onSuccess?: (serverId: string) => void },
+    options?: { onError?: () => void; onSuccess?: (serverId: string) => void },
     input?: ContactInput,
   ) {
     let serverId: string | undefined;
@@ -397,6 +398,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       });
     } catch (e) {
       runInAction(() => {
+        options?.onError?.();
         this.error = (e as Error)?.message;
       });
     } finally {
@@ -415,6 +417,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     socialUrl: string;
     organizationId: string;
     options?: {
+      onError?: () => void;
       onSuccess?: (serverId: string) => void;
     };
   }) {
@@ -462,6 +465,7 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
         `We couldn't create this contact. Please try again.`,
         'create-contract-error',
       );
+      options?.onError?.();
       runInAction(() => {
         this.error = (e as Error)?.message;
       });
