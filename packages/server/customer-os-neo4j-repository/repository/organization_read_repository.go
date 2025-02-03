@@ -53,6 +53,7 @@ type OrganizationReadRepository interface {
 	GetForApiCache(ctx context.Context, tenant string, skip, limit int) ([]map[string]interface{}, error)
 	GetPatchesForApiCache(ctx context.Context, tenant string, lastPatchTimestamp time.Time) ([]map[string]interface{}, error)
 	GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
+	GetAllForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForSlackChannels(ctx context.Context, tenant string, slackChannelIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error)
 	GetOrganizationsForUpdateNextRenewalDate(ctx context.Context, limit int) ([]TenantAndOrganizationId, error)
@@ -817,6 +818,41 @@ func (r *organizationReadRepository) GetAllForInvoices(ctx context.Context, tena
 	params := map[string]any{
 		"tenant":     tenant,
 		"invoiceIds": invoiceIds,
+	}
+
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *organizationReadRepository) GetAllForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetAllForContracts")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.Object("contractIds", contractIds))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)
+				WHERE c.id IN $contractIds
+				RETURN o, c.id`
+	params := map[string]any{
+		"tenant":      tenant,
+		"contractIds": contractIds,
 	}
 
 	span.LogFields(log.String("query", cypher))

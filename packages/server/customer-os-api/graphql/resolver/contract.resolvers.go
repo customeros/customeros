@@ -170,6 +170,20 @@ func (r *contractResolver) UpcomingInvoices(ctx context.Context, obj *model.Cont
 	return mapper.MapEntitiesToInvoices(&upcomingInvoiceEntities), nil
 }
 
+// Organization is the resolver for the organization field.
+func (r *contractResolver) Organization(ctx context.Context, obj *model.Contract) (*model.Organization, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	organizationEntity, err := dataloader.For(ctx).GetOrganizationForContract(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("error fetching organization for contract %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "Error fetching organization for contract %s", obj.Metadata.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
 // ServiceLineItems is the resolver for the serviceLineItems field.
 func (r *contractResolver) ServiceLineItems(ctx context.Context, obj *model.Contract) ([]*model.ServiceLineItem, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
