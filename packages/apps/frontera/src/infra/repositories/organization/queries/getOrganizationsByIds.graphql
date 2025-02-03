@@ -29,6 +29,9 @@ query getOrganizationsByIds($ids: [ID!]) {
       primary
       primaryDomain
     }
+    icpFit
+    icpFitReasons
+    icpFitUpdatedAt
     wrongIndustry
     createdAt
     updatedAt

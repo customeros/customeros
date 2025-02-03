@@ -18,6 +18,7 @@ export type GetOrganizationsQuery = {
       notes?: string | null;
       hide: boolean;
       wrongIndustry: boolean;
+      icpFit?: Types.IcpFit | null;
       stage?: Types.OrganizationStage | null;
       description?: string | null;
       industry?: string | null;

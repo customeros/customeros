@@ -1,7 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-import { Organization } from '@store/Organizations/Organization.dto';
 
 import { Plus } from '@ui/media/icons/Plus';
 import { IconButton } from '@ui/form/IconButton';
@@ -34,17 +33,20 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
             aria-label='Add'
             icon={<Plus className='size-4' />}
             onClick={() => {
-              store.organizations.create(Organization.default(), {
-                onSucces(serverId) {
-                  setTimeout(() => {
-                    organization.draft();
-                    organization.addSubsidiary(serverId);
-                    organization?.commit();
-                  }, 100);
+              store.organizations.create(
+                {},
+                {
+                  onSucces(serverId) {
+                    setTimeout(() => {
+                      organization.draft();
+                      organization.addSubsidiary(serverId);
+                      organization?.commit();
+                    }, 100);
 
-                  navigate(`/organization/${serverId}?tab=about`);
+                    navigate(`/organization/${serverId}?tab=about`);
+                  },
                 },
-              });
+              );
             }}
           />
         )}

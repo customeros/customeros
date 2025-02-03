@@ -1,0 +1,1 @@
+export { IcpBadge } from './IcpBadge';

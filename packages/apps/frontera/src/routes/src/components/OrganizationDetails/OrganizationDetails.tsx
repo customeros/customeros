@@ -18,6 +18,7 @@ import { SocialMediaList } from '@organization/components/Tabs';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { TruncatedText } from '@ui/presentation/TruncatedText/TruncatedText';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { IcpBadge } from '@shared/components/OrganizationDetails/components/icp';
 import { Domains } from '@shared/components/OrganizationDetails/components/domains';
 import { OwnerInput } from '@shared/components/OrganizationDetails/components/owner';
 import { Branches } from '@shared/components/OrganizationDetails/components/branches';
@@ -117,12 +118,12 @@ export const OrganizationDetails = observer(
             )}
 
             {organization.value?.referenceId && (
-              <div className='h-full ml-4'>
+              <div className='ml-4'>
                 <Tooltip asChild={false} label={'Copy ID'}>
                   <Tag
                     variant='outline'
                     colorScheme='gray'
-                    className='rounded-full cursor-pointer'
+                    className='cursor-pointer w-full max-w-[100px]'
                     onClick={() => {
                       copyToClipboard(
                         organization.value?.referenceId ?? '',
@@ -130,11 +131,15 @@ export const OrganizationDetails = observer(
                       );
                     }}
                   >
-                    <TagLabel>{organization.value?.referenceId}</TagLabel>
+                    <TagLabel className='truncate overflow-hidden whitespace-nowrap'>
+                      {organization.value?.referenceId}
+                    </TagLabel>
                   </Tag>
                 </Tooltip>
               </div>
             )}
+
+            <IcpBadge id={store.ui.focusRow ?? id} />
           </div>
 
           <Domains />

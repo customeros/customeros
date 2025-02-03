@@ -32,6 +32,7 @@ query getOrganizations(
           name
         }
       }
+      icpFit
       owner {
         id
         firstName

@@ -1,11 +1,11 @@
-import { runInAction } from 'mobx';
 import { Store } from '@store/_store';
+import { computed, runInAction } from 'mobx';
 import { type RootStore } from '@store/root';
 import { type Transport } from '@infra/transport';
-import { AgentRepository } from '@infra/repositories/agent';
-import { type AgentDatum } from '@infra/repositories/agent';
+import { type AgentDatum, AgentRepository } from '@infra/repositories/agent';
 
 import { unwrap } from '@utils/unwrap';
+import { AgentType } from '@graphql/types';
 
 import { Agent } from './Agent.dto';
 
@@ -18,6 +18,13 @@ export class AgentStore extends Store<AgentDatum, Agent> {
       getId: (data) => data?.id,
       factory: Agent,
     });
+  }
+
+  @computed
+  get icpQualificationAgent() {
+    return this.toArray().find(
+      (agent) => agent.value.type === AgentType.IcpQualifier,
+    );
   }
 
   public async bootstrap() {
