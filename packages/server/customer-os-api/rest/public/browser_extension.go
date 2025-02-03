@@ -3,6 +3,8 @@ package public
 import (
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/customerbase"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"net/http"
 	"regexp"
 	"strings"
@@ -90,7 +92,10 @@ func (h *BrowserExtensionHandler) processContact(ctx context.Context, record cus
 	span, ctx := opentracing.StartSpanFromContext(ctx, "Customerbase.processContact")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
-	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+	tenant := common.GetTenantFromContext(ctx)
+
+	tracing.TagTenant(span, tenant)
+
 	span.LogFields(log.String("email", record.Email), log.String("linkedin", record.LinkedInURL))
 
 	linkedInUrl := strings.TrimSpace(record.LinkedInURL)
@@ -108,6 +113,8 @@ func (h *BrowserExtensionHandler) processContact(ctx context.Context, record cus
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save contact"))
 			return ""
 		}
+
+		h.services.CommonServices.Events.Publisher.PublishNotification(ctx, tenant, createdContactId, model.CONTACT, utils.NewEventCompletedDetails().WithCreate())
 	}
 
 	return createdContactId
