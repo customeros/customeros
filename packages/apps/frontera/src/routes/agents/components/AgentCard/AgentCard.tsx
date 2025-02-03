@@ -23,24 +23,22 @@ export const AgentCard = ({
   const navigate = useNavigate();
   const tagColor = status === 'ON' ? 'success' : 'error';
 
-  const [border, bg, iconColor] = [
-    `border-${color}-200 hover:border-${color}-500`,
-    `bg-${color}-50`,
-    `text-${color}-500`,
-  ];
+  const [ring, bg, iconColor] = colorMap[color];
 
   return (
     <div
       onClick={() => navigate(`/agents/${id}`)}
       className={cn(
-        'p-3 rounded-lg flex items-center gap-2 border mb-4 cursor-pointer hover:bg-white hover:shadow-lg transition-colors',
-        border,
+        'p-3 rounded-lg flex items-center gap-2 ring-0 border mb-4 cursor-pointer hover:bg-white hover:shadow-lg transition-all ring-grayModern-200 hover:ring-1',
+        ring,
       )}
     >
-      <div className={cn('p-2 flex items-center rounded-lg', bg)}>
+      <div
+        className={cn('p-2 flex items-center rounded-lg bg-grayModern-50', bg)}
+      >
         <Icon
-          className={cn('size-6', iconColor)}
           name={(icon as IconName) ?? 'radar'}
+          className={cn('size-6 text-grayModern-500', iconColor)}
         />
       </div>
 
@@ -59,3 +57,49 @@ export const AgentCard = ({
     </div>
   );
 };
+
+const colorMap: Record<string, [ring: string, bg: string, iconColor: string]> =
+  {
+    grayModern: [
+      'hover:ring-grayModern-400',
+      'hover:bg-grayModern-50',
+      'hover:text-grayModern-500',
+    ],
+    error: [
+      'hover:ring-error-400',
+      'hover:bg-error-50',
+      'hover:text-error-500',
+    ],
+    warning: [
+      'hover:ring-warning-400',
+      'hover:bg-warning-50',
+      'hover:text-warning-500',
+    ],
+    success: [
+      'hover:ring-success-400',
+      'hover:bg-success-50',
+      'hover:text-success-500',
+    ],
+    grayWarm: [
+      'hover:ring-grayWarm-400',
+      'hover:bg-grayWarm-50',
+      'hover:text-grayWarm-500',
+    ],
+    moss: ['hover:ring-moss-400', 'hover:bg-moss-50', 'hover:text-moss-500'],
+    blueLight: [
+      'hover:ring-blueLight-400',
+      'hover:bg-blueLight-50',
+      'hover:text-blueLight-500',
+    ],
+    indigo: [
+      'hover:ring-indigo-400',
+      'hover:bg-indigo-50',
+      'hover:text-indigo-500',
+    ],
+    violet: [
+      'hover:ring-violet-400',
+      'hover:bg-violet-50',
+      'hover:text-violet-500',
+    ],
+    pink: ['hover:ring-pink-400', 'hover:bg-pink-50', 'hover:text-pink-500'],
+  };

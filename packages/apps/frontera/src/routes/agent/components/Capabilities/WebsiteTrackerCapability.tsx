@@ -103,7 +103,7 @@ export const WebsiteTrackerCapability = observer(() => {
 
         <div>
           <h2 className='text-sm font-medium mb-1'>Code snippet</h2>
-          <p className='pb-2'>{`Place the following code in the <HEAD> section of your website:`}</p>
+          <p className='pb-2 text-sm'>{`Place the following code in the <HEAD> section of your website:`}</p>
           <div className='px-3 py-2 rounded-md bg-grayModern-100 flex items-baseline'>
             <pre className='text-sm font-sticky whitespace-pre-wrap'>
               {`<script id="customeros-tracker" type="text/javascript">`}
