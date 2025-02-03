@@ -37,6 +37,7 @@ type RestHandlers struct {
 	Webhooks             *webhooks.WebhookHandler
 	WebTracker           *reveal.WebTrackerHandler
 	WebsiteTrackerEvents *public.WebsiteTrackerEventsHandler
+	BrowserExtension     *public.BrowserExtensionHandler
 }
 
 func InitRestHandlers(services *cosapi_services.Services) *RestHandlers {
@@ -60,6 +61,7 @@ func InitRestHandlers(services *cosapi_services.Services) *RestHandlers {
 		Webhooks:             webhooks.NewWebhookHandler(services, responseHandler, integrationsHandler),
 		WebTracker:           reveal.NewWebTrackerHandler(services, responseHandler),
 		WebsiteTrackerEvents: public.NewWebsiteTrackerEventsHandler(services, responseHandler),
+		BrowserExtension:     public.NewBrowserExtensionHandler(services, responseHandler),
 	}
 
 	return &handlers
