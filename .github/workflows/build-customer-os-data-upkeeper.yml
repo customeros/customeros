@@ -7,7 +7,6 @@ on:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/events-processing-proto/**
       - packages/server/events/**
       - packages/server/enrichment-api/**
       - packages/server/validation-api/**
@@ -18,7 +17,6 @@ on:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/events-processing-proto/**
       - packages/server/events/**
       - packages/server/validation-api/**
       - packages/runner/customer-os-data-upkeeper/**

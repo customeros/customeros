@@ -8,7 +8,6 @@ on:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/events-processing-proto/**
       - packages/server/events-subscribers/**
       - .github/workflows/build-events-subscribers.yml
   pull_request:
@@ -17,7 +16,6 @@ on:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/events-processing-proto/**
       - packages/server/events-subscribers/**
       - .github/workflows/build-events-subscribers.yml
   release:

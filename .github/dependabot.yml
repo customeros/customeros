@@ -81,34 +81,6 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
-    directory: "/packages/server/events-processing-proto"
-    schedule:
-      interval: "daily"
-      time: "04:00"
-    open-pull-requests-limit: 3
-    labels:
-      - "go"
-      - "dependencies"
-      - "module/events-processing-proto"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
-    directory: "/packages/server/events-processing-platform"
-    schedule:
-      interval: "daily"
-      time: "04:00"
-    open-pull-requests-limit: 3
-    labels:
-      - "go"
-      - "dependencies"
-      - "app/events-processing-platform"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
     directory: "/packages/server/events-subscribers"
     schedule:
       interval: "daily"
@@ -118,20 +90,6 @@ updates:
       - "go"
       - "dependencies"
       - "app/events-subscribers"
-    pull-request-branch-name:
-      separator: "-"
-    rebase-strategy: "auto"
-
-  - package-ecosystem: "gomod"
-    directory: "/packages/server/events-processing-platform-subscribers"
-    schedule:
-      interval: "daily"
-      time: "04:00"
-    open-pull-requests-limit: 3
-    labels:
-      - "go"
-      - "dependencies"
-      - "app/events-processing-platform-subscribers"
     pull-request-branch-name:
       separator: "-"
     rebase-strategy: "auto"
