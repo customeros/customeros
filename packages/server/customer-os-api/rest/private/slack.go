@@ -96,13 +96,13 @@ func CallbackSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		code := c.Request.URL.Query().Get("code")
 		redirectUri := c.Request.URL.Query().Get("redirect_uri")
 		span.LogKV("code", code)
-		span.LogKV("redirectUri", redirectUri)
+		span.LogKV("redirectUri", url.QueryEscape(redirectUri))
 
 		requestData := url.Values{}
 		requestData.Set("code", code)
 		requestData.Set("client_id", s.Cfg.Common.External.SlackConfig.ClientID)
 		requestData.Set("client_secret", s.Cfg.Common.External.SlackConfig.ClientSecret)
-		requestData.Set("redirect_url", redirectUri)
+		requestData.Set("redirect_url", url.QueryEscape(redirectUri))
 
 		// Encode the form data
 		requestBody := requestData.Encode()
