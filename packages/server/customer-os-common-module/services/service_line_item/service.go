@@ -218,6 +218,20 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				tracing.TraceErr(span, err)
 			}
 
+			userName := ""
+			if common.GetUserIdFromContext(ctx) == "" {
+				userName = "CustomerOS API"
+			} else {
+				userDbNode, err := s.neo4j.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+				if userDbNode != nil {
+					userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
+					userName = userEntity.GetFullName()
+				}
+			}
+
 			if createFlow {
 				if dataFields.BilledType != nil && utils.IfNotNilString(dataFields.BilledType.String()) != "" {
 					name := "Unnamed service"
@@ -225,15 +239,6 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 						name = *dataFields.Name
 					}
 
-					userName := ""
-					userDbNode, err := s.neo4j.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
-					if err != nil {
-						tracing.TraceErr(span, err)
-					}
-					if userDbNode != nil {
-						userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
-						userName = userEntity.GetFullName()
-					}
 					extraActionProperties := map[string]interface{}{
 						"comments": utils.IfNotNilString(dataFields.Comments),
 					}
@@ -256,7 +261,13 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 						return err
 					}
 					if dataFields.BilledType.IsRecurrent() {
-						message := userName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(utils.IfNotNilInt64(dataFields.Quantity), 10) + " x " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + "/" + cycle + " starting with " + dataFields.StartedAt.Format("2006-01-02")
+						message := userName
+						if dataFields.NewVersion != nil && *dataFields.NewVersion {
+							message += " updated recurring service for "
+						} else {
+							message += " added a recurring service to "
+						}
+						message += contractEntity.Name + ": " + name + " at " + strconv.FormatInt(utils.IfNotNilInt64(dataFields.Quantity), 10) + " x " + fmt.Sprintf("%.2f", utils.IfNotNilFloat64(dataFields.Price)) + "/" + cycle + " starting with " + dataFields.StartedAt.Format("2006-01-02")
 						_, err = s.neo4j.ActionWriteRepository.CreateWithProperties(ctx, tenant, contractEntity.Id, model.CONTRACT, enum.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now(), common.GetAppSourceFromContext(ctx), extraActionProperties)
 						if err != nil {
 							tracing.TraceErr(span, err)
@@ -298,15 +309,6 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					name = *dataFields.Name
 				}
 
-				userName := ""
-				userDbNode, err := s.neo4j.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-				if userDbNode != nil {
-					userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
-					userName = userEntity.GetFullName()
-				}
 				extraActionProperties := map[string]interface{}{
 					"comments": utils.IfNotNilString(dataFields.Comments),
 				}
