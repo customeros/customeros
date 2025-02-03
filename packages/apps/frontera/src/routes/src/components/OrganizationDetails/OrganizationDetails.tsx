@@ -107,39 +107,41 @@ export const OrganizationDetails = observer(
             <p className='font-semibold text-base mt-0.5 overflow-hidden overflow-ellipsis'>
               {organization?.value?.name ?? ''}
             </p>
-            {previewCard && (
-              <IconButton
-                size='xs'
-                variant='ghost'
-                icon={<Icon name='x-close' />}
-                onClick={() => setPreviewCard(false)}
-                aria-label='close preview organization'
-              />
-            )}
 
-            {organization.value?.referenceId && (
-              <div className='ml-4'>
-                <Tooltip asChild={false} label={'Copy ID'}>
-                  <Tag
-                    variant='outline'
-                    colorScheme='gray'
-                    className='cursor-pointer w-full max-w-[100px]'
-                    onClick={() => {
-                      copyToClipboard(
-                        organization.value?.referenceId ?? '',
-                        'Reference ID copied ',
-                      );
-                    }}
-                  >
-                    <TagLabel className='truncate overflow-hidden whitespace-nowrap'>
-                      {organization.value?.referenceId}
-                    </TagLabel>
-                  </Tag>
-                </Tooltip>
-              </div>
-            )}
+            <div className='flex items-center justify-between gap-x-2'>
+              {organization.value?.referenceId && (
+                <div className='ml-4'>
+                  <Tooltip asChild={false} label={'Copy ID'}>
+                    <Tag
+                      variant='outline'
+                      colorScheme='gray'
+                      className='cursor-pointer w-full max-w-[100px]'
+                      onClick={() => {
+                        copyToClipboard(
+                          organization.value?.referenceId ?? '',
+                          'Reference ID copied ',
+                        );
+                      }}
+                    >
+                      <TagLabel className='truncate overflow-hidden whitespace-nowrap'>
+                        {organization.value?.referenceId}
+                      </TagLabel>
+                    </Tag>
+                  </Tooltip>
+                </div>
+              )}
 
-            <IcpBadge id={store.ui.focusRow ?? id} />
+              <IcpBadge id={store.ui.focusRow ?? id} />
+              {previewCard && (
+                <IconButton
+                  size='xs'
+                  variant='ghost'
+                  icon={<Icon name='x-close' />}
+                  onClick={() => setPreviewCard(false)}
+                  aria-label='close preview organization'
+                />
+              )}
+            </div>
           </div>
 
           <Domains />
