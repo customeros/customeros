@@ -264,6 +264,7 @@ func InitCommonServices(
 		workspaceImpl,
 		markdownEventImpl,
 		domainImpl,
+		invoiceImpl,
 	)
 
 	// initialize agents
