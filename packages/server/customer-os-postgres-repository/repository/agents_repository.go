@@ -178,6 +178,7 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByTypesCrossTenant(ctx conte
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	span.LogFields(log.Int("count", len(records)))
 	return records, nil
 }
 

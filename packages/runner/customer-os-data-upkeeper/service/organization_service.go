@@ -120,7 +120,7 @@ func (s *organizationService) IcpCheck() {
 			OrganizationID: record.OrganizationId,
 		}
 
-		err = s.commonServices.Events.Publisher.PublishFanoutEvent(ctx, record.OrganizationId, model.INTENT_SIGNAL, &event)
+		err = s.commonServices.Events.Publisher.PublishFanoutEvent(innerCtx, record.OrganizationId, model.INTENT_SIGNAL, &event)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "error publishing icp check event"))
 			s.log.Errorf("Error publishing icp check event: %v", err)
