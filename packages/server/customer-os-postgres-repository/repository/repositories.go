@@ -168,6 +168,7 @@ func InitRepositories(postgresDB *config.PostgresDB) *Repositories {
 
 func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 	err := postgresDB.GormDB.AutoMigrate(
+		&postgres_entity.AgentCapabilityRegistry{},
 		&postgres_entity.AgentRegistry{},
 		&postgres_entity.AgentExecution{},
 		&postgres_entity.Agent{},
