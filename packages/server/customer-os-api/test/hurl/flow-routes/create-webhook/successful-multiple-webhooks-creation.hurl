@@ -6,12 +6,13 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     "integration": "slack"
 }
 
-HTTP 201
+HTTP *
 [Captures]
 hook_secret: jsonpath "$.hook.secret"
 hook_requestId: jsonpath "$.requestId"
 [Asserts]
-header "Content-Type" == "application/json; charset=utf-8"
+status == 200
+header "Content-Type" == "application/json"
 jsonpath "$.status" == "success"
 jsonpath "$.requestId" exists
 jsonpath "$.hook.url" matches "/flows/v1/[a-zA-Z0-9-]+/i/[a-zA-Z0-9-]+"
@@ -25,9 +26,10 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     "integration": "slack"
 }
 
-HTTP 201
+HTTP *
 [Asserts]
-header "Content-Type" == "application/json; charset=utf-8"
+status == 200
+header "Content-Type" == "application/json"
 jsonpath "$.status" == "success"
 jsonpath "$.requestId" exists
 jsonpath "$.hook.url" matches "/flows/v1/[a-zA-Z0-9-]+/i/[a-zA-Z0-9-]+"

@@ -6,6 +6,7 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     "email": ""
 }
 
-HTTP/2 200
+HTTP/2 *
 [Asserts]
+status == 200
 body == ""

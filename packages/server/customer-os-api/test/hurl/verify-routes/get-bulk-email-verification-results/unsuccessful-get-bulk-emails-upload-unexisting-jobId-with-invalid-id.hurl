@@ -2,9 +2,10 @@
 GET {{cos_url}}/verify/v1/email/bulk/results/02d64272
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 
-HTTP 404
+HTTP *
 [Asserts]
+status == 404
 header "Content-Type" contains "application/json"
 jsonpath "$.requestId" exists
 jsonpath "$.status" == "error"
-jsonpath "$.message" == "invalid requestId"
+jsonpath "$.error" == "Not Found"

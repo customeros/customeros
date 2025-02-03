@@ -4,8 +4,9 @@ Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 [Options]
 
-HTTP 404
+HTTP *
 [Asserts]
+status == 404
 header "Content-Type" contains "application/json"
 jsonpath "$.requestId" exists
 jsonpath "$.status" == "error"

@@ -2,8 +2,9 @@
 GET {{cos_url}}/me
 X-CUSTOMER-OS-API-KEY:
 
-HTTP 401
+HTTP *
 [Asserts]
+status == 401
 header "Content-Type" contains "application/json"
 jsonpath "$.message" == "API key is required"
 jsonpath "$.status" == "error"

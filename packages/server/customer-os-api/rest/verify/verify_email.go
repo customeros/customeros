@@ -229,7 +229,7 @@ func (h *VerifyHandler) VerifyEmailAddress() gin.HandlerFunc {
 		// Check if email address is provided
 		emailAddress := c.Query("address")
 		if emailAddress == "" {
-			message := "Missing parameter: adderss"
+			message := "Missing parameter: address"
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 			return
 		}

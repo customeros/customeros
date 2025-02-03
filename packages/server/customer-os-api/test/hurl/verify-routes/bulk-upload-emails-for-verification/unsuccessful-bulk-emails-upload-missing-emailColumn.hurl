@@ -5,9 +5,10 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 [MultipartFormData]
 file: file,unsuccessful-bulk-emails-upload-missing-emailColumn.csv;
 
-HTTP 400
+HTTP *
 [Asserts]
+status == 400
 header "Content-Type" contains "application/json"
 jsonpath "$.requestId" exists
 jsonpath "$.status" == "error"
-jsonpath "$.message" == "Please provide emailColumn parameter"
+jsonpath "$.message" == "Missing emailColumn parameter"

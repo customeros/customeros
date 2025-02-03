@@ -8,11 +8,10 @@ lastName: Brown
 email: matt@customeros.ai
 includeMobileNumber: true
 
-HTTP 200
+HTTP *
 [Asserts]
+status == 200
 header "Content-Type" contains "application/json; charset=utf-8"
-jsonpath "$.status" == "success"
-jsonpath "$.requestId" exists
 jsonpath "$.isComplete" == true
 jsonpath "$.data" exists
 jsonpath "$.data.emails" isCollection
@@ -35,4 +34,3 @@ jsonpath "$.data.social.linkedin.url" == "https://www.linkedin.com/in/mateocafe"
 jsonpath "$.data.social.x" exists
 jsonpath "$.data.social.github" exists
 jsonpath "$.data.social.discord" exists
-

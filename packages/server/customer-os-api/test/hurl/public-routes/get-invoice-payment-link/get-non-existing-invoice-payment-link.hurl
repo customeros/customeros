@@ -5,7 +5,8 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 [QueryStringParams]
 address: silviu@customeros.ai
 
-HTTP 404
+HTTP *
 [Asserts]
+status == 404
 header "Content-Type" == "text/plain; charset=utf-8"
 body == ""

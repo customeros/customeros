@@ -5,8 +5,9 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
 [QueryStringParams]
 address: silviu@customeros.ai
 
-HTTP 200
+HTTP *
 [Asserts]
+status == 200
 header "Content-Type" == "application/json"
 jsonpath "$.status" == "success"
 jsonpath "$.requestId" exists

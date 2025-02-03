@@ -12,10 +12,11 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     "website": "https://hurl-{{custom_id}}.ai"
 }
 
-HTTP/2 201
+HTTP/2 *
 [Captures]
 org_id: jsonpath "$.organization.id"
 [Asserts]
+status == 201
 jsonpath "$.status" == "success"
 jsonpath "$.organization.id" exists
 
@@ -23,8 +24,9 @@ GET {{cos_url}}/customerbase/v1/organizations/{{org_id}}
 Content-Type: application/json
 X-CUSTOMER-OS-API-KEY: {{api_key}}
 
-HTTP/2 200
+HTTP/2 *
 [Asserts]
+status == 200
 jsonpath "$.status" == "success"
 
 PUT {{cos_url}}/customerbase/v1/organizations/{{org_id}}/links/stripe/primary
@@ -34,8 +36,9 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     "externalId": "stripe-1234"
 }
 
-HTTP/2 200
+HTTP/2 *
 [Asserts]
+status == 200
 jsonpath "$.status" == "success"
 jsonpath "$.organization.externalSystem" == "stripe"
 jsonpath "$.organization.externalId" == "stripe-1234"

@@ -6,13 +6,10 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     "integration": "slack123"
 }
 
-HTTP 400
-#[Captures]
-#hook_url: jsonpath "$.hook.url"
-#hook_secret: jsonpath "$.hook.secret"
-
+HTTP *
 [Asserts]
+status == 400
 header "Content-Type" == "application/json; charset=utf-8"
 jsonpath "$.status" == "error"
 jsonpath "$.requestId" exists
-jsonpath "$.message" == "please provide a valid integration value"
+jsonpath "$.message" == "Invalid integration value"

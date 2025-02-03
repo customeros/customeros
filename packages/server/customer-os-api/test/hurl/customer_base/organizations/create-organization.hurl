@@ -12,9 +12,10 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     "website": "https://hurl-{{custom_id}}.ai"
 }
 
-HTTP/2 201
+HTTP/2 *
 [Captures]
 org_id: jsonpath "$.organization.id"
 [Asserts]
+status == 201
 jsonpath "$.status" == "success"
 jsonpath "$.organization.id" exists

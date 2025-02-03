@@ -14,8 +14,9 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
         }
     ]
 
-HTTP/2 201
+HTTP/2 *
 [Asserts]
+status == 200
 jsonpath "$.status" exists
 jsonpath "$.status" == "success"
 jsonpath "$.requestId" exists

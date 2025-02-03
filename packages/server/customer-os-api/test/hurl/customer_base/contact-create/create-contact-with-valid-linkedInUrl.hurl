@@ -6,8 +6,9 @@ X-CUSTOMER-OS-API-KEY: {{api_key}}
     "linkedinUrl": "https://www.linkedin.com/in/{{random_str}}"
 }
 
-HTTP/2 200
+HTTP/2 *
 [Asserts]
+status == 200
 jsonpath "$.status" exists
 jsonpath "$.status" == "success"
 jsonpath "$.requestId" exists
