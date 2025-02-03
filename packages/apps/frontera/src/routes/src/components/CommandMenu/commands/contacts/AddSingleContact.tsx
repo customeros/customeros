@@ -134,6 +134,10 @@ export const AddSingleContact = observer(() => {
               if (e.key === 'Escape') {
                 handleClose(e);
               }
+
+              if (e.key === 'Enter') {
+                handleSubmit();
+              }
               e.stopPropagation();
             }}
           />
