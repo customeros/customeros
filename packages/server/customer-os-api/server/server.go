@@ -114,21 +114,31 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer df.Close(gRPCconn)
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 
-	// Setting up Gin
-	r := gin.Default()
-
-	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = server.cfg.App.CORS.AllowOrigins
-	for _, header := range server.cfg.App.CORS.AllowHeaders {
-		corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, strings.TrimSpace(header))
-	}
-
 	// Set up services
 	serviceContainer := cosapi_services.InitServices(server.log, &neo4jDriver, postgresDb, server.cfg, grpcContainer)
 
 	// Set up handlers
 	adminApiHandler := graphHandler.NewAdminApiHandler(server.cfg, serviceContainer.Repositories.Neo4jRepositories)
 	restHandlers := rest_handlers.InitRestHandlers(serviceContainer)
+
+	// Setting up Gin
+	r := gin.Default()
+
+	// endpoints without CORS
+	registerRoute(ctx, r, RouteConfig{
+		method:    "POST",
+		path:      "/browserExtension/contact",
+		handler:   restHandlers.BrowserExtension.CreateContact(),
+		routeType: RouteCustomer,
+		services:  serviceContainer,
+		cache:     serviceContainer.Cache,
+	})
+
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = server.cfg.App.CORS.AllowOrigins
+	for _, header := range server.cfg.App.CORS.AllowHeaders {
+		corsConfig.AllowHeaders = append(corsConfig.AllowHeaders, strings.TrimSpace(header))
+	}
 
 	r.Use(cors.New(corsConfig))
 	r.Use(tracing.RecoveryWithJaeger(opentracing.GlobalTracer()))

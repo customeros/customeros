@@ -3,9 +3,9 @@ package security
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/gin-gonic/gin"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"net/http"
@@ -24,7 +24,6 @@ const (
 	KEY_USER_ID     = "UserId"
 	KEY_USER_EMAIL  = "UserEmail"
 	KEY_USER_ROLES  = "UserRoles"
-	KEY_APP_SOURCE  = "AppSource"
 )
 
 const UsernameHeader = "X-Openline-USERNAME"
