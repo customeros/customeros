@@ -1,5 +1,5 @@
 function sendSessionData() {
-  console.log("Attempting to send session data from content script");
+  // console.log("Attempting to send session data from content script");
   const request: IDBOpenDBRequest = indexedDB.open("customerDB_shared");
 
   request.onerror = function (event: Event) {
@@ -28,7 +28,7 @@ function sendSessionData() {
 
     getRequest.onsuccess = function (event: Event) {
       const sessionData = (event.target as IDBRequest).result;
-      console.log("Session data retrieved from IndexedDB:", sessionData);
+      // console.log("Session data retrieved from IndexedDB:", sessionData);
 
       if (sessionData && sessionData.profile) {
         const email: string | null = sessionData.profile.email || null;
@@ -43,9 +43,9 @@ function sendSessionData() {
 
         apiKeyRequest.onsuccess = function (event: Event) {
           const apiKey = (event.target as IDBRequest).result;
-          console.log("tenantApiKey retrieved from IndexedDB:", apiKey);
+          // console.log("tenantApiKey retrieved from IndexedDB:", apiKey);
 
-          console.log("Sending session data to background:", { email, apiKey });
+          // console.log("Sending session data to background:", { email, apiKey });
           if (email && apiKey) {
             chrome.runtime.sendMessage({
               action: "COS_SESSION_DATA",
