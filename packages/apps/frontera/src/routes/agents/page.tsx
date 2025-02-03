@@ -31,16 +31,18 @@ export const AgentsPage = observer(() => {
     <div className='relative h-full'>
       <Header />
       <div className='columns-3 p-4 gap-4'>
-        {agents.map((agent) => (
-          <AgentCard
-            id={agent.id}
-            key={agent.id}
-            icon={agent.value.icon}
-            name={agent.value.name}
-            color={agent.value.color}
-            status={agent.value.isActive ? 'ON' : 'OFF'}
-          />
-        ))}
+        {agents
+          .filter((agent) => agent.value.visible)
+          .map((agent) => (
+            <AgentCard
+              id={agent.id}
+              key={agent.id}
+              icon={agent.value.icon}
+              name={agent.value.name}
+              color={agent.value.color}
+              status={agent.value.isActive ? 'ON' : 'OFF'}
+            />
+          ))}
       </div>
     </div>
   );
