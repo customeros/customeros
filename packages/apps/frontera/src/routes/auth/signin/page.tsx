@@ -15,7 +15,6 @@ import { Divider } from '@ui/presentation/Divider';
 import { Microsoft } from '@ui/media/logos/Microsoft';
 
 import CustomerOsLogo from './CustomerOS-logo.png';
-import { InteractiveDonut } from './interactiveDonut/InteractiveDonut.tsx';
 
 const providers = [
   { id: 'google', name: 'Google' },
@@ -84,8 +83,8 @@ export const SignIn = observer(() => {
     return (
       <div className='h-screen w-screen flex animate-fadeIn overflow-hidden max-h-screen max-w-screen'>
         <div className='flex-1 items-center h-screen overflow-hidden'>
-          <div className='h-full flex items-center justify-center lg:justify-start lg:ml-[12%] relative'>
-            <div className='relative flex flex-col items-center justify-center w-[450px] h-full px-6 pb-6 bg-white  z-[99999] shadow-2xl'>
+          <div className='h-full flex items-center justify-center relative'>
+            <div className='relative flex flex-col items-center justify-center w-[450px] h-full px-6 pb-6 bg-white'>
               <div className='h-full flex items-center justify-center relative '>
                 <div className='flex flex-col items-center w-[360px]'>
                   <img
@@ -116,9 +115,6 @@ export const SignIn = observer(() => {
             </div>
           </div>
         </div>
-        <div className='h-full w-[100%] absolute top-[-100vh]'>
-          <InteractiveDonut />
-        </div>
       </div>
     );
   }
@@ -127,8 +123,8 @@ export const SignIn = observer(() => {
     <>
       <div className='h-screen w-screen flex animate-fadeIn overflow-hidden max-h-screen max-w-screen'>
         <div className='flex-1 items-center h-screen overflow-hidden'>
-          <div className='h-full flex items-center justify-center lg:justify-start lg:ml-[12%] relative'>
-            <div className='flex flex-col items-center justify-center w-[450px] h-full px-6 pb-6 bg-white  z-[99999] shadow-2xl'>
+          <div className='h-full flex items-center justify-center  relative'>
+            <div className='flex flex-col items-center justify-center w-[450px] h-full px-6 pb-6 bg-white'>
               <img
                 width={264}
                 height={264}
@@ -252,9 +248,6 @@ export const SignIn = observer(() => {
               </div>
             </div>
           </div>
-        </div>
-        <div className='h-full w-[100%] absolute top-[-100vh]'>
-          <InteractiveDonut />
         </div>
       </div>
     </>
