@@ -80,10 +80,6 @@ func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(IdentifyWebsiteVisitor
 	return nil
 }
 
-func (c *IdentifyWebsiteVisitorCapability) GetOutput() IdentifyWebsiteVisitorOutput {
-	return IdentifyWebsiteVisitorOutput{}
-}
-
 type IdentifyWebsiteVisitorInput struct {
 	SessionID string `json:"sessionId"`
 	IPAddress string `json:"ipAddress"`

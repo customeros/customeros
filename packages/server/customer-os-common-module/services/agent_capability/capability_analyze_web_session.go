@@ -69,10 +69,6 @@ func (c *AnalyzeWebSessionCapability) ValidateConfig(config NoConfig) error {
 	return nil
 }
 
-func (c *AnalyzeWebSessionCapability) GetOutput() AnalyzeWebSessionOutput {
-	return AnalyzeWebSessionOutput{}
-}
-
 type AnalyzeWebSessionInput struct {
 	SessionID      string `json:"sessionId"`
 	VisitorID      string `json:"visitorId"`

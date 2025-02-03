@@ -56,10 +56,6 @@ func (c *CreateOrganizationCapability) ValidateConfig(config NoConfig) error {
 	return nil
 }
 
-func (c *CreateOrganizationCapability) GetOutput() CreateOrganizationOutput {
-	return CreateOrganizationOutput{}
-}
-
 type CreateOrganizationInput struct {
 	Domain string `json:"domain"`
 }

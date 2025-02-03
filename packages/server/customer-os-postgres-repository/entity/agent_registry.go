@@ -10,10 +10,12 @@ import (
 type AgentRegistry struct {
 	ID           string         `gorm:"primaryKey;type:varchar(21)" json:"id"`
 	Type         enum.AgentType `gorm:"column:type;type:varchar(255);not null;index" json:"type" binding:"required"`
+	AgentName    string         `gorm:"column:agent_name;type:varchar(255);not null" json:"agentName"`
 	Filename     string         `gorm:"column:filename;type:varchar(255);not null" json:"filename"`
 	Triggers     pq.StringArray `gorm:"column:triggers;type:varchar[]" json:"triggers"`
 	Capabilities pq.StringArray `gorm:"column:capabilities;type:varchar[]" json:"capabilities"`
 	Version      string         `gorm:"column:version;type:varchar(21);not null" json:"version"`
+	Goal         string         `gorm:"column:goal;type:varchar(255)" json:"goal"`
 	IsActive     bool           `gorm:"column:is_active;type:boolean;default:true" json:"isActive"`
 	Icon         string         `gorm:"column:icon;type:text" json:"icon"`
 }

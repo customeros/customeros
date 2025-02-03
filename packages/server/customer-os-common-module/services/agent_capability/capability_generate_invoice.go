@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -28,8 +29,7 @@ type GenerateInvoiceOutput struct {
 	InvoiceNumber string `json:"invoiceNumber"`
 }
 
-type GenerateInvoiceConfig struct {
-}
+type GenerateInvoiceConfig struct{}
 
 func (c *GenerateInvoiceConfig) Validate() bool {
 	return true
@@ -48,10 +48,6 @@ func (c *GenerateInvoiceCapability) GetInput() GenerateInvoiceInput {
 
 func (c *GenerateInvoiceCapability) GetConfig() GenerateInvoiceConfig {
 	return GenerateInvoiceConfig{}
-}
-
-func (c *GenerateInvoiceCapability) GetOutput() GenerateInvoiceOutput {
-	return GenerateInvoiceOutput{}
 }
 
 // Compile-time interface check

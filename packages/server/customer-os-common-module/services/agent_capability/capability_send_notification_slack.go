@@ -43,10 +43,6 @@ func (c *SendSlackNotificationCapability) GetConfig() SendSlackNotificationConfi
 	return SendSlackNotificationConfig{}
 }
 
-func (c *SendSlackNotificationCapability) GetOutput() SendSlackNotificationOutput {
-	return SendSlackNotificationOutput{}
-}
-
 func NewSendSlackNotificationCapability(notificationService interfaces.NotificationService) *SendSlackNotificationCapability {
 	return &SendSlackNotificationCapability{
 		notificationService: notificationService,
