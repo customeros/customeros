@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, MouseEvent, KeyboardEvent } from 'react';
 
 import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
@@ -57,7 +57,12 @@ export const AddSingleContact = observer(() => {
   const confirmButtonText =
     contactCreate.type === 'name' ? 'Add contact' : 'Add & enrich';
 
-  const handleClose = (e?: KeyboardEvent) => {
+  const handleClose = (
+    e?:
+      | KeyboardEvent
+      | KeyboardEvent<HTMLButtonElement | HTMLInputElement>
+      | MouseEvent,
+  ) => {
     e?.stopPropagation();
     e?.preventDefault();
     contactCreate.clearState();
@@ -82,7 +87,7 @@ export const AddSingleContact = observer(() => {
   }, [store.ui.commandMenu.context?.meta]);
 
   useModKey('Enter', handleSubmit);
-  useKey('Escape', handleClose);
+  useKey('Escape', () => handleClose());
 
   return (
     <Command shouldFilter={false} label='Add contacts'>
