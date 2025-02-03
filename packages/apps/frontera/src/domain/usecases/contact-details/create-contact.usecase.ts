@@ -2,32 +2,37 @@ import { RootStore } from '@store/root';
 import { action, computed, observable } from 'mobx';
 import { ContactService } from '@store/Contacts/__service__/Contacts.service';
 
-export class CreateContact {
+type ContactType = 'linkedin' | 'email' | 'name';
+
+interface ValidationError {
+  message: string;
+  isEmpty: boolean;
+  isInvalid: boolean;
+}
+
+export class CreateContactUsecase {
   private service = ContactService.getInstance();
   private root = RootStore.getInstance();
 
   @observable accessor inputValue: string = '';
-  @observable accessor type: 'linkedin' | 'email' | 'name' = 'linkedin';
+  @observable accessor isLoading: boolean = false;
+  @observable accessor type: ContactType = 'linkedin';
   @observable accessor organizationId: string = '';
-  @observable accessor invalidName: boolean = false;
-  @observable accessor invalidLinkedInUrl: boolean = false;
-  @observable accessor emptyLinkedInUrl: boolean = false;
-  @observable accessor errorLinkedIn: string = '';
-  @observable accessor errorEmail: string = '';
-  @observable accessor emptyEmail: boolean = false;
-  @observable accessor invalidEmail: boolean = false;
+  @observable accessor errors: Record<ContactType, ValidationError> = {
+    linkedin: { isEmpty: false, isInvalid: false, message: '' },
+    email: { isEmpty: false, isInvalid: false, message: '' },
+    name: { isEmpty: false, isInvalid: false, message: '' },
+  };
 
-  constructor() {
-    this.setInputValue = this.setInputValue.bind(this);
-    this.setType = this.setType.bind(this);
-    this.setErrorEmail = this.setErrorEmail.bind(this);
-    this.setErrorLinkedin = this.setErrorLinkedin.bind(this);
-    this.clearErrors = this.clearErrors.bind(this);
-  }
+  private readonly PATTERNS = {
+    linkedin: /^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/,
+    email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+  };
 
   @action
-  setType(type: 'linkedin' | 'email' | 'name') {
+  setType(type: ContactType) {
     this.type = type;
+    this.clearErrors();
   }
 
   @action
@@ -38,174 +43,143 @@ export class CreateContact {
   @action
   setInputValue(inputValue: string) {
     this.inputValue = inputValue;
+    this.clearErrors();
   }
 
   @computed
-  get getType() {
-    return this.type;
+  get currentError(): ValidationError {
+    return this.errors[this.type];
   }
 
   @action
-  getInputValue() {
-    return this.inputValue;
-  }
+  private validateInput(): boolean {
+    const error = this.errors[this.type];
 
-  @action
-  setErrorEmail(error: string) {
-    this.errorEmail = error;
-  }
+    if (!this.inputValue) {
+      error.isEmpty = true;
 
-  @action
-  setErrorLinkedin(error: string) {
-    this.errorLinkedIn = error;
-  }
-
-  @action
-  validateName() {
-    if (this.inputValue.length === 0) {
-      this.invalidName = true;
-    } else {
-      this.invalidName = false;
+      return false;
     }
-  }
 
-  @action
-  async checkIfLinkedInUrlExists(linkedInUrl: string) {
-    const { contact_ByLinkedIn } = await this.service.contactExistsByLinkedIn({
-      linkedIn: linkedInUrl,
-    });
-
-    if (contact_ByLinkedIn?.metadata.id) {
-      this.setErrorLinkedin('A contact with this LinkedIn already exists');
+    if (this.type === 'name') {
+      return true;
     }
+
+    const pattern = this.PATTERNS[this.type];
+
+    if (!pattern.test(this.inputValue)) {
+      error.isInvalid = true;
+
+      return false;
+    }
+
+    return true;
   }
 
   @action
-  validateLinkedInUrl() {
-    const url = this.inputValue;
+  private async checkExisting(): Promise<boolean> {
+    const error = this.errors[this.type];
 
-    if (url.length === 0) {
-      this.emptyLinkedInUrl = true;
-    } else {
-      this.emptyLinkedInUrl = false;
+    try {
+      if (this.type === 'linkedin') {
+        const { contact_ByLinkedIn } =
+          await this.service.contactExistsByLinkedIn({
+            linkedIn: this.inputValue,
+          });
 
-      const linkedInUrlPattern = /^(https?:\/\/)?(www\.)?linkedin\.com\/.*$/;
+        if (contact_ByLinkedIn?.metadata.id) {
+          error.message = 'A contact with this LinkedIn already exists';
 
-      if (!linkedInUrlPattern.test(url)) {
-        this.invalidLinkedInUrl = true;
-      } else {
-        this.invalidLinkedInUrl = false;
+          return false;
+        }
       }
+
+      if (this.type === 'email') {
+        const { contact_ByEmail } = await this.service.contactExistsByEmail({
+          email: this.inputValue,
+        });
+
+        if ((contact_ByEmail?.emails?.length ?? 0) > 0) {
+          error.message = 'A contact with this email already exists';
+
+          return false;
+        }
+      }
+
+      return true;
+    } catch (err) {
+      error.message = 'Error checking existing contact';
+
+      return false;
     }
   }
 
   @action
-  validateEmail() {
-    const email = this.inputValue;
+  private async createContact() {
+    const options = {
+      onSuccess: () => {
+        this.isLoading = false;
+        this.root.ui.commandMenu.toggle('AddSingleContact');
+        this.root.ui.commandMenu.clearContext();
+        this.root.ui.toastSuccess('Contact created', 'contact-email-created');
+      },
+    };
 
-    if (email.length === 0) {
-      this.emptyEmail = true;
-    } else {
-      this.emptyEmail = false;
+    switch (this.type) {
+      case 'linkedin':
+        await this.root.contacts.createWithSocial({
+          organizationId: this.organizationId,
+          socialUrl: this.inputValue,
+        });
+        break;
+
+      case 'name':
+        await this.root.contacts.create(this.organizationId, options, {
+          name: this.inputValue,
+        });
+        break;
+
+      case 'email':
+        await this.root.contacts.createWithEmail(this.organizationId, options, {
+          email: { email: this.inputValue, primary: true },
+        });
+        break;
     }
-
-    const emailPatern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-    if (!emailPatern.test(email)) {
-      this.invalidEmail = true;
-    } else {
-      this.invalidEmail = false;
-    }
-  }
-
-  @action
-  async checkIfEmailExists(email: string) {
-    const { contact_ByEmail } = await this.service.contactExistsByEmail({
-      email: email,
-    });
-
-    if ((contact_ByEmail?.emails?.length ?? 0) > 0) {
-      this.setErrorEmail('A contact with this email already exists');
-    }
-  }
-
-  @action
-  clearState() {
-    this.errorEmail = '';
-    this.errorLinkedIn = '';
-    this.emptyLinkedInUrl = false;
-    this.invalidLinkedInUrl = false;
-    this.emptyEmail = false;
-    this.invalidEmail = false;
-    this.inputValue = '';
-    this.type = 'linkedin';
   }
 
   @action
   clearErrors() {
-    this.errorEmail = '';
-    this.errorLinkedIn = '';
-    this.emptyLinkedInUrl = false;
-    this.invalidLinkedInUrl = false;
-    this.emptyEmail = false;
-    this.invalidEmail = false;
+    Object.values(this.errors).forEach((error) => {
+      error.isEmpty = false;
+      error.isInvalid = false;
+      error.message = '';
+    });
+  }
+
+  @action
+  clearState() {
+    this.clearErrors();
+    this.inputValue = '';
+    this.isLoading = false;
+    this.type = 'linkedin';
   }
 
   @action
   async submit() {
-    if (this.type === 'linkedin') {
-      this.validateLinkedInUrl();
+    this.clearErrors();
+    this.isLoading = true;
 
-      if (this.emptyLinkedInUrl) return;
-      if (this.invalidLinkedInUrl) return;
-      await this.checkIfLinkedInUrlExists(this.inputValue);
+    if (!this.validateInput()) {
+      this.isLoading = false;
 
-      if (this.errorLinkedIn) return;
-
-      this.root.contacts.createWithSocial({
-        organizationId: this.organizationId,
-        socialUrl: this.inputValue,
-      });
+      return;
     }
 
-    if (this.type === 'name') {
-      this.validateName();
-
-      if (this.invalidName) return;
-      this.root.contacts.create(
-        this.organizationId,
-        {
-          onSuccess: () =>
-            this.root.ui.toastSuccess(
-              'Contact created',
-              'contact-email-created',
-            ),
-        },
-        { name: this.inputValue },
-      );
+    if (this.type !== 'name' && !(await this.checkExisting())) {
+      return;
     }
 
-    if (this.type === 'email') {
-      this.validateEmail();
-
-      if (this.emptyEmail) return;
-      if (this.invalidEmail) return;
-      await this.checkIfEmailExists(this.inputValue);
-
-      if (this.errorEmail) return;
-
-      this.root.contacts.createWithEmail(
-        this.organizationId,
-        {
-          onSuccess: () =>
-            this.root.ui.toastSuccess(
-              'Contact created',
-              'contact-email-created',
-            ),
-        },
-        { email: { email: this.inputValue, primary: true } },
-      );
-    }
+    await this.createContact();
     this.clearState();
   }
 }
