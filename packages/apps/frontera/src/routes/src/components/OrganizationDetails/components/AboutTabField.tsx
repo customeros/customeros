@@ -33,8 +33,8 @@ export const AboutTabField = ({
   return (
     <div className='flex group'>
       <Tooltip align='start' label={label}>
-        <p className='text-sm flex items-center cursor-default '>
-          {icon}
+        <div className='text-sm flex items-center cursor-default '>
+          <div className='flex items-center'>{icon}</div>
           {value ? (
             <span>{value}</span>
           ) : (
@@ -42,7 +42,7 @@ export const AboutTabField = ({
               {placeholder}
             </span>
           )}
-        </p>
+        </div>
       </Tooltip>
       {value && (
         <Tooltip

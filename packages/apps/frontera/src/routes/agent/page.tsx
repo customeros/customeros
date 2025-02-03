@@ -6,7 +6,7 @@ import { observer } from 'mobx-react-lite';
 import { AgentViewUsecase } from '@domain/usecases/agents/agent-view.usecase';
 
 import { cn } from '@ui/utils/cn';
-import { Icon } from '@ui/media/Icon';
+import { Icon, IconName } from '@ui/media/Icon';
 import { CapabilityType } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 
@@ -15,10 +15,13 @@ import { Header, capabilities } from './components';
 const goalMap = {
   identify_web_visitor:
     'Identify website visitors and add them as enriched leads to CustomerOS',
+  evaluate_icp_fit:
+    'Qualify new leads based on whether they match your ideal customer profile or not',
 };
 
 export const AgentPage = observer(() => {
   const store = useStore();
+
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [queryParams, setQueryParams] = useSearchParams();
@@ -58,6 +61,7 @@ export const AgentPage = observer(() => {
       <Header
         isActive={!!agent?.value.isActive}
         agentName={agent?.value?.name ?? ''}
+        icon={agent?.value.icon as IconName}
         onToggleActive={usecase.toggleActive}
       />
 

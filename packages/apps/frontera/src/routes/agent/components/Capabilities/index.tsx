@@ -1,5 +1,6 @@
 import { CapabilityType } from '@graphql/types';
 
+import { EvaluateCompanyIcpFit } from './EvaluateCompanyIcpFit';
 import { WebsiteTrackerCapability } from './WebsiteTrackerCapability';
 import { SendSlackNotificationCapability } from './SendSlackNotificationCapability';
 
@@ -11,7 +12,7 @@ export const capabilities: Record<CapabilityType, () => JSX.Element> = {
   [CapabilityType.WebVisitorSendSlackNotification]: () => (
     <SendSlackNotificationCapability />
   ),
-  [CapabilityType.IcpQualify]: () => <></>,
-  [CapabilityType.CreateMarkdownTimelineEvent]: () => <></>,
   [CapabilityType.ApplyTag]: () => <></>,
+  [CapabilityType.CreateMarkdownTimelineEvent]: () => <></>,
+  [CapabilityType.IcpQualify]: () => <EvaluateCompanyIcpFit />,
 };
