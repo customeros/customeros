@@ -271,6 +271,13 @@ func InitCommonServices(
 	capabilityExecutionImpl := agent_capability.NewAgentCapabilityExecutionService()
 	agentRunnerImpl := agent.NewAgentRunnerService(postgresRepositories, capabilityImpl, agentImpl, capabilityExecutionImpl)
 
+	// initialize agent registry
+	agentRegImpl := agent.NewAgentRegistryService(postgresRepositories, capabilityImpl.GetExecutors())
+	err = agentRegImpl.SyncRegistry(context.Background())
+	if err != nil {
+		log.Fatalf("cannot sync agent registry")
+	}
+
 	// Initialize CommonServices struct
 	common := CommonServices{
 		// Core components

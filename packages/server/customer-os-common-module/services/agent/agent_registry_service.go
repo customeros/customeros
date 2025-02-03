@@ -2,7 +2,6 @@ package agent
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 
 	"github.com/BurntSushi/toml"
@@ -10,11 +9,11 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
+	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/aws_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
@@ -30,16 +29,15 @@ type Agent struct {
 	Goal         string       `toml:"goal"`
 	Icon         string       `toml:"icon"`
 	Triggers     Triggers     `toml:"triggers"`
-	Capabilities []Capability `toml:"capabilities"`
+	Capabilities Capabilities `toml:"capabilities"`
 }
 
 type Triggers struct {
 	Events []string `toml:"events"`
 }
 
-type Capability struct {
-	Type          string      `toml:"type"`
-	ConfigDefault interface{} `toml:"config_default,omitempty"`
+type Capabilities struct {
+	Types []string `toml:"types"`
 }
 
 type agentRegistryService struct {
@@ -77,98 +75,62 @@ func (r *agentRegistryService) SyncRegistry(ctx context.Context) error {
 		return err
 	}
 
+	var errs error
 	for _, file := range agentConfigFiles {
-		agentConfig, err := r.loadAgentConfig(ctx, file)
+		err = r.processAgentConfigFile(ctx, file)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
-		}
-
-		agentType, err := enum.GetAgentType(agentConfig.Type)
-		if err != nil {
-			span.LogKV("agentType", agentConfig.Type)
-			err := errors.New("Not a valid agent type")
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		dbAgent := postgres_entity.AgentRegistry{
-			Type:     agentType,
-			Name:     agentConfig.Name,
-			Goal:     agentConfig.Goal,
-			Icon:     agentConfig.Icon,
-			IsActive: true,
-		}
-
-		// process capabilities
-		var dbCapabilities []postgres_entity.Capability
-		for _, cap := range agentConfig.Capabilities {
-			capType, err := enum.GetAgentCapability(cap.Type)
-			if err != nil {
-				span.LogKV("capabilityType", cap.Type)
-				tracing.TraceErr(span, err)
-				return err
-			}
-
-			// process capability config
-			configStr := ""
-			if cap.ConfigDefault != nil {
-				config, err := r.processAgentConfig(ctx, cap)
-				if err != nil {
-					tracing.LogObjectAsJson(span, "config", config)
-					tracing.TraceErr(span, err)
-					return err
-				}
-
-				// convert config to JSON string
-				configBytes, err := json.Marshal(config)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return err
-				}
-				configStr = string(configBytes)
-			}
-
-			dbCapabilities = append(dbCapabilities, postgres_entity.Capability{
-				Type:   capType,
-				Config: configStr,
-				Active: true,
-			})
-		}
-
-		dbAgent.CapabilitiesConfig = postgres_entity.CapabilitiesConfig{
-			Capabilities: dbCapabilities,
-		}
-
-		// Check if agent already exists in DB
-		existingAgent, err := r.postgresRepositories.AgentRegistryRepository.FindByType(ctx, dbAgent.Type)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		if existingAgent != nil {
-			// Update existing agent
-			existingAgent.Name = dbAgent.Name
-			existingAgent.Goal = dbAgent.Goal
-			existingAgent.Icon = dbAgent.Icon
-			existingAgent.CapabilitiesConfig = dbAgent.CapabilitiesConfig
-
-			_, err = r.postgresRepositories.AgentRegistryRepository.Update(ctx, *existingAgent)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-		} else {
-			// Create new agent
-			_, err = r.postgresRepositories.AgentRegistryRepository.Create(ctx, dbAgent)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
+			errs = multierr.Append(errs, err)
 		}
 	}
 
+	return errs
+}
+
+func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filename string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "agentRegistryService.processAgentConfigFile")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	agentConfig, err := r.getAgentConfig(ctx, filename)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	agentType, err := enum.GetAgentType(agentConfig.Type)
+	if err != nil {
+		span.LogKV("agentType", agentConfig.Type)
+		err := errors.New("Not a valid agent type")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	dbAgent := postgres_entity.AgentRegistry{
+		Type:         agentType,
+		Version:      agentConfig.Version,
+		Filename:     filename,
+		Triggers:     agentConfig.Triggers.Events,
+		Capabilities: agentConfig.Capabilities.Types,
+		Icon:         agentConfig.Icon,
+		IsActive:     true,
+	}
+
+	// Check if agent already exists in DB
+	existingAgent, err := r.postgresRepositories.AgentRegistryRepository.FindByType(ctx, dbAgent.Type)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if existingAgent == nil {
+		// Create new agent
+		_, err = r.postgresRepositories.AgentRegistryRepository.Create(ctx, dbAgent)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
 	return nil
 }
 
@@ -206,66 +168,5 @@ func (r *agentRegistryService) loadAgentConfig(ctx context.Context, file string)
 		return nil, err
 	}
 
-	for _, cap := range agent.Capabilities {
-		_, err := r.processAgentConfig(ctx, cap)
-		if err != nil {
-			tracing.TraceErr(span, err)
-		}
-	}
-
 	return &agent, nil
-}
-
-func (r *agentRegistryService) processAgentConfig(ctx context.Context, capability Capability) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "agentRegistryService.processAgentConfig")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "capability", capability)
-
-	capType, err := enum.GetAgentCapability(capability.Type)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	_, exists := r.agentCapabilityExecutors[capType]
-	if !exists {
-		err = errors.New("capability not registered")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	typedCap, ok := agent_capability.GetTypedExecutor[any, any, any](
-		r.agentCapabilityExecutors,
-		capType,
-	)
-	if !ok {
-		err = errors.New("failed to get typed capability")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	// Get base config for capability
-	config := typedCap.GetConfig()
-
-	// If no config in TOML, return base config
-	if capability.ConfigDefault == nil {
-		return config, nil
-	}
-
-	// Marshal TOML config to bytes for processing
-	configBytes, err := toml.Marshal(capability.ConfigDefault)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	// Unmarshal into the correct config type
-	err = toml.Unmarshal(configBytes, &config)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return config, nil
 }
