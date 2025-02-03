@@ -20,4 +20,6 @@ type AgentService interface {
 	SaveAgentExecutionError(ctx context.Context, executionID, errorMessage string) error
 }
 
-type AgentRegistry interface{}
+type AgentRegistry interface {
+	SyncRegistry(ctx context.Context) error
+}
