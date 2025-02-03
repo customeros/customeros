@@ -24,6 +24,7 @@ func InitCapabilities(
 	workspaceService interfaces.WorkspaceService,
 	markdownService interfaces.MarkdownEventService,
 	domainService interfaces.DomainService,
+	invoiceService interfaces.InvoiceService,
 ) *AgentCapabilities {
 	capabilities := &AgentCapabilities{
 		executors: make(map[enum.AgentCapability]interfaces.AgentCapabilityUntyped),
@@ -38,6 +39,7 @@ func InitCapabilities(
 	capabilities.executors[enum.CapabilityApplyTag] = NewApplyTagCapability(tagService)
 	capabilities.executors[enum.CapabilityCreateMarkdownTimelineEvent] = NewCreateMarkdownTimelineEventCapability(markdownService)
 	capabilities.executors[enum.CapabilityEvaluateCompanyICPFit] = NewICPQualificationCapability(postgresRepositories, aiService, organizationService)
+	capabilities.executors[enum.CapabilityGenerateInvoice] = NewGenerateInvoiceCapability(postgresRepositories, invoiceService)
 	// Continue registering other capabilities here...
 
 	return capabilities
@@ -61,7 +63,7 @@ func GetTypedExecutor[I, O, C any](
 	executors map[enum.AgentCapability]interfaces.AgentCapabilityUntyped,
 	capType enum.AgentCapability,
 ) (interfaces.AgentCapability[I, O, C], bool) {
-	key := enum.AgentCapability(capType)
+	key := capType
 	executor, exists := executors[key]
 	if !exists {
 		return nil, false

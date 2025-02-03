@@ -87,6 +87,13 @@ func (f *agentCapabilityExecutionService) Execute(
 		}
 		return executeCapability(ctx, capability, params, executor)
 
+	case enum.CapabilityGenerateInvoice:
+		executor, ok := GetTypedExecutor[GenerateInvoiceInput, GenerateInvoiceOutput, GenerateInvoiceConfig](executors, capability.Type)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
+		}
+		return executeCapability(ctx, capability, params, executor)
+
 	default:
 		err := fmt.Errorf("capability not configured")
 		span.LogKV("capability", capability.Type)
