@@ -2,10 +2,10 @@ package dataloader
 
 import (
 	"context"
-	"github.com/graph-gophers/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/graph-gophers/dataloader"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -45,7 +45,7 @@ func (b *contractBatcher) getContractsForOrganizations(ctx context.Context, keys
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	contractEntitiesPtr, err := b.contractService.GetContractsForOrganizations(ctx, ids)
+	contractEntitiesPtr, err := b.commonContractService.GetContractsForOrganizations(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred

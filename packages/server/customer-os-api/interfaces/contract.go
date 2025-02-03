@@ -15,7 +15,6 @@ type ContractService interface {
 	Update(ctx context.Context, input model.ContractUpdateInput) error
 	SoftDeleteContract(ctx context.Context, contractId string) (bool, error)
 	GetById(ctx context.Context, id string) (*neo4j_entity.ContractEntity, error)
-	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*neo4j_entity.ContractEntities, error)
 	GetContractsForInvoices(ctx context.Context, invoiceIds []string) (*neo4j_entity.ContractEntities, error)
 	GetContractByServiceLineItem(ctx context.Context, serviceLineItemId string) (*neo4j_entity.ContractEntity, error)
 	ContractsExistForTenant(ctx context.Context) (bool, error)

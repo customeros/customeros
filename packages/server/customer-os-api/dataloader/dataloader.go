@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/graph-gophers/dataloader"
 	cosapi_interfaces "github.com/customeros/customeros/packages/server/customer-os-api/interfaces"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/graph-gophers/dataloader"
 )
 
 const defaultDataloaderWaitTime = 32 * time.Millisecond
@@ -210,7 +210,8 @@ type commentBatcher struct {
 	commentService cosapi_interfaces.CommentService
 }
 type contractBatcher struct {
-	contractService cosapi_interfaces.ContractService
+	contractService       cosapi_interfaces.ContractService
+	commonContractService interfaces.ContractService
 }
 type serviceLineItemBatcher struct {
 	serviceLineItemService interfaces.ServiceLineItemService
@@ -314,7 +315,8 @@ func NewDataLoader(services *cosapi_services.Services) *Loaders {
 		actionItemService: services.ActionItemService,
 	}
 	contractBatcher := &contractBatcher{
-		contractService: services.ContractService,
+		contractService:       services.ContractService,
+		commonContractService: services.CommonServices.ContractService,
 	}
 	serviceLineItemBatcher := &serviceLineItemBatcher{
 		serviceLineItemService: services.CommonServices.ServiceLineItemService,

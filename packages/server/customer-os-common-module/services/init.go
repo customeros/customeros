@@ -250,6 +250,7 @@ func InitCommonServices(
 	contractImpl.SetOpportunityService(opportunityImpl)
 	flowExecutionImpl.SetFlowService(flowImpl)
 	jobroleImpl.SetOrganizationService(orgImpl)
+	orgImpl.SetContractService(contractImpl)
 
 	// initialize agent capabilities
 	capabilityImpl := agent_capability.InitCapabilities(

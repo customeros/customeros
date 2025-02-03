@@ -15,6 +15,7 @@ import (
 
 type OrganizationService interface {
 	SetSocialService(social SocialService)
+	SetContractService(contractService ContractService)
 	IsInitialized() bool
 
 	GetById(ctx context.Context, tenant, organizationId string) (*neo4j_entity.OrganizationEntity, error)

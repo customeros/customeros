@@ -44,6 +44,7 @@ type organizationService struct {
 	user            interfaces.UserService
 	social          interfaces.SocialService
 	currencyService interfaces.CurrencyService
+	contractService interfaces.ContractService
 }
 
 func NewOrganizationService(log logger.Logger,
@@ -71,6 +72,10 @@ func NewOrganizationService(log logger.Logger,
 
 func (s *organizationService) SetSocialService(social interfaces.SocialService) {
 	s.social = social
+}
+
+func (s *organizationService) SetContractService(contractService interfaces.ContractService) {
+	s.contractService = contractService
 }
 
 func (s *organizationService) IsInitialized() bool {
@@ -651,6 +656,21 @@ func (s *organizationService) Hide(ctx context.Context, txWithPostCommit *utils.
 		return err
 	}
 	tenant := common.GetTenantFromContext(ctx)
+
+	// validate no live contracts
+	contracts, err := s.contractService.GetContractsForOrganizations(ctx, []string{organizationId})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Failed to get contracts for organization: %v", err.Error())
+		return err
+	}
+	for _, contract := range *contracts {
+		if contract.ContractStatus == neo4jenum.ContractStatusLive {
+			err = errors.New("Cannot hide organization with live contracts")
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
 
 	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 		err = s.ValidateOrganizationExists(ctx, txWithPostCommit.Tx, organizationId)
