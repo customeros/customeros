@@ -87,6 +87,7 @@ func (s *serviceLineItemService) Create(ctx context.Context, serviceLineItemDeta
 		StartedAt:  serviceLineItemDetails.StartedAt,
 		EndedAt:    serviceLineItemDetails.EndedAt,
 		Source:     utils.StringPtr(serviceLineItemDetails.Source.String()),
+		NewVersion: utils.BoolPtr(false),
 	}
 
 	if serviceLineItemDetails.SkuId != "" && serviceLineItemDetails.SliName == "" {
@@ -247,6 +248,7 @@ func (s *serviceLineItemService) NewVersion(ctx context.Context, data cosapi_int
 		Comments:   utils.StringPtr(data.Comments),
 		Source:     utils.StringPtr(data.Source.String()),
 		BilledType: utils.ToPtr(baseServiceLineItemEntity.Billed),
+		NewVersion: utils.BoolPtr(true),
 	}
 
 	sliId, err := s.sli.Save(ctx, nil, nil, sliDataFields)
@@ -435,6 +437,7 @@ func (s *serviceLineItemService) Update(ctx context.Context, serviceLineItemDeta
 			Comments:   utils.StringPtr(serviceLineItemDetails.SliComments),
 			BilledType: utils.ToPtr(serviceLineItemDetails.SliBilledType),
 			ParentId:   utils.StringPtr(baseServiceLineItemEntity.ParentID),
+			NewVersion: utils.BoolPtr(false),
 		}
 
 		// if start date is changed, validate that change is allowed

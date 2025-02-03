@@ -20,4 +20,5 @@ type SLIFields struct {
 	TaxRate    *float64              `json:"taxRate,omitempty"`
 	Comments   *string               `json:"comments,omitempty"`
 	ParentId   *string               `json:"parentId,omitempty"`
+	NewVersion *bool                 `json:"newVersion,omitempty"`
 }
