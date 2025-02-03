@@ -1,8 +1,8 @@
-import { useRef, useEffect, MouseEvent, KeyboardEvent } from 'react';
+import { useRef, useEffect } from 'react';
 
 import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
-import { CreateContact } from '@domain/usecases/contact-details/create-contact.usecase';
+import { CreateContactUsecase } from '@domain/usecases/contact-details/create-contact.usecase';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
@@ -16,25 +16,48 @@ import { Signature } from '@ui/media/icons/Signature';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 import { Command, CommandCancelIconButton } from '@ui/overlay/CommandMenu';
 
-const contactCreate = new CreateContact();
+const contactCreate = new CreateContactUsecase();
+
+interface InputConfig {
+  label: string;
+  icon: JSX.Element;
+  placeholder: string;
+  type: 'linkedin' | 'email' | 'name';
+}
+
+const INPUT_CONFIGS: InputConfig[] = [
+  {
+    type: 'linkedin',
+    placeholder: 'linkedin.com/in/johnlemon',
+    icon: <LinkedinOutline className='text-inherit' />,
+    label: 'LinkedIn',
+  },
+  {
+    type: 'email',
+    placeholder: 'john@heyjude.band',
+    icon: <Mail01 className='text-inherit' />,
+    label: 'Email',
+  },
+  {
+    type: 'name',
+    placeholder: 'First and last name',
+    icon: <Signature className='text-inherit' />,
+    label: 'Name',
+  },
+];
+
 export const AddSingleContact = observer(() => {
   const store = useStore();
   const inputRef = useRef<HTMLInputElement>(null);
-  const inputPlaceholder =
-    contactCreate.getType === 'linkedin'
-      ? 'linkedin.com/in/johnlemon'
-      : contactCreate.getType === 'email'
-      ? 'john@heyjude.band'
-      : 'First and last name';
-  const confirmButtonPlaceholder =
-    contactCreate.getType === 'name' ? 'Add contact' : 'Add & enrich';
 
-  const handleClose = (
-    e?:
-      | MouseEvent<HTMLButtonElement>
-      | KeyboardEvent<HTMLInputElement>
-      | KeyboardEvent<HTMLButtonElement>,
-  ) => {
+  const currentConfig =
+    INPUT_CONFIGS.find((config) => config.type === contactCreate.type) ??
+    INPUT_CONFIGS[0];
+
+  const confirmButtonText =
+    contactCreate.type === 'name' ? 'Add contact' : 'Add & enrich';
+
+  const handleClose = (e?: KeyboardEvent) => {
     e?.stopPropagation();
     e?.preventDefault();
     contactCreate.clearState();
@@ -42,50 +65,24 @@ export const AddSingleContact = observer(() => {
     store.ui.commandMenu.clearContext();
   };
 
-  useEffect(() => {
-    if (store.ui.commandMenu.context?.meta?.email.length) {
-      contactCreate.setType('email');
-      contactCreate.setInputValue(store.ui.commandMenu.context.meta.email);
-    }
-  }, [store.ui.commandMenu.context?.meta]);
-
   const handleSubmit = async () => {
     contactCreate.setOrganizationId(
       store.ui.commandMenu.context?.ids?.[0] as string,
     );
-
-    if (contactCreate.getType === 'name') {
-      await contactCreate.submit();
-
-      !contactCreate.invalidName && handleClose();
-    }
-
-    if (contactCreate.getType === 'linkedin') {
-      await contactCreate.submit();
-
-      if (contactCreate.emptyLinkedInUrl || contactCreate.invalidLinkedInUrl)
-        return;
-      if (contactCreate.errorLinkedIn) return;
-      handleClose();
-    }
-
-    if (contactCreate.getType === 'email') {
-      await contactCreate.submit();
-
-      if (contactCreate.emptyEmail || contactCreate.invalidEmail) return;
-      if (contactCreate.errorEmail) return;
-
-      store.ui.commandMenu.context?.meta?.callback();
-      handleClose();
-    }
+    await contactCreate.submit();
   };
 
-  useModKey('Enter', () => {
-    handleSubmit();
-  });
-  useKey('Escape', () => {
-    handleSubmit();
-  });
+  useEffect(() => {
+    const email = store.ui.commandMenu.context?.meta?.email;
+
+    if (email?.length) {
+      contactCreate.setType('email');
+      contactCreate.setInputValue(email);
+    }
+  }, [store.ui.commandMenu.context?.meta]);
+
+  useModKey('Enter', handleSubmit);
+  useKey('Escape', handleClose);
 
   return (
     <Command shouldFilter={false} label='Add contacts'>
@@ -99,116 +96,57 @@ export const AddSingleContact = observer(() => {
 
         <div className='text-sm flex flex-col gap-4'>
           <ButtonGroup className='flex items-center w-full'>
-            <Button
-              size='xs'
-              onClick={() => contactCreate.setType('linkedin')}
-              data-inactive={contactCreate.getType !== 'linkedin'}
-              leftIcon={<LinkedinOutline className='text-inherit' />}
-              className={cn('w-full', {
-                selected: contactCreate.getType === 'linkedin',
-              })}
-            >
-              LinkedIn
-            </Button>
-            <Button
-              size='xs'
-              onClick={() => contactCreate.setType('email')}
-              leftIcon={<Mail01 className='text-inherit' />}
-              data-inactive={contactCreate.getType !== 'email'}
-              className={cn('w-full', {
-                selected: contactCreate.getType === 'email',
-              })}
-            >
-              Email
-            </Button>
-            <Button
-              size='xs'
-              dataTest='org-people-add-by-name'
-              onClick={() => contactCreate.setType('name')}
-              data-inactive={contactCreate.getType !== 'name'}
-              leftIcon={<Signature className='text-inherit' />}
-              className={cn('w-full', {
-                selected: contactCreate.getType === 'name',
-              })}
-            >
-              Name
-            </Button>
+            {INPUT_CONFIGS.map((config) => (
+              <Button
+                size='xs'
+                key={config.type}
+                leftIcon={config.icon}
+                onClick={() => contactCreate.setType(config.type)}
+                data-inactive={contactCreate.type !== config.type}
+                dataTest={
+                  config.type === 'name' ? 'org-people-add-by-name' : undefined
+                }
+                className={cn('w-full', {
+                  selected: contactCreate.type === config.type,
+                })}
+              >
+                {config.label}
+              </Button>
+            ))}
           </ButtonGroup>
+
           <Input
             autoFocus
             ref={inputRef}
             variant='unstyled'
-            placeholder={inputPlaceholder}
             dataTest='org-people-name-input'
             value={contactCreate.inputValue}
+            placeholder={currentConfig.placeholder}
+            onChange={(e) => {
+              contactCreate.setInputValue(e.target.value);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
                 handleClose(e);
               }
               e.stopPropagation();
             }}
-            onChange={(e) => {
-              contactCreate.setInputValue(e.target.value);
-
-              if (contactCreate.inputValue) {
-                contactCreate.getType === 'name' &&
-                  contactCreate.validateName();
-              }
-              contactCreate.clearErrors();
-            }}
           />
         </div>
 
-        {contactCreate.getType === 'name' && (
-          <p
-            className={cn(
-              'text-error-500 text-[12px] mt-0 opacity-0',
-              contactCreate.invalidName && 'opacity-100',
-            )}
-          >
-            Every hero needs a name
-          </p>
-        )}
+        <p className={cn('text-error-500 text-[12px] mt-0')}>
+          {contactCreate.type === 'name' &&
+            contactCreate.currentError.isEmpty &&
+            'Every hero needs a name'}
 
-        {contactCreate.getType === 'linkedin' && (
-          <>
-            <p
-              className={cn(
-                'text-error-500 text-[12px] mt-0 opacity-0',
-                (contactCreate.emptyLinkedInUrl ||
-                  contactCreate.errorLinkedIn ||
-                  contactCreate.invalidLinkedInUrl) &&
-                  'opacity-100',
-              )}
-            >
-              {contactCreate.inputValue.length === 0
-                ? 'Huston we have a blank...'
-                : contactCreate.errorLinkedIn
-                ? contactCreate.errorLinkedIn
-                : 'Invalid LinkedIn URL'}
-            </p>
-          </>
-        )}
-
-        {contactCreate.getType === 'email' && (
-          <>
-            <p
-              className={cn(
-                'text-error-500 text-[12px] mt-0 opacity-0',
-                (contactCreate.emptyEmail ||
-                  contactCreate.errorEmail ||
-                  contactCreate.invalidEmail) &&
-                  'opacity-100',
-              )}
-            >
-              {contactCreate.inputValue.length === 0
-                ? 'Huston we have a blank...'
-                : contactCreate.errorEmail
-                ? contactCreate.errorEmail
-                : 'Invalid email format'}
-            </p>
-          </>
-        )}
+          {contactCreate.type !== 'name' && contactCreate.currentError.isEmpty
+            ? 'Huston we have a blank...'
+            : contactCreate.currentError.message
+            ? contactCreate.currentError.message
+            : contactCreate.currentError.isInvalid
+            ? `Invalid ${contactCreate.type} format`
+            : ''}
+        </p>
 
         <div className='flex justify-between gap-3 mt-2'>
           <Button
@@ -216,7 +154,6 @@ export const AddSingleContact = observer(() => {
             variant='outline'
             className='w-full'
             onClick={handleClose}
-            // onFocus={(e) => e.preventDefault()}
           >
             Cancel
           </Button>
@@ -225,18 +162,18 @@ export const AddSingleContact = observer(() => {
             variant='outline'
             className='w-full'
             colorScheme='primary'
+            onClick={handleSubmit}
+            loadingText={'Adding contact...'}
+            isLoading={contactCreate.isLoading}
             dataTest='confirm-contact-creation'
             leftSpinner={<Spinner size='sm' label='creating contacts' />}
-            onClick={() => {
-              handleSubmit();
-            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleSubmit();
               }
             }}
           >
-            {confirmButtonPlaceholder}
+            {confirmButtonText}
           </Button>
         </div>
       </article>
