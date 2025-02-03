@@ -70,7 +70,7 @@ async function getCookiesFromLinkedInTab() {
     // Retrieve session data
     const sessionData = await new Promise<SessionData | null>((resolve) => {
       const onMessage = (message: any) => {
-        console.log("Message received:", message); // Added log to check incoming message
+        console.log("Message received:", message);
         if (message.action === "COS_SESSION_DATA") {
           chrome.runtime.onMessage.removeListener(onMessage);
           resolve({ email: message.email, apiKey: message.apiKey });

@@ -39,11 +39,16 @@
   "side_panel": {
     "default_path": "sidepanel.html"
   },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none';"
+  },
   "host_permissions": [
     "https://app.customeros.ai/*",
     "https://bas.customeros.ai/*",
     "http://localhost:5173/*",
     "https://localhost:5173/*",
-    "https://www.linkedin.com/*"
+    "https://www.linkedin.com/*",
+    "https://cos.customeros.ai/*",
+    "https://api.customeros.ai/*"
   ]
 }
