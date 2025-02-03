@@ -7,14 +7,12 @@ on:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/events-processing-proto/**
       - .github/workflows/test-common-module.yml
   pull_request:
     paths:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/events-processing-proto/**
       - .github/workflows/test-common-module.yml
   release:
     types: [ created, edited ]

@@ -7,7 +7,6 @@ on:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/events-processing-proto/**
       - packages/server/customer-os-webhooks/**
       - .github/workflows/build-customer-os-webhooks.yml
   pull_request:
@@ -15,7 +14,6 @@ on:
       - packages/server/customer-os-common-module/**
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
-      - packages/server/events-processing-proto/**
       - packages/server/customer-os-webhooks/**
       - .github/workflows/build-customer-os-webhooks.yml
   release:
