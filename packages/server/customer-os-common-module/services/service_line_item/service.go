@@ -218,6 +218,20 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 				tracing.TraceErr(span, err)
 			}
 
+			userName := ""
+			if common.GetUserIdFromContext(ctx) == "" {
+				userName = "CustomerOS API"
+			} else {
+				userDbNode, err := s.neo4j.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
+				if err != nil {
+					tracing.TraceErr(span, err)
+				}
+				if userDbNode != nil {
+					userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
+					userName = userEntity.GetFullName()
+				}
+			}
+
 			if createFlow {
 				if dataFields.BilledType != nil && utils.IfNotNilString(dataFields.BilledType.String()) != "" {
 					name := "Unnamed service"
@@ -225,15 +239,6 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 						name = *dataFields.Name
 					}
 
-					userName := ""
-					userDbNode, err := s.neo4j.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
-					if err != nil {
-						tracing.TraceErr(span, err)
-					}
-					if userDbNode != nil {
-						userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
-						userName = userEntity.GetFullName()
-					}
 					extraActionProperties := map[string]interface{}{
 						"comments": utils.IfNotNilString(dataFields.Comments),
 					}
@@ -304,15 +309,6 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 					name = *dataFields.Name
 				}
 
-				userName := ""
-				userDbNode, err := s.neo4j.UserReadRepository.GetUserById(ctx, tenant, common.GetUserIdFromContext(ctx))
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-				if userDbNode != nil {
-					userEntity := neo4jmapper.MapDbNodeToUserEntity(userDbNode)
-					userName = userEntity.GetFullName()
-				}
 				extraActionProperties := map[string]interface{}{
 					"comments": utils.IfNotNilString(dataFields.Comments),
 				}
