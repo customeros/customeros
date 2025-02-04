@@ -129,6 +129,9 @@ func executeCapability[I, O, C any](
 
 	config := cap.NewConfig()
 	err = capability.GetConfig(&config)
+	if err != nil {
+		return nil, err
+	}
 
 	output, err := cap.Execute(ctx, input, config)
 	if err != nil {
