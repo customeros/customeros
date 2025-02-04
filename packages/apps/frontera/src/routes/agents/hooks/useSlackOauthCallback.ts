@@ -25,12 +25,12 @@ export const useSlackOauthCallback = () => {
     if (slackCode) {
       store.settings.slack.oauthCallback(
         slackCode,
-        `https://app.customeros.ai/agents?state=${state}`,
+        `${import.meta.env.VITE_CLIENT_APP_URL}/agents`,
       );
     }
 
     if (id) {
-      navigate(`/agents/${id}?cid=${cid}`);
+      navigate(`/agents/${id}?${cid}`);
     }
   }, [store.session.isAuthenticated]);
 };

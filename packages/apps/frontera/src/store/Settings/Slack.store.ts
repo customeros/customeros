@@ -56,7 +56,7 @@ export class Slack {
     try {
       this.isLoading = true;
       await this.transportLayer.http.post(
-        `/sa/slack/oauth/callback?code=${code}&redirect_uri=${redirect_uri}`,
+        `/sa/slack/oauth/callback?code=${code}&redirect_url=${redirect_uri}`,
       );
       this.load();
       this.root.common.fetchSlackChannels();
@@ -71,7 +71,7 @@ export class Slack {
     }
   }
 
-  async enableSync(redirect_uri?: string) {
+  async enableSync(redirect_uri?: string, state?: string) {
     Tracer.span('Slack.enableSync');
 
     try {
@@ -80,7 +80,7 @@ export class Slack {
       const redirectUri = redirect_uri ?? 'https://app.customeros.ai/settings';
 
       const { data } = await this.transportLayer.http.get(
-        `/sa/slack/requestAccess?redirect_uri=${redirectUri}`,
+        `/sa/slack/requestAccess?redirect_url=${redirectUri}&state=${state}`,
       );
 
       window.location.href = data.url;
