@@ -17,13 +17,12 @@ export const ContractCell = observer(({ contractId }: ContractCellProps) => {
   const store = useStore();
 
   const contract = store.contracts.value.get(contractId) as ContractStore;
-  const org = contract.organization;
   const linkRef = useRef<HTMLParagraphElement>(null);
 
   const handleNavigate = () => {
-    if (!org?.id) return;
+    if (!contract?.organizationId) return;
 
-    const href = getHref(org?.id);
+    const href = getHref(contract.organizationId);
 
     if (!href) return;
 
@@ -38,12 +37,9 @@ export const ContractCell = observer(({ contractId }: ContractCellProps) => {
       data-test='Contract-name-in-all-orgs-table'
       className={cn(
         'overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer pr-7',
-        {
-          'text-gray-400 cursor-not-allowed': !org?.id,
-        },
       )}
     >
-      {contract?.value?.contractName || `${org?.value?.name}`}
+      {contract?.value?.contractName || `${contract.organization?.value?.name}`}
     </div>
   );
 });
