@@ -34,7 +34,7 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
   @observable accessor isBootstrapping = false;
   @observable accessor error: string | null = null;
   @observable accessor value: Map<string, E> = new Map();
-  @observable accessor range: [startIndex: number, endIndex: number] = [0, 0];
+  @observable accessor searchResults: Map<string, string[]> = new Map();
 
   channel?: Channel;
   options: StoreOptions<T>;
@@ -235,8 +235,13 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
           set(record, 'id', id);
           this.value.set(id, record);
 
+          this.searchResults.forEach((v) => {
+            if (v.includes(id)) return;
+            v.unshift(id);
+          });
           this.size++;
           this.version++;
+
           setTimeout(() => {
             this.invalidate(id);
           }, 1000);
@@ -374,12 +379,6 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
       });
     });
   }
-
-  @action
-  public setActiveRange = (startIndex: number, endIndex: number) => {
-    this.range[0] = startIndex;
-    this.range[1] = endIndex;
-  };
 
   private makeChangesetOperation(id: string) {
     const lhs = this.snapshots.get(id)!;
