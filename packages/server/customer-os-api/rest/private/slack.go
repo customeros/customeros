@@ -67,15 +67,16 @@ func RequestAccessSlack(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 		slackRequestAccessUrl := "https://slack.com/oauth/v2/authorize?client_id=" + s.Cfg.Common.External.SlackConfig.ClientID + "&scope=" + strings.Join(scopes, ",") + "&user_scope="
 
+		state := c.Query("state")
+
+		if state != "" {
+			slackRequestAccessUrl += "&state=" + state
+		}
+
 		redirectUrl := c.Query("redirect_url")
 
 		if redirectUrl != "" {
 			slackRequestAccessUrl += "&redirect_url=" + url.QueryEscape(redirectUrl)
-		}
-		state := c.Query("state")
-
-		if state != "" {
-			slackRequestAccessUrl += "&state=" + url.QueryEscape(state)
 		}
 
 		span.LogFields(log.Object("slackRequestAccessUrl", slackRequestAccessUrl))
