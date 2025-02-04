@@ -1,7 +1,9 @@
 package postgres_entity
 
 import (
+	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -11,6 +13,26 @@ import (
 
 type CapabilitiesConfig struct {
 	Capabilities []Capability `json:"capabilities"`
+}
+
+func (c *CapabilitiesConfig) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("expected []byte for CapabilitiesConfig, got %T", value)
+	}
+
+	return json.Unmarshal(bytes, c)
+}
+
+func (c CapabilitiesConfig) Value() (driver.Value, error) {
+	if c.Capabilities == nil {
+		return nil, nil
+	}
+	return json.Marshal(c)
 }
 
 type Capability struct {
