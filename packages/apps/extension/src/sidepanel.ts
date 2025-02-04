@@ -57,6 +57,25 @@ document.addEventListener("DOMContentLoaded", function () {
           .then((response) => response.json())
           .then((data) => {
             console.log("Success:", data);
+
+            const successMessage = document.getElementById("success-message");
+            const successIcon = document.getElementById(
+              "success-icon"
+            ) as HTMLImageElement;
+
+            successMessage!.style.display = "block";
+            successMessage!.style.color = "#067647";
+            successMessage!.textContent = "Contact added";
+
+            if (successIcon) {
+              successIcon.src = "src/assets/check-circle.svg";
+              successIcon.style.display = "block";
+            }
+
+            setTimeout(() => {
+              successMessage!.style.display = "none";
+              successIcon.style.display = "none";
+            }, 3000);
           })
           .catch((error) => {
             console.error("Error:", error);
@@ -64,4 +83,18 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   });
+});
+
+chrome.runtime.onMessage.addListener((message) => {
+  const tenantNameSpan = document.getElementById("tenant-name");
+  if (message.action === "COS_SESSION_DATA") {
+    if (message.tenantName.length === 0) {
+      tenantNameSpan!.style.display = "none";
+    } else {
+      tenantNameSpan!.style.background = " #f5f5f4";
+      tenantNameSpan!.textContent = `Signed into ${message.tenantName}`;
+    }
+  } else {
+    tenantNameSpan!.style.display = "none";
+  }
 });

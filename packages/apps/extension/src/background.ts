@@ -229,21 +229,38 @@ chrome.action.onClicked.addListener((tab: chrome.tabs.Tab) =>
 );
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === "complete") {
-    if (tab.url) {
-      const url = new URL(tab.url);
-      if (url.host === "www.linkedin.com" || url.host === "linkedin.com") {
-        chrome.sidePanel.setOptions({
-          tabId: tabId,
-          path: "sidepanel.html",
-          enabled: true,
-        });
-      } else {
-        chrome.sidePanel.setOptions({
-          tabId: tabId,
-          enabled: false,
-        });
-      }
+  if (changeInfo.status === "complete" && tab.url) {
+    const url = new URL(tab.url);
+    if (url.host === "www.linkedin.com" || url.host === "linkedin.com") {
+      chrome.sidePanel.setOptions({
+        tabId: tabId,
+        path: "sidepanel.html",
+        enabled: true,
+      });
+    } else {
+      chrome.sidePanel.setOptions({
+        tabId: tabId,
+        enabled: false,
+      });
+    }
+  }
+});
+
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  const tab = await chrome.tabs.get(activeInfo.tabId);
+  if (tab.url) {
+    const url = new URL(tab.url);
+    if (url.host === "www.linkedin.com" || url.host === "linkedin.com") {
+      chrome.sidePanel.setOptions({
+        tabId: activeInfo.tabId,
+        path: "sidepanel.html",
+        enabled: true,
+      });
+    } else {
+      chrome.sidePanel.setOptions({
+        tabId: activeInfo.tabId,
+        enabled: false,
+      });
     }
   }
 });

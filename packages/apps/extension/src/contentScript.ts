@@ -10,13 +10,12 @@ function sendSessionData() {
   };
 
   request.onsuccess = function (event: Event) {
-    console.log("IndexedDB opened successfully");
+    // console.log("IndexedDB opened successfully");
     const db: IDBDatabase = (event.target as IDBOpenDBRequest).result;
 
     const transaction: IDBTransaction = db.transaction(["Session"], "readonly");
 
     const objectStore: IDBObjectStore = transaction.objectStore("Session");
-    console.log(objectStore, "aici");
     const getRequest: IDBRequest = objectStore.get("value");
 
     getRequest.onerror = function (event: Event) {
@@ -33,7 +32,7 @@ function sendSessionData() {
       if (sessionData && sessionData.profile) {
         const email: string | null = sessionData.profile.email || null;
         const apiKeyRequest: IDBRequest = objectStore.get("tenantApiKey");
-
+        const tenantName: string | null = sessionData.tenant;
         apiKeyRequest.onerror = function (event: Event) {
           console.error(
             "Error reading tenantApiKey from IndexedDB:",
@@ -43,14 +42,13 @@ function sendSessionData() {
 
         apiKeyRequest.onsuccess = function (event: Event) {
           const apiKey = (event.target as IDBRequest).result;
-          // console.log("tenantApiKey retrieved from IndexedDB:", apiKey);
 
-          // console.log("Sending session data to background:", { email, apiKey });
           if (email && apiKey) {
             chrome.runtime.sendMessage({
               action: "COS_SESSION_DATA",
               email,
               apiKey,
+              tenantName,
             });
           }
         };
