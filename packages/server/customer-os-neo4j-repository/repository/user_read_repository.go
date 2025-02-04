@@ -2,12 +2,13 @@ package neo4j_repository
 
 import (
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -19,6 +20,7 @@ type UserReadRepository interface {
 	GetUserById(ctx context.Context, tenant, userId string) (*dbtype.Node, error)
 	FindFirstUserWithRolesByEmail(ctx context.Context, email string) (string, string, []string, error)
 	FindTestUser(ctx context.Context) (*dbtype.Node, error)
+	GetAuthenticatedUserInTenant(ctx context.Context, authUserId, email string) (*dbtype.Node, error)
 	GetFirstUserByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
 	GetAllOwnersForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error)
 	GetOwnerForOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
@@ -202,6 +204,46 @@ func (u *userReadRepository) toStringList(values []interface{}) []string {
 		result = append(result, value.(string))
 	}
 	return result
+}
+
+func (r *userReadRepository) GetAuthenticatedUserInTenant(ctx context.Context, authUserId, email string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetUserForAuthentication")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := fmt.Sprintf(`MATCH (e:Email{rawEmail:$email})<-[:HAS]-(u:User)-[:%s]->(a:AuthenticationUser {id:$authUserId})-[:%s]->(t:Tenant) RETURN u`, model.AUTHENTICATED_BY.String(), model.HAS_WORKSPACE.String())
+	params := map[string]any{
+		"tenant":     tenant,
+		"email":      email,
+		"authUserId": authUserId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if result == nil {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	}
+
+	span.LogFields(log.Bool("result.found", true))
+	return result.(*dbtype.Node), nil
 }
 
 func (r *userReadRepository) GetFirstUserByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error) {

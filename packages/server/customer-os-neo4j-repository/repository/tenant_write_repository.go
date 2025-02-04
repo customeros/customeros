@@ -17,7 +17,7 @@ import (
 )
 
 type TenantWriteRepository interface {
-	CreateTenantIfNotExistAndReturn(ctx context.Context, tenant neo4jentity.TenantEntity) (*dbtype.Node, error)
+	CreateTenantIfNotExistAndReturn(ctx context.Context, tx neo4j.ManagedTransaction, tenant neo4jentity.TenantEntity) (*dbtype.Node, error)
 
 	CreateTenantBillingProfile(ctx context.Context, tenant string, data data_fields.TenantBillingProfileFields) error
 	UpdateTenantBillingProfile(ctx context.Context, tenant string, data data_fields.TenantBillingProfileFields) error
@@ -42,7 +42,7 @@ func NewTenantWriteRepository(driver *neo4j.DriverWithContext, database string) 
 	}
 }
 
-func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Context, tenant neo4jentity.TenantEntity) (*dbtype.Node, error) {
+func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Context, tx neo4j.ManagedTransaction, tenant neo4jentity.TenantEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.CreateTenantIfNotExistAndReturn")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -80,17 +80,8 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, cypher, params)
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	}); err != nil {
-		return nil, err
-	} else {
-		return result.(*dbtype.Node), nil
-	}
+	queryResult, err := tx.Run(ctx, cypher, params)
+	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
 func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, tenant string, data data_fields.TenantBillingProfileFields) error {

@@ -249,8 +249,6 @@ func (c *SendWebVisitorSlackNotificationCapability) isWorkspaceDomain(ctx contex
 	}
 
 	if len(workspaceDomains) == 0 {
-		err := errors.New("no workspace domains found for tenant")
-		tracing.TraceErr(span, err)
 		return false
 	}
 

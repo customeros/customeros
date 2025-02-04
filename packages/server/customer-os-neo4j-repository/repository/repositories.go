@@ -8,6 +8,8 @@ type Repositories struct {
 	Neo4jDriver *neo4j.DriverWithContext
 	Database    string
 
+	AuthenticationReadRepository             AuthenticationReadRepository
+	AuthenticationWriteRepository            AuthenticationWriteRepository
 	ActionReadRepository                     ActionReadRepository
 	ActionWriteRepository                    ActionWriteRepository
 	AttachmentReadRepository                 AttachmentReadRepository
@@ -74,8 +76,6 @@ type Repositories struct {
 	OrganizationWriteRepository              OrganizationWriteRepository
 	PhoneNumberReadRepository                PhoneNumberReadRepository
 	PhoneNumberWriteRepository               PhoneNumberWriteRepository
-	PlayerReadRepository                     PlayerReadRepository
-	PlayerWriteRepository                    PlayerWriteRepository
 	ReminderReadRepository                   ReminderReadRepository
 	ReminderWriteRepository                  ReminderWriteRepository
 	ServiceLineItemReadRepository            ServiceLineItemReadRepository
@@ -101,6 +101,8 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 	repositories := Repositories{
 		Neo4jDriver:                              driver,
 		Database:                                 neo4jDatabase,
+		AuthenticationReadRepository:             NewAuthenticationReadRepository(driver, neo4jDatabase),
+		AuthenticationWriteRepository:            NewAuthenticationWriteRepository(driver, neo4jDatabase),
 		ActionReadRepository:                     NewActionReadRepository(driver, neo4jDatabase),
 		ActionWriteRepository:                    NewActionWriteRepository(driver, neo4jDatabase),
 		AttachmentReadRepository:                 NewAttachmentReadRepository(driver, neo4jDatabase),
@@ -167,8 +169,6 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		OrganizationWriteRepository:              NewOrganizationWriteRepository(driver, neo4jDatabase),
 		PhoneNumberReadRepository:                NewPhoneNumberReadRepository(driver, neo4jDatabase),
 		PhoneNumberWriteRepository:               NewPhoneNumberWriteRepository(driver, neo4jDatabase),
-		PlayerReadRepository:                     NewPlayerReadRepository(driver, neo4jDatabase),
-		PlayerWriteRepository:                    NewPlayerWriteRepository(driver, neo4jDatabase),
 		ReminderReadRepository:                   NewReminderReadRepository(driver, neo4jDatabase),
 		ReminderWriteRepository:                  NewReminderWriteRepository(driver, neo4jDatabase),
 		ServiceLineItemReadRepository:            NewServiceLineItemReadRepository(driver, neo4jDatabase),

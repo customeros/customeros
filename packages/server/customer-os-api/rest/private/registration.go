@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-api/utils"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"log"
 	"net/http"
 	"strings"
@@ -11,11 +14,8 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	common_enum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/postmark"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	common_utils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -35,7 +35,6 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/config"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
-	"github.com/customeros/customeros/packages/server/customer-os-api/utils"
 )
 
 func RML(s *cosapi_services.Services) gin.HandlerFunc {
@@ -172,7 +171,7 @@ func PML(s *cosapi_services.Services) gin.HandlerFunc {
 		}
 
 		if signInRequest.Code != "" {
-			magicLink, err := s.Repositories.PostgresRepositories.MagicLinkRepository.GetByCode(ctx, signInRequest.Code)
+			magicLink, err = s.Repositories.PostgresRepositories.MagicLinkRepository.GetByCode(ctx, signInRequest.Code)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -233,6 +232,395 @@ func Signin(s *cosapi_services.Services) gin.HandlerFunc {
 	}
 }
 
+func signIn(ctx context.Context, services *cosapi_services.Services, ginContext *gin.Context, signInRequest SignInRequest, personalEmailProviders []postgres_entity.PersonalEmailProvider, config *config.Config) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "signInV2")
+	defer span.Finish()
+
+	var err error
+
+	saveErr := saveIP(ctx, ginContext, services, signInRequest.LoggedInEmail)
+	if saveErr != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to save IP address"))
+	}
+
+	span.LogFields(tracingLog.Object("request", signInRequest))
+
+	firstName, lastName, err := validateRequestAtProvider(ctx, config, signInRequest)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
+			"result": fmt.Sprintf("unable to validate request at provider: %v", err.Error()),
+		})
+		return
+	}
+
+	isPersonalEmail := false
+
+	var authId string
+	var authUserId string
+	var tenant string
+	var availableTenants []string
+
+	var userId string
+
+	_, err = common_utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, services.CommonServices.Neo4jRepositories.Neo4jDriver, services.CommonServices.Neo4jRepositories.Database, nil, func(txWithPostCommit *common_utils.TxWithPostCommit) (any, error) {
+
+		//authentication
+		authIdAndProviderNode, err := services.CommonServices.Neo4jRepositories.AuthenticationReadRepository.GetByAuthIdAndProvider(ctx, signInRequest.LoggedInEmail, signInRequest.Provider)
+		if err != nil {
+			return nil, err
+		}
+
+		//auth with the same provider found
+		if authIdAndProviderNode != nil {
+			authProps := common_utils.GetPropsFromNode(*authIdAndProviderNode)
+			authId = common_utils.GetStringPropOrEmpty(authProps, "id")
+
+			authUserNode, err := services.Repositories.Neo4jRepositories.AuthenticationReadRepository.GetAuthUser(ctx, authId)
+			if err != nil {
+				return nil, err
+			}
+
+			authUserProps := common_utils.GetPropsFromNode(*authUserNode)
+			authUserId = common_utils.GetStringPropOrEmpty(authUserProps, "id")
+		} else {
+			//auth with different provider found. link back to the same user and add new auth
+			authNodes, err := services.CommonServices.Neo4jRepositories.AuthenticationReadRepository.GetByAuthId(ctx, signInRequest.LoggedInEmail)
+			if err != nil {
+				return nil, err
+			}
+
+			if authNodes != nil && len(authNodes) > 0 {
+				authProps := common_utils.GetPropsFromNode(*authNodes[0])
+				authId = common_utils.GetStringPropOrEmpty(authProps, "id")
+
+				authUserNode, err := services.Repositories.Neo4jRepositories.AuthenticationReadRepository.GetAuthUser(ctx, authId)
+				if err != nil {
+					return nil, err
+				}
+
+				authUserProps := common_utils.GetPropsFromNode(*authUserNode)
+				authUserId = common_utils.GetStringPropOrEmpty(authUserProps, "id")
+
+				authId, err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.CreateAuthentication(ctx, *txWithPostCommit.Tx, neoEntity.AuthenticationEntity{
+					AuthId:     signInRequest.LoggedInEmail,
+					Provider:   signInRequest.Provider,
+					IdentityId: signInRequest.OAuthToken.ProviderAccountId,
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationWithAuthenticationUser(ctx, *txWithPostCommit.Tx, authId, authUserId)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		span.LogKV("authId", authId)
+		span.LogKV("authUserId", authUserId)
+
+		if authId != "" && authUserId == "" {
+			return nil, fmt.Errorf("authId found but authUserId not found")
+		}
+
+		//auth doesn't exist at all
+		if authId == "" {
+			//create auth + user
+			authId, err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.CreateAuthentication(ctx, *txWithPostCommit.Tx, neoEntity.AuthenticationEntity{
+				AuthId:     signInRequest.LoggedInEmail,
+				Provider:   signInRequest.Provider,
+				IdentityId: signInRequest.OAuthToken.ProviderAccountId,
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			authUserId, err = services.Repositories.Neo4jRepositories.AuthenticationWriteRepository.CreateAuthenticationUser(ctx, *txWithPostCommit.Tx, authId, neoEntity.AuthenticationUserEntity{
+				FirstName: firstName,
+				LastName:  lastName,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		span.LogKV("authId", authId)
+		span.LogKV("authUserId", authUserId)
+
+		//tenant
+		tenants, err := services.Repositories.Neo4jRepositories.AuthenticationReadRepository.GetTenants(ctx, authUserId)
+		if err != nil {
+			return nil, err
+		}
+
+		if tenants != nil && len(tenants) > 0 {
+			tenantProps := common_utils.GetPropsFromNode(*tenants[0])
+			tenant = common_utils.GetStringPropOrEmpty(tenantProps, "name")
+
+			for _, tenantNode := range tenants {
+				tenantProps := common_utils.GetPropsFromNode(*tenantNode)
+				availableTenants = append(availableTenants, common_utils.GetStringPropOrEmpty(tenantProps, "name"))
+			}
+		} else {
+			domain := common_utils.ExtractDomain(signInRequest.LoggedInEmail)
+			// check if the user is using a personal email provider
+			for _, personalEmailProviderItem := range personalEmailProviders {
+				domainLowercase := strings.ToLower(strings.TrimSpace(domain))
+				personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
+				if domainLowercase == personalEmailProviderDomainLowercase {
+					isPersonalEmail = true
+					break
+				}
+			}
+			span.LogFields(tracingLog.Bool("isPersonalEmail", isPersonalEmail))
+
+			tenantStr := ""
+			if isPersonalEmail {
+				tenantStr = utils.GenerateName()
+			} else {
+				tenantStr = utils.Sanitize(domain)
+			}
+
+			span.LogFields(tracingLog.String("newTenantCreationWith", tenantStr))
+
+			tenantEntity, err := services.CommonServices.TenantService.Merge(ctx, *txWithPostCommit.Tx, neoEntity.TenantEntity{
+				Name: tenantStr,
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			tenant = tenantEntity.Name
+
+			err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, *txWithPostCommit.Tx, authUserId, tenant)
+			if err != nil {
+				return nil, err
+			}
+
+			err = services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelAuthenticationUser, authUserId, "defaultTenant", tenantEntity.Name)
+			if err != nil {
+				return nil, err
+			}
+
+			if !isPersonalEmail {
+				_, err := services.CommonServices.WorkspaceService.MergeToTenant(ctx, neoEntity.WorkspaceEntity{
+					Name:     domain,
+					Provider: signInRequest.Provider,
+				}, tenantEntity.Name)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant: tenant,
+		})
+
+		//user in tenant
+		userInTenantNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetAuthenticatedUserInTenant(ctx, authUserId, signInRequest.LoggedInEmail)
+		if err != nil {
+			return nil, err
+		}
+		if userInTenantNode != nil {
+			userId = mapper.MapDbNodeToUserEntity(userInTenantNode).Id
+			span.LogFields(tracingLog.Object("user", "found"))
+		} else {
+			span.LogFields(tracingLog.Object("user", "not found"))
+
+			userId, err = services.CommonServices.UserService.Save(ctx, txWithPostCommit, nil, data_fields.UserFields{
+				FirstName: &firstName,
+				LastName:  &lastName,
+				Roles:     common_utils.ToPtr([]string{"USER", "OWNER"}),
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationUserWithUser(ctx, *txWithPostCommit.Tx, authUserId, userId)
+			if err != nil {
+				return nil, err
+			}
+
+			emailNode, err := services.CommonServices.Neo4jRepositories.EmailReadRepository.GetFirstByEmail(ctx, tenant, signInRequest.LoggedInEmail)
+			if err != nil {
+				return nil, err
+			}
+
+			if emailNode == nil {
+				_, err = services.CommonServices.EmailService.Merge(ctx, txWithPostCommit, tenant, interfaces.EmailFields{
+					Primary: true,
+					Email:   signInRequest.LoggedInEmail,
+					Source:  neoEntity.DataSourceOpenline,
+				}, &common_srv.LinkWith{
+					Type: model.USER,
+					Id:   userId,
+				})
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
+			"result": fmt.Sprintf("unable to create auth: %v", err.Error()),
+		})
+		return
+	}
+
+	ctx = common.WithCustomContext(ctx, &common.CustomContext{
+		Tenant:    tenant,
+		UserEmail: signInRequest.LoggedInEmail,
+	})
+
+	_, err = initializeUserInTenant(ctx, services, userId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		ginContext.JSON(http.StatusInternalServerError, gin.H{
+			"result": fmt.Sprintf("unable to initialize user: %v", err.Error()),
+		})
+		return
+	}
+
+	if !isPersonalEmail {
+		err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
+
+	go func() {
+		c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
+		defer cancelFunc()
+
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - register new tenant", ginContext.Request.Header)
+		defer span.Finish()
+
+		err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		span.LogFields(tracingLog.String("result", "ok"))
+	}()
+
+	// handle email token
+	// Handle Google provider
+	if signInRequest.Provider == common_enum.WorkspaceProviderGoogle.String() {
+		if isRequestEnablingOAuthSync(signInRequest) {
+			oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, tenant, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
+			if oauthToken == nil {
+				oauthToken = &postgres_entity.OAuthTokenEntity{}
+			}
+			oauthToken.Provider = signInRequest.Provider
+			oauthToken.TenantName = tenant
+			oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
+			oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
+			oauthToken.Type = signInRequest.OAuthTokenType
+			oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
+			oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
+			oauthToken.IdToken = signInRequest.OAuthToken.IdToken
+			oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
+			oauthToken.Scope = signInRequest.OAuthToken.Scope
+			oauthToken.NeedsManualRefresh = false
+			if isRequestEnablingGmailSync(signInRequest) {
+				oauthToken.GmailSyncEnabled = true
+			}
+			if isRequestEnablingGoogleCalendarSync(signInRequest) {
+				oauthToken.GoogleCalendarSyncEnabled = true
+			}
+			_, err := services.Repositories.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+		}
+	} else if signInRequest.Provider == common_enum.WorkspaceProviderAzure.String() {
+		oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, tenant, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
+		if oauthToken == nil {
+			oauthToken = &postgres_entity.OAuthTokenEntity{}
+		}
+		oauthToken.Provider = signInRequest.Provider
+		oauthToken.TenantName = tenant
+		oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
+		oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
+		oauthToken.Type = signInRequest.OAuthTokenType
+		oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
+		oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
+		oauthToken.IdToken = signInRequest.OAuthToken.IdToken
+		oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
+		oauthToken.Scope = signInRequest.OAuthToken.Scope
+		oauthToken.NeedsManualRefresh = false
+		_, err := services.Repositories.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	} else if signInRequest.Provider == common_enum.WorkspaceProviderMagicLink.String() {
+	} else {
+		tracing.TraceErr(span, fmt.Errorf("Unsupported provider: %s", signInRequest.Provider))
+	}
+
+	ginContext.JSON(http.StatusOK, gin.H{
+		"email":            signInRequest.LoggedInEmail,
+		"authUserId":       authUserId,
+		"tenant":           tenant,
+		"availableTenants": availableTenants,
+	})
+}
+
+func initializeUserInTenant(ctx context.Context, services *cosapi_services.Services, userId string) (*string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "Registration.initializeUserInTenant")
+	defer span.Finish()
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := addDefaultMissingRoles(ctx, services, tenant, userId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	defaultWorkSchedule := postgres_entity.UserWorkingSchedule{
+		UserId:    userId,
+		DayRange:  "Mon-Fri",
+		StartHour: "09:00",
+		EndHour:   "18:00",
+	}
+
+	workingSchedule, err := services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.GetForUser(ctx, tenant, userId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if len(workingSchedule) == 0 {
+		err = services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.Store(ctx, tenant, &defaultWorkSchedule)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+	}
+
+	err = services.Repositories.Neo4jRepositories.UserWriteRepository.RegisterLogin(ctx, tenant, userId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	// TODO why is this needed?
+	//err = services.CommonServices.Events.Publisher.PublishFanoutEvent(innerCtx, userId, model.USER, dto.UserLogin{LoginEmail: email, Provider: provider, IdentityId: providerAccountId})
+	//if err != nil {
+	//	tracing.TraceErr(span, err)
+	//}
+
+	return &userId, nil
+}
+
 func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := common_utils.GetLongLivedContext(context.Background())
@@ -285,368 +673,27 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 	}
 }
 
-func signIn(ctx context.Context, services *cosapi_services.Services, ginContext *gin.Context, signInRequest SignInRequest, personalEmailProviders []postgres_entity.PersonalEmailProvider, config *config.Config) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "getTenant")
-	defer span.Finish()
-
-	var err error
-
-	saveErr := saveIP(ctx, ginContext, services, signInRequest.LoggedInEmail)
-	if saveErr != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to save IP address"))
-	}
-
-	span.LogFields(tracingLog.Object("request", signInRequest))
-
-	firstName, lastName, err := validateRequestAtProvider(ctx, config, signInRequest)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		ginContext.JSON(http.StatusInternalServerError, gin.H{
-			"result": fmt.Sprintf("unable to validate request at provider: %v", err.Error()),
-		})
-		return
-	}
-
-	if firstName == nil {
-		s := ""
-		firstName = &s
-	}
-
-	if lastName == nil {
-		s := ""
-		lastName = &s
-	}
-
-	var tenantName *string
-	var userId *string
-
-	if signInRequest.Tenant == "" {
-		span.LogFields(tracingLog.String("flow", "authentication"))
-
-		tn, isNewTenant, err := getTenant(ctx, services, personalEmailProviders, signInRequest, config)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			ginContext.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("unable to get tenant: %v", err.Error()),
-			})
-			return
-		}
-		tenantName = tn
-
-		ctx = common.WithCustomContext(ctx, &common.CustomContext{
-			Tenant: *tenantName,
-		})
-		userId, err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			ginContext.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("unable to initialize user: %v", err.Error()),
-			})
-			return
-		}
-
-		if isNewTenant {
-			domain := common_utils.ExtractDomain(signInRequest.LoggedInEmail)
-			isPersonalEmail := false
-			// check if the user is using a personal email provider
-			for _, personalEmailProviderItem := range personalEmailProviders {
-				domainLowercase := strings.ToLower(strings.TrimSpace(domain))
-				personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
-				if domainLowercase == personalEmailProviderDomainLowercase {
-					isPersonalEmail = true
-					break
-				}
-			}
-
-			if !isPersonalEmail {
-				err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-			}
-
-			go func() {
-				c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
-				defer cancelFunc()
-
-				ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - register new tenant", ginContext.Request.Header)
-				defer span.Finish()
-
-				err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return
-				}
-
-				span.LogFields(tracingLog.String("result", "ok"))
-			}()
-		} else {
-
-			domain := common_utils.ExtractDomain(signInRequest.LoggedInEmail)
-
-			isPersonalEmail := false
-			// check if the user is using a personal email provider
-			for _, personalEmailProviderItem := range personalEmailProviders {
-				domainLowercase := strings.ToLower(strings.TrimSpace(domain))
-				personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
-				if domainLowercase == personalEmailProviderDomainLowercase {
-					isPersonalEmail = true
-					break
-				}
-			}
-
-			// TODO temp code, on each login try to prepare default tenant setup.
-			if !isPersonalEmail {
-				err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
-				if err != nil {
-					tracing.TraceErr(span, err)
-				}
-			}
-		}
-	} else {
-		span.LogFields(tracingLog.String("flow", "authorization"))
-
-		userDbNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, signInRequest.Tenant, signInRequest.LoggedInEmail)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			ginContext.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("unable to get email id: %v", err.Error()),
-			})
-			return
-		}
-
-		if userDbNode == nil {
-			ginContext.JSON(http.StatusUnauthorized, gin.H{
-				"result": fmt.Sprintf("email not found"),
-			})
-			return
-		}
-
-		tenantName = &signInRequest.Tenant
-	}
-
-	span.SetTag(tracing.SpanTagTenant, *tenantName)
-
-	// Handle Google provider
-	if signInRequest.Provider == common_enum.WorkspaceProviderGoogle.String() {
-		if isRequestEnablingOAuthSync(signInRequest) {
-			oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
-			if oauthToken == nil {
-				oauthToken = &postgres_entity.OAuthTokenEntity{}
-			}
-			oauthToken.Provider = signInRequest.Provider
-			oauthToken.TenantName = *tenantName
-			oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
-			oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
-			oauthToken.Type = signInRequest.OAuthTokenType
-			oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
-			oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
-			oauthToken.IdToken = signInRequest.OAuthToken.IdToken
-			oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
-			oauthToken.Scope = signInRequest.OAuthToken.Scope
-			oauthToken.NeedsManualRefresh = false
-			if isRequestEnablingGmailSync(signInRequest) {
-				oauthToken.GmailSyncEnabled = true
-			}
-			if isRequestEnablingGoogleCalendarSync(signInRequest) {
-				oauthToken.GoogleCalendarSyncEnabled = true
-			}
-			_, err := services.Repositories.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
-			if err != nil {
-				log.Printf("unable to save oauth token: %v", err.Error())
-				ginContext.JSON(http.StatusInternalServerError, gin.H{
-					"result": fmt.Sprintf("unable to save oauth token: %v", err.Error()),
-				})
-				return
-			}
-		}
-	} else if signInRequest.Provider == common_enum.WorkspaceProviderAzure.String() {
-		oauthToken, _ := services.Repositories.PostgresRepositories.OAuthTokenRepository.GetByEmail(ctx, *tenantName, signInRequest.Provider, signInRequest.OAuthTokenForEmail)
-		if oauthToken == nil {
-			oauthToken = &postgres_entity.OAuthTokenEntity{}
-		}
-		oauthToken.Provider = signInRequest.Provider
-		oauthToken.TenantName = *tenantName
-		oauthToken.PlayerIdentityId = signInRequest.OAuthToken.ProviderAccountId
-		oauthToken.EmailAddress = signInRequest.OAuthTokenForEmail
-		oauthToken.Type = signInRequest.OAuthTokenType
-		oauthToken.AccessToken = signInRequest.OAuthToken.AccessToken
-		oauthToken.RefreshToken = signInRequest.OAuthToken.RefreshToken
-		oauthToken.IdToken = signInRequest.OAuthToken.IdToken
-		oauthToken.ExpiresAt = signInRequest.OAuthToken.ExpiresAt
-		oauthToken.Scope = signInRequest.OAuthToken.Scope
-		oauthToken.NeedsManualRefresh = false
-		_, err := services.Repositories.PostgresRepositories.OAuthTokenRepository.Save(ctx, *oauthToken)
-		if err != nil {
-			log.Printf("unable to save oauth token: %v", err.Error())
-			ginContext.JSON(http.StatusInternalServerError, gin.H{
-				"result": fmt.Sprintf("unable to save oauth token: %v", err.Error()),
-			})
-			return
-		}
-	} else if signInRequest.Provider == common_enum.WorkspaceProviderMagicLink.String() {
-	} else {
-		log.Printf("Unsupported provider: %s", signInRequest.Provider)
-		ginContext.JSON(http.StatusBadRequest, gin.H{
-			"result": fmt.Sprintf("Unsupported provider: %s", signInRequest.Provider),
-		})
-		return
-	}
-
-	ginContext.JSON(http.StatusOK, gin.H{
-		"status": "OK",
-		"email":  signInRequest.LoggedInEmail,
-		"tenant": *tenantName,
-		"userId": userId,
-	})
-}
-
-func getTenant(c context.Context, services *cosapi_services.Services, personalEmailProvider []postgres_entity.PersonalEmailProvider, signInRequest SignInRequest, config *config.Config) (*string, bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "getTenant")
-	defer span.Finish()
-
-	domain := common_utils.ExtractDomain(signInRequest.LoggedInEmail)
-	span.LogFields(tracingLog.String("domain", domain))
-
-	isPersonalEmail := false
-	// check if the user is using a personal email provider
-	for _, personalEmailProviderItem := range personalEmailProvider {
-		domainLowercase := strings.ToLower(strings.TrimSpace(domain))
-		personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
-		if domainLowercase == personalEmailProviderDomainLowercase {
-			isPersonalEmail = true
-			break
-		}
-	}
-
-	span.LogFields(tracingLog.Bool("isPersonalEmail", isPersonalEmail))
-
-	if isPersonalEmail {
-		playerNodes, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetPlayersByAuthId(ctx, signInRequest.LoggedInEmail)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, false, err
-		}
-		if playerNodes != nil && len(playerNodes) > 0 {
-			span.LogFields(tracingLog.Object("playerIdentified", true))
-
-			playerId := mapper.MapDbNodeToPlayerEntity(playerNodes[0]).Id
-
-			usersDb, err := services.Repositories.Neo4jRepositories.PlayerReadRepository.GetUsersForPlayer(ctx, []string{playerId})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, false, err
-			}
-
-			if usersDb == nil || len(usersDb) == 0 {
-				tracing.TraceErr(span, fmt.Errorf("users not found"))
-				return nil, false, fmt.Errorf("users not found")
-			}
-
-			tenantFromLabel := model.GetTenantFromLabels(usersDb[0].Node.Labels, model.NodeLabelUser)
-
-			if tenantFromLabel == "" {
-				tracing.TraceErr(span, fmt.Errorf("tenant not found"))
-				return nil, false, fmt.Errorf("tenant not found")
-			}
-
-			span.LogFields(tracingLog.String("tenantIdentifiedFromPlayer", tenantFromLabel))
-			return &tenantFromLabel, false, nil
-		} else {
-			span.LogFields(tracingLog.Object("playerIdentified", false))
-		}
-	} else {
-		tenantNode, err := services.Repositories.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspaceProvider(ctx, domain, signInRequest.Provider)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, false, err
-		}
-		if tenantNode != nil {
-			tenant := mapper.MapDbNodeToTenantEntity(tenantNode)
-			span.LogFields(tracingLog.String("tenantIdentifiedSameWorkspace", tenant.Name))
-			return &tenant.Name, false, nil
-		}
-
-		// tenant not found by the requested login info, try to find it by another workspace with the same domain
-		tenantNode, err = services.Repositories.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspace(ctx, domain)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, false, err
-		}
-
-		if tenantNode != nil {
-			tenant := mapper.MapDbNodeToTenantEntity(tenantNode)
-			span.LogFields(tracingLog.String("tenantIdentifiedDifferentWorkspace", tenant.Name))
-
-			_, err := services.CommonServices.WorkspaceService.MergeToTenant(ctx, neoEntity.WorkspaceEntity{
-				Name:     domain,
-				Provider: signInRequest.Provider,
-			}, tenant.Name)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, false, err
-			}
-
-			return &tenant.Name, false, nil
-		}
-	}
-
-	var tenantStr string
-	if isPersonalEmail {
-		tenantStr = utils.GenerateName()
-	} else {
-		tenantStr = utils.Sanitize(domain)
-	}
-
-	span.LogFields(tracingLog.String("newTenantCreationWith", tenantStr))
-
-	tenantEntity, err := services.CommonServices.TenantService.Merge(ctx, neoEntity.TenantEntity{
-		Name: tenantStr,
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, false, err
-	}
-
-	if !isPersonalEmail {
-		_, err := services.CommonServices.WorkspaceService.MergeToTenant(ctx, neoEntity.WorkspaceEntity{
-			Name:     domain,
-			Provider: signInRequest.Provider,
-		}, tenantEntity.Name)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, false, err
-		}
-	}
-
-	if config.Common.External.SlackConfig.NotifyNewTenantRegisteredHook != "" {
-		common_utils.SendSlackMessage(ctx, config.Common.External.SlackConfig.NotifyNewTenantRegisteredHook, tenantStr+" tenant registered by "+signInRequest.LoggedInEmail)
-	}
-
-	return &tenantEntity.Name, true, nil
-}
-
-func validateRequestAtProvider(c context.Context, config *config.Config, signInRequest SignInRequest) (*string, *string, error) {
+func validateRequestAtProvider(c context.Context, config *config.Config, signInRequest SignInRequest) (string, string, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "Registration.getUserInfoFromGoogle")
 	defer span.Finish()
 
 	if signInRequest.Provider == common_enum.WorkspaceProviderMagicLink.String() {
-		return nil, nil, nil
+		return "", "", nil
 	} else if signInRequest.Provider == common_enum.WorkspaceProviderGoogle.String() {
 		userInfo, err := getUserInfoFromGoogle(ctx, config, signInRequest)
 		if err != nil {
 			tracing.TraceErr(nil, err)
-			return nil, nil, err
+			return "", "", err
 		}
 
-		return &userInfo.GivenName, &userInfo.FamilyName, nil
+		return userInfo.GivenName, userInfo.FamilyName, nil
 	} else if signInRequest.Provider == common_enum.WorkspaceProviderAzure.String() {
 		client := &http.Client{}
 		// Create a GET request with the Authorization header.
 		req, err := http.NewRequest("GET", "https://graph.microsoft.com/oidc/userinfo", nil)
 		if err != nil {
 			tracing.TraceErr(nil, err)
-			return nil, nil, err
+			return "", "", err
 		}
 
 		req.Header.Set("Authorization", "Bearer "+signInRequest.OAuthToken.AccessToken)
@@ -654,7 +701,7 @@ func validateRequestAtProvider(c context.Context, config *config.Config, signInR
 		resp, err := client.Do(req)
 		if err != nil {
 			tracing.TraceErr(nil, err)
-			return nil, nil, err
+			return "", "", err
 		}
 		defer resp.Body.Close()
 
@@ -664,14 +711,14 @@ func validateRequestAtProvider(c context.Context, config *config.Config, signInR
 
 			firstName := data["given_name"]
 			lastName := data["family_name"]
-			return &firstName, &lastName, nil
+			return firstName, lastName, nil
 		} else {
 			tracing.TraceErr(nil, err)
-			return nil, nil, err
+			return "", "", err
 		}
 	} else {
 		tracing.TraceErr(nil, fmt.Errorf("provider not supported"))
-		return nil, nil, fmt.Errorf("provider not supported")
+		return "", "", fmt.Errorf("provider not supported")
 	}
 }
 
@@ -708,129 +755,6 @@ func getUserInfoFromGoogle(c context.Context, config *config.Config, signInReque
 	}
 
 	return userInfo, nil
-}
-
-func initializeUser(c context.Context, services *cosapi_services.Services, provider, providerAccountId, tenant, email string, firstName, lastName *string) (*string, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "Registration.initializeUser")
-	defer span.Finish()
-
-	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant: tenant,
-	})
-
-	userId := ""
-	playerId := ""
-
-	userNode, err := services.Repositories.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, email)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	if userNode != nil {
-		userId = mapper.MapDbNodeToUserEntity(userNode).Id
-		span.LogFields(tracingLog.Object("user", "found"))
-	} else {
-		span.LogFields(tracingLog.Object("user", "not found"))
-	}
-
-	playerNode, err := services.Repositories.Neo4jRepositories.PlayerReadRepository.GetPlayerByAuthIdProvider(ctx, email, provider)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	if playerNode != nil {
-		playerId = mapper.MapDbNodeToPlayerEntity(playerNode).Id
-		span.LogFields(tracingLog.Object("player", "found"))
-	} else {
-		span.LogFields(tracingLog.Object("player", "not found"))
-	}
-
-	defaultWorkSchedule := postgres_entity.UserWorkingSchedule{
-		UserId:    userId,
-		DayRange:  "Mon-Fri",
-		StartHour: "09:00",
-		EndHour:   "18:00",
-	}
-
-	if userId == "" {
-		userId, err = services.CommonServices.UserService.Save(innerCtx, nil, nil, data_fields.UserFields{
-			FirstName: firstName,
-			LastName:  lastName,
-			Roles:     common_utils.ToPtr([]string{"USER", "OWNER"}),
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-		_, err = services.CommonServices.EmailService.Merge(innerCtx, nil, tenant, interfaces.EmailFields{
-			Primary: true,
-			Email:   email,
-			Source:  neoEntity.DataSourceOpenline,
-		}, &common_srv.LinkWith{
-			Type: model.USER,
-			Id:   userId,
-		})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to link user to email"))
-			return nil, err
-		}
-
-		err = services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.Store(innerCtx, tenant, &defaultWorkSchedule)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-	} else {
-		err = addDefaultMissingRoles(ctx, services, tenant, userId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-		workingSchedule, err := services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.GetForUser(ctx, tenant, userId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-		if len(workingSchedule) == 0 {
-			err = services.Repositories.PostgresRepositories.UserWorkingScheduleRepository.Store(innerCtx, tenant, &defaultWorkSchedule)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
-			}
-		}
-	}
-
-	if playerId == "" {
-		err := services.Repositories.Neo4jRepositories.PlayerWriteRepository.Merge(ctx, userId, neoEntity.PlayerEntity{
-			AuthId:     email,
-			Provider:   provider,
-			IdentityId: providerAccountId,
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-	}
-
-	if userId != "" {
-		innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-			Tenant:    tenant,
-			UserEmail: email,
-		})
-		err = services.Repositories.Neo4jRepositories.UserWriteRepository.RegisterLogin(innerCtx, tenant, userId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-		}
-		err = services.CommonServices.Events.Publisher.PublishFanoutEvent(innerCtx, userId, model.USER, dto.UserLogin{LoginEmail: email, Provider: provider, IdentityId: providerAccountId})
-		if err != nil {
-			tracing.TraceErr(span, err)
-		}
-	}
-
-	return &userId, nil
 }
 
 func addDefaultMissingRoles(c context.Context, services *cosapi_services.Services, tenant, userId string) error {

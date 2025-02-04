@@ -14,6 +14,8 @@ const (
 	SENT_TO           EntityRelation = "SENT_TO"
 	NEXT              EntityRelation = "NEXT"
 	CONNECTED_WITH    EntityRelation = "CONNECTED_WITH"
+	HAS_WORKSPACE     EntityRelation = "HAS_WORKSPACE"
+	AUTHENTICATED_BY  EntityRelation = "AUTHENTICATED_BY"
 )
 
 func (entityRelation EntityRelation) String() string {
