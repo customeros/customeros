@@ -11,6 +11,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4jRepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -77,6 +78,23 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer df.Close(gRPCconn)
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 
+	// Setting up services
+	commonServices := service.InitServices(
+		postgresRepositories,
+		neo4jRepositories,
+		server.cfg,
+		grpcContainer,
+		server.log,
+	)
+
+	// initialize agent registry
+	agentRegImpl := agent.NewAgentRegistryService(postgresRepositories, commonServices.CommonServices.AgentCapabilities.GetExecutors())
+	err = agentRegImpl.SyncRegistry(ctx)
+	if err != nil {
+		server.log.Info("Cannot init agent registy")
+		server.log.Fatal(err)
+	}
+
 	// Setting up Gin
 	r := gin.Default()
 
@@ -94,15 +112,6 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.Use(tracing.RecoveryWithJaeger(opentracing.GlobalTracer()))
 	r.Use(prometheusMiddleware())
 	r.Use(bodyLoggerMiddleware)
-
-	// Setting up services
-	service.InitServices(
-		postgresRepositories,
-		neo4jRepositories,
-		server.cfg,
-		grpcContainer,
-		server.log,
-	)
 
 	r.GET("/health", HealthCheckHandler)
 	r.GET("/readiness", ReadinessHandler)
