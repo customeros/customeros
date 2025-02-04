@@ -274,6 +274,7 @@ func InitCommonServices(
 	agentRegImpl := agent.NewAgentRegistryService(postgresRepositories, capabilityImpl.GetExecutors())
 	err = agentRegImpl.SyncRegistry(context.Background())
 	if err != nil {
+		log.DPanic(err)
 		log.Fatalf("cannot sync agent registry")
 	}
 
