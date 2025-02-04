@@ -26,5 +26,19 @@ func (AgentRegistry) TableName() string {
 
 func (r *AgentRegistry) BeforeCreate(tx *gorm.DB) error {
 	r.ID = utils.GenerateNanoIdWithPrefix("ar", 16)
+	return r.ValidateCapabilities()
+}
+
+func (r *AgentRegistry) ValidateCapabilities() error {
+	if len(r.Capabilities) == 0 {
+		return nil
+	}
+
+	for _, capabilityType := range r.Capabilities {
+		_, err := enum.GetAgentCapability(capabilityType)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

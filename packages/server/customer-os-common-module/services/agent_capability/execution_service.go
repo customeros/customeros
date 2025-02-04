@@ -2,7 +2,6 @@ package agent_capability
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -122,17 +121,14 @@ func executeCapability[I, O, C any](
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	input := cap.GetInput()
-	if err := utils.MapToStruct(allParams, &input); err != nil {
+	input := cap.NewInput()
+	err := utils.MapToStruct(allParams, &input)
+	if err != nil {
 		return nil, err
 	}
 
-	config := cap.GetConfig()
-	if capability.Config != "" {
-		if err := json.Unmarshal([]byte(capability.Config), &config); err != nil {
-			return nil, err
-		}
-	}
+	config := cap.NewConfig()
+	err = capability.GetConfig(&config)
 
 	output, err := cap.Execute(ctx, input, config)
 	if err != nil {

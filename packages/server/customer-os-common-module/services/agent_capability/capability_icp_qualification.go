@@ -73,26 +73,35 @@ func NewICPQualificationCapability(postgres *postgres_repository.Repositories, a
 	}
 }
 
-type ICPAnswer struct {
-	ICPFit  bool     `json:"icp_fit"`
-	Reasons []string `json:"reasons"`
-}
-
-func (c *ICPQualificationCapability) GetInput() ICPQualificationInput {
-	return ICPQualificationInput{}
-}
-
-func (c *ICPQualificationCapability) GetConfig() ICPQualificationConfig {
-	return ICPQualificationConfig{}
-}
-
 // Compile-time interface check
 var (
 	_ interfaces.AgentCapability[ICPQualificationInput, ICPQualificationOutput, ICPQualificationConfig] = (*ICPQualificationCapability)(nil)
 )
 
+type ICPAnswer struct {
+	ICPFit  bool     `json:"icp_fit"`
+	Reasons []string `json:"reasons"`
+}
+
 func (c *ICPQualificationCapability) Type() enum.AgentCapability {
 	return enum.CapabilityEvaluateCompanyICPFit
+}
+
+func (c *ICPQualificationCapability) Name() string {
+	return "Evaluate company for ICP fit"
+}
+
+func (c *ICPQualificationCapability) NewInput() ICPQualificationInput {
+	return ICPQualificationInput{}
+}
+
+func (c *ICPQualificationCapability) NewConfig() ICPQualificationConfig {
+	return ICPQualificationConfig{}
+}
+
+func (c *ICPQualificationCapability) DefaultConfig() any {
+	config := c.NewConfig()
+	return &config
 }
 
 func (c *ICPQualificationCapability) ValidateConfig(config ICPQualificationConfig) error {

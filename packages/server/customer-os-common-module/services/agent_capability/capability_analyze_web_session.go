@@ -44,8 +44,20 @@ func (c *AnalyzeWebSessionCapability) Type() enum.AgentCapability {
 	return enum.CapabilityAnalyzeWebSessionIntent
 }
 
-func (c *AnalyzeWebSessionCapability) GetInput() AnalyzeWebSessionInput {
+func (c *AnalyzeWebSessionCapability) Name() string {
+	return "Analyze web session for intent"
+}
+
+func (c *AnalyzeWebSessionCapability) NewInput() AnalyzeWebSessionInput {
 	return AnalyzeWebSessionInput{}
+}
+
+func (c *AnalyzeWebSessionCapability) NewConfig() NoConfig {
+	return NoConfig{}
+}
+
+func (c *AnalyzeWebSessionCapability) DefaultConfig() any {
+	return &NoConfig{}
 }
 
 func (c *AnalyzeWebSessionCapability) ValidateInput(data AnalyzeWebSessionInput) error {
@@ -59,10 +71,6 @@ func (c *AnalyzeWebSessionCapability) ValidateInput(data AnalyzeWebSessionInput)
 		return errors.New("missing required input data: OrganizationID")
 	}
 	return nil
-}
-
-func (c *AnalyzeWebSessionCapability) GetConfig() NoConfig {
-	return NoConfig{}
 }
 
 func (c *AnalyzeWebSessionCapability) ValidateConfig(config NoConfig) error {

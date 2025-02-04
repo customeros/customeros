@@ -1,10 +1,11 @@
 package mapper
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 )
 
 func MapAgentToModel(entity *postgresEntity.Agent) *model.Agent {
@@ -31,7 +32,7 @@ func MapAgentToModel(entity *postgresEntity.Agent) *model.Agent {
 			Type:   enummapper.MapAgentCapabilityTypeToModel(capability.Type),
 			Errors: utils.StringPtrNillable(capability.Error),
 			Active: capability.Active,
-			Config: capability.Config,
+			Config: capability.GetConfigString(),
 		})
 	}
 	return &agentModel

@@ -180,7 +180,6 @@ func InitCommonServices(
 	}
 
 	// Simple - Services that depend only on base services
-	agentImpl := agent.NewAgentService(postgresRepositories, eventsImpl)
 	aiImpl := ai.NewAIService(log, &cfg.External.AnthropicConfig, &cfg.External.DeepseekConfig)
 	attachmentImpl := attachment.NewAttachmentService(neo4jRepositories)
 	azureImpl := azure.NewAzureService(&cfg.Infrastructure.AzureOAuthConfig, postgresRepositories, neo4jRepositories)
@@ -237,7 +236,6 @@ func InitCommonServices(
 	enrichmentImpl := enrichment.NewEnrichmentService(log, &cfg.External, cacheImpl, eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, domainImpl, locationImpl, orgImpl, socialImpl)
 	verifyImpl := verify.NewVerifyService(log, postgresRepositories, cfg, enrichmentImpl)
 	actionImpl := action.NewActionService(log, neo4jRepositories, eventsImpl, orgImpl)
-	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailboxImpl, orgImpl, postmarkImpl, userImpl, agentImpl)
 
 	// Resolve circular dependencies
 	emailImpl.SetContactService(contactImpl)
@@ -268,6 +266,7 @@ func InitCommonServices(
 	)
 
 	// initialize agents
+	agentImpl := agent.NewAgentService(postgresRepositories, eventsImpl, capabilityImpl)
 	capabilityExecutionImpl := agent_capability.NewAgentCapabilityExecutionService()
 	agentRunnerImpl := agent.NewAgentRunnerService(postgresRepositories, capabilityImpl, agentImpl, capabilityExecutionImpl)
 
@@ -277,6 +276,9 @@ func InitCommonServices(
 	if err != nil {
 		log.Fatalf("cannot sync agent registry")
 	}
+
+	// initialize registration service
+	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailboxImpl, orgImpl, postmarkImpl, userImpl, agentImpl)
 
 	// Initialize CommonServices struct
 	common := CommonServices{

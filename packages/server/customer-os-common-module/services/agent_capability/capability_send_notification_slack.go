@@ -17,6 +17,38 @@ type SendSlackNotificationCapability struct {
 	notificationService interfaces.NotificationService
 }
 
+func NewSendSlackNotificationCapability(notificationService interfaces.NotificationService) *SendSlackNotificationCapability {
+	return &SendSlackNotificationCapability{
+		notificationService: notificationService,
+	}
+}
+
+// Compile-time interface check
+var (
+	_ interfaces.AgentCapability[SendSlackNotificationInput, SendSlackNotificationOutput, SendSlackNotificationConfig] = (*SendSlackNotificationCapability)(nil)
+)
+
+func (c *SendSlackNotificationCapability) Type() enum.AgentCapability {
+	return enum.CapabilitySendSlackNotification
+}
+
+func (c *SendSlackNotificationCapability) Name() string {
+	return "Send a slack notification"
+}
+
+func (c *SendSlackNotificationCapability) NewInput() SendSlackNotificationInput {
+	return SendSlackNotificationInput{}
+}
+
+func (c *SendSlackNotificationCapability) NewConfig() SendSlackNotificationConfig {
+	return SendSlackNotificationConfig{}
+}
+
+func (c *SendSlackNotificationCapability) DefaultConfig() any {
+	config := c.NewConfig()
+	return &config
+}
+
 func (c *SendSlackNotificationCapability) ValidateConfig(config SendSlackNotificationConfig) error {
 	if config.ChannelID.Value == "" {
 		return errors.New("ChannelID must be set")
@@ -30,29 +62,6 @@ func (c *SendSlackNotificationCapability) ValidateInput(input SendSlackNotificat
 	}
 	return nil
 }
-
-func (c *SendSlackNotificationCapability) Type() enum.AgentCapability {
-	return enum.CapabilitySendSlackNotification
-}
-
-func (c *SendSlackNotificationCapability) GetInput() SendSlackNotificationInput {
-	return SendSlackNotificationInput{}
-}
-
-func (c *SendSlackNotificationCapability) GetConfig() SendSlackNotificationConfig {
-	return SendSlackNotificationConfig{}
-}
-
-func NewSendSlackNotificationCapability(notificationService interfaces.NotificationService) *SendSlackNotificationCapability {
-	return &SendSlackNotificationCapability{
-		notificationService: notificationService,
-	}
-}
-
-// Compile-time interface check
-var (
-	_ interfaces.AgentCapability[SendSlackNotificationInput, SendSlackNotificationOutput, SendSlackNotificationConfig] = (*SendSlackNotificationCapability)(nil)
-)
 
 type SendSlackNotificationInput struct {
 	Message string `json:"message"`

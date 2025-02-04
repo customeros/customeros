@@ -34,21 +34,29 @@ func NewCreateMarkdownTimelineEventCapability(markdownService interfaces.Markdow
 	}
 }
 
-func (c *CreateMarkdownTimelineEventCapability) GetInput() CreateMarkdownTimelineEventInput {
-	return CreateMarkdownTimelineEventInput{}
-}
-
-func (c *CreateMarkdownTimelineEventCapability) GetConfig() NoConfig {
-	return NoConfig{}
-}
-
 // Compile-time interface check
 var (
 	_ interfaces.AgentCapability[CreateMarkdownTimelineEventInput, CreateMarkdownTimelineEventOutput, NoConfig] = (*CreateMarkdownTimelineEventCapability)(nil)
 )
 
+func (c *CreateMarkdownTimelineEventCapability) NewInput() CreateMarkdownTimelineEventInput {
+	return CreateMarkdownTimelineEventInput{}
+}
+
+func (c *CreateMarkdownTimelineEventCapability) NewConfig() NoConfig {
+	return NoConfig{}
+}
+
+func (c *CreateMarkdownTimelineEventCapability) DefaultConfig() any {
+	return &NoConfig{}
+}
+
 func (c *CreateMarkdownTimelineEventCapability) Type() enum.AgentCapability {
 	return enum.CapabilityCreateMarkdownTimelineEvent
+}
+
+func (c *CreateMarkdownTimelineEventCapability) Name() string {
+	return "Add event to timeline"
 }
 
 func (c *CreateMarkdownTimelineEventCapability) ValidateConfig(config NoConfig) error {
