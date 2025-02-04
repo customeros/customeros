@@ -396,8 +396,6 @@ export class OrganizationService {
 
     organization.setNotes(notes);
 
-    organization.value.notes = notes;
-
     const [res, err] = await unwrap(
       this.orgRepo.saveOrganization({
         input: {
