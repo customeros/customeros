@@ -17,7 +17,7 @@ export const AuthPanel = observer(() => {
     if (queryParams && queryParams.has('code')) {
       store.settings.slack.oauthCallback(
         queryParams.get('code') as string,
-        'https://app.customeros.ai/settings',
+        `${import.meta.env.VITE_CLIENT_APP_URL}/settings`,
       );
     }
   }, [queryParams]);
