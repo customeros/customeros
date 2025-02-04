@@ -15,7 +15,7 @@ export const TableViewsToggleNavigation = observer(() => {
   const preset = searchParams.get('preset');
   const [tabs, setLastActivePosition] = useLocalStorage<{
     [key: string]: string;
-  }>('customeros-player-last-position', { root: 'organizations' });
+  }>('customeros-player-last-position', { root: 'finder' });
 
   const tableViewDefs = store.tableViewDefs.toArray();
   const tableViewDef = store.tableViewDefs.getById(preset || '')?.value;

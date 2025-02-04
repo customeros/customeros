@@ -21,7 +21,7 @@ export const AvatarCell = memo(
 
     const [tabs] = useLocalStorage<{
       [key: string]: string;
-    }>(`customeros-player-last-position`, { root: 'organization' });
+    }>(`customeros-player-last-position`, { root: 'finder' });
 
     const src = icon || logo;
     const fullName = name || 'Unnamed';

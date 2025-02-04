@@ -21,7 +21,7 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
 
   const [tabs] = useLocalStorage<{
     [key: string]: string;
-  }>(`customeros-player-last-position`, { root: 'organization' });
+  }>(`customeros-player-last-position`, { root: 'finder' });
   const navigate = useNavigate();
 
   const fullName = name || 'Unnamed';

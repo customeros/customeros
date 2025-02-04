@@ -19,7 +19,7 @@ export const OrganizationNameCell = observer(
 
     const [tabs] = useLocalStorage<{
       [key: string]: string;
-    }>(`customeros-player-last-position`, { root: 'organization' });
+    }>(`customeros-player-last-position`, { root: 'finder' });
     const linkRef = useRef<HTMLAnchorElement>(null);
 
     const lastPositionParams = tabs[orgId];
