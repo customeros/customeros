@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts';
@@ -25,6 +25,7 @@ export const AvatarCell = memo(
 
     const src = icon || logo;
     const fullName = name || 'Unnamed';
+    const [status, setStatus] = useState('loading');
 
     const handleNavigate = () => {
       const lastPositionParams = tabs[id];
@@ -44,16 +45,23 @@ export const AvatarCell = memo(
             },
           )}
         >
-          {src ? (
+          {src && status !== 'error' && (
             <Image
               src={src}
               alt={fullName}
               loading='lazy'
               decoding='async'
               fetchPriority='low'
-              className='w-full h-full object-contain'
+              onError={() => setStatus('error')}
+              onLoad={() => setStatus('loaded')}
+              className={cn('w-full h-full object-contain', {
+                'opacity-0 size-0': status === 'loading',
+                'opacity-100': status === 'loaded',
+              })}
             />
-          ) : (
+          )}
+
+          {(!src || status === 'error' || status === 'loading') && (
             <Building06 className='w-4 h-4 text-gray-700' />
           )}
         </div>
