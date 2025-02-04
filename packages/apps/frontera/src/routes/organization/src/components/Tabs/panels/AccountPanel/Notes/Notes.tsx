@@ -1,8 +1,10 @@
+import { useMemo } from 'react';
+
 import { observer } from 'mobx-react-lite';
+import { EditOrganizationNotesUsecase } from '@domain/usecases/organization-details/edit-organization-notes.usecase.ts';
 
 import { File02 } from '@ui/media/icons/File02';
 import { Editor } from '@ui/form/Editor/Editor';
-import { useStore } from '@shared/hooks/useStore';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { Card, CardFooter, CardContent } from '@ui/presentation/Card/Card';
@@ -12,8 +14,10 @@ interface NotesProps {
 }
 
 export const Notes = observer(({ id }: NotesProps) => {
-  const store = useStore();
-  const organization = store.organizations.value.get(id);
+  const editNotesUsecase = useMemo(
+    () => new EditOrganizationNotesUsecase(id),
+    [id],
+  );
 
   return (
     <Card className='bg-white p-4 w-full cursor-default hover:shadow-md focus-within:shadow-md transition-all duration-200 ease-out'>
@@ -32,14 +36,12 @@ export const Notes = observer(({ id }: NotesProps) => {
             className='cursor-text'
             namespace='opportunity-next-step'
             placeholderClassName='cursor-text'
-            onFocus={() => organization?.draft()}
-            onBlur={() => organization?.commit()}
+            onBlur={() => editNotesUsecase.execute()}
             dataTest='organization-account-notes-editor'
-            defaultHtmlValue={organization?.value?.notes ?? ''}
+            defaultHtmlValue={editNotesUsecase.defaultNote ?? ''}
             placeholder='Write some notes or anything related to this customer'
             onChange={(html) => {
-              if (!organization) return;
-              organization.value.notes = html;
+              editNotesUsecase.setNotes(html);
             }}
           />
         </div>

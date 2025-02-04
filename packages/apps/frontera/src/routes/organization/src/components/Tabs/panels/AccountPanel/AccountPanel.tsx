@@ -124,6 +124,7 @@ const AccountPanelComponent = observer(() => {
         }
       >
         <Contracts />
+        <Notes id={id} />
       </OrganizationPanel>
     </>
   );

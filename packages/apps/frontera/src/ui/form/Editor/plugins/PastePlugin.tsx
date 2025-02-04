@@ -25,6 +25,8 @@ export function LinkPastePlugin() {
         const pastedData = clipboardData?.getData('text/plain');
         const selectedText = selection.getTextContent().trim();
 
+        if (!pastedData) return;
+
         if (selectedText.length && isValidUrl(pastedData)) {
           editor.update(() => {
             const linkNode = $createLinkNode(pastedData);
