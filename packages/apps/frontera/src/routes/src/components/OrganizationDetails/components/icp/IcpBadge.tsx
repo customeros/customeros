@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
@@ -7,6 +8,7 @@ import { IcpFit } from '@graphql/types';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Icon, IconName } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
+import { Button } from '@ui/form/Button/Button.tsx';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/overlay/Popover';
 import { Tag, TagLabel, TagLeftIcon, TagRightIcon } from '@ui/presentation/Tag';
 
@@ -44,7 +46,7 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
   const [open, setOpen] = useState(false);
   const icpAgent = store.agents.icpQualificationAgent;
   const icpAgentActive = icpAgent?.value.isActive;
-
+  const navigate = useNavigate();
   const organization = store.organizations.getById(id);
 
   if (!organization) return null;
@@ -58,20 +60,22 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
 
   const noAgentConfigured = !icpAgentActive;
   const icpProfilingInProgress =
-    organization.value.icpFit === IcpFit.IcpNotSet && icpAgentActive;
+    organization.value.icpFit === IcpFit.IcpNotSet &&
+    icpAgentActive &&
+    !organization.value.icpFitUpdatedAt;
 
-  if (noAgentConfigured) {
-    return null;
-  }
+  const icpFitChangedByUserAction =
+    ((organization.value.icpFit === IcpFit.IcpNotSet &&
+      organization.value.icpFitUpdatedAt) ||
+      icpFitReasons.length === 0) &&
+    !icpProfilingInProgress;
+
+  const icpFitSetBySystem =
+    organization.value.icpFit !== IcpFit.IcpNotSet && icpFitReasons.length > 0;
 
   return (
     <Popover open={open} modal={true} onOpenChange={(value) => setOpen(value)}>
-      <PopoverTrigger
-        disabled={
-          !icpProfilingInProgress &&
-          (!icpFitReasons || icpFitReasons.length <= 0)
-        }
-      >
+      <PopoverTrigger>
         <Tag className='ml-4' variant='subtle' colorScheme={data.colorScheme}>
           {data.icon && (
             <TagLeftIcon className='mr-1'>
@@ -113,7 +117,30 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
       </PopoverTrigger>
       <PopoverContent align='end' side='bottom' className='text-sm'>
         <div className='max-w-[295px]'>
-          {organization.value.icpFit !== IcpFit.IcpNotSet && (
+          {noAgentConfigured && (
+            <>
+              <p>
+                To determine whether this company fits your ideal customer
+                profile, configure and enable the
+                <span className='mx-1 font-medium underline underline-offset-1'>
+                  ICP qualifier
+                </span>
+                agent.
+              </p>
+              <Button
+                size='xs'
+                variant='outline'
+                colorScheme='primary'
+                className={'w-full mt-4'}
+                onClick={() => {
+                  navigate(`/agents/${icpAgent?.id}`);
+                }}
+              >
+                Go to ICP qualifier
+              </Button>
+            </>
+          )}
+          {!noAgentConfigured && icpFitSetBySystem && (
             <>
               <p>
                 The
@@ -127,16 +154,14 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
                 your ideal customer profile.
               </p>
 
-              {icpFitReasons.length > 0 && (
-                <div className='pt-3'>
-                  <span>Here's why:</span>
-                  <ol className='list-decimal pl-5'>
-                    {icpFitReasons.map((reason, index) => (
-                      <li key={`${index}-reason`}>{reason}</li>
-                    ))}
-                  </ol>
-                </div>
-              )}
+              <div className='pt-3'>
+                <span>Here's why:</span>
+                <ol className='list-decimal pl-5'>
+                  {icpFitReasons.map((reason, index) => (
+                    <li key={`${index}-reason`}>{reason}</li>
+                  ))}
+                </ol>
+              </div>
 
               {/*<div className='p-2 px-3 mt-2 bg-grayModern-50 flex items-center'>*/}
               {/*  <Icon*/}
@@ -158,8 +183,15 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
               {/*</div>*/}
             </>
           )}
-          {icpProfilingInProgress && (
-            <>
+          {!noAgentConfigured && icpFitChangedByUserAction && (
+            <p>
+              A user changed this company’s ICP status by updating its
+              relationship and stage.
+            </p>
+          )}
+          {!noAgentConfigured &&
+            !icpFitChangedByUserAction &&
+            icpProfilingInProgress && (
               <p>
                 The
                 <span className='mx-1 font-medium underline underline-offset-1'>
@@ -168,32 +200,7 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
                 agent is busy determining whether this company fits your ideal
                 customer profile or not
               </p>
-            </>
-          )}
-
-          {/*{noAgentConfigured && (*/}
-          {/*  <>*/}
-          {/*    <p>*/}
-          {/*      To determine whether this company fits your ideal customer*/}
-          {/*      profile, configure and enable the*/}
-          {/*      <span className='mx-1 font-medium underline underline-offset-1'>*/}
-          {/*        ICP qualifier*/}
-          {/*      </span>*/}
-          {/*      agent.*/}
-          {/*    </p>*/}
-          {/*    <Button*/}
-          {/*      size='xs'*/}
-          {/*      variant='outline'*/}
-          {/*      colorScheme='primary'*/}
-          {/*      className={'w-full mt-4'}*/}
-          {/*      onClick={() => {*/}
-          {/*        navigate(`/agents/${icpAgent?.id}`);*/}
-          {/*      }}*/}
-          {/*    >*/}
-          {/*      Go to ICP qualifier*/}
-          {/*    </Button>*/}
-          {/*  </>*/}
-          {/*)}*/}
+            )}
         </div>
       </PopoverContent>
     </Popover>
