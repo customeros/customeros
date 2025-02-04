@@ -91,7 +91,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	agentRegImpl := agent.NewAgentRegistryService(postgresRepositories, commonServices.CommonServices.AgentCapabilities.GetExecutors())
 	err = agentRegImpl.SyncRegistry(ctx)
 	if err != nil {
-		server.log.Info("Cannot init agent registy")
+		server.log.Info("Cannot init agent registry")
 		server.log.Fatal(err)
 	}
 
