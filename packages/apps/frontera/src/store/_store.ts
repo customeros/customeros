@@ -236,7 +236,7 @@ export class Store<T extends object, E extends Entity<T> = Entity<T>> {
           this.value.set(id, record);
 
           this.size++;
-
+          this.version++;
           setTimeout(() => {
             this.invalidate(id);
           }, 1000);
