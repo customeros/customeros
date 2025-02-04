@@ -338,7 +338,7 @@ async function createServer() {
       const magicLinkReq = await verifyMagicLink(body.code);
       const magicLinkRes = await magicLinkReq.json();
 
-      if (magicLinkRes?.status !== 'OK') {
+      if (!magicLinkRes?.tenant) {
         throw new Error(magicLinkRes?.result);
       }
 

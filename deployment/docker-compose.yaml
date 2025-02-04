@@ -69,7 +69,7 @@ services:
       - ./provision:/provision
     command: >
       bash -c "
-      until PGPASSWORD=password psql -U postgres -d openline -h postgres -c '\q'; do
+      until PGPASSWORD=password psql -U postgres -d openline -h postgres -c 'SELECT 1'; do
         echo 'Waiting for Postgres...'
         sleep 2
       done &&
