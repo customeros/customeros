@@ -17,7 +17,6 @@ import { TargetsContactsView } from './__views__/TargetsContacts.view';
 export class ContactsStore extends Store<ContactDatum, Contact> {
   private chunkSize = 50;
   private service = ContactService.getInstance();
-  @observable accessor searchResults: Map<string, string[]> = new Map();
   @observable accessor cursors: Map<string, number> = new Map();
   @observable accessor availableCounts: Map<string, number> = new Map();
 

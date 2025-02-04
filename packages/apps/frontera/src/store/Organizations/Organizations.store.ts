@@ -32,7 +32,6 @@ type SaveOrganizationPayload = SaveOrganizationMutationVariables['input'];
 export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
   chunkSize = 50;
   private repository = OrganizationRepository.getInstance();
-  @observable accessor searchResults: Map<string, string[]> = new Map();
   @observable accessor cursors: Map<string, number> = new Map();
   @observable accessor availableCounts: Map<string, number> = new Map();
 
