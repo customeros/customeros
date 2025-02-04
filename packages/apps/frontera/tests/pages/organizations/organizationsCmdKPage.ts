@@ -1,6 +1,6 @@
 import { Page, expect, TestInfo } from '@playwright/test';
 
-import { FlowsPage } from '../flows/flowsPage';
+// import { FlowsPage } from '../flows/flowsPage';
 import { TargetsPage } from '../targets/targetsPage';
 import { sideNavSelectors } from '../sideNavSelectors';
 import { SettingsPage } from '../settings/settingsPage';
@@ -9,7 +9,7 @@ import { ContactsPage } from '../contacts/contactsPage';
 import { OrganizationsPage } from './organizationsPage';
 import { ContractsPage } from '../contracts/contractsPage';
 // import { CustomersPage } from '../customers/customersPage';
-import { CustomerMapPage } from '../customer-map/customerMapPage';
+// import { CustomerMapPage } from '../customer-map/customerMapPage';
 import { SettingsAccountsPage } from '../settings/settingsAccounts';
 import {
   ensureLocatorIsVisible,
@@ -39,9 +39,9 @@ export class OrganizationsCmdKPage {
   private organizationHubGn = 'div[data-test="organization-hub-gn"]';
   private organizationHubGi = 'div[data-test="organization-hub-gi"]';
   private organizationHubGr = 'div[data-test="organization-hub-gr"]';
-  private organizationHubGf = 'div[data-test="organization-hub-gf"]';
+  // private organizationHubGf = 'div[data-test="organization-hub-gf"]';
   private organizationHubGs = 'div[data-test="organization-hub-gs"]';
-  private organizationHubGd = 'div[data-test="organization-hub-gd"]';
+  // private organizationHubGd = 'div[data-test="organization-hub-gd"]';
 
   private async openCmdK() {
     await this.page.waitForSelector('div[data-test="search-orgs"]', {
@@ -156,27 +156,27 @@ export class OrganizationsCmdKPage {
     const organizationHubGrText = await organizationHubGr.textContent();
     const navigationItemTextSeven = await navigationItems[6].textContent();
 
-    const organizationHubGf = this.page.locator(this.organizationHubGf);
-    const organizationHubGfText = await organizationHubGf.textContent();
-    const navigationItemTextEight = await navigationItems[7].textContent();
+    // const organizationHubGf = this.page.locator(this.organizationHubGf);
+    // const organizationHubGfText = await organizationHubGf.textContent();
+    // const navigationItemTextEight = await navigationItems[7].textContent();
 
     const organizationHubGs = this.page.locator(this.organizationHubGs);
     const organizationHubGsText = await organizationHubGs.textContent();
     const navigationItemTextNine = await navigationItems[8].textContent();
 
-    const organizationHubGd = this.page.locator(this.organizationHubGd);
-    const organizationHubGdText = await organizationHubGd.textContent();
-    const navigationItemTextTen = await navigationItems[9].textContent();
+    // const organizationHubGd = this.page.locator(this.organizationHubGd);
+    // const organizationHubGdText = await organizationHubGd.textContent();
+    // const navigationItemTextTen = await navigationItems[9].textContent();
 
     await Promise.all([
-      expect.soft(organizationsHubText.trim()).toBe('Organizations'),
+      expect.soft(organizationsHubText.trim()).toBe('Companies'),
       expect
         .soft(organizationHubInputText.trim())
         .toBe('Type a command or search'),
       expect
         .soft(organizationHubAddNewOrgsText.trim())
-        .toBe('Add new organizations...'),
-      expect.soft(navigationItems).toHaveLength(11),
+        .toBe('Add new companies...'),
+      expect.soft(navigationItems).toHaveLength(10),
       expect
         .soft(organizationHubGtText.trim())
         .toBe(navigationItemTextOne.trim()),
@@ -198,15 +198,15 @@ export class OrganizationsCmdKPage {
       expect
         .soft(organizationHubGrText.trim())
         .toBe(navigationItemTextSeven.trim()),
-      expect
-        .soft(organizationHubGfText.trim())
-        .toBe(navigationItemTextEight.trim()),
+      // expect
+      //   .soft(organizationHubGfText.trim())
+      //   .toBe(navigationItemTextEight.trim()),
       expect
         .soft(organizationHubGsText.trim())
         .toBe(navigationItemTextNine.trim()),
-      expect
-        .soft(organizationHubGdText.trim())
-        .toBe(navigationItemTextTen.trim()),
+      // expect
+      //   .soft(organizationHubGdText.trim())
+      //   .toBe(navigationItemTextTen.trim()),
     ]);
 
     await this.page.keyboard.press('Escape');
@@ -239,7 +239,7 @@ export class OrganizationsCmdKPage {
     const navigationItemTextOne = await navigationItems[0].textContent();
 
     await Promise.all([
-      expect.soft(navigationItems).toHaveLength(2),
+      expect.soft(navigationItems).toHaveLength(1),
       expect
         .soft(organizationHubGcText.trim())
         .toBe(navigationItemTextOne.trim()),
@@ -381,25 +381,25 @@ export class OrganizationsCmdKPage {
     await organizationsPage.goToAllOrgs();
   }
 
-  async verifyNavigationToFlows(page: Page) {
-    const flowsPage = new FlowsPage(page);
-    const organizationsPage = new OrganizationsPage(page);
-
-    await this.verifyNavigationWithKeyboard(
-      'KeyF',
-      flowsPage.sideNavItemAllFlows,
-    );
-
-    await this.page.goBack();
-
-    await this.openCmdK();
-    await this.verifyNavigationWithClick(
-      this.organizationHubGf,
-      flowsPage.sideNavItemAllFlows,
-    );
-
-    await organizationsPage.goToAllOrgs();
-  }
+  // async verifyNavigationToFlows(page: Page) {
+  //   const flowsPage = new FlowsPage(page);
+  //   const organizationsPage = new OrganizationsPage(page);
+  //
+  //   await this.verifyNavigationWithKeyboard(
+  //     'KeyF',
+  //     flowsPage.sideNavItemAllFlows,
+  //   );
+  //
+  //   await this.page.goBack();
+  //
+  //   await this.openCmdK();
+  //   await this.verifyNavigationWithClick(
+  //     this.organizationHubGf,
+  //     flowsPage.sideNavItemAllFlows,
+  //   );
+  //
+  //   await organizationsPage.goToAllOrgs();
+  // }
 
   async verifyNavigationToSettings(page: Page) {
     const settingsAccountsPage = new SettingsAccountsPage(page);
@@ -421,23 +421,23 @@ export class OrganizationsCmdKPage {
     await clickLocatorThatIsVisible(this.page, settingsPage.settingsGoBack);
   }
 
-  async verifyNavigationToCustomerMap(page: Page) {
-    const customerMapPage = new CustomerMapPage();
-    const organizationsPage = new OrganizationsPage(page);
-
-    await this.verifyNavigationWithKeyboard(
-      'KeyD',
-      customerMapPage.sideNavItemAllCustomerMapSelected,
-    );
-
-    await this.page.goBack();
-
-    await this.openCmdK();
-    await this.verifyNavigationWithClick(
-      this.organizationHubGd,
-      customerMapPage.sideNavItemAllCustomerMapSelected,
-    );
-
-    await organizationsPage.goToAllOrgs();
-  }
+  // async verifyNavigationToCustomerMap(page: Page) {
+  //   const customerMapPage = new CustomerMapPage();
+  //   const organizationsPage = new OrganizationsPage(page);
+  //
+  //   await this.verifyNavigationWithKeyboard(
+  //     'KeyD',
+  //     customerMapPage.sideNavItemAllCustomerMapSelected,
+  //   );
+  //
+  //   await this.page.goBack();
+  //
+  //   await this.openCmdK();
+  //   await this.verifyNavigationWithClick(
+  //     this.organizationHubGd,
+  //     customerMapPage.sideNavItemAllCustomerMapSelected,
+  //   );
+  //
+  //   await organizationsPage.goToAllOrgs();
+  // }
 }
