@@ -137,25 +137,7 @@ func (h *WebsiteTrackerEventsHandler) validateTrackingAllowed(ctx context.Contex
 	}
 
 	// check if agent has intent to identify visitor
-	for _, agent := range agents {
-		for _, capability := range agent.CapabilitiesConfig.Capabilities {
-			if capability.Type == enum.CapabilityIdentifyWebVisitor {
-				// unmarshal capability config
-				var config agent_capability.IdentifyWebsiteVisitorConfig
-				if err = json.Unmarshal([]byte(capability.Config), &config); err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal capability config"))
-					return "", err
-				}
-				for _, website := range config.Websites.Value {
-					if utils.CleanUrlBasePath(website) == cleanedOrigin {
-						tenant = agent.Tenant
-						h.cache.SetTenantForOrigin(cleanedOrigin, tenant)
-						break
-					}
-				}
-			}
-		}
-	}
+	tenant = h.findTenantByOrigin(ctx, agents, cleanedOrigin)
 
 	if tenant == "" {
 		err = fmt.Errorf("tenant not found for origin: %s", origin)
@@ -164,6 +146,42 @@ func (h *WebsiteTrackerEventsHandler) validateTrackingAllowed(ctx context.Contex
 	}
 	span.LogKV("result.tenant", tenant)
 	return tenant, nil
+}
+
+func (h *WebsiteTrackerEventsHandler) findTenantByOrigin(ctx context.Context, agents []postgres_entity.Agent, cleanedOrigin string) string {
+	for _, agent := range agents {
+		if tenant := h.checkAgentForOrigin(ctx, agent, cleanedOrigin); tenant != "" {
+			h.cache.SetTenantForOrigin(cleanedOrigin, tenant)
+			return tenant
+		}
+	}
+	return ""
+}
+
+func (h *WebsiteTrackerEventsHandler) checkAgentForOrigin(ctx context.Context, agent postgres_entity.Agent, cleanedOrigin string) string {
+	span, _ := opentracing.StartSpanFromContext(ctx, "WebsiteTrackerEventsHandler.checkAgentForOrigin")
+	defer span.Finish()
+	tracing.TagComponentRest(span)
+
+	for _, capability := range agent.CapabilitiesConfig.Capabilities {
+		if capability.Type != enum.CapabilityIdentifyWebVisitor {
+			continue
+		}
+
+		var config agent_capability.IdentifyWebsiteVisitorConfig
+		err := capability.GetConfig(&config)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return ""
+		}
+
+		for _, website := range config.Websites.Value {
+			if utils.CleanUrlBasePath(website) == cleanedOrigin {
+				return agent.Tenant
+			}
+		}
+	}
+	return ""
 }
 
 func (h *WebsiteTrackerEventsHandler) assignEventToSession(ctx context.Context, trackerData *postgres_entity.WebTrackerEvents) error {
