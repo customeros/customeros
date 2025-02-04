@@ -34,8 +34,20 @@ func (c *CreateOrganizationCapability) Type() enum.AgentCapability {
 	return enum.CapabilityCreateAndEnrichCompany
 }
 
-func (c *CreateOrganizationCapability) GetInput() CreateOrganizationInput {
+func (c *CreateOrganizationCapability) Name() string {
+	return "Create and enrich a company"
+}
+
+func (c *CreateOrganizationCapability) NewInput() CreateOrganizationInput {
 	return CreateOrganizationInput{}
+}
+
+func (c *CreateOrganizationCapability) NewConfig() NoConfig {
+	return NoConfig{}
+}
+
+func (c *CreateOrganizationCapability) DefaultConfig() any {
+	return &NoConfig{}
 }
 
 func (c *CreateOrganizationCapability) ValidateInput(input CreateOrganizationInput) error {
@@ -46,10 +58,6 @@ func (c *CreateOrganizationCapability) ValidateInput(input CreateOrganizationInp
 		return errors.New("Invalid domain format")
 	}
 	return nil
-}
-
-func (c *CreateOrganizationCapability) GetConfig() NoConfig {
-	return NoConfig{}
 }
 
 func (c *CreateOrganizationCapability) ValidateConfig(config NoConfig) error {

@@ -1,7 +1,6 @@
 package rest_handlers
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-api/rest/agents"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/billing"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/customerbase"
 	"github.com/customeros/customeros/packages/server/customer-os-api/rest/enrich"
@@ -21,7 +20,6 @@ import (
 type RestHandlers struct {
 	Response *response.Response
 
-	Agents               *agents.AgentHandler
 	AskAI                *private.AskAIHandler
 	Billing              *billing.BillingHandler
 	Contact              *customerbase.ContactHandler
@@ -45,7 +43,6 @@ func InitRestHandlers(services *cosapi_services.Services) *RestHandlers {
 	integrationsHandler := integrations.NewIntegrationHandler(services, responseHandler)
 
 	handlers := RestHandlers{
-		Agents:               agents.NewAgentHandler(services, responseHandler),
 		AskAI:                private.NewAskAIHandler(services, responseHandler),
 		Billing:              billing.NewBillingHandler(services, responseHandler),
 		Contact:              customerbase.NewContactHandler(services, responseHandler),

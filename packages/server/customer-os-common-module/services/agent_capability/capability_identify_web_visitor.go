@@ -42,8 +42,21 @@ func (c *IdentifyWebsiteVisitorCapability) Type() enum.AgentCapability {
 	return enum.CapabilityIdentifyWebVisitor
 }
 
-func (c *IdentifyWebsiteVisitorCapability) GetInput() IdentifyWebsiteVisitorInput {
+func (c *IdentifyWebsiteVisitorCapability) Name() string {
+	return "Identify website visitor"
+}
+
+func (c *IdentifyWebsiteVisitorCapability) NewInput() IdentifyWebsiteVisitorInput {
 	return IdentifyWebsiteVisitorInput{}
+}
+
+func (c *IdentifyWebsiteVisitorCapability) NewConfig() IdentifyWebsiteVisitorConfig {
+	return IdentifyWebsiteVisitorConfig{}
+}
+
+func (c *IdentifyWebsiteVisitorCapability) DefaultConfig() any {
+	config := c.NewConfig()
+	return &config
 }
 
 func (c *IdentifyWebsiteVisitorCapability) ValidateInput(data IdentifyWebsiteVisitorInput) error {
@@ -57,10 +70,6 @@ func (c *IdentifyWebsiteVisitorCapability) ValidateInput(data IdentifyWebsiteVis
 		return errors.New("VisitorID cannot be empty")
 	}
 	return nil
-}
-
-func (c *IdentifyWebsiteVisitorCapability) GetConfig() IdentifyWebsiteVisitorConfig {
-	return IdentifyWebsiteVisitorConfig{}
 }
 
 func (c *IdentifyWebsiteVisitorConfig) Validate() bool {

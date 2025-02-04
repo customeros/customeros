@@ -2,11 +2,10 @@ package agent
 
 import (
 	"context"
-	"encoding/json"
 
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -23,20 +22,22 @@ import (
 )
 
 type agentService struct {
-	postgresRepositories     *postgresrepository.Repositories
-	events                   *events.EventsService
-	agentCapabilityExecutors map[enum.AgentCapability]interfaces.AgentCapabilityUntyped
+	postgresRepositories            *postgresrepository.Repositories
+	events                          *events.EventsService
+	agentCapabilities               *agent_capability.AgentCapabilities
+	agentCapabilityExecutionService interfaces.AgentCapabilityExecutionService
 }
 
 func NewAgentService(
 	postgresRepositories *postgresrepository.Repositories,
 	events *events.EventsService,
-	executors map[enum.AgentCapability]interfaces.AgentCapabilityUntyped,
+	agentCapabilities *agent_capability.AgentCapabilities,
 ) interfaces.AgentService {
 	return &agentService{
-		postgresRepositories:     postgresRepositories,
-		events:                   events,
-		agentCapabilityExecutors: executors,
+		postgresRepositories:            postgresRepositories,
+		events:                          events,
+		agentCapabilities:               agentCapabilities,
+		agentCapabilityExecutionService: agent_capability.NewAgentCapabilityExecutionService(),
 	}
 }
 
@@ -102,52 +103,41 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	agent := postgresentity.Agent{
 		Type:        agentType,
 		Tenant:      tenant,
-		Name:        agentRegistry.Nam,
+		Name:        agentRegistry.AgentName,
 		Goal:        agentRegistry.Goal,
 		IsActive:    false,
 		VisibleInUI: true,
 		Icon:        agentRegistry.Icon,
-		Color:       agentRegistry.Color,
+		Color:       utils.GetRandomColor(),
 		RegistryID:  agentRegistry.ID,
-	}
-	if agent.Color == "" {
-		agent.Color = utils.GetRandomColor()
 	}
 
 	// build capabilities from registry
 	var agentCapabilities []postgresentity.Capability
-	for _, masterCapability := range agentRegistry.CapabilitiesConfig.Capabilities {
-		agentCapability := postgresentity.Capability{
-			ID:     uuid.New().String(),
-			Name:   masterCapability.Name,
-			Type:   masterCapability.Type,
-			Error:  "",
-			Active: masterCapability.Active,
+	for _, registryCapability := range agentRegistry.Capabilities {
+		// get default config for each capability
+		capabilityType, err := enum.GetAgentCapability(registryCapability)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
 		}
-		if agentCapability.Name == "" {
-			agentCapability.Name = masterCapability.Type.GetName()
+		executor, err := a.agentCapabilities.GetExecutor(capabilityType)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
 		}
-		if masterCapability.Config != "" {
-			agentCapability.Config = masterCapability.Config
-		} else {
-			config := agent_capability.Gen(agentCapability.Type)
-			if config != nil {
-				configBytes, err := json.Marshal(config)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return nil, err
-				}
-				agentCapability.Config = string(configBytes)
-			}
+		defaultCapability, err := a.createDefaultCapability(ctx, capabilityType, executor.Name())
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
 		}
-		agentCapabilities = append(agentCapabilities, agentCapability)
+
+		agentCapabilities = append(agentCapabilities, *defaultCapability)
 	}
+
 	agent.CapabilitiesConfig = postgresentity.CapabilitiesConfig{
 		Capabilities: agentCapabilities,
 	}
-
-	// validate capabilities
-	a.ValidateCapabilities(ctx, &agent)
 
 	// create agent instance in database
 	newAgent, err := a.postgresRepositories.AgentRepository.Create(ctx, agent)
@@ -157,6 +147,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	}
 	tracing.TagEntity(span, newAgent.ID)
 
+	// publish agent created event
 	err = a.events.Publisher.PublishFanoutEvent(ctx, newAgent.ID, model.AGENT, dto.CreateAgent{
 		Active:       newAgent.IsActive,
 		Name:         newAgent.Name,
@@ -175,6 +166,28 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	}
 
 	return newAgent, nil
+}
+
+func (a *agentService) createDefaultCapability(ctx context.Context, capabilityType enum.AgentCapability, capabilityName string) (*postgres_entity.Capability, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.createDefaultCapability")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	executor, err := a.agentCapabilities.GetExecutor(capabilityType)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	config := executor.DefaultConfig()
+	agentCapability := postgresentity.Capability{
+		ID:     utils.GenerateNanoIdWithPrefix("cap", 16),
+		Name:   capabilityName,
+		Type:   capabilityType,
+		Active: true,
+	}
+	agentCapability.SetConfig(config)
+
+	return &agentCapability, nil
 }
 
 func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilitiesConfig *postgresentity.CapabilitiesConfig) (*postgresentity.Agent, error) {
@@ -223,7 +236,7 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	}
 
 	if validateCapabilities {
-		a.ValidateCapabilities(ctx, agentEntity)
+		// todo
 	}
 
 	updatedAgent, err := a.postgresRepositories.AgentRepository.Update(ctx, *agentEntity)
@@ -239,58 +252,6 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	}
 
 	return updatedAgent, nil
-}
-
-func (a *agentService) ValidateCapabilities(ctx context.Context, agentEntity *postgresentity.Agent) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.ValidateCapabilities")
-	defer span.Finish()
-
-	capabilities := agentEntity.CapabilitiesConfig.Capabilities // []Capability
-	allCapabilitiesValid := true
-
-	for i := range capabilities {
-		capability := &capabilities[i] // pointer so we can update error
-		if !capability.Active {
-			// Not active => auto valid
-			continue
-		}
-
-		// decode JSON config into typed struct (example)
-		typedConfig, decodeErr := decodeConfigForCapability(capability.Type, capability.Config)
-		if decodeErr != nil {
-			tracing.TraceErr(span, decodeErr)
-			continue
-		}
-		if typedConfig == nil {
-			continue
-		}
-
-		// see if typedConfig implements ConfigValidator
-		if validator, ok := typedConfig.(agent_capability.ConfigValidator); ok {
-			if !validator.Validate() {
-				allCapabilitiesValid = false
-			}
-			newConfigJson, _ := json.Marshal(typedConfig)
-			capability.Config = string(newConfigJson)
-		}
-	}
-
-	agentEntity.CapabilitiesConfig.Capabilities = capabilities
-	agentEntity.Configured = allCapabilitiesValid
-}
-
-func decodeConfigForCapability(capType enum.AgentCapability, configJSON string) (any, error) {
-	c := agent_capability.GetCapabilityConfigStruct(capType)
-	if c == nil {
-		return nil, nil
-	}
-
-	err := json.Unmarshal([]byte(configJSON), c)
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
 }
 
 func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent postgresentity.Agent, triggerEvent, traceId string) (string, error) {

@@ -93,6 +93,24 @@ func (c *SendWebVisitorSlackNotificationCapability) Type() enum.AgentCapability 
 	return enum.CapabilitySendWebVisitorSlackNotification
 }
 
+func (c *SendWebVisitorSlackNotificationCapability) Name() string {
+	return "Send a slack notification"
+}
+
+func (c *SendWebVisitorSlackNotificationCapability) NewInput() SendWebVisitorSlackNotificationInput {
+	return SendWebVisitorSlackNotificationInput{}
+}
+
+func (c *SendWebVisitorSlackNotificationCapability) NewConfig() SendWebVisitorSlackNotificationConfig {
+	return SendWebVisitorSlackNotificationConfig{}
+}
+
+func (c *SendWebVisitorSlackNotificationCapability) DefaultConfig() any {
+	config := c.NewConfig()
+	config.CooldownHours.Value = 12
+	return &config
+}
+
 func (c *SendWebVisitorSlackNotificationCapability) ValidateConfig(config SendWebVisitorSlackNotificationConfig) error {
 	if config.ChannelID.Value == "" {
 		return errors.New("ChannelID must be set")
@@ -111,14 +129,6 @@ func (c *SendWebVisitorSlackNotificationCapability) ValidateInput(input SendWebV
 		return errors.New("OrganizationID cannot be empty")
 	}
 	return nil
-}
-
-func (c *SendWebVisitorSlackNotificationCapability) GetInput() SendWebVisitorSlackNotificationInput {
-	return SendWebVisitorSlackNotificationInput{}
-}
-
-func (c *SendWebVisitorSlackNotificationCapability) GetConfig() SendWebVisitorSlackNotificationConfig {
-	return SendWebVisitorSlackNotificationConfig{}
 }
 
 func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context, data SendWebVisitorSlackNotificationInput, config SendWebVisitorSlackNotificationConfig) (SendWebVisitorSlackNotificationOutput, error) {

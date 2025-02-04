@@ -8,14 +8,15 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // AgentSave is the resolver for the agent_Save field.
@@ -56,13 +57,16 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 	if input.Capabilities != nil {
 		capabilities := make([]postgresentity.Capability, 0, len(input.Capabilities))
 		for _, capability := range input.Capabilities {
-			capabilities = append(capabilities, postgresentity.Capability{
+
+			dbCapability := postgresentity.Capability{
 				ID:     utils.IfNotNilString(capability.ID),
 				Name:   utils.IfNotNilString(capability.Name),
 				Error:  utils.IfNotNilString(capability.Errors),
 				Active: utils.IfNotNilBool(capability.Active),
-				Config: utils.IfNotNilString(capability.Config),
-			})
+			}
+			dbCapability.SetConfig(utils.IfNotNilString(capability.Config))
+
+			capabilities = append(capabilities, dbCapability)
 			if capability.Type != nil {
 				capabilities[len(capabilities)-1].Type = enummapper.MapAgentCapabilityTypeFromModel(*capability.Type)
 			}

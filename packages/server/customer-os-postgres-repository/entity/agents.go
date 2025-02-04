@@ -18,9 +18,29 @@ type Capability struct {
 	Name        string               `json:"name"`
 	Type        enum.AgentCapability `json:"type"`
 	Error       string               `json:"error"`
-	Config      string               `json:"config"`
+	Config      json.RawMessage      `json:"config"`
 	Active      bool                 `json:"active"`
 	Description string               `json:"description"`
+}
+
+func (c *Capability) SetConfig(config interface{}) error {
+	data, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+	c.Config = data
+	return nil
+}
+
+func (c *Capability) GetConfig(configPtr interface{}) error {
+	return json.Unmarshal(c.Config, configPtr)
+}
+
+func (c *Capability) GetConfigString() string {
+	if c.Config == nil {
+		return ""
+	}
+	return string(c.Config)
 }
 
 type Agent struct {

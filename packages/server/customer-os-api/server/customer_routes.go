@@ -24,26 +24,6 @@ const (
 	WebhooksPath     = "/webhooks/v1"
 )
 
-func registerAgentRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
-	registerRoute(ctx, r, RouteConfig{
-		method:    "POST",
-		path:      fmt.Sprintf("%s/registry", AgentsPath),
-		handler:   h.Agents.RegisterAgent(),
-		routeType: RouteInternal,
-		services:  s,
-		cache:     s.Cache,
-	})
-
-	registerRoute(ctx, r, RouteConfig{
-		method:    "GET",
-		path:      fmt.Sprintf("%s/registry", AgentsPath),
-		handler:   h.Agents.AgentRegistry(),
-		routeType: RouteCustomer,
-		services:  s,
-		cache:     s.Cache,
-	})
-}
-
 func registerBillingRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",

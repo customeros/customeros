@@ -42,14 +42,6 @@ func NewGenerateInvoiceCapability(postgres *postgres_repository.Repositories, in
 	}
 }
 
-func (c *GenerateInvoiceCapability) GetInput() GenerateInvoiceInput {
-	return GenerateInvoiceInput{}
-}
-
-func (c *GenerateInvoiceCapability) GetConfig() GenerateInvoiceConfig {
-	return GenerateInvoiceConfig{}
-}
-
 // Compile-time interface check
 var (
 	_ interfaces.AgentCapability[GenerateInvoiceInput, GenerateInvoiceOutput, GenerateInvoiceConfig] = (*GenerateInvoiceCapability)(nil)
@@ -57,6 +49,23 @@ var (
 
 func (c *GenerateInvoiceCapability) Type() enum.AgentCapability {
 	return enum.CapabilityGenerateInvoice
+}
+
+func (c *GenerateInvoiceCapability) Name() string {
+	return "Generate an invoice"
+}
+
+func (c *GenerateInvoiceCapability) NewInput() GenerateInvoiceInput {
+	return GenerateInvoiceInput{}
+}
+
+func (c *GenerateInvoiceCapability) NewConfig() GenerateInvoiceConfig {
+	return GenerateInvoiceConfig{}
+}
+
+func (c *GenerateInvoiceCapability) DefaultConfig() any {
+	config := c.NewConfig()
+	return &config
 }
 
 func (c *GenerateInvoiceCapability) ValidateConfig(config GenerateInvoiceConfig) error {

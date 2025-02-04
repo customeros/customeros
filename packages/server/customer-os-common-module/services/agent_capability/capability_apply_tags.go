@@ -35,28 +35,6 @@ type TagConfig struct {
 	Error string `json:"error"`
 }
 
-func (c *ApplyTagCapability) ValidateConfig(config ApplyTagConfig) error {
-	if config.TagName.Value == "" {
-		return errors.New("Tag not configured")
-	}
-	return nil
-}
-
-func (c *ApplyTagCapability) ValidateInput(input ApplyTagInput) error {
-	if input.OrganizationID == "" {
-		return errors.New("OrganizationID cannot be empty")
-	}
-	return nil
-}
-
-func (c *ApplyTagCapability) GetInput() ApplyTagInput {
-	return ApplyTagInput{}
-}
-
-func (c *ApplyTagCapability) GetConfig() ApplyTagConfig {
-	return ApplyTagConfig{}
-}
-
 func NewApplyTagCapability(tagService interfaces.TagService) *ApplyTagCapability {
 	return &ApplyTagCapability{
 		tagService: tagService,
@@ -70,6 +48,38 @@ var (
 
 func (c *ApplyTagCapability) Type() enum.AgentCapability {
 	return enum.CapabilityApplyTag
+}
+
+func (c *ApplyTagCapability) Name() string {
+	return "Apply a tag"
+}
+
+func (c *ApplyTagCapability) NewInput() ApplyTagInput {
+	return ApplyTagInput{}
+}
+
+func (c *ApplyTagCapability) NewConfig() ApplyTagConfig {
+	return ApplyTagConfig{}
+}
+
+func (c *ApplyTagCapability) DefaultConfig() any {
+	config := c.NewConfig()
+	config.TagName.Value = "Support"
+	return &config
+}
+
+func (c *ApplyTagCapability) ValidateConfig(config ApplyTagConfig) error {
+	if config.TagName.Value == "" {
+		return errors.New("Tag not configured")
+	}
+	return nil
+}
+
+func (c *ApplyTagCapability) ValidateInput(input ApplyTagInput) error {
+	if input.OrganizationID == "" {
+		return errors.New("OrganizationID cannot be empty")
+	}
+	return nil
 }
 
 func (c *ApplyTagCapability) Execute(ctx context.Context, data ApplyTagInput, config ApplyTagConfig) (ApplyTagOutput, error) {
