@@ -85,6 +85,33 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+function updateButtonContainer() {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs.length > 0) {
+      const url = tabs.find(
+        (tab) => tab.url && tab.url.includes("linkedin.com/in")
+      )?.url;
+
+      const buttonContainer = document.getElementById("button-container");
+      const notOnLinkedInProfile = document.getElementById("wrong-url");
+      if (!url) {
+        buttonContainer!.style.display = "none";
+        notOnLinkedInProfile!.style.display = "flex";
+        notOnLinkedInProfile!.textContent =
+          "Go to any LinkedIn profile to instantly add contacts to CustomerOS";
+      } else {
+        buttonContainer!.style.display = "flex";
+        notOnLinkedInProfile!.style.display = "none";
+      }
+    }
+  });
+}
+
+updateButtonContainer();
+
+chrome.tabs.onUpdated.addListener(updateButtonContainer);
+chrome.tabs.onActivated.addListener(updateButtonContainer);
+
 chrome.runtime.onMessage.addListener((message) => {
   const tenantNameSpan = document.getElementById("tenant-name");
   if (message.action === "COS_SESSION_DATA") {
