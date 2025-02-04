@@ -180,4 +180,8 @@ export class SettingsPage {
       responseData?.data?.mailstack_GetPaymentIntent?.clientSecret,
     ).toBeTruthy();
   }
+
+  async goBack() {
+    await clickLocatorThatIsVisible(this.page, this.settingsGoBack);
+  }
 }

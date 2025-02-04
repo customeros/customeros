@@ -5,12 +5,16 @@ import { twMerge } from 'tailwind-merge';
 
 import { InputProps, inputVariants } from './Input';
 
-type MaskedInputProps = IMaskMixinProps<MaskElement> & InputProps;
+type MaskedInputProps = IMaskMixinProps<MaskElement> &
+  InputProps & {
+    dataTest?: string;
+  };
 
 export const MaskedInput = ({
   size,
   variant,
   className,
+  dataTest,
   ...rest
 }: MaskedInputProps) => {
   return (
@@ -18,6 +22,7 @@ export const MaskedInput = ({
     <IMaskInput
       {...rest}
       data-1p-ignore
+      data-test={dataTest}
       className={twMerge(inputVariants({ className, size, variant }))}
     />
   );

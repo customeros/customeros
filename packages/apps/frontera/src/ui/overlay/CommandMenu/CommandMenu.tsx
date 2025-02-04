@@ -226,7 +226,9 @@ export const CommandKbd = ({
 
 export const CommandCancelIconButton = ({
   onClose,
+  dataTest,
 }: {
+  dataTest?: string;
   onClose: (
     e: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>,
   ) => void;
@@ -238,6 +240,7 @@ export const CommandCancelIconButton = ({
       icon={<XClose />}
       onClick={onClose}
       aria-label='cancel'
+      dataTest={dataTest}
       className='absolute top-6 right-6'
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
@@ -267,7 +270,7 @@ export const CommandCancelButton = forwardRef(
         variant='outline'
         onClick={onClose}
         className='w-full'
-        data-test={dataTest}
+        dataTest={dataTest}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.stopPropagation();

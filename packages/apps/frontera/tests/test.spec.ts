@@ -2,16 +2,18 @@
 import { test } from './videoFixture';
 import { organizations } from './test-data';
 // import { FlowPage } from './pages/flows/flowPage';
+// import { ContactsPage } from './pages/contacts/contactsPage';
 // import { FlowsPage } from './pages/flows/flowsPage';
 import { LogoPage } from './pages/logoPage/logoPage';
 import { LoginPage } from './pages/loginPage/loginPage';
 import { SettingsPage } from './pages/settings/settingsPage';
 // import { ContactsPage } from './pages/contacts/contactsPage';
-// import { ContactsPage } from './pages/contacts/contactsPage';
 import { CustomersPage } from './pages/customers/customersPage';
 import { WinRatesFor } from './pages/opportunitiesKanban/winRates';
 import { KanbanColumns } from './pages/opportunitiesKanban/columns';
 import { OrganizationsPage } from './pages/organizations/organizationsPage';
+import { SettingsProductsPage } from './pages/settings/settingsProductsPage';
+import { SkuType } from '../src/routes/src/types/__generated__/graphql.types';
 import { OrganizationAboutPage } from './pages/organization/organizationAboutPage';
 import { OrganizationsCmdKPage } from './pages/organizations/organizationsCmdKPage';
 import { OrganizationPeoplePage } from './pages/organization/organizationPeoplePage';
@@ -147,14 +149,27 @@ test('Create Timeline entries in an Organization', async ({
   await organizationTimelinePage.ensureReminderCanBeAdded();
 });
 
-test('Create Contracts in an Organization', async ({ page }, testInfo) => {
+test.only('Create Contracts in an Organization', async ({ page }, testInfo) => {
+  const logoPage = new LogoPage(page);
   const loginPage = new LoginPage(page);
+  const settingsPage = new SettingsPage(page);
+  const settingsProductsPage = new SettingsProductsPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationAccountPage = new OrganizationAccountPage(page);
   const organizationSideNavPage = new OrganizationSideNavPage(page);
 
   // Login
   await loginPage.login();
+  await page.waitForTimeout(5000);
+  await logoPage.goToSettings();
+  await settingsProductsPage.goToSettingsProductsPage();
+  await settingsProductsPage.addProduct(SkuType.Subscription, 's1', '123.01');
+  await page.waitForTimeout(5000);
+  await settingsProductsPage.addProduct(SkuType.OneTime, 'o1', '111.99');
+  await page.waitForTimeout(5000);
+
+  await settingsPage.goBack();
+  await page.waitForTimeout(5000);
   // Wait for redirect and load All Orgs page
   await organizationsPage.goToAllOrgs();
 

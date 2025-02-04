@@ -64,8 +64,13 @@ export const AddNewSku = observer(() => {
     <Command shouldFilter={false} className={'!w-auto'}>
       <article className={'p-6'}>
         <div className='flex justify-between items-center'>
-          <h1 className='text-base font-semibold inline'>New product</h1>
-          <CommandCancelIconButton onClose={handleClose} />
+          <h1
+            data-test='new-product-header'
+            className='text-base font-semibold inline'
+          >
+            New product
+          </h1>
+          <CommandCancelIconButton dataTest='add-sku-x' onClose={handleClose} />
         </div>
 
         <div className={'mt-4 gap-2.5 flex flex-col'}>
@@ -82,10 +87,17 @@ export const AddNewSku = observer(() => {
               onValueChange={(val: SkuType) => addSkuUsecase.editType(val)}
             >
               <Radio value={SkuType.Subscription}>
-                <span className='text-sm'>Subscription</span>
+                <span
+                  className='text-sm'
+                  data-test={'add-product-subscription'}
+                >
+                  Subscription
+                </span>
               </Radio>
               <Radio value={SkuType.OneTime}>
-                <span className='text-sm'>One-time</span>
+                <span className='text-sm' data-test={'add-product-one-time'}>
+                  One-time
+                </span>
               </Radio>
             </RadioGroup>
           </div>
@@ -202,7 +214,10 @@ export const AddNewSku = observer(() => {
         </div>
 
         <div className='flex justify-between gap-3 mt-6'>
-          <CommandCancelButton onClose={handleClose} />
+          <CommandCancelButton
+            onClose={handleClose}
+            dataTest='add-sku-cancel'
+          />
 
           <Button
             size='sm'
@@ -210,7 +225,7 @@ export const AddNewSku = observer(() => {
             className='w-full'
             colorScheme='primary'
             onClick={handleConfirm}
-            data-test='add-sku-confirm'
+            dataTest='add-sku-confirm'
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleConfirm();
