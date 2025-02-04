@@ -54,11 +54,11 @@ export class ContractStore implements Store<Contract> {
   }
 
   get organization() {
-    return this.root.organizations
-      .toArray()
-      .find((e) =>
-        e?.contracts?.find((c) => c.metadata.id === this.value.metadata.id),
-      );
+    return this.root.organizations.getById(this.value.organization.metadata.id);
+  }
+
+  get organizationId() {
+    return this.value.organization.metadata.id;
   }
 
   set id(id: string) {
@@ -462,6 +462,11 @@ const defaultValue: Contract = {
   sourceOfTruth: DataSource.Openline,
   status: ContractStatus.Undefined,
   updatedAt: '',
+  organization: {
+    metadata: {
+      id: '',
+    },
+  },
 };
 
 type CONTRACT_QUERY_RESULT = {
@@ -475,6 +480,11 @@ const CONTRACT_QUERY = gql`
         created
         source
         lastUpdated
+      }
+      organization {
+        metadata {
+          id
+        }
       }
 
       contractName
