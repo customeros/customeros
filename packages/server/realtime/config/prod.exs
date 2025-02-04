@@ -12,7 +12,7 @@ config :realtime, RealtimeWeb.Endpoint,
     "https://app.customeros.ai",
     "https://frontera.customeros.ai",
     "https://frontera.openline.dev",
-    ~r/^https?:\/\/([a-z0-9-]+)\.localcan\.dev$/
+    "//*.localcan.dev"
   ]
 
 # Configures Swoosh API Client
