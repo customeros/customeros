@@ -270,14 +270,6 @@ func InitCommonServices(
 	capabilityExecutionImpl := agent_capability.NewAgentCapabilityExecutionService()
 	agentRunnerImpl := agent.NewAgentRunnerService(postgresRepositories, capabilityImpl, agentImpl, capabilityExecutionImpl)
 
-	// initialize agent registry
-	agentRegImpl := agent.NewAgentRegistryService(postgresRepositories, capabilityImpl.GetExecutors())
-	err = agentRegImpl.SyncRegistry(context.Background())
-	if err != nil {
-		log.DPanic(err)
-		log.Fatalf("cannot sync agent registry")
-	}
-
 	// initialize registration service
 	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailboxImpl, orgImpl, postmarkImpl, userImpl, agentImpl)
 
