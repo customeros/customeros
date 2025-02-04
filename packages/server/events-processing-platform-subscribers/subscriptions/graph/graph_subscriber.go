@@ -135,15 +135,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	switch evt.GetEventType() {
 
-	case invoiceevents.InvoiceCreateForContractV1:
-		_ = s.invoiceEventHandler.OnInvoiceCreateForContractV1(ctx, evt)
-		return nil
-	case invoiceevents.InvoiceFillV1:
-		_ = s.invoiceEventHandler.OnInvoiceFillV1(ctx, evt)
-		return nil
-	case invoiceevents.InvoicePdfGeneratedV1:
-		_ = s.invoiceEventHandler.OnInvoicePdfGenerated(ctx, evt)
-		return nil
 	case invoiceevents.InvoiceVoidV1:
 		_ = s.invoiceEventHandler.OnInvoiceVoidV1(ctx, evt)
 		return nil

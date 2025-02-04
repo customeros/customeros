@@ -2,7 +2,7 @@ package agent_capability
 
 import (
 	"context"
-
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -96,6 +96,25 @@ func (c *GenerateInvoiceCapability) Execute(ctx context.Context, data GenerateIn
 	if err := c.ValidateConfig(config); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
 		return result, err
+	}
+
+	dataFields := data_fields.InvoiceFields{
+		DryRun:  data.DryRun,
+		Preview: data.Preview,
+	}
+	invoiceId, err := c.invoiceService.InvoiceContract(ctx, nil, data.ContractId, dataFields)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to generate invoice"))
+		return result, err
+	}
+	// load invoice after generation
+	invoiceEntity, err := c.invoiceService.GetById(ctx, nil, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get invoice"))
+	}
+	result.InvoiceId = invoiceId
+	if invoiceEntity != nil {
+		result.InvoiceNumber = invoiceEntity.Number
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)

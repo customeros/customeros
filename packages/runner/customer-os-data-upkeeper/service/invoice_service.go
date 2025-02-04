@@ -5,13 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"net/http"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
@@ -21,10 +22,8 @@ import (
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	commonpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
@@ -100,24 +99,17 @@ func (s *invoiceService) GenerateCycleInvoices() {
 		return
 	}
 
-	if s.eventsProcessingClient == nil {
-		err := errors.New("eventsProcessingClient is nil")
-		s.log.Error(err.Error())
-		return
-	}
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateCycleInvoices")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	referenceTime := utils.Now()
 	dryRun := false
-	cachedTenantBaseCurrencies := make(map[string]neo4jenum.Currency)
-	cachedTenantPostpaidFlags := make(map[string]bool)
+	preview := false
 
 	limit := 100
 
 	for {
-		span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateCycleInvoices")
-		defer span.Finish()
-		tracing.TagComponentCronJob(span)
-
 		select {
 		case <-ctx.Done():
 			s.log.Infof("Context cancelled, stopping")
@@ -144,84 +136,114 @@ func (s *invoiceService) GenerateCycleInvoices() {
 				Tenant:    record.Tenant,
 				AppSource: constants.AppSourceDataUpkeeper,
 			})
-			innerSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "InvoiceService.GenerateCycleInvoices.ProcessRecord")
-			defer innerSpan.Finish()
-			tracing.TagTenant(innerSpan, record.Tenant)
+			recordSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "InvoiceService.GenerateCycleInvoices.Record")
+			defer recordSpan.Finish()
+			tracing.TagTenant(recordSpan, record.Tenant)
 			contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
 			tenant := record.Tenant
 
-			currency := contract.Currency.String()
-			if currency == "" {
-				currency = s.getTenantBaseCurrency(innerCtx, tenant, cachedTenantBaseCurrencies).String()
-			}
-
-			isPostpaid := s.getTenantInvoicingPostpaidFlag(innerCtx, tenant, cachedTenantPostpaidFlags)
-
-			var invoicePeriodStart, invoicePeriodEnd time.Time
-			if contract.NextInvoiceDate != nil {
-				invoicePeriodStart = *contract.NextInvoiceDate
-			} else {
-				invoicePeriodStart = *contract.InvoicingStartDate
-			}
-			invoicePeriodEnd = s.calculateInvoiceCycleEnd(innerCtx, invoicePeriodStart, tenant, *contract)
-
-			readyToRequestInvoice := false
-			if isPostpaid {
-				readyToRequestInvoice = utils.EndOfDayInUTC(invoicePeriodEnd).Before(referenceTime)
-			} else {
-				readyToRequestInvoice = invoicePeriodEnd.After(invoicePeriodStart)
-			}
-
-			if readyToRequestInvoice {
-				newInvoiceRequest := invoicepb.NewInvoiceForContractRequest{
-					Tenant:               record.Tenant,
-					ContractId:           contract.Id,
-					Currency:             currency,
-					InvoicePeriodStart:   utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
-					InvoicePeriodEnd:     utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
-					DryRun:               dryRun,
-					Note:                 contract.InvoiceNote,
-					Postpaid:             isPostpaid,
-					BillingCycleInMonths: contract.BillingCycleInMonths,
-					SourceFields: &commonpb.SourceFields{
-						AppSource: constants.AppSourceDataUpkeeper,
-						Source:    neo4jentity.DataSourceOpenline.String(),
-					},
-				}
-				innerCtx = tracing.InjectSpanContextIntoGrpcMetadata(innerCtx, innerSpan)
-				_, err = utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-					return s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(innerCtx, &newInvoiceRequest)
-				})
-				if err != nil {
-					tracing.TraceErr(innerSpan, err)
-					s.log.Errorf("Error generating invoice for contract %s: %s", contract.Id, err.Error())
-				}
-
-				if !dryRun && err == nil {
-					nextInvoiceDate := invoicePeriodEnd.AddDate(0, 0, 1)
-					contractDataFields := data_fields.ContractSaveFields{
-						NextInvoiceDate: utils.ToPtr(nextInvoiceDate),
-					}
-					_, err = s.commonServices.ContractService.Save(innerCtx, &contract.Id, contractDataFields)
-					if err != nil {
-						tracing.TraceErr(innerSpan, err)
-						s.log.Errorf("Error updating contract %s: %s", contract.Id, err.Error())
-					}
-				}
-			}
-			// mark invoicing started
-			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkCycleInvoicingRequested(ctx, tenant, contract.Id, utils.Now())
+			// mark invoicing requested to prevent double processing of the record
+			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkCycleInvoicingRequested(innerCtx, tenant, contract.Id, utils.Now())
 			if err != nil {
-				tracing.TraceErr(innerSpan, errors.Wrap(err, "Error marking invoicing started"))
+				tracing.TraceErr(recordSpan, errors.Wrap(err, "Error marking invoicing requested"))
 				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
 				return
 			}
+
+			// check if tenant has agent for invoicing enabled and configured
+			invoicingAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(innerCtx, []enum.AgentType{enum.AgentCashflowGuardian})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error getting invoicing agents: %v", err)
+				continue
+			}
+			if len(invoicingAgents) == 0 {
+				s.log.Infof("No invoicing agents configured for tenant %s", tenant)
+				continue
+			}
+
+			event := dto.IntentDetected{
+				EventName:  enum.EventIntentSignal,
+				IntentType: enum.IntentGenerateCycleInvoice,
+				ContractID: contract.Id,
+				DryRun:     dryRun,
+				Preview:    preview,
+			}
+
+			err = s.commonServices.Events.Publisher.PublishFanoutEvent(innerCtx, contract.Id, model.INTENT_SIGNAL, &event)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "error publishing icp check event"))
+				s.log.Errorf("Error publishing icp check event: %v", err)
+				continue
+			}
 		}
 
-		if len(records) < limit {
+		// sleep for async processing, then check again
+		time.Sleep(10 * time.Second)
+	}
+}
+
+func (s *invoiceService) GenerateNextPreviewInvoices() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateNextPreviewInvoices")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	referenceTime := utils.Now()
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateNextScheduledInvoices(ctx, referenceTime, 10)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting contracts for invoicing: %v", err)
 			return
 		}
 
+		// no contracts found
+		if len(records) == 0 {
+			return
+		}
+
+		// process records
+		for _, record := range records {
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+			})
+			recordSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "InvoiceService.GenerateNextPreviewInvoices.Record")
+			defer recordSpan.Finish()
+			tracing.TagTenant(recordSpan, record.Tenant)
+			contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
+			tenant := record.Tenant
+
+			// mark next preview invoice requested
+			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkNextPreviewInvoicingRequested(ctx, tenant, contract.Id, utils.Now())
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
+				return
+			}
+
+			dataFields := data_fields.InvoiceFields{
+				DryRun:  true,
+				Preview: true,
+			}
+			_, err = s.commonServices.InvoiceService.InvoiceContract(innerCtx, nil, contract.Id, dataFields)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error generating invoice for contract %s: %s", contract.Id, err.Error())
+			}
+		}
 		// sleep for async processing, then check again
 		time.Sleep(10 * time.Second)
 	}
@@ -257,18 +279,6 @@ func (s *invoiceService) getTenantBaseCurrency(ctx context.Context, tenant strin
 	currency := tenantSettings.BaseCurrency
 	cachedTenantBaseCurrencies[tenant] = currency
 	return currency
-}
-
-func (s *invoiceService) getTenantInvoicingPostpaidFlag(ctx context.Context, tenant string, cachedTenantPostpaidFlags map[string]bool) bool {
-	if postpaid, ok := cachedTenantPostpaidFlags[tenant]; ok {
-		return postpaid
-	}
-
-	dbNode, _ := s.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
-	tenantSettings := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
-
-	cachedTenantPostpaidFlags[tenant] = tenantSettings.InvoicingPostpaid
-	return tenantSettings.InvoicingPostpaid
 }
 
 func (s *invoiceService) SendPayNotifications() {
@@ -410,102 +420,104 @@ func (s *invoiceService) SendRemindNotifications() {
 }
 
 func (s *invoiceService) GenerateOffCycleInvoices() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
+	return
 
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateOffCycleInvoices")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	//ctx, cancel := context.WithCancel(context.Background())
+	//defer cancel() // Cancel context on exit
 
-	if s.cfg.App.ProcessConfig.OffCycleInvoicingEnabled == false {
-		s.log.Infof("Off-cycle invoicing is disabled, stopping")
-		span.LogFields(log.Bool("off_cycle_invoicing_enabled", s.cfg.App.ProcessConfig.OffCycleInvoicingEnabled))
-		return
-	}
-
-	if s.eventsProcessingClient == nil {
-		err := errors.New("eventsProcessingClient is nil")
-		tracing.TraceErr(span, err)
-		s.log.Error(err.Error())
-		return
-	}
-
-	referenceTime := utils.Now()
-	dryRun := false
-	cachedTenantBaseCurrencies := make(map[string]neo4jenum.Currency)
-
-	limit := 100
-
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, referenceTime, s.cfg.App.ProcessConfig.DelayGenerateOffCycleInvoiceInMinutes, limit)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting contracts for off-cycle invoicing: %v", err)
-			return
-		}
-
-		// no contracts found
-		if len(records) == 0 {
-			return
-		}
-
-		// process records
-		for _, record := range records {
-			contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
-			tenant := record.Tenant
-
-			currency := contract.Currency.String()
-			if currency == "" {
-				currency = s.getTenantBaseCurrency(ctx, tenant, cachedTenantBaseCurrencies).String()
-			}
-
-			invoicePeriodStart := utils.ToDate(referenceTime)
-			invoicePeriodEnd := utils.ToDate(utils.IfNotNilTimeWithDefault(contract.NextInvoiceDate, referenceTime).AddDate(0, 0, -1))
-
-			readyToRequestInvoice := !invoicePeriodEnd.Before(invoicePeriodStart)
-			if readyToRequestInvoice {
-				newInvoiceRequest := invoicepb.NewInvoiceForContractRequest{
-					Tenant:             record.Tenant,
-					ContractId:         contract.Id,
-					Currency:           currency,
-					InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
-					InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
-					DryRun:             dryRun,
-					OffCycle:           true,
-					SourceFields: &commonpb.SourceFields{
-						AppSource: constants.AppSourceDataUpkeeper,
-						Source:    neo4jentity.DataSourceOpenline.String(),
-					},
-				}
-				_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-					return s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(ctx, &newInvoiceRequest)
-				})
-				if err != nil {
-					tracing.TraceErr(span, err)
-					s.log.Errorf("Error generating off-cycle invoice for contract %s: %s", contract.Id, err.Error())
-				}
-			}
-			// mark invoicing started
-			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkOffCycleInvoicingRequested(ctx, tenant, contract.Id, utils.Now())
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
-			}
-		}
-		// sleep for async processing, then check again
-		if len(records) < limit {
-			return
-		}
-		time.Sleep(10 * time.Second)
-	}
+	//span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateOffCycleInvoices")
+	//defer span.Finish()
+	//tracing.TagComponentCronJob(span)
+	//
+	//if s.cfg.App.ProcessConfig.OffCycleInvoicingEnabled == false {
+	//	s.log.Infof("Off-cycle invoicing is disabled, stopping")
+	//	span.LogFields(log.Bool("off_cycle_invoicing_enabled", s.cfg.App.ProcessConfig.OffCycleInvoicingEnabled))
+	//	return
+	//}
+	//
+	//if s.eventsProcessingClient == nil {
+	//	err := errors.New("eventsProcessingClient is nil")
+	//	tracing.TraceErr(span, err)
+	//	s.log.Error(err.Error())
+	//	return
+	//}
+	//
+	//referenceTime := utils.Now()
+	//dryRun := false
+	//cachedTenantBaseCurrencies := make(map[string]neo4jenum.Currency)
+	//
+	//limit := 100
+	//
+	//for {
+	//	select {
+	//	case <-ctx.Done():
+	//		s.log.Infof("Context cancelled, stopping")
+	//		return
+	//	default:
+	//		// continue as normal
+	//	}
+	//
+	//	records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateOffCycleInvoices(ctx, referenceTime, s.cfg.App.ProcessConfig.DelayGenerateOffCycleInvoiceInMinutes, limit)
+	//	if err != nil {
+	//		tracing.TraceErr(span, err)
+	//		s.log.Errorf("Error getting contracts for off-cycle invoicing: %v", err)
+	//		return
+	//	}
+	//
+	//	// no contracts found
+	//	if len(records) == 0 {
+	//		return
+	//	}
+	//
+	//	// process records
+	//	for _, record := range records {
+	//		contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
+	//		tenant := record.Tenant
+	//
+	//		currency := contract.Currency.String()
+	//		if currency == "" {
+	//			currency = s.getTenantBaseCurrency(ctx, tenant, cachedTenantBaseCurrencies).String()
+	//		}
+	//
+	//		invoicePeriodStart := utils.ToDate(referenceTime)
+	//		invoicePeriodEnd := utils.ToDate(utils.IfNotNilTimeWithDefault(contract.NextInvoiceDate, referenceTime).AddDate(0, 0, -1))
+	//
+	//		readyToRequestInvoice := !invoicePeriodEnd.Before(invoicePeriodStart)
+	//		if readyToRequestInvoice {
+	//			newInvoiceRequest := invoicepb.NewInvoiceForContractRequest{
+	//				Tenant:             record.Tenant,
+	//				ContractId:         contract.Id,
+	//				Currency:           currency,
+	//				InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
+	//				InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
+	//				DryRun:             dryRun,
+	//				OffCycle:           true,
+	//				SourceFields: &commonpb.SourceFields{
+	//					AppSource: constants.AppSourceDataUpkeeper,
+	//					Source:    neo4jentity.DataSourceOpenline.String(),
+	//				},
+	//			}
+	//			_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+	//				return s.eventsProcessingClient.InvoiceClient.NewInvoiceForContract(ctx, &newInvoiceRequest)
+	//			})
+	//			if err != nil {
+	//				tracing.TraceErr(span, err)
+	//				s.log.Errorf("Error generating off-cycle invoice for contract %s: %s", contract.Id, err.Error())
+	//			}
+	//		}
+	//		// mark invoicing started
+	//		err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkOffCycleInvoicingRequested(ctx, tenant, contract.Id, utils.Now())
+	//		if err != nil {
+	//			tracing.TraceErr(span, err)
+	//			s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
+	//		}
+	//	}
+	//	// sleep for async processing, then check again
+	//	if len(records) < limit {
+	//		return
+	//	}
+	//	time.Sleep(10 * time.Second)
+	//}
 }
 
 func (s *invoiceService) GenerateInvoicePaymentLinks() {
@@ -694,89 +706,6 @@ func (s *invoiceService) CleanupInvoices() {
 				s.log.Errorf("Error deleting dry run invoice %s: %v", invoice.Id, err)
 			}
 		}
-	}
-}
-
-func (s *invoiceService) GenerateNextPreviewInvoices() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateNextPreviewInvoices")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	if s.eventsProcessingClient == nil {
-		err := errors.New("eventsProcessingClient is nil")
-		tracing.TraceErr(span, err)
-		s.log.Error(err.Error())
-		return
-	}
-
-	referenceTime := utils.Now()
-	cachedTenantBaseCurrencies := make(map[string]neo4jenum.Currency)
-
-	for {
-		select {
-		case <-ctx.Done():
-			s.log.Infof("Context cancelled, stopping")
-			return
-		default:
-			// continue as normal
-		}
-
-		records, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractsToGenerateNextScheduledInvoices(ctx, referenceTime, 10)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting contracts for invoicing: %v", err)
-			return
-		}
-
-		// no contracts found
-		if len(records) == 0 {
-			return
-		}
-
-		// process records
-		for _, record := range records {
-			contract := neo4jmapper.MapDbNodeToContractEntity(record.Node)
-			tenant := record.Tenant
-
-			currency := contract.Currency.String()
-			if currency == "" {
-				currency = s.getTenantBaseCurrency(ctx, tenant, cachedTenantBaseCurrencies).String()
-			}
-
-			var invoicePeriodStart, invoicePeriodEnd time.Time
-			if contract.NextInvoiceDate != nil {
-				invoicePeriodStart = *contract.NextInvoiceDate
-			} else if contract.InvoicingStartDate != nil {
-				invoicePeriodStart = *contract.InvoicingStartDate
-			}
-			invoicePeriodEnd = s.calculateInvoiceCycleEnd(ctx, invoicePeriodStart, record.Tenant, *contract)
-
-			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-				return s.eventsProcessingClient.InvoiceClient.NextPreviewInvoiceForContract(ctx, &invoicepb.NextPreviewInvoiceForContractRequest{
-					Tenant:               tenant,
-					ContractId:           contract.Id,
-					AppSource:            constants.AppSourceDataUpkeeper,
-					Currency:             contract.Currency.String(),
-					BillingCycleInMonths: contract.BillingCycleInMonths,
-					InvoicePeriodStart:   utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
-					InvoicePeriodEnd:     utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
-				})
-			})
-
-			// mark next preview invoice requested
-			err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkNextPreviewInvoicingRequested(ctx, tenant, contract.Id, utils.Now())
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error marking invoicing started for contract %s: %s", contract.Id, err.Error())
-				return
-			}
-		}
-		// sleep for async processing, then check again
-		time.Sleep(10 * time.Second)
 	}
 }
 

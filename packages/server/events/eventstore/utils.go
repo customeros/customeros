@@ -3,9 +3,7 @@ package eventstore
 import (
 	"context"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/validator"
 	"github.com/customeros/customeros/packages/server/events/constants"
-	baseEvent "github.com/customeros/customeros/packages/server/events/event"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"strings"
@@ -15,31 +13,6 @@ type EventMetadata struct {
 	Tenant string `json:"tenant"`
 	UserId string `json:"user-id"`
 	App    string `json:"app"`
-}
-
-// TODO
-func ToAggregateEvent(aggregate Aggregate, eventData baseEvent.BaseEvent) (Event, error) {
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return Event{}, errors.Wrap(err, "failed to validate eventData")
-	}
-
-	event := NewBaseEvent(aggregate, eventData.EventName)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return Event{}, errors.Wrap(err, "error setting json data for EmailCreateEvent")
-	}
-	return event, nil
-}
-
-// Deprecated, use EnrichEventWithMetadataExtended instead
-func EnrichEventWithMetadata(event *Event, span *opentracing.Span, tenant, userId string) {
-	metadata := tracing.ExtractTextMapCarrier((*span).Context())
-	metadata["tenant"] = tenant
-	if userId != "" {
-		metadata["user-id"] = userId
-	}
-	if err := event.SetMetadata(metadata); err != nil {
-		tracing.TraceErr(*span, err)
-	}
 }
 
 func EnrichEventWithMetadataExtended(event *Event, span opentracing.Span, mtd EventMetadata) {
@@ -54,10 +27,6 @@ func EnrichEventWithMetadataExtended(event *Event, span opentracing.Span, mtd Ev
 	if err := event.SetMetadata(metadata); err != nil {
 		tracing.TraceErr(span, err)
 	}
-}
-
-func AllowCheckForNoChanges(appSource, loggedInUserId string) bool {
-	return (appSource == constants.AppSourceIntegrationApp || appSource == constants.AppSourceSyncCustomerOsData) && loggedInUserId == ""
 }
 
 func LoadAggregate(ctx context.Context, eventStore AggregateStore, agg Aggregate, options LoadAggregateOptions) error {

@@ -5,7 +5,6 @@ import (
 
 	"github.com/customeros/customeros/packages/server/events-processing-platform/config"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/logger"
-	"github.com/customeros/customeros/packages/server/events-processing-platform/repository"
 )
 
 type Services struct {
@@ -19,7 +18,6 @@ type Services struct {
 
 func InitServices(
 	cfg *config.Config,
-	repositories *repository.Repositories,
 	aggregateStore eventstore.AggregateStore,
 	log logger.Logger,
 ) *Services {
@@ -28,7 +26,6 @@ func InitServices(
 	services.es = aggregateStore
 	services.RequestHandler = NewRequestHandler(log, aggregateStore, &cfg.Utils)
 	services.InvoiceService = NewInvoiceService(
-		repositories,
 		log,
 		aggregateStore,
 		services.RequestHandler,

@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
 	neo4j_entity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 
@@ -16,7 +17,7 @@ type ContractService interface {
 	GetById(ctx context.Context, contactId string) (*neo4j_entity.ContractEntity, error)
 	GetContractsForOrganizations(ctx context.Context, organizationIds []string) (*neo4j_entity.ContractEntities, error)
 
-	Save(ctx context.Context, contactId *string, dataFields data_fields.ContractSaveFields) (string, error)
+	Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId *string, dataFields data_fields.ContractSaveFields) (string, error)
 	SoftDelete(ctx context.Context, contractId string) error
 	RefreshContractStatus(ctx context.Context, contractId string) error
 	RecalculateContractLtv(ctx context.Context, contractId string) error

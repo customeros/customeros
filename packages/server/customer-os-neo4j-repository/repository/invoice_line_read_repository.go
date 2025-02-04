@@ -1,18 +1,18 @@
 package neo4j_repository
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 )
 
 type InvoiceLineReadRepository interface {
-	GetAllForInvoice(ctx context.Context, tenant string, invoiceId string) ([]*dbtype.Node, error)
+	GetAllForInvoice(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, invoiceId string) ([]*dbtype.Node, error)
 	GetAllForInvoices(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetLatestInvoiceLineWithInvoiceIdByServiceLineItemParentId(ctx context.Context, tenant, sliParentId string) (*utils.DbNodeAndId, error)
 }
@@ -33,7 +33,7 @@ func (r *invoiceLineReadRepository) prepareReadSession(ctx context.Context) neo4
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *invoiceLineReadRepository) GetAllForInvoice(ctx context.Context, tenant string, invoiceId string) ([]*dbtype.Node, error) {
+func (r *invoiceLineReadRepository) GetAllForInvoice(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, invoiceId string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceLineReadRepository.GetAllForInvoice")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -52,17 +52,15 @@ func (r *invoiceLineReadRepository) GetAllForInvoice(ctx context.Context, tenant
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
-		}
+	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
 	return result.([]*dbtype.Node), err
 }
 

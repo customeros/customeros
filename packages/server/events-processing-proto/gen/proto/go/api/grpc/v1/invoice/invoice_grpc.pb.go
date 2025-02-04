@@ -22,13 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InvoiceGrpcServiceClient interface {
-	NextPreviewInvoiceForContract(ctx context.Context, in *NextPreviewInvoiceForContractRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
-	NewInvoiceForContract(ctx context.Context, in *NewInvoiceForContractRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
-	FillInvoice(ctx context.Context, in *FillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
-	GenerateInvoicePdf(ctx context.Context, in *GenerateInvoicePdfRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
-	PdfGeneratedInvoice(ctx context.Context, in *PdfGeneratedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	PayInvoiceNotification(ctx context.Context, in *PayInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
-	RequestFillInvoice(ctx context.Context, in *RequestFillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	PermanentlyDeleteInitializedInvoice(ctx context.Context, in *PermanentlyDeleteInitializedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	VoidInvoice(ctx context.Context, in *VoidInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	RemindInvoiceNotification(ctx context.Context, in *RemindInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
@@ -42,63 +36,9 @@ func NewInvoiceGrpcServiceClient(cc grpc.ClientConnInterface) InvoiceGrpcService
 	return &invoiceGrpcServiceClient{cc}
 }
 
-func (c *invoiceGrpcServiceClient) NextPreviewInvoiceForContract(ctx context.Context, in *NextPreviewInvoiceForContractRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
-	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/NextPreviewInvoiceForContract", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *invoiceGrpcServiceClient) NewInvoiceForContract(ctx context.Context, in *NewInvoiceForContractRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
-	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/NewInvoiceForContract", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *invoiceGrpcServiceClient) FillInvoice(ctx context.Context, in *FillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
-	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/FillInvoice", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *invoiceGrpcServiceClient) GenerateInvoicePdf(ctx context.Context, in *GenerateInvoicePdfRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
-	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/GenerateInvoicePdf", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *invoiceGrpcServiceClient) PdfGeneratedInvoice(ctx context.Context, in *PdfGeneratedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
-	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/PdfGeneratedInvoice", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *invoiceGrpcServiceClient) PayInvoiceNotification(ctx context.Context, in *PayInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
 	out := new(InvoiceIdResponse)
 	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/PayInvoiceNotification", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *invoiceGrpcServiceClient) RequestFillInvoice(ctx context.Context, in *RequestFillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
-	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/RequestFillInvoice", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -136,13 +76,7 @@ func (c *invoiceGrpcServiceClient) RemindInvoiceNotification(ctx context.Context
 // All implementations should embed UnimplementedInvoiceGrpcServiceServer
 // for forward compatibility
 type InvoiceGrpcServiceServer interface {
-	NextPreviewInvoiceForContract(context.Context, *NextPreviewInvoiceForContractRequest) (*InvoiceIdResponse, error)
-	NewInvoiceForContract(context.Context, *NewInvoiceForContractRequest) (*InvoiceIdResponse, error)
-	FillInvoice(context.Context, *FillInvoiceRequest) (*InvoiceIdResponse, error)
-	GenerateInvoicePdf(context.Context, *GenerateInvoicePdfRequest) (*InvoiceIdResponse, error)
-	PdfGeneratedInvoice(context.Context, *PdfGeneratedInvoiceRequest) (*InvoiceIdResponse, error)
 	PayInvoiceNotification(context.Context, *PayInvoiceNotificationRequest) (*InvoiceIdResponse, error)
-	RequestFillInvoice(context.Context, *RequestFillInvoiceRequest) (*InvoiceIdResponse, error)
 	PermanentlyDeleteInitializedInvoice(context.Context, *PermanentlyDeleteInitializedInvoiceRequest) (*InvoiceIdResponse, error)
 	VoidInvoice(context.Context, *VoidInvoiceRequest) (*InvoiceIdResponse, error)
 	RemindInvoiceNotification(context.Context, *RemindInvoiceNotificationRequest) (*InvoiceIdResponse, error)
@@ -152,26 +86,8 @@ type InvoiceGrpcServiceServer interface {
 type UnimplementedInvoiceGrpcServiceServer struct {
 }
 
-func (UnimplementedInvoiceGrpcServiceServer) NextPreviewInvoiceForContract(context.Context, *NextPreviewInvoiceForContractRequest) (*InvoiceIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NextPreviewInvoiceForContract not implemented")
-}
-func (UnimplementedInvoiceGrpcServiceServer) NewInvoiceForContract(context.Context, *NewInvoiceForContractRequest) (*InvoiceIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NewInvoiceForContract not implemented")
-}
-func (UnimplementedInvoiceGrpcServiceServer) FillInvoice(context.Context, *FillInvoiceRequest) (*InvoiceIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FillInvoice not implemented")
-}
-func (UnimplementedInvoiceGrpcServiceServer) GenerateInvoicePdf(context.Context, *GenerateInvoicePdfRequest) (*InvoiceIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GenerateInvoicePdf not implemented")
-}
-func (UnimplementedInvoiceGrpcServiceServer) PdfGeneratedInvoice(context.Context, *PdfGeneratedInvoiceRequest) (*InvoiceIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PdfGeneratedInvoice not implemented")
-}
 func (UnimplementedInvoiceGrpcServiceServer) PayInvoiceNotification(context.Context, *PayInvoiceNotificationRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PayInvoiceNotification not implemented")
-}
-func (UnimplementedInvoiceGrpcServiceServer) RequestFillInvoice(context.Context, *RequestFillInvoiceRequest) (*InvoiceIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RequestFillInvoice not implemented")
 }
 func (UnimplementedInvoiceGrpcServiceServer) PermanentlyDeleteInitializedInvoice(context.Context, *PermanentlyDeleteInitializedInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PermanentlyDeleteInitializedInvoice not implemented")
@@ -194,96 +110,6 @@ func RegisterInvoiceGrpcServiceServer(s grpc.ServiceRegistrar, srv InvoiceGrpcSe
 	s.RegisterService(&InvoiceGrpcService_ServiceDesc, srv)
 }
 
-func _InvoiceGrpcService_NextPreviewInvoiceForContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NextPreviewInvoiceForContractRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(InvoiceGrpcServiceServer).NextPreviewInvoiceForContract(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/InvoiceGrpcService/NextPreviewInvoiceForContract",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceGrpcServiceServer).NextPreviewInvoiceForContract(ctx, req.(*NextPreviewInvoiceForContractRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _InvoiceGrpcService_NewInvoiceForContract_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NewInvoiceForContractRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(InvoiceGrpcServiceServer).NewInvoiceForContract(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/InvoiceGrpcService/NewInvoiceForContract",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceGrpcServiceServer).NewInvoiceForContract(ctx, req.(*NewInvoiceForContractRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _InvoiceGrpcService_FillInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FillInvoiceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(InvoiceGrpcServiceServer).FillInvoice(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/InvoiceGrpcService/FillInvoice",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceGrpcServiceServer).FillInvoice(ctx, req.(*FillInvoiceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _InvoiceGrpcService_GenerateInvoicePdf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GenerateInvoicePdfRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(InvoiceGrpcServiceServer).GenerateInvoicePdf(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/InvoiceGrpcService/GenerateInvoicePdf",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceGrpcServiceServer).GenerateInvoicePdf(ctx, req.(*GenerateInvoicePdfRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _InvoiceGrpcService_PdfGeneratedInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PdfGeneratedInvoiceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(InvoiceGrpcServiceServer).PdfGeneratedInvoice(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/InvoiceGrpcService/PdfGeneratedInvoice",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceGrpcServiceServer).PdfGeneratedInvoice(ctx, req.(*PdfGeneratedInvoiceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _InvoiceGrpcService_PayInvoiceNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PayInvoiceNotificationRequest)
 	if err := dec(in); err != nil {
@@ -298,24 +124,6 @@ func _InvoiceGrpcService_PayInvoiceNotification_Handler(srv interface{}, ctx con
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(InvoiceGrpcServiceServer).PayInvoiceNotification(ctx, req.(*PayInvoiceNotificationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _InvoiceGrpcService_RequestFillInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RequestFillInvoiceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(InvoiceGrpcServiceServer).RequestFillInvoice(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/InvoiceGrpcService/RequestFillInvoice",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceGrpcServiceServer).RequestFillInvoice(ctx, req.(*RequestFillInvoiceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -382,32 +190,8 @@ var InvoiceGrpcService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*InvoiceGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "NextPreviewInvoiceForContract",
-			Handler:    _InvoiceGrpcService_NextPreviewInvoiceForContract_Handler,
-		},
-		{
-			MethodName: "NewInvoiceForContract",
-			Handler:    _InvoiceGrpcService_NewInvoiceForContract_Handler,
-		},
-		{
-			MethodName: "FillInvoice",
-			Handler:    _InvoiceGrpcService_FillInvoice_Handler,
-		},
-		{
-			MethodName: "GenerateInvoicePdf",
-			Handler:    _InvoiceGrpcService_GenerateInvoicePdf_Handler,
-		},
-		{
-			MethodName: "PdfGeneratedInvoice",
-			Handler:    _InvoiceGrpcService_PdfGeneratedInvoice_Handler,
-		},
-		{
 			MethodName: "PayInvoiceNotification",
 			Handler:    _InvoiceGrpcService_PayInvoiceNotification_Handler,
-		},
-		{
-			MethodName: "RequestFillInvoice",
-			Handler:    _InvoiceGrpcService_RequestFillInvoice_Handler,
 		},
 		{
 			MethodName: "PermanentlyDeleteInitializedInvoice",

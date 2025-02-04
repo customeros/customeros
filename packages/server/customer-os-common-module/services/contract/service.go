@@ -3,13 +3,13 @@ package contract
 import (
 	"context"
 	"fmt"
+	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	"math"
 	"time"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jmodel "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -76,7 +76,7 @@ func (s *contractService) GetById(ctx context.Context, contractId string) (*neo4
 	}
 }
 
-func (s *contractService) Save(ctx context.Context, id *string, dataFields data_fields.ContractSaveFields) (string, error) {
+func (s *contractService) Save(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, id *string, dataFields data_fields.ContractSaveFields) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractService.Save")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -140,94 +140,106 @@ func (s *contractService) Save(ctx context.Context, id *string, dataFields data_
 
 	var beforeUpdateContractEntity *neo4jentity.ContractEntity
 
-	if createFlow {
-		err := s.neo4j.ContractWriteRepository.CreateForOrganization(ctx, tenant, contractId, dataFields)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return "", err
-		}
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
 
-		if dataFields.ExternalSystem != nil && dataFields.ExternalSystem.Available() {
-			externalSystemData := neo4jmodel.ExternalSystem{
-				ExternalSystemId: dataFields.ExternalSystem.ExternalSystemId,
-				ExternalUrl:      dataFields.ExternalSystem.ExternalUrl,
-				ExternalId:       dataFields.ExternalSystem.ExternalId,
-				ExternalIdSecond: dataFields.ExternalSystem.ExternalIdSecond,
-				ExternalSource:   dataFields.ExternalSystem.ExternalSource,
-				SyncDate:         dataFields.ExternalSystem.SyncDate,
-			}
-			err = s.neo4j.ExternalSystemWriteRepository.LinkWithEntity(ctx, tenant, contractId, model.NodeLabelContract, externalSystemData)
+		if createFlow {
+			err := s.neo4j.ContractWriteRepository.CreateForOrganization(ctx, txWithPostCommit.Tx, tenant, contractId, dataFields)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				s.log.Errorf("Error while linking contract %s with external system %s: %s", contractId, dataFields.ExternalSystem.ExternalSystemId, err.Error())
 				return "", err
 			}
-		}
-	} else {
-		contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return contractId, err
-		}
-		beforeUpdateContractEntity = neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
-		err = s.neo4j.ContractWriteRepository.UpdateContract(ctx, tenant, contractId, dataFields)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return "", err
-		}
-
-		if dataFields.ExternalSystem != nil && dataFields.ExternalSystem.Available() {
-			externalSystemData := neo4jmodel.ExternalSystem{
-				ExternalSystemId: dataFields.ExternalSystem.ExternalSystemId,
-				ExternalUrl:      dataFields.ExternalSystem.ExternalUrl,
-				ExternalId:       dataFields.ExternalSystem.ExternalId,
-				ExternalIdSecond: dataFields.ExternalSystem.ExternalIdSecond,
-				ExternalSource:   dataFields.ExternalSystem.ExternalSource,
-				SyncDate:         dataFields.ExternalSystem.SyncDate,
+			if dataFields.ExternalSystem != nil && dataFields.ExternalSystem.Available() {
+				externalSystemData := neo4jmodel.ExternalSystem{
+					ExternalSystemId: dataFields.ExternalSystem.ExternalSystemId,
+					ExternalUrl:      dataFields.ExternalSystem.ExternalUrl,
+					ExternalId:       dataFields.ExternalSystem.ExternalId,
+					ExternalIdSecond: dataFields.ExternalSystem.ExternalIdSecond,
+					ExternalSource:   dataFields.ExternalSystem.ExternalSource,
+					SyncDate:         dataFields.ExternalSystem.SyncDate,
+				}
+				err = s.neo4j.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, txWithPostCommit.Tx, tenant, contractId, model.NodeLabelContract, externalSystemData)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error while linking contract %s with external system %s: %s", contractId, dataFields.ExternalSystem.ExternalSystemId, err.Error())
+					return "", err
+				}
 			}
-			err = s.neo4j.ExternalSystemWriteRepository.LinkWithEntity(ctx, tenant, contractId, model.NodeLabelContract, externalSystemData)
+		} else {
+			contractDbNode, err := s.neo4j.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				s.log.Errorf("Error while linking contract %s with external system %s: %s", contractId, dataFields.ExternalSystem.ExternalSystemId, err.Error())
+				return contractId, err
+			}
+			beforeUpdateContractEntity = neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+
+			err = s.neo4j.ContractWriteRepository.UpdateContract(ctx, txWithPostCommit.Tx, tenant, contractId, dataFields)
+			if err != nil {
+				tracing.TraceErr(span, err)
 				return "", err
 			}
-		}
-	}
 
-	// send events
-	if createFlow {
-		err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.CreateContract{dataFields})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContract"))
+			if dataFields.ExternalSystem != nil && dataFields.ExternalSystem.Available() {
+				externalSystemData := neo4jmodel.ExternalSystem{
+					ExternalSystemId: dataFields.ExternalSystem.ExternalSystemId,
+					ExternalUrl:      dataFields.ExternalSystem.ExternalUrl,
+					ExternalId:       dataFields.ExternalSystem.ExternalId,
+					ExternalIdSecond: dataFields.ExternalSystem.ExternalIdSecond,
+					ExternalSource:   dataFields.ExternalSystem.ExternalSource,
+					SyncDate:         dataFields.ExternalSystem.SyncDate,
+				}
+				err = s.neo4j.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, txWithPostCommit.Tx, tenant, contractId, model.NodeLabelContract, externalSystemData)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error while linking contract %s with external system %s: %s", contractId, dataFields.ExternalSystem.ExternalSystemId, err.Error())
+					return "", err
+				}
+			}
 		}
-		s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithCreate())
-	} else {
-		err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.UpdateContract{dataFields})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContract"))
-		}
-		if dataFields.AppSource == nil || *dataFields.AppSource != constants.AppSourceCustomerOsApi {
-			s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
-		}
-	}
 
-	// post save actions
-	if createFlow {
-		err = s.postCreateContract(ctx, tenant, contractId, dataFields)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error while post create contract %s: %s", contractId, err.Error())
-		}
-	} else {
-		err = s.postUpdateContract(ctx, tenant, contractId, beforeUpdateContractEntity)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Error while post create contract %s: %s", contractId, err.Error())
-		}
-		if dataFields.AppSource == nil || *dataFields.AppSource != constants.AppSourceCustomerOsApi {
-			s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
-		}
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+			// send events
+			if createFlow {
+				err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.CreateContract{dataFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateContract"))
+				}
+				s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithCreate())
+			} else {
+				err = s.events.Publisher.PublishFanoutEvent(ctx, contractId, model.CONTRACT, dto.UpdateContract{dataFields})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateContract"))
+				}
+				if dataFields.AppSource == nil || *dataFields.AppSource != constants.AppSourceCustomerOsApi {
+					s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+				}
+			}
+
+			// post save actions
+			if createFlow {
+				err = s.postCreateContract(ctx, tenant, contractId, dataFields)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error while post create contract %s: %s", contractId, err.Error())
+				}
+			} else {
+				err = s.postUpdateContract(ctx, tenant, contractId, beforeUpdateContractEntity)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error while post create contract %s: %s", contractId, err.Error())
+				}
+				if dataFields.AppSource == nil || *dataFields.AppSource != constants.AppSourceCustomerOsApi {
+					s.events.Publisher.PublishNotification(ctx, tenant, contractId, model.CONTRACT, utils.NewEventCompletedDetails().WithUpdate())
+				}
+			}
+
+			return nil
+		})
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 
 	return contractId, nil

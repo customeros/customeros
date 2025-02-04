@@ -29,6 +29,7 @@ type InternalServicesConfig struct {
 	MailSherpaApiConfig MailSherpaApiConfig
 	CustomerOsApi       CustomerOsApiConfig
 	FileStoreConfig     FileStoreConfig
+	PdfConverterConfig  PdfConverterConfig
 }
 
 type ExternalServicesConfig struct {

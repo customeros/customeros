@@ -15,8 +15,8 @@ import (
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	neoRepo "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresrepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	commonpb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/emersion/go-message/mail"
 	"github.com/google/uuid"
@@ -47,12 +47,13 @@ type invoiceService struct {
 	neo4j                *neoRepo.Repositories
 	postgresRepositories *postgresrepository.Repositories
 	events               *events.EventsService
-	contract             interfaces.ContractService
+	contractService      interfaces.ContractService
 	sli                  interfaces.ServiceLineItemService
 	tenantSettings       interfaces.TenantSettingsService
 	postmarkService      interfaces.PostmarkService
 	fileService          interfaces.FileService
 	cfg                  *config.ExternalServicesConfig
+	internalCfg          *config.InternalServicesConfig
 }
 
 func NewInvoiceService(log logger.Logger,
@@ -60,8 +61,9 @@ func NewInvoiceService(log logger.Logger,
 	neo4j *neoRepo.Repositories,
 	postgresRepositories *postgresrepository.Repositories,
 	cfg *config.ExternalServicesConfig,
+	internalCfg *config.InternalServicesConfig,
 	events *events.EventsService,
-	contract interfaces.ContractService,
+	contractService interfaces.ContractService,
 	sli interfaces.ServiceLineItemService,
 	tenantSettings interfaces.TenantSettingsService,
 	postmarkService interfaces.PostmarkService,
@@ -74,7 +76,7 @@ func NewInvoiceService(log logger.Logger,
 		postgresRepositories: postgresRepositories,
 		cfg:                  cfg,
 		events:               events,
-		contract:             contract,
+		contractService:      contractService,
 		sli:                  sli,
 		tenantSettings:       tenantSettings,
 		postmarkService:      postmarkService,
@@ -90,8 +92,8 @@ type InvoiceActionMetadata struct {
 	InvoiceId     string  `json:"id"`
 }
 
-func (s *invoiceService) SetContractService(contract interfaces.ContractService) {
-	s.contract = contract
+func (s *invoiceService) SetContractService(contractService interfaces.ContractService) {
+	s.contractService = contractService
 }
 
 func (s *invoiceService) SetServiceLineItemService(sli interfaces.ServiceLineItemService) {
@@ -102,7 +104,468 @@ func (s *invoiceService) IsInitialized() bool {
 	return utils.IsInitialized(s)
 }
 
-func (s *invoiceService) GenerateNewRandomInvoiceNumber() string {
+func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contractId string, dataFields data_fields.InvoiceFields) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.InvoiceContract")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("contractId", contractId))
+	tracing.LogObjectAsJson(span, "dataFields", dataFields)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	invoiceId := ""
+
+	contractEntity, err := s.contractService.GetById(ctx, contractId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	// validate contract
+	if contractEntity == nil {
+		err := fmt.Errorf("contract not found")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	offCycle := false
+	dryRun := dataFields.DryRun
+	preview := dataFields.Preview
+
+	if dryRun == false {
+		if contractEntity.ContractStatus != neo4jenum.ContractStatusLive && contractEntity.ContractStatus != neo4jenum.ContractStatusOutOfContract {
+			err := fmt.Errorf("contract not live")
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+	}
+
+	if preview == true && dryRun == false {
+		err := fmt.Errorf("preview invoices should be dry run")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	// prepare currency
+	currency := contractEntity.Currency.String()
+	if currency == "" {
+		dbNode, err := s.neo4j.TenantReadRepository.GetTenantSettings(ctx, tenant)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+		tenantSettings := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
+		currency = tenantSettings.BaseCurrency.String()
+	}
+
+	// prepare postpaid flag
+	dbNode, err := s.neo4j.TenantReadRepository.GetTenantSettings(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(dbNode)
+	isPostpaid := tenantSettingsEntity.InvoicingPostpaid
+
+	// preload tenant billing profile
+	tenantBillingProfiles, err := s.neo4j.TenantReadRepository.GetTenantBillingProfiles(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	if len(tenantBillingProfiles) == 0 {
+		err := errors.New("tenantBillingProfiles not available")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	tenantBillingProfileEntity := neo4jmapper.MapDbNodeToTenantBillingProfileEntity(tenantBillingProfiles[0])
+
+	// preload countries
+	contractCountry := contractEntity.Country
+	countryDbNode, _ := s.neo4j.CountryReadRepository.GetCountryByCodeIfExists(ctx, contractCountry)
+	if countryDbNode != nil {
+		countryEntity := neo4jmapper.MapDbNodeToCountryEntity(countryDbNode)
+		contractCountry = countryEntity.Name
+	}
+	tenantBillingProfileCountry := tenantBillingProfileEntity.Country
+	countryDbNode, _ = s.neo4j.CountryReadRepository.GetCountryByCodeIfExists(ctx, tenantBillingProfileCountry)
+	if countryDbNode != nil {
+		countryEntity := neo4jmapper.MapDbNodeToCountryEntity(countryDbNode)
+		tenantBillingProfileCountry = countryEntity.Name
+	}
+
+	// prepare and validate dates
+	var invoicePeriodStart, invoicePeriodEnd time.Time
+	if preview && dataFields.InvoiceStartDate != nil {
+		invoicePeriodStart = *dataFields.InvoiceStartDate
+	} else {
+		if contractEntity.NextInvoiceDate != nil {
+			invoicePeriodStart = *contractEntity.NextInvoiceDate
+		} else {
+			invoicePeriodStart = *contractEntity.InvoicingStartDate
+		}
+	}
+	if preview && dataFields.InvoiceEndDate != nil {
+		invoicePeriodEnd = *dataFields.InvoiceEndDate
+	} else {
+		invoicePeriodEnd = s.prepareInvoiceCycleEndDate(ctx, invoicePeriodStart, tenant, contractEntity)
+	}
+
+	contractReadyForInvoicingByDates := true
+	if !dryRun {
+		if isPostpaid {
+			contractReadyForInvoicingByDates = utils.EndOfDayInUTC(invoicePeriodEnd).Before(utils.Now())
+		} else {
+			contractReadyForInvoicingByDates = invoicePeriodEnd.After(invoicePeriodStart)
+		}
+	}
+	if !contractReadyForInvoicingByDates {
+		err := fmt.Errorf("contract not ready for invoicing")
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	// generate invoice id
+	invoiceId, err = s.neo4j.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelInvoice)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	tracing.TagEntity(span, invoiceId)
+
+	// prepare invoice number
+	invoiceNumber := dataFields.InvoiceNumber
+	if invoiceNumber == "" && !offCycle {
+		filledInvoiceDbNode, err := s.neo4j.InvoiceReadRepository.GetFirstPreviewFilledInvoice(ctx, tenant, contractId)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "GetFirstPreviewFilledInvoice"))
+		}
+		if filledInvoiceDbNode != nil {
+			filledInvoiceEntity := neo4jmapper.MapDbNodeToInvoiceEntity(filledInvoiceDbNode)
+			invoiceNumber = filledInvoiceEntity.Number
+		}
+	}
+	if invoiceNumber == "" || (dryRun && !preview) {
+		if !dryRun || preview {
+			invoiceNumber = s.prepareInvoiceNumber(tenant)
+		} else {
+			invoiceNumber = s.generateNewRandomInvoiceNumber()
+		}
+	}
+
+	// prepare issue and due date
+	issuedDate := utils.ToDate(utils.Now())
+	if dryRun {
+		issuedDate = utils.ToDate(invoicePeriodStart)
+		if isPostpaid {
+			issuedDate = utils.ToDate(invoicePeriodEnd).AddDate(0, 0, 1)
+		}
+	}
+	dueDate := issuedDate.AddDate(0, 0, int(contractEntity.DueDays))
+
+	// prepare other fielcs
+	invoiceNote := contractEntity.InvoiceNote
+	if preview {
+		invoiceNote = ""
+	}
+	source := neo4jentity.DataSourceOpenline.String()
+	appSource := common.GetAppSourceFromContext(ctx)
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+
+		// Step 1 - create invoice node for the contract
+		data := neo4jrepository.InvoiceCreateFields{
+			ContractId:           contractId,
+			Currency:             neo4jenum.DecodeCurrency(currency),
+			DryRun:               dryRun,
+			OffCycle:             offCycle,
+			Postpaid:             isPostpaid,
+			Preview:              preview,
+			BillingCycleInMonths: contractEntity.BillingCycleInMonths,
+			PeriodStartDate:      invoicePeriodStart,
+			PeriodEndDate:        invoicePeriodEnd,
+			CreatedAt:            utils.Now(),
+			IssuedDate:           issuedDate,
+			DueDate:              dueDate,
+			Status:               neo4jenum.InvoiceStatusInitialized,
+			Source:               source,
+			AppSource:            appSource,
+			Note:                 invoiceNote,
+		}
+		err = s.neo4j.InvoiceWriteRepository.CreateInvoiceForContract(ctx, txWithPostCommit.Tx, tenant, invoiceId, data)
+		if err != nil {
+			s.log.Errorf("Error while creating invoice for contract %s: %s", contractId, err.Error())
+			return nil, err
+		}
+
+		// Step 2 - Remove previous initialized invoices, if any
+		if dryRun && preview {
+			err = s.neo4j.InvoiceWriteRepository.DeletePreviewCycleInitializedInvoices(ctx, txWithPostCommit.Tx, tenant, contractId, invoiceId)
+			if err != nil {
+				s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
+				return nil, err
+			}
+		}
+
+		// Step 3 - get temp invoice entity
+		invoiceEntity, err := s.GetById(ctx, txWithPostCommit.Tx, invoiceId)
+		if err != nil {
+			return nil, err
+		}
+
+		// Step 4 - get service line items for the contract
+		sliEntities, err := s.sli.GetServiceLineItemsForContract(ctx, contractId)
+		if err != nil {
+			return nil, err
+		}
+
+		// Step 5 - invoke fill invoice (calculates all data), Done only for cycle invoices
+		var invoiceLines []*neo4jentity.InvoiceLineEntity
+		if !offCycle {
+			invoiceEntity, invoiceLines, err = s.fillCycleInvoice(ctx, invoiceEntity, *sliEntities)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// Step 6 - prepare invoice status
+		invoiceStatus := neo4jenum.InvoiceStatusDue
+		if len(invoiceLines) == 0 {
+			invoiceStatus = neo4jenum.InvoiceStatusEmpty
+		} else {
+			if dryRun && preview {
+				if contractEntity.ContractStatus == neo4jenum.ContractStatusOutOfContract {
+					invoiceStatus = neo4jenum.InvoiceStatusOnHold
+				} else {
+					invoiceStatus = neo4jenum.InvoiceStatusScheduled
+				}
+			} else if invoiceEntity.TotalAmount == 0 {
+				invoiceStatus = neo4jenum.InvoiceStatusPaid
+			}
+		}
+
+		// Step 7 - save filled invoice and invoice lines
+		fillFields := neo4jrepository.InvoiceFillFields{
+			InvoiceNumber:                invoiceNumber,
+			CustomerName:                 contractEntity.OrganizationLegalName,
+			CustomerEmail:                contractEntity.InvoiceEmail,
+			CustomerAddressLine1:         contractEntity.AddressLine1,
+			CustomerAddressLine2:         contractEntity.AddressLine2,
+			CustomerAddressZip:           contractEntity.Zip,
+			CustomerAddressLocality:      contractEntity.Locality,
+			CustomerAddressCountry:       contractCountry,
+			CustomerAddressRegion:        contractEntity.Region,
+			ProviderLogoRepositoryFileId: tenantSettingsEntity.LogoRepositoryFileId,
+			ProviderName:                 tenantBillingProfileEntity.LegalName,
+			ProviderEmail:                tenantBillingProfileEntity.SendInvoicesFrom,
+			ProviderAddressLine1:         tenantBillingProfileEntity.AddressLine1,
+			ProviderAddressLine2:         tenantBillingProfileEntity.AddressLine2,
+			ProviderAddressZip:           tenantBillingProfileEntity.Zip,
+			ProviderAddressLocality:      tenantBillingProfileEntity.Locality,
+			ProviderAddressCountry:       tenantBillingProfileCountry,
+			ProviderAddressRegion:        tenantBillingProfileEntity.Region,
+			Amount:                       invoiceEntity.Amount,
+			VAT:                          invoiceEntity.Vat,
+			TotalAmount:                  invoiceEntity.TotalAmount,
+			Status:                       invoiceStatus,
+		}
+		err = s.neo4j.InvoiceWriteRepository.FillInvoice(ctx, txWithPostCommit.Tx, tenant, invoiceId, fillFields)
+		if err != nil {
+			s.log.Errorf("Error while filling invocie with details %s: %s", invoiceId, err.Error())
+			return nil, err
+		}
+		for _, item := range invoiceLines {
+			invoiceLineData := neo4jrepository.InvoiceLineCreateFields{
+				CreatedAt:               utils.Now(),
+				SkuId:                   item.SkuId,
+				SkuName:                 item.SkuName,
+				Name:                    utils.FirstNotEmptyString(item.SkuName, item.Name),
+				Price:                   item.Price,
+				Quantity:                item.Quantity,
+				Amount:                  item.Amount,
+				VAT:                     item.Vat,
+				TotalAmount:             item.TotalAmount,
+				BilledType:              item.BilledType,
+				Source:                  source,
+				AppSource:               appSource,
+				ServiceLineItemId:       item.ServiceLineItemId,
+				ServiceLineItemParentId: item.ServiceLineItemParentId,
+			}
+			err = s.neo4j.InvoiceLineWriteRepository.CreateInvoiceLine(ctx, txWithPostCommit.Tx, tenant, invoiceId, item.Id, invoiceLineData)
+			if err != nil {
+				s.log.Errorf("Error while inserting invoice line %s for invoice %s: %s", item.Id, invoiceId, err.Error())
+				return "", err
+			}
+		}
+
+		invoiceEntityAfterFill, err := s.GetById(ctx, txWithPostCommit.Tx, invoiceId)
+		if err != nil {
+			return nil, err
+		}
+
+		// Step 8 - generate invoice PDF
+		if invoiceEntityAfterFill.Status != neo4jenum.InvoiceStatusEmpty {
+
+			// load invoice lines
+			var invoiceLineEntities []*neo4jentity.InvoiceLineEntity
+
+			// load invoice lines
+			invoiceLinesNodes, err := s.neo4j.InvoiceLineReadRepository.GetAllForInvoice(ctx, txWithPostCommit.Tx, tenant, invoiceId)
+			if err != nil {
+				return nil, err
+			}
+			for _, invoiceLineNode := range invoiceLinesNodes {
+				invoiceLineEntities = append(invoiceLineEntities, neo4jmapper.MapDbNodeToInvoiceLineEntity(invoiceLineNode))
+			}
+
+			fileId, err := s.generateInvoicePDF(ctx, invoiceEntityAfterFill, contractEntity, invoiceLineEntities, tenantBillingProfileEntity)
+			if err != nil {
+				return nil, err
+			}
+			// save pdf file id
+			err = s.neo4j.InvoiceWriteRepository.InvoicePdfGenerated(ctx, txWithPostCommit.Tx, tenant, invoiceId, fileId)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// Step X-1 - move contract to next invoice date
+		if !dryRun && invoiceStatus != neo4jenum.InvoiceStatusEmpty {
+			s.createInvoiceAction(ctx, txWithPostCommit.Tx, tenant, "", *invoiceEntityAfterFill)
+		}
+
+		// Step X - move contract to next invoice date
+		if !dryRun {
+			nextInvoiceDate := invoicePeriodEnd.AddDate(0, 0, 1)
+			contractDataFields := data_fields.ContractSaveFields{
+				NextInvoiceDate: utils.ToPtr(nextInvoiceDate),
+			}
+			_, err = s.contractService.Save(ctx, txWithPostCommit, &contractEntity.Id, contractDataFields)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+
+			// event for storing invoicing details
+			createDto := dto.CreateInvoice{
+				Id:                   invoiceId,
+				Currency:             currency,
+				DryRun:               dryRun,
+				Preview:              preview,
+				Postpaid:             isPostpaid,
+				Number:               invoiceNumber,
+				Note:                 invoiceNote,
+				BillingCycleInMonths: contractEntity.BillingCycleInMonths,
+				InvoicePeriodStart:   invoicePeriodStart,
+				InvoicePeriodEnd:     invoicePeriodEnd,
+				OffCycle:             offCycle,
+				Source:               source,
+				AppSource:            appSource,
+				DueDate:              dueDate,
+				IssuedDate:           issuedDate,
+			}
+			err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, createDto)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateInvoice"))
+			}
+
+			// event to notify invoice completed
+			s.events.Publisher.PublishNotification(ctx, tenant, invoiceId, model.INVOICE, utils.NewEventCompletedDetails().WithCreate())
+
+			if !invoiceEntityAfterFill.OffCycle && !invoiceEntityAfterFill.DryRun {
+				err = s.neo4j.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, "")
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
+				}
+
+				start := utils.ToDate(invoicePeriodEnd).AddDate(0, 0, 1)
+				end := s.prepareInvoiceCycleEndDate(ctx, start, tenant, contractEntity)
+
+				previewInvoiceFields := data_fields.InvoiceFields{
+					Preview:          true,
+					DryRun:           true,
+					InvoiceStartDate: &start,
+					InvoiceEndDate:   &end,
+				}
+				_, err = s.InvoiceContract(ctx, nil, contractId, previewInvoiceFields)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error while creating preview invoice for contract %s: %s", contractId, err.Error())
+				}
+			} else if preview && dryRun {
+				err = s.neo4j.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, invoiceId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
+				}
+			}
+
+			return nil
+		})
+
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "invoicing failed"))
+		return "", err
+	}
+
+	return invoiceId, nil
+}
+
+func (s *invoiceService) prepareInvoiceCycleEndDate(ctx context.Context, start time.Time, tenant string, contractEntity *neo4jentity.ContractEntity) time.Time {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.prepareInvoiceCycleEndDate")
+	defer span.Finish()
+
+	nextStart := start.AddDate(0, int(contractEntity.BillingCycleInMonths), 0)
+	if start.Day() == 1 {
+		// if previous invoice was generated end of month, we need to substract extra 1 day
+		previousCycleInvoiceDbNode, err := s.neo4j.InvoiceReadRepository.GetPreviousCycleInvoice(ctx, tenant, contractEntity.Id)
+		if err != nil {
+			tracing.TraceErr(nil, errors.Wrap(err, "Error getting previous cycle invoice"))
+		}
+		if previousCycleInvoiceDbNode != nil {
+			previousInvoice := neo4jmapper.MapDbNodeToInvoiceEntity(previousCycleInvoiceDbNode)
+			if previousInvoice.PeriodStartDate.Day() != 1 {
+				nextStart = nextStart.AddDate(0, -1, 0)
+				nextStart = time.Date(nextStart.Year(), nextStart.Month(), previousInvoice.PeriodStartDate.Day(), 0, 0, 0, 0, nextStart.Location())
+			}
+		}
+	}
+	invoiceCycleEnd := nextStart.AddDate(0, 0, -1)
+	span.LogFields(log.Object("result.invoiceCycleEnd", invoiceCycleEnd))
+	return invoiceCycleEnd
+}
+
+func (s *invoiceService) prepareInvoiceNumber(tenant string) string {
+	maxAttempts := 20
+	var invoiceNumber string
+	for attempt := 1; attempt < maxAttempts+1; attempt++ {
+		invoiceNumber = s.generateNewRandomInvoiceNumber()
+		invoiceNumberEntity := postgresentity.InvoiceNumberEntity{
+			InvoiceNumber: invoiceNumber,
+			Tenant:        tenant,
+			Attempts:      attempt,
+		}
+		innerErr := s.postgresRepositories.InvoiceRepository.Reserve(invoiceNumberEntity)
+		if innerErr == nil {
+			break
+		}
+	}
+
+	return invoiceNumber
+}
+
+func (s *invoiceService) generateNewRandomInvoiceNumber() string {
 	digits := "0123456789"
 	consonants := "BCDFGHJKLMNPQRSTVWXYZ"
 	invoiceNumber := utils.GenerateRandomStringFromCharset(3, consonants) + "-" + utils.GenerateRandomStringFromCharset(5, digits)
@@ -239,7 +702,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 	}
 
 	// fetch existing contract and set the next invoice date
-	contract, err := s.contract.GetById(ctx, simulateInvoicesWithChanges.ContractId)
+	contract, err := s.contractService.GetById(ctx, simulateInvoicesWithChanges.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -435,7 +898,7 @@ func (s *invoiceService) SimulateInvoice(ctx context.Context, simulateInvoicesWi
 
 func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *neo4jentity.ContractEntity, sliEntities *neo4jentity.ServiceLineItemEntities, span opentracing.Span) (*interfaces.SimulateInvoiceResponseData, error) {
 	invoiceEntity := &neo4jentity.InvoiceEntity{}
-	invoiceLines := []*invoicepb.InvoiceLine{}
+	var invoiceLines []*neo4jentity.InvoiceLineEntity
 
 	tenantSettings, err := s.tenantSettings.GetTenantSettings(ctx)
 	if err != nil {
@@ -451,7 +914,7 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *n
 	}
 	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycleInMonths)
 
-	invoiceEntity.Number = s.GenerateNewRandomInvoiceNumber()
+	invoiceEntity.Number = s.generateNewRandomInvoiceNumber()
 	invoiceEntity.OffCycle = false
 	invoiceEntity.Postpaid = tenantSettings.InvoicingPostpaid
 	invoiceEntity.BillingCycleInMonths = contract.BillingCycleInMonths
@@ -467,7 +930,7 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *n
 		invoiceEntity.Currency = tenantSettings.BaseCurrency
 	}
 
-	invoiceEntity, invoiceLines, err = s.FillCycleInvoice(ctx, invoiceEntity, *sliEntities)
+	invoiceEntity, invoiceLines, err = s.fillCycleInvoice(ctx, invoiceEntity, *sliEntities)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -487,7 +950,7 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *n
 			Price:                   line.Price,
 			Quantity:                line.Quantity,
 			Amount:                  line.Amount,
-			TotalAmount:             line.Total,
+			TotalAmount:             line.TotalAmount,
 			Vat:                     line.Vat,
 		}
 		onCycleInvoice.Lines = append(onCycleInvoice.Lines, invoiceLineEntity)
@@ -498,7 +961,7 @@ func (s *invoiceService) SimulateOnCycleInvoice(ctx context.Context, contract *n
 
 func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *neo4jentity.ContractEntity, sliEntities *neo4jentity.ServiceLineItemEntities, span opentracing.Span) (*interfaces.SimulateInvoiceResponseData, error) {
 	invoiceEntity := &neo4jentity.InvoiceEntity{}
-	invoiceLines := []*invoicepb.InvoiceLine{}
+	var invoiceLines []*neo4jentity.InvoiceLineEntity
 
 	tenantSettings, err := s.tenantSettings.GetTenantSettings(ctx)
 	if err != nil {
@@ -523,7 +986,7 @@ func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *
 		}
 	}
 
-	invoiceEntity.Number = s.GenerateNewRandomInvoiceNumber()
+	invoiceEntity.Number = s.generateNewRandomInvoiceNumber()
 	invoiceEntity.OffCycle = true
 	invoiceEntity.Postpaid = false
 	invoiceEntity.BillingCycleInMonths = contract.BillingCycleInMonths
@@ -574,7 +1037,7 @@ func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *
 			Price:                   line.Price,
 			Quantity:                line.Quantity,
 			Amount:                  line.Amount,
-			TotalAmount:             line.Total,
+			TotalAmount:             line.TotalAmount,
 			Vat:                     line.Vat,
 		}
 		onCycleInvoice.Lines = append(onCycleInvoice.Lines, invoiceLineEntity)
@@ -583,74 +1046,23 @@ func (s *invoiceService) SimulateOffCycleInvoice(ctx context.Context, contract *
 	return onCycleInvoice, nil
 }
 
-func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId, appSource string) (string, error) {
+func (s *invoiceService) NextInvoiceDryRun(ctx context.Context, contractId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.NextInvoiceDryRun")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("contractId", contractId))
 
-	now := time.Now()
-
-	contract, err := s.contract.GetById(ctx, contractId)
+	invoiceFields := data_fields.InvoiceFields{
+		DryRun:  true,
+		Preview: false,
+	}
+	invoiceId, err := s.InvoiceContract(ctx, nil, contractId, invoiceFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err
 	}
 
-	var invoicePeriodStart, invoicePeriodEnd time.Time
-	if contract.NextInvoiceDate != nil {
-		invoicePeriodStart = *contract.NextInvoiceDate
-	} else if contract.InvoicingStartDate != nil {
-		invoicePeriodStart = *contract.InvoicingStartDate
-	} else {
-		err = fmt.Errorf("contract has no next invoice date or invoicing start date")
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-	invoicePeriodEnd = calculateInvoiceCycleEnd(invoicePeriodStart, contract.BillingCycleInMonths)
-
-	tenantSettings, err := s.tenantSettings.GetTenantSettings(ctx)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	currency := contract.Currency.String()
-	if currency == "" {
-		currency = tenantSettings.BaseCurrency.String()
-	}
-
-	dryRunInvoiceRequest := invoicepb.NewInvoiceForContractRequest{
-		Tenant:             common.GetTenantFromContext(ctx),
-		LoggedInUserId:     common.GetUserIdFromContext(ctx),
-		ContractId:         contractId,
-		DryRun:             true,
-		CreatedAt:          utils.ConvertTimeToTimestampPtr(&now),
-		InvoicePeriodStart: utils.ConvertTimeToTimestampPtr(&invoicePeriodStart),
-		InvoicePeriodEnd:   utils.ConvertTimeToTimestampPtr(&invoicePeriodEnd),
-		Currency:           currency,
-		Note:               contract.InvoiceNote,
-		Postpaid:           tenantSettings.InvoicingPostpaid,
-		SourceFields: &commonpb.SourceFields{
-			Source:    neo4jentity.DataSourceOpenline.String(),
-			AppSource: appSource,
-		},
-	}
-
-	dryRunInvoiceRequest.BillingCycleInMonths = contract.BillingCycleInMonths
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-		return s.grpc.InvoiceClient.NewInvoiceForContract(ctx, &dryRunInvoiceRequest)
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
-		return "", err
-	}
-
-	span.LogFields(log.String("output - createdInvoiceId", response.Id))
-	return response.Id, nil
+	return invoiceId, nil
 }
 
 func (s *invoiceService) PayInvoice(ctx context.Context, invoiceId string) error {
@@ -703,7 +1115,7 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, invoiceId, appSource s
 	return nil
 }
 
-func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error) {
+func (h *invoiceService) fillCycleInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*neo4jentity.InvoiceLineEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.fillCycleInvoice")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
@@ -711,7 +1123,7 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 	tenant := common.GetTenantFromContext(ctx)
 
 	amount, vat := float64(0), float64(0)
-	var invoiceLines []*invoicepb.InvoiceLine
+	var invoiceLines []*neo4jentity.InvoiceLineEntity
 
 	referenceTime := invoiceEntity.PeriodStartDate
 	periodEndTime := utils.EndOfDayInUTC(invoiceEntity.PeriodEndDate)
@@ -821,15 +1233,16 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 			amount += calculatedSLIAmount
 			vat += calculatedSLIVat
 
-			invoiceLine := invoicepb.InvoiceLine{
+			invoiceLine := neo4jentity.InvoiceLineEntity{
 				Name:                    sliEntity.Name,
 				Price:                   utils.RoundHalfUpFloat64(calculatePriceForBilledType(sliEntity.Price, sliEntity.Billed, invoiceEntity.BillingCycleInMonths), 2),
 				Quantity:                sliEntity.Quantity,
 				Amount:                  calculatedSLIAmount,
-				Total:                   utils.RoundHalfUpFloat64(calculatedSLIAmount+calculatedSLIVat, 2),
+				TotalAmount:             utils.RoundHalfUpFloat64(calculatedSLIAmount+calculatedSLIVat, 2),
 				Vat:                     calculatedSLIVat,
 				ServiceLineItemId:       sliEntity.ID,
 				ServiceLineItemParentId: sliEntity.ParentID,
+				BilledType:              sliEntity.Billed,
 			}
 
 			if sliEntity.SkuId != "" {
@@ -845,16 +1258,6 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 				}
 			}
 
-			switch sliEntity.Billed {
-			case neo4jenum.BilledTypeMonthly:
-				invoiceLine.BilledType = commonpb.BilledType_MONTHLY_BILLED
-			case neo4jenum.BilledTypeQuarterly:
-				invoiceLine.BilledType = commonpb.BilledType_QUARTERLY_BILLED
-			case neo4jenum.BilledTypeAnnually:
-				invoiceLine.BilledType = commonpb.BilledType_ANNUALLY_BILLED
-			case neo4jenum.BilledTypeOnce:
-				invoiceLine.BilledType = commonpb.BilledType_ONCE_BILLED
-			}
 			invoiceLines = append(invoiceLines, &invoiceLine)
 			continue
 		}
@@ -874,7 +1277,7 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 }
 
 // Deprecated
-func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error) {
+func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*neo4jentity.InvoiceLineEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.FillOffCyclePrepaidInvoice")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
@@ -930,7 +1333,7 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 	span.LogFields(log.Int("result - amount of SLIs to process", len(filteredSliEntities)))
 
 	amount, vat := float64(0), float64(0)
-	var invoiceLines []*invoicepb.InvoiceLine
+	var invoiceLines []*neo4jentity.InvoiceLineEntity
 
 	proratedSliFound := false
 	// iterate SLIs by parent id
@@ -998,12 +1401,12 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 		}
 		amount += finalSLIAmount
 		vat += calculatedSLIVat
-		invoiceLine := invoicepb.InvoiceLine{
+		invoiceLine := neo4jentity.InvoiceLineEntity{
 			Name:                    sliEntityToInvoice.Name,
 			Price:                   utils.RoundHalfUpFloat64(calculatePriceForBilledType(sliEntityToInvoice.Price, sliEntityToInvoice.Billed, invoiceEntity.BillingCycleInMonths), 2),
 			Quantity:                sliEntityToInvoice.Quantity,
 			Amount:                  finalSLIAmount,
-			Total:                   utils.RoundHalfUpFloat64(finalSLIAmount+calculatedSLIVat, 2),
+			TotalAmount:             utils.RoundHalfUpFloat64(finalSLIAmount+calculatedSLIVat, 2),
 			Vat:                     calculatedSLIVat,
 			ServiceLineItemId:       sliEntityToInvoice.ID,
 			ServiceLineItemParentId: sliEntityToInvoice.ParentID,
@@ -1021,17 +1424,7 @@ func (h *invoiceService) FillOffCyclePrepaidInvoice(ctx context.Context, invoice
 				invoiceLine.Name = sku.Name
 			}
 		}
-
-		switch sliEntityToInvoice.Billed {
-		case neo4jenum.BilledTypeMonthly:
-			invoiceLine.BilledType = commonpb.BilledType_MONTHLY_BILLED
-		case neo4jenum.BilledTypeQuarterly:
-			invoiceLine.BilledType = commonpb.BilledType_QUARTERLY_BILLED
-		case neo4jenum.BilledTypeAnnually:
-			invoiceLine.BilledType = commonpb.BilledType_ANNUALLY_BILLED
-		case neo4jenum.BilledTypeOnce:
-			invoiceLine.BilledType = commonpb.BilledType_ONCE_BILLED
-		}
+		invoiceLine.BilledType = sliEntityToInvoice.Billed
 		invoiceLines = append(invoiceLines, &invoiceLine)
 	}
 
@@ -1568,7 +1961,7 @@ func (s *invoiceService) dispatchInvoicePaidEvent(ctx context.Context, tenant st
 	}
 
 	// get invoice line items linked to invoice to build payload for webhook
-	invoiceLineDbNodes, err := s.neo4j.InvoiceLineReadRepository.GetAllForInvoice(ctx, tenant, invoice.Id)
+	invoiceLineDbNodes, err := s.neo4j.InvoiceLineReadRepository.GetAllForInvoice(ctx, nil, tenant, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "GetAllForInvoice"))
 		s.log.Errorf("Error getting invoice line items for invoice %s: %s", invoice.Id, err.Error())
@@ -1598,4 +1991,190 @@ func (s *invoiceService) dispatchInvoicePaidEvent(ctx context.Context, tenant st
 	}
 
 	return nil
+}
+
+func (s *invoiceService) generateInvoicePDF(ctx context.Context,
+	invoiceEntity *neo4jentity.InvoiceEntity,
+	contractEntity *neo4jentity.ContractEntity,
+	invoiceLineEntities []*neo4jentity.InvoiceLineEntity,
+	tenantBillingProfileEntity *neo4jentity.TenantBillingProfileEntity) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.generateInvoicePDF")
+	defer span.Finish()
+	tenant := common.GetTenantFromContext(ctx)
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, invoiceEntity.Id)
+
+	invoiceHasVat := false
+
+	if invoiceEntity.Vat > 0 {
+		invoiceHasVat = true
+	}
+
+	dataForPdf := map[string]interface{}{
+		"Tenant":                       tenant,
+		"CustomerName":                 invoiceEntity.Customer.Name,
+		"CustomerEmail":                invoiceEntity.Customer.Email,
+		"CustomerAddressLine1":         invoiceEntity.Customer.AddressLine1,
+		"CustomerAddressLine2":         invoiceEntity.Customer.AddressLine2,
+		"CustomerAddressLine3":         utils.JoinNonEmpty(", ", invoiceEntity.Customer.Locality, invoiceEntity.Customer.Zip),
+		"CustomerAddressLine4":         utils.JoinNonEmpty(", ", invoiceEntity.Customer.Region, invoiceEntity.Customer.Country),
+		"ProviderLogoExtension":        "",
+		"ProviderLogoRepositoryFileId": invoiceEntity.Provider.LogoRepositoryFileId,
+		"ProviderName":                 invoiceEntity.Provider.Name,
+		"ProviderEmail":                invoiceEntity.Provider.Email,
+		"ProviderAddressLine1":         invoiceEntity.Provider.AddressLine1,
+		"ProviderAddressLine2":         invoiceEntity.Provider.AddressLine2,
+		"ProviderAddressLine3":         utils.JoinNonEmpty(", ", invoiceEntity.Provider.Locality, invoiceEntity.Provider.Zip),
+		"ProviderAddressLine4":         utils.JoinNonEmpty(", ", invoiceEntity.Provider.Region, invoiceEntity.Provider.Country),
+		"InvoiceNumber":                invoiceEntity.Number,
+		"InvoiceIssueDate":             invoiceEntity.CreatedAt.Format("02 Jan 2006"),
+		"InvoiceDueDate":               invoiceEntity.DueDate.Format("02 Jan 2006"),
+		"InvoiceCurrency":              invoiceEntity.Currency.String() + "" + invoiceEntity.Currency.Symbol(),
+		"InvoiceSubtotal":              utils.FormatAmount(invoiceEntity.Amount, 2),
+		"InvoiceTotal":                 utils.FormatAmount(invoiceEntity.TotalAmount, 2),
+		"InvoiceAmountDue":             utils.FormatAmount(invoiceEntity.TotalAmount, 2),
+		"InvoiceLineItems":             []map[string]string{},
+		"Note":                         invoiceEntity.Note,
+		"CanPayByCheck":                contractEntity.Check,
+		"DryRun":                       invoiceEntity.DryRun,
+	}
+
+	// Include bank details
+	if contractEntity.CanPayWithBankTransfer {
+		if tenantBillingProfileEntity.CanPayWithBankTransfer {
+			bankAccountDbNodes, err := s.neo4j.BankAccountReadRepository.GetBankAccounts(ctx, tenant)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+			for _, bankAccountDbNode := range bankAccountDbNodes {
+				bankAccountEntity := neo4jmapper.MapDbNodeToBankAccountEntity(bankAccountDbNode)
+				if bankAccountEntity.Currency == invoiceEntity.Currency {
+					dataForPdf["BankDetailsAvailable"] = true
+					dataForPdf["BankAccountName"] = bankAccountEntity.BankName
+					dataForPdf["BankAccountNumber"] = bankAccountEntity.AccountNumber
+					dataForPdf["BankAccountIBAN"] = bankAccountEntity.Iban
+					dataForPdf["BankAccountBIC"] = bankAccountEntity.Bic
+					dataForPdf["BankAccountSortCode"] = bankAccountEntity.SortCode
+					dataForPdf["BankAccountRoutingNumber"] = bankAccountEntity.RoutingNumber
+					dataForPdf["BankAccountOtherDetails"] = bankAccountEntity.OtherDetails
+					break
+				}
+			}
+		}
+	}
+
+	if invoiceHasVat {
+		dataForPdf["InvoiceVat"] = fmt.Sprintf("%.2f", invoiceEntity.Vat)
+	}
+
+	for _, invoiceLine := range invoiceLineEntities {
+		invoiceLineItem := map[string]string{
+			"Name":      utils.FirstNotEmptyString(invoiceLine.SkuName, invoiceLine.Name),
+			"Quantity":  fmt.Sprintf("%d", invoiceLine.Quantity),
+			"UnitPrice": invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Price, 2),
+			"Amount":    invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Amount, 2),
+			"Vat":       invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Vat, 2),
+		}
+		sliDbNode, _ := s.neo4j.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, tenant, invoiceLine.ServiceLineItemId)
+		sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
+
+		if invoiceLine.BilledType == neo4jenum.BilledTypeOnce {
+			invoiceLineItem["InvoiceLineSubtitle"] = sliEntity.StartedAt.Format("02 Jan 2006")
+		}
+		// if the invoice line item does not have a subtitle, we will use the period start and end date
+		if _, ok := invoiceLineItem["InvoiceLineSubtitle"]; !ok {
+			invoiceLineSubtitle := fmt.Sprintf("%s - %s", invoiceEntity.PeriodStartDate.Format("02 Jan 2006"), invoiceEntity.PeriodEndDate.Format("02 Jan 2006"))
+			if sliEntity.Billed.IsRecurrent() && sliEntity.Billed.InMonths() != invoiceEntity.BillingCycleInMonths {
+				invoiceLineSubtitle += ". "
+				invoiceLineSubtitle += invoiceEntity.Currency.Symbol()
+				invoiceLineSubtitle += utils.FormatAmount(sliEntity.Price, 2)
+				invoiceLineSubtitle += "/"
+				switch sliEntity.Billed {
+				case neo4jenum.BilledTypeMonthly:
+					invoiceLineSubtitle += "month"
+				case neo4jenum.BilledTypeQuarterly:
+					invoiceLineSubtitle += "quarter"
+				case neo4jenum.BilledTypeAnnually:
+					invoiceLineSubtitle += "year"
+				}
+			}
+			invoiceLineItem["InvoiceLineSubtitle"] = invoiceLineSubtitle
+		}
+
+		if invoiceHasVat {
+			invoiceLineItem["InvoiceHasVat"] = "true"
+		}
+
+		dataForPdf["InvoiceLineItems"] = append(dataForPdf["InvoiceLineItems"].([]map[string]string), invoiceLineItem)
+	}
+
+	// prepare the temp html file
+	tmpInvoiceFile, err := os.CreateTemp("", "invoice_*.html")
+	if err != nil {
+		return "", errors.Wrap(err, "os.TempFile")
+	}
+	defer os.Remove(tmpInvoiceFile.Name()) // Delete the temporary HTML file when done
+	defer tmpInvoiceFile.Close()
+
+	if invoiceEntity.Provider.LogoRepositoryFileId != "" {
+		fileMetadata, err := s.fileService.GetById(ctx, invoiceEntity.Provider.LogoRepositoryFileId)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "GetFileMetadata"))
+			s.log.Errorf("Error getting file metadata for file %s: %s", invoiceEntity.Provider.LogoRepositoryFileId, err.Error())
+		} else {
+			dataForPdf["ProviderLogoExtension"] = GetFileExtensionFromMetadata(fileMetadata)
+		}
+	}
+
+	// fill the template with data and store it in temp
+	err = FillInvoiceHtmlTemplate(ctx, tmpInvoiceFile, dataForPdf)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "FillInvoiceHtmlTemplate"))
+		return "", errors.Wrap(err, "FillInvoiceHtmlTemplate")
+	}
+
+	// convert the temp to pdf
+	// Max attempts
+	maxAttempts := 3
+	var pdfBytes *[]byte
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		// Try to convert the temp to pdf
+		pdfBytes, err = ConvertInvoiceHtmlToPdf(ctx, s.fileService, s.internalCfg.PdfConverterConfig.PdfConverterUrl, tmpInvoiceFile, dataForPdf)
+		if err == nil {
+			// Success, no need to retry
+			break
+		}
+		// Log the error and trace on failure
+		tracing.TraceErr(span, errors.Wrap(err, "ConvertInvoiceHtmlToPdf"))
+		if attempt == maxAttempts {
+			return "", err
+		}
+	}
+
+	if pdfBytes == nil {
+		return "", errors.New("pdfBytes is nil")
+	}
+
+	// TODO remove this at some point when we are sure that the pdf is generated correctly
+	// Save the PDF file to disk
+	os.WriteFile("output.pdf", *pdfBytes, 0644)
+
+	basePath := fmt.Sprintf("/INVOICE/%d/%s", invoiceEntity.CreatedAt.Year(), invoiceEntity.CreatedAt.Format("01"))
+
+	if invoiceEntity.DryRun {
+		basePath = basePath + "/DRY_RUN"
+	}
+
+	fileDTO, err := s.fileService.UploadSingleFileBytesDirect(ctx, basePath, invoiceEntity.Id, "Invoice - "+invoiceEntity.Number+".pdf", pdfBytes, true)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "UploadSingleFileBytes"))
+		return "", errors.Wrap(err, "UploadSingleFileBytes")
+	}
+
+	if fileDTO.ID == "" {
+		return "", errors.New("fileDTO.Id is empty")
+	}
+
+	return fileDTO.ID, nil
 }

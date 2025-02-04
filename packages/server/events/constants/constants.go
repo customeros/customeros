@@ -1,10 +1,8 @@
 package constants
 
 const (
-	AppSourceEventProcessingPlatform            = "event-processing-platform"
-	AppSourceEventProcessingPlatformSubscribers = "event-processing-platform-subscribers"
-	AppSourceIntegrationApp                     = "integration.app"
-	AppSourceSyncCustomerOsData                 = "sync-customer-os-data"
+	AppSourceIntegrationApp     = "integration.app"
+	AppSourceSyncCustomerOsData = "sync-customer-os-data"
 
 	ComponentNeo4jRepository = "neo4jRepository"
 	ComponentService         = "service"
@@ -45,11 +43,7 @@ const (
 	Bcrypt          = "bcrypt"
 	Redis           = "redis"
 
-	EsInternalStreamPrefix = "$"
-	EsAll                  = "$all"
-	StreamTempPrefix       = "temp"
-
-	RetriesOnOptimisticLockException = 5
+	StreamTempPrefix = "temp"
 
 	StreamMetadataMaxCount              = 200
 	StreamMetadataMaxAgeSeconds         = 7 * 24 * 60 * 60  // 7 days

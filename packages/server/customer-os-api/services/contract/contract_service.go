@@ -171,7 +171,7 @@ func (s *contractService) Create(ctx context.Context, contractDetails *cosapi_in
 		}
 	}
 
-	contractId, err := s.contract.Save(ctx, nil, contractDataFields)
+	contractId, err := s.contract.Save(ctx, nil, nil, contractDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from create contract %s", err.Error())
@@ -324,7 +324,7 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 	}
 	contractDataFields.AutoRenew = input.AutoRenew
 
-	_, err := s.contract.Save(ctx, &input.ContractID, contractDataFields)
+	_, err := s.contract.Save(ctx, nil, &input.ContractID, contractDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())

@@ -65,7 +65,7 @@ func (s *mailService) GetEmailsForProcessingForUser(ctx context.Context, tenant,
 	}
 
 	for _, externalSystem := range distinctExternalSystems {
-		// TODO alexb add caching for each tenant of external systems
+		// TODO add caching for each tenant of external systems
 		err = s.neo4j.ExternalSystemWriteRepository.CreateIfNotExists(
 			ctx, tenant, externalSystem, externalSystem,
 		)

@@ -25,6 +25,7 @@ type CommonConfig struct {
 	Neo4j            commonconf.Neo4jConfig
 	Mailsherpa       commonconf.MailSherpaApiConfig
 	FileStore        commonconf.FileStoreConfig
+	PdfConverter     commonconf.PdfConverterConfig
 }
 
 type AppConfig struct {
@@ -97,6 +98,7 @@ func Load() *Config {
 			CustomerOsApi:       cmnCfg.CustomerOsApi,
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,
 			FileStoreConfig:     cmnCfg.FileStore,
+			PdfConverterConfig:  cmnCfg.PdfConverter,
 		},
 	}
 

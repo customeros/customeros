@@ -20,7 +20,6 @@ import (
 
 	"github.com/customeros/customeros/packages/server/events-processing-platform/config"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/logger"
-	"github.com/customeros/customeros/packages/server/events-processing-platform/repository"
 	"github.com/customeros/customeros/packages/server/events-processing-platform/service"
 )
 
@@ -31,7 +30,6 @@ const (
 type Server struct {
 	Config         *config.Config
 	Log            logger.Logger
-	Repositories   *repository.Repositories
 	Services       *service.Services
 	AggregateStore eventstore.AggregateStore
 	GrpcServer     *grpc.Server
@@ -81,15 +79,12 @@ func (server *Server) Start(parentCtx context.Context) error {
 	}
 	defer postgresDb.Close()
 
-	repository.Migration(postgresDb.GormDB)
-
 	// Setting up Neo4j
 	neo4jDriver, err := commonConfig.NewNeo4jDriver(server.Config.CommonServices.Infrastructure.Neo4jConfig)
 	if err != nil {
 		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.Config.CommonServices.Infrastructure.Neo4jConfig.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
-	server.Repositories = repository.InitRepos(&neo4jDriver, server.Config.CommonServices.Infrastructure.Neo4jConfig.Database, postgresDb)
 
 	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
 
@@ -98,7 +93,6 @@ func (server *Server) Start(parentCtx context.Context) error {
 
 	server.Services = service.InitServices(
 		server.Config,
-		server.Repositories,
 		server.AggregateStore,
 		server.Log,
 	)

@@ -1,12 +1,12 @@
-package repository
+package postgres_repository
 
 import (
-	"github.com/customeros/customeros/packages/server/events-processing-platform/repository/postgres/entity"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"gorm.io/gorm"
 )
 
 type InvoiceRepository interface {
-	Reserve(invoiceNumber entity.InvoiceNumberEntity) error
+	Reserve(invoiceNumber postgres_entity.InvoiceNumberEntity) error
 }
 
 type invoiceRepository struct {
@@ -18,7 +18,7 @@ func NewInvoiceRepository(gormDb *gorm.DB) InvoiceRepository {
 	return &repo
 }
 
-func (r *invoiceRepository) Reserve(invoiceNumber entity.InvoiceNumberEntity) error {
+func (r *invoiceRepository) Reserve(invoiceNumber postgres_entity.InvoiceNumberEntity) error {
 	err := r.gormDb.Save(&invoiceNumber).Error
 	return err
 }

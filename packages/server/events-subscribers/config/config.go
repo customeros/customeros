@@ -39,6 +39,8 @@ type CommonConfig struct {
 	Brandfetch       commonconf.BrandfetchConfig
 	Enrow            commonconf.EnrowConfig
 	QuickbooksConfig commonconf.QuickbooksConfig
+	PdfConverter     commonconf.PdfConverterConfig
+	FileStore        commonconf.FileStoreConfig
 }
 
 func Load() *Config {
@@ -67,6 +69,8 @@ func Load() *Config {
 		},
 		Internal: commonconf.InternalServicesConfig{
 			MailSherpaApiConfig: cmnCfg.MailSherpaApi,
+			PdfConverterConfig:  cmnCfg.PdfConverter,
+			FileStoreConfig:     cmnCfg.FileStore,
 		},
 		External: commonconf.ExternalServicesConfig{
 			BetterContactConfig: cmnCfg.BetterContact,

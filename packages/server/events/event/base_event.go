@@ -15,8 +15,3 @@ type BaseEvent struct {
 	EntityId       string           `json:"entityId" validate:"required"`
 	EntityType     model.EntityType `json:"entityType" validate:"required"`
 }
-
-type BaseEventAccessor interface {
-	GetBaseEvent() BaseEvent
-	SetEntityId(entityId string)
-}

@@ -124,9 +124,6 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	}
 
 	acceptedEventTypes := []string{
-		invoice.InvoiceFillRequestedV1,
-		invoice.InvoicePdfRequestedV1,
-		invoice.InvoicePdfGeneratedV1,
 		invoice.InvoiceVoidV1,
 		invoice.InvoicePayNotificationV1,
 		invoice.InvoiceRemindNotificationV1,
@@ -148,12 +145,6 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	})
 
 	switch evt.GetEventType() {
-	case invoice.InvoiceFillRequestedV1:
-		return s.invoiceEventHandler.onInvoiceFillRequestedV1(ctx, evt)
-	case invoice.InvoicePdfRequestedV1:
-		return s.invoiceEventHandler.generateInvoicePDFV1(ctx, evt)
-	case invoice.InvoicePdfGeneratedV1:
-		return s.invoiceEventHandler.onInvoicePdfGeneratedV1(ctx, evt)
 	case invoice.InvoiceVoidV1:
 		return s.invoiceEventHandler.onInvoiceVoidV1(ctx, evt)
 	case invoice.InvoicePayNotificationV1:

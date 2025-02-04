@@ -10,6 +10,7 @@ const (
 	AgentICPQualifier          AgentType = "icp_qualifier"
 	AgentSupportSignalDetector AgentType = "support_signal_detector"
 	AgentWebVisitorIdentifier  AgentType = "web_visitor_identifier"
+	AgentCashflowGuardian      AgentType = "cashflow_guardian"
 )
 
 func (t AgentType) String() string {
@@ -21,6 +22,7 @@ func GetAgentType(s string) (AgentType, error) {
 	case
 		AgentICPQualifier,
 		AgentSupportSignalDetector,
+		AgentCashflowGuardian,
 		AgentWebVisitorIdentifier:
 		return AgentType(s), nil
 

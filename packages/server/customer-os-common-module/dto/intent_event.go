@@ -11,4 +11,7 @@ type IntentDetected struct {
 	IntentType     enum.IntentSignal `json:"intentType"`
 	OrganizationID string            `json:"organizationId"`
 	ContactID      string            `json:"contactId"`
+	ContractID     string            `json:"contractId"`
+	DryRun         bool              `json:"dryRun"`
+	Preview        bool              `json:"preview"`
 }
