@@ -16,7 +16,7 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
   const orgName = store.organizations.getById(id)?.value?.name;
   const [tabs] = useLocalStorage<{
     [key: string]: string;
-  }>(`customeros-player-last-position`, { root: 'organization' });
+  }>(`customeros-player-last-position`, { root: 'finder' });
   const linkRef = useRef<HTMLAnchorElement>(null);
 
   const lastPositionParams = tabs[id];

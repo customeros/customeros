@@ -20,7 +20,7 @@ export const OrganizationCell = ({
 }: OrganizationCellProps) => {
   const [tabs] = useLocalStorage<{
     [key: string]: string;
-  }>(`customeros-player-last-position`, { root: 'organization' });
+  }>(`customeros-player-last-position`, { root: 'finder' });
   const navigate = useNavigate();
 
   const linkRef = useRef<HTMLParagraphElement>(null);
