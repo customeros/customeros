@@ -350,11 +350,11 @@ export class OrganizationService {
       ?.setRenewalAdjustedRate(renewalLikelihood);
 
     const amount =
-      this.root.organizations.getById(orgId)?.value.renewalSummaryArrForecast ??
-      0;
+      this.root.organizations.getById(orgId)?.value
+        ?.renewalSummaryArrForecast ?? 0;
     const potentialAmount =
       this.root.organizations.getById(orgId)?.value
-        .renewalSummaryMaxArrForecast ?? 0;
+        ?.renewalSummaryMaxArrForecast ?? 0;
     const rate =
       amount === 0 || potentialAmount === 0
         ? 0
@@ -384,6 +384,32 @@ export class OrganizationService {
         'Failed to update opportunity renewals',
         'update-opportunity-renewals',
       );
+
+      return [null, err];
+    }
+
+    return [res, err];
+  }
+
+  public async updateNotes(organization: Organization, notes: string) {
+    const prevNotes = organization.value.notes ?? '';
+
+    organization.setNotes(notes);
+
+    const [res, err] = await unwrap(
+      this.orgRepo.saveOrganization({
+        input: {
+          id: organization.id,
+          notes,
+        },
+      }),
+    );
+
+    if (err) {
+      console.error(err);
+      organization.setNotes(prevNotes);
+
+      this.root.ui.toastError('Failed to update notes', 'update-notes');
 
       return [null, err];
     }

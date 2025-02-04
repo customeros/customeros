@@ -139,6 +139,7 @@ export type Attachment = Node & {
   mimeType: Scalars['String']['output'];
   size: Scalars['Int64']['output'];
   source: DataSource;
+  /** @deprecated No longer supported */
   sourceOfTruth: DataSource;
 };
 
@@ -272,6 +273,7 @@ export type BillingProfile = Node &
     id: Scalars['ID']['output'];
     legalName: Scalars['String']['output'];
     source: DataSource;
+    /** @deprecated No longer supported */
     sourceOfTruth: DataSource;
     taxId: Scalars['String']['output'];
     updatedAt: Scalars['Time']['output'];
@@ -318,6 +320,7 @@ export type Calendar = {
   link?: Maybe<Scalars['String']['output']>;
   primary: Scalars['Boolean']['output'];
   source: DataSource;
+  /** @deprecated No longer supported */
   sourceOfTruth: DataSource;
   updatedAt: Scalars['Time']['output'];
 };
@@ -489,6 +492,7 @@ export type Comment = {
   externalLinks: Array<ExternalSystem>;
   id: Scalars['ID']['output'];
   source: DataSource;
+  /** @deprecated No longer supported */
   sourceOfTruth: DataSource;
   updatedAt: Scalars['Time']['output'];
 };
@@ -848,6 +852,7 @@ export type Contract = MetadataInterface & {
    */
   name: Scalars['String']['output'];
   opportunities?: Maybe<Array<Opportunity>>;
+  organization: Organization;
   /**
    * Deprecated, use billingDetails instead.
    * @deprecated Use billingDetails instead.
@@ -1926,6 +1931,7 @@ export type InteractionEvent = Node & {
   sentBy: Array<InteractionEventParticipant>;
   sentTo: Array<InteractionEventParticipant>;
   source: DataSource;
+  /** @deprecated No longer supported */
   sourceOfTruth: DataSource;
 };
 
@@ -1949,6 +1955,7 @@ export type InteractionSession = Node & {
   identifier: Scalars['String']['output'];
   name: Scalars['String']['output'];
   source: DataSource;
+  /** @deprecated No longer supported */
   sourceOfTruth: DataSource;
   status: Scalars['String']['output'];
   type?: Maybe<Scalars['String']['output']>;
@@ -2151,6 +2158,7 @@ export type Issue = Node &
     priority?: Maybe<Scalars['String']['output']>;
     reportedBy?: Maybe<IssueParticipant>;
     source: DataSource;
+    /** @deprecated No longer supported */
     sourceOfTruth: DataSource;
     /**
      * Deprecated: Use issueStatus field instead
@@ -2293,6 +2301,7 @@ export type Location = Node &
     rawAddress?: Maybe<Scalars['String']['output']>;
     region?: Maybe<Scalars['String']['output']>;
     source: DataSource;
+    /** @deprecated No longer supported */
     sourceOfTruth: DataSource;
     street?: Maybe<Scalars['String']['output']>;
     timeZone?: Maybe<Scalars['String']['output']>;
@@ -2335,6 +2344,7 @@ export type LogEntry = {
   externalLinks: Array<ExternalSystem>;
   id: Scalars['ID']['output'];
   source: DataSource;
+  /** @deprecated No longer supported */
   sourceOfTruth: DataSource;
   startedAt: Scalars['Time']['output'];
   tags: Array<Tag>;
@@ -2400,6 +2410,7 @@ export type Meeting = Node & {
   note: Array<Note>;
   recording?: Maybe<Attachment>;
   source: DataSource;
+  /** @deprecated No longer supported */
   sourceOfTruth: DataSource;
   startedAt?: Maybe<Scalars['Time']['output']>;
   status: MeetingStatus;
@@ -2510,11 +2521,17 @@ export type Mutation = {
   bankAccount_Create: BankAccount;
   bankAccount_Delete: DeleteResponse;
   bankAccount_Update: BankAccount;
+  /** @deprecated No longer supported */
   billingProfile_Create: Scalars['ID']['output'];
+  /** @deprecated No longer supported */
   billingProfile_LinkEmail: Scalars['ID']['output'];
+  /** @deprecated No longer supported */
   billingProfile_LinkLocation: Scalars['ID']['output'];
+  /** @deprecated No longer supported */
   billingProfile_UnlinkEmail: Scalars['ID']['output'];
+  /** @deprecated No longer supported */
   billingProfile_UnlinkLocation: Scalars['ID']['output'];
+  /** @deprecated No longer supported */
   billingProfile_Update: Scalars['ID']['output'];
   contact_AddNewLocation: Location;
   contact_AddOrganizationById: Contact;
@@ -3435,6 +3452,7 @@ export type Note = {
   id: Scalars['ID']['output'];
   includes: Array<Attachment>;
   source: DataSource;
+  /** @deprecated No longer supported */
   sourceOfTruth: DataSource;
   updatedAt: Scalars['Time']['output'];
 };
@@ -3515,7 +3533,10 @@ export type Opportunity = MetadataInterface & {
   renewedAt?: Maybe<Scalars['Time']['output']>;
   /** Deprecated, use metadata */
   source?: Maybe<DataSource>;
-  /** Deprecated, use metadata */
+  /**
+   * Deprecated, use metadata
+   * @deprecated No longer supported
+   */
   sourceOfTruth?: Maybe<DataSource>;
   stageLastUpdated?: Maybe<Scalars['Time']['output']>;
   /** Deprecated, use metadata */
@@ -4018,6 +4039,7 @@ export type PageView = Node &
     pageUrl: Scalars['String']['output'];
     sessionId: Scalars['ID']['output'];
     source: DataSource;
+    /** @deprecated No longer supported */
     sourceOfTruth: DataSource;
     startedAt: Scalars['Time']['output'];
   };
@@ -4697,6 +4719,7 @@ export type Social = Node &
     id: Scalars['ID']['output'];
     metadata: Metadata;
     source: DataSource;
+    /** @deprecated No longer supported */
     sourceOfTruth: DataSource;
     updatedAt: Scalars['Time']['output'];
     url: Scalars['String']['output'];
@@ -4727,12 +4750,14 @@ export type SourceFields = {
   appSource: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   source: DataSource;
+  /** @deprecated No longer supported */
   sourceOfTruth: DataSource;
 };
 
 export type SourceFieldsInterface = {
   appSource: Scalars['String']['output'];
   source: DataSource;
+  /** @deprecated No longer supported */
   sourceOfTruth: DataSource;
 };
 
@@ -4930,6 +4955,7 @@ export type TenantBillingProfile = Node &
     sendInvoicesBcc: Scalars['String']['output'];
     sendInvoicesFrom: Scalars['String']['output'];
     source: DataSource;
+    /** @deprecated No longer supported */
     sourceOfTruth: DataSource;
     updatedAt: Scalars['Time']['output'];
     vatNumber: Scalars['String']['output'];
@@ -5133,6 +5159,7 @@ export type User = {
   profilePhotoUrl?: Maybe<Scalars['String']['output']>;
   roles: Array<Role>;
   source: DataSource;
+  /** @deprecated No longer supported */
   sourceOfTruth: DataSource;
   test: Scalars['Boolean']['output'];
   timezone?: Maybe<Scalars['String']['output']>;

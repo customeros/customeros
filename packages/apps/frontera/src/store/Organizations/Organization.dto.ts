@@ -256,6 +256,13 @@ export class Organization extends Entity<OrganizationDatum> {
   }
 
   @action
+  public setNotes(notes: string) {
+    this.draft();
+    this.value.notes = notes;
+    this.commit({ syncOnly: true });
+  }
+
+  @action
   public addSocial(url: string) {
     this.value.socialMedia.push({
       id: crypto.randomUUID(),

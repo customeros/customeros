@@ -105,6 +105,11 @@ const CONTRACTS_QUERY = gql`
           source
           lastUpdated
         }
+        organization {
+          metadata {
+            id
+          }
+        }
 
         contractName
         serviceStarted

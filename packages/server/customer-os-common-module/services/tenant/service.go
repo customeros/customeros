@@ -3,6 +3,7 @@ package tenant
 import (
 	"context"
 	"fmt"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"math/rand"
 	"strings"
 
@@ -68,7 +69,7 @@ func (s *tenantService) GetTenantForUserEmail(ctx context.Context, email string)
 	return neo4jmapper.MapDbNodeToTenantEntity(tenant), nil
 }
 
-func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.TenantEntity) (*neo4jentity.TenantEntity, error) {
+func (s *tenantService) Merge(ctx context.Context, tx neo4j.ManagedTransaction, tenantEntity neo4jentity.TenantEntity) (*neo4jentity.TenantEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.Merge")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -94,7 +95,7 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.Tena
 
 	span.LogFields(log.Object("tenantName", tenantName))
 	tenantEntity.Name = tenantName
-	tenant, err := s.neo4j.TenantWriteRepository.CreateTenantIfNotExistAndReturn(ctx, tenantEntity)
+	tenant, err := s.neo4j.TenantWriteRepository.CreateTenantIfNotExistAndReturn(ctx, tx, tenantEntity)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("merge: %w", err)

@@ -74,25 +74,6 @@ func MapDbNodeToWorkspaceEntity(dbNode *dbtype.Node) *neo4j_entity.WorkspaceEnti
 	return &workspace
 }
 
-func MapDbNodeToPlayerEntity(node *neo4j.Node) *neo4j_entity.PlayerEntity {
-	if node == nil {
-		return &neo4j_entity.PlayerEntity{}
-	}
-	props := utils.GetPropsFromNode(*node)
-
-	return &neo4j_entity.PlayerEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		AuthId:        utils.GetStringPropOrEmpty(props, "authId"),
-		Provider:      utils.GetStringPropOrEmpty(props, "provider"),
-		IdentityId:    utils.GetStringPropOrEmpty(props, "identityId"),
-		Source:        utils.GetStringPropOrEmpty(props, "source"),
-		SourceOfTruth: utils.GetStringPropOrEmpty(props, "sourceOfTruth"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-	}
-}
-
 func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *neo4j_entity.InvoiceEntity {
 	if dbNode == nil {
 		return &neo4j_entity.InvoiceEntity{}

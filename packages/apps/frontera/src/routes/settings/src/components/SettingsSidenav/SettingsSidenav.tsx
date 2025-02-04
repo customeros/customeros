@@ -24,7 +24,7 @@ export const SettingsSidenav = observer(() => {
 
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
-    { ['settings']: 'oauth', root: 'organization' },
+    { ['settings']: 'oauth', root: 'finder' },
   );
 
   const hasCampaign = searchParams?.get('campaign') || false;

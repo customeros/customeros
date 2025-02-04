@@ -8,8 +8,6 @@ import { ARRForecast } from '@organization/components/Tabs/panels/AccountPanel/A
 import { ContractModalsContextProvider } from '@organization/components/Tabs/panels/AccountPanel/context/ContractModalsContext.tsx';
 import { ContractModalStatusContextProvider } from '@organization/components/Tabs/panels/AccountPanel/context/ContractStatusModalsContext.tsx';
 
-import { Notes } from '../Notes';
-
 export const Contracts = observer(() => {
   const id = useParams()?.id as string;
   const store = useStore();
@@ -42,8 +40,6 @@ export const Contracts = observer(() => {
           </div>
         );
       })}
-
-      <Notes id={id} />
     </>
   );
 });

@@ -5,6 +5,7 @@ type EntityType string
 const (
 	AGENT EntityType = "AGENT"
 
+	AUTHENTICATION_USER      EntityType = "AUTHENTICATION_USER"
 	ATTACHMENT               EntityType = "ATTACHMENT"
 	COMMENT                  EntityType = "COMMENT"
 	CONTACT                  EntityType = "CONTACT"
@@ -52,6 +53,8 @@ func (entityType EntityType) String() string {
 
 func (entityType EntityType) Neo4jLabel() string {
 	switch entityType {
+	case AUTHENTICATION_USER:
+		return NodeLabelAuthenticationUser
 	case TENANT:
 		return NodeLabelTenant
 	case TENANT_SETTINGS:

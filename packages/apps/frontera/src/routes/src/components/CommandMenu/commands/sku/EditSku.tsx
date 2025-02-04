@@ -131,24 +131,17 @@ export const EditSku = observer(() => {
             </label>
             <MaskedInput
               size='sm'
-              mask={`num`}
+              mask={'num'}
               id='sku-price'
               variant='outline'
-              dataTest='sku-price'
+              data-test='sku-price'
               placeholder='Price per unit'
-              defaultValue={formatInitialValue(editSkuUsecase.price)}
-              onFocus={(e) => (e.target as HTMLInputElement).select()}
+              onFocus={(e) => e.target.select()}
+              value={editSkuUsecase.maskedPrice}
               className={cn({
                 'border-error-600 hover:!border-error-600 focus:!border-error-600 active:!border-error-600':
                   editSkuUsecase.errors.price,
               })}
-              onAccept={(v, instance) => {
-                editSkuUsecase.editPrice(instance?.unmaskedValue || '');
-
-                if (v.length && editSkuUsecase.errors.price) {
-                  editSkuUsecase.resetPriceError();
-                }
-              }}
               onKeyDownCapture={(e) => {
                 e.stopPropagation();
 
@@ -160,18 +153,26 @@ export const EditSku = observer(() => {
                   handleClose();
                 }
               }}
+              onAccept={(v, instance) => {
+                editSkuUsecase.editPrice(instance?.unmaskedValue || '');
+                editSkuUsecase.setMaskedValue(v);
+
+                if (v.length && editSkuUsecase.errors.price) {
+                  editSkuUsecase.resetPriceError();
+                }
+              }}
               blocks={{
                 num: {
                   mask: Number,
                   scale: 2,
-                  lazy: false,
+                  lazy: true,
                   min: 0,
                   radix: '.',
                   placeholderChar: '#',
                   thousandsSeparator: ',',
                   normalizeZeros: true,
                   padFractionalZeros: true,
-                  autofix: true,
+                  autofix: false,
                 },
               }}
             />
@@ -212,16 +213,3 @@ export const EditSku = observer(() => {
     </Command>
   );
 });
-
-const formatInitialValue = (value?: string | number) => {
-  if (!value) return '';
-
-  const num = typeof value === 'number' ? value : parseFloat(value);
-
-  if (isNaN(num)) return '';
-
-  return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
-};

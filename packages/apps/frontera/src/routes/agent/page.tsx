@@ -7,7 +7,6 @@ import { AgentViewUsecase } from '@domain/usecases/agents/agent-view.usecase';
 
 import { cn } from '@ui/utils/cn';
 import { Icon, IconName } from '@ui/media/Icon';
-import { CapabilityType } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 
 import { Header, capabilities } from './components';
@@ -77,44 +76,41 @@ export const AgentPage = observer(() => {
           <h2 className='mb-2 font-medium text-sm'>This agent will:</h2>
 
           <ul className='space-y-1'>
-            {agent?.value.capabilities.map((capability) =>
-              capability.type !==
-              CapabilityType.WebVisitorSendSlackNotification ? (
-                <div
-                  key={capability.id}
-                  onClick={() => {
-                    if (capability.config.length) {
-                      usecase.setActiveCapability(capability);
-                      navigate(`?cid=${capability.id}`);
+            {agent?.value.capabilities.map((capability) => (
+              <div
+                key={capability.id}
+                onClick={() => {
+                  if (capability.config.length) {
+                    usecase.setActiveCapability(capability);
+                    navigate(`?cid=${capability.id}`);
+                  }
+                }}
+                className={cn(
+                  'flex items-center px-2 py-1 justify-between rounded-lg select-none',
+                  capability.config.length &&
+                    'hover:bg-grayModern-200 cursor-pointer',
+                  capability.id === usecase?.activeCapability?.id &&
+                    'bg-grayModern-100 hover:bg-grayModern-100',
+                )}
+              >
+                <div className='flex items-center gap-2'>
+                  <Icon
+                    stroke={capability.errors ? 'currentColor' : 'none'}
+                    name={capability.errors ? 'radio-dot' : 'dot-single'}
+                    className={
+                      capability.errors
+                        ? 'text-error-500'
+                        : 'text-grayModern-500'
                     }
-                  }}
-                  className={cn(
-                    'flex items-center px-2 py-1 justify-between rounded-lg select-none',
-                    capability.config.length &&
-                      'hover:bg-grayModern-200 cursor-pointer',
-                    capability.id === usecase?.activeCapability?.id &&
-                      'bg-grayModern-100 hover:bg-grayModern-100',
-                  )}
-                >
-                  <div className='flex items-center gap-2'>
-                    <Icon
-                      stroke={capability.errors ? 'currentColor' : 'none'}
-                      name={capability.errors ? 'radio-dot' : 'dot-single'}
-                      className={
-                        capability.errors
-                          ? 'text-error-500'
-                          : 'text-grayModern-500'
-                      }
-                    />
-                    <p className='text-sm'>{capability.name ?? 'Unknown'}</p>
-                  </div>
-
-                  {capability.config.length > 0 && (
-                    <Icon name='settings-02' className='text-grayModern-500' />
-                  )}
+                  />
+                  <p className='text-sm'>{capability.name ?? 'Unknown'}</p>
                 </div>
-              ) : null,
-            )}
+
+                {capability.config.length > 0 && (
+                  <Icon name='settings-02' className='text-grayModern-500' />
+                )}
+              </div>
+            ))}
           </ul>
         </div>
 
