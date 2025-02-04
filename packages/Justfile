@@ -120,6 +120,11 @@ start-api:
     cd ./server/customer-os-api && go run .
     echo "Services started."
 
+start-admin:
+    cd ./server/customer-os-platform-admin-api && go run .
+    echo "Services started."
+
+
 start-events:
     cd ./server/events-subscribers && go run . 
 

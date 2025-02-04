@@ -54,13 +54,39 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 	switch AgentCapability(s) {
 	case
 		CapabilityAnalyzeWebSessionIntent,
+		CapabilityApplyTag,
+		CapabilityBuildCampaignList,
+		CapabilityCollectPayments,
 		CapabilityCreateAndEnrichCompany,
+		CapabilityCreateMarkdownTimelineEvent,
+		CapabilityDetectNewLead,
+		CapabilityDetectNewMeetingRecording,
+		CapabilityEnrichEmailAddress,
+		CapabilityEvaluateCompanyICPFit,
+		CapabilityExtractMeetingHighlights,
+		CapabilityForwardEmailReply,
+		CapabilityGatherCompanyIntelligence,
+		CapabilityGenerateInvoice,
+		CapabilityHandleAutoresponder,
+		CapabilityIdentifyMeetingParticipants,
 		CapabilityIdentifyWebVisitor,
+		CapabilityManageBouncedEmail,
+		CapabilityMonitorAccountsReceivable,
+		CapabilityMonitorSupportPages,
+		CapabilityProcessRefund,
+		CapabilityScheduleEmailDelivery,
+		CapabilitySelectOptimalSendingMailbox,
+		CapabilitySendInvoice,
+		CapabilitySendLinkedinConnectionRequest,
+		CapabililtySendLinkedinMessage,
+		CapabilitySyncLinkedinConnections,
+		CapabilitySendPaymentReminder,
 		CapabilitySendSlackNotification,
 		CapabilitySendWebVisitorSlackNotification,
-		CapabilityApplyTag,
-		CapabilityCreateMarkdownTimelineEvent,
-		CapabilityEvaluateCompanyICPFit:
+		CapabilitySyncWithAccountingSystem,
+		CapabilityTrackCampaignEngagement,
+		CapabilityUpdateCompanyStatus,
+		CapabilityValidateEmailAddressDeliverability:
 		return AgentCapability(s), nil
 
 	default:

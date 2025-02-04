@@ -23,13 +23,17 @@ const (
 )
 
 type Agent struct {
-	Version      string       `toml:"version"`
-	Name         string       `toml:"name"`
-	Type         string       `toml:"type"`
-	Goal         string       `toml:"goal"`
-	Icon         string       `toml:"icon"`
-	Triggers     Triggers     `toml:"triggers"`
-	Capabilities Capabilities `toml:"capabilities"`
+	Agent        AgentMetadata `toml:"agent"`
+	Triggers     Triggers      `toml:"triggers"`
+	Capabilities Capabilities  `toml:"capabilities"`
+}
+
+type AgentMetadata struct {
+	Version string `toml:"version"`
+	Name    string `toml:"name"`
+	Type    string `toml:"type"`
+	Goal    string `toml:"goal"`
+	Icon    string `toml:"icon"`
 }
 
 type Triggers struct {
@@ -98,9 +102,9 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 		return err
 	}
 
-	agentType, err := enum.GetAgentType(agentConfig.Type)
+	agentType, err := enum.GetAgentType(agentConfig.Agent.Type)
 	if err != nil {
-		span.LogKV("agentType", agentConfig.Type)
+		span.LogKV("agentType", agentConfig.Agent.Type)
 		err := errors.New("Not a valid agent type")
 		tracing.TraceErr(span, err)
 		return err
@@ -108,11 +112,13 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 
 	dbAgent := postgres_entity.AgentRegistry{
 		Type:         agentType,
-		Version:      agentConfig.Version,
+		AgentName:    agentConfig.Agent.Name,
+		Goal:         agentConfig.Agent.Goal,
+		Version:      agentConfig.Agent.Version,
 		Filename:     filename,
 		Triggers:     agentConfig.Triggers.Events,
 		Capabilities: agentConfig.Capabilities.Types,
-		Icon:         agentConfig.Icon,
+		Icon:         agentConfig.Agent.Icon,
 		IsActive:     true,
 	}
 
