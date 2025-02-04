@@ -36,6 +36,8 @@ export const InlineSelect: FC<InlineSelectProps> = ({
 
       <Select
         name={name}
+        openMenuOnClick
+        openMenuOnFocus
         options={options}
         onChange={onChange}
         value={selectedOption}
