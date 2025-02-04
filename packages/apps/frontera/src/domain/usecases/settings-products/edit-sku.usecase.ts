@@ -8,6 +8,7 @@ export class EditSkuUsecase {
   private root = RootStore.getInstance();
   private service = new SkuService();
   @observable accessor productName: string = '';
+  @observable accessor maskedPrice: string = '';
   @observable accessor price: number | undefined = undefined;
   @observable accessor errors = {
     productName: '',
@@ -19,6 +20,9 @@ export class EditSkuUsecase {
     this.skuId = skuId;
     this.editProductName = this.editProductName.bind(this);
     this.editPrice = this.editPrice.bind(this);
+    this.setMaskedValue = this.setMaskedValue.bind(this);
+
+    this.init();
   }
 
   @computed
@@ -26,6 +30,11 @@ export class EditSkuUsecase {
     if (!this.skuId) return;
 
     return this.root.skus.getById(this.skuId);
+  }
+
+  @action
+  init() {
+    this.maskedPrice = this.sku?.value?.price?.toString() ?? '';
   }
 
   @action
@@ -63,6 +72,11 @@ export class EditSkuUsecase {
   @action
   editProductName(name: string) {
     this.productName = name;
+  }
+
+  @action
+  setMaskedValue(masked: string) {
+    this.maskedPrice = masked;
   }
 
   @action
