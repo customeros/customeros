@@ -8,7 +8,7 @@ export const useNavigationManager = () => {
   const [searchParams] = useSearchParams();
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     'customeros-player-last-position',
-    { root: 'organization' },
+    { root: 'finder' },
   );
 
   const [lastSearchForPreset, setLastSearchForPreset] = useLocalStorage<{
