@@ -18,6 +18,7 @@ import {
   Currency,
   DataSource,
   Opportunity,
+  Organization,
   ContractStatus,
   ContractUpdateInput,
   ContractRenewalCycle,
@@ -466,7 +467,7 @@ const defaultValue: Contract = {
     metadata: {
       id: '',
     },
-  },
+  } as Organization,
 };
 
 type CONTRACT_QUERY_RESULT = {
