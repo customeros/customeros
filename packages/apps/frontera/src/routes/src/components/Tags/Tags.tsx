@@ -1,12 +1,13 @@
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn.ts';
+import { Icon } from '@ui/media/Icon';
 import { Combobox } from '@ui/form/Combobox';
 import { Plus } from '@ui/media/icons/Plus.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { SelectOption } from '@shared/types/SelectOptions.ts';
-import { Tag, TagLabel, TagCloseButton } from '@ui/presentation/Tag';
+import { Tag, TagLabel, TagRightButton } from '@ui/presentation/Tag';
 import {
   Popover,
   PopoverContent,
@@ -71,12 +72,14 @@ export const Tags = observer(
                       }
                     >
                       <TagLabel>{option.label}</TagLabel>
-                      <TagCloseButton
+                      <TagRightButton
                         onClick={(e) => {
                           e.stopPropagation();
                           handleClear(option.value);
                         }}
-                      />
+                      >
+                        <Icon name={'x-close'} />
+                      </TagRightButton>
                     </Tag>
                   );
                 })

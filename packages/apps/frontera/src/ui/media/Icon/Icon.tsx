@@ -9,6 +9,7 @@ export type IconName =
   | 'arrow-dropdown'
   | 'bubbles'
   | 'chevron-down'
+  | 'chevron-up'
   | 'chevron-left'
   | 'chevron-right'
   | 'copy-03'
