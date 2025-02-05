@@ -1,9 +1,7 @@
 package invoice
 
 import (
-	"bytes"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -24,7 +22,6 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"io/ioutil"
-	"net/http"
 	"net/mail"
 	"os"
 	"path/filepath"
@@ -33,7 +30,6 @@ import (
 	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/tracing"
-	"github.com/customeros/customeros/packages/server/events-processing-platform-subscribers/webhook"
 )
 
 type eventMetadata struct {
@@ -82,249 +78,6 @@ func NewInvoiceEventHandler(
 		postmark:       postmark,
 		eventPublisher: eventPublisher,
 	}
-}
-
-// TODO alexbalexb working moving this one
-func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoicePdfGeneratedV1")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData invoice.InvoicePdfGeneratedEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	tracing.LogObjectAsJson(span, "eventData", eventData)
-	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceId)
-
-	invoiceEntity, err := h.invoice.GetById(ctx, nil, invoiceId)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "InvoiceService.GetById"))
-		return err
-	}
-	if invoiceEntity == nil {
-		err = fmt.Errorf("invoice %s not found", invoiceId)
-		tracing.TraceErr(span, errors.Wrap(err, "invoiceEntity == nil"))
-		return err
-	}
-
-	if invoiceEntity.DryRun {
-		return nil
-	}
-
-	err = h.slackInvoiceFinalizedWebhook(ctx, eventData.Tenant, *invoiceEntity)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "slackInvoiceFinalizedWebhook"))
-		h.log.Errorf("error invoking slack invoice finalized webhook for invoice %s: %s", invoiceId, err.Error())
-	}
-
-	err = h.eventPublisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceFinalized{})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "PublishEvent"))
-		h.log.Errorf("error publishing invoice finalized event for invoice %s: %s", invoiceId, err.Error())
-	}
-
-	// do not dispatch invoice finalized event if it was already dispatched
-	if invoiceEntity.InvoiceInternalFields.InvoiceFinalizedWebhookProcessedAt == nil {
-		// dispatch invoice finalized event
-		err = h.dispatchInvoiceFinalizedEvent(ctx, eventData.Tenant, *invoiceEntity)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "dispatchInvoiceFinalizedEvent"))
-			h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoiceId, err.Error())
-			// TODO: must implement retry mechanism for dispatching invoice finalized event
-		}
-		err = h.neo4j.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyFinalizedWebhookProcessedAt), utils.NowPtr())
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "UpdateTimeProperty"))
-			h.log.Errorf("Error setting invoice finalized webhook processed for invoice %s: %s", invoiceEntity.Id, err.Error())
-		}
-	}
-
-	return nil
-}
-
-func (h *InvoiceEventHandler) slackInvoiceFinalizedWebhook(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.slackInvoiceFinalizedWebhook")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	tracing.LogObjectAsJson(span, "invoice", invoice)
-
-	if h.cfg.CommonServices.External.SlackConfig.InternalAlertsRegisteredWebhook == "" {
-		return nil
-	}
-
-	// get organization linked to invoice
-	organizationDbNode, err := h.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetOrganizationByInvoiceId"))
-		h.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
-		return err
-	}
-	organizationEntity := neo4jentity.OrganizationEntity{}
-	if organizationDbNode != nil {
-		organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-	}
-
-	// Create a struct to hold the JSON data
-	type SlackMessage struct {
-		Text string `json:"text"`
-	}
-	message := SlackMessage{Text: fmt.Sprintf("Tenant %s, Invoice %s has been finalized for customer %s", tenant, invoice.Number, organizationEntity.Name)}
-	// Convert struct to JSON
-	jsonData, err := json.Marshal(message)
-	if err != nil {
-		fmt.Println("Error encoding JSON:", err)
-		return err
-	}
-
-	// Send POST request
-	resp, err := http.Post(h.cfg.CommonServices.External.SlackConfig.InternalAlertsRegisteredWebhook, "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		fmt.Println("Error sending request:", err)
-		return err
-	}
-	defer resp.Body.Close()
-
-	span.LogFields(log.String("result.status", resp.Status))
-
-	return nil
-}
-
-func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.dispatchInvoiceFinalizedEvent")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	tracing.LogObjectAsJson(span, "invoice", invoice)
-
-	// get organization linked to invoice to build payload for webhook
-	organizationDbNode, err := h.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetOrganizationByInvoiceId"))
-		h.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
-		return err
-	}
-	organizationEntity := neo4jentity.OrganizationEntity{}
-	if organizationDbNode != nil {
-		organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-	}
-
-	// get contract linked to invoice to build payload for webhook
-	contractDbNode, err := h.neo4j.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{organizationEntity.ID})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetContractsForOrganizations"))
-		h.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
-		return err
-	}
-
-	contractEntity := neo4jentity.ContractEntity{}
-	if len(contractDbNode) > 0 && contractDbNode[0] != nil {
-		node := contractDbNode[0].Node
-		if node != nil {
-			contractEntity = *neo4jmapper.MapDbNodeToContractEntity(node)
-		}
-	}
-
-	// get invoice line items linked to invoice to build payload for webhook
-	invoiceLineDbNodes, err := h.neo4j.InvoiceLineReadRepository.GetAllForInvoice(ctx, nil, tenant, invoice.Id)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetAllForInvoice"))
-		h.log.Errorf("Error getting invoice line items for invoice %s: %s", invoice.Id, err.Error())
-		return err
-	}
-
-	ilEntities := []*neo4jentity.InvoiceLineEntity{}
-	for _, ilDbNode := range invoiceLineDbNodes {
-		ilEntity := neo4jmapper.MapDbNodeToInvoiceLineEntity(ilDbNode)
-		ilEntities = append(ilEntities, ilEntity)
-	}
-
-	webhookPayload := webhook.PopulateInvoicePayload(&invoice, &organizationEntity, &contractEntity, ilEntities)
-	// dispatch the event
-	err = webhook.DispatchWebhook(
-		ctx,
-		tenant,
-		webhook.WebhookEventInvoiceFinalized,
-		webhookPayload,
-		h.postgres,
-		h.cfg,
-	)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "DispatchWebhook"))
-		h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoice.Id, err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (h *InvoiceEventHandler) dispatchInvoicePaidEvent(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.dispatchInvoicePaidEvent")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	tracing.LogObjectAsJson(span, "invoice", invoice)
-
-	// get organization linked to invoice to build payload for webhook
-	organizationDbNode, err := h.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetOrganizationByInvoiceId"))
-		h.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
-		return err
-	}
-	organizationEntity := neo4jentity.OrganizationEntity{}
-	if organizationDbNode != nil {
-		organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-	}
-
-	// get contract linked to invoice to build payload for webhook
-	contractDbNode, err := h.neo4j.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{organizationEntity.ID})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetContractsForOrganizations"))
-		h.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
-		return err
-	}
-
-	contractEntity := neo4jentity.ContractEntity{}
-	if len(contractDbNode) > 0 && contractDbNode[0] != nil {
-		node := contractDbNode[0].Node
-		if node != nil {
-			contractEntity = *neo4jmapper.MapDbNodeToContractEntity(node)
-		}
-	}
-
-	// get invoice line items linked to invoice to build payload for webhook
-	invoiceLineDbNodes, err := h.neo4j.InvoiceLineReadRepository.GetAllForInvoice(ctx, nil, tenant, invoice.Id)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "GetAllForInvoice"))
-		h.log.Errorf("Error getting invoice line items for invoice %s: %s", invoice.Id, err.Error())
-		return err
-	}
-
-	ilEntities := []*neo4jentity.InvoiceLineEntity{}
-	for _, ilDbNode := range invoiceLineDbNodes {
-		ilEntity := neo4jmapper.MapDbNodeToInvoiceLineEntity(ilDbNode)
-		ilEntities = append(ilEntities, ilEntity)
-	}
-
-	webhookPayload := webhook.PopulateInvoicePayload(&invoice, &organizationEntity, &contractEntity, ilEntities)
-	// dispatch the event
-	err = webhook.DispatchWebhook(
-		ctx,
-		tenant,
-		webhook.WebhookEventInvoiceStatusPaid,
-		webhookPayload,
-		h.postgres,
-		h.cfg,
-	)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "DispatchWebhook"))
-		h.log.Errorf("Error dispatching invoice paid event for invoice %s: %s", invoice.Id, err.Error())
-		return err
-	}
-
-	return nil
 }
 
 func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstore.Event) error {

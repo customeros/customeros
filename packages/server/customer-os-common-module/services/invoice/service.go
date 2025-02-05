@@ -1,10 +1,13 @@
 package invoice
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -404,26 +407,23 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 			}
 		}
 
+		// load invoice and invoice lines after fill
 		invoiceEntityAfterFill, err := s.GetById(ctx, txWithPostCommit.Tx, invoiceId)
 		if err != nil {
 			return nil, err
 		}
 
+		var invoiceLineEntities []*neo4jentity.InvoiceLineEntity
+		invoiceLinesNodes, err := s.neo4j.InvoiceLineReadRepository.GetAllForInvoice(ctx, txWithPostCommit.Tx, tenant, invoiceId)
+		if err != nil {
+			return nil, err
+		}
+		for _, invoiceLineNode := range invoiceLinesNodes {
+			invoiceLineEntities = append(invoiceLineEntities, neo4jmapper.MapDbNodeToInvoiceLineEntity(invoiceLineNode))
+		}
+
 		// Step 8 - generate invoice PDF
 		if invoiceEntityAfterFill.Status != neo4jenum.InvoiceStatusEmpty {
-
-			// load invoice lines
-			var invoiceLineEntities []*neo4jentity.InvoiceLineEntity
-
-			// load invoice lines
-			invoiceLinesNodes, err := s.neo4j.InvoiceLineReadRepository.GetAllForInvoice(ctx, txWithPostCommit.Tx, tenant, invoiceId)
-			if err != nil {
-				return nil, err
-			}
-			for _, invoiceLineNode := range invoiceLinesNodes {
-				invoiceLineEntities = append(invoiceLineEntities, neo4jmapper.MapDbNodeToInvoiceLineEntity(invoiceLineNode))
-			}
-
 			fileId, err := s.generateInvoicePDF(ctx, invoiceEntityAfterFill, contractEntity, invoiceLineEntities, tenantBillingProfileEntity)
 			if err != nil {
 				return nil, err
@@ -435,12 +435,12 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 			}
 		}
 
-		// Step X-1 - move contract to next invoice date
+		// Step 9 - create invoice action
 		if !dryRun && invoiceStatus != neo4jenum.InvoiceStatusEmpty {
 			s.createInvoiceAction(ctx, txWithPostCommit.Tx, tenant, "", *invoiceEntityAfterFill)
 		}
 
-		// Step X - move contract to next invoice date
+		// Step 10 - move contract to next invoice date
 		if !dryRun {
 			nextInvoiceDate := invoicePeriodEnd.AddDate(0, 0, 1)
 			contractDataFields := data_fields.ContractSaveFields{
@@ -452,8 +452,23 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 			}
 		}
 
-		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
+		// Step 11 - invoice webhooks
+		if invoiceEntityAfterFill.InvoiceInternalFields.InvoiceFinalizedWebhookProcessedAt == nil {
+			// dispatch invoice finalized event
+			err = s.dispatchInvoiceFinalizedEvent(ctx, tenant, invoiceEntityAfterFill, contractEntity, invoiceLineEntities)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "dispatchInvoiceFinalizedEvent"))
+				s.log.Errorf("Error while dispatching invoice finalized event for invoice %s: %s", invoiceEntityAfterFill.Id, err.Error())
+				// TODO: must implement retry mechanism for dispatching invoice finalized event
+			}
+			err = s.neo4j.CommonWriteRepository.UpdateTimePropertyInTx(ctx, txWithPostCommit.Tx, tenant, model.NodeLabelInvoice, invoiceId, string(neo4jentity.InvoicePropertyFinalizedWebhookProcessedAt), utils.NowPtr())
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "Error setting invoice finalized webhook processed"))
+				s.log.Errorf("Error setting invoice finalized webhook processed for invoice %s: %s", invoiceEntity.Id, err.Error())
+			}
+		}
 
+		txWithPostCommit.AddPostCommitAction(func(ctx context.Context) error {
 			// event for storing invoicing details
 			createDto := dto.CreateInvoice{
 				Id:                   invoiceId,
@@ -477,8 +492,20 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateInvoice"))
 			}
 
-			// event to notify invoice completed
+			// finalized invoice event
+			err = s.events.Publisher.PublishFanoutEvent(ctx, invoiceId, model.INVOICE, dto.InvoiceFinalized{})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to publish message InvoiceFinalized"))
+			}
+
+			// invoice completion event for FE
 			s.events.Publisher.PublishNotification(ctx, tenant, invoiceId, model.INVOICE, utils.NewEventCompletedDetails().WithCreate())
+
+			// internal slack notification
+			err = s.slackInvoiceFinalizedWebhook(ctx, tenant, invoiceEntityAfterFill)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "unable to send slack webhook"))
+			}
 
 			if !invoiceEntityAfterFill.OffCycle && !invoiceEntityAfterFill.DryRun {
 				err = s.neo4j.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, tenant, contractId, "")
@@ -520,6 +547,57 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 	}
 
 	return invoiceId, nil
+}
+
+func (s *invoiceService) slackInvoiceFinalizedWebhook(ctx context.Context, tenant string, invoice *neo4jentity.InvoiceEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.slackInvoiceFinalizedWebhook")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.LogObjectAsJson(span, "invoice", invoice)
+
+	if invoice.DryRun {
+		return nil
+	}
+
+	if s.cfg.SlackConfig.InternalAlertsRegisteredWebhook == "" {
+		return nil
+	}
+
+	// get organization linked to invoice
+	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
+		return err
+	}
+	organizationEntity := neo4jentity.OrganizationEntity{}
+	if organizationDbNode != nil {
+		organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+	}
+
+	// Create a struct to hold the JSON data
+	type SlackMessage struct {
+		Text string `json:"text"`
+	}
+	message := SlackMessage{Text: fmt.Sprintf("Tenant %s, Invoice %s has been finalized for customer %s", tenant, invoice.Number, organizationEntity.Name)}
+	// Convert struct to JSON
+	jsonData, err := json.Marshal(message)
+	if err != nil {
+		fmt.Println("Error encoding JSON:", err)
+		return err
+	}
+
+	// Send POST request
+	resp, err := http.Post(s.cfg.SlackConfig.InternalAlertsRegisteredWebhook, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	span.LogFields(log.String("result.status", resp.Status))
+
+	return nil
 }
 
 func (s *invoiceService) prepareInvoiceCycleEndDate(ctx context.Context, start time.Time, tenant string, contractEntity *neo4jentity.ContractEntity) time.Time {
@@ -1116,7 +1194,7 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, invoiceId, appSource s
 }
 
 func (h *invoiceService) fillCycleInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*neo4jentity.InvoiceLineEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.fillCycleInvoice")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.fillCycleInvoice")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagEntityId, invoiceEntity.Id)
 
@@ -1613,7 +1691,7 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, txWithPostCommit *ut
 }
 
 func (s *invoiceService) createInvoiceAction(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, previousStatus neo4jenum.InvoiceStatus, invoiceEntity neo4jentity.InvoiceEntity) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.createInvoiceAction")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.createInvoiceAction")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("invoiceId", invoiceEntity.Id))
@@ -1987,6 +2065,50 @@ func (s *invoiceService) dispatchInvoicePaidEvent(ctx context.Context, tenant st
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "DispatchWebhook"))
 		s.log.Errorf("Error dispatching invoice paid event for invoice %s: %s", invoice.Id, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *invoiceService) dispatchInvoiceFinalizedEvent(ctx context.Context, tenant string,
+	invoiceEntity *neo4jentity.InvoiceEntity,
+	contractEntity *neo4jentity.ContractEntity,
+	invoiceLineEntities []*neo4jentity.InvoiceLineEntity) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceService.dispatchInvoiceFinalizedEvent")
+	defer span.Finish()
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, invoiceEntity.Id)
+
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
+		return nil
+	}
+
+	// get organization linked to invoice to build payload for webhook
+	organizationDbNode, err := s.neo4j.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoiceEntity.Id)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "GetOrganizationByInvoiceId"))
+		s.log.Errorf("Error getting organization for invoice %s: %s", invoiceEntity.Id, err.Error())
+		return err
+	}
+	organizationEntity := neo4jentity.OrganizationEntity{}
+	if organizationDbNode != nil {
+		organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+	}
+
+	webhookPayload := webhook.PopulateInvoicePayload(invoiceEntity, &organizationEntity, contractEntity, invoiceLineEntities)
+	// dispatch the event
+	err = webhook.DispatchWebhook(
+		ctx,
+		tenant,
+		webhook.WebhookEventInvoiceFinalized,
+		webhookPayload,
+		s.postgresRepositories,
+		*s.cfg,
+	)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "DispatchWebhook"))
+		s.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoiceEntity.Id, err.Error())
 		return err
 	}
 

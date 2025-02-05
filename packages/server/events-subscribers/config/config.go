@@ -41,6 +41,7 @@ type CommonConfig struct {
 	QuickbooksConfig commonconf.QuickbooksConfig
 	PdfConverter     commonconf.PdfConverterConfig
 	FileStore        commonconf.FileStoreConfig
+	SlackConfig      commonconf.SlackConfig
 }
 
 func Load() *Config {
@@ -85,6 +86,7 @@ func Load() *Config {
 			BrandfetchConfig:    cmnCfg.Brandfetch,
 			EnrowConfig:         cmnCfg.Enrow,
 			QuickbooksConfig:    cmnCfg.QuickbooksConfig,
+			SlackConfig:         cmnCfg.SlackConfig,
 		},
 	}
 
