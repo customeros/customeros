@@ -1,0 +1,18 @@
+query TenantSettings {
+  tenantSettings {
+    logoUrl
+    logoRepositoryFileId
+    baseCurrency
+    workspaceName
+    workspaceLogo
+    billingEnabled
+    opportunityStages {
+      id
+      value
+      order
+      label
+      visible
+      likelihoodRate
+    }
+  }
+}

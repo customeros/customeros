@@ -134,11 +134,11 @@ export const OrganizationDetails = observer(
               <IcpBadge id={store.ui.focusRow ?? id} />
               {previewCard && (
                 <IconButton
-                  size='xs'
+                  size='xxs'
                   variant='ghost'
-                  icon={<Icon name='x-close' />}
                   aria-label='close preview company'
                   onClick={() => setPreviewCard(false)}
+                  icon={<Icon name='x-close' className='size-4' />}
                 />
               )}
             </div>
