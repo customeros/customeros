@@ -10,10 +10,6 @@ replace github.com/customeros/customeros/packages/server/customer-os-postgres-re
 
 replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
-replace github.com/customeros/customeros/packages/server/events-processing-proto => ../events-processing-proto
-
-replace github.com/customeros/customeros/packages/server/events => ../events
-
 require (
 	github.com/99designs/gqlgen v0.17.64
 	github.com/caarlos0/env/v6 v6.10.1
@@ -21,7 +17,6 @@ require (
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20250123143641-47eb9a512f9d
 	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c
 	github.com/customeros/customeros/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
-	github.com/customeros/customeros/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c
 	github.com/customeros/mailsherpa v0.3.8
 	github.com/customeros/mailwatcher v0.1.6
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -43,7 +38,6 @@ require (
 	github.com/swaggo/swag v1.16.4
 	github.com/testcontainers/testcontainers-go v0.35.0
 	github.com/vektah/gqlparser/v2 v2.5.22
-	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/exp v0.0.0-20241204233417-43b7b7cde48d
 	golang.org/x/net v0.34.0
@@ -196,6 +190,7 @@ require (
 	go.temporal.io/api v1.43.0 // indirect
 	go.temporal.io/sdk v1.32.1 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect

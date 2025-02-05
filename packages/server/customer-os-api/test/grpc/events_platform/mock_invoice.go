@@ -1,8 +1,6 @@
 package events_platform
 
-import (
-	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
-)
+import ()
 
 type MockInvoiceServiceCallbacks struct {
 }
@@ -14,5 +12,4 @@ func SetInvoiceCallbacks(callbacks *MockInvoiceServiceCallbacks) {
 }
 
 type MockInvoiceService struct {
-	invoicepb.UnimplementedInvoiceGrpcServiceServer
 }

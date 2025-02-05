@@ -10,8 +10,6 @@ replace github.com/customeros/customeros/packages/server/customer-os-postgres-re
 
 replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
-replace github.com/customeros/customeros/packages/server/events-processing-proto => ../events-processing-proto
-
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/customeros/customeros/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
@@ -41,7 +39,6 @@ require (
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/coocood/freecache v1.2.4 // indirect
 	github.com/customeros/customeros/packages/server/customer-os-neo4j-repository v0.0.0-20241202190357-68898897475c // indirect
-	github.com/customeros/customeros/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/forPelevin/gomoji v1.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect

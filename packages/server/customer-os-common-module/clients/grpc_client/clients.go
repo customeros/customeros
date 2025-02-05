@@ -1,7 +1,6 @@
 package grpc_client
 
 import (
-	invoice_grpc_service "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"google.golang.org/grpc"
 )
 

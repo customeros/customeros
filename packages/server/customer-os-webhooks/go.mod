@@ -6,8 +6,6 @@ toolchain go1.23.1
 
 replace github.com/customeros/customeros/packages/server/customer-os-common-module => ../customer-os-common-module
 
-replace github.com/customeros/customeros/packages/server/events-processing-proto => ../events-processing-proto
-
 replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
 replace github.com/customeros/customeros/packages/server/customer-os-postgres-repository => ../customer-os-postgres-repository
@@ -54,7 +52,6 @@ require (
 	github.com/cloudflare/cloudflare-go v0.115.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
-	github.com/customeros/customeros/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c // indirect
 	github.com/customeros/mailsherpa v0.3.8 // indirect
 	github.com/customeros/mailwatcher v0.1.6 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

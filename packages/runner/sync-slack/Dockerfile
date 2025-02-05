@@ -8,7 +8,6 @@ RUN mkdir /app/packages/server
 COPY server/customer-os-common-module/. /app/packages/server/customer-os-common-module/
 COPY server/customer-os-neo4j-repository/. /app/packages/server/customer-os-neo4j-repository/
 COPY server/customer-os-postgres-repository/. /app/packages/server/customer-os-postgres-repository/
-COPY server/events-processing-proto/. /app/packages/server/events-processing-proto/
 COPY runner/sync-slack/. /app/packages/runner/sync-slack
 
 WORKDIR /app/packages/runner/sync-slack
