@@ -12,11 +12,10 @@ import { SocialMediaItem } from './SocialMediaItem.tsx';
 interface SocialMediaListProps {
   dataTest?: string;
   isReadOnly?: boolean;
-  leftElement?: React.ReactNode;
 }
 
 export const SocialMediaList = observer(
-  ({ isReadOnly, dataTest, leftElement }: SocialMediaListProps) => {
+  ({ isReadOnly, dataTest }: SocialMediaListProps) => {
     const store = useStore();
     const id = useParams()?.id as string;
     const organization = store.organizations.getById(store.ui.focusRow ?? id);
@@ -41,7 +40,6 @@ export const SocialMediaList = observer(
               value={l}
               dataTest={dataTest}
               isReadOnly={isReadOnly}
-              leftElement={leftElement}
               organization={organization}
             />
           </div>

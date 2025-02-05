@@ -34,17 +34,10 @@ interface SocialMediaItemProps {
   dataTest?: string;
   isReadOnly?: boolean;
   organization: Organization;
-  leftElement?: React.ReactNode;
 }
 
 export const SocialMediaItem = observer(
-  ({
-    value,
-    dataTest,
-    leftElement,
-    id,
-    organization,
-  }: SocialMediaItemProps) => {
+  ({ value, dataTest, id, organization }: SocialMediaItemProps) => {
     const [openActionBar, setIsOpenActionBar] = useState(false);
     const [_, copyToClipboard] = useCopyToClipboard();
     const { onClose, onOpen, open } = useDisclosure();
@@ -75,9 +68,7 @@ export const SocialMediaItem = observer(
                             openActionBar &&
                               'border-[1px] border-gray-700 rounded-full ',
                           )}
-                        >
-                          {leftElement}
-                        </SocialIcon>
+                        />
                       </div>
                     </Tooltip>
                   </PopoverTrigger>
