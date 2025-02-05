@@ -57,24 +57,26 @@ func (c *Capability) SetConfig(config interface{}) error {
 			c.Config = nil
 			return nil
 		}
-		// If it's already a JSON string, unmarshal it first to avoid double encoding
-		var parsed json.RawMessage
-		if err := json.Unmarshal([]byte(v), &parsed); err != nil {
+		// Parse the JSON string into a map to modify values
+		var configMap map[string]interface{}
+		if err := json.Unmarshal([]byte(v), &configMap); err != nil {
 			return err
 		}
-		// If the parsed value is empty object or empty string, set to nil
-		if string(parsed) == "{}" || string(parsed) == `""` {
-			c.Config = nil
-			return nil
+
+		replaceNullWithEmptyString(configMap)
+
+		// Marshal back to JSON
+		data, err := json.Marshal(configMap)
+		if err != nil {
+			return err
 		}
-		c.Config = parsed
+		c.Config = json.RawMessage(data)
+
 	default:
-		// For other types, marshal to JSON as before
 		data, err := json.Marshal(config)
 		if err != nil {
 			return err
 		}
-		// If the marshaled value is empty object or empty string, set to nil
 		if string(data) == "{}" || string(data) == `""` {
 			c.Config = nil
 			return nil
@@ -82,6 +84,17 @@ func (c *Capability) SetConfig(config interface{}) error {
 		c.Config = json.RawMessage(data)
 	}
 	return nil
+}
+
+func replaceNullWithEmptyString(m map[string]interface{}) {
+	for k, v := range m {
+		switch val := v.(type) {
+		case nil:
+			m[k] = ""
+		case map[string]interface{}:
+			replaceNullWithEmptyString(val)
+		}
+	}
 }
 
 func (c *Capability) GetConfig(configPtr interface{}) error {

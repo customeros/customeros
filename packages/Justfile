@@ -114,7 +114,7 @@ ps:
 	cd ../deployment && podman-compose ps
 
 start:
-	cd ../deployment && podman-compose up rabbitmq jaeger postgres postgres-sidecar neo4j eventstore -d
+	cd ../deployment && podman-compose up rabbitmq jaeger postgres postgres-sidecar neo4j -d
 
 start-api:
     cd ./server/customer-os-api && go run .
@@ -137,7 +137,7 @@ start-upkeeper:
     echo "Services started."
 
 stop:
-	cd ../deployment && podman-compose down rabbitmq jaeger postgres postgres-sidecar neo4j eventstore 
+	cd ../deployment && podman-compose down rabbitmq jaeger postgres postgres-sidecar neo4j
 
 # Run tests for a specific service
 test SERVICE:
