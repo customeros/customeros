@@ -1,4 +1,5 @@
 import path from 'path';
+import fg from 'fast-glob';
 import { cpus } from 'node:os';
 import svgr from 'vite-plugin-svgr';
 import { defineConfig } from 'vite';
@@ -28,6 +29,16 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
+    {
+      name: 'watch-external',
+      async buildStart() {
+        const files = await fg(['public/**/*']);
+
+        for (const file of files) {
+          this.addWatchFile(file);
+        }
+      },
+    },
     react({
       babel: {
         plugins: [

@@ -1,64 +1,34 @@
 import { cn } from '@ui/utils/cn';
-import { X } from '@ui/media/logos/X';
-import { Slack } from '@ui/media/logos/Slack';
-import { Reddit } from '@ui/media/logos/Reddit';
-import { Tiktok } from '@ui/media/logos/Tiktok';
-import { Google } from '@ui/media/logos/Google';
-import { Discord } from '@ui/media/logos/Discord';
-import { Youtube } from '@ui/media/logos/Youtube';
-import { Notion } from '@ui/media/logos/Notion.tsx';
-import { Github } from '@ui/media/logos/Github.tsx';
-import { Linkedin } from '@ui/media/logos/Linkedin';
-import { Snapchat } from '@ui/media/logos/Snapchat';
-import { Telegram } from '@ui/media/logos/Telegram';
-import { Clubhouse } from '@ui/media/logos/Clubhouse';
-import { Pinterest } from '@ui/media/logos/Pinterest';
-import { Angellist } from '@ui/media/logos/Angellist';
-import { Facebook } from '@ui/media/logos/Facebook.tsx';
-import { Instagram } from '@ui/media/logos/Instagram.tsx';
+import { Logo, LogoName } from '@ui/media/Logo/Logo';
 
 import { isKnownUrl } from './util';
 
-export const SocialIcon = ({
-  children,
-  className,
-  url,
-}: React.PropsWithChildren<{ url: string; className?: string }>) => {
+const logoConfig: Partial<Record<string, { fill?: string; name: LogoName }>> = {
+  twitter: { name: 'twitter' },
+  facebook: { name: 'facebook' },
+  linkedin: { name: 'linkedin', fill: '#0A66C2' },
+  github: { name: 'github' },
+  instagram: { name: 'instagram' },
+  youtube: { name: 'youtube' },
+  google: { name: 'google' },
+};
+interface SocialIconProps {
+  url: string;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export const SocialIcon = ({ children, className, url }: SocialIconProps) => {
   const knownUrl = isKnownUrl(url);
+  const logoProps = logoConfig[knownUrl as keyof typeof logoConfig];
 
-  if (knownUrl === 'twitter') return <X className={cn('size-4', className)} />;
-  if (knownUrl === 'facebook')
-    return <Facebook className={cn('size-4', className)} />;
-  if (knownUrl === 'linkedin')
-    return <Linkedin className={cn('size-4', className)} />;
-  if (knownUrl === 'github')
-    return <Github className={cn('size-4', className)} />;
-  if (knownUrl === 'instagram')
-    return <Instagram className={cn('size-4', className)} />;
-  if (knownUrl === 'youtube')
-    return <Youtube className={cn('size-4', className)} />;
-  if (knownUrl === 'pinterest')
-    return <Pinterest className={cn('size-4', className)} />;
-  if (knownUrl === 'angellist')
-    return <Angellist className={cn('size-4', className)} />;
-  if (knownUrl === 'notion')
-    return <Notion className={cn('size-4', className)} />;
-  if (knownUrl === 'clubhouse')
-    return <Clubhouse className={cn('size-4', className)} />;
-  if (knownUrl === 'discord')
-    return <Discord className={cn('size-4', className)} />;
-  if (knownUrl === 'slack')
-    return <Slack className={cn('size-4', className)} />;
-  if (knownUrl === 'tiktok')
-    return <Tiktok className={cn('size-4', className)} />;
-  if (knownUrl === 'telegram')
-    return <Telegram className={cn('size-4', className)} />;
-  if (knownUrl === 'snapchat')
-    return <Snapchat className={cn('size-4', className)} />;
-  if (knownUrl === 'reddit')
-    return <Reddit className={cn('size-4', className)} />;
-  if (knownUrl === 'google')
-    return <Google className={cn('size-4', className)} />;
+  if (logoProps) {
+    return <Logo {...logoProps} className={cn(className)} />;
+  }
 
-  return <>{children}</>;
+  if (children) {
+    return <>{children}</>;
+  }
+
+  return <Logo name='default' className={cn(className)} />;
 };

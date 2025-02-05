@@ -155,10 +155,7 @@ export const OrganizationDetails = observer(
                 text={organization.value.description}
               />
             )}
-            <SocialMediaList
-              dataTest='org-about-social-link'
-              leftElement={<Icon name='share-07' className='text-gray-500' />}
-            />
+            <SocialMediaList dataTest='org-about-social-link' />
             <Tags
               dataTest='org-about-tags'
               inputPlaceholder='Search...'

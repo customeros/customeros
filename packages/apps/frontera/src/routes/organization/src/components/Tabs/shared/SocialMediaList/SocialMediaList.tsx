@@ -12,11 +12,10 @@ import { SocialMediaItem } from './SocialMediaItem.tsx';
 interface SocialMediaListProps {
   dataTest?: string;
   isReadOnly?: boolean;
-  leftElement?: React.ReactNode;
 }
 
 export const SocialMediaList = observer(
-  ({ isReadOnly, dataTest, leftElement }: SocialMediaListProps) => {
+  ({ isReadOnly, dataTest }: SocialMediaListProps) => {
     const store = useStore();
     const id = useParams()?.id as string;
     const organization = store.organizations.getById(store.ui.focusRow ?? id);
@@ -33,15 +32,14 @@ export const SocialMediaList = observer(
     }));
 
     return (
-      <div className='flex flex-wrap gap-2'>
+      <div className='flex flex-wrap gap-3'>
         {socialOptions.map(({ value: v, label: l }: SelectOption) => (
-          <div key={v} className='w-auto '>
+          <div key={v} className='w-fit '>
             <SocialMediaItem
               id={v}
               value={l}
               dataTest={dataTest}
               isReadOnly={isReadOnly}
-              leftElement={leftElement}
               organization={organization}
             />
           </div>
