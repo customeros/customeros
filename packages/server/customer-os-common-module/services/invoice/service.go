@@ -27,7 +27,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
@@ -45,7 +44,6 @@ import (
 
 type invoiceService struct {
 	log                  logger.Logger
-	grpc                 *grpc_client.Clients
 	neo4j                *neoRepo.Repositories
 	postgresRepositories *postgresrepository.Repositories
 	events               *events.EventsService
@@ -59,7 +57,6 @@ type invoiceService struct {
 }
 
 func NewInvoiceService(log logger.Logger,
-	grpc *grpc_client.Clients,
 	neo4j *neoRepo.Repositories,
 	postgresRepositories *postgresrepository.Repositories,
 	cfg *config.ExternalServicesConfig,
@@ -73,7 +70,6 @@ func NewInvoiceService(log logger.Logger,
 ) interfaces.InvoiceService {
 	return &invoiceService{
 		log:                  log,
-		grpc:                 grpc,
 		neo4j:                neo4j,
 		postgresRepositories: postgresRepositories,
 		cfg:                  cfg,
@@ -2485,6 +2481,14 @@ func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoice
 		return err
 	}
 
+	// Mark notification requested, to avoid double notifications
+	err = s.neo4j.InvoiceWriteRepository.MarkPayNotificationRequested(ctx, tenant, invoiceId, utils.Now())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error marking pay notification requested for invoice %s: %s", invoiceId, err.Error())
+	}
+
+	// prepare email
 	workflowId := ""
 	if contractEntity.PayOnline || contractEntity.PayAutomatically {
 		workflowId = postmark.WorkflowInvoiceReadyWithPaymentLink
@@ -2667,6 +2671,14 @@ func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context,
 	}
 	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
 
+	// Mark notification requested, to avoid double notifications
+	err = s.neo4j.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelInvoice, invoiceId, string(neo4jentity.InvoicePropertyRemindInvoiceNotificationRequestedAt), utils.NowPtr())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error marking remind notification requested for invoice %s: %s", invoiceId, err.Error())
+	}
+
+	// prepare email
 	workflowId := ""
 	if invoiceEntity.PaymentDetails.PaymentLink == "" {
 		workflowId = postmark.WorkflowInvoiceRemindNoPaymentLink

@@ -9,7 +9,6 @@ import (
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -149,7 +148,6 @@ func InitCommonServices(
 	neo4jRepositories *neo4j_repository.Repositories,
 	postgresRepositories *postgres_repository.Repositories,
 	cfg *config.CommonConfig,
-	grpcClients *grpc_client.Clients,
 	options *InitOptions,
 ) *CommonServices {
 	var err error
@@ -221,10 +219,10 @@ func InitCommonServices(
 	socialImpl := social.NewSocialService(log, neo4jRepositories, eventsImpl, contactImpl)
 	orgImpl := organization.NewOrganizationService(log, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl, currencyImpl)
 	webVisitProcessorImpl := intent_signals.NewWebVisitProcessor(postgresRepositories, eventsImpl, orgImpl)
-	contractImpl := contract.NewContractService(log, neo4jRepositories, eventsImpl, grpcClients, nil, orgImpl)
-	opportunityImpl := opportunity.NewOpportunityService(log, grpcClients, neo4jRepositories, eventsImpl, contractImpl, orgImpl, tenantSettingsImpl)
+	contractImpl := contract.NewContractService(log, neo4jRepositories, eventsImpl, nil, orgImpl)
+	opportunityImpl := opportunity.NewOpportunityService(log, neo4jRepositories, eventsImpl, contractImpl, orgImpl, tenantSettingsImpl)
 	sliImpl := sli.NewServiceLineItemService(log, eventsImpl, neo4jRepositories, contractImpl)
-	invoiceImpl := invoice.NewInvoiceService(log, grpcClients, neo4jRepositories, postgresRepositories, &cfg.External, &cfg.Internal, eventsImpl, contractImpl, sliImpl, tenantSettingsImpl, postmarkImpl, fileImpl)
+	invoiceImpl := invoice.NewInvoiceService(log, neo4jRepositories, postgresRepositories, &cfg.External, &cfg.Internal, eventsImpl, contractImpl, sliImpl, tenantSettingsImpl, postmarkImpl, fileImpl)
 	logEntry := logentry.NewLogEntryService(log, neo4jRepositories, eventsImpl, orgImpl)
 	mailboxImpl := mailbox.NewMailboxService(log, postgresRepositories, neo4jRepositories, emailImpl)
 	interactionEventImpl := interaction_event.NewInteractionEventService(neo4jRepositories, emailImpl)

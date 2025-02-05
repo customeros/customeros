@@ -15,7 +15,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
@@ -33,17 +32,15 @@ type contractService struct {
 	log          logger.Logger
 	neo4j        *neoRepo.Repositories
 	events       *events.EventsService
-	grpc         *grpc_client.Clients
 	opportunity  interfaces.OpportunityService
 	organization interfaces.OrganizationService
 }
 
-func NewContractService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService, grpc *grpc_client.Clients, opportunity interfaces.OpportunityService, org interfaces.OrganizationService) interfaces.ContractService {
+func NewContractService(log logger.Logger, neo4j *neoRepo.Repositories, events *events.EventsService, opportunity interfaces.OpportunityService, org interfaces.OrganizationService) interfaces.ContractService {
 	return &contractService{
 		log:          log,
 		neo4j:        neo4j,
 		events:       events,
-		grpc:         grpc,
 		opportunity:  opportunity,
 		organization: org,
 	}

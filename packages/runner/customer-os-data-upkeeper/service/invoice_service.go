@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -72,20 +71,18 @@ type InvoiceService interface {
 }
 
 type invoiceService struct {
-	cfg                    *config.Config
-	log                    logger.Logger
-	commonServices         *commonService.CommonServices
-	repositories           *repository.Repositories
-	eventsProcessingClient *grpc_client.Clients
+	cfg            *config.Config
+	log            logger.Logger
+	commonServices *commonService.CommonServices
+	repositories   *repository.Repositories
 }
 
-func NewInvoiceService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices, repositories *repository.Repositories, client *grpc_client.Clients) InvoiceService {
+func NewInvoiceService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices, repositories *repository.Repositories) InvoiceService {
 	return &invoiceService{
-		cfg:                    cfg,
-		log:                    log,
-		commonServices:         commonServices,
-		repositories:           repositories,
-		eventsProcessingClient: client,
+		cfg:            cfg,
+		log:            log,
+		commonServices: commonServices,
+		repositories:   repositories,
 	}
 }
 
@@ -288,13 +285,6 @@ func (s *invoiceService) SendPayNotifications() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	if s.eventsProcessingClient == nil {
-		err := errors.New("eventsProcessingClient is nil")
-		tracing.TraceErr(span, err)
-		s.log.Error(err.Error())
-		return
-	}
-
 	referenceTime := utils.Now()
 
 	for {
@@ -323,25 +313,15 @@ func (s *invoiceService) SendPayNotifications() {
 		for _, record := range records {
 			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
 			tenant := record.Tenant
-
-			grpcRequest := invoicepb.PayInvoiceNotificationRequest{
-				Tenant:    record.Tenant,
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant:    tenant,
 				AppSource: constants.AppSourceDataUpkeeper,
-				InvoiceId: invoice.Id,
-			}
-			_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-				return s.eventsProcessingClient.InvoiceClient.PayInvoiceNotification(ctx, &grpcRequest)
 			})
+
+			err = s.commonServices.InvoiceService.SendPayInvoiceNotification(innerCtx, invoice.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error sending pay notification for invoice %s: %s", invoice.Id, err.Error())
-			}
-
-			// mark invoicing started
-			err = s.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkPayNotificationRequested(ctx, tenant, invoice.Id, utils.Now())
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error marking pay notification requested for invoice %s: %s", invoice.Id, err.Error())
 			}
 		}
 		// sleep for async processing, then check again
@@ -356,13 +336,6 @@ func (s *invoiceService) SendRemindNotifications() {
 	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.SendRemindNotifications")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
-
-	if s.eventsProcessingClient == nil {
-		err := errors.New("eventsProcessingClient is nil")
-		tracing.TraceErr(span, err)
-		s.log.Error(err.Error())
-		return
-	}
 
 	referenceTime := utils.Now()
 	limit := 100
@@ -392,25 +365,15 @@ func (s *invoiceService) SendRemindNotifications() {
 		// process records
 		for _, record := range records {
 			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
-
-			grpcRequest := invoicepb.RemindInvoiceNotificationRequest{
+			innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
 				Tenant:    record.Tenant,
 				AppSource: constants.AppSourceDataUpkeeper,
-				InvoiceId: invoice.Id,
-			}
-			_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
-				return s.eventsProcessingClient.InvoiceClient.RemindInvoiceNotification(ctx, &grpcRequest)
 			})
+
+			err = s.commonServices.InvoiceService.SendPayReminderInvoiceNotification(innerCtx, invoice.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error sending pay notification for invoice %s: %s", invoice.Id, err.Error())
-			}
-
-			// mark invoicing started
-			err = s.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelInvoice, invoice.Id, string(neo4jentity.InvoicePropertyRemindInvoiceNotificationRequestedAt), utils.NowPtr())
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("Error marking remind notification requested for invoice %s: %s", invoice.Id, err.Error())
 			}
 		}
 		// sleep for async processing, then check again
@@ -526,13 +489,6 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateInvoicePaymentLinks")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
-
-	if s.eventsProcessingClient == nil {
-		err := errors.New("eventsProcessingClient is nil")
-		tracing.TraceErr(span, err)
-		s.log.Error(err.Error())
-		return
-	}
 
 	if s.cfg.App.EventNotifications.IntegrationAppEventWebhookUrls.GeneratePaymentLinkUrl == "" {
 		err := errors.New("GeneratePaymentLinkUrl is not configured")
@@ -715,13 +671,6 @@ func (s *invoiceService) AdjustInvoiceStatus() {
 	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.AdjustInvoiceStatus")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
-
-	if s.eventsProcessingClient == nil {
-		err := errors.New("eventsProcessingClient is nil")
-		tracing.TraceErr(span, err)
-		s.log.Error(err.Error())
-		return
-	}
 
 	for {
 		select {
