@@ -5,25 +5,6 @@ import "common/source.proto";
 
 option go_package = "api/grpc/v1/invoice;invoice_grpc_service";
 
-message PayInvoiceNotificationRequest {
-  string tenant = 1;
-  string invoiceId = 2;
-  string loggedInUserId = 3;
-  string appSource = 4;
-}
-
-message RemindInvoiceNotificationRequest {
-  string tenant = 1;
-  string invoiceId = 2;
-  string loggedInUserId = 3;
-  string appSource = 4;
-}
-
-message InvoiceIdResponse {
-  string id = 1;
-}
 
 service InvoiceGrpcService {
-  rpc PayInvoiceNotification(PayInvoiceNotificationRequest) returns (InvoiceIdResponse);
-  rpc RemindInvoiceNotification(RemindInvoiceNotificationRequest) returns (InvoiceIdResponse);
 }

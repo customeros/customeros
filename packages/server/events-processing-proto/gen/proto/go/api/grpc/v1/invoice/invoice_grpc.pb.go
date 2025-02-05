@@ -7,10 +7,7 @@
 package invoice_grpc_service
 
 import (
-	context "context"
 	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -22,8 +19,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InvoiceGrpcServiceClient interface {
-	PayInvoiceNotification(ctx context.Context, in *PayInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
-	RemindInvoiceNotification(ctx context.Context, in *RemindInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 }
 
 type invoiceGrpcServiceClient struct {
@@ -34,41 +29,14 @@ func NewInvoiceGrpcServiceClient(cc grpc.ClientConnInterface) InvoiceGrpcService
 	return &invoiceGrpcServiceClient{cc}
 }
 
-func (c *invoiceGrpcServiceClient) PayInvoiceNotification(ctx context.Context, in *PayInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
-	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/PayInvoiceNotification", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *invoiceGrpcServiceClient) RemindInvoiceNotification(ctx context.Context, in *RemindInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
-	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/RemindInvoiceNotification", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // InvoiceGrpcServiceServer is the server API for InvoiceGrpcService service.
 // All implementations should embed UnimplementedInvoiceGrpcServiceServer
 // for forward compatibility
 type InvoiceGrpcServiceServer interface {
-	PayInvoiceNotification(context.Context, *PayInvoiceNotificationRequest) (*InvoiceIdResponse, error)
-	RemindInvoiceNotification(context.Context, *RemindInvoiceNotificationRequest) (*InvoiceIdResponse, error)
 }
 
 // UnimplementedInvoiceGrpcServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedInvoiceGrpcServiceServer struct {
-}
-
-func (UnimplementedInvoiceGrpcServiceServer) PayInvoiceNotification(context.Context, *PayInvoiceNotificationRequest) (*InvoiceIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PayInvoiceNotification not implemented")
-}
-func (UnimplementedInvoiceGrpcServiceServer) RemindInvoiceNotification(context.Context, *RemindInvoiceNotificationRequest) (*InvoiceIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemindInvoiceNotification not implemented")
 }
 
 // UnsafeInvoiceGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -82,58 +50,13 @@ func RegisterInvoiceGrpcServiceServer(s grpc.ServiceRegistrar, srv InvoiceGrpcSe
 	s.RegisterService(&InvoiceGrpcService_ServiceDesc, srv)
 }
 
-func _InvoiceGrpcService_PayInvoiceNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PayInvoiceNotificationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(InvoiceGrpcServiceServer).PayInvoiceNotification(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/InvoiceGrpcService/PayInvoiceNotification",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceGrpcServiceServer).PayInvoiceNotification(ctx, req.(*PayInvoiceNotificationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _InvoiceGrpcService_RemindInvoiceNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RemindInvoiceNotificationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(InvoiceGrpcServiceServer).RemindInvoiceNotification(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/InvoiceGrpcService/RemindInvoiceNotification",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceGrpcServiceServer).RemindInvoiceNotification(ctx, req.(*RemindInvoiceNotificationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // InvoiceGrpcService_ServiceDesc is the grpc.ServiceDesc for InvoiceGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var InvoiceGrpcService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "InvoiceGrpcService",
 	HandlerType: (*InvoiceGrpcServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "PayInvoiceNotification",
-			Handler:    _InvoiceGrpcService_PayInvoiceNotification_Handler,
-		},
-		{
-			MethodName: "RemindInvoiceNotification",
-			Handler:    _InvoiceGrpcService_RemindInvoiceNotification_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "invoice.proto",
+	Methods:     []grpc.MethodDesc{},
+	Streams:     []grpc.StreamDesc{},
+	Metadata:    "invoice.proto",
 }

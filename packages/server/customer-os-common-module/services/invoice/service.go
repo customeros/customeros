@@ -2417,3 +2417,35 @@ func (s *invoiceService) generateInvoicePDF(ctx context.Context,
 
 	return fileDTO.ID, nil
 }
+
+func (s *invoiceService) SendPayInvoiceNotification(ctx context.Context, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.SendPayInvoiceNotification")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, invoiceId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+	return nil
+}
+
+func (s *invoiceService) SendPayReminderInvoiceNotification(ctx context.Context, invoiceId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.SendPayReminderInvoiceNotification")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, invoiceId)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+	return nil
+}
