@@ -49,6 +49,15 @@ export class TenantStore {
     }
   }
 
+  updateBillingStatus(newStatus: boolean) {
+    if (!this.value) {
+      console.error('TenantStore - value is not defined');
+
+      return;
+    }
+    this.value.billingEnabled = newStatus;
+  }
+
   update(
     updated: (value: TenantSettings) => TenantSettings,
     options: { mutate: boolean } = { mutate: true },

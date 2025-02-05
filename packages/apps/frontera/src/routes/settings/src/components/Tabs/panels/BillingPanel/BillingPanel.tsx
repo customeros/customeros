@@ -14,6 +14,7 @@ import {
   TenantSettingsQuery,
   useTenantSettingsQuery,
 } from '@settings/graphql/getTenantSettings.generated';
+import { ToggleCustomerBillingUsecase } from '@domain/usecases/settings-billing-profiles/toggle-customer-billing.usecase.ts';
 import { BankTransferSelectionContextProvider } from '@settings/components/Tabs/panels/BillingPanel/context/BankTransferSelectionContext';
 
 import { cn } from '@ui/utils/cn';
@@ -34,6 +35,7 @@ import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog
 
 import { TenantBillingPanelDetailsForm } from './components';
 import { TenantBillingDetailsDto } from './TenantBillingProfile.dto';
+const toggleBillingUsecase = new ToggleCustomerBillingUsecase();
 
 export const BillingPanel = observer(() => {
   const store = useStore();
@@ -279,28 +281,9 @@ export const BillingPanel = observer(() => {
     setDefaultValues(defaultValues);
   }, [defaultValues]);
 
-  const handleDisableBillingDetails = () => {
-    updateTenantSettingsMutation.mutate(
-      {
-        input: {
-          patch: true,
-          billingEnabled: false,
-        },
-      },
-      {
-        onSuccess: onClose,
-      },
-    );
-  };
-
   const handleToggleInvoices = () => {
     if (!tenantSettingsData?.billingEnabled) {
-      updateTenantSettingsMutation.mutate({
-        input: {
-          patch: true,
-          billingEnabled: true,
-        },
-      });
+      toggleBillingUsecase.execute(true);
 
       return;
     }
@@ -404,8 +387,10 @@ export const BillingPanel = observer(() => {
         onClose={onClose}
         confirmButtonLabel='Disable'
         label='Disable Customer billing?'
-        onConfirm={handleDisableBillingDetails}
         isLoading={updateTenantSettingsMutation.isPending}
+        onConfirm={() => {
+          toggleBillingUsecase.execute(false);
+        }}
         body='Disabling Customer billing will stop the sending of invoices, and prevent customers from being able to pay.'
       />
     </div>
