@@ -424,12 +424,11 @@ func (s *enrichmentService) enrichContactWithScrapInEnrichDetails(ctx context.Co
 	time.Sleep(1 * time.Second)
 
 	if len(scrapinContactResponse.Person.Positions.PositionHistory) > 0 {
-		positionName := ""
-		var positionStartedAt, positionEndedAt *time.Time
-
 		// process positions in reverse order
 		for i := len(scrapinContactResponse.Person.Positions.PositionHistory) - 1; i >= 0; i-- {
 			position := scrapinContactResponse.Person.Positions.PositionHistory[i]
+			positionName := ""
+			var positionStartedAt, positionEndedAt *time.Time
 
 			// find organization by linkedin url
 			organizationDbNodes, err := s.neo4jRepository.OrganizationReadRepository.GetOrganizationsByLinkedIn(ctx, tenant, position.LinkedInUrl, "", position.LinkedInId)
@@ -451,6 +450,7 @@ func (s *enrichmentService) enrichContactWithScrapInEnrichDetails(ctx context.Co
 				if position.StartEndDate.Start != nil {
 					positionStartedAt = utils.TimePtr(utils.FirstTimeOfMonth(position.StartEndDate.Start.Year, position.StartEndDate.Start.Month))
 				}
+
 				if position.StartEndDate.End != nil {
 					positionEndedAt = utils.TimePtr(utils.FirstTimeOfMonth(position.StartEndDate.End.Year, position.StartEndDate.End.Month))
 				}
