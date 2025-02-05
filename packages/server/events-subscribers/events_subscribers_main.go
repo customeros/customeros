@@ -11,6 +11,7 @@ import (
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	common_agent_listeners "github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
@@ -156,7 +157,7 @@ func (a *App) initServices() error {
 	}
 	a.events = eventsService
 
-	// Register listeners instead of handlers
+	// Register listeners
 	if err := a.initializeListeners(); err != nil {
 		return fmt.Errorf("failed to initialize listeners: %w", err)
 	}
@@ -195,8 +196,25 @@ func (a *App) initializeListeners() error {
 	a.events.Subscriber.RegisterListener(events_listeners.NewRequestEnrichOrganizationListener(a.logger, a.deps))
 	a.events.Subscriber.RegisterListener(events_listeners.NewRequestRefreshLastTouchpointListener(a.logger, a.deps))
 
+	// ICP Fit Listeners
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewNewLeadListener(
+		a.logger,
+		a.deps.PostgresRepositories,
+		a.deps.CommonServices.AgentRunnerService,
+	))
+
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewIcpNotAFitListener(a.logger, a.deps.PostgresRepositories))
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewIcpFitListener(a.logger, a.deps.PostgresRepositories))
+
 	// Webvisit Listeners
-	a.events.Subscriber.RegisterListener(agent_listeners.NewWebsiteVisitListener(a.logger, a.deps))
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewNewWebSessionListener(
+		a.logger,
+		a.deps.PostgresRepositories,
+		a.deps.CommonServices.AgentRunnerService,
+	))
+
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewWebVisitorIdentifiedListener(a.logger, a.deps.PostgresRepositories))
+	a.events.Subscriber.RegisterListener(common_agent_listeners.NewWebVisitorNotIdentifiedListener(a.logger, a.deps.PostgresRepositories))
 
 	// Intent Listeners
 	a.events.Subscriber.RegisterListener(agent_listeners.NewIntentDetectedListener(a.logger, a.deps))

@@ -1,15 +1,17 @@
 package dto
 
+import postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+
 type CreateAgent struct {
-	Active       bool   `json:"active"`
-	VisibleInUI  bool   `json:"visibleInUi"`
-	Name         string `json:"name"`
-	Type         string `json:"type"`
-	Icon         string `json:"icon"`
-	Color        string `json:"color"`
-	Capabilities string `json:"capabilities"`
-	Goal         string `json:"goal"`
-	Status       string `json:"status"`
-	FlowID       string `json:"flowId"`
-	RegistryID   string `json:"registryId"`
+	Active       bool                         `json:"active"`
+	VisibleInUI  bool                         `json:"visibleInUi"`
+	Name         string                       `json:"name"`
+	Type         string                       `json:"type"`
+	Icon         string                       `json:"icon"`
+	Color        string                       `json:"color"`
+	Capabilities []postgres_entity.Capability `json:"capabilities"`
+	Goal         string                       `json:"goal"`
+	Status       string                       `json:"status"`
+	FlowID       string                       `json:"flowId"`
+	RegistryID   string                       `json:"registryId"`
 }

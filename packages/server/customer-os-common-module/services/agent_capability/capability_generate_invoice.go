@@ -2,12 +2,13 @@ package agent_capability
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -79,33 +80,32 @@ func (c *GenerateInvoiceCapability) ValidateInput(input GenerateInvoiceInput) er
 	return nil
 }
 
-func (c *GenerateInvoiceCapability) Execute(ctx context.Context, data GenerateInvoiceInput, config GenerateInvoiceConfig) (GenerateInvoiceOutput, error) {
+func (c *GenerateInvoiceCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[GenerateInvoiceInput, GenerateInvoiceConfig]) (bool, GenerateInvoiceOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GenerateInvoiceCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	tracing.LogObjectAsJson(span, "input", data)
-	tracing.LogObjectAsJson(span, "config", config)
+	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
 
 	result := GenerateInvoiceOutput{}
 
-	if err := c.ValidateInput(data); err != nil {
+	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return result, err
+		return false, result, err
 	}
-	if err := c.ValidateConfig(config); err != nil {
+	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return result, err
+		return false, result, err
 	}
 
 	dataFields := data_fields.InvoiceFields{
-		DryRun:  data.DryRun,
-		Preview: data.Preview,
+		DryRun:  executionContainer.InputData.DryRun,
+		Preview: executionContainer.InputData.Preview,
 	}
-	invoiceId, err := c.invoiceService.InvoiceContract(ctx, nil, data.ContractId, dataFields)
+	invoiceId, err := c.invoiceService.InvoiceContract(ctx, nil, executionContainer.InputData.ContractId, dataFields)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to generate invoice"))
-		return result, err
+		return true, result, err
 	}
 	// load invoice after generation
 	invoiceEntity, err := c.invoiceService.GetById(ctx, nil, invoiceId)
@@ -118,5 +118,5 @@ func (c *GenerateInvoiceCapability) Execute(ctx context.Context, data GenerateIn
 	}
 
 	tracing.LogObjectAsJson(span, "result", result)
-	return result, nil
+	return true, result, nil
 }

@@ -3,8 +3,8 @@ package model
 type EntityType string
 
 const (
-	AGENT EntityType = "AGENT"
-
+	AGENT                    EntityType = "AGENT"
+	AGENT_EXECUTION          EntityType = "AGENT_EXECUTION"
 	AUTHENTICATION_USER      EntityType = "AUTHENTICATION_USER"
 	ATTACHMENT               EntityType = "ATTACHMENT"
 	COMMENT                  EntityType = "COMMENT"

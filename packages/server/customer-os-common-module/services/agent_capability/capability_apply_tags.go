@@ -22,10 +22,6 @@ type ApplyTagInput struct {
 	OrganizationID string `json:"organizationId"`
 }
 
-type ApplyTagOutput struct {
-	CapabilityOutput
-}
-
 type ApplyTagConfig struct {
 	TagName TagConfig `json:"tagName"`
 }
@@ -43,7 +39,7 @@ func NewApplyTagCapability(tagService interfaces.TagService) *ApplyTagCapability
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapability[ApplyTagInput, ApplyTagOutput, ApplyTagConfig] = (*ApplyTagCapability)(nil)
+	_ interfaces.AgentCapability[ApplyTagInput, NoOutput, ApplyTagConfig] = (*ApplyTagCapability)(nil)
 )
 
 func (c *ApplyTagCapability) Type() enum.AgentCapability {
@@ -82,46 +78,44 @@ func (c *ApplyTagCapability) ValidateInput(input ApplyTagInput) error {
 	return nil
 }
 
-func (c *ApplyTagCapability) Execute(ctx context.Context, data ApplyTagInput, config ApplyTagConfig) (ApplyTagOutput, error) {
+func (c *ApplyTagCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ApplyTagInput, ApplyTagConfig]) (bool, NoOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
-	result := ApplyTagOutput{}
+	result := NoOutput{}
 
-	if err := c.ValidateConfig(config); err != nil {
+	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return result, err
+		return false, result, err
 	}
-	if err := c.ValidateInput(data); err != nil {
+	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return result, err
+		return false, result, err
 	}
-
-	result.ExecutionValidated = true
 
 	var entityType model.EntityType
 	var entityID string
-	if data.OrganizationID != "" {
+	if executionContainer.InputData.OrganizationID != "" {
 		entityType = model.ORGANIZATION
-		entityID = data.OrganizationID
+		entityID = executionContainer.InputData.OrganizationID
 	}
 
-	err := c.applyTag(ctx, entityType, entityID, config.TagName.Value)
+	err := c.applyTag(ctx, entityType, entityID, executionContainer.ConfigData.TagName.Value)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 
-	result.Completed = true
 	tracing.LogObjectAsJson(span, "result", result)
-	return result, nil
+	return true, result, nil
 }
 
 func (c *ApplyTagCapability) applyTag(ctx context.Context, entityType model.EntityType, entityId string, tagName string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.applyTag")
 	defer span.Finish()
+	tracing.TagComponentService(span)
 
 	// check if tag exists
 	tagEntity, err := c.tagService.GetTagByEntityTypeAndName(ctx, entityType, tagName)

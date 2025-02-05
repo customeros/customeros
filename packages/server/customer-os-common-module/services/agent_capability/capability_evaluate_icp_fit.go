@@ -10,16 +10,21 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type EvaluateICPFitCapability struct {
 	aiService interfaces.AIService
+	events    *events.EventsService
 }
 
 type EvaluateICPFitInput struct {
+	OrganizationID      string              `json:"organizationId"`
 	CompanyName         string              `json:"companyName"`
 	PrimaryDomain       string              `json:"primaryDomain"`
 	CompanyDescriptions CompanyDescriptions `json:"companyDescriptions"`
@@ -65,9 +70,10 @@ func (c *EvaluateICPFitConfig) Validate() bool {
 	return isValid
 }
 
-func NewEvaluateICPFitCapability(aiService interfaces.AIService) *EvaluateICPFitCapability {
+func NewEvaluateICPFitCapability(aiService interfaces.AIService, events *events.EventsService) *EvaluateICPFitCapability {
 	return &EvaluateICPFitCapability{
 		aiService: aiService,
+		events:    events,
 	}
 }
 
@@ -106,6 +112,8 @@ func (c *EvaluateICPFitCapability) ValidateConfig(config EvaluateICPFitConfig) e
 
 func (c *EvaluateICPFitCapability) ValidateInput(input EvaluateICPFitInput) error {
 	switch {
+	case input.OrganizationID == "":
+		return errors.New("missing required input: OrganizationID")
 	case input.PrimaryDomain == "":
 		return errors.New("missing required input: PrimaryDomain")
 	case input.CompanyName == "":
@@ -130,50 +138,74 @@ type ICPAnswer struct {
 	Reasons []string `json:"reasons"`
 }
 
-func (c *EvaluateICPFitCapability) Execute(ctx context.Context, data EvaluateICPFitInput, config EvaluateICPFitConfig) (EvaluateICPFitOutput, error) {
+func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[EvaluateICPFitInput, EvaluateICPFitConfig]) (bool, EvaluateICPFitOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EvaluateICPFitCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	tracing.LogObjectAsJson(span, "input", data)
-	tracing.LogObjectAsJson(span, "config", config)
+	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
 
 	result := EvaluateICPFitOutput{
 		IcpFit: enum.IcpNotSet,
 	}
 
-	if err := c.ValidateInput(data); err != nil {
+	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return result, err
+		return false, result, err
 	}
-	if err := c.ValidateConfig(config); err != nil {
+	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return result, err
+		return false, result, err
 	}
 
 	// build prompt
-	systemPrompt, content := c.buildPrompts(config.QualificationCriteria.Value, config.DisqualificationCriteria.Value, data)
+	systemPrompt, content := c.buildPrompts(executionContainer)
 
 	// askAI
 	answer, err := c.aiService.AskAI(ctx, enum.AIModelAnthropicHaiku, systemPrompt, content)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 
 	// parse answer
 	parsedAnswer, err := c.parseAnswer(ctx, *answer)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 	result.IcpFitRationale = parsedAnswer.Reasons
-
 	tracing.LogObjectAsJson(span, "result", result)
-	return result, nil
+
+	err = c.publishIcpFitEvent(ctx, result.IcpFit, executionContainer.AgentExecutionID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return true, result, err
+	}
+
+	return true, result, nil
 }
 
-func (c *EvaluateICPFitCapability) buildPrompts(icpQualification, icpDisqualification string, company EvaluateICPFitInput) (string, string) {
+func (c *EvaluateICPFitCapability) publishIcpFitEvent(ctx context.Context, icpFitResult enum.IcpFit, agentExecutionID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EvaluateICPFitCapability.publishIcpFitEvent")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	switch icpFitResult {
+	case enum.IcpIsFit:
+		return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.IcpFit{})
+
+	case enum.IcpNotFit:
+		return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.IcpNotAFit{})
+
+	default:
+		return errors.New("ICP Fit not set")
+	}
+}
+
+func (c *EvaluateICPFitCapability) buildPrompts(executionContainer interfaces.TypedExecutionContainer[EvaluateICPFitInput, EvaluateICPFitConfig]) (string, string) {
+	company := executionContainer.InputData
+
 	systemPrompt := `You are a world class company analyst. Your objective is to determine whether the company I provide you fits our ideal customer profile or not. I will provide you with three datasets: 1. a description of our ideal customer, 2. criteria that automatically disqualifies companies, and 3. all the context I have about the company, including their name, location, and several descriptions taken from their website and linkedin pages.
 
 Analyze the company and respond in this exact JSON format:
@@ -208,7 +240,7 @@ Important: Always provide exactly three reasons, and format as valid JSON.  Plea
         Industry Name: %s
 		Company Description: %s
 		Additional Company Descriptions: %s
-        `, icpQualification, icpDisqualification,
+        `, executionContainer.ConfigData.QualificationCriteria.Value, executionContainer.ConfigData.DisqualificationCriteria.Value,
 		company.CompanyName, company.PrimaryDomain, company.YearCompanyFounded, company.EmployeeCount,
 		company.CompanyCity, company.CompanyRegion, company.CompanyCountryA2,
 		company.IndustryNAICSName, company.CompanyDescriptions.Description1, additionalCompanyDescriptions)
@@ -217,7 +249,7 @@ Important: Always provide exactly three reasons, and format as valid JSON.  Plea
 }
 
 func (c *EvaluateICPFitCapability) parseAnswer(ctx context.Context, answer string) (*ICPAnswer, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ICPQualificationCapability.parseAnswer")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EvaluateICPFitCapability.parseAnswer")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 

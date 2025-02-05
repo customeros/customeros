@@ -7,6 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_event_producers"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/opentracing/opentracing-go"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
 
@@ -16,10 +21,6 @@ import (
 	localcron "github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/cron"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/repository"
-	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/opentracing/opentracing-go"
 )
 
 func main() {
@@ -60,6 +61,7 @@ func main() {
 		Repositories:   repositories,
 		CommonServices: commonService.InitCommonServices(appLogger, repositories.Neo4jRepositories, repositories.PostgresRepositories, cfg.Common, &commonService.InitOptions{LoadPersonalEmailProviders: true}),
 	}
+	cntnr.AgentProducers = agent_producers.InitAgentProducers(cntnr.CommonServices)
 
 	crons := localcron.StartCron(cntnr)
 

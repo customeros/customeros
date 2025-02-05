@@ -187,7 +187,7 @@ func updateOrganizations(cont *container.Container) {
 }
 
 func findLeads(cont *container.Container) {
-	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).FindLeads()
+	cont.AgentProducers.NewLeadProducer.NewLeads()
 }
 
 func syncDataToGlobalOrgs(cont *container.Container) {
@@ -345,7 +345,7 @@ func sendReminders(cont *container.Container) {
 }
 
 func processWebSessions(cont *container.Container) {
-	service.NewWebSessionService(cont.Cfg, cont.Log, cont.CommonServices).ProcessWebSessions()
+	cont.AgentProducers.NewWebSessionProducer.ProcessWebSessions()
 }
 
 func analyzeWebSessionIntent(cont *container.Container) {

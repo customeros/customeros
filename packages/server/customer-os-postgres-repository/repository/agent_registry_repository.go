@@ -20,10 +20,11 @@ var (
 )
 
 type AgentRegistryRepository interface {
-	Create(ctx context.Context, agent postgres_entity.AgentRegistry) (*postgres_entity.AgentRegistry, error)
-	Update(ctx context.Context, agent postgres_entity.AgentRegistry) (*postgres_entity.AgentRegistry, error)
+	Create(ctx context.Context, agent postgres_entity.AgentRegistry, plays []postgres_entity.AgentPlay) (*postgres_entity.AgentRegistry, error)
+	Update(ctx context.Context, agent postgres_entity.AgentRegistry, plays []postgres_entity.AgentPlay) (*postgres_entity.AgentRegistry, error)
 	FindByType(ctx context.Context, agentType enum.AgentType) (*postgres_entity.AgentRegistry, error)
 	FindAll(ctx context.Context) ([]postgres_entity.AgentRegistry, error)
+	FindPlay(ctx context.Context, agentType enum.AgentType, triggerEvent enum.AgentListenerEvent) (*postgres_entity.AgentPlay, error)
 }
 
 type agentRegistryRepository struct {
@@ -54,8 +55,29 @@ func (r *agentRegistryRepository) FindAll(ctx context.Context) ([]postgres_entit
 	return agents, nil
 }
 
+func (r *agentRegistryRepository) FindPlay(ctx context.Context, agentType enum.AgentType, triggerEvent enum.AgentListenerEvent) (*postgres_entity.AgentPlay, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.FindPlay")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var play postgres_entity.AgentPlay
+	err := r.gormDb.WithContext(ctx).
+		Where("agent_type = ? AND trigger_type = ?", agentType.String(), triggerEvent.String()).
+		First(&play).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("failed to find play for agent type %s and trigger %s: %w",
+			agentType.String(), triggerEvent.String(), err)
+	}
+
+	return &play, nil
+}
+
 func (r *agentRegistryRepository) FindByType(ctx context.Context, agentType enum.AgentType) (*postgres_entity.AgentRegistry, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Find")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.FindByType")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
@@ -74,7 +96,7 @@ func (r *agentRegistryRepository) FindByType(ctx context.Context, agentType enum
 	return &agent, nil
 }
 
-func (r *agentRegistryRepository) Create(ctx context.Context, agent postgres_entity.AgentRegistry) (*postgres_entity.AgentRegistry, error) {
+func (r *agentRegistryRepository) Create(ctx context.Context, agent postgres_entity.AgentRegistry, plays []postgres_entity.AgentPlay) (*postgres_entity.AgentRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -92,7 +114,22 @@ func (r *agentRegistryRepository) Create(ctx context.Context, agent postgres_ent
 			return fmt.Errorf("agent with type %s already exists", agent.Type)
 		}
 
-		return tx.Create(&agent).Error
+		// Create the agent
+		if err := tx.Create(&agent).Error; err != nil {
+			return err
+		}
+
+		// Create plays with the agent ID
+		for i := range plays {
+			plays[i].AgentRegistryID = agent.ID
+		}
+		if len(plays) > 0 {
+			if err := tx.Create(&plays).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -102,7 +139,7 @@ func (r *agentRegistryRepository) Create(ctx context.Context, agent postgres_ent
 	return &agent, nil
 }
 
-func (r *agentRegistryRepository) Update(ctx context.Context, agent postgres_entity.AgentRegistry) (*postgres_entity.AgentRegistry, error) {
+func (r *agentRegistryRepository) Update(ctx context.Context, agent postgres_entity.AgentRegistry, plays []postgres_entity.AgentPlay) (*postgres_entity.AgentRegistry, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -121,7 +158,7 @@ func (r *agentRegistryRepository) Update(ctx context.Context, agent postgres_ent
 			return err
 		}
 
-		// Perform update
+		// Update agent
 		result := tx.Model(&postgres_entity.AgentRegistry{}).
 			Where("id = ?", agent.ID).
 			Updates(&agent)
@@ -132,6 +169,21 @@ func (r *agentRegistryRepository) Update(ctx context.Context, agent postgres_ent
 
 		if result.RowsAffected == 0 {
 			return fmt.Errorf("no rows affected during update")
+		}
+
+		// Delete existing plays
+		if err := tx.Delete(&postgres_entity.AgentPlay{}, "agent_registry_id = ?", agent.ID).Error; err != nil {
+			return err
+		}
+
+		// Create new plays
+		if len(plays) > 0 {
+			for i := range plays {
+				plays[i].AgentRegistryID = agent.ID
+			}
+			if err := tx.Create(&plays).Error; err != nil {
+				return err
+			}
 		}
 
 		// Fetch updated record

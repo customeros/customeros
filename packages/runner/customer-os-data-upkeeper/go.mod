@@ -23,7 +23,6 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
-	go.uber.org/multierr v1.11.0
 	golang.org/x/net v0.34.0
 	google.golang.org/grpc v1.70.0
 )
@@ -123,6 +122,7 @@ require (
 	go.temporal.io/api v1.43.0 // indirect
 	go.temporal.io/sdk v1.32.1 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect

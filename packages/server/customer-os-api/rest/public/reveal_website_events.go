@@ -163,7 +163,7 @@ func (h *WebsiteTrackerEventsHandler) checkAgentForOrigin(ctx context.Context, a
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
-	for _, capability := range agent.CapabilitiesConfig.Capabilities {
+	for _, capability := range agent.Capabilities {
 		if capability.Type != enum.CapabilityIdentifyWebVisitor {
 			continue
 		}

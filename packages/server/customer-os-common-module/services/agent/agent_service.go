@@ -135,9 +135,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		agentCapabilities = append(agentCapabilities, *defaultCapability)
 	}
 
-	agent.CapabilitiesConfig = postgresentity.CapabilitiesConfig{
-		Capabilities: agentCapabilities,
-	}
+	agent.Capabilities = agentCapabilities
 
 	// create agent instance in database
 	newAgent, err := a.postgresRepositories.AgentRepository.Create(ctx, agent)
@@ -154,7 +152,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		Type:         newAgent.Type.String(),
 		Icon:         newAgent.Icon,
 		Color:        newAgent.Color,
-		Capabilities: newAgent.GetCapabilitiesConfigAsString(),
+		Capabilities: newAgent.Capabilities,
 		Goal:         newAgent.Goal,
 		Status:       newAgent.Status,
 		FlowID:       newAgent.FlowID,
@@ -190,13 +188,13 @@ func (a *agentService) createDefaultCapability(ctx context.Context, capabilityTy
 	return &agentCapability, nil
 }
 
-func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilitiesConfig *postgresentity.CapabilitiesConfig) (*postgresentity.Agent, error) {
+func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilities []postgresentity.Capability) (*postgresentity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.UpdateAgent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, agentId)
 	tracing.LogObjectAsJson(span, "agentFields", agentFields)
-	tracing.LogObjectAsJson(span, "capabilitiesConfig", capabilitiesConfig)
+	tracing.LogObjectAsJson(span, "capabilities", capabilities)
 
 	agentEntity, err := a.postgresRepositories.AgentRepository.GetById(ctx, agentId)
 	if err != nil {
@@ -230,8 +228,8 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 		agentEntity.FlowID = *agentFields.FlowID
 	}
 	validateCapabilities := false
-	if capabilitiesConfig != nil && len(capabilitiesConfig.Capabilities) > 0 {
-		agentEntity.CapabilitiesConfig = *capabilitiesConfig
+	if len(capabilities) != 0 {
+		agentEntity.Capabilities = capabilities
 		validateCapabilities = true
 	}
 
@@ -245,7 +243,7 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 		return nil, err
 	}
 
-	eventFields := dto.UpdateAgent{AgentFields: agentFields, Capabilities: capabilitiesConfig}
+	eventFields := dto.UpdateAgent{AgentFields: agentFields, Capabilities: capabilities}
 	err = a.events.Publisher.PublishFanoutEvent(ctx, agentId, model.AGENT, eventFields)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateAgent"))

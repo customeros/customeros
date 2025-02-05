@@ -8,6 +8,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -50,6 +51,7 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	// validation
 	if agent.ID == "" {
 		err := errors.New("agent ID cannot be empty")
 		tracing.TraceErr(span, err)
@@ -60,6 +62,12 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 
 	if !agent.IsActive {
 		err := errors.New("agent is not active")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	triggerEvent, err := enum.GetAgentListener(eventName)
+	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -75,13 +83,44 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	allParams := make(map[string]any)
 	utils.MergeMapToMap(initialParams, allParams)
 
+	// get capability executors
+	untypedExecutors := a.agentCapabilitiesService.GetExecutors()
+
+	// get agent Type and lookup the play for the trigger event
+	play, err := a.postgresRepositories.AgentRegistryRepository.FindPlay(ctx, agent.Type, triggerEvent)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	var capErr error
-	for _, capability := range agent.CapabilitiesConfig.Capabilities {
-		if !capability.Active {
-			continue
+	for _, capabilityTypeStr := range *&play.Capabilities {
+
+		capabilityType, err := enum.GetAgentCapability(capabilityTypeStr)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
 		}
 
-		output, err := a.capabilityExecutionService.Execute(ctx, capability, allParams, a.agentCapabilitiesService.GetExecutors())
+		capability, err := a.postgresRepositories.AgentRepository.FindCapability(ctx, agent.ID, capabilityType)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		if capability == nil {
+			err = errors.New("cannot identify capability")
+			span.LogKV("agentID", agent.ID)
+			span.LogKV("capabilityType", capabilityType)
+		}
+
+		executionContainer := interfaces.ExecutionContainer{
+			AgentExecutionID: executionID,
+			Capability:       *capability,
+			ExecutionParams:  allParams,
+			UntypedExecutors: untypedExecutors,
+		}
+
+		output, err := a.capabilityExecutionService.Execute(ctx, executionContainer)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			capErr = err

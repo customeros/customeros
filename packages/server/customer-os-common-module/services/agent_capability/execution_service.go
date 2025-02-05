@@ -20,82 +20,126 @@ func NewAgentCapabilityExecutionService() interfaces.AgentCapabilityExecutionSer
 }
 
 func (f *agentCapabilityExecutionService) Execute(
-	ctx context.Context,
-	capability postgres_entity.Capability,
-	params map[string]any,
-	executors map[enum.AgentCapability]interfaces.AgentCapabilityUntyped,
+	ctx context.Context, executionContainer interfaces.ExecutionContainer,
 ) (map[string]any, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "agentCapabilityExecutionService.Execute")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	switch capability.Type {
+	switch executionContainer.Capability.Type {
 	case enum.CapabilityAnalyzeWebSessionIntent:
-		executor, ok := GetTypedExecutor[AnalyzeWebSessionInput, AnalyzeWebSessionOutput, postgres_entity.NoConfig](executors, capability.Type)
+		executor, ok := GetTypedExecutor[AnalyzeWebSessionInput, AnalyzeWebSessionOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityAnalyzeWebSessionIntent)
 		}
-		return executeCapability(ctx, capability, params, executor)
+		return executeCapability(ctx, executor, executionContainer)
 
 	case enum.CapabilityApplyTag:
-		executor, ok := GetTypedExecutor[ApplyTagInput, ApplyTagOutput, ApplyTagConfig](executors, capability.Type)
+		executor, ok := GetTypedExecutor[ApplyTagInput, NoOutput, ApplyTagConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityApplyTag)
 		}
-		return executeCapability(ctx, capability, params, executor)
+		return executeCapability(ctx, executor, executionContainer)
 
 	case enum.CapabilityCreateAndEnrichCompany:
-		executor, ok := GetTypedExecutor[CreateOrganizationInput, CreateOrganizationOutput, postgres_entity.NoConfig](executors, capability.Type)
+		executor, ok := GetTypedExecutor[CreateOrganizationInput, CreateOrganizationOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityCreateAndEnrichCompany)
 		}
-		return executeCapability(ctx, capability, params, executor)
+		return executeCapability(ctx, executor, executionContainer)
 
 	case enum.CapabilityCreateMarkdownTimelineEvent:
-		executor, ok := GetTypedExecutor[CreateMarkdownTimelineEventInput, CreateMarkdownTimelineEventOutput, postgres_entity.NoConfig](executors, capability.Type)
+		executor, ok := GetTypedExecutor[CreateMarkdownTimelineEventInput, CreateMarkdownTimelineEventOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityCreateMarkdownTimelineEvent)
 		}
-		return executeCapability(ctx, capability, params, executor)
+		return executeCapability(ctx, executor, executionContainer)
 
 	case enum.CapabilityEvaluateCompanyICPFit:
-		executor, ok := GetTypedExecutor[ICPQualificationInput, ICPQualificationOutput, ICPQualificationConfig](executors, capability.Type)
+		executor, ok := GetTypedExecutor[EvaluateICPFitInput, EvaluateICPFitOutput, EvaluateICPFitConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityEvaluateCompanyICPFit)
 		}
-		return executeCapability(ctx, capability, params, executor)
+		return executeCapability(ctx, executor, executionContainer)
+
+	case enum.CapabilityGatherCompanyIntelligence:
+		executor, ok := GetTypedExecutor[GatherCompanyIntilligenceInput, GatherCompanyIntelligenceOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityEvaluateCompanyICPFit)
+		}
+		return executeCapability(ctx, executor, executionContainer)
+
+	case enum.CapabilityGenerateInvoice:
+		executor, ok := GetTypedExecutor[GenerateInvoiceInput, GenerateInvoiceOutput, GenerateInvoiceConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
+		if !ok {
+			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
+		}
+		return executeCapability(ctx, executor, executionContainer)
 
 	case enum.CapabilityIdentifyWebVisitor:
-		executor, ok := GetTypedExecutor[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorOutput, IdentifyWebsiteVisitorConfig](executors, capability.Type)
+		executor, ok := GetTypedExecutor[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorOutput, IdentifyWebsiteVisitorConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityIdentifyWebVisitor)
 		}
-		return executeCapability(ctx, capability, params, executor)
+		return executeCapability(ctx, executor, executionContainer)
 
 	case enum.CapabilitySendSlackNotification:
-		executor, ok := GetTypedExecutor[SendSlackNotificationInput, SendSlackNotificationOutput, SendSlackNotificationConfig](executors, capability.Type)
+		executor, ok := GetTypedExecutor[SendSlackNotificationInput, NoOutput, SendSlackNotificationConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendSlackNotification)
 		}
-		return executeCapability(ctx, capability, params, executor)
+		return executeCapability(ctx, executor, executionContainer)
 
 	case enum.CapabilitySendWebVisitorSlackNotification:
-		executor, ok := GetTypedExecutor[SendWebVisitorSlackNotificationInput, SendWebVisitorSlackNotificationOutput, SendWebVisitorSlackNotificationConfig](executors, capability.Type)
+		executor, ok := GetTypedExecutor[SendWebVisitorSlackNotificationInput, NoOutput, SendWebVisitorSlackNotificationConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
 		}
-		return executeCapability(ctx, capability, params, executor)
+		return executeCapability(ctx, executor, executionContainer)
 
-	case enum.CapabilityGenerateInvoice:
-		executor, ok := GetTypedExecutor[GenerateInvoiceInput, GenerateInvoiceOutput, GenerateInvoiceConfig](executors, capability.Type)
+	case enum.CapabilityUpdateCompanyStatus:
+		executor, ok := GetTypedExecutor[UpdateCompanyStatusInput, NoOutput, postgres_entity.NoConfig](
+			executionContainer.UntypedExecutors,
+			executionContainer.Capability.Type,
+		)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilitySendWebVisitorSlackNotification)
 		}
-		return executeCapability(ctx, capability, params, executor)
+		return executeCapability(ctx, executor, executionContainer)
 
 	default:
 		err := fmt.Errorf("capability not configured")
-		span.LogKV("capability", capability.Type)
+		span.LogKV("capability", executionContainer.Capability.Type)
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -113,29 +157,38 @@ func (f *agentCapabilityExecutionService) handleGetTypedExecutorError(ctx contex
 
 func executeCapability[I, O, C any](
 	ctx context.Context,
-	capability postgres_entity.Capability,
-	allParams map[string]any,
 	cap interfaces.AgentCapability[I, O, C],
+	executionContainer interfaces.ExecutionContainer,
 ) (map[string]any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("agentCapabilityExecutionService.executeCapability.%s", capability.Type.String()))
+	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("agentCapabilityExecutionService.executeCapability.%s", executionContainer.Capability.Type.String()))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	input := cap.NewInput()
-	err := utils.MapToStruct(allParams, &input)
+	err := utils.MapToStruct(executionContainer.ExecutionParams, &input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	config := cap.NewConfig()
-	err = capability.GetConfig(&config)
+	err = executionContainer.Capability.GetConfig(&config)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	output, err := cap.Execute(ctx, input, config)
+	typedExecutionContainer := interfaces.TypedExecutionContainer[I, C]{
+		AgentExecutionID: executionContainer.AgentExecutionID,
+		InputData:        input,
+		ConfigData:       config,
+	}
+
+	ok, output, err := cap.Execute(ctx, typedExecutionContainer)
+	if !ok {
+		// todo -- what do we do when input validation does not pass?
+		// for when we implement retry logic
+	}
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

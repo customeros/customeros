@@ -34,10 +34,6 @@ type SendWebVisitorSlackNotificationInput struct {
 	SessionDuration string   `json:"sessionDuration"`
 }
 
-type SendWebVisitorSlackNotificationOutput struct {
-	CapabilityOutput
-}
-
 type SendWebVisitorSlackNotificationConfig struct {
 	ChannelID     SlackChannelIdConfig     `json:"channelId" toml:"slack_channel_id"`
 	CooldownHours SlackCooldownHoursConfig `json:"cooldownHours" toml:"notification_cooldown_in_hrs"`
@@ -86,7 +82,7 @@ func NewSendWebVisitorSlackNotificationCapability(postgresRepositories *postgres
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapability[SendWebVisitorSlackNotificationInput, SendWebVisitorSlackNotificationOutput, SendWebVisitorSlackNotificationConfig] = (*SendWebVisitorSlackNotificationCapability)(nil)
+	_ interfaces.AgentCapability[SendWebVisitorSlackNotificationInput, NoOutput, SendWebVisitorSlackNotificationConfig] = (*SendWebVisitorSlackNotificationCapability)(nil)
 )
 
 func (c *SendWebVisitorSlackNotificationCapability) Type() enum.AgentCapability {
@@ -131,71 +127,68 @@ func (c *SendWebVisitorSlackNotificationCapability) ValidateInput(input SendWebV
 	return nil
 }
 
-func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context, data SendWebVisitorSlackNotificationInput, config SendWebVisitorSlackNotificationConfig) (SendWebVisitorSlackNotificationOutput, error) {
+func (c *SendWebVisitorSlackNotificationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SendWebVisitorSlackNotificationInput, SendWebVisitorSlackNotificationConfig]) (bool, NoOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendWebVisitorSlackNotificationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	tracing.LogObjectAsJson(span, "input", data)
-	tracing.LogObjectAsJson(span, "config", config)
+	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
 
-	result := SendWebVisitorSlackNotificationOutput{}
+	result := NoOutput{}
 
-	if err := c.ValidateInput(data); err != nil {
+	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return result, err
+		return false, result, err
 	}
-	if err := c.ValidateConfig(config); err != nil {
+	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return result, err
+		return false, result, err
 	}
-
-	result.ExecutionValidated = true
 
 	// check if slack notification enabled
 	slackChannel, err := c.postgresRepositories.SlackChannelNotificationRepository.GetSlackChannel(ctx, "REVEAL-AI-WEBSITE-VISIT")
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 	if slackChannel == nil {
 		span.LogKV("result.slackChannel", "not found")
-		return result, nil
+		return true, result, nil
 	}
 	span.LogKV("result.slackChannel", slackChannel.ChannelId)
 
 	// check if notification should be suppressed
-	skip, err := c.skipNotification(ctx, data.Domain, config.CooldownHours.Value)
+	skip, err := c.skipNotification(ctx, executionContainer.InputData.Domain, executionContainer.ConfigData.CooldownHours.Value)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 	if skip {
-		return result, nil
+		return true, result, nil
 	}
 
-	message, err := c.buildWebVisitorSlackNotification(ctx, data)
+	message, err := c.buildWebVisitorSlackNotification(ctx, executionContainer.InputData)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 	if message == nil {
 		err = errors.New("Failed to build slack notification message")
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 
-	_, err = c.sendSlackNotificationCapability.Execute(ctx, SendSlackNotificationInput{Message: *message}, SendSlackNotificationConfig{ChannelID: SlackChannelIdConfig{
-		Value: config.ChannelID.Value,
-	}})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return result, err
+	newExecutionContainer := interfaces.TypedExecutionContainer[SendSlackNotificationInput, SendSlackNotificationConfig]{
+		AgentExecutionID: executionContainer.AgentExecutionID,
+		InputData: SendSlackNotificationInput{
+			Message: *message,
+		},
+		ConfigData: SendSlackNotificationConfig{
+			ChannelID: executionContainer.ConfigData.ChannelID,
+		},
 	}
 
-	result.Completed = true
-	tracing.LogObjectAsJson(span, "result", result)
-	return result, nil
+	return c.sendSlackNotificationCapability.Execute(ctx, newExecutionContainer)
 }
 
 func (c *SendWebVisitorSlackNotificationCapability) skipNotification(ctx context.Context, domain string, cooldownInHrs int64) (bool, error) {
@@ -400,20 +393,4 @@ func (c *SendWebVisitorSlackNotificationCapability) buildWebVisitorSlackNotifica
 		data.OrganizationID)
 
 	return &layoutBlocks, nil
-}
-
-// ExecuteUntyped implements the AgentCapabilityUntyped interface.
-// It casts the generic input and config to the specific types and delegates to the typed Execute method.
-func (c *SendWebVisitorSlackNotificationCapability) ExecuteUntyped(ctx context.Context, input any, config any) (any, error) {
-	typedInput, ok := input.(*SendWebVisitorSlackNotificationInput)
-	if !ok || typedInput == nil {
-		return nil, fmt.Errorf("invalid input type: expected SendWebVisitorSlackNotificationInput")
-	}
-
-	typedConfig, ok := config.(*SendWebVisitorSlackNotificationConfig)
-	if !ok || typedConfig == nil {
-		return nil, fmt.Errorf("invalid config type: expected SendWebVisitorSlackNotificationConfig")
-	}
-
-	return c.Execute(ctx, *typedInput, *typedConfig)
 }

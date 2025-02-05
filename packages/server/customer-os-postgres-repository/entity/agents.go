@@ -11,42 +11,85 @@ import (
 	"gorm.io/gorm"
 )
 
-type CapabilitiesConfig struct {
-	Capabilities []Capability `json:"capabilities"`
+// Agent entity without the embedded capabilities
+type Agent struct {
+	ID           string         `gorm:"primaryKey;type:varchar(32)" json:"id"`
+	Type         enum.AgentType `gorm:"column:type;type:varchar(50);not null;" json:"type"`
+	Tenant       string         `gorm:"column:tenant;type:varchar(255);not null;uniqueIndex:idx_tenant_name" json:"tenant" binding:"required"`
+	Name         string         `gorm:"column:name;type:varchar(255);not null" json:"name" binding:"required"`
+	Configured   bool           `gorm:"column:configured;type:boolean;default:false" json:"capabilitiesConfigured"`
+	Goal         string         `gorm:"column:goal;type:text" json:"goal"`
+	Status       string         `gorm:"column:status;type:varchar(32)" json:"status"`
+	IsActive     bool           `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
+	FlowID       string         `gorm:"column:flow_id;type:varchar(255)" json:"flowId"`
+	VisibleInUI  bool           `gorm:"column:visible_in_ui;type:boolean;default:true" json:"visibleInUI"`
+	CreatedAt    time.Time      `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
+	UpdatedAt    *time.Time     `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	ErrorMessage *string        `gorm:"column:error_message;type:varchar(255)" json:"errorMessage"`
+	Color        string         `gorm:"column:color;type:varchar(255)" json:"color"`
+	Icon         string         `gorm:"column:icon;type:varchar(255)" json:"icon"`
+	RegistryID   string         `gorm:"column:registry_id;type:varchar(32)" json:"registryId"`
+	Capabilities []Capability   `gorm:"foreignKey:AgentID" json:"capabilities"`
 }
 
-func (c *CapabilitiesConfig) Scan(value interface{}) error {
+func (Agent) TableName() string {
+	return "agents"
+}
+
+func (r *Agent) BeforeCreate(tx *gorm.DB) error {
+	r.ID = utils.GenerateNanoIdWithPrefix("agent", 16)
+	return nil
+}
+
+// Capability as a separate entity
+type Capability struct {
+	ID          string               `gorm:"primaryKey;type:varchar(32)" json:"id"`
+	AgentID     string               `gorm:"column:agent_id;type:varchar(32);not null" json:"agentId"`
+	Name        string               `gorm:"column:name;type:varchar(255);not null" json:"name"`
+	Type        enum.AgentCapability `gorm:"column:type;type:varchar(50);not null" json:"type"`
+	Error       string               `gorm:"column:error;type:varchar(255)" json:"error"`
+	Config      JSONConfig           `gorm:"column:config;type:jsonb" json:"config"`
+	Active      bool                 `gorm:"column:active;type:boolean;default:true" json:"active"`
+	Description string               `gorm:"column:description;type:text" json:"description"`
+	CreatedAt   time.Time            `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
+	UpdatedAt   *time.Time           `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+}
+
+func (Capability) TableName() string {
+	return "agent_capabilities"
+}
+
+func (c *Capability) BeforeCreate(tx *gorm.DB) error {
+	c.ID = utils.GenerateNanoIdWithPrefix("cap", 16)
+	return nil
+}
+
+// JSONConfig type for handling the config JSON field
+type JSONConfig json.RawMessage
+
+func (j *JSONConfig) Scan(value interface{}) error {
 	if value == nil {
+		*j = nil
 		return nil
 	}
 
 	bytes, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("expected []byte for CapabilitiesConfig, got %T", value)
+		return fmt.Errorf("expected []byte for JSONConfig, got %T", value)
 	}
 
-	return json.Unmarshal(bytes, c)
+	*j = JSONConfig(bytes)
+	return nil
 }
 
-func (c CapabilitiesConfig) Value() (driver.Value, error) {
-	if c.Capabilities == nil {
+func (j JSONConfig) Value() (driver.Value, error) {
+	if j == nil {
 		return nil, nil
 	}
-	return json.Marshal(c)
+	return []byte(j), nil
 }
 
-type Capability struct {
-	ID          string               `json:"id"`
-	Name        string               `json:"name"`
-	Type        enum.AgentCapability `json:"type"`
-	Error       string               `json:"error"`
-	Config      json.RawMessage      `json:"config"`
-	Active      bool                 `json:"active"`
-	Description string               `json:"description"`
-}
-
-type NoConfig struct{}
-
+// Helper methods for Capability
 func (c *Capability) SetConfig(config interface{}) error {
 	if config == nil || config == "" {
 		c.Config = nil
@@ -59,7 +102,6 @@ func (c *Capability) SetConfig(config interface{}) error {
 			c.Config = nil
 			return nil
 		}
-		// Parse the JSON string into a map to modify values
 		var configMap map[string]interface{}
 		if err := json.Unmarshal([]byte(v), &configMap); err != nil {
 			return err
@@ -67,12 +109,11 @@ func (c *Capability) SetConfig(config interface{}) error {
 
 		replaceNullWithEmptyString(configMap)
 
-		// Marshal back to JSON
 		data, err := json.Marshal(configMap)
 		if err != nil {
 			return err
 		}
-		c.Config = json.RawMessage(data)
+		c.Config = JSONConfig(data)
 
 	default:
 		data, err := json.Marshal(config)
@@ -83,10 +124,33 @@ func (c *Capability) SetConfig(config interface{}) error {
 			c.Config = nil
 			return nil
 		}
-		c.Config = json.RawMessage(data)
+		c.Config = JSONConfig(data)
 	}
 	return nil
 }
+
+func (c *Capability) GetConfig(configPtr interface{}) error {
+	if c.Config == nil {
+		return nil
+	}
+	if _, ok := configPtr.(*NoConfig); ok {
+		return nil
+	}
+	return json.Unmarshal([]byte(c.Config), configPtr)
+}
+
+func (c *Capability) GetConfigString() string {
+	if c.Config == nil {
+		return ""
+	}
+	str := string(c.Config)
+	if str == "null" {
+		str = ""
+	}
+	return str
+}
+
+type NoConfig struct{}
 
 func replaceNullWithEmptyString(m map[string]interface{}) {
 	for k, v := range m {
@@ -97,59 +161,4 @@ func replaceNullWithEmptyString(m map[string]interface{}) {
 			replaceNullWithEmptyString(val)
 		}
 	}
-}
-
-func (c *Capability) GetConfig(configPtr interface{}) error {
-	if c.Config == nil || string(c.Config) == "" {
-		return nil
-	}
-	if _, ok := configPtr.(*NoConfig); ok {
-		return nil
-	}
-	return json.Unmarshal(c.Config, configPtr)
-}
-
-func (c *Capability) GetConfigString() string {
-	str := string(c.Config)
-	if str == "null" {
-		str = ""
-	}
-	return str
-}
-
-type Agent struct {
-	ID                 string             `gorm:"primaryKey;type:varchar(32)" json:"id"`
-	Type               enum.AgentType     `gorm:"column:type;type:varchar(50);not null;" json:"type"`
-	Tenant             string             `gorm:"column:tenant;type:varchar(255);not null;uniqueIndex:idx_tenant_name" json:"tenant" binding:"required"`
-	Name               string             `gorm:"column:name;type:varchar(255);not null" json:"name" binding:"required"`
-	CapabilitiesConfig CapabilitiesConfig `gorm:"column:capabilities_config;type:jsonb" json:"capabilities"`
-	Configured         bool               `gorm:"column:configured;type:boolean;default:false" json:"capabilitiesConfigured"`
-	Goal               string             `gorm:"column:goal;type:text" json:"goal"`
-	Status             string             `gorm:"column:status;type:varchar(32)" json:"status"`
-	IsActive           bool               `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
-	FlowID             string             `gorm:"column:flow_id;type:varchar(255)" json:"flowId"`
-	VisibleInUI        bool               `gorm:"column:visible_in_ui;type:boolean;default:true" json:"visibleInUI"`
-	CreatedAt          time.Time          `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
-	UpdatedAt          *time.Time         `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
-	ErrorMessage       *string            `gorm:"column:error_message;type:varchar(255)" json:"errorMessage"`
-	Color              string             `gorm:"column:color;type:varchar(255)" json:"color"`
-	Icon               string             `gorm:"column:icon;type:varchar(255)" json:"icon"`
-	RegistryID         string             `gorm:"column:registry_id;type:varchar(32)" json:"registryId"`
-}
-
-func (Agent) TableName() string {
-	return "agents"
-}
-
-func (r *Agent) BeforeCreate(tx *gorm.DB) error {
-	r.ID = utils.GenerateNanoIdWithPrefix("agent", 16)
-	return nil
-}
-
-func (r *Agent) GetCapabilitiesConfigAsString() string {
-	bytes, err := json.Marshal(r.CapabilitiesConfig)
-	if err != nil {
-		return ""
-	}
-	return string(bytes)
 }

@@ -23,26 +23,34 @@ const (
 )
 
 type Agent struct {
-	Agent        AgentMetadata `toml:"agent"`
-	Triggers     Triggers      `toml:"triggers"`
-	Capabilities Capabilities  `toml:"capabilities"`
+	Agent        AgentMetadata   `toml:"agent"`
+	Goal         GoalConfig      `toml:"goal"`
+	Watchers     WatchersConfig  `toml:"watchers"`
+	Capabilities CapabilityTypes `toml:"capabilities"`
+	Plays        Plays           `toml:"plays"`
 }
 
 type AgentMetadata struct {
 	Version string `toml:"version"`
 	Name    string `toml:"name"`
 	Type    string `toml:"type"`
-	Goal    string `toml:"goal"`
 	Icon    string `toml:"icon"`
 }
 
-type Triggers struct {
+type GoalConfig struct {
+	Goal             string   `toml:"goal"`
+	CompletionEvents []string `toml:"completion_events"`
+}
+
+type WatchersConfig struct {
 	Events []string `toml:"events"`
 }
 
-type Capabilities struct {
+type CapabilityTypes struct {
 	Types []string `toml:"types"`
 }
+
+type Plays map[string][]string
 
 type agentRegistryService struct {
 	postgresRepositories     *postgres_repository.Repositories
@@ -110,16 +118,29 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 		return err
 	}
 
+	// Create agent registry entity
 	dbAgent := postgres_entity.AgentRegistry{
-		Type:         agentType,
-		AgentName:    agentConfig.Agent.Name,
-		Goal:         agentConfig.Agent.Goal,
-		Version:      agentConfig.Agent.Version,
-		Filename:     filename,
-		Triggers:     agentConfig.Triggers.Events,
-		Capabilities: agentConfig.Capabilities.Types,
-		Icon:         agentConfig.Agent.Icon,
-		IsActive:     true,
+		Type:             agentType,
+		AgentName:        agentConfig.Agent.Name,
+		Goal:             agentConfig.Goal.Goal,
+		CompletionEvents: agentConfig.Goal.CompletionEvents,
+		ListenerEvents:   agentConfig.Watchers.Events,
+		Capabilities:     agentConfig.Capabilities.Types,
+		Version:          agentConfig.Agent.Version,
+		Filename:         filename,
+		Icon:             agentConfig.Agent.Icon,
+		IsActive:         true,
+	}
+
+	// Create agent plays
+	var plays []postgres_entity.AgentPlay
+	for triggerEvent, capabilities := range agentConfig.Plays {
+		play := postgres_entity.AgentPlay{
+			AgentType:    agentType,
+			TriggerEvent: triggerEvent,
+			Capabilities: capabilities,
+		}
+		plays = append(plays, play)
 	}
 
 	// Check if agent already exists in DB
@@ -130,13 +151,22 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 	}
 
 	if existingAgent == nil {
-		// Create new agent
-		_, err = r.postgresRepositories.AgentRegistryRepository.Create(ctx, dbAgent)
+		// Create new agent with plays
+		_, err = r.postgresRepositories.AgentRegistryRepository.Create(ctx, dbAgent, plays)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	} else {
+		// Update existing agent with new plays
+		dbAgent.ID = existingAgent.ID
+		_, err = r.postgresRepositories.AgentRegistryRepository.Update(ctx, dbAgent, plays)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 	}
+
 	return nil
 }
 
