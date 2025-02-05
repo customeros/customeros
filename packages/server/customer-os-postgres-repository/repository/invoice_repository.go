@@ -26,6 +26,6 @@ func (r *invoiceRepository) Reserve(ctx context.Context, invoiceNumber postgres_
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	err := r.gormDb.Save(&invoiceNumber).Error
+	err := r.gormDb.Create(&invoiceNumber).Error
 	return err
 }

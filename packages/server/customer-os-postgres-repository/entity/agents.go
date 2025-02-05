@@ -98,6 +98,9 @@ func replaceNullWithEmptyString(m map[string]interface{}) {
 }
 
 func (c *Capability) GetConfig(configPtr interface{}) error {
+	if c.Config == nil || string(c.Config) == "" {
+		return nil
+	}
 	return json.Unmarshal(c.Config, configPtr)
 }
 
