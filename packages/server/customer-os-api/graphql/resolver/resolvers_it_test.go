@@ -111,13 +111,11 @@ func prepareClient() {
 			},
 		},
 		},
-		grpcClient,
 	)
 
 	graphResolver := NewResolver(
 		appLogger,
 		customerOsApiServices,
-		grpcClient,
 		&config.Config{},
 	)
 
