@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
@@ -24,9 +23,8 @@ import {
 
 import { Subdomain } from './Subdomain.tsx';
 
-export const Domains = observer(() => {
+export const Domains = observer(({ id }: { id: string }) => {
   const store = useStore();
-  const id = useParams()?.id as string;
 
   // Track expanded state for each domain group
   const [expandedDomains, setExpandedDomains] = useState<
@@ -34,7 +32,7 @@ export const Domains = observer(() => {
   >({});
   const [showMenus, setShowMenus] = useState<Record<string, boolean>>({});
 
-  const organization = store.organizations.getById(store.ui.focusRow ?? id);
+  const organization = store.organizations.getById(id);
 
   if (!organization || !organization?.value) return null;
 
