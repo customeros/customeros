@@ -12,26 +12,11 @@ message PayInvoiceNotificationRequest {
   string appSource = 4;
 }
 
-message PermanentlyDeleteInitializedInvoiceRequest {
-  string tenant = 1;
-  string invoiceId = 2;
-  string loggedInUserId = 3;
-  string appSource = 4;
-}
-
 message RemindInvoiceNotificationRequest {
   string tenant = 1;
   string invoiceId = 2;
   string loggedInUserId = 3;
   string appSource = 4;
-}
-
-message VoidInvoiceRequest {
-  string tenant = 1;
-  string invoiceId = 2;
-  string loggedInUserId = 3;
-  string appSource = 4;
-  google.protobuf.Timestamp updatedAt = 5;
 }
 
 message InvoiceIdResponse {
@@ -40,7 +25,5 @@ message InvoiceIdResponse {
 
 service InvoiceGrpcService {
   rpc PayInvoiceNotification(PayInvoiceNotificationRequest) returns (InvoiceIdResponse);
-  rpc PermanentlyDeleteInitializedInvoice(PermanentlyDeleteInitializedInvoiceRequest) returns (InvoiceIdResponse);
-  rpc VoidInvoice(VoidInvoiceRequest) returns (InvoiceIdResponse);
   rpc RemindInvoiceNotification(RemindInvoiceNotificationRequest) returns (InvoiceIdResponse);
 }

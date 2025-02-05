@@ -28,7 +28,7 @@ type InvoiceService interface {
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceRequestData) ([]*SimulateInvoiceResponseData, error)
 	NextInvoiceDryRun(ctx context.Context, contractId string) (string, error)
 	PayInvoice(ctx context.Context, invoiceId string) error
-	VoidInvoice(ctx context.Context, invoiceId, appSource string) error
+	VoidInvoice(ctx context.Context, invoiceId string) error
 	UpdateInvoice(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, invoiceId string, data neo4jrepository.InvoiceUpdateFields) error
 
 	// Deprecated: Method should be re-worked. DO NOT ENABLE IN PROD

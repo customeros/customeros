@@ -23,8 +23,6 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InvoiceGrpcServiceClient interface {
 	PayInvoiceNotification(ctx context.Context, in *PayInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
-	PermanentlyDeleteInitializedInvoice(ctx context.Context, in *PermanentlyDeleteInitializedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
-	VoidInvoice(ctx context.Context, in *VoidInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	RemindInvoiceNotification(ctx context.Context, in *RemindInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 }
 
@@ -45,24 +43,6 @@ func (c *invoiceGrpcServiceClient) PayInvoiceNotification(ctx context.Context, i
 	return out, nil
 }
 
-func (c *invoiceGrpcServiceClient) PermanentlyDeleteInitializedInvoice(ctx context.Context, in *PermanentlyDeleteInitializedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
-	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/PermanentlyDeleteInitializedInvoice", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *invoiceGrpcServiceClient) VoidInvoice(ctx context.Context, in *VoidInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
-	out := new(InvoiceIdResponse)
-	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/VoidInvoice", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *invoiceGrpcServiceClient) RemindInvoiceNotification(ctx context.Context, in *RemindInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
 	out := new(InvoiceIdResponse)
 	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/RemindInvoiceNotification", in, out, opts...)
@@ -77,8 +57,6 @@ func (c *invoiceGrpcServiceClient) RemindInvoiceNotification(ctx context.Context
 // for forward compatibility
 type InvoiceGrpcServiceServer interface {
 	PayInvoiceNotification(context.Context, *PayInvoiceNotificationRequest) (*InvoiceIdResponse, error)
-	PermanentlyDeleteInitializedInvoice(context.Context, *PermanentlyDeleteInitializedInvoiceRequest) (*InvoiceIdResponse, error)
-	VoidInvoice(context.Context, *VoidInvoiceRequest) (*InvoiceIdResponse, error)
 	RemindInvoiceNotification(context.Context, *RemindInvoiceNotificationRequest) (*InvoiceIdResponse, error)
 }
 
@@ -88,12 +66,6 @@ type UnimplementedInvoiceGrpcServiceServer struct {
 
 func (UnimplementedInvoiceGrpcServiceServer) PayInvoiceNotification(context.Context, *PayInvoiceNotificationRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PayInvoiceNotification not implemented")
-}
-func (UnimplementedInvoiceGrpcServiceServer) PermanentlyDeleteInitializedInvoice(context.Context, *PermanentlyDeleteInitializedInvoiceRequest) (*InvoiceIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PermanentlyDeleteInitializedInvoice not implemented")
-}
-func (UnimplementedInvoiceGrpcServiceServer) VoidInvoice(context.Context, *VoidInvoiceRequest) (*InvoiceIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VoidInvoice not implemented")
 }
 func (UnimplementedInvoiceGrpcServiceServer) RemindInvoiceNotification(context.Context, *RemindInvoiceNotificationRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemindInvoiceNotification not implemented")
@@ -128,42 +100,6 @@ func _InvoiceGrpcService_PayInvoiceNotification_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _InvoiceGrpcService_PermanentlyDeleteInitializedInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PermanentlyDeleteInitializedInvoiceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(InvoiceGrpcServiceServer).PermanentlyDeleteInitializedInvoice(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/InvoiceGrpcService/PermanentlyDeleteInitializedInvoice",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceGrpcServiceServer).PermanentlyDeleteInitializedInvoice(ctx, req.(*PermanentlyDeleteInitializedInvoiceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _InvoiceGrpcService_VoidInvoice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VoidInvoiceRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(InvoiceGrpcServiceServer).VoidInvoice(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/InvoiceGrpcService/VoidInvoice",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(InvoiceGrpcServiceServer).VoidInvoice(ctx, req.(*VoidInvoiceRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _InvoiceGrpcService_RemindInvoiceNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RemindInvoiceNotificationRequest)
 	if err := dec(in); err != nil {
@@ -192,14 +128,6 @@ var InvoiceGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PayInvoiceNotification",
 			Handler:    _InvoiceGrpcService_PayInvoiceNotification_Handler,
-		},
-		{
-			MethodName: "PermanentlyDeleteInitializedInvoice",
-			Handler:    _InvoiceGrpcService_PermanentlyDeleteInitializedInvoice_Handler,
-		},
-		{
-			MethodName: "VoidInvoice",
-			Handler:    _InvoiceGrpcService_VoidInvoice_Handler,
 		},
 		{
 			MethodName: "RemindInvoiceNotification",

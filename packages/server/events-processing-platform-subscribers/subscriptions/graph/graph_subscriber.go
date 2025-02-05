@@ -7,7 +7,6 @@ import (
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
-	invoiceevents "github.com/customeros/customeros/packages/server/events-processing-platform/domain/invoice"
 	"github.com/customeros/customeros/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -134,13 +133,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	defer cancel()
 
 	switch evt.GetEventType() {
-
-	case invoiceevents.InvoiceVoidV1:
-		_ = s.invoiceEventHandler.OnInvoiceVoidV1(ctx, evt)
-		return nil
-	case invoiceevents.InvoiceDeleteV1:
-		_ = s.invoiceEventHandler.OnInvoiceDeleteV1(ctx, evt)
-		return nil
 
 	default:
 		return nil

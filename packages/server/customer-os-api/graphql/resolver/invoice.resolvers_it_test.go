@@ -10,13 +10,11 @@ import (
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/test"
-	invoicepb "github.com/customeros/customeros/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/test/grpc/events_platform"
 	"github.com/customeros/customeros/packages/server/customer-os-api/utils/decode"
 )
 
@@ -818,48 +816,4 @@ func TestMutationResolver_InvoicePay(t *testing.T) {
 	require.Nil(t, err)
 	invoice := invoiceStruct.Invoice_Pay
 	require.Equal(t, invoiceId, invoice.Metadata.ID)
-}
-
-func TestMutationResolver_InvoiceVoid(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	neo4jtest.CreateUserWithId(ctx, driver, tenantName, testUserId)
-	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
-	invoiceId := neo4jtest.CreateInvoiceForContract(ctx, driver, tenantName, contractId, neo4jentity.InvoiceEntity{})
-
-	calledVoidInvoice := false
-
-	invoiceServiceCallbacks := events_platform.MockInvoiceServiceCallbacks{
-		VoidInvoice: func(context context.Context, invoice *invoicepb.VoidInvoiceRequest) (*invoicepb.InvoiceIdResponse, error) {
-			require.Equal(t, tenantName, invoice.Tenant)
-			require.Equal(t, invoiceId, invoice.InvoiceId)
-			require.Equal(t, testUserId, invoice.LoggedInUserId)
-			require.Equal(t, constants.AppSourceCustomerOsApi, invoice.AppSource)
-
-			calledVoidInvoice = true
-			return &invoicepb.InvoiceIdResponse{
-				Id: invoiceId,
-			}, nil
-		},
-	}
-	events_platform.SetInvoiceCallbacks(&invoiceServiceCallbacks)
-
-	rawResponse := callGraphQL(t, "invoice/void_invoice", map[string]interface{}{
-		"invoiceId": invoiceId,
-	})
-
-	var invoiceStruct struct {
-		Invoice_Void model.Invoice
-	}
-
-	require.Nil(t, rawResponse.Errors)
-	err := decode.Decode(rawResponse.Data.(map[string]any), &invoiceStruct)
-	require.Nil(t, err)
-	invoice := invoiceStruct.Invoice_Void
-	require.Equal(t, invoiceId, invoice.Metadata.ID)
-
-	require.True(t, calledVoidInvoice)
 }

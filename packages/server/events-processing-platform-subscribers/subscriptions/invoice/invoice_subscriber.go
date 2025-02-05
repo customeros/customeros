@@ -124,7 +124,6 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	}
 
 	acceptedEventTypes := []string{
-		invoice.InvoiceVoidV1,
 		invoice.InvoicePayNotificationV1,
 		invoice.InvoiceRemindNotificationV1,
 	}
@@ -145,8 +144,6 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	})
 
 	switch evt.GetEventType() {
-	case invoice.InvoiceVoidV1:
-		return s.invoiceEventHandler.onInvoiceVoidV1(ctx, evt)
 	case invoice.InvoicePayNotificationV1:
 		return s.invoiceEventHandler.onInvoicePayNotificationV1(ctx, evt)
 	case invoice.InvoiceRemindNotificationV1:
