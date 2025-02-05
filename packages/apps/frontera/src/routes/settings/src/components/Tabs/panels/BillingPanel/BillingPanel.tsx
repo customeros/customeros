@@ -55,7 +55,7 @@ export const BillingPanel = observer(() => {
       queryClient.invalidateQueries({ queryKey });
     },
   });
-  const { data: tenantSettingsData } = useTenantSettingsQuery(client);
+  const tenantSettingsData = store.settings.tenant.value;
   const { open: isOpen, onOpen, onClose } = useDisclosure();
 
   const updateTenantSettingsMutation = useUpdateTenantSettingsMutation(client, {
@@ -116,7 +116,7 @@ export const BillingPanel = observer(() => {
   const formId = 'tenant-billing-profile-form';
   const defaultValues = new TenantBillingDetailsDto({
     ...data?.tenantBillingProfiles?.[0],
-    baseCurrency: tenantSettingsData?.tenantSettings?.baseCurrency,
+    baseCurrency: tenantSettingsData?.baseCurrency,
   } as TenantBillingProfile & { baseCurrency: string });
 
   const handleUpdateData = useDebounce(
@@ -294,7 +294,7 @@ export const BillingPanel = observer(() => {
   };
 
   const handleToggleInvoices = () => {
-    if (!tenantSettingsData?.tenantSettings?.billingEnabled) {
+    if (!tenantSettingsData?.billingEnabled) {
       updateTenantSettingsMutation.mutate({
         input: {
           patch: true,
@@ -306,7 +306,8 @@ export const BillingPanel = observer(() => {
     }
     onOpen();
   };
-  const billingEnabledStyle = tenantSettingsData?.tenantSettings.billingEnabled
+
+  const billingEnabledStyle = tenantSettingsData?.billingEnabled
     ? 'opacity-0'
     : 'opacity-100';
 
@@ -319,7 +320,7 @@ export const BillingPanel = observer(() => {
               <b>Billing</b>
             </h1>
 
-            {tenantSettingsData?.tenantSettings.billingEnabled && (
+            {tenantSettingsData?.billingEnabled && (
               <Menu>
                 <MenuButton>
                   <IconButton
@@ -343,7 +344,7 @@ export const BillingPanel = observer(() => {
             )}
           </div>
 
-          {!tenantSettingsData?.tenantSettings.billingEnabled && (
+          {!tenantSettingsData?.billingEnabled && (
             <div
               className={cn(
                 billingEnabledStyle,
@@ -378,7 +379,7 @@ export const BillingPanel = observer(() => {
             </div>
           )}
 
-          {tenantSettingsData?.tenantSettings.billingEnabled && (
+          {tenantSettingsData?.billingEnabled && (
             <TenantBillingPanelDetailsForm
               formId={formId}
               country={state.values?.country}
