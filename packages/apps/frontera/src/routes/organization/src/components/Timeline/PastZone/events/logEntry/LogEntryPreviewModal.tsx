@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import copy from 'copy-to-clipboard';
 import noteImg from '@assets/images/note-img-preview.png';
 
 import { Link01 } from '@ui/media/icons/Link01';
@@ -11,6 +10,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Tag, User, EntityType } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton/IconButton';
+import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { LogEntryWithAliases } from '@organization/components/Timeline/types';
 import { HtmlContentRenderer } from '@ui/presentation/HtmlContentRenderer/HtmlContentRenderer';
 import { useLogEntryUpdateContext } from '@organization/components/Timeline/PastZone/events/logEntry/context/LogEntryUpdateModalContext';
@@ -43,6 +43,7 @@ export const LogEntryPreviewModal = ({
   const [mentionsQuery, setMentionsQuery] = useState<string | null>('');
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
+  const [_, copy] = useCopyToClipboard();
 
   const logEntryId = searchParams.get('events') ?? '';
   const logEntry = store.timelineEvents.logEntries.value.get(logEntryId);
@@ -98,8 +99,8 @@ export const LogEntryPreviewModal = ({
                   variant='ghost'
                   aria-label='Copy link to this entry'
                   className='text-sm text-gray-500 mr-1'
-                  onClick={() => copy(window.location.href)}
                   icon={<Link01 className='text-gray-500' />}
+                  onClick={() => copy(window.location.href, 'Link copied')}
                 />
               </div>
             </Tooltip>

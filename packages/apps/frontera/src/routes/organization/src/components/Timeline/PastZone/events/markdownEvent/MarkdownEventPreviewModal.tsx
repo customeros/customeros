@@ -1,4 +1,3 @@
-import copy from 'copy-to-clipboard';
 import { MarkdownEventType } from '@store/TimelineEvents/MarkdownEvent/types';
 
 import { XClose } from '@ui/media/icons/XClose';
@@ -6,6 +5,7 @@ import { Link01 } from '@ui/media/icons/Link01';
 import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { CardHeader, CardContent } from '@ui/presentation/Card/Card';
+import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { MarkdownRenderer } from '@organization/components/Timeline/PastZone/events/markdownEvent/MarkdownRenderer';
 import {
   useTimelineEventPreviewStateContext,
@@ -16,6 +16,7 @@ export const MarkdownEventPreviewModal = () => {
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
   const event = modalContent as MarkdownEventType;
+  const [_, copy] = useCopyToClipboard();
 
   return (
     <div className='overflow-hidden rounded-xl pb-6'>
@@ -38,8 +39,8 @@ export const MarkdownEventPreviewModal = () => {
                   color='gray.500'
                   className='mr-1'
                   aria-label='Copy link to this event'
-                  onClick={() => copy(window.location.href)}
                   icon={<Link01 className='text-gray-500 size-4' />}
+                  onClick={() => copy(window.location.href, 'Link copied')}
                 />
               </div>
             </Tooltip>

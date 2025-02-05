@@ -148,8 +148,8 @@ export const MeetingPreviewModal = ({
               size='xs'
               variant='ghost'
               aria-label='copy link'
-              onClick={() => copy(window.location.href)}
               icon={<Link01 className='text-gray-500' />}
+              onClick={() => copy(window.location.href, 'Link copied')}
             />
           </Tooltip>
           <Tooltip label='Close'>

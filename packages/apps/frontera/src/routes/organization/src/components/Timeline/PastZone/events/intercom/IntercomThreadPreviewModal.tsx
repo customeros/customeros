@@ -1,4 +1,3 @@
-import copy from 'copy-to-clipboard';
 import { convert } from 'html-to-text';
 
 import { cn } from '@ui/utils/cn';
@@ -11,6 +10,7 @@ import { Divider } from '@ui/presentation/Divider/Divider';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { CardHeader, CardContent } from '@ui/presentation/Card/Card';
+import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { useGetTimelineEventsQuery } from '@organization/graphql/getTimelineEvents.generated';
 import {
   UserParticipant,
@@ -40,6 +40,7 @@ export const IntercomThreadPreviewModal = () => {
   const client = getGraphQLClient();
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
+  const [_, copy] = useCopyToClipboard();
 
   const event = modalContent as InteractionEvent;
 
@@ -99,8 +100,8 @@ export const IntercomThreadPreviewModal = () => {
                   className='mr-1'
                   color='gray.500'
                   aria-label='Copy link to this thread'
-                  onClick={() => copy(window.location.href)}
                   icon={<Link01 className='text-gray-500' />}
+                  onClick={() => copy(window.location.href, 'Link copied')}
                 />
               </div>
             </Tooltip>

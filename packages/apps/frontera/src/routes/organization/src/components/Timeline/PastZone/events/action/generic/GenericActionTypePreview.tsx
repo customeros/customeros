@@ -1,7 +1,6 @@
 import Markdown from 'react-markdown';
 import { Children, isValidElement } from 'react';
 
-import copy from 'copy-to-clipboard';
 import { MarkdownEventType } from '@store/TimelineEvents/MarkdownEvent/types';
 
 import { XClose } from '@ui/media/icons/XClose';
@@ -10,12 +9,14 @@ import { IconButton } from '@ui/form/IconButton';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { getExternalUrl } from '@utils/getExternalLink.ts';
 import { CardHeader, CardContent } from '@ui/presentation/Card/Card';
+import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import {
   useTimelineEventPreviewStateContext,
   useTimelineEventPreviewMethodsContext,
 } from '@organization/components/Timeline/shared/TimelineEventPreview/context/TimelineEventPreviewContext';
 
 export const GenericActionTypePreview = () => {
+  const [_, copy] = useCopyToClipboard();
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
   const event = modalContent as MarkdownEventType;
@@ -36,8 +37,8 @@ export const GenericActionTypePreview = () => {
                   color='gray.500'
                   className='mr-1'
                   aria-label='Copy link to this event'
-                  onClick={() => copy(window.location.href)}
                   icon={<Link01 className='text-gray-500 size-4' />}
+                  onClick={() => copy(window.location.href, 'Link copied')}
                 />
               </div>
             </Tooltip>
