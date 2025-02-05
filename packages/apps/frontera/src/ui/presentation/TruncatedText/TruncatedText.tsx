@@ -37,12 +37,13 @@ export const TruncatedText = ({
     <div className='w-full'>
       <div
         ref={textRef}
-        className={cn(
-          {
-            [`line-clamp-${maxLines}`]: !isExpanded,
-          },
-          className && className,
-        )}
+        className={cn('overflow-hidden', className ? className : '')}
+        style={{
+          display: '-webkit-box',
+          lineClamp: isExpanded ? 'none' : maxLines,
+          WebkitLineClamp: isExpanded ? 'none' : maxLines,
+          WebkitBoxOrient: 'vertical',
+        }}
         {...rest}
       >
         {text}
@@ -50,7 +51,10 @@ export const TruncatedText = ({
       {showButton && (
         <button
           onClick={toggleExpand}
-          className={cn(className, 'inline-block text-primary-700 underline')}
+          className={cn(
+            'inline-block text-primary-700 underline',
+            className ? className : '',
+          )}
         >
           {isExpanded ? 'Show less' : 'Show more'}
         </button>
