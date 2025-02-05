@@ -25,7 +25,7 @@ func MapAgentToModel(entity *postgresEntity.Agent) *model.Agent {
 		Visible:   entity.VisibleInUI,
 		FlowID:    utils.StringPtr(entity.FlowID),
 	}
-	for _, capability := range entity.CapabilitiesConfig.Capabilities {
+	for _, capability := range entity.Capabilities {
 		agentModel.Capabilities = append(agentModel.Capabilities, &model.Capability{
 			ID:     capability.ID,
 			Name:   capability.Name,

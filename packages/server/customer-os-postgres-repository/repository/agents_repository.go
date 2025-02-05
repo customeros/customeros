@@ -3,13 +3,12 @@ package postgres_repository
 import (
 	"context"
 	"errors"
-	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -24,6 +23,8 @@ type AgentRepository interface {
 	GetActiveConfiguredAgentsByTypes(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
 	GetActiveConfiguredAgentsByTypesCrossTenant(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
 	Update(ctx context.Context, agent postgres_entity.Agent) (*postgres_entity.Agent, error)
+	UpsertCapabilities(ctx context.Context, agentID string, capabilities []postgres_entity.Capability) error
+	FindCapability(ctx context.Context, agentID string, capabilityType enum.AgentCapability) (*postgres_entity.Capability, error)
 }
 
 type agentsRepository struct {
@@ -42,6 +43,7 @@ func (f *agentsRepository) GetById(ctx context.Context, id string) (*postgres_en
 
 	var agent postgres_entity.Agent
 	err := f.gormDb.
+		Preload("Capabilities").
 		Where("id = ?", id).
 		First(&agent).
 		Error
@@ -58,11 +60,32 @@ func (f *agentsRepository) Create(ctx context.Context, agent postgres_entity.Age
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	agent.ID = utils.GenerateNanoIdWithPrefix("agent", 16)
+	err := f.gormDb.Transaction(func(tx *gorm.DB) error {
+		// Create agent first
+		if err := tx.Create(&agent).Error; err != nil {
+			return err
+		}
 
-	var created postgres_entity.Agent
-	err := f.gormDb.Create(&agent).Scan(&created).Error
+		// Create capabilities if any exist
+		if len(agent.Capabilities) > 0 {
+			for i := range agent.Capabilities {
+				agent.Capabilities[i].AgentID = agent.ID
+			}
+			if err := tx.Create(&agent.Capabilities).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// Fetch the created agent with capabilities
+	var created postgres_entity.Agent
+	if err := f.gormDb.Preload("Capabilities").First(&created, "id = ?", agent.ID).Error; err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -83,7 +106,9 @@ func (f *agentsRepository) GetAll(ctx context.Context) ([]*postgres_entity.Agent
 	}
 
 	var agents []*postgres_entity.Agent
-	query := f.gormDb.Where("tenant = ? ", tenant)
+	query := f.gormDb.
+		Preload("Capabilities").
+		Where("tenant = ?", tenant)
 	err := query.Find(&agents).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -105,13 +130,14 @@ func (f *agentsRepository) GetAllAgentsByTypes(ctx context.Context, agentTypes [
 	}
 
 	var records []postgres_entity.Agent
-	// Convert enum array to []string
 	types := make([]string, len(agentTypes))
 	for i, agentType := range agentTypes {
 		types[i] = agentType.String()
 	}
 
-	query := f.gormDb.Where("tenant = ? ", tenant)
+	query := f.gormDb.
+		Preload("Capabilities").
+		Where("tenant = ?", tenant)
 	if len(types) > 0 {
 		query = query.Where("type IN (?)", types)
 	}
@@ -137,13 +163,14 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByTypes(ctx context.Context,
 	}
 
 	var records []postgres_entity.Agent
-	// Convert enum array to []string
 	types := make([]string, len(agentTypes))
 	for i, agentType := range agentTypes {
 		types[i] = agentType.String()
 	}
 
-	query := f.gormDb.Where("tenant = ? AND is_active = ? AND configured = ?", tenant, true, true)
+	query := f.gormDb.
+		Preload("Capabilities").
+		Where("tenant = ? AND is_active = ? AND configured = ?", tenant, true, true)
 	if len(types) > 0 {
 		query = query.Where("type IN (?)", types)
 	}
@@ -162,13 +189,14 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByTypesCrossTenant(ctx conte
 	tracing.TagComponentPostgresRepository(span)
 
 	var records []postgres_entity.Agent
-	// Convert enum array to []string
 	types := make([]string, len(agentTypes))
 	for i, agentType := range agentTypes {
 		types[i] = agentType.String()
 	}
 
-	query := f.gormDb.Where("is_active = ? AND configured = ?", true, true)
+	query := f.gormDb.
+		Preload("Capabilities").
+		Where("is_active = ? AND configured = ?", true, true)
 	if len(types) > 0 {
 		query = query.Where("type IN (?)", types)
 	}
@@ -187,11 +215,12 @@ func (f *agentsRepository) Find(ctx context.Context, agent postgres_entity.Agent
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var automation postgres_entity.Agent
+	var result postgres_entity.Agent
 	err := f.gormDb.
+		Preload("Capabilities").
 		Where(&agent).
 		Where("is_active = true").
-		First(&automation).Error
+		First(&result).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -199,7 +228,7 @@ func (f *agentsRepository) Find(ctx context.Context, agent postgres_entity.Agent
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return &automation, nil
+	return &result, nil
 }
 
 func (f *agentsRepository) Update(ctx context.Context, agent postgres_entity.Agent) (*postgres_entity.Agent, error) {
@@ -209,22 +238,89 @@ func (f *agentsRepository) Update(ctx context.Context, agent postgres_entity.Age
 	tracing.LogObjectAsJson(span, "agentEntity", agent)
 
 	if agent.ID == "" {
-		err := errors.New("agent ID is missing") // Fixed error message to match the context
+		err := errors.New("agent ID is missing")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	var updatedAgents postgres_entity.Agent
-	err := f.gormDb.
-		Model(&postgres_entity.Agent{}).
-		Where("id = ?", agent.ID).
-		Save(agent).
-		First(&updatedAgents, "id = ?", agent.ID).
-		Error
+	err := f.gormDb.Transaction(func(tx *gorm.DB) error {
+		// Update agent
+		if err := tx.Model(&agent).Updates(&agent).Error; err != nil {
+			return err
+		}
+
+		// Handle capabilities if they exist
+		if len(agent.Capabilities) > 0 {
+			if err := f.UpsertCapabilities(ctx, agent.ID, agent.Capabilities); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	return &updatedAgents, nil
+	// Fetch updated agent with capabilities
+	var updatedAgent postgres_entity.Agent
+	if err := f.gormDb.Preload("Capabilities").First(&updatedAgent, "id = ?", agent.ID).Error; err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &updatedAgent, nil
+}
+
+func (f *agentsRepository) UpsertCapabilities(ctx context.Context, agentID string, capabilities []postgres_entity.Capability) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.UpsertCapabilities")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	return f.gormDb.Transaction(func(tx *gorm.DB) error {
+		// Delete existing capabilities
+		if err := tx.Where("agent_id = ?", agentID).Delete(&postgres_entity.Capability{}).Error; err != nil {
+			return err
+		}
+
+		// Set agent ID for all capabilities
+		for i := range capabilities {
+			capabilities[i].AgentID = agentID
+		}
+
+		// Create new capabilities
+		if len(capabilities) > 0 {
+			if err := tx.Create(&capabilities).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+func (f *agentsRepository) FindCapability(ctx context.Context, agentID string, capabilityType enum.AgentCapability) (*postgres_entity.Capability, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.FindActiveCapability")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(
+		log.String("agentID", agentID),
+		log.String("capabilityType", capabilityType.String()),
+	)
+
+	var capability postgres_entity.Capability
+	err := f.gormDb.
+		Where("agent_id = ? AND type = ? AND active = ?", agentID, capabilityType.String(), true).
+		First(&capability).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &capability, nil
 }

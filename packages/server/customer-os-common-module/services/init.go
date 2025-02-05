@@ -255,6 +255,7 @@ func InitCommonServices(
 
 	// initialize agent capabilities
 	capabilityImpl := agent_capability.InitCapabilities(
+		eventsImpl,
 		postgresRepositories,
 		actionImpl,
 		aiImpl,

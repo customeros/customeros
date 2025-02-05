@@ -8,14 +8,15 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
-	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
-	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+
+	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
+	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
+	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
 )
 
 // AgentSave is the resolver for the agent_Save field.
@@ -52,7 +53,7 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 		FlowID:      input.FlowID,
 		Goal:        input.Goal,
 	}
-	var capabilitiesConfig *postgresentity.CapabilitiesConfig
+	var capabilitiesConfig []postgresentity.Capability
 	if input.Capabilities != nil {
 		capabilities := make([]postgresentity.Capability, 0, len(input.Capabilities))
 		for _, capability := range input.Capabilities {
@@ -70,9 +71,7 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 				capabilities[len(capabilities)-1].Type = enummapper.MapAgentCapabilityTypeFromModel(*capability.Type)
 			}
 		}
-		capabilitiesConfig = &postgresentity.CapabilitiesConfig{
-			Capabilities: capabilities,
-		}
+		capabilitiesConfig = capabilities
 	}
 
 	updatedAgentEntity, err := r.Services.CommonServices.AgentService.UpdateAgent(ctx, agentId, agentFields, capabilitiesConfig)

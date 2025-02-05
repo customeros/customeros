@@ -9,48 +9,41 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-type NewLeadListener struct {
+type WebVisitorIdentifiedListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
-	agentRunnerService   *agent.AgentRunnerService
 }
 
-func NewNewLeadListener(
+func NewWebVisitorIdentifiedListener(
 	logger logger.Logger,
 	postgresRepositories *postgres_repository.Repositories,
-	agentRunnerService *agent.AgentRunnerService,
-) *NewLeadListener {
-	return &NewLeadListener{
+) *WebVisitorIdentifiedListener {
+	return &WebVisitorIdentifiedListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
-			events.GetEventType[dto.NewLead](), // subscribed event
-			events.QueueAgents,                 // listening on Agents queue
+			events.GetEventType[dto.WebVisitorIdentified](), // subscribed event
+			events.QueueAgents, // listening on Agents queue
 		),
-		postgresRepositories: postgresRepositories,
-		agentRunnerService:   agentRunnerService,
 	}
 }
 
 // Add all Agent types subscribed to this event here
-func (l *NewLeadListener) subscribedAgents() []enum.AgentType {
+func (l *WebVisitorIdentifiedListener) subscribedAgents() []enum.AgentType {
 	return []enum.AgentType{
-		enum.AgentICPQualifier,
+		enum.AgentWebVisitorIdentifier,
 	}
 }
 
-func (l *NewLeadListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewLeadListener.Handle")
+func (l *WebVisitorIdentifiedListener) Handle(ctx context.Context, baseEvent any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebVisitorIdentifiedListener.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
@@ -61,48 +54,33 @@ func (l *NewLeadListener) Handle(ctx context.Context, baseEvent any) error {
 		return err
 	}
 
-	return l.handleExecution(ctx, event.Event.EntityId, event.Event.EventType)
+	return l.handleGoalAchieved(ctx, event.Event.EntityId, event.Event.EventType)
 }
 
-func (l *NewLeadListener) handleExecution(ctx context.Context, orgID string, eventName string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewLeadListener.handle")
+func (l *WebVisitorIdentifiedListener) handleGoalAchieved(ctx context.Context, orgId, eventName string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebVisitorIdentifiedListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
 	subscribedAgents := l.subscribedAgents()
 	if len(subscribedAgents) == 0 {
-		err := errors.New("No agent types configured for company stage lead listener")
+		err := errors.New("No agent types configured for WebVisitorIdentified event")
 		tracing.TraceErr(span, err)
 		return err
-	}
-
-	message := struct {
-		OrganizationID string
-	}{
-		OrganizationID: orgID,
 	}
 
 	activeAgents := l.lookupActiveAgents(ctx, subscribedAgents)
 	var errs error
 	for _, agent := range activeAgents {
-
-		initialParams, err := utils.StructToMap(message)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			errs = multierr.Append(errs, err)
-		}
-		err = l.agentRunnerService.Run(ctx, agent, eventName, initialParams)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			errs = multierr.Append(errs, err)
-		}
+		fmt.Println(agent)
+		// todo mark execution as goal achieved
 	}
 
 	return errs
 }
 
-func (l *NewLeadListener) lookupActiveAgents(ctx context.Context, agentTypes []enum.AgentType) []postgres_entity.Agent {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewLeadListener.lookupActiveAgents")
+func (l *WebVisitorIdentifiedListener) lookupActiveAgents(ctx context.Context, agentTypes []enum.AgentType) []postgres_entity.Agent {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebVisitorIdentifiedListener.lookupActiveAgents")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	span.LogFields(log.String("agentTypes", fmt.Sprintf("%v", agentTypes)))

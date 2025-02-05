@@ -8,16 +8,18 @@ import (
 type AgentListenerEvent string
 
 const (
-	EventNewLead              AgentListenerEvent = "new_lead"
-	EventICPMatch             AgentListenerEvent = "icp_match"
-	EventICPNotAMatch         AgentListenerEvent = "icp_not_a_match"
-	EventRunICPQualifierAgent AgentListenerEvent = "run_icp_qualifier_agent"
+	EventNewLead                 AgentListenerEvent = "new_lead"
+	EventICPFit                  AgentListenerEvent = "icp_fit"
+	EventICPNotAFit              AgentListenerEvent = "icp_not_a_fit"
+	EventRunICPQualifierAgent    AgentListenerEvent = "run_icp_qualifier_agent"
+	EventNewWebSession           AgentListenerEvent = "new_web_session"
+	EventWebVisitorIdentified    AgentListenerEvent = "web_visitor_identified"
+	EventWebVisitorNotIdentified AgentListenerEvent = "web_visitor_not_identified"
 
 	EventFathomMeetingSummaryCreated AgentListenerEvent = "fathom.meeting_summary.created"
 	EventFlowContactAdded            AgentListenerEvent = "flow.contact.added"
 	EventGrainMeetingSummaryCreated  AgentListenerEvent = "grain.meeting_summary.created"
 	EventIntentSignal                AgentListenerEvent = "generic.intent_signal.detected"
-	EventRevealWebsiteVisit          AgentListenerEvent = "reveal.website_visit"
 	NotSet                           AgentListenerEvent = ""
 )
 
@@ -43,21 +45,23 @@ func (e AgentListenerEvent) ExternalSystem() (system Source, err error) {
 	return DecodeSource(systemId), nil
 }
 
-func GetFlowListenerEvent(s string) (AgentListenerEvent, error) {
+func GetAgentListener(s string) (AgentListenerEvent, error) {
 	switch AgentListenerEvent(s) {
 	case
 		EventNewLead,
-		EventICPMatch,
-		EventICPNotAMatch,
+		EventNewWebSession,
+		EventWebVisitorIdentified,
+		EventWebVisitorNotIdentified,
+		EventICPFit,
+		EventICPNotAFit,
 		EventRunICPQualifierAgent,
 		EventFathomMeetingSummaryCreated,
 		EventFlowContactAdded,
 		EventGrainMeetingSummaryCreated,
-		EventIntentSignal,
-		EventRevealWebsiteVisit:
+		EventIntentSignal:
 
 		return AgentListenerEvent(s), nil
 	default:
-		return "", fmt.Errorf("invalid FlowListenerEvent: %s", s)
+		return "", fmt.Errorf("invalid AgentListener: %s", s)
 	}
 }

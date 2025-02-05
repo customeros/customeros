@@ -9,48 +9,41 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-type NewLeadListener struct {
+type IcpNotAFitListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
-	agentRunnerService   *agent.AgentRunnerService
 }
 
-func NewNewLeadListener(
+func NewIcpNotAFitListener(
 	logger logger.Logger,
 	postgresRepositories *postgres_repository.Repositories,
-	agentRunnerService *agent.AgentRunnerService,
-) *NewLeadListener {
-	return &NewLeadListener{
+) *IcpNotAFitListener {
+	return &IcpNotAFitListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
-			events.GetEventType[dto.NewLead](), // subscribed event
-			events.QueueAgents,                 // listening on Agents queue
+			events.GetEventType[dto.IcpNotAFit](), // subscribed event
+			events.QueueAgents,                    // listening on Agents queue
 		),
-		postgresRepositories: postgresRepositories,
-		agentRunnerService:   agentRunnerService,
 	}
 }
 
 // Add all Agent types subscribed to this event here
-func (l *NewLeadListener) subscribedAgents() []enum.AgentType {
+func (l *IcpNotAFitListener) subscribedAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentICPQualifier,
 	}
 }
 
-func (l *NewLeadListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewLeadListener.Handle")
+func (l *IcpNotAFitListener) Handle(ctx context.Context, baseEvent any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpNotAFitListener.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
@@ -61,11 +54,11 @@ func (l *NewLeadListener) Handle(ctx context.Context, baseEvent any) error {
 		return err
 	}
 
-	return l.handleExecution(ctx, event.Event.EntityId, event.Event.EventType)
+	return l.handleGoalAchieved(ctx, event.Event.EntityId, event.Event.EventType)
 }
 
-func (l *NewLeadListener) handleExecution(ctx context.Context, orgID string, eventName string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewLeadListener.handle")
+func (l *IcpNotAFitListener) handleGoalAchieved(ctx context.Context, orgId, eventName string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpNotAFitListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
@@ -76,33 +69,18 @@ func (l *NewLeadListener) handleExecution(ctx context.Context, orgID string, eve
 		return err
 	}
 
-	message := struct {
-		OrganizationID string
-	}{
-		OrganizationID: orgID,
-	}
-
 	activeAgents := l.lookupActiveAgents(ctx, subscribedAgents)
 	var errs error
 	for _, agent := range activeAgents {
-
-		initialParams, err := utils.StructToMap(message)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			errs = multierr.Append(errs, err)
-		}
-		err = l.agentRunnerService.Run(ctx, agent, eventName, initialParams)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			errs = multierr.Append(errs, err)
-		}
+		fmt.Println(agent)
+		// todo mark execution as goal achieved
 	}
 
 	return errs
 }
 
-func (l *NewLeadListener) lookupActiveAgents(ctx context.Context, agentTypes []enum.AgentType) []postgres_entity.Agent {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "NewLeadListener.lookupActiveAgents")
+func (l *IcpNotAFitListener) lookupActiveAgents(ctx context.Context, agentTypes []enum.AgentType) []postgres_entity.Agent {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpNotAFitListener.lookupActiveAgents")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	span.LogFields(log.String("agentTypes", fmt.Sprintf("%v", agentTypes)))

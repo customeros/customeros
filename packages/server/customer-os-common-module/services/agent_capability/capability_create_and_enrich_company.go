@@ -70,56 +70,51 @@ type CreateOrganizationInput struct {
 }
 
 type CreateOrganizationOutput struct {
-	CapabilityOutput
 	OrganizationID string `json:"organizationId"`
 }
 
-func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateOrganizationInput, config postgres_entity.NoConfig) (CreateOrganizationOutput, error) {
+func (c *CreateOrganizationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[CreateOrganizationInput, postgres_entity.NoConfig]) (bool, CreateOrganizationOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateOrganizationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	tracing.LogObjectAsJson(span, "input", data)
-	tracing.LogObjectAsJson(span, "config", config)
+	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
+	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
 
 	result := CreateOrganizationOutput{}
 
-	if err := c.ValidateInput(data); err != nil {
+	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return result, err
+		return false, result, err
 	}
-	if err := c.ValidateConfig(config); err != nil {
+	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return result, err
+		return false, result, err
 	}
-
-	result.ExecutionValidated = true
 
 	// Check if the domain is already linked to an organization
-	organizationEntity, err := c.organizationService.GetOrganizationByDomain(ctx, data.Domain, true)
+	organizationEntity, err := c.organizationService.GetOrganizationByDomain(ctx, executionContainer.InputData.Domain, true)
 
 	// organization found
 	if organizationEntity != nil {
 		// if organization is hidden, return early
 		if organizationEntity.Hide {
-			return result, errors.New("Identified organization is archived")
+			return true, result, errors.New("Identified organization is archived")
 		}
 		result.OrganizationID = organizationEntity.ID
-		result.Completed = true
 		tracing.LogObjectAsJson(span, "result", result)
-		return result, nil
+		return true, result, nil
 	}
 
 	orgID, err := c.organizationService.Save(ctx, nil, nil, data_fields.OrganizationFields{
-		Domains: []string{data.Domain},
+		Domains: []string{executionContainer.InputData.Domain},
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 
 	result.OrganizationID = orgID
-	result.Completed = true
 	tracing.LogObjectAsJson(span, "result", result)
-	return result, nil
+	return true, result, nil
 }

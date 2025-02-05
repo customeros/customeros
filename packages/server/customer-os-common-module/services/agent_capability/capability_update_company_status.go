@@ -2,9 +2,6 @@ package agent_capability
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"strings"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -19,38 +16,43 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-type UpdateCompanyStatusCapability struct{}
-
-type UpdateCompanyStatusInput struct{}
-
-type UpdateCompanyStatusOutput struct {
-	IcpFit          enum.IcpFit `json:"icpFit"`
-	IcpFitRationale []string    `json:"icpFitRationale"`
+type UpdateCompanyStatusCapability struct {
+	organizationService interfaces.OrganizationService
 }
 
-func NewUpdateCompanyStatusCapability() *UpdateCompanyStatusCapability {
-	return &UpdateCompanyStatusCapability{}
+type UpdateCompanyStatusInput struct {
+	OrganizationID           string      `json:"organizationId"`
+	OrganizationRelationship string      `json:"organizationRelationship"`
+	OrganizationStage        string      `json:"organizationStage"`
+	IcpFit                   enum.IcpFit `json:"icpFit"`
+	IcpFitRationale          []string    `json:"icpFitRationale"`
+}
+
+func NewUpdateCompanyStatusCapability(orgSrv interfaces.OrganizationService) *UpdateCompanyStatusCapability {
+	return &UpdateCompanyStatusCapability{
+		organizationService: orgSrv,
+	}
 }
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapability[UpdateCompanyStatusInput, UpdateCompanyStatusOutput, NoConfig] = (*UpdateCompanyStatusCapability)(nil)
+	_ interfaces.AgentCapability[UpdateCompanyStatusInput, NoOutput, postgres_entity.NoConfig] = (*UpdateCompanyStatusCapability)(nil)
 )
 
 func (c *UpdateCompanyStatusCapability) Type() enum.AgentCapability {
-	return enum.CapabilityEvaluateCompanyICPFit
+	return enum.CapabilityUpdateCompanyStatus
 }
 
 func (c *UpdateCompanyStatusCapability) Name() string {
-	return "Evaluate company for ICP fit"
+	return "Update company status"
 }
 
-func (c *UpdateCompanyStatusCapability) NewInput() EvaluateICPFitInput {
-	return EvaluateICPFitInput{}
+func (c *UpdateCompanyStatusCapability) NewInput() UpdateCompanyStatusInput {
+	return UpdateCompanyStatusInput{}
 }
 
-func (c *UpdateCompanyStatusCapability) NewConfig() EvaluateICPFitConfig {
-	return EvaluateICPFitConfig{}
+func (c *UpdateCompanyStatusCapability) NewConfig() postgres_entity.NoConfig {
+	return postgres_entity.NoConfig{}
 }
 
 func (c *UpdateCompanyStatusCapability) DefaultConfig() any {
@@ -58,27 +60,56 @@ func (c *UpdateCompanyStatusCapability) DefaultConfig() any {
 	return &config
 }
 
-func (c *UpdateCompanyStatusCapability) ValidateConfig(config EvaluateICPFitConfig) error {
-	if config.QualificationCriteria.Value == "" {
-		return errors.New("missing required config: QualificationCriteria")
-	}
+func (c *UpdateCompanyStatusCapability) ValidateConfig(config postgres_entity.NoConfig) error {
 	return nil
 }
 
-func (c *UpdateCompanyStatusCapability) ValidateInput(input EvaluateICPFitInput) error {
+func (c *UpdateCompanyStatusCapability) ValidateInput(input UpdateCompanyStatusInput) error {
 	if input.OrganizationID == "" {
-		return errors.New("missing required input: OrganizationID")
+		err := errors.New("required parameter missing: OrganizationID")
+		return err
+	}
+
+	if input.IcpFit != enum.IcpNotSet && len(input.IcpFitRationale) != 3 {
+		err := errors.New("ICP fit data not complete")
+		return err
+	}
+
+	if input.IcpFit == enum.IcpNotSet && input.OrganizationRelationship == "" && input.OrganizationStage == "" {
+		err := errors.New("There's nothing to update")
+		return err
 	}
 	return nil
 }
 
-func (c *UpdateCompanyStatusCapability) Execute(ctx context.Context, data EvaluateICPFitInput, config EvaluateICPFitConfig) (EvaluateICPFitOutput, error) {
+func (c *UpdateCompanyStatusCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[UpdateCompanyStatusInput, postgres_entity.NoConfig]) (bool, NoOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateCompanyStatusCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	tracing.LogObjectAsJson(span, "input", data)
-	tracing.LogObjectAsJson(span, "config", config)
+	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
+
+	if err := c.ValidateInput(executionContainer.InputData); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
+		return false, NoOutput{}, err
+	}
+	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
+		return false, NoOutput{}, err
+	}
+
+	switch {
+	case executionContainer.InputData.IcpFit == enum.IcpIsFit:
+		return true, NoOutput{}, c.processICPFit(ctx, executionContainer.InputData.OrganizationID, executionContainer.InputData.IcpFitRationale)
+
+	case executionContainer.InputData.IcpFit == enum.IcpNotFit:
+		return true, NoOutput{}, c.processICPNotAFit(ctx, executionContainer.InputData.OrganizationID, executionContainer.InputData.IcpFitRationale)
+
+	default:
+		err := errors.New("Not implemented yet")
+		tracing.TraceErr(span, err)
+		return false, NoOutput{}, err
+	}
 }
 
 func (c *UpdateCompanyStatusCapability) processICPFit(ctx context.Context, organizationID string, reasons []string) error {

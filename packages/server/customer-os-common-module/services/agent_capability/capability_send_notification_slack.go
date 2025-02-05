@@ -25,7 +25,7 @@ func NewSendSlackNotificationCapability(notificationService interfaces.Notificat
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapability[SendSlackNotificationInput, SendSlackNotificationOutput, SendSlackNotificationConfig] = (*SendSlackNotificationCapability)(nil)
+	_ interfaces.AgentCapability[SendSlackNotificationInput, NoOutput, SendSlackNotificationConfig] = (*SendSlackNotificationCapability)(nil)
 )
 
 func (c *SendSlackNotificationCapability) Type() enum.AgentCapability {
@@ -67,10 +67,6 @@ type SendSlackNotificationInput struct {
 	Message string `json:"message"`
 }
 
-type SendSlackNotificationOutput struct {
-	CapabilityOutput
-}
-
 type SendSlackNotificationConfig struct {
 	ChannelID SlackChannelIdConfig `json:"channelId"`
 }
@@ -80,40 +76,37 @@ type SlackChannelIdConfig struct {
 	Error string `json:"error"`
 }
 
-func (c *SendSlackNotificationCapability) Execute(ctx context.Context, data SendSlackNotificationInput, config SendSlackNotificationConfig) (SendSlackNotificationOutput, error) {
+func (c *SendSlackNotificationCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[SendSlackNotificationInput, SendSlackNotificationConfig]) (bool, NoOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SendSlackNotificationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	tracing.LogObjectAsJson(span, "input", data)
-	tracing.LogObjectAsJson(span, "config", config)
+	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
 
-	result := SendSlackNotificationOutput{}
+	result := NoOutput{}
 
-	if err := c.ValidateInput(data); err != nil {
+	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return result, err
+		return false, result, err
 	}
-	if err := c.ValidateConfig(config); err != nil {
+	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return result, err
+		return false, result, err
 	}
-	result.ExecutionValidated = true
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("Tenant not set on context")
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 
-	err := c.notificationService.NotifySlackChannel(ctx, tenant, config.ChannelID.Value, &data.Message)
+	err := c.notificationService.NotifySlackChannel(ctx, tenant, executionContainer.ConfigData.ChannelID.Value, &executionContainer.InputData.Message)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 
-	result.Completed = true
 	tracing.LogObjectAsJson(span, "result", result)
-	return result, nil
+	return true, result, nil
 }

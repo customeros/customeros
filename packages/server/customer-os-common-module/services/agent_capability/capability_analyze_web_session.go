@@ -61,7 +61,7 @@ func (c *AnalyzeWebSessionCapability) DefaultConfig() any {
 }
 
 func (c *AnalyzeWebSessionCapability) ValidateInput(data AnalyzeWebSessionInput) error {
-	if data.SessionID == "" {
+	if data.WebSessionID == "" {
 		return errors.New("missing required input data: SessionID")
 	}
 	if data.Domain == "" {
@@ -78,15 +78,14 @@ func (c *AnalyzeWebSessionCapability) ValidateConfig(config postgres_entity.NoCo
 }
 
 type AnalyzeWebSessionInput struct {
-	SessionID      string `json:"sessionId"`
+	WebSessionID   string `json:"webSessionId"`
 	VisitorID      string `json:"visitorId"`
 	OrganizationID string `json:"organizationId"`
 	Domain         string `json:"domain"`
 }
 
 type AnalyzeWebSessionOutput struct {
-	CapabilityOutput
-	SessionID         string   `json:"sessionId"`
+	WebSessionID      string   `json:"webSessionId"`
 	IsNewCompanyVisit bool     `json:"isNewCompanyVisit"`
 	IsNewPersonVisit  bool     `json:"isNewPersonVisit"`
 	PageViews         []string `json:"pageViews"`
@@ -96,76 +95,73 @@ type AnalyzeWebSessionOutput struct {
 	Referrer          string   `json:"referrer"`
 }
 
-func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeWebSessionInput, config postgres_entity.NoConfig) (AnalyzeWebSessionOutput, error) {
+func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[AnalyzeWebSessionInput, postgres_entity.NoConfig]) (bool, AnalyzeWebSessionOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	tracing.LogObjectAsJson(span, "input", data)
-	tracing.LogObjectAsJson(span, "config", config)
+	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
+	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
 
 	result := AnalyzeWebSessionOutput{}
 
-	if err := c.ValidateConfig(config); err != nil {
+	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return result, err
+		return false, result, err
 	}
-	if err := c.ValidateInput(data); err != nil {
+	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return result, err
+		return false, result, err
 	}
-
-	result.ExecutionValidated = true
 
 	// update session with organization id
-	if data.OrganizationID != "" {
-		err := c.postgresRepositories.WebSessionRepository.UpdateSessionWithOrganization(ctx, data.SessionID, data.OrganizationID)
+	if executionContainer.InputData.OrganizationID != "" {
+		err := c.postgresRepositories.WebSessionRepository.UpdateSessionWithOrganization(ctx, executionContainer.InputData.WebSessionID, executionContainer.InputData.OrganizationID)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return result, err
+			return true, result, err
 		}
 	}
 
 	// analyze session
-	result, err := c.sessionAnalytics(ctx, data.SessionID)
+	result, err := c.sessionAnalytics(ctx, executionContainer.InputData.WebSessionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 
 	// determine if a new company visit
-	isNewCompany, err := c.isNewCompanyVisit(ctx, data.Domain)
+	isNewCompany, err := c.isNewCompanyVisit(ctx, executionContainer.InputData.Domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 	result.IsNewCompanyVisit = isNewCompany
 
 	// determine if a new person visit
-	isNewVisitor, err := c.isNewWebsiteVisitor(ctx, data.VisitorID)
+	isNewVisitor, err := c.isNewWebsiteVisitor(ctx, executionContainer.InputData.VisitorID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 	result.IsNewPersonVisit = isNewVisitor
 
 	// build timeline event
-	timelineMessage, err := c.buildTimelineMessage(ctx, data.SessionID, result)
+	timelineMessage, err := c.buildTimelineMessage(ctx, executionContainer.InputData.WebSessionID, result)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 
 	// write event to timeline
-	err = c.writeSessionToTimeline(ctx, data.OrganizationID, timelineMessage)
+	err = c.writeSessionToTimeline(ctx, executionContainer.InputData.OrganizationID, timelineMessage)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 
-	result.Completed = true
 	tracing.LogObjectAsJson(span, "result", result)
-	return result, nil
+	return true, result, nil
 }
 
 func (c *AnalyzeWebSessionCapability) writeSessionToTimeline(ctx context.Context, orgID, timelineMessage string) error {
@@ -228,7 +224,7 @@ func (c *AnalyzeWebSessionCapability) sessionAnalytics(ctx context.Context, sess
 	}
 
 	results := AnalyzeWebSessionOutput{
-		SessionID:       sessionID,
+		WebSessionID:    sessionID,
 		PageViews:       session.UniquePageViews,
 		SessionDuration: sessionDuration,
 		Hostname:        hostname,

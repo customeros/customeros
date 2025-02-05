@@ -9,24 +9,30 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type IdentifyWebsiteVisitorCapability struct {
+	events               *events.EventsService
 	postgresRepositories *postgres_repository.Repositories
 	enrichmentService    interfaces.EnrichmentService
 	domainService        interfaces.DomainService
 }
 
 func NewIdentifyWebsiteVisitorCapability(
+	events *events.EventsService,
 	postgresRepositories *postgres_repository.Repositories,
 	enrichmentService interfaces.EnrichmentService,
 	domainService interfaces.DomainService,
 ) *IdentifyWebsiteVisitorCapability {
 	return &IdentifyWebsiteVisitorCapability{
+		events:               events,
 		postgresRepositories: postgresRepositories,
 		enrichmentService:    enrichmentService,
 		domainService:        domainService,
@@ -63,8 +69,8 @@ func (c *IdentifyWebsiteVisitorCapability) ValidateInput(data IdentifyWebsiteVis
 	if data.IPAddress == "" {
 		return errors.New("IP address cannot be empty")
 	}
-	if data.SessionID == "" {
-		return errors.New("SessionID cannot be empty")
+	if data.WebSessionID == "" {
+		return errors.New("WebSessionID cannot be empty")
 	}
 	if data.VisitorID == "" {
 		return errors.New("VisitorID cannot be empty")
@@ -90,14 +96,13 @@ func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(IdentifyWebsiteVisitor
 }
 
 type IdentifyWebsiteVisitorInput struct {
-	SessionID string `json:"sessionId"`
-	IPAddress string `json:"ipAddress"`
-	VisitorID string `json:"visitorId"`
-	Hostname  string `json:"hostname"`
+	WebSessionID string `json:"webSessionId"`
+	IPAddress    string `json:"ipAddress"`
+	VisitorID    string `json:"visitorId"`
+	Hostname     string `json:"hostname"`
 }
 
 type IdentifyWebsiteVisitorOutput struct {
-	CapabilityOutput
 	Domain       string `json:"domain"`
 	LinkedInSlug string `json:"linkedinSlug"`
 }
@@ -111,63 +116,89 @@ type WebsitesConfig struct {
 	Error string   `json:"error"`
 }
 
-func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, data IdentifyWebsiteVisitorInput, config IdentifyWebsiteVisitorConfig) (IdentifyWebsiteVisitorOutput, error) {
+func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorConfig]) (bool, IdentifyWebsiteVisitorOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	tracing.LogObjectAsJson(span, "input", data)
-	tracing.LogObjectAsJson(span, "config", config)
+	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
 
 	result := IdentifyWebsiteVisitorOutput{}
 
-	if err := c.ValidateInput(data); err != nil {
+	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return result, err
+		return false, result, err
 	}
-	if err := c.ValidateConfig(config); err != nil {
+	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return result, err
+		return false, result, err
 	}
 
 	// check if website input hostname configured by current agent
-	err := c.acceptHostname(ctx, data.Hostname, config.Websites.Value)
+	err := c.acceptHostname(ctx, executionContainer.InputData.Hostname, executionContainer.ConfigData.Websites.Value)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		tracing.LogObjectAsJson(span, "result", result)
-		return result, err
+		return true, result, err
 	}
 
-	result.ExecutionValidated = true
-
-	domain, linkedInSlug, err := c.identifyIP(ctx, data.IPAddress)
+	domain, linkedInSlug, err := c.identifyIP(ctx, executionContainer.InputData.IPAddress)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		tracing.LogObjectAsJson(span, "result", result)
-		return result, err
+		return true, result, err
 	}
 	span.LogKV("domain", domain)
 
 	result.Domain = domain
 	result.LinkedInSlug = linkedInSlug
+	tracing.LogObjectAsJson(span, "result", result)
 
 	if domain != "" {
-		_, err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithDomain(ctx, data.SessionID, domain)
+		_, err = c.postgresRepositories.WebSessionRepository.UpdateSessionWithDomain(ctx, executionContainer.InputData.WebSessionID, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			tracing.LogObjectAsJson(span, "result", result)
-			return result, err
+			return true, result, err
 		}
+		err = c.publishWebVisitorIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return true, result, err
+		}
+
+		return true, result, nil
 	}
 
-	result.Completed = true
-	tracing.LogObjectAsJson(span, "result", result)
-	return result, nil
+	err = c.publishWebVisitorNotIdentifiedEvent(ctx, executionContainer.AgentExecutionID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return true, result, err
+	}
+
+	return true, result, nil
+}
+
+func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorIdentifiedEvent(ctx context.Context, agentExecutionID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.publishWebVisitorIdentifiedEvent")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.WebVisitorIdentified{})
+}
+
+func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorNotIdentifiedEvent(ctx context.Context, agentExecutionID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.publishWebVisitorNotIdentifiedEvent")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.WebVisitorNotIdentified{})
 }
 
 func (c *IdentifyWebsiteVisitorCapability) acceptHostname(ctx context.Context, hostname string, websites []string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.acceptHostname")
 	defer span.Finish()
+	tracing.TagComponentService(span)
 
 	accepted := false
 

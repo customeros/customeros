@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
@@ -54,7 +55,7 @@ func NewGatherCompanyIntelligenceCapability(
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapability[GatherCompanyIntilligenceInput, GatherCompanyIntelligenceOutput, NoConfig] = (*GatherCompanyIntelligenceCapability)(nil)
+	_ interfaces.AgentCapability[GatherCompanyIntilligenceInput, GatherCompanyIntelligenceOutput, postgres_entity.NoConfig] = (*GatherCompanyIntelligenceCapability)(nil)
 )
 
 func (c *GatherCompanyIntelligenceCapability) Type() enum.AgentCapability {
@@ -69,8 +70,8 @@ func (c *GatherCompanyIntelligenceCapability) NewInput() GatherCompanyIntilligen
 	return GatherCompanyIntilligenceInput{}
 }
 
-func (c *GatherCompanyIntelligenceCapability) NewConfig() NoConfig {
-	return NoConfig{}
+func (c *GatherCompanyIntelligenceCapability) NewConfig() postgres_entity.NoConfig {
+	return postgres_entity.NoConfig{}
 }
 
 func (c *GatherCompanyIntelligenceCapability) DefaultConfig() any {
@@ -78,7 +79,7 @@ func (c *GatherCompanyIntelligenceCapability) DefaultConfig() any {
 	return &config
 }
 
-func (c *GatherCompanyIntelligenceCapability) ValidateConfig(config NoConfig) error {
+func (c *GatherCompanyIntelligenceCapability) ValidateConfig(config postgres_entity.NoConfig) error {
 	return nil
 }
 
@@ -89,40 +90,39 @@ func (c *GatherCompanyIntelligenceCapability) ValidateInput(input GatherCompanyI
 	return nil
 }
 
-func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, data GatherCompanyIntilligenceInput, config NoConfig) (GatherCompanyIntelligenceOutput, error) {
+func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[GatherCompanyIntilligenceInput, postgres_entity.NoConfig]) (bool, GatherCompanyIntelligenceOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GatherCompanyIntelligenceCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	tracing.LogObjectAsJson(span, "input", data)
-	tracing.LogObjectAsJson(span, "config", config)
+	tracing.LogObjectAsJson(span, "executionContainer", executionContainer)
 
 	result := GatherCompanyIntelligenceOutput{}
 
-	if err := c.ValidateInput(data); err != nil {
+	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return result, err
+		return false, result, err
 	}
-	if err := c.ValidateConfig(config); err != nil {
+	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return result, err
+		return false, result, err
 	}
 
 	// get all company context
-	primaryDomain, err := c.organizationService.GetPrimaryDomainByOrgID(ctx, data.OrganizationID)
+	primaryDomain, err := c.organizationService.GetPrimaryDomainByOrgID(ctx, executionContainer.InputData.OrganizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 	company, err := c.postgresRepositories.GlobalOrganizationRepository.GetByPrimaryDomain(ctx, primaryDomain)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 	if company == nil {
 		err := errors.New("Company not set in global orgs, cannot run ICP qualification")
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 
 	result.CompanyCity = company.Name
@@ -137,5 +137,5 @@ func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, data 
 	result.CompanyCity = company.City
 	result.CompanyRegion = company.Region
 	result.CompanyCountryA2 = company.CountryA2
-	return result, nil
+	return true, result, nil
 }

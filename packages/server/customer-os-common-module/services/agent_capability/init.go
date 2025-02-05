@@ -7,6 +7,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 )
 
 type AgentCapabilities struct {
@@ -14,6 +15,7 @@ type AgentCapabilities struct {
 }
 
 func InitCapabilities(
+	events *events.EventsService,
 	postgresRepositories *postgres_repository.Repositories,
 	actionService interfaces.ActionService,
 	aiService interfaces.AIService,
@@ -32,14 +34,16 @@ func InitCapabilities(
 
 	// Register each capability with its corresponding type.
 	capabilities.executors[enum.CapabilityAnalyzeWebSessionIntent] = NewAnalyzeWebSessionCapability(postgresRepositories, actionService)
+	capabilities.executors[enum.CapabilityApplyTag] = NewApplyTagCapability(tagService)
 	capabilities.executors[enum.CapabilityCreateAndEnrichCompany] = NewCreateOrganizationCapability(organizationService)
-	capabilities.executors[enum.CapabilityIdentifyWebVisitor] = NewIdentifyWebsiteVisitorCapability(postgresRepositories, enrichmentService, domainService)
+	capabilities.executors[enum.CapabilityCreateMarkdownTimelineEvent] = NewCreateMarkdownTimelineEventCapability(markdownService)
+	capabilities.executors[enum.CapabilityEvaluateCompanyICPFit] = NewEvaluateICPFitCapability(aiService, events)
+	capabilities.executors[enum.CapabilityGatherCompanyIntelligence] = NewGatherCompanyIntelligenceCapability(postgresRepositories, organizationService)
+	capabilities.executors[enum.CapabilityGenerateInvoice] = NewGenerateInvoiceCapability(postgresRepositories, invoiceService)
+	capabilities.executors[enum.CapabilityIdentifyWebVisitor] = NewIdentifyWebsiteVisitorCapability(events, postgresRepositories, enrichmentService, domainService)
 	capabilities.executors[enum.CapabilitySendSlackNotification] = NewSendSlackNotificationCapability(notificationService)
 	capabilities.executors[enum.CapabilitySendWebVisitorSlackNotification] = NewSendWebVisitorSlackNotificationCapability(postgresRepositories, notificationService, workspaceService)
-	capabilities.executors[enum.CapabilityApplyTag] = NewApplyTagCapability(tagService)
-	capabilities.executors[enum.CapabilityCreateMarkdownTimelineEvent] = NewCreateMarkdownTimelineEventCapability(markdownService)
-	capabilities.executors[enum.CapabilityEvaluateCompanyICPFit] = NewICPQualificationCapability(postgresRepositories, aiService, organizationService)
-	capabilities.executors[enum.CapabilityGenerateInvoice] = NewGenerateInvoiceCapability(postgresRepositories, invoiceService)
+	capabilities.executors[enum.CapabilityUpdateCompanyStatus] = NewUpdateCompanyStatusCapability(organizationService)
 	// Continue registering other capabilities here...
 
 	return capabilities

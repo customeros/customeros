@@ -1,3 +1,3 @@
 package agent_capability
 
-type NoConfig struct{}
+type NoOutput struct{}

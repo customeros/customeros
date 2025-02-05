@@ -25,7 +25,6 @@ type CreateMarkdownTimelineEventInput struct {
 }
 
 type CreateMarkdownTimelineEventOutput struct {
-	CapabilityOutput
 	MarkdownEventID string `json:"markdownEventId"`
 }
 
@@ -74,44 +73,42 @@ func (c *CreateMarkdownTimelineEventCapability) ValidateInput(input CreateMarkdo
 	return nil
 }
 
-func (c *CreateMarkdownTimelineEventCapability) Execute(ctx context.Context, data CreateMarkdownTimelineEventInput, config postgres_entity.NoConfig) (CreateMarkdownTimelineEventOutput, error) {
+func (c *CreateMarkdownTimelineEventCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[CreateMarkdownTimelineEventInput, postgres_entity.NoConfig]) (bool, CreateMarkdownTimelineEventOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateMarkdownTimelineEventCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 	tracing.TagTenant(span, common.GetTenantFromContext(ctx))
-	tracing.LogObjectAsJson(span, "input", data)
-	tracing.LogObjectAsJson(span, "config", config)
+	tracing.LogObjectAsJson(span, "input", executionContainer.InputData)
+	tracing.LogObjectAsJson(span, "config", executionContainer.ConfigData)
 
 	result := CreateMarkdownTimelineEventOutput{}
 
-	if err := c.ValidateInput(data); err != nil {
+	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
-		return result, err
+		return false, result, err
 	}
-	if err := c.ValidateConfig(config); err != nil {
+	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
-		return result, err
+		return false, result, err
 	}
-	result.ExecutionValidated = true
 
 	tenant := common.GetTenantFromContext(ctx)
 	if tenant == "" {
 		err := errors.New("Tenant not set on context")
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 
 	markdownEventId, err := c.markdownService.Save(ctx, nil, nil, data_fields.MarkdownEventFields{
-		OrganizationId: utils.StringPtr(data.OrganizationID),
-		Content:        utils.StringPtr(data.Message),
+		OrganizationId: utils.StringPtr(executionContainer.InputData.OrganizationID),
+		Content:        utils.StringPtr(executionContainer.InputData.Message),
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return result, err
+		return true, result, err
 	}
 
-	result.Completed = true
 	result.MarkdownEventID = markdownEventId
 	tracing.LogObjectAsJson(span, "result", result)
-	return result, nil
+	return true, result, nil
 }

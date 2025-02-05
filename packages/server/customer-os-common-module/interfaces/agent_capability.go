@@ -9,12 +9,12 @@ import (
 )
 
 type AgentCapability[I, O, C any] interface {
-	AgentCapabilityUntyped
-	Execute(ctx context.Context, inputData I, configData C) (outputData O, error error)
+	Execute(ctx context.Context, execution TypedExecutionContainer[I, C]) (validationOk bool, outputData O, error error)
 	ValidateConfig(C) error
 	ValidateInput(I) error
 	NewInput() I
 	NewConfig() C
+	AgentCapabilityUntyped
 }
 
 type AgentCapabilityUntyped interface {
@@ -24,7 +24,18 @@ type AgentCapabilityUntyped interface {
 }
 
 type AgentCapabilityExecutionService interface {
-	Execute(
-		ctx context.Context, capability postgres_entity.Capability, params map[string]any, executors map[enum.AgentCapability]AgentCapabilityUntyped,
-	) (map[string]any, error)
+	Execute(ctx context.Context, execution ExecutionContainer) (map[string]any, error)
+}
+
+type ExecutionContainer struct {
+	AgentExecutionID string
+	Capability       postgres_entity.Capability
+	ExecutionParams  map[string]any
+	UntypedExecutors map[enum.AgentCapability]AgentCapabilityUntyped
+}
+
+type TypedExecutionContainer[I, C any] struct {
+	AgentExecutionID string
+	InputData        I
+	ConfigData       C
 }
