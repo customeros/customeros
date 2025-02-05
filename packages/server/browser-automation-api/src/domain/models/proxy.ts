@@ -1,4 +1,4 @@
-import { logger } from "@/infrastructure";
+import { logger, ProxyConfig } from "@/infrastructure";
 import { ErrorParser } from "@/util/error";
 import {
   ProxyPoolTable,
@@ -50,15 +50,12 @@ export class Proxy {
     }
   }
 
-  static toBrowserHeader(values: ProxyPoolTable) {
-    return JSON.stringify({
-      proxy: {
-        server: values.url,
-        username: values.username,
-        password: values.password,
-      },
-      // enableArgs: ["--js-flags='--max-old-space-size=4096'"],
-    });
+  static toConfig(values: ProxyPoolPayload): ProxyConfig {
+    return {
+      proxyServer: values.url,
+      proxyServerUsername: values.username,
+      proxyServerPassword: values.password,
+    };
   }
 
   static handleError(err: any) {

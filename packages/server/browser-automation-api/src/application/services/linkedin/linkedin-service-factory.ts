@@ -15,13 +15,13 @@ export class LinkedinServiceFactory {
   constructor(
     private configsRepository: BrowserConfigsRepository,
     private proxyPoolRepository: ProxyPoolRepository,
-    private assignedProxiesRepository: AssignedProxiesRepository,
+    private assignedProxiesRepository: AssignedProxiesRepository
   ) {}
 
   async createForRun(browserAutomationRun: BrowserAutomationRun) {
     try {
       const browserConfig = await this.configsRepository.selectById(
-        browserAutomationRun.browserConfigId,
+        browserAutomationRun.browserConfigId
       );
       if (!browserConfig) {
         throw new StandardError({
@@ -32,7 +32,7 @@ export class LinkedinServiceFactory {
       }
 
       const assignedProxy = await this.assignedProxiesRepository.selectByUserId(
-        browserConfig.userId,
+        browserConfig.userId
       );
       if (!assignedProxy) {
         throw new StandardError({
@@ -43,7 +43,7 @@ export class LinkedinServiceFactory {
       }
 
       const proxy = await this.proxyPoolRepository.selectById(
-        assignedProxy.proxyPoolId,
+        assignedProxy.proxyPoolId
       );
       if (!proxy) {
         throw new StandardError({
@@ -53,9 +53,10 @@ export class LinkedinServiceFactory {
         });
       }
 
-      const proxyHeader = Proxy.toBrowserHeader(proxy);
-
-      return new LinkedinService(new BrowserConfig(browserConfig), proxyHeader);
+      return new LinkedinService(
+        new BrowserConfig(browserConfig),
+        new Proxy(proxy)
+      );
     } catch (err) {
       const error = ErrorParser.parse(err);
       logger.error(error.message, {
