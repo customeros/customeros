@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -32,7 +31,6 @@ import (
 type contractService struct {
 	log            logger.Logger
 	repositories   *repository.Repositories
-	grpcClients    *grpc_client.Clients
 	tenantSettings interfaces.TenantSettingsService
 	contract       interfaces.ContractService
 	opportunity    interfaces.OpportunityService
@@ -41,7 +39,6 @@ type contractService struct {
 func NewContractService(
 	log logger.Logger,
 	repositories *repository.Repositories,
-	grpcClients *grpc_client.Clients,
 	tenantSettings interfaces.TenantSettingsService,
 	contract interfaces.ContractService,
 	opportunity interfaces.OpportunityService,
@@ -49,7 +46,6 @@ func NewContractService(
 	return &contractService{
 		log:            log,
 		repositories:   repositories,
-		grpcClients:    grpcClients,
 		tenantSettings: tenantSettings,
 		contract:       contract,
 		opportunity:    opportunity,

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/model"
 	"github.com/customeros/customeros/packages/server/customer-os-webhooks/repository"
@@ -15,14 +14,12 @@ type InteractionSessionService interface {
 type interactionSessionService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
 }
 
-func NewInteractionSessionService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) InteractionSessionService {
+func NewInteractionSessionService(log logger.Logger, repositories *repository.Repositories) InteractionSessionService {
 	return &interactionSessionService{
 		log:          log,
 		repositories: repositories,
-		grpcClients:  grpcClients,
 	}
 }
 

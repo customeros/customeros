@@ -8,7 +8,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonservice "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
@@ -72,15 +71,6 @@ func (server *server) Run(parentCtx context.Context) error {
 	}
 	defer neo4jDriver.Close(ctx)
 
-	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(&server.cfg.Common.Infrastructure.GrpcClientConfig)
-	gRPCconn, err := df.GetEventsProcessingPlatformConn()
-	if err != nil {
-		server.log.Fatalf("Failed to connect: %v", err)
-	}
-	defer df.Close(gRPCconn)
-	grpcContainer := grpc_client.InitClients(gRPCconn)
-
 	// Setting up CommonServices & repositories
 	repos := repository.InitRepos(&neo4jDriver, postgresDb, server.cfg.Common.Infrastructure.Neo4jConfig.Database)
 
@@ -89,7 +79,6 @@ func (server *server) Run(parentCtx context.Context) error {
 		repos.Neo4jRepositories,
 		repos.PostgresRepositories,
 		&server.cfg.Common,
-		grpcContainer,
 		&commonservice.InitOptions{
 			LoadPersonalEmailProviders: true,
 			LoadEmailExclusionList:     true,
@@ -123,7 +112,6 @@ func (server *server) Run(parentCtx context.Context) error {
 		repos,
 		server.cfg,
 		commonServices,
-		grpcContainer,
 		appCache,
 	)
 	route.AddExternalSystemRoutes(ctx, r, serviceContainer, server.log, serviceContainer.CommonServices.Cache)

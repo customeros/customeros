@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
@@ -11,7 +10,6 @@ import (
 
 type DependencyContainer struct {
 	Logger               logger.Logger
-	GRPCClients          *grpc_client.Clients
 	CommonConfig         *config.CommonConfig
 	PostgresRepositories *postgres_repository.Repositories
 	Neo4jRepositories    *neo4j_repository.Repositories

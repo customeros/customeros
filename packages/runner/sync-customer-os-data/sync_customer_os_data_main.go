@@ -2,17 +2,15 @@ package main
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/config"
 	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/constants"
 	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/logger"
 	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/service"
 	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/tracing"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 	"sync"
 	"time"
 )
@@ -82,20 +80,8 @@ func main() {
 	// Airbyte DB
 	airbyteStoreDb := config.InitPoolManager(cfg)
 
-	// gRPC
-	var gRPCconn *grpc.ClientConn
-	if cfg.GrpcClientConfig.EventsProcessingPlatformEnabled {
-		df := grpc_client.NewDialFactory(&cfg.GrpcClientConfig)
-		gRPCconn, err = df.GetEventsProcessingPlatformConn()
-		if err != nil {
-			appLogger.Fatalf("Failed to connect: %v", err)
-		}
-		defer df.Close(gRPCconn)
-	}
-
 	// Services
-	grpcContainer := grpc_client.InitClients(gRPCconn)
-	services := service.InitServices(cfg, appLogger, &neo4jDriver, postgresDb, airbyteStoreDb, grpcContainer)
+	services := service.InitServices(cfg, appLogger, &neo4jDriver, postgresDb, airbyteStoreDb)
 
 	services.InitService.Init()
 

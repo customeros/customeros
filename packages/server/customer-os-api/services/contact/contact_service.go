@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -34,18 +33,16 @@ import (
 type contactService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
 	contact      interfaces.ContactService
 	email        interfaces.EmailService
 	phoneNumber  interfaces.PhoneNumberService
 	org          cosapi_interfaces.OrganizationService
 }
 
-func NewContactService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, contact interfaces.ContactService, email interfaces.EmailService, phoneNumber interfaces.PhoneNumberService, org cosapi_interfaces.OrganizationService) cosapi_interfaces.ContactService {
+func NewContactService(log logger.Logger, repositories *repository.Repositories, contact interfaces.ContactService, email interfaces.EmailService, phoneNumber interfaces.PhoneNumberService, org cosapi_interfaces.OrganizationService) cosapi_interfaces.ContactService {
 	return &contactService{
 		log:          log,
 		repositories: repositories,
-		grpcClients:  grpcClients,
 		contact:      contact,
 		email:        email,
 		phoneNumber:  phoneNumber,

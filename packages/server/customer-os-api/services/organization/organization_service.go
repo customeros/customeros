@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -38,16 +37,14 @@ type OrganizationUpdateData struct {
 type organizationService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
 	events       *events.EventsService
 	organization interfaces.OrganizationService
 }
 
-func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, events *events.EventsService, org interfaces.OrganizationService) cosapi_interfaces.OrganizationService {
+func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, events *events.EventsService, org interfaces.OrganizationService) cosapi_interfaces.OrganizationService {
 	return &organizationService{
 		log:          log,
 		repositories: repositories,
-		grpcClients:  grpcClients,
 		events:       events,
 		organization: org,
 	}

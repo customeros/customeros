@@ -11,7 +11,6 @@ import (
 
 	"github.com/99designs/gqlgen/client"
 	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -28,7 +27,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	cosapiservices "github.com/customeros/customeros/packages/server/customer-os-api/services"
-	"github.com/customeros/customeros/packages/server/customer-os-api/test/grpc/events_platform"
 )
 
 var (
@@ -100,11 +98,6 @@ func prepareClient() {
 		GormDB:      gormDB,
 		AsyncGormDB: gormDB,
 	}
-
-	testDialFactory := events_platform.NewTestDialFactory()
-	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()
-
-	grpcClient := grpc_client.InitClients(gRPCconn)
 
 	customerOsApiServices = cosapiservices.InitServices(
 		appLogger,

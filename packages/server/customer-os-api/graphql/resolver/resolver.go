@@ -3,7 +3,6 @@ package resolver
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-api/config"
 	cosapi_services "github.com/customeros/customeros/packages/server/customer-os-api/services"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 )
 
@@ -16,14 +15,12 @@ type Resolver struct {
 	log      logger.Logger
 	cfg      *config.Config
 	Services *cosapi_services.Services
-	Clients  *grpc_client.Clients
 }
 
-func NewResolver(log logger.Logger, serviceContainer *cosapi_services.Services, grpcContainer *grpc_client.Clients, cfg *config.Config) *Resolver {
+func NewResolver(log logger.Logger, serviceContainer *cosapi_services.Services, cfg *config.Config) *Resolver {
 	return &Resolver{
 		log:      log,
 		cfg:      cfg,
 		Services: serviceContainer,
-		Clients:  grpcContainer,
 	}
 }

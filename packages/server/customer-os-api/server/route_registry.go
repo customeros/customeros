@@ -4,7 +4,6 @@ import (
 	"context"
 
 	commoncaches "github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/gin-gonic/gin"
@@ -24,13 +23,12 @@ const (
 )
 
 type RouteConfig struct {
-	method     string
-	path       string
-	handler    gin.HandlerFunc
-	routeType  RouteType
-	services   *cosapi_services.Services
-	cache      *commoncaches.Cache
-	grpcClient *grpc_client.Clients
+	method    string
+	path      string
+	handler   gin.HandlerFunc
+	routeType RouteType
+	services  *cosapi_services.Services
+	cache     *commoncaches.Cache
 }
 
 func RegisterRestRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.Services, h *rest_handlers.RestHandlers) {

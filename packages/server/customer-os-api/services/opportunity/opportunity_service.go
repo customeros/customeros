@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -26,16 +25,14 @@ import (
 type opportunityService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
 	opportunity  interfaces.OpportunityService
 	organization interfaces.OrganizationService
 }
 
-func NewOpportunityService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, opportunity interfaces.OpportunityService, org interfaces.OrganizationService) cosapi_interfaces.OpportunityService {
+func NewOpportunityService(log logger.Logger, repositories *repository.Repositories, opportunity interfaces.OpportunityService, org interfaces.OrganizationService) cosapi_interfaces.OpportunityService {
 	return &opportunityService{
 		log:          log,
 		repositories: repositories,
-		grpcClients:  grpcClients,
 		opportunity:  opportunity,
 		organization: org,
 	}

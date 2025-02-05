@@ -7,7 +7,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -31,7 +30,6 @@ import (
 type serviceLineItemService struct {
 	log            logger.Logger
 	repositories   *repository.Repositories
-	grpcClients    *grpc_client.Clients
 	sli            interfaces.ServiceLineItemService
 	contract       cosapi_interfaces.ContractService
 	tenantSettings interfaces.TenantSettingsService
@@ -40,7 +38,6 @@ type serviceLineItemService struct {
 func NewServiceLineItemService(
 	log logger.Logger,
 	repositories *repository.Repositories,
-	grpcClients *grpc_client.Clients,
 	sli interfaces.ServiceLineItemService,
 	contract cosapi_interfaces.ContractService,
 	tenantSettings interfaces.TenantSettingsService,
@@ -48,7 +45,6 @@ func NewServiceLineItemService(
 	return &serviceLineItemService{
 		log:            log,
 		repositories:   repositories,
-		grpcClients:    grpcClients,
 		sli:            sli,
 		contract:       contract,
 		tenantSettings: tenantSettings,
@@ -719,28 +715,5 @@ func MapServiceLineItemBulkItemToData(input *model.ServiceLineItemBulkUpdateItem
 		StartedAt:               input.ServiceStarted,
 		CloseVersion:            utils.IfNotNilBool(input.CloseVersion),
 		NewVersion:              utils.IfNotNilBool(input.NewVersion),
-	}
-}
-
-func convertBilledTypeToProto(billedType neo4jenum.BilledType, span opentracing.Span) (commonpb.BilledType, error) {
-	switch billedType {
-	case neo4jenum.BilledTypeMonthly:
-		return commonpb.BilledType_MONTHLY_BILLED, nil
-	case neo4jenum.BilledTypeQuarterly:
-		return commonpb.BilledType_QUARTERLY_BILLED, nil
-	case neo4jenum.BilledTypeAnnually:
-		return commonpb.BilledType_ANNUALLY_BILLED, nil
-	case neo4jenum.BilledTypeOnce:
-		return commonpb.BilledType_ONCE_BILLED, nil
-	case neo4jenum.BilledTypeUsage:
-		return commonpb.BilledType_USAGE_BILLED, nil
-	case neo4jenum.BilledTypeNone:
-		err := fmt.Errorf("billed type is not set")
-		tracing.TraceErr(span, err)
-		return commonpb.BilledType_NONE_BILLED, err
-	default:
-		err := fmt.Errorf("unknown billed type: %s", billedType)
-		tracing.TraceErr(span, err)
-		return commonpb.BilledType_NONE_BILLED, err
 	}
 }

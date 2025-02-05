@@ -61,9 +61,8 @@ func main() {
 		logrus.Fatalf("failed opening connection to gRPC: %v", err.Error())
 	}
 	defer df.Close(gRPCconn)
-	grpcContainer := grpc_client.InitClients(gRPCconn)
 
-	services := service.InitServices(config, neo4jDriver, postgresDb, grpcContainer, appLogger)
+	services := service.InitServices(config, neo4jDriver, postgresDb, appLogger)
 
 	cronJub := localCron.StartCron(config, services)
 

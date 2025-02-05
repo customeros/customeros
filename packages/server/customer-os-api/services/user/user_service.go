@@ -4,8 +4,6 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	model2 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -13,6 +11,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -25,7 +24,6 @@ import (
 type userService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
 }
 
 type CustomerAddJobRoleData struct {
@@ -33,11 +31,10 @@ type CustomerAddJobRoleData struct {
 	JobRoleEntity *neo4jentity.JobRoleEntity
 }
 
-func NewUserService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) cosapi_interfaces.UserService {
+func NewUserService(log logger.Logger, repositories *repository.Repositories) cosapi_interfaces.UserService {
 	return &userService{
 		log:          log,
 		repositories: repositories,
-		grpcClients:  grpcClients,
 	}
 }
 

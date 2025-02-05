@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -41,15 +40,13 @@ const (
 type invoiceService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
 	invoice      interfaces.InvoiceService
 }
 
-func NewInvoiceService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, invoice interfaces.InvoiceService) cosapi_interfaces.InvoiceService {
+func NewInvoiceService(log logger.Logger, repositories *repository.Repositories, invoice interfaces.InvoiceService) cosapi_interfaces.InvoiceService {
 	return &invoiceService{
 		log:          log,
 		repositories: repositories,
-		grpcClients:  grpcClients,
 		invoice:      invoice,
 	}
 }

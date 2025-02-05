@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -31,16 +30,14 @@ type CommentService interface {
 type commentService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
 	services     *Services
 	maxWorkers   int
 }
 
-func NewCommentService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) CommentService {
+func NewCommentService(log logger.Logger, repositories *repository.Repositories, services *Services) CommentService {
 	return &commentService{
 		log:          log,
 		repositories: repositories,
-		grpcClients:  grpcClients,
 		services:     services,
 		maxWorkers:   services.cfg.App.ConcurrencyConfig.CommentSyncConcurrency,
 	}

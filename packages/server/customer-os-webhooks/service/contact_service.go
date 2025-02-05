@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -36,16 +35,14 @@ type ContactService interface {
 type contactService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
 	services     *Services
 	maxWorkers   int
 }
 
-func NewContactService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) ContactService {
+func NewContactService(log logger.Logger, repositories *repository.Repositories, services *Services) ContactService {
 	return &contactService{
 		log:          log,
 		repositories: repositories,
-		grpcClients:  grpcClients,
 		services:     services,
 		maxWorkers:   services.cfg.App.ConcurrencyConfig.ContactSyncConcurrency,
 	}
