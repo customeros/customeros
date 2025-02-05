@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
@@ -145,16 +145,12 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
             <>
               <p>
                 The
-                <span
-                  tabIndex={0}
-                  role={'button'}
+                <Link
+                  to={`/agents/${icpAgent?.id}`}
                   className='mx-1 font-medium underline underline-offset-1 cursor-pointer'
-                  onClick={() => {
-                    navigate(`/agents/${icpAgent?.id}`);
-                  }}
                 >
                   ICP qualifier
-                </span>
+                </Link>
                 agent determined that this company{' '}
                 {organization.value.icpFit === IcpFit.IcpFit
                   ? 'fits'
@@ -202,16 +198,12 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
             icpProfilingInProgress && (
               <p>
                 The
-                <span
-                  tabIndex={0}
-                  role={'button'}
+                <Link
+                  to={`/agents/${icpAgent?.id}`}
                   className='mx-1 font-medium underline underline-offset-1 cursor-pointer'
-                  onClick={() => {
-                    navigate(`/agents/${icpAgent?.id}`);
-                  }}
                 >
                   ICP qualifier
-                </span>
+                </Link>
                 agent is busy determining whether this company fits your ideal
                 customer profile or not
               </p>

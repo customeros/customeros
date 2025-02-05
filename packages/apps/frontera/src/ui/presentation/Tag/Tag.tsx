@@ -5,7 +5,6 @@ import { VariantProps } from 'class-variance-authority';
 
 import { cn } from '@ui/utils/cn';
 import { useSlots } from '@ui/utils/hooks';
-import { XClose } from '@ui/media/icons/XClose';
 
 import {
   tagSizeVariant,
