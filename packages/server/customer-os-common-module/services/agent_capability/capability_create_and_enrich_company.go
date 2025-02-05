@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -27,7 +28,7 @@ func NewCreateOrganizationCapability(orgService interfaces.OrganizationService) 
 
 // Compile-time interface checks
 var (
-	_ interfaces.AgentCapability[CreateOrganizationInput, CreateOrganizationOutput, NoConfig] = (*CreateOrganizationCapability)(nil)
+	_ interfaces.AgentCapability[CreateOrganizationInput, CreateOrganizationOutput, postgres_entity.NoConfig] = (*CreateOrganizationCapability)(nil)
 )
 
 func (c *CreateOrganizationCapability) Type() enum.AgentCapability {
@@ -42,12 +43,12 @@ func (c *CreateOrganizationCapability) NewInput() CreateOrganizationInput {
 	return CreateOrganizationInput{}
 }
 
-func (c *CreateOrganizationCapability) NewConfig() NoConfig {
-	return NoConfig{}
+func (c *CreateOrganizationCapability) NewConfig() postgres_entity.NoConfig {
+	return postgres_entity.NoConfig{}
 }
 
 func (c *CreateOrganizationCapability) DefaultConfig() any {
-	return &NoConfig{}
+	return &postgres_entity.NoConfig{}
 }
 
 func (c *CreateOrganizationCapability) ValidateInput(input CreateOrganizationInput) error {
@@ -60,7 +61,7 @@ func (c *CreateOrganizationCapability) ValidateInput(input CreateOrganizationInp
 	return nil
 }
 
-func (c *CreateOrganizationCapability) ValidateConfig(config NoConfig) error {
+func (c *CreateOrganizationCapability) ValidateConfig(config postgres_entity.NoConfig) error {
 	return nil
 }
 
@@ -73,7 +74,7 @@ type CreateOrganizationOutput struct {
 	OrganizationID string `json:"organizationId"`
 }
 
-func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateOrganizationInput, config NoConfig) (CreateOrganizationOutput, error) {
+func (c *CreateOrganizationCapability) Execute(ctx context.Context, data CreateOrganizationInput, config postgres_entity.NoConfig) (CreateOrganizationOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateOrganizationCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
