@@ -1304,6 +1304,7 @@ type GetPaymentIntent struct {
 
 type GlobalCache struct {
 	User                *User                    `json:"user"`
+	IsPlatformOwner     bool                     `json:"isPlatformOwner"`
 	IsOwner             bool                     `json:"isOwner"`
 	InactiveEmailTokens []*GlobalCacheEmailToken `json:"inactiveEmailTokens"`
 	ActiveEmailTokens   []*GlobalCacheEmailToken `json:"activeEmailTokens"`
@@ -2912,6 +2913,12 @@ type TenantBillingProfileUpdateInput struct {
 	CanPayWithBankTransfer    *bool `json:"canPayWithBankTransfer,omitempty"`
 	CanPayWithPigeon          *bool `json:"canPayWithPigeon,omitempty"`
 	Check                     *bool `json:"check,omitempty"`
+}
+
+type TenantImpersonateDetails struct {
+	Tenant    string `json:"tenant"`
+	CreatedBy string `json:"createdBy"`
+	Personal  bool   `json:"personal"`
 }
 
 type TenantInput struct {
@@ -4884,6 +4891,7 @@ const (
 	RoleOwner         Role = "OWNER"
 	RoleAdmin         Role = "ADMIN"
 	RolePlatformOwner Role = "PLATFORM_OWNER"
+	RoleImpersonated  Role = "IMPERSONATED"
 )
 
 var AllRole = []Role{
@@ -4891,11 +4899,12 @@ var AllRole = []Role{
 	RoleOwner,
 	RoleAdmin,
 	RolePlatformOwner,
+	RoleImpersonated,
 }
 
 func (e Role) IsValid() bool {
 	switch e {
-	case RoleUser, RoleOwner, RoleAdmin, RolePlatformOwner:
+	case RoleUser, RoleOwner, RoleAdmin, RolePlatformOwner, RoleImpersonated:
 		return true
 	}
 	return false

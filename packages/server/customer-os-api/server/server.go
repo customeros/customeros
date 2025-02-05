@@ -108,7 +108,6 @@ func (server *server) Run(parentCtx context.Context) error {
 	serviceContainer := cosapi_services.InitServices(server.log, &neo4jDriver, postgresDb, server.cfg)
 
 	// Set up handlers
-	adminApiHandler := graphHandler.NewAdminApiHandler(server.cfg, serviceContainer.Repositories.Neo4jRepositories)
 	restHandlers := rest_handlers.InitRestHandlers(serviceContainer)
 
 	// Setting up Gin
@@ -150,11 +149,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.POST("/query",
 		tracing.GraphQlTracingEnhancer(ctx),
 		apiKeyCheckerHTTPMiddleware(serviceContainer.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, serviceContainer.Repositories.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(serviceContainer.Cache)),
-		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, serviceContainer.Repositories.Neo4jRepositories, security.WithCache(serviceContainer.Cache)),
-		server.graphqlHandler(serviceContainer))
-	r.POST("/admin/query",
-		tracing.GraphQlTracingEnhancer(ctx),
-		adminApiHandler.GetAdminApiHandlerEnhancer(),
+		tenantUserContextEnhancerMiddleware(serviceContainer.Repositories.Neo4jRepositories, security.WithCache(serviceContainer.Cache)),
 		server.graphqlHandler(serviceContainer))
 
 	// graphql playground
@@ -201,8 +196,8 @@ func apiKeyCheckerHTTPMiddleware(tenantApiKeyRepo postgresRepository.TenantWebho
 }
 
 // Define a custom middleware adapter for TenantUserContextEnhancer.
-func tenantUserContextEnhancerMiddleware(userContextType security.HeaderAllowance, repos *neo4jRepository.Repositories, opts ...security.CommonServiceOption) func(c *gin.Context) {
-	tenantEnhancer := security.TenantUserContextEnhancer(userContextType, repos, opts...)
+func tenantUserContextEnhancerMiddleware(repos *neo4jRepository.Repositories, opts ...security.CommonServiceOption) func(c *gin.Context) {
+	tenantEnhancer := security.TenantUserContextEnhancer(repos, opts...)
 	return func(c *gin.Context) {
 		if isIntrospectionQuery(c.Request) {
 			c.Next() // Skip TenantUserContextEnhancer and continue to the next handler.
@@ -290,6 +285,9 @@ func (server *server) graphqlHandler(serviceContainer *cosapi_services.Services)
 		}
 		if c.Keys[security.KEY_USER_ROLES] != nil {
 			customCtx.Roles = c.Keys[security.KEY_USER_ROLES].([]string)
+		}
+		if c.Keys[security.KEY_AUTHENTICATED_USER_ID] != nil {
+			customCtx.AuthUserId = c.Keys[security.KEY_AUTHENTICATED_USER_ID].(string)
 		}
 		if c.Keys[security.KEY_USER_ID] != nil {
 			customCtx.UserId = c.Keys[security.KEY_USER_ID].(string)
@@ -418,6 +416,9 @@ func enrichContextMiddleware(appSource string) gin.HandlerFunc {
 		}
 		if c.Keys[security.KEY_USER_ROLES] != nil {
 			customCtx.Roles = c.Keys[security.KEY_USER_ROLES].([]string)
+		}
+		if c.Keys[security.KEY_AUTHENTICATED_USER_ID] != nil {
+			customCtx.AuthUserId = c.Keys[security.KEY_AUTHENTICATED_USER_ID].(string)
 		}
 		if c.Keys[security.KEY_USER_ID] != nil {
 			customCtx.UserId = c.Keys[security.KEY_USER_ID].(string)

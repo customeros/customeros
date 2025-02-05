@@ -12,11 +12,18 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
+type TenantHasWorkspace struct {
+	Tenant     string
+	CreatedBy  string
+	IsPersonal bool
+}
+
 type AuthenticationReadRepository interface {
 	GetByAuthIdAndProvider(ctx context.Context, authId string, provider string) (*dbtype.Node, error)
 	GetByAuthId(ctx context.Context, authId string) ([]*dbtype.Node, error)
 	GetAuthUser(ctx context.Context, authId string) (*dbtype.Node, error)
 	GetTenants(ctx context.Context, authUserId string) ([]*dbtype.Node, error)
+	GetTenantsForImpersonation(ctx context.Context, authUserId string) ([]*TenantHasWorkspace, error)
 }
 
 type authenticationReadRepository struct {
@@ -163,4 +170,53 @@ func (r *authenticationReadRepository) GetTenants(ctx context.Context, authUserI
 	span.LogFields(log.Int("result.found", len(data)))
 
 	return data, nil
+}
+
+func (r *authenticationReadRepository) GetTenantsForImpersonation(ctx context.Context, authUserId string) ([]*TenantHasWorkspace, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationReadRepository.GetTenants")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `
+			MATCH (au:AuthenticationUser{id:$authUserId})-[:HAS_WORKSPACE]-(t:Tenant)
+			OPTIONAL MATCH (t)-[r]-(w:Workspace)
+			RETURN 
+			t.name,
+			t.createdBy,
+			CASE WHEN w IS NULL THEN true ELSE false END AS isPersonal`
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query),
+			map[string]any{
+				"authUserId": authUserId,
+			}); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Collect(ctx)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("error getting users for player: %w", err)
+	}
+
+	var results []*TenantHasWorkspace
+	if result != nil {
+		for _, v := range result.([]*neo4j.Record) {
+			tenant := v.Values[0].(string)
+			createdBy := v.Values[1].(string)
+			isPersonal := v.Values[2].(bool)
+
+			results = append(results, &TenantHasWorkspace{
+				Tenant:     tenant,
+				CreatedBy:  createdBy,
+				IsPersonal: isPersonal,
+			})
+		}
+	}
+
+	return results, nil
 }

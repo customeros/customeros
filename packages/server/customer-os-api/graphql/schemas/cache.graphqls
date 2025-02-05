@@ -1,9 +1,11 @@
 extend type Query {
+    version: Float!
     global_Cache : GlobalCache!
 }
 
 type GlobalCache {
     user:                   User!
+    isPlatformOwner:        Boolean!
     isOwner:                Boolean!
     inactiveEmailTokens:    [GlobalCacheEmailToken!]!
     activeEmailTokens:      [GlobalCacheEmailToken!]!

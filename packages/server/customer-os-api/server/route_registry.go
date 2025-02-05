@@ -61,7 +61,6 @@ func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 				security.WithCache(config.services.Cache),
 			),
 			security.TenantUserContextEnhancer(
-				security.USERNAME_OR_TENANT,
 				config.services.Repositories.Neo4jRepositories,
 				security.WithCache(config.cache),
 			))
@@ -82,7 +81,6 @@ func registerRoute(ctx context.Context, r *gin.Engine, config RouteConfig) {
 		middlewares = append(middlewares,
 			config.services.JWTService.GetJWTTenantUserEnhancer(),
 			security.TenantUserContextEnhancer(
-				security.USERNAME_OR_TENANT,
 				config.services.Repositories.Neo4jRepositories,
 				security.WithCache(config.cache),
 			))

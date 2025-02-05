@@ -1,3 +1,5 @@
+import { Impersonate } from '@settings/components/Tabs/panels/Workspace/Impersonate/Impersonate.tsx';
+
 import { AuthPanel } from './panels/AuthPanel';
 import { General } from './panels/Workspace/General';
 import { BillingPanel } from './panels/BillingPanel';
@@ -34,6 +36,8 @@ export const Panels = ({ tab }: PanelsProps) => {
       return <Mailboxes />;
     case 'products':
       return <Products />;
+    case 'impersonate':
+      return <Impersonate />;
 
     default:
       return <AuthPanel />;

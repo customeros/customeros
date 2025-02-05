@@ -49,6 +49,7 @@ jobs:
         env:
           VITE_TEST_API_URL: ${{ secrets.PROD_VITE_TEST_API_URL }}
           VITE_TEST_API_KEY: ${{ secrets.PROD_VITE_TEST_API_KEY }}
+          VITE_TEST_TENANT: ${{ secrets.PROD_VITE_TEST_TENANT }}
           VITE_TEST_USERNAME: ${{ secrets.PROD_VITE_TEST_USERNAME }}
           VITE_REALTIME_WS_API_KEY: ${{ secrets.PROD_VITE_REALTIME_WS_API_KEY }}
           VITE_REALTIME_WS_PATH: ${{ secrets.PROD_VITE_TEST_DUMMY_VITE_REALTIME_WS_PATH }}

@@ -11,8 +11,6 @@ extend type Mutation {
     tenant_UpdateBillingProfile(input: TenantBillingProfileUpdateInput!): TenantBillingProfile! @hasRole(roles: [ADMIN, USER]) @hasTenant
     tenant_UpdateSettings(input: TenantSettingsInput): TenantSettings! @hasRole(roles: [ADMIN, USER]) @hasTenant
     tenant_UpdateSettingsOpportunityStage(input: TenantSettingsOpportunityStageConfigurationInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
-    tenant_hardDelete(tenant: String!, confirmTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
 }
 
 type TenantSettings {

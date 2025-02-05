@@ -12,6 +12,7 @@ export const getGraphQLClient = (params?: RequestConfig) => {
         ...params?.headers,
         // 'X-Frontera-Auth': 'true',
         Authorization: `Bearer ${window?.__COS_SESSION__?.sessionToken}`,
+        'X-Openline-TENANT': window?.__COS_SESSION__?.tenant,
         'X-Openline-USERNAME': window?.__COS_SESSION__?.email,
       },
     },

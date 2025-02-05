@@ -21,6 +21,7 @@ const isTestMode = import.meta.env.MODE === 'test';
 const defaultGraphqlHeaders: Record<string, string> = isTestMode
   ? {
       'X-OPENLINE-API-KEY': import.meta.env.VITE_TEST_API_KEY as string,
+      'X-OPENLINE-TENANT': import.meta.env.VITE_TEST_TENANT as string,
       'X-OPENLINE-USERNAME': import.meta.env.VITE_TEST_USERNAME as string,
     }
   : {};

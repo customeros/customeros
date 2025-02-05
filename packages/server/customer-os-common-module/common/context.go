@@ -8,11 +8,12 @@ import (
 )
 
 type CustomContext struct {
-	AppSource string
-	Tenant    string
-	UserId    string
-	UserEmail string
-	Roles     []string
+	AppSource  string
+	Tenant     string
+	AuthUserId string
+	UserId     string
+	UserEmail  string
+	Roles      []string
 }
 
 var customContextKey = "CUSTOM_CONTEXT"
@@ -57,6 +58,10 @@ func GetTenantFromContext(ctx context.Context) string {
 
 func GetRolesFromContext(ctx context.Context) []string {
 	return GetContext(ctx).Roles
+}
+
+func GetAuthUserIdFromContext(ctx context.Context) string {
+	return GetContext(ctx).AuthUserId
 }
 
 func GetUserIdFromContext(ctx context.Context) string {

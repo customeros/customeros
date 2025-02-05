@@ -17,8 +17,11 @@ type AuthenticationWriteRepository interface {
 	CreateAuthentication(ctx context.Context, tx neo4j.ManagedTransaction, data neo4j_entity.AuthenticationEntity) (string, error)
 	CreateAuthenticationUser(ctx context.Context, tx neo4j.ManagedTransaction, authenticationId string, data neo4j_entity.AuthenticationUserEntity) (string, error)
 	LinkAuthenticationWithAuthenticationUser(ctx context.Context, tx neo4j.ManagedTransaction, authId, authUserId string) error
-	LinkAuthenticationUserWithTenant(ctx context.Context, tx neo4j.ManagedTransaction, authUserId, tenant string) error
+	LinkAuthenticationUserWithTenant(ctx context.Context, tx *neo4j.ManagedTransaction, authUserId, tenant string) error
+	UnlinkAuthenticationUserWithTenant(ctx context.Context, tx *neo4j.ManagedTransaction, authUserId, tenant string) error
 	LinkAuthenticationUserWithUser(ctx context.Context, tx neo4j.ManagedTransaction, authUserId, userId string) error
+	SetDefaultTenant(ctx context.Context, tx neo4j.ManagedTransaction, authUserId, defaultTenant string) error
+	SetCurrentTenant(ctx context.Context, tx *neo4j.ManagedTransaction, authUserId, currentTenant string) error
 }
 
 type authenticationWriteRepository struct {
@@ -94,7 +97,7 @@ func (r *authenticationWriteRepository) CreateAuthenticationUser(ctx context.Con
 }
 
 func (r *authenticationWriteRepository) LinkAuthenticationWithAuthenticationUser(ctx context.Context, tx neo4j.ManagedTransaction, authId, authUserId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationWriteRepository.LinkAuthenticationUserWithTenant")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationWriteRepository.LinkAuthenticationWithAuthenticationUser")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -117,7 +120,7 @@ func (r *authenticationWriteRepository) LinkAuthenticationWithAuthenticationUser
 	return nil
 }
 
-func (r *authenticationWriteRepository) LinkAuthenticationUserWithTenant(ctx context.Context, tx neo4j.ManagedTransaction, authUserId, tenant string) error {
+func (r *authenticationWriteRepository) LinkAuthenticationUserWithTenant(ctx context.Context, tx *neo4j.ManagedTransaction, authUserId, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationWriteRepository.LinkAuthenticationUserWithTenant")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -133,7 +136,45 @@ func (r *authenticationWriteRepository) LinkAuthenticationUserWithTenant(ctx con
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	if _, err := tx.Run(ctx, cypher, params); err != nil {
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *authenticationWriteRepository) UnlinkAuthenticationUserWithTenant(ctx context.Context, tx *neo4j.ManagedTransaction, authUserId, tenant string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationWriteRepository.UnlinkAuthenticationUserWithTenant")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogKV("authUserId", authUserId)
+	span.LogKV("tenant", tenant)
+
+	cypher := `MATCH (u:AuthenticationUser {id:$authUserId})-[r:HAS_WORKSPACE]->(t:Tenant {name:$tenant}) delete r`
+	params := map[string]any{
+		"tenant":     tenant,
+		"authUserId": authUserId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -160,6 +201,61 @@ func (r *authenticationWriteRepository) LinkAuthenticationUserWithUser(ctx conte
 	if _, err := tx.Run(ctx, cypher, params); err != nil {
 		tracing.TraceErr(span, err)
 		return err
+	}
+
+	return nil
+}
+
+func (r *authenticationWriteRepository) SetDefaultTenant(ctx context.Context, tx neo4j.ManagedTransaction, authUserId, defaultTenant string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationWriteRepository.SetDefaultTenant")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogKV("authUserId", authUserId)
+	span.LogKV("defaultTenant", defaultTenant)
+
+	cypher := `MATCH (a:AuthenticationUser {id:$authUserId}) set a.defaultTenant = $defaultTenant`
+	params := map[string]any{
+		"authUserId":    authUserId,
+		"defaultTenant": defaultTenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	if _, err := tx.Run(ctx, cypher, params); err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *authenticationWriteRepository) SetCurrentTenant(ctx context.Context, tx *neo4j.ManagedTransaction, authUserId, currentTenant string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationWriteRepository.SetCurrentTenant")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogKV("authUserId", authUserId)
+	span.LogKV("currentTenant", currentTenant)
+
+	cypher := `MATCH (a:AuthenticationUser {id:$authUserId}) set a.currentTenant = $currentTenant`
+	params := map[string]any{
+		"authUserId":    authUserId,
+		"currentTenant": currentTenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+
+	if err != nil {
+		tracing.TraceErr(span, err)
 	}
 
 	return nil

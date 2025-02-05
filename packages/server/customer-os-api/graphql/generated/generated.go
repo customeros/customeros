@@ -716,6 +716,7 @@ type ComplexityRoot struct {
 		InactiveEmailTokens func(childComplexity int) int
 		IsFirstLogin        func(childComplexity int) int
 		IsOwner             func(childComplexity int) int
+		IsPlatformOwner     func(childComplexity int) int
 		Mailboxes           func(childComplexity int) int
 		MaxARRForecastValue func(childComplexity int) int
 		MinARRForecastValue func(childComplexity int) int
@@ -1056,6 +1057,10 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AddTag                                     func(childComplexity int, input model.AddTagInput) int
+		AdminAddWorkspaceAccess                    func(childComplexity int, authenticatedUserEmail string, tenant string) int
+		AdminRemoveWorkspaceAccess                 func(childComplexity int, authenticatedUserEmail string, tenant string) int
+		AdminSwitchCurrentWorkspace                func(childComplexity int, switchToTenant string) int
+		AdminTenantHardDelete                      func(childComplexity int, tenant string, confirmTenant string) int
 		AgentSave                                  func(childComplexity int, input model.AgentSaveInput) int
 		AttachmentCreate                           func(childComplexity int, input model.AttachmentInput) int
 		BankAccountCreate                          func(childComplexity int, input *model.BankAccountCreateInput) int
@@ -1214,7 +1219,6 @@ type ComplexityRoot struct {
 		TagDelete                                  func(childComplexity int, id string) int
 		TagUpdate                                  func(childComplexity int, input model.TagUpdateInput) int
 		TenantAddBillingProfile                    func(childComplexity int, input model.TenantBillingProfileInput) int
-		TenantHardDelete                           func(childComplexity int, tenant string, confirmTenant string) int
 		TenantUpdateBillingProfile                 func(childComplexity int, input model.TenantBillingProfileUpdateInput) int
 		TenantUpdateSettings                       func(childComplexity int, input *model.TenantSettingsInput) int
 		TenantUpdateSettingsOpportunityStage       func(childComplexity int, input model.TenantSettingsOpportunityStageConfigurationInput) int
@@ -1564,6 +1568,7 @@ type ComplexityRoot struct {
 		Tenant                             func(childComplexity int) int
 		TenantBillingProfile               func(childComplexity int, id string) int
 		TenantBillingProfiles              func(childComplexity int) int
+		TenantImpersonateList              func(childComplexity int) int
 		TenantSettings                     func(childComplexity int) int
 		TimelineEvents                     func(childComplexity int, ids []string) int
 		UIContacts                         func(childComplexity int, ids []string) int
@@ -1573,6 +1578,7 @@ type ComplexityRoot struct {
 		User                               func(childComplexity int, id string) int
 		UserByEmail                        func(childComplexity int, email string) int
 		Users                              func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) int
+		Version                            func(childComplexity int) int
 	}
 
 	Reminder struct {
@@ -1747,6 +1753,12 @@ type ComplexityRoot struct {
 		UpdatedAt                     func(childComplexity int) int
 		VatNumber                     func(childComplexity int) int
 		Zip                           func(childComplexity int) int
+	}
+
+	TenantImpersonateDetails struct {
+		CreatedBy func(childComplexity int) int
+		Personal  func(childComplexity int) int
+		Tenant    func(childComplexity int) int
 	}
 
 	TenantSettings struct {
@@ -1951,6 +1963,10 @@ type MeetingResolver interface {
 	ExternalSystem(ctx context.Context, obj *model.Meeting) ([]*model.ExternalSystem, error)
 }
 type MutationResolver interface {
+	AdminAddWorkspaceAccess(ctx context.Context, authenticatedUserEmail string, tenant string) (bool, error)
+	AdminRemoveWorkspaceAccess(ctx context.Context, authenticatedUserEmail string, tenant string) (bool, error)
+	AdminSwitchCurrentWorkspace(ctx context.Context, switchToTenant string) (bool, error)
+	AdminTenantHardDelete(ctx context.Context, tenant string, confirmTenant string) (bool, error)
 	AgentSave(ctx context.Context, input model.AgentSaveInput) (*model.Agent, error)
 	AttachmentCreate(ctx context.Context, input model.AttachmentInput) (*model.Attachment, error)
 	BankAccountCreate(ctx context.Context, input *model.BankAccountCreateInput) (*model.BankAccount, error)
@@ -2109,7 +2125,6 @@ type MutationResolver interface {
 	TenantUpdateBillingProfile(ctx context.Context, input model.TenantBillingProfileUpdateInput) (*model.TenantBillingProfile, error)
 	TenantUpdateSettings(ctx context.Context, input *model.TenantSettingsInput) (*model.TenantSettings, error)
 	TenantUpdateSettingsOpportunityStage(ctx context.Context, input model.TenantSettingsOpportunityStageConfigurationInput) (*model.ActionResponse, error)
-	TenantHardDelete(ctx context.Context, tenant string, confirmTenant string) (bool, error)
 	UserUpdateOnboardingDetails(ctx context.Context, input model.UserOnboardingDetailsInput) (*model.User, error)
 	TableViewDefCreate(ctx context.Context, input model.TableViewDefCreateInput) (*model.TableViewDef, error)
 	TableViewDefUpdate(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error)
@@ -2170,11 +2185,13 @@ type PhoneNumberResolver interface {
 	Organizations(ctx context.Context, obj *model.PhoneNumber) ([]*model.Organization, error)
 }
 type QueryResolver interface {
+	TenantImpersonateList(ctx context.Context) ([]*model.TenantImpersonateDetails, error)
 	Agents(ctx context.Context) ([]*model.Agent, error)
 	Agent(ctx context.Context, id string) (*model.Agent, error)
 	SlackChannelsWithBot(ctx context.Context) ([]*model.AgentSlackChannel, error)
 	Attachment(ctx context.Context, id string) (*model.Attachment, error)
 	BankAccounts(ctx context.Context) ([]*model.BankAccount, error)
+	Version(ctx context.Context) (float64, error)
 	GlobalCache(ctx context.Context) (*model.GlobalCache, error)
 	Contact(ctx context.Context, id string) (*model.Contact, error)
 	Contacts(ctx context.Context, pagination *model.Pagination, where *model.Filter, sort []*model1.SortBy) (*model.ContactsPage, error)
@@ -5455,6 +5472,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.GlobalCache.IsOwner(childComplexity), true
 
+	case "GlobalCache.isPlatformOwner":
+		if e.complexity.GlobalCache.IsPlatformOwner == nil {
+			break
+		}
+
+		return e.complexity.GlobalCache.IsPlatformOwner(childComplexity), true
+
 	case "GlobalCache.mailboxes":
 		if e.complexity.GlobalCache.Mailboxes == nil {
 			break
@@ -7293,6 +7317,54 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddTag(childComplexity, args["input"].(model.AddTagInput)), true
+
+	case "Mutation.admin_addWorkspaceAccess":
+		if e.complexity.Mutation.AdminAddWorkspaceAccess == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_admin_addWorkspaceAccess_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AdminAddWorkspaceAccess(childComplexity, args["authenticatedUserEmail"].(string), args["tenant"].(string)), true
+
+	case "Mutation.admin_removeWorkspaceAccess":
+		if e.complexity.Mutation.AdminRemoveWorkspaceAccess == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_admin_removeWorkspaceAccess_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AdminRemoveWorkspaceAccess(childComplexity, args["authenticatedUserEmail"].(string), args["tenant"].(string)), true
+
+	case "Mutation.admin_switchCurrentWorkspace":
+		if e.complexity.Mutation.AdminSwitchCurrentWorkspace == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_admin_switchCurrentWorkspace_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AdminSwitchCurrentWorkspace(childComplexity, args["switchToTenant"].(string)), true
+
+	case "Mutation.admin_tenant_hardDelete":
+		if e.complexity.Mutation.AdminTenantHardDelete == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_admin_tenant_hardDelete_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AdminTenantHardDelete(childComplexity, args["tenant"].(string), args["confirmTenant"].(string)), true
 
 	case "Mutation.agent_Save":
 		if e.complexity.Mutation.AgentSave == nil {
@@ -9189,18 +9261,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.TenantAddBillingProfile(childComplexity, args["input"].(model.TenantBillingProfileInput)), true
-
-	case "Mutation.tenant_hardDelete":
-		if e.complexity.Mutation.TenantHardDelete == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_tenant_hardDelete_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.TenantHardDelete(childComplexity, args["tenant"].(string), args["confirmTenant"].(string)), true
 
 	case "Mutation.tenant_UpdateBillingProfile":
 		if e.complexity.Mutation.TenantUpdateBillingProfile == nil {
@@ -11609,6 +11669,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.TenantBillingProfiles(childComplexity), true
 
+	case "Query.tenant_impersonateList":
+		if e.complexity.Query.TenantImpersonateList == nil {
+			break
+		}
+
+		return e.complexity.Query.TenantImpersonateList(childComplexity), true
+
 	case "Query.tenantSettings":
 		if e.complexity.Query.TenantSettings == nil {
 			break
@@ -11711,6 +11778,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Users(childComplexity, args["pagination"].(*model.Pagination), args["where"].(*model.Filter), args["sort"].([]*model1.SortBy)), true
+
+	case "Query.version":
+		if e.complexity.Query.Version == nil {
+			break
+		}
+
+		return e.complexity.Query.Version(childComplexity), true
 
 	case "Reminder.content":
 		if e.complexity.Reminder.Content == nil {
@@ -12573,6 +12647,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TenantBillingProfile.Zip(childComplexity), true
 
+	case "TenantImpersonateDetails.createdBy":
+		if e.complexity.TenantImpersonateDetails.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.TenantImpersonateDetails.CreatedBy(childComplexity), true
+
+	case "TenantImpersonateDetails.personal":
+		if e.complexity.TenantImpersonateDetails.Personal == nil {
+			break
+		}
+
+		return e.complexity.TenantImpersonateDetails.Personal(childComplexity), true
+
+	case "TenantImpersonateDetails.tenant":
+		if e.complexity.TenantImpersonateDetails.Tenant == nil {
+			break
+		}
+
+		return e.complexity.TenantImpersonateDetails.Tenant(childComplexity), true
+
 	case "TenantSettings.baseCurrency":
 		if e.complexity.TenantSettings.BaseCurrency == nil {
 			break
@@ -13179,6 +13274,24 @@ enum ActionType {
     source: DataSource!
     appSource: String!
 }`, BuiltIn: false},
+	{Name: "../schemas/admin.graphqls", Input: `extend type Query {
+    tenant_impersonateList: [TenantImpersonateDetails!]! @hasRole(roles: [PLATFORM_OWNER, IMPERSONATED]) @hasTenant
+}
+
+extend type Mutation {
+    admin_addWorkspaceAccess(authenticatedUserEmail: String!, tenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
+    admin_removeWorkspaceAccess(authenticatedUserEmail: String!, tenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
+
+    admin_switchCurrentWorkspace(switchToTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
+
+    admin_tenant_hardDelete(tenant: String!, confirmTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
+}
+
+type TenantImpersonateDetails {
+    tenant: String!
+    createdBy: String!
+    personal: Boolean!
+}`, BuiltIn: false},
 	{Name: "../schemas/agent.graphqls", Input: `extend type Query {
   agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
   agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -13395,11 +13508,13 @@ input BillingProfileLinkEmailInput {
     primary: Boolean
 }`, BuiltIn: false},
 	{Name: "../schemas/cache.graphqls", Input: `extend type Query {
+    version: Float!
     global_Cache : GlobalCache!
 }
 
 type GlobalCache {
     user:                   User!
+    isPlatformOwner:        Boolean!
     isOwner:                Boolean!
     inactiveEmailTokens:    [GlobalCacheEmailToken!]!
     activeEmailTokens:      [GlobalCacheEmailToken!]!
@@ -14597,6 +14712,7 @@ enum Role {
     OWNER
     ADMIN
     PLATFORM_OWNER
+    IMPERSONATED
 }
 
 directive @hasTenant on FIELD_DEFINITION`, BuiltIn: false},
@@ -16975,8 +17091,6 @@ extend type Mutation {
     tenant_UpdateBillingProfile(input: TenantBillingProfileUpdateInput!): TenantBillingProfile! @hasRole(roles: [ADMIN, USER]) @hasTenant
     tenant_UpdateSettings(input: TenantSettingsInput): TenantSettings! @hasRole(roles: [ADMIN, USER]) @hasTenant
     tenant_UpdateSettingsOpportunityStage(input: TenantSettingsOpportunityStageConfigurationInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
-    tenant_hardDelete(tenant: String!, confirmTenant: String!): Boolean! @hasRole(roles: [PLATFORM_OWNER]) @hasTenant
 }
 
 type TenantSettings {
@@ -17830,6 +17944,187 @@ func (ec *executionContext) field_Mutation_addTag_argsInput(
 	}
 
 	var zeroVal model.AddTagInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_admin_addWorkspaceAccess_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_admin_addWorkspaceAccess_argsAuthenticatedUserEmail(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["authenticatedUserEmail"] = arg0
+	arg1, err := ec.field_Mutation_admin_addWorkspaceAccess_argsTenant(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["tenant"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_admin_addWorkspaceAccess_argsAuthenticatedUserEmail(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["authenticatedUserEmail"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("authenticatedUserEmail"))
+	if tmp, ok := rawArgs["authenticatedUserEmail"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_admin_addWorkspaceAccess_argsTenant(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["tenant"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("tenant"))
+	if tmp, ok := rawArgs["tenant"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_admin_removeWorkspaceAccess_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_admin_removeWorkspaceAccess_argsAuthenticatedUserEmail(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["authenticatedUserEmail"] = arg0
+	arg1, err := ec.field_Mutation_admin_removeWorkspaceAccess_argsTenant(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["tenant"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_admin_removeWorkspaceAccess_argsAuthenticatedUserEmail(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["authenticatedUserEmail"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("authenticatedUserEmail"))
+	if tmp, ok := rawArgs["authenticatedUserEmail"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_admin_removeWorkspaceAccess_argsTenant(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["tenant"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("tenant"))
+	if tmp, ok := rawArgs["tenant"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_admin_switchCurrentWorkspace_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_admin_switchCurrentWorkspace_argsSwitchToTenant(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["switchToTenant"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_admin_switchCurrentWorkspace_argsSwitchToTenant(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["switchToTenant"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("switchToTenant"))
+	if tmp, ok := rawArgs["switchToTenant"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_admin_tenant_hardDelete_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_admin_tenant_hardDelete_argsTenant(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["tenant"] = arg0
+	arg1, err := ec.field_Mutation_admin_tenant_hardDelete_argsConfirmTenant(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["confirmTenant"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_admin_tenant_hardDelete_argsTenant(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["tenant"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("tenant"))
+	if tmp, ok := rawArgs["tenant"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_admin_tenant_hardDelete_argsConfirmTenant(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	if _, ok := rawArgs["confirmTenant"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("confirmTenant"))
+	if tmp, ok := rawArgs["confirmTenant"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -24293,57 +24588,6 @@ func (ec *executionContext) field_Mutation_tenant_UpdateSettings_argsInput(
 	}
 
 	var zeroVal *model.TenantSettingsInput
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_tenant_hardDelete_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
-	var err error
-	args := map[string]any{}
-	arg0, err := ec.field_Mutation_tenant_hardDelete_argsTenant(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["tenant"] = arg0
-	arg1, err := ec.field_Mutation_tenant_hardDelete_argsConfirmTenant(ctx, rawArgs)
-	if err != nil {
-		return nil, err
-	}
-	args["confirmTenant"] = arg1
-	return args, nil
-}
-func (ec *executionContext) field_Mutation_tenant_hardDelete_argsTenant(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["tenant"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("tenant"))
-	if tmp, ok := rawArgs["tenant"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
-	return zeroVal, nil
-}
-
-func (ec *executionContext) field_Mutation_tenant_hardDelete_argsConfirmTenant(
-	ctx context.Context,
-	rawArgs map[string]any,
-) (string, error) {
-	if _, ok := rawArgs["confirmTenant"]; !ok {
-		var zeroVal string
-		return zeroVal, nil
-	}
-
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("confirmTenant"))
-	if tmp, ok := rawArgs["confirmTenant"]; ok {
-		return ec.unmarshalNString2string(ctx, tmp)
-	}
-
-	var zeroVal string
 	return zeroVal, nil
 }
 
@@ -48354,6 +48598,50 @@ func (ec *executionContext) fieldContext_GlobalCache_user(_ context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _GlobalCache_isPlatformOwner(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GlobalCache_isPlatformOwner(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsPlatformOwner, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GlobalCache_isPlatformOwner(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GlobalCache",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _GlobalCache_isOwner(ctx context.Context, field graphql.CollectedField, obj *model.GlobalCache) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_GlobalCache_isOwner(ctx, field)
 	if err != nil {
@@ -61391,6 +61679,362 @@ func (ec *executionContext) fieldContext_Metadata_version(_ context.Context, fie
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int64 does not have child fields")
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_admin_addWorkspaceAccess(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_admin_addWorkspaceAccess(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AdminAddWorkspaceAccess(rctx, fc.Args["authenticatedUserEmail"].(string), fc.Args["tenant"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"PLATFORM_OWNER"})
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_admin_addWorkspaceAccess(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_admin_addWorkspaceAccess_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_admin_removeWorkspaceAccess(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_admin_removeWorkspaceAccess(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AdminRemoveWorkspaceAccess(rctx, fc.Args["authenticatedUserEmail"].(string), fc.Args["tenant"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"PLATFORM_OWNER"})
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_admin_removeWorkspaceAccess(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_admin_removeWorkspaceAccess_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_admin_switchCurrentWorkspace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_admin_switchCurrentWorkspace(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AdminSwitchCurrentWorkspace(rctx, fc.Args["switchToTenant"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"PLATFORM_OWNER"})
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_admin_switchCurrentWorkspace(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_admin_switchCurrentWorkspace_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_admin_tenant_hardDelete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_admin_tenant_hardDelete(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AdminTenantHardDelete(rctx, fc.Args["tenant"].(string), fc.Args["confirmTenant"].(string))
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"PLATFORM_OWNER"})
+			if err != nil {
+				var zeroVal bool
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal bool
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_admin_tenant_hardDelete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_admin_tenant_hardDelete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -78957,95 +79601,6 @@ func (ec *executionContext) fieldContext_Mutation_tenant_UpdateSettingsOpportuni
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_tenant_hardDelete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_tenant_hardDelete(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		directive0 := func(rctx context.Context) (any, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().TenantHardDelete(rctx, fc.Args["tenant"].(string), fc.Args["confirmTenant"].(string))
-		}
-
-		directive1 := func(ctx context.Context) (any, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"PLATFORM_OWNER"})
-			if err != nil {
-				var zeroVal bool
-				return zeroVal, err
-			}
-			if ec.directives.HasRole == nil {
-				var zeroVal bool
-				return zeroVal, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (any, error) {
-			if ec.directives.HasTenant == nil {
-				var zeroVal bool
-				return zeroVal, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(bool); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_tenant_hardDelete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_tenant_hardDelete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_user_UpdateOnboardingDetails(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_user_UpdateOnboardingDetails(ctx, field)
 	if err != nil {
@@ -91225,6 +91780,92 @@ func (ec *executionContext) fieldContext_PhoneNumberParticipant_type(_ context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_tenant_impersonateList(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_tenant_impersonateList(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		directive0 := func(rctx context.Context) (any, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().TenantImpersonateList(rctx)
+		}
+
+		directive1 := func(ctx context.Context) (any, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐRoleᚄ(ctx, []any{"PLATFORM_OWNER", "IMPERSONATED"})
+			if err != nil {
+				var zeroVal []*model.TenantImpersonateDetails
+				return zeroVal, err
+			}
+			if ec.directives.HasRole == nil {
+				var zeroVal []*model.TenantImpersonateDetails
+				return zeroVal, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (any, error) {
+			if ec.directives.HasTenant == nil {
+				var zeroVal []*model.TenantImpersonateDetails
+				return zeroVal, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.TenantImpersonateDetails); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/customeros/customeros/packages/server/customer-os-api/graphql/model.TenantImpersonateDetails`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.TenantImpersonateDetails)
+	fc.Result = res
+	return ec.marshalNTenantImpersonateDetails2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantImpersonateDetailsᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_tenant_impersonateList(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "tenant":
+				return ec.fieldContext_TenantImpersonateDetails_tenant(ctx, field)
+			case "createdBy":
+				return ec.fieldContext_TenantImpersonateDetails_createdBy(ctx, field)
+			case "personal":
+				return ec.fieldContext_TenantImpersonateDetails_personal(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TenantImpersonateDetails", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_agents(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_agents(ctx, field)
 	if err != nil {
@@ -91708,6 +92349,50 @@ func (ec *executionContext) fieldContext_Query_bankAccounts(_ context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_version(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_version(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Version(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(float64)
+	fc.Result = res
+	return ec.marshalNFloat2float64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_global_Cache(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_global_Cache(ctx, field)
 	if err != nil {
@@ -91749,6 +92434,8 @@ func (ec *executionContext) fieldContext_Query_global_Cache(_ context.Context, f
 			switch field.Name {
 			case "user":
 				return ec.fieldContext_GlobalCache_user(ctx, field)
+			case "isPlatformOwner":
+				return ec.fieldContext_GlobalCache_isPlatformOwner(ctx, field)
 			case "isOwner":
 				return ec.fieldContext_GlobalCache_isOwner(ctx, field)
 			case "inactiveEmailTokens":
@@ -106206,6 +106893,138 @@ func (ec *executionContext) _TenantBillingProfile_check(ctx context.Context, fie
 func (ec *executionContext) fieldContext_TenantBillingProfile_check(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "TenantBillingProfile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantImpersonateDetails_tenant(ctx context.Context, field graphql.CollectedField, obj *model.TenantImpersonateDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantImpersonateDetails_tenant(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Tenant, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantImpersonateDetails_tenant(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantImpersonateDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantImpersonateDetails_createdBy(ctx context.Context, field graphql.CollectedField, obj *model.TenantImpersonateDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantImpersonateDetails_createdBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantImpersonateDetails_createdBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantImpersonateDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TenantImpersonateDetails_personal(ctx context.Context, field graphql.CollectedField, obj *model.TenantImpersonateDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TenantImpersonateDetails_personal(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Personal, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TenantImpersonateDetails_personal(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TenantImpersonateDetails",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -123215,6 +124034,11 @@ func (ec *executionContext) _GlobalCache(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "isPlatformOwner":
+			out.Values[i] = ec._GlobalCache_isPlatformOwner(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "isOwner":
 			out.Values[i] = ec._GlobalCache_isOwner(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -126334,6 +127158,34 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "admin_addWorkspaceAccess":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_admin_addWorkspaceAccess(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "admin_removeWorkspaceAccess":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_admin_removeWorkspaceAccess(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "admin_switchCurrentWorkspace":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_admin_switchCurrentWorkspace(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "admin_tenant_hardDelete":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_admin_tenant_hardDelete(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "agent_Save":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_agent_Save(ctx, field)
@@ -127400,13 +128252,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "tenant_UpdateSettingsOpportunityStage":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_tenant_UpdateSettingsOpportunityStage(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "tenant_hardDelete":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_tenant_hardDelete(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -129840,6 +130685,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "tenant_impersonateList":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_tenant_impersonateList(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "agents":
 			field := field
 
@@ -129935,6 +130802,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_bankAccounts(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "version":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_version(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -132875,6 +133764,55 @@ func (ec *executionContext) _TenantBillingProfile(ctx context.Context, sel ast.S
 			}
 		case "check":
 			out.Values[i] = ec._TenantBillingProfile_check(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var tenantImpersonateDetailsImplementors = []string{"TenantImpersonateDetails"}
+
+func (ec *executionContext) _TenantImpersonateDetails(ctx context.Context, sel ast.SelectionSet, obj *model.TenantImpersonateDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, tenantImpersonateDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TenantImpersonateDetails")
+		case "tenant":
+			out.Values[i] = ec._TenantImpersonateDetails_tenant(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdBy":
+			out.Values[i] = ec._TenantImpersonateDetails_createdBy(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "personal":
+			out.Values[i] = ec._TenantImpersonateDetails_personal(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -138886,6 +139824,60 @@ func (ec *executionContext) unmarshalNTenantBillingProfileInput2githubᚗcomᚋc
 func (ec *executionContext) unmarshalNTenantBillingProfileUpdateInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantBillingProfileUpdateInput(ctx context.Context, v any) (model.TenantBillingProfileUpdateInput, error) {
 	res, err := ec.unmarshalInputTenantBillingProfileUpdateInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTenantImpersonateDetails2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantImpersonateDetailsᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TenantImpersonateDetails) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTenantImpersonateDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantImpersonateDetails(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTenantImpersonateDetails2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantImpersonateDetails(ctx context.Context, sel ast.SelectionSet, v *model.TenantImpersonateDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TenantImpersonateDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNTenantSettings2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐTenantSettings(ctx context.Context, sel ast.SelectionSet, v model.TenantSettings) graphql.Marshaler {

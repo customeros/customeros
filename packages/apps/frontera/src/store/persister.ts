@@ -4,7 +4,7 @@ export type PersisterInstance = LocalForage;
 
 export class Persister {
   static DB_NAME = 'customerDB';
-  private static version = 0.2;
+  private static version = 0.3;
   private static instances: Map<string, PersisterInstance> = new Map();
   private static sharedInstances: Map<string, PersisterInstance> = new Map();
 
@@ -57,9 +57,7 @@ export class Persister {
         const dbs = await indexedDB.databases();
         const dbNames = dbs
           .map((db) => db.name)
-          .filter(
-            (n) => n?.startsWith('customerDB_') && !n?.includes('shared'),
-          );
+          .filter((n) => n?.startsWith('customerDB_'));
 
         const drops = dbNames.map((name) => LocalForage.dropInstance({ name }));
 

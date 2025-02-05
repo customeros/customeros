@@ -2,7 +2,6 @@ package neo4j_repository
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	commonmodel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -26,7 +25,6 @@ type TenantWriteRepository interface {
 
 	HardDeleteTenant(ctx context.Context, tenant string) error
 
-	LinkWithWorkspace(ctx context.Context, tenant string, workspace neo4jentity.WorkspaceEntity) (bool, error)
 	MarkOnboardingChecked(ctx context.Context, tenant string) error
 }
 
@@ -52,10 +50,9 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 	cypher := `MERGE (t:Tenant {name:$name}) 
 		 ON CREATE SET 
 		  t.id=randomUUID(), 
+		  t.createdBy=$createdBy, 
 		  t.createdAt=datetime(), 
-		  t.updatedAt=datetime(), 
-		  t.source=$source, 
-		  t.appSource=$appSource,
+		  t.updatedAt=datetime(),
 		  t.active=true
 		WITH t
 		MERGE (t)-[:HAS_SETTINGS]->(ts:TenantSettings {tenant:$name})
@@ -70,8 +67,7 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 		 RETURN t`
 	params := map[string]any{
 		"name":              tenant.Name,
-		"source":            tenant.Source,
-		"appSource":         tenant.AppSource,
+		"createdBy":         tenant.CreatedBy,
 		"invoicingEnabled":  false,
 		"invoicingPostpaid": false,
 		"enrichContacts":    true,
@@ -81,6 +77,11 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 	tracing.LogObjectAsJson(span, "params", params)
 
 	queryResult, err := tx.Run(ctx, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 }
 
@@ -390,42 +391,6 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 	}
 
 	return err
-}
-
-func (r *tenantWriteRepository) LinkWithWorkspace(ctx context.Context, tenant string, workspace neo4jentity.WorkspaceEntity) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.LinkWithWorkspace")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-	query := `
-			MATCH (t:Tenant {name:$tenant})
-			MATCH (w:Workspace {name:$name, provider:$provider})
-			WHERE NOT ()-[:HAS_WORKSPACE]->(w)
-			CREATE (t)-[:HAS_WORKSPACE]->(w)
-			RETURN t`
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"tenant":   tenant,
-				"name":     workspace.Name,
-				"provider": workspace.Provider,
-			})
-		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
-	})
-	if err != nil {
-		return false, err
-	}
-	convertedResult, isOk := result.([]*dbtype.Node)
-	if !isOk {
-		return false, errors.New("unexpected result type")
-	}
-	if len(convertedResult) == 0 {
-		return false, nil
-	}
-	return true, nil
 }
 
 func (r *tenantWriteRepository) MarkOnboardingChecked(ctx context.Context, tenant string) error {

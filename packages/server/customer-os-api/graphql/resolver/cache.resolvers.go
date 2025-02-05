@@ -16,6 +16,11 @@ import (
 	postgresEntity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
+// Version is the resolver for the version field.
+func (r *queryResolver) Version(ctx context.Context) (float64, error) {
+	return 0.3, nil
+}
+
 // GlobalCache is the resolver for the global_Cache field.
 func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "GlobalCache.global_Cache", graphql.GetOperationContext(ctx))
@@ -36,13 +41,21 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 	}
 	response.User = mapper.MapEntityToUser(user)
 
-	isOwner, err := r.Services.CommonServices.UserService.IsOwner(ctx, user.Id)
+	userEntity, err := r.Services.CommonServices.UserService.GetById(ctx, userId)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "failed GlobalCache - is owner")
+		graphql.AddErrorf(ctx, "failed GlobalCache - find user by id")
 		return nil, nil
 	}
-	response.IsOwner = isOwner
+
+	for _, role := range userEntity.Roles {
+		if role == "OWNER" {
+			response.IsOwner = true
+		}
+		if role == "PLATFORM_OWNER" || role == "IMPERSONATED" {
+			response.IsPlatformOwner = true
+		}
+	}
 
 	if userEmail != "" {
 		privateKey, err := r.Services.Repositories.PostgresRepositories.GoogleServiceAccountKeyRepository.GetApiKeyByTenantService(ctx, tenantName, postgresEntity.GSUITE_SERVICE_PRIVATE_KEY)

@@ -1,0 +1,17 @@
+{
+  "session": {
+      "tenant": "PureThePhantom",
+      "access_token": "ya29.a0AXooCgu0s-msvFSUvsbw2wfwAPATYWHIJtA9oEkHc_UFESt4CgevMZkmfItxpC9XoDxfIpqAfku_1Ps7Kx5ayIjPqbCCOiMHYvLfQIFmRoFbWp7CNuqPo4dlcpPeOvWfF6fg_7at8T1OX1zdpg6EQ77s_P6jwCKitErOdvve0XZbaCgYKAZsSARASFQHGX2Mirnq-9Ao0__tUmGcY_Xrx0w0179",
+      "integrations_token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlB1cmVUaGVQaGFudG9tIiwibmFtZSI6IlB1cmVUaGVQaGFudG9tIiwiaWF0IjoxNzE4MTk3MDYyLCJleHAiOjE3MjA3ODkwNjIsImlzcyI6IjM5YWVmZWI2LWZkYzMtNDc5MC05M2MzLTU2OGUxMGI1ZTY5NCJ9.-HHKo0yLIa3KdfyPwoUebACRXsF_gLR3VCgLQvJgKPaRvbF5rVYG4e0w1wWrk9zuoUz4Yo-A3i0hMine_N4kwg",
+      "profile": {
+          "id": "106865202875672254797",
+          "email": "customerostestuser@gmail.com",
+          "verified_email": true,
+          "name": "customerostest",
+          "given_name": "customerostest",
+          "picture": "https://lh3.googleusercontent.com/a/ACg8ocKLs396zHp28whtxHWcpMuIaLF47NpGXblTVZ034S1hGvkEkw=s96-c"
+      },
+      "iat": 1718197062,
+      "exp": 1720789062
+  }
+}

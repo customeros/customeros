@@ -7,24 +7,29 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 )
 
+type AuthenticatedUserInTenant struct {
+	Tenant              string
+	AuthenticatedUserId string
+	UserId              string
+	Roles               []string
+}
+
 type UserReadRepository interface {
 	GetAllForTenant(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 	GetUserById(ctx context.Context, tenant, userId string) (*dbtype.Node, error)
-	FindFirstUserWithRolesByEmail(ctx context.Context, email string) (string, string, []string, error)
+	FindFirstUserWithRolesByEmail(ctx context.Context, tenant, email string) (*AuthenticatedUserInTenant, error)
 	FindTestUser(ctx context.Context) (*dbtype.Node, error)
 	GetAuthenticatedUserInTenant(ctx context.Context, authUserId, email string) (*dbtype.Node, error)
 	GetFirstUserByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
 	GetAllOwnersForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error)
 	GetOwnerForOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error)
-	IsOwner(parentCtx context.Context, tenant, userId string) (bool, error)
 	GetOwnerForContact(ctx context.Context, tenant, contactId string) (*dbtype.Node, error)
 	GetCreatorForNote(ctx context.Context, tenant, noteId string) (*dbtype.Node, error)
 	GetPaginatedCustomerUsers(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
@@ -156,23 +161,25 @@ func (r *userReadRepository) GetUserById(ctx context.Context, tenant, userId str
 	return result.(*dbtype.Node), nil
 }
 
-func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, email string) (string, string, []string, error) {
+func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, tenant, email string) (*AuthenticatedUserInTenant, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.FindFirstUserWithRolesByEmail")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	span.LogFields(log.String("email", email))
+	span.LogFields(log.String("tenant", tenant))
 
 	session := utils.NewNeo4jReadSession(ctx, *u.driver)
 	defer session.Close(ctx)
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, `
-			MATCH (e:Email)<-[:HAS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(t:Tenant)
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
+			MATCH (e:Email_%s)<-[:HAS]-(u:User_%s)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant {name: $tenant})
 			WHERE e.email=$email OR e.rawEmail=$email
-			RETURN t.name, u.id, u.roles ORDER BY u.createdAt ASC LIMIT 1`,
+			RETURN t.name, au.id, u.id, u.roles ORDER BY u.createdAt ASC LIMIT 1`, tenant, tenant),
 			map[string]interface{}{
-				"email": email,
+				"email":  email,
+				"tenant": tenant,
 			})
 		if err != nil {
 			return nil, err
@@ -180,21 +187,28 @@ func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, 
 		return queryResult.Collect(ctx)
 	})
 	if err != nil {
-		return "", "", []string{}, err
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 	if len(records.([]*neo4j.Record)) > 0 {
 		tenant := records.([]*neo4j.Record)[0].Values[0].(string)
-		userId := records.([]*neo4j.Record)[0].Values[1].(string)
-		roleList, ok := records.([]*neo4j.Record)[0].Values[2].([]interface{})
+		authenticatedUserId := records.([]*neo4j.Record)[0].Values[1].(string)
+		userId := records.([]*neo4j.Record)[0].Values[2].(string)
+		roleList, ok := records.([]*neo4j.Record)[0].Values[3].([]interface{})
 		var roles []string
 		if !ok {
 			roles = []string{}
 		} else {
 			roles = u.toStringList(roleList)
 		}
-		return userId, tenant, roles, nil
+		return &AuthenticatedUserInTenant{
+			Tenant:              tenant,
+			AuthenticatedUserId: authenticatedUserId,
+			UserId:              userId,
+			Roles:               roles,
+		}, nil
 	} else {
-		return "", "", []string{}, nil
+		return nil, nil
 	}
 }
 
@@ -213,7 +227,7 @@ func (r *userReadRepository) GetAuthenticatedUserInTenant(ctx context.Context, a
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (e:Email{rawEmail:$email})<-[:HAS]-(u:User)-[:%s]->(a:AuthenticationUser {id:$authUserId})-[:%s]->(t:Tenant) RETURN u`, model.AUTHENTICATED_BY.String(), model.HAS_WORKSPACE.String())
+	cypher := fmt.Sprintf(`MATCH (e:Email_%s{rawEmail:$email})<-[:HAS]-(u:User_%s)-[:%s]->(a:AuthenticationUser {id:$authUserId})-[:%s]->(t:Tenant {name:$tenant}) RETURN u`, tenant, tenant, model.AUTHENTICATED_BY.String(), model.HAS_WORKSPACE.String())
 	params := map[string]any{
 		"tenant":     tenant,
 		"email":      email,
@@ -387,39 +401,6 @@ func (r *userReadRepository) GetOwnerForOrganization(ctx context.Context, tenant
 	} else {
 		return utils.NodePtr(result.([]*neo4j.Record)[0].Values[0].(dbtype.Node)), nil
 	}
-}
-
-func (r *userReadRepository) IsOwner(parentCtx context.Context, tenant, userId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserReadRepository.IsOwner")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)<-[:OWNS]-(u:User{id:$userId})
-			RETURN count(o)`
-	params := map[string]any{
-		"tenant": tenant,
-		"userId": userId,
-	}
-
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	queryResult, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, cypher, params)
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Single(ctx)
-	})
-
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return false, err
-	}
-
-	count := queryResult.(*db.Record).Values[0].(int64)
-	span.LogFields(log.Int64("result", count))
-	return count > 0, nil
 }
 
 func (r *userReadRepository) GetOwnerForContact(parentCtx context.Context, tenant, contactId string) (*dbtype.Node, error) {

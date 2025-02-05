@@ -35,6 +35,7 @@ query global_Cache {
     }
     mailboxes
 
+    isPlatformOwner
     isOwner
     minARRForecastValue
     maxARRForecastValue

@@ -12,7 +12,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/security"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
@@ -43,23 +42,7 @@ func (h *MailHandler) SendEmail() gin.HandlerFunc {
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 
-		tenant := c.GetString(security.KEY_TENANT_NAME)
-
-		customCtx := &common.CustomContext{}
-		if c.Keys[security.KEY_TENANT_NAME] != nil {
-			customCtx.Tenant = c.Keys[security.KEY_TENANT_NAME].(string)
-		}
-		if c.Keys[security.KEY_USER_ROLES] != nil {
-			customCtx.Roles = c.Keys[security.KEY_USER_ROLES].([]string)
-		}
-		if c.Keys[security.KEY_USER_ID] != nil {
-			customCtx.UserId = c.Keys[security.KEY_USER_ID].(string)
-		}
-		if c.Keys[security.KEY_USER_EMAIL] != nil {
-			customCtx.UserEmail = c.Keys[security.KEY_USER_EMAIL].(string)
-		}
-
-		ctx = common.WithCustomContext(ctx, customCtx)
+		tenant := common.GetTenantFromContext(ctx)
 
 		var request *postgres_entity.EmailMessage
 
