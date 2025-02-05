@@ -8,6 +8,12 @@ import { AgentViewUsecase } from '@domain/usecases/agents/agent-view.usecase';
 import { cn } from '@ui/utils/cn';
 import { Icon, IconName } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
+import {
+  ScrollAreaRoot,
+  ScrollAreaThumb,
+  ScrollAreaViewport,
+  ScrollAreaScrollbar,
+} from '@ui/utils/ScrollArea';
 
 import { Header, capabilities } from './components';
 
@@ -115,9 +121,16 @@ export const AgentPage = observer(() => {
         </div>
 
         {usecase.activeCapability && (
-          <div className='w-[418px] border-r border-r-grayModern-200 px-4 py-3'>
-            <ActiveCapability />
-          </div>
+          <ScrollAreaRoot>
+            <ScrollAreaViewport>
+              <div className='w-[418px] border-r border-r-grayModern-200 px-4 py-3'>
+                <ActiveCapability />
+              </div>
+            </ScrollAreaViewport>
+            <ScrollAreaScrollbar orientation='vertical'>
+              <ScrollAreaThumb />
+            </ScrollAreaScrollbar>
+          </ScrollAreaRoot>
         )}
       </div>
     </div>
