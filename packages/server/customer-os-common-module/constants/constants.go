@@ -4,6 +4,7 @@ const (
 	AppSourceCustomerOsApi    = "customer-os-api"
 	AppSourceSyncEmail        = "sync-email"
 	AppSourceFileStoreService = "file-store"
+	AppSourceUpkeeper         = "upkeeper"
 
 	ComponentResolver        = "resolver"
 	ComponentRest            = "rest"
