@@ -118,6 +118,7 @@ func (r *commonRepository) PermanentlyDelete(ctx context.Context, tenant string)
 		postgres_entity.EmailTracking{}.TableName(),
 		postgres_entity.EmailValidationRecord{}.TableName(),
 		postgres_entity.EmailValidationRequestBulk{}.TableName(),
+		postgres_entity.InvoiceNumberEntity{}.TableName(),
 		postgres_entity.MailStackDomain{}.TableName(),
 		postgres_entity.SlackChannelNotification{}.TableName(),
 		postgres_entity.StatsApiCalls{}.TableName(),

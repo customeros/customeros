@@ -251,11 +251,7 @@ func (s *invoiceService) InvoiceContract(ctx context.Context, txWithPostCommit *
 		}
 	}
 	if invoiceNumber == "" || (dryRun && !preview) {
-		if !dryRun || preview {
-			invoiceNumber = s.prepareInvoiceNumber(tenant)
-		} else {
-			invoiceNumber = s.generateNewRandomInvoiceNumber()
-		}
+		invoiceNumber = s.prepareInvoiceNumber(ctx, tenant)
 	}
 
 	// prepare issue and due date
@@ -620,7 +616,10 @@ func (s *invoiceService) prepareInvoiceCycleEndDate(ctx context.Context, start t
 	return invoiceCycleEnd
 }
 
-func (s *invoiceService) prepareInvoiceNumber(tenant string) string {
+func (s *invoiceService) prepareInvoiceNumber(ctx context.Context, tenant string) string {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.prepareInvoiceNumber")
+	defer span.Finish()
+
 	maxAttempts := 20
 	var invoiceNumber string
 	for attempt := 1; attempt < maxAttempts+1; attempt++ {
@@ -630,12 +629,13 @@ func (s *invoiceService) prepareInvoiceNumber(tenant string) string {
 			Tenant:        tenant,
 			Attempts:      attempt,
 		}
-		innerErr := s.postgresRepositories.InvoiceRepository.Reserve(invoiceNumberEntity)
+		innerErr := s.postgresRepositories.InvoiceRepository.Reserve(ctx, invoiceNumberEntity)
 		if innerErr == nil {
 			break
 		}
 	}
 
+	span.LogFields(log.String("invoiceNumber", invoiceNumber))
 	return invoiceNumber
 }
 
