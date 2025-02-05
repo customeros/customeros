@@ -39,7 +39,7 @@ export const AvatarCell = observer(
             }
           }}
           className={cn(
-            'w-6 h-6 flex items-center justify-center rounded border border-gray-200 cursor-pointer focus:outline-none',
+            'w-6 h-6 flex items-center justify-center  border border-gray-200 cursor-pointer focus:outline-none rounded-full',
             {
               'animate-pulse': isEnriching,
               'cursor-default': !canNavigate,
@@ -56,7 +56,7 @@ export const AvatarCell = observer(
                 fetchPriority='low'
                 onError={() => setStatus('error')}
                 onLoad={() => setStatus('loaded')}
-                className={cn('w-full h-full object-contain', {
+                className={cn('w-full h-full object-contain rounded-full', {
                   'opacity-0 size-0': status === 'loading',
                   'opacity-100': status === 'loaded',
                 })}
