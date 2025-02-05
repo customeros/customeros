@@ -42,6 +42,7 @@ type CommonConfig struct {
 	PdfConverter     commonconf.PdfConverterConfig
 	FileStore        commonconf.FileStoreConfig
 	SlackConfig      commonconf.SlackConfig
+	CustomerOsApi    commonconf.CustomerOsApiConfig
 }
 
 func Load() *Config {
@@ -72,6 +73,7 @@ func Load() *Config {
 			MailSherpaApiConfig: cmnCfg.MailSherpaApi,
 			PdfConverterConfig:  cmnCfg.PdfConverter,
 			FileStoreConfig:     cmnCfg.FileStore,
+			CustomerOsApi:       cmnCfg.CustomerOsApi,
 		},
 		External: commonconf.ExternalServicesConfig{
 			BetterContactConfig: cmnCfg.BetterContact,
