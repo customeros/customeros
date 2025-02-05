@@ -1,5 +1,5 @@
 import { cn } from '@ui/utils/cn';
-import { Logo } from '@ui/media/Logo/Logo';
+import { Logo } from '@ui/media/Logo';
 
 import { isKnownUrl } from './util';
 
