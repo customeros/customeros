@@ -99,7 +99,7 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        title='Organization'
+        title='Company'
         id={ColumnViewType.ContactsOrganization}
         {...getTHeadProps<Contact>(props)}
       />

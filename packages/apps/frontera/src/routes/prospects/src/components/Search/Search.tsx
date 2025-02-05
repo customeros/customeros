@@ -79,7 +79,7 @@ export const Search = observer(() => {
           }}
           placeholder={
             store.ui.isSearching
-              ? 'by opportunity, organization or owner...'
+              ? 'by opportunity, company or owner...'
               : '/ to search'
           }
           onFocus={() => {

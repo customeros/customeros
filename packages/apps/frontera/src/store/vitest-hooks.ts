@@ -28,7 +28,7 @@ afterAll(async () => {
     try {
       await organizationsRepository.hideOrganizations({ ids: [id] });
     } catch (error) {
-      console.error(`Failed to cleanup organization ${id}:`, error);
+      console.error(`Failed to cleanup company ${id}:`, error);
     }
   }
 });

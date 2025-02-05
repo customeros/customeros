@@ -17,7 +17,7 @@ import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog
 import { TagColorPicker } from './TagColorPicker';
 
 const entityTypes = {
-  [EntityType.Organization]: { label: 'Organization' },
+  [EntityType.Organization]: { label: 'Company' },
   [EntityType.Contact]: { label: 'Contact' },
   [EntityType.LogEntry]: { label: 'Log entry' },
 };

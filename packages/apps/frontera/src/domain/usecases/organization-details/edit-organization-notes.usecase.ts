@@ -37,7 +37,7 @@ export class EditOrganizationNotesUsecase {
 
     if (!organization) {
       console.error(
-        'EditOrganizationNoteUsecase: execute called without organization',
+        'EditOrganizationNoteUsecase: execute called without company',
       );
 
       return;

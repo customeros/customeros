@@ -152,7 +152,7 @@ export const KanbanCard = observer(
                 >
                   {organization?.value.name
                     ? organization.value.name
-                    : 'Organization loading...'}
+                    : 'Company loading...'}
                 </p>
               </div>
             </div>

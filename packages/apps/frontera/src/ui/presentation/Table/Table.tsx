@@ -883,8 +883,8 @@ const NoResults = ({ tableId }: { tableId?: TableIdType }) => {
         {tableId &&
           [TableIdType.Customers, TableIdType.Targets].includes(tableId) && (
             <>
-              Alternatively, you can add more organizations here by changing
-              their relationship.
+              Alternatively, you can add more companies here by changing their
+              relationship.
             </>
           )}
       </p>

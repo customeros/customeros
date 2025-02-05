@@ -88,7 +88,7 @@ export const OrganizationSidenav = observer(() => {
           )}
           <Tooltip label={organization?.value?.name ?? ''}>
             <span className='max-w-150px  font-semibold text-gray-700 truncate whitespace-nowrap '>
-              {organization?.value?.name || 'Organization'}
+              {organization?.value?.name || 'Company'}
             </span>
           </Tooltip>
         </div>

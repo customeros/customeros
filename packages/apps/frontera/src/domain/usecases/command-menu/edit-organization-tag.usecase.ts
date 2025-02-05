@@ -61,8 +61,8 @@ export class EditOrganizationTagUsecase {
     const organization = this.organization;
 
     return selectedIds?.length === 1
-      ? `Organization - ${organization?.value?.name}`
-      : `${selectedIds?.length} organizations`;
+      ? `Company - ${organization?.value?.name}`
+      : `${selectedIds?.length} companies`;
   }
 
   @computed
@@ -172,7 +172,7 @@ export class EditOrganizationTagUsecase {
 
     if (!id || !this.organization) {
       console.error(
-        'EditOrganizationTagUsecase: select called without id or organization',
+        'EditOrganizationTagUsecase: select called without id or company',
       );
 
       return;

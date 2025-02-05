@@ -204,7 +204,7 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
         },
         {
           id: LastTouchpointType.ActionCreated,
-          label: 'Organization created',
+          label: 'Company created',
         },
       ],
     },
@@ -319,7 +319,7 @@ export const getDefaultFieldTypes = (store?: RootStore) => {
     [ColumnViewType.OrganizationsParentOrganization]: {
       fieldType: CustomFieldTemplateType.FreeText,
       fieldTypeName: 'Text',
-      fieldName: 'Parent org',
+      fieldName: 'Parent company',
       columnAccesor: ColumnViewType.OrganizationsParentOrganization,
       icon: <Type01 className='mb-0.5' />,
     },
