@@ -21,11 +21,17 @@ export const Products = observer(() => {
       <div className='flex flex-col gap-4'>
         <div>
           <div className='flex justify-between'>
-            <p className='text-gray-700  font-semibold'>Products</p>
+            <p
+              data-test='products-header'
+              className='text-gray-700  font-semibold'
+            >
+              Products
+            </p>
             <Button
               size='xs'
               leftIcon={<Plus />}
               colorScheme='primary'
+              dataTest={'add-product-button'}
               onClick={() => {
                 store.ui.commandMenu.setType('AddNewSku');
                 store.ui.commandMenu.setOpen(true);

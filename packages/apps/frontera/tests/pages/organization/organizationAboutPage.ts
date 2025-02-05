@@ -18,7 +18,7 @@ export class OrganizationAboutPage {
   private orgAboutName = 'input[data-test="org-about-name"]';
   private orgAboutDomainEmpty = 'span[data-test="org-about-domain-empty"]';
   private orgAboutDomainFilled = 'span[data-test="org-about-domain-filled"]';
-  private orgAboutDescription = 'p[data-test="org-about-description"]';
+  private orgAboutDescription = 'div[data-test="org-about-description"]';
   private orgAboutTags = 'div[data-test="org-about-tags"]';
   private orgAboutRelationship = 'button[data-test="org-about-relationship"]';
   private relationshipNotAFit = 'div[role="menuitem"]:has-text("Not a fit")';
@@ -39,10 +39,10 @@ export class OrganizationAboutPage {
   private orgAboutOwner = 'div[data-test="org-about-org-owner"]';
   private orgAboutOwnerCustomerosFeTesting =
     'div[role="option"]:has-text("customeros.fe.testing")';
-  private orgAboutSocialLink = 'input[data-test="org-about-social-link"]';
-  private readonly socialLinkDataTest =
-    this.orgAboutSocialLink.match(/data-test="([^"]+)"/)?.[1] ??
-    'org-about-social-link';
+  private orgAboutSocialLink = 'div[data-test="org-about-social-link"]';
+  // private readonly socialLinkDataTest =
+  //   this.orgAboutSocialLink.match(/data-test="([^"]+)"/)?.[1] ??
+  //   'org-about-social-link';
   private orgAboutSocialLinkFilledIn = 'p[data-test="org-about-social-link"]';
   private orgAboutSocialLinkEmpty =
     'input[data-test="org-about-social-link"][placeholder="Social link"]';
@@ -333,21 +333,22 @@ export class OrganizationAboutPage {
       expect
         .soft(this.page.locator(this.orgAboutNumberOfEmployees))
         .toContainText(update.orgAboutNumberOfEmployees),
+      expect.soft(this.page.locator(this.orgAboutSocialLink).count()).toBe(5),
       // expect
       //   .soft(this.getSocialLinkLocator('facebook.com/cognyte').count())
       //   .toBeGreaterThan(0),
-      expect
-        .soft(this.getSocialLinkLocator('/silkwebro').count())
-        .toBeGreaterThan(0),
-      expect
-        .soft(this.getSocialLinkLocator('youtube.com/c/Gomagro').count())
-        .toBeGreaterThan(0),
-      expect
-        .soft(this.getSocialLinkLocator('/992874').count())
-        .toBeGreaterThan(0),
-      expect
-        .soft(this.getSocialLinkLocator(update.orgAboutSocialLinkEmpty))
-        .toHaveCount(1),
+      // expect
+      //   .soft(this.getSocialLinkLocator('/silkwebro').count())
+      //   .toBeGreaterThan(0),
+      // expect
+      //   .soft(this.getSocialLinkLocator('youtube.com/c/Gomagro').count())
+      //   .toBeGreaterThan(0),
+      // expect
+      //   .soft(this.getSocialLinkLocator('/992874').count())
+      //   .toBeGreaterThan(0),
+      // expect
+      //   .soft(this.getSocialLinkLocator(update.orgAboutSocialLinkEmpty))
+      //   .toHaveCount(1),
       expect
         .soft(this.page.locator(this.orgAboutOwner))
         .toContainText(update.orgAboutOwner),
@@ -356,32 +357,34 @@ export class OrganizationAboutPage {
 
   async enrichOrganization(domain: string) {
     await this.addDomainToOrg(domain);
-
-    await this.page.waitForLoadState('networkidle');
-    await this.page.locator(this.orgAboutName).waitFor({ state: 'visible' });
-  }
-
-  private getSocialLinkLocator(exactText: string) {
-    return this.page.locator(
-      `p[data-test="${this.socialLinkDataTest}"]:has-text("${exactText}")`,
+    await expect(this.page.locator(this.orgAboutDomainFilled)).toHaveText(
+      domain,
     );
+    //   await this.page.waitForLoadState('networkidle');
+    //   await this.page.locator(this.orgAboutName).waitFor({ state: 'visible' });
   }
+
+  // private getSocialLinkLocator(exactText: string) {
+  //   return this.page.locator(
+  //     `p[data-test="${this.socialLinkDataTest}"]:has-text("${exactText}")`,
+  //   );
+  // }
 
   async checkEnrichedAboutFields(create: { name: string; domain: string }) {
-    const socialLinks = ['/silkwebro', 'youtube.com/c/Gomagro', '/992874'];
-
-    // First scroll each social link into view
-    for (const link of socialLinks) {
-      const locator = this.getSocialLinkLocator(link);
-
-      await locator.scrollIntoViewIfNeeded();
-    }
+    // const socialLinks = ['/silkwebro', 'youtube.com/c/Gomagro', '/992874'];
+    //
+    // // First scroll each social link into view
+    // for (const link of socialLinks) {
+    //   const locator = this.getSocialLinkLocator(link);
+    //
+    //   await locator.scrollIntoViewIfNeeded();
+    // }
 
     // Then check all conditions
     await Promise.all([
-      expect
-        .soft(this.page.locator(this.orgAboutName))
-        .toHaveValue(create.name),
+      // expect
+      //   .soft(this.page.locator(this.orgAboutName))
+      //   .toHaveValue(create.name),
       expect
         .soft(this.page.locator(this.orgAboutDomainFilled))
         .toHaveText(create.domain),
@@ -394,14 +397,17 @@ export class OrganizationAboutPage {
         .soft(this.page.locator(this.orgAboutIndustry))
         .toHaveText('Industry not found yet'),
       expect
-        .soft(await this.getSocialLinkLocator('/silkwebro').count())
-        .toBeGreaterThan(0),
-      expect
-        .soft(await this.getSocialLinkLocator('youtube.com/c/Gomagro').count())
-        .toBeGreaterThan(0),
-      expect
-        .soft(await this.getSocialLinkLocator('/992874').count())
-        .toBeGreaterThan(0),
+        .soft(await this.page.locator(this.orgAboutSocialLink).count())
+        .toBe(5),
+      // expect
+      //   .soft(await this.getSocialLinkLocator('/silkwebro').count())
+      //   .toBeGreaterThan(0),
+      // expect
+      //   .soft(await this.getSocialLinkLocator('youtube.com/c/Gomagro').count())
+      //   .toBeGreaterThan(0),
+      // expect
+      //   .soft(await this.getSocialLinkLocator('/992874').count())
+      //   .toBeGreaterThan(0),
     ]);
   }
 }

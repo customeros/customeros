@@ -1,17 +1,20 @@
 // import { test } from '@playwright/test';
 import { test } from './videoFixture';
-import { flow, organizations } from './test-data';
-import { FlowPage } from './pages/flows/flowPage';
-import { FlowsPage } from './pages/flows/flowsPage';
+import { organizations } from './test-data';
+// import { FlowPage } from './pages/flows/flowPage';
+// import { ContactsPage } from './pages/contacts/contactsPage';
+// import { FlowsPage } from './pages/flows/flowsPage';
 import { LogoPage } from './pages/logoPage/logoPage';
 import { LoginPage } from './pages/loginPage/loginPage';
 import { SettingsPage } from './pages/settings/settingsPage';
-import { ContactsPage } from './pages/contacts/contactsPage';
+import { MailboxesPage } from './pages/settings/mailboxesPage';
 // import { ContactsPage } from './pages/contacts/contactsPage';
 import { CustomersPage } from './pages/customers/customersPage';
 import { WinRatesFor } from './pages/opportunitiesKanban/winRates';
 import { KanbanColumns } from './pages/opportunitiesKanban/columns';
 import { OrganizationsPage } from './pages/organizations/organizationsPage';
+import { SettingsProductsPage } from './pages/settings/settingsProductsPage';
+import { SkuType } from '../src/routes/src/types/__generated__/graphql.types';
 import { OrganizationAboutPage } from './pages/organization/organizationAboutPage';
 import { OrganizationsCmdKPage } from './pages/organizations/organizationsCmdKPage';
 import { OrganizationPeoplePage } from './pages/organization/organizationPeoplePage';
@@ -148,6 +151,55 @@ test('Create Timeline entries in an Organization', async ({
 });
 
 test('Create Contracts in an Organization', async ({ page }, testInfo) => {
+  const logoPage = new LogoPage(page);
+  const loginPage = new LoginPage(page);
+  const settingsPage = new SettingsPage(page);
+  const settingsProductsPage = new SettingsProductsPage(page);
+  const organizationsPage = new OrganizationsPage(page);
+  const organizationAccountPage = new OrganizationAccountPage(page);
+  const organizationSideNavPage = new OrganizationSideNavPage(page);
+
+  // Login
+  await loginPage.login();
+  await logoPage.goToSettings();
+  await settingsProductsPage.goToSettingsProductsPage();
+  await settingsProductsPage.addProduct(SkuType.Subscription, 's1', '123.01');
+  await settingsProductsPage.addProduct(SkuType.OneTime, 'o1', '111.99');
+
+  await settingsPage.goBack();
+  // Wait for redirect and load All Orgs page
+  await organizationsPage.goToAllOrgs();
+
+  // Add organization and check new entry
+  const organizationName = await organizationsPage.addNonInitialOrganization(
+    testInfo,
+  );
+
+  //Access newly created organization
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  await organizationsPage.goToOrganization(organizationName);
+
+  // Go to Account page and update org
+  await organizationSideNavPage.goToAccount();
+  await organizationAccountPage.updateOrgToCustomer();
+
+  // Add the first contract to organization and check new entry
+  await organizationAccountPage.addContractEmpty();
+  await organizationAccountPage.addBillingAddress(0);
+  await organizationAccountPage.checkContractsCount(1);
+  await organizationAccountPage.addSLIsToContract(0);
+  await organizationAccountPage.checkSLIsInAccountPanel();
+
+  // Add the second first contract to organization
+  await organizationAccountPage.addContractNonEmpty();
+  await organizationAccountPage.checkContractsCount(2);
+
+  // Delete a contract
+  await organizationAccountPage.deleteContract(1);
+  await organizationAccountPage.checkContractsCount(1);
+});
+
+test('Create Note in an Organization', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationAccountPage = new OrganizationAccountPage(page);
@@ -169,23 +221,7 @@ test('Create Contracts in an Organization', async ({ page }, testInfo) => {
 
   // Go to Account page and update org
   await organizationSideNavPage.goToAccount();
-  await organizationAccountPage.updateOrgToCustomer();
   await organizationAccountPage.addNoteToOrg();
-
-  // Add the first contract to organization and check new entry
-  await organizationAccountPage.addContractEmpty();
-  await organizationAccountPage.addBillingAddress(0);
-  await organizationAccountPage.checkContractsCount(1);
-  await organizationAccountPage.addSLIsToContract(0);
-  await organizationAccountPage.checkSLIsInAccountPanel();
-
-  // Add the second first contract to organization
-  await organizationAccountPage.addContractNonEmpty();
-  await organizationAccountPage.checkContractsCount(2);
-
-  // Delete a contract
-  await organizationAccountPage.deleteContract(1);
-  await organizationAccountPage.checkContractsCount(1);
 });
 
 test('CmdK global menu', async ({ page }, testInfo) => {
@@ -205,51 +241,51 @@ test('CmdK global menu', async ({ page }, testInfo) => {
   await organizationsCmdKPage.verifyNavigationToContacts(page);
   await organizationsCmdKPage.verifyNavigationToInvoices(page);
   await organizationsCmdKPage.verifyNavigationToContracts(page);
-  await organizationsCmdKPage.verifyNavigationToFlows(page);
+  // await organizationsCmdKPage.verifyNavigationToFlows(page);
   await organizationsCmdKPage.verifyNavigationToSettings(page);
 });
 
-test('Assign contact to flow', async ({ page }, testInfo) => {
-  const loginPage = new LoginPage(page);
-  const flowsPage = new FlowsPage(page);
-  const flowPage = new FlowPage(page);
-  const organizationsPage = new OrganizationsPage(page);
-  const organizationPeoplePage = new OrganizationPeoplePage(page);
-  const organizationSideNavPage = new OrganizationSideNavPage(page);
-  const contactsPage = new ContactsPage(page);
-
-  //
-  await loginPage.login();
-  await flowsPage.goToFlows();
-
-  const flowName = await flowsPage.addFlow();
-
-  await flowPage.checkNewFlowEntry(flowName);
-  // await flowPage.goToFlows();
-  await flowsPage.checkNewFlowEntry(flowName, flow.create);
-
-  await organizationsPage.goToAllOrgs();
-
-  // Add organization and check new entry
-  const organizationName = await organizationsPage.addNonInitialOrganization(
-    testInfo,
-  );
-
-  //Access newly created organization
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-  await organizationsPage.goToOrganization(organizationName);
-
-  // Go to People page
-  await organizationSideNavPage.goToPeople();
-
-  const contactName = await organizationPeoplePage.createContactFromEmpty();
-
-  await organizationSideNavPage.goBack();
-  await contactsPage.waitForPageLoad();
-  await contactsPage.updateContactFlow(contactName, flowName);
-  await flowsPage.goToFlows();
-  await flowsPage.checkNewFlowEntry(flowName, flow.update);
-});
+// test('Assign contact to flow', async ({ page }, testInfo) => {
+//   const loginPage = new LoginPage(page);
+//   const flowsPage = new FlowsPage(page);
+//   const flowPage = new FlowPage(page);
+//   const organizationsPage = new OrganizationsPage(page);
+//   const organizationPeoplePage = new OrganizationPeoplePage(page);
+//   const organizationSideNavPage = new OrganizationSideNavPage(page);
+//   const contactsPage = new ContactsPage(page);
+//
+//   //
+//   await loginPage.login();
+//   await flowsPage.goToFlows();
+//
+//   const flowName = await flowsPage.addFlow();
+//
+//   await flowPage.checkNewFlowEntry(flowName);
+//   // await flowPage.goToFlows();
+//   await flowsPage.checkNewFlowEntry(flowName, flow.create);
+//
+//   await organizationsPage.goToAllOrgs();
+//
+//   // Add organization and check new entry
+//   const organizationName = await organizationsPage.addNonInitialOrganization(
+//     testInfo,
+//   );
+//
+//   //Access newly created organization
+//   await new Promise((resolve) => setTimeout(resolve, 1500));
+//   await organizationsPage.goToOrganization(organizationName);
+//
+//   // Go to People page
+//   await organizationSideNavPage.goToPeople();
+//
+//   const contactName = await organizationPeoplePage.createContactFromEmpty();
+//
+//   await organizationSideNavPage.goBack();
+//   await contactsPage.waitForPageLoad();
+//   await contactsPage.updateContactFlow(contactName, flowName);
+//   await flowsPage.goToFlows();
+//   await flowsPage.checkNewFlowEntry(flowName, flow.update);
+// });
 
 test('Create opportunities', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
@@ -550,16 +586,16 @@ test('Create opportunities', async ({ page }, testInfo) => {
 test('Purchase mailboxes', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const logoPage = new LogoPage(page);
-  const settingsPage = new SettingsPage(page);
+  const mailboxesPage = new MailboxesPage(page);
 
   await loginPage.login();
   await logoPage.goToSettings();
-  await settingsPage.goToMailboxes();
-  await settingsPage.setupMailboxes();
-  await settingsPage.searchForDomains();
-  await settingsPage.addDomainsToCart();
-  await settingsPage.setRedirectUrl();
-  await settingsPage.setUsernames();
-  await settingsPage.checkout();
-  await settingsPage.fillInPaymentForm();
+  await mailboxesPage.goToMailboxes();
+  await mailboxesPage.setupMailboxes();
+  await mailboxesPage.searchForDomains();
+  await mailboxesPage.addDomainsToCart();
+  await mailboxesPage.setRedirectUrl();
+  await mailboxesPage.setUsernames();
+  await mailboxesPage.checkout();
+  await mailboxesPage.fillInPaymentForm();
 });

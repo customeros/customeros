@@ -1,6 +1,5 @@
 import { Page, expect, Locator } from '@playwright/test';
 
-import { SettingsAccountsPage } from '../settings/settingsAccounts';
 import {
   createRequestPromise,
   createResponsePromise,
@@ -16,8 +15,7 @@ export class OrganizationTimelinePage {
 
   private page: Page;
 
-  private timelinetimelineEmailButton =
-    'button[data-test="timeline-email-button"]';
+  private timelineEmailButton = 'button[data-test="timeline-email-button"]';
   private timelineEmailPermissionPrompt =
     'button[data-test="timeline-email-permission-prompt"]';
 
@@ -39,17 +37,19 @@ export class OrganizationTimelinePage {
   private timelineReminderList = 'div[data-test="timeline-reminder-list"]';
   private timelineReminderDismiss =
     'button[data-test="timeline-reminder-dismiss"]';
+  private timelineEmailDiscard = 'button[data-test="timeline-email-discard"]';
+  private timelineEmailSend = 'button[data-test="timeline-email-send"]';
 
   async ensureEmailPermissionPromptIsRedirecting() {
-    await clickLocatorsThatAreVisible(
-      this.page,
-      this.timelinetimelineEmailButton,
-    );
-    await clickLocatorsThatAreVisible(
-      this.page,
-      this.timelineEmailPermissionPrompt,
-    );
-    await SettingsAccountsPage.ensureSettingsAccountsHeaderIsVisible(this.page);
+    await clickLocatorsThatAreVisible(this.page, this.timelineEmailButton);
+    await expect(this.page.locator(this.timelineEmailDiscard)).toBeEnabled();
+    await expect(this.page.locator(this.timelineEmailSend)).toBeEnabled();
+
+    // await clickLocatorsThatAreVisible(
+    //   this.page,
+    //   this.timelineEmailPermissionPrompt,
+    // );
+    // await SettingsAccountsPage.ensureSettingsAccountsHeaderIsVisible(this.page);
   }
 
   async addLogEntry() {

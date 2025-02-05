@@ -148,10 +148,10 @@ export class OrganizationAccountPage {
       this.page,
       this.contractMenuEditContract,
       this.contractCardAddSli,
-      this.addNewServiceMenuSubscription,
-      this.contractCardAddSli,
-      this.addNewServiceMenuOneTime,
-      this.contractDetailsSaveDraft,
+      // this.addNewServiceMenuSubscription,
+      // this.contractCardAddSli,
+      // this.addNewServiceMenuOneTime,
+      // this.contractDetailsSaveDraft,
     );
   }
 

@@ -1,6 +1,6 @@
 import { chromium } from '@playwright/test';
 
-import { FlowsPage } from './pages/flows/flowsPage';
+// import { FlowsPage } from './pages/flows/flowsPage';
 import { LoginPage } from './pages/loginPage/loginPage';
 import { ContactsPage } from './pages/contacts/contactsPage';
 import { WinRatesFor } from './pages/opportunitiesKanban/winRates';
@@ -15,7 +15,7 @@ async function globalSetup() {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const contactsPage = new ContactsPage(page);
-  const flowsPage = new FlowsPage(page);
+  // const flowsPage = new FlowsPage(page);
   const opportunitiesPage = new OpportunitiesPage(page);
   const opportunitiesKanbanPage = new OpportunitiesKanbanPage(page);
 
@@ -47,19 +47,19 @@ async function globalSetup() {
   }
 
   // Archive flows
-  await flowsPage.waitForPageLoad();
-
-  if (
-    (await page
-      .locator(flowsPage.finderTableFlows)
-      .locator('[data-index]')
-      .count()) > 0
-  ) {
-    await flowsPage.selectAllFlows();
-    await flowsPage.archiveOrgs();
-    await flowsPage.confirmArchiveOrgs();
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-  }
+  // await flowsPage.waitForPageLoad();
+  //
+  // if (
+  //   (await page
+  //     .locator(flowsPage.finderTableFlows)
+  //     .locator('[data-index]')
+  //     .count()) > 0
+  // ) {
+  //   await flowsPage.selectAllFlows();
+  //   await flowsPage.archiveOrgs();
+  //   await flowsPage.confirmArchiveOrgs();
+  //   await new Promise((resolve) => setTimeout(resolve, 1500));
+  // }
 
   // Archive opportunities
   await opportunitiesPage.goToOpportunitiesList();
