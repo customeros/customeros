@@ -1,12 +1,10 @@
 import { observer } from 'mobx-react-lite';
 
 import { Tag01 } from '@ui/media/icons/Tag01';
-import { Clock } from '@ui/media/icons/Clock';
 import { Delete } from '@ui/media/icons/Delete';
 import { useStore } from '@shared/hooks/useStore';
 import { Archive } from '@ui/media/icons/Archive';
 import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
-import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
 import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { AddContactFlowSubItemGroup } from '@shared/components/CommandMenu/commands/contacts/AddContactFlowSubItemGroup.tsx';
@@ -50,23 +48,6 @@ export const ContactBulkCommands = observer(() => {
           Add to flow...
         </CommandItem>
         <AddContactFlowSubItemGroup />
-        <CommandItem
-          leftAccessory={<Certificate02 />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('ChangeOrAddJobRoles');
-          }}
-        >
-          Edit job roles...
-        </CommandItem>
-        <CommandItem
-          leftAccessory={<Clock />}
-          keywords={contactKeywords.edit_time_zone}
-          onSelect={() => {
-            store.ui.commandMenu.setType('EditTimeZone');
-          }}
-        >
-          Edit time zone...
-        </CommandItem>
 
         {contactStores.some((contact) => !!contact?.flows?.length) && (
           <CommandItem
