@@ -345,6 +345,7 @@ export class OrganizationsPage {
       .click();
 
     await clickLocatorThatIsVisible(this.page, this.relationshipCustomer);
+    await this.page.waitForTimeout(5000);
   }
 
   async goToOrganization(organizationName: string) {

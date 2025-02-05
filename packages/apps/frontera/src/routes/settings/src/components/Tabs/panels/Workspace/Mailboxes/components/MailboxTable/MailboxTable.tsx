@@ -23,7 +23,9 @@ export const MailboxTable = observer(() => {
     <div className='w-full'>
       <div className='pl-6 pr-3 pt-[5px] pb-[5px] flex items-center justify-between'>
         <div className='flex items-center gap-2'>
-          <h2 className='font-semibold text-md'>Mailboxes</h2>
+          <h2 data-test='mailboxes-header' className='font-semibold text-md'>
+            Mailboxes
+          </h2>
           <Button
             size='xxs'
             rightIcon={<LinkExternal01 className='size-3' />}
@@ -37,6 +39,7 @@ export const MailboxTable = observer(() => {
           onClick={goToBuy}
           leftIcon={<Plus />}
           colorScheme='primary'
+          dataTest='new-mailboxes'
         >
           New mailboxes
         </Button>

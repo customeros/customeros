@@ -83,7 +83,10 @@ export const SettingsSidenav = observer(() => {
               onClick={() => navigate(`/${lastActivePosition.root}`)}
             />
 
-            <p className='font-semibold text-gray-700 break-keep line-clamp-1'>
+            <p
+              data-test='settings-header'
+              className='font-semibold text-gray-700 break-keep line-clamp-1'
+            >
               Settings
             </p>
           </div>

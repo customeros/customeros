@@ -49,7 +49,12 @@ export const ComposeEmail: FC<ComposeEmailProps> = observer(
           >
             <div className='flex gap-2'>
               {onDiscard && (
-                <Button size='xs' variant={'ghost'} onClick={onDiscard}>
+                <Button
+                  size='xs'
+                  variant={'ghost'}
+                  onClick={onDiscard}
+                  dataTest='timeline-email-discard'
+                >
                   Discard
                 </Button>
               )}
@@ -57,6 +62,7 @@ export const ComposeEmail: FC<ComposeEmailProps> = observer(
               <Button
                 size='xs'
                 loadingText='Sending...'
+                dataTest='timeline-email-send'
                 isLoading={emailUseCase.isSending}
                 onClick={() => {
                   emailUseCase.createEmail(replyToId);

@@ -2,7 +2,7 @@ import { Page, expect } from '@playwright/test';
 
 export class CustomersPage {
   private organizationNameInAllOrgsTable =
-    'p[data-test="organization-name-in-all-orgs-table"]';
+    'span[data-test="organization-name-in-all-orgs-table"]';
 
   constructor(private page: Page) {}
 

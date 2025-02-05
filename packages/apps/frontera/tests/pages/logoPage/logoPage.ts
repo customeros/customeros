@@ -19,9 +19,6 @@ export class LogoPage {
 
     await clickLocatorsThatAreVisible(this.page, this.sideNavItemLogo);
     await clickLocatorsThatAreVisible(this.page, this.sideNavItemLogoSettings);
-    await ensureLocatorIsVisible(
-      this.page,
-      settingsPage.sideNavSettingsMailboxes,
-    );
+    await ensureLocatorIsVisible(this.page, settingsPage.settingsHeader);
   }
 }

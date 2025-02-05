@@ -7,6 +7,7 @@ import { organizations } from './test-data';
 import { LogoPage } from './pages/logoPage/logoPage';
 import { LoginPage } from './pages/loginPage/loginPage';
 import { SettingsPage } from './pages/settings/settingsPage';
+import { MailboxesPage } from './pages/settings/mailboxesPage';
 // import { ContactsPage } from './pages/contacts/contactsPage';
 import { CustomersPage } from './pages/customers/customersPage';
 import { WinRatesFor } from './pages/opportunitiesKanban/winRates';
@@ -585,16 +586,16 @@ test('Create opportunities', async ({ page }, testInfo) => {
 test('Purchase mailboxes', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const logoPage = new LogoPage(page);
-  const settingsPage = new SettingsPage(page);
+  const mailboxesPage = new MailboxesPage(page);
 
   await loginPage.login();
   await logoPage.goToSettings();
-  await settingsPage.goToMailboxes();
-  await settingsPage.setupMailboxes();
-  await settingsPage.searchForDomains();
-  await settingsPage.addDomainsToCart();
-  await settingsPage.setRedirectUrl();
-  await settingsPage.setUsernames();
-  await settingsPage.checkout();
-  await settingsPage.fillInPaymentForm();
+  await mailboxesPage.goToMailboxes();
+  await mailboxesPage.setupMailboxes();
+  await mailboxesPage.searchForDomains();
+  await mailboxesPage.addDomainsToCart();
+  await mailboxesPage.setRedirectUrl();
+  await mailboxesPage.setUsernames();
+  await mailboxesPage.checkout();
+  await mailboxesPage.fillInPaymentForm();
 });
