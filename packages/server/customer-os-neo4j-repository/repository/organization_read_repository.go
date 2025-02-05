@@ -3,17 +3,19 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	commonenum "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"strings"
-	"time"
+
+	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 )
 
 const (
@@ -974,7 +976,6 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateNextRenewalDate(ct
 			return nil, err
 		}
 		return queryResult.Collect(ctx)
-
 	})
 	if err != nil {
 		return nil, err
@@ -1022,7 +1023,6 @@ func (r *organizationReadRepository) GetOrganizationsWithWebsiteAndWithoutDomain
 			return nil, err
 		}
 		return queryResult.Collect(ctx)
-
 	})
 	if err != nil {
 		return nil, err
@@ -1072,7 +1072,6 @@ func (r *organizationReadRepository) GetOrganizationsForEnrichByDomain(ctx conte
 			return nil, err
 		}
 		return queryResult.Collect(ctx)
-
 	})
 	if err != nil {
 		return nil, err

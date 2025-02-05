@@ -113,7 +113,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 
 	// Organization Jobs
 	addJob(cont.Cfg.App.Cron.CronScheduleUpdateOrganization, GroupOrganization, updateOrganizations, "updateOrganizations")
-	addJob(cont.Cfg.App.Cron.CronScheduleUpdateOrganization, GroupOrganization, icpCheck, "icpCheck")
+	addJob(cont.Cfg.App.Cron.CronScheduleUpdateOrganization, GroupOrganization, findLeads, "findLeads")
 
 	addJob(cont.Cfg.App.Cron.CronScheduleSyncDataToGlobalOrgs, GroupGlobalOrg, syncDataToGlobalOrgs, "syncDataToGlobalOrgs")
 	addJob(cont.Cfg.App.Cron.CronScheduleProcessWebsiteForGlobalOrgs, GroupGlobalOrg, processWebsiteForGlobalOrgs, "processWebsiteForGlobalOrgs")
@@ -186,8 +186,8 @@ func updateOrganizations(cont *container.Container) {
 	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).UpkeepOrganizations()
 }
 
-func icpCheck(cont *container.Container) {
-	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).IcpCheck()
+func findLeads(cont *container.Container) {
+	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).FindLeads()
 }
 
 func syncDataToGlobalOrgs(cont *container.Container) {
