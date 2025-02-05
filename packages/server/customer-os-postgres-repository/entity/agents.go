@@ -45,6 +45,8 @@ type Capability struct {
 	Description string               `json:"description"`
 }
 
+type NoConfig struct{}
+
 func (c *Capability) SetConfig(config interface{}) error {
 	if config == nil || config == "" {
 		c.Config = nil
@@ -99,6 +101,9 @@ func replaceNullWithEmptyString(m map[string]interface{}) {
 
 func (c *Capability) GetConfig(configPtr interface{}) error {
 	if c.Config == nil || string(c.Config) == "" {
+		return nil
+	}
+	if _, ok := configPtr.(*NoConfig); ok {
 		return nil
 	}
 	return json.Unmarshal(c.Config, configPtr)

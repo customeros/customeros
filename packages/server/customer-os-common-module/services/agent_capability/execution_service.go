@@ -31,7 +31,7 @@ func (f *agentCapabilityExecutionService) Execute(
 
 	switch capability.Type {
 	case enum.CapabilityAnalyzeWebSessionIntent:
-		executor, ok := GetTypedExecutor[AnalyzeWebSessionInput, AnalyzeWebSessionOutput, NoConfig](executors, capability.Type)
+		executor, ok := GetTypedExecutor[AnalyzeWebSessionInput, AnalyzeWebSessionOutput, postgres_entity.NoConfig](executors, capability.Type)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityAnalyzeWebSessionIntent)
 		}
@@ -45,14 +45,14 @@ func (f *agentCapabilityExecutionService) Execute(
 		return executeCapability(ctx, capability, params, executor)
 
 	case enum.CapabilityCreateAndEnrichCompany:
-		executor, ok := GetTypedExecutor[CreateOrganizationInput, CreateOrganizationOutput, NoConfig](executors, capability.Type)
+		executor, ok := GetTypedExecutor[CreateOrganizationInput, CreateOrganizationOutput, postgres_entity.NoConfig](executors, capability.Type)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityCreateAndEnrichCompany)
 		}
 		return executeCapability(ctx, capability, params, executor)
 
 	case enum.CapabilityCreateMarkdownTimelineEvent:
-		executor, ok := GetTypedExecutor[CreateMarkdownTimelineEventInput, CreateMarkdownTimelineEventOutput, NoConfig](executors, capability.Type)
+		executor, ok := GetTypedExecutor[CreateMarkdownTimelineEventInput, CreateMarkdownTimelineEventOutput, postgres_entity.NoConfig](executors, capability.Type)
 		if !ok {
 			return nil, f.handleGetTypedExecutorError(ctx, enum.CapabilityCreateMarkdownTimelineEvent)
 		}

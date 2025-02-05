@@ -3,6 +3,7 @@ package agent_capability
 import (
 	"context"
 
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
@@ -36,19 +37,19 @@ func NewCreateMarkdownTimelineEventCapability(markdownService interfaces.Markdow
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapability[CreateMarkdownTimelineEventInput, CreateMarkdownTimelineEventOutput, NoConfig] = (*CreateMarkdownTimelineEventCapability)(nil)
+	_ interfaces.AgentCapability[CreateMarkdownTimelineEventInput, CreateMarkdownTimelineEventOutput, postgres_entity.NoConfig] = (*CreateMarkdownTimelineEventCapability)(nil)
 )
 
 func (c *CreateMarkdownTimelineEventCapability) NewInput() CreateMarkdownTimelineEventInput {
 	return CreateMarkdownTimelineEventInput{}
 }
 
-func (c *CreateMarkdownTimelineEventCapability) NewConfig() NoConfig {
-	return NoConfig{}
+func (c *CreateMarkdownTimelineEventCapability) NewConfig() postgres_entity.NoConfig {
+	return postgres_entity.NoConfig{}
 }
 
 func (c *CreateMarkdownTimelineEventCapability) DefaultConfig() any {
-	return &NoConfig{}
+	return &postgres_entity.NoConfig{}
 }
 
 func (c *CreateMarkdownTimelineEventCapability) Type() enum.AgentCapability {
@@ -59,7 +60,7 @@ func (c *CreateMarkdownTimelineEventCapability) Name() string {
 	return "Add event to timeline"
 }
 
-func (c *CreateMarkdownTimelineEventCapability) ValidateConfig(config NoConfig) error {
+func (c *CreateMarkdownTimelineEventCapability) ValidateConfig(config postgres_entity.NoConfig) error {
 	return nil
 }
 
@@ -73,7 +74,7 @@ func (c *CreateMarkdownTimelineEventCapability) ValidateInput(input CreateMarkdo
 	return nil
 }
 
-func (c *CreateMarkdownTimelineEventCapability) Execute(ctx context.Context, data CreateMarkdownTimelineEventInput, config NoConfig) (CreateMarkdownTimelineEventOutput, error) {
+func (c *CreateMarkdownTimelineEventCapability) Execute(ctx context.Context, data CreateMarkdownTimelineEventInput, config postgres_entity.NoConfig) (CreateMarkdownTimelineEventOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateMarkdownTimelineEventCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)

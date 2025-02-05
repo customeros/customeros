@@ -37,7 +37,7 @@ func NewAnalyzeWebSessionCapability(
 
 // Compile-time interface checks
 var (
-	_ interfaces.AgentCapability[AnalyzeWebSessionInput, AnalyzeWebSessionOutput, NoConfig] = (*AnalyzeWebSessionCapability)(nil)
+	_ interfaces.AgentCapability[AnalyzeWebSessionInput, AnalyzeWebSessionOutput, postgres_entity.NoConfig] = (*AnalyzeWebSessionCapability)(nil)
 )
 
 func (c *AnalyzeWebSessionCapability) Type() enum.AgentCapability {
@@ -52,12 +52,12 @@ func (c *AnalyzeWebSessionCapability) NewInput() AnalyzeWebSessionInput {
 	return AnalyzeWebSessionInput{}
 }
 
-func (c *AnalyzeWebSessionCapability) NewConfig() NoConfig {
-	return NoConfig{}
+func (c *AnalyzeWebSessionCapability) NewConfig() postgres_entity.NoConfig {
+	return postgres_entity.NoConfig{}
 }
 
 func (c *AnalyzeWebSessionCapability) DefaultConfig() any {
-	return &NoConfig{}
+	return &postgres_entity.NoConfig{}
 }
 
 func (c *AnalyzeWebSessionCapability) ValidateInput(data AnalyzeWebSessionInput) error {
@@ -73,7 +73,7 @@ func (c *AnalyzeWebSessionCapability) ValidateInput(data AnalyzeWebSessionInput)
 	return nil
 }
 
-func (c *AnalyzeWebSessionCapability) ValidateConfig(config NoConfig) error {
+func (c *AnalyzeWebSessionCapability) ValidateConfig(config postgres_entity.NoConfig) error {
 	return nil
 }
 
@@ -96,7 +96,7 @@ type AnalyzeWebSessionOutput struct {
 	Referrer          string   `json:"referrer"`
 }
 
-func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeWebSessionInput, config NoConfig) (AnalyzeWebSessionOutput, error) {
+func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, data AnalyzeWebSessionInput, config postgres_entity.NoConfig) (AnalyzeWebSessionOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AnalyzeWebSessionCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
