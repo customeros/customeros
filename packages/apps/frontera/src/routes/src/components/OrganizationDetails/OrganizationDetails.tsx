@@ -144,7 +144,7 @@ export const OrganizationDetails = observer(
             </div>
           </div>
 
-          <Domains />
+          <Domains id={id} />
 
           <div className='flex flex-col w-full flex-1 items-start justify-start gap-3 mt-2'>
             {!!organization?.value?.description && (
