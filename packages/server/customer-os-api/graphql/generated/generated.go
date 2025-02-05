@@ -13180,85 +13180,89 @@ enum ActionType {
     appSource: String!
 }`, BuiltIn: false},
 	{Name: "../schemas/agent.graphqls", Input: `extend type Query {
-    agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
+  agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+  agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    slackChannelsWithBot: [AgentSlackChannel!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+  slackChannelsWithBot: [AgentSlackChannel!]!
+    @hasRole(roles: [ADMIN, USER])
+    @hasTenant
 }
 
 extend type Mutation {
-    agent_Save(input: AgentSaveInput!): Agent!@hasRole(roles: [ADMIN, USER]) @hasTenant
+  agent_Save(input: AgentSaveInput!): Agent!
+    @hasRole(roles: [ADMIN, USER])
+    @hasTenant
 }
 
 type AgentSlackChannel {
-    channelId: String!
-    name: String!
+  channelId: String!
+  name: String!
 }
 
 enum CapabilityType {
-    IDENTIFY_WEB_VISITOR
-    CREATE_ORGANIZATION
-    ANALYZE_WEB_SESSION_INTENT
-    SEND_SLACK_NOTIFICATION
-    WEB_VISITOR_SEND_SLACK_NOTIFICATION
-    APPLY_TAG
-    CREATE_MARKDOWN_TIMELINE_EVENT
-    ICP_QUALIFY
+  IDENTIFY_WEB_VISITOR
+  CREATE_ORGANIZATION
+  ANALYZE_WEB_SESSION_INTENT
+  SEND_SLACK_NOTIFICATION
+  WEB_VISITOR_SEND_SLACK_NOTIFICATION
+  APPLY_TAG
+  CREATE_MARKDOWN_TIMELINE_EVENT
+  ICP_QUALIFY
 }
 
 type Capability {
-    id: ID!
-    type: CapabilityType!
-    name: String!
-    action: String!
-    active: Boolean!
-    config: String!
-    errors: String
+  id: ID!
+  type: CapabilityType!
+  name: String!
+  action: String!
+  active: Boolean!
+  config: String!
+  errors: String
 }
 
 enum AgentType {
-    WEB_VISIT_IDENTIFIER
-    TAG_SUPPORT
-    ICP_QUALIFIER
+  WEB_VISIT_IDENTIFIER
+  TAG_SUPPORT
+  ICP_QUALIFIER
 }
 
 type Agent {
-    id: ID!
-    type: AgentType!
-    name: String!
-    capabilities: [Capability!]!
-    goal: String!
-    isActive: Boolean!
-    flowId: ID
-    visible: Boolean!
-    createdAt: Time!
-    updatedAt: Time!
-    error: String
-    color: String!
-    icon: String!
+  id: ID!
+  type: AgentType!
+  name: String!
+  capabilities: [Capability!]!
+  goal: String!
+  isActive: Boolean!
+  flowId: ID
+  visible: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+  error: String
+  color: String!
+  icon: String!
 }
 
 input CapabilitySaveInput {
-    id: ID
-    type: CapabilityType
-    name: String
-    action: String
-    active: Boolean
-    config: String
-    errors: String
+  id: ID
+  type: CapabilityType
+  name: String
+  action: String
+  active: Boolean
+  config: String
+  errors: String
 }
 
 input AgentSaveInput {
-    id:             ID
-    type:           AgentType @deprecated
-    name:           String
-    capabilities:   [CapabilitySaveInput!]
-    goal:           String
-    isActive:       Boolean
-    flowId:         ID
-    visible:        Boolean
-    color:          String
-    icon:           String
+  id: ID
+  type: AgentType @deprecated
+  name: String
+  capabilities: [CapabilitySaveInput!]
+  goal: String
+  isActive: Boolean
+  flowId: ID
+  visible: Boolean
+  color: String
+  icon: String
 }
 `, BuiltIn: false},
 	{Name: "../schemas/attachment.graphqls", Input: `extend type Query {
