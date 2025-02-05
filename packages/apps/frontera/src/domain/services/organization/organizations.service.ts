@@ -83,10 +83,7 @@ export class OrganizationService {
         if (organization_Merge.id) {
           this.root.organizations.mergeOrganizations(primaryId, secondaryIds);
 
-          this.root.ui.toastSuccess(
-            `Merged organizations`,
-            `merge-${primaryId}`,
-          );
+          this.root.ui.toastSuccess(`Merged companies`, `merge-${primaryId}`);
         }
       });
     } catch (err) {
@@ -137,10 +134,7 @@ export class OrganizationService {
       console.error(err);
       organization.deleteTag(tag.id);
 
-      this.root.ui.toastError(
-        'Failed to add tag to organization',
-        'tag-add-failed',
-      );
+      this.root.ui.toastError('Failed to add tag to company', 'tag-add-failed');
 
       return [null, err];
     }
@@ -162,7 +156,7 @@ export class OrganizationService {
       organization.addTag(tag.id);
 
       this.root.ui.toastError(
-        'Failed to remove tag from organization',
+        'Failed to remove tag from company',
         'tag-remove-failed',
       );
 

@@ -21,7 +21,7 @@ export const FieldsSection = ({
       </div>
       <div className='ml-[23px]'>
         <SidenavItem
-          label='Organization'
+          label='Company'
           isActive={checkIsActive('organizations')}
           onClick={handleItemClick('organizations')}
         />

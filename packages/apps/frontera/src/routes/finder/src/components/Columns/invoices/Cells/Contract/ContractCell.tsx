@@ -38,7 +38,7 @@ export const ContractCell = observer(
             align='start'
             side='bottom'
             targetRef={itemRef}
-            label='The org linked to this contract does not exist'
+            label='The company linked to this contract does not exist'
           >
             <div>
               <span className='text-gray-700 font-medium cursor-pointer'>

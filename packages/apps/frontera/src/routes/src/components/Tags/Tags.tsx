@@ -50,7 +50,7 @@ export const Tags = observer(
 
     return (
       <Popover>
-        <Tooltip align='start' label='Organization tags'>
+        <Tooltip align='start' label='Company tags'>
           <PopoverTrigger className={cn('flex items-center w-full', className)}>
             {leftAccessory}
             <div

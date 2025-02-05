@@ -460,7 +460,7 @@ export const getFilterTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsParentOrganization]: {
       filterType: 'text',
-      filterName: 'Parent org',
+      filterName: 'Parent company',
       filterAccesor: ColumnViewType.OrganizationsParentOrganization,
       filterOperators: [
         ComparisonOperator.Contains,

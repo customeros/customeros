@@ -361,7 +361,7 @@ class ContactService {
             },
           });
           store.store.root.ui.toastSuccess(
-            "Contact's organization was changed",
+            "Contact's company was changed",
             'org-linked',
           );
         },

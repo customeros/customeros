@@ -195,7 +195,7 @@ export const AddNewSku = observer(() => {
 
             {!addSkuUsecase.errors.price && (
               <p className='text-xs text-grayModern-500 pl-2.5'>
-                Product currency is set in your organization's contracts
+                Product currency is set in your company's contracts
               </p>
             )}
           </div>

@@ -122,7 +122,7 @@ export class EditOrganizationTagUsecase {
 
     if (!ids || !organization) {
       console.error(
-        'EditOrganizationTagUsecase: select called without id or organization',
+        'EditOrganizationTagUsecase: select called without id or company',
       );
 
       return;

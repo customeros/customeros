@@ -20,7 +20,7 @@ export class RemoveOrgSocialMediaItemUsecase {
 
     if (!id || !organization) {
       console.error(
-        'RemoveOrgSocialMediaItemUsecase: remove social called without id or organization',
+        'RemoveOrgSocialMediaItemUsecase: remove social called without id or company',
       );
 
       return;
@@ -31,7 +31,7 @@ export class RemoveOrgSocialMediaItemUsecase {
 
     if (!social) {
       console.error(
-        'RemoveOrgSocialMediaItemUsecase: social not found on organization',
+        'RemoveOrgSocialMediaItemUsecase: social not found on company',
       );
 
       return;

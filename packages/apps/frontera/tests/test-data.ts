@@ -20,7 +20,7 @@ export const organizations = {
     name: 'Yahoo! Inc.',
     domain: 'protv.ro',
     orgAboutDescription:
-      'This org is simply the best, better than all the rest',
+      'This company is simply the best, better than all the rest',
     orgAboutTags: 'testOrgTag',
     orgAboutRelationship: 'Not a fit',
     orgAboutRelationshipRequest: 'NOT_A_FIT',

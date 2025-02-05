@@ -311,6 +311,7 @@ const contactKeywords = {
   change_latest_org: [
     'edit',
     'organization',
+    'company',
     'change',
     'update',
     'latest',

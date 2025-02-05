@@ -94,7 +94,7 @@ export const OrganizationDetails = observer(
           {isEnriching && (
             <div className='flex items-center justify-start gap-2 border-[1px] text-sm border-grayModern-100 bg-grayModern-50 rounded-[4px] py-1 px-2 '>
               <Spinner
-                label='enriching org'
+                label='enriching company'
                 className='text-grayModern-300 fill-grayModern-500 size-4'
               />
               <span className='font-medium'>
@@ -137,8 +137,8 @@ export const OrganizationDetails = observer(
                   size='xs'
                   variant='ghost'
                   icon={<Icon name='x-close' />}
+                  aria-label='close preview company'
                   onClick={() => setPreviewCard(false)}
-                  aria-label='close preview organization'
                 />
               )}
             </div>
@@ -158,10 +158,10 @@ export const OrganizationDetails = observer(
             <SocialMediaList dataTest='org-about-social-link' />
             <Tags
               dataTest='org-about-tags'
+              placeholder='Company tags'
               inputPlaceholder='Search...'
               onCreate={handleCreateOption}
               options={tagsUsecase.tagList}
-              placeholder='Organization tags'
               value={tagsUsecase.selectedTags}
               inputValue={tagsUsecase.searchTerm}
               setInputValue={tagsUsecase.setSearchTerm}

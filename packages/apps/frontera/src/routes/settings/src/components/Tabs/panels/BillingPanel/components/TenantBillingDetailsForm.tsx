@@ -53,7 +53,7 @@ export const TenantBillingPanelDetailsForm = ({
         name='legalName'
         autoComplete='off'
         placeholder='Legal name'
-        label='Organization legal name'
+        label='Company legal name'
         onFocus={() => setIsInvoiceProviderFocused(true)}
         onBlur={() => setIsInvoiceProviderFocused(false)}
         onMouseEnter={() => setIsInvoiceProviderDetailsHovered(true)}

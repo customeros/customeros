@@ -59,7 +59,7 @@ export const OrganizationFields = observer(() => {
   return (
     <Layout>
       <Header
-        title='Organization fields'
+        title='Company fields'
         numberOfCoreFields={coreFields.length}
         numberOfCustomFields={customFieldStore.length}
         subTitle='Create and manage custom fields for companies'

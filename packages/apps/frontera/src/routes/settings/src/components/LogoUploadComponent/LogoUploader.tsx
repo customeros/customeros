@@ -67,7 +67,7 @@ export const LogoUploader = observer(() => {
     <div className='flex flex-col'>
       <div className='flex justify-between items-center'>
         <p className='text-sm text-gray-900 w-fit whitespace-nowrap font-semibold'>
-          Organization logo
+          Company logo
         </p>
 
         <FileUploadTrigger

@@ -108,7 +108,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsIsPublic]: 'Ownership Type',
   [ColumnViewType.OrganizationsContactCount]: 'Contacts',
   [ColumnViewType.OrganizationsCountry]: 'Country',
-  [ColumnViewType.OrganizationsParentOrganization]: 'Parent Org',
+  [ColumnViewType.OrganizationsParentOrganization]: 'Parent company',
   [ColumnViewType.OrganizationsUpdatedDate]: 'Last Updated',
   [ColumnViewType.OrganizationsPrimaryDomains]: 'Primary Domains',
 };

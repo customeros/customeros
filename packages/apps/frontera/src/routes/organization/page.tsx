@@ -31,7 +31,7 @@ export const OrganizationPage = observer(() => {
   }
 
   if (!store.organizations.value.has(id)) {
-    throw new Error('Organization not found');
+    throw new Error('Company not found');
   }
 
   return (

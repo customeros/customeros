@@ -123,7 +123,7 @@ const columns: Record<string, Column> = {
     enableSorting: true,
     header: (props) => (
       <THead
-        title='Organization'
+        title='Company'
         id={ColumnViewType.InvoicesOrganization}
         {...getTHeadProps(props)}
       />

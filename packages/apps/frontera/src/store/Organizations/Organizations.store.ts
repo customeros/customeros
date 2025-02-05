@@ -320,7 +320,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         }
       });
     } catch (e) {
-      console.error('Failed invalidating organization with ID: ' + id);
+      console.error('Failed invalidating company with ID: ' + id);
     }
   }
 
@@ -358,13 +358,13 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
         });
         opts?.onSucces?.(record.id);
 
-        this.root.ui.toastSuccess('Organization added', record.id);
+        this.root.ui.toastSuccess('Company added', record.id);
       });
     } catch (error) {
       runInAction(() => {
         this.value.delete(tempId);
         this.root.ui.toastError(
-          'Failed to create organization.',
+          'Failed to create company.',
           'create-org-faillure',
         );
       });
@@ -405,12 +405,12 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
           ids: [record.id],
         });
 
-        this.root.ui.toastSuccess('Organization added', record.id);
+        this.root.ui.toastSuccess('Company added', record.id);
       });
     } catch (error) {
       runInAction(() => {
         this.root.ui.toastError(
-          'Failed to add organization.',
+          'Failed to add company.',
           'create-org-faillure',
         );
       });
@@ -531,7 +531,7 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       ids: [primaryId],
     });
 
-    this.root.ui.toastSuccess(`Merged organizations`, `merge-${primaryId}`);
+    this.root.ui.toastSuccess(`Merged companies`, `merge-${primaryId}`);
   };
 
   removeTags = (ids: string[]) => {
