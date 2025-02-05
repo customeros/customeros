@@ -49,7 +49,6 @@ export class SettingsProductsPage {
     } else if (productType === SkuType.OneTime) {
       await clickLocatorThatIsVisible(this.page, this.addProductOneTime);
     }
-    await clickLocatorThatIsVisible(this.page, this.addProductSubscription);
     await this.page.locator(this.skuProductName).fill(productName);
     await this.page.locator(this.skuPrice).fill(productPrice);
     await clickLocatorThatIsVisible(this.page, this.addSkuConfirm);

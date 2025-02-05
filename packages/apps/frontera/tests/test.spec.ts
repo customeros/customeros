@@ -149,7 +149,7 @@ test('Create Timeline entries in an Organization', async ({
   await organizationTimelinePage.ensureReminderCanBeAdded();
 });
 
-test.only('Create Contracts in an Organization', async ({ page }, testInfo) => {
+test('Create Contracts in an Organization', async ({ page }, testInfo) => {
   const logoPage = new LogoPage(page);
   const loginPage = new LoginPage(page);
   const settingsPage = new SettingsPage(page);
@@ -160,16 +160,12 @@ test.only('Create Contracts in an Organization', async ({ page }, testInfo) => {
 
   // Login
   await loginPage.login();
-  await page.waitForTimeout(5000);
   await logoPage.goToSettings();
   await settingsProductsPage.goToSettingsProductsPage();
   await settingsProductsPage.addProduct(SkuType.Subscription, 's1', '123.01');
-  await page.waitForTimeout(5000);
   await settingsProductsPage.addProduct(SkuType.OneTime, 'o1', '111.99');
-  await page.waitForTimeout(5000);
 
   await settingsPage.goBack();
-  await page.waitForTimeout(5000);
   // Wait for redirect and load All Orgs page
   await organizationsPage.goToAllOrgs();
 
