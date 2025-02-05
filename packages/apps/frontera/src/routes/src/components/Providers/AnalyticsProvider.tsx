@@ -68,9 +68,10 @@ export const AnalyticsProvider = observer(
 
         if (import.meta.env.PROD) {
           if (window.posthog) {
-            window.posthog.identify(id, { email, name });
-            window.posthog.group('tenant', store.session.value.tenant, {
-              campaign: store.session.value.campaign,
+            window.posthog.identify(id, {
+              email,
+              name,
+              cohort: store.session.value.tenant,
             });
           }
         }
