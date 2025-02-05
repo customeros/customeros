@@ -45,7 +45,7 @@ func NewAgentRunnerService(
 	}
 }
 
-func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agent, eventType string, initialParams map[string]any) error {
+func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agent, eventName string, initialParams map[string]any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.Run")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -65,7 +65,7 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	}
 
 	// create execution record
-	executionID, err := a.createAgentExecutionRecord(ctx, agent.ID, eventType, tracing.GetTraceId(span))
+	executionID, err := a.createAgentExecutionRecord(ctx, agent.ID, eventName, tracing.GetTraceId(span))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to create agent execution record"))
 		return err
@@ -111,11 +111,11 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	return nil
 }
 
-func (a *AgentRunnerService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEventType, traceId string) (string, error) {
+func (a *AgentRunnerService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEventName, traceId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.createAgentExecutionRecord")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogKV("agentID", agentID, "triggerEventType", triggerEventType, "traceId", traceId)
+	span.LogKV("agentID", agentID, "triggerEventType", triggerEventName, "traceId", traceId)
 
 	agent, err := a.postgresRepositories.AgentRepository.Find(ctx, postgres_entity.Agent{
 		ID: agentID,
@@ -131,5 +131,5 @@ func (a *AgentRunnerService) createAgentExecutionRecord(ctx context.Context, age
 		return "", err
 	}
 
-	return a.agentService.CreateAgentExecutionRecord(ctx, *agent, triggerEventType, traceId)
+	return a.agentService.CreateAgentExecutionRecord(ctx, *agent, triggerEventName, traceId)
 }
