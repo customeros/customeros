@@ -117,24 +117,27 @@ func executeCapability[I, O, C any](
 	allParams map[string]any,
 	cap interfaces.AgentCapability[I, O, C],
 ) (map[string]any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "agentCapabilityExecutionService.executeCapability")
+	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("agentCapabilityExecutionService.executeCapability.%s", capability.Type.String()))
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	input := cap.NewInput()
 	err := utils.MapToStruct(allParams, &input)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	config := cap.NewConfig()
 	err = capability.GetConfig(&config)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	output, err := cap.Execute(ctx, input, config)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
