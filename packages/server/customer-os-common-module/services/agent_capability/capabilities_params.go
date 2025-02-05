@@ -1,6 +1,8 @@
 package agent_capability
 
-import "github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+import (
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+)
 
 type CapabilityParams struct {
 	Completed                bool        `json:"completed"`
@@ -24,4 +26,14 @@ type CapabilityParams struct {
 	SessionID                string      `json:"sessionId"`
 	SlackNotification        string      `json:"slackNotification"`
 	VisitorID                string      `json:"visitorId"`
+
+	CompanyName         string `json:"companyName"`
+	PrimaryDomain       string `json:"primaryDomain"`
+	CompanyDescriptions string `json:"companyDescriptions"`
+	IndustryNAICSName   string `json:"industryName"`
+	YearCompanyFounded  string `json:"yearCompanyFounded"`
+	EmployeeCount       int64  `json:"employeeCount"`
+	CompanyCity         string `json:"companyCity"`
+	CompanyRegion       string `json:"companyRegion"`
+	CompanyCountryA2    string `json:"companyCountry"`
 }

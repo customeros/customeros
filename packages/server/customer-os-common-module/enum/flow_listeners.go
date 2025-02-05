@@ -8,7 +8,11 @@ import (
 type AgentListenerEvent string
 
 const (
-	EventCompanyStageLead            AgentListenerEvent = "company.stage.lead"
+	EventNewLead              AgentListenerEvent = "new_lead"
+	EventICPMatch             AgentListenerEvent = "icp_match"
+	EventICPNotAMatch         AgentListenerEvent = "icp_not_a_match"
+	EventRunICPQualifierAgent AgentListenerEvent = "run_icp_qualifier_agent"
+
 	EventFathomMeetingSummaryCreated AgentListenerEvent = "fathom.meeting_summary.created"
 	EventFlowContactAdded            AgentListenerEvent = "flow.contact.added"
 	EventGrainMeetingSummaryCreated  AgentListenerEvent = "grain.meeting_summary.created"
@@ -42,7 +46,10 @@ func (e AgentListenerEvent) ExternalSystem() (system Source, err error) {
 func GetFlowListenerEvent(s string) (AgentListenerEvent, error) {
 	switch AgentListenerEvent(s) {
 	case
-		EventCompanyStageLead,
+		EventNewLead,
+		EventICPMatch,
+		EventICPNotAMatch,
+		EventRunICPQualifierAgent,
 		EventFathomMeetingSummaryCreated,
 		EventFlowContactAdded,
 		EventGrainMeetingSummaryCreated,

@@ -6,7 +6,6 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
@@ -14,8 +13,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
-	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/config"
@@ -27,7 +24,6 @@ type OrganizationService interface {
 	RefreshLastTouchpoint()
 	UpkeepOrganizations()
 	SendReminders()
-	FindLeads()
 }
 
 type organizationService struct {
@@ -41,97 +37,6 @@ func NewOrganizationService(cfg *config.Config, log logger.Logger, commonService
 		cfg:            cfg,
 		log:            log,
 		commonServices: commonServices,
-	}
-}
-
-func (s *organizationService) FindLeads() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.IcpCheck")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	// get active icp agents
-	icpAgents, err := s.commonServices.PostgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypesCrossTenant(ctx, []enum.AgentType{enum.AgentICPQualifier})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error getting icp agents: %v", err)
-		return
-	}
-	var tenants []string
-	for _, agent := range icpAgents {
-		tenants = append(tenants, agent.Tenant)
-	}
-
-	if len(tenants) == 0 {
-		span.LogKV("message", "No active icp agents found")
-		return
-	}
-
-	limit := 100
-	delayFromPreviousCheckRequestInMinutes := 24 * 60 // 24 hours
-
-	records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForIcpCheck(ctx, tenants, limit, delayFromPreviousCheckRequestInMinutes)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error getting organizations for renewals: %v", err)
-		return
-	}
-
-	// no record
-	if len(records) == 0 {
-		return
-	}
-
-	// process organizations
-	for _, record := range records {
-		s.processLeads(ctx, record)
-	}
-}
-
-func (s *organizationService) processLeads(ctx context.Context, record neo4j_repository.TenantAndOrganizationId) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "organizationService.processsLeads")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
-
-	innerCtx := common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant:    record.Tenant,
-		AppSource: constants.AppSourceDataUpkeeper,
-	})
-	recordSpan, innerCtx := tracing.StartTracerSpan(innerCtx, "OrganizationService.IcpCheck.Record")
-	tracing.TagEntity(recordSpan, record.OrganizationId)
-	tracing.TagTenant(recordSpan, record.Tenant)
-
-	err := s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(innerCtx, record.Tenant, model.NodeLabelOrganization, record.OrganizationId, string(neo4jentity.OrganizationPropertyIcpCheckRequestedAt), utils.NowPtr())
-	if err != nil {
-		tracing.TraceErr(recordSpan, err)
-		s.log.Errorf("Error updating icp check requested at: %s", err.Error())
-		return
-	}
-
-	// check if any organization domain is known global org
-	globalOrgs, err := s.commonServices.OrganizationService.GetGlobalOrganizationsByTenantOrganizationId(innerCtx, record.OrganizationId)
-	if err != nil {
-		tracing.TraceErr(recordSpan, err)
-		s.log.Errorf("Error getting global organizations: %v", err)
-		return
-	}
-	if len(globalOrgs) == 0 {
-		span.LogKV("message", "Organization is not a global organization")
-		return
-	}
-
-	event := dto.OrganizationStageLead{
-		EventName:      enum.EventCompanyStageLead,
-		OrganizationID: record.OrganizationId,
-	}
-
-	err = s.commonServices.Events.Publisher.PublishFanoutEvent(innerCtx, record.OrganizationId, model.ORGANIZATION, &event)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "error publishing new lead event"))
-		s.log.Errorf("Error publishing new lead event: %v", err)
-		return
 	}
 }
 
