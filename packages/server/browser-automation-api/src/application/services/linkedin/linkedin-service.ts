@@ -1,19 +1,18 @@
 import { logger } from "@/infrastructure";
 import { ErrorParser } from "@/util/error";
+import { Proxy } from "@/domain/models/proxy";
 import { BrowserConfig } from "@/domain/models/browser-config";
+
 import { LinkedinAutomationService } from "@/infrastructure/scraper/services/linkedin-automation-service";
 
 export class LinkedinService {
   private linkedinAutomationService: LinkedinAutomationService;
 
-  constructor(
-    private browserConfig: BrowserConfig,
-    private proxyHeader: string,
-  ) {
+  constructor(private browserConfig: BrowserConfig, private proxy: Proxy) {
     this.linkedinAutomationService = new LinkedinAutomationService(
       JSON.parse(this.browserConfig.cookies ?? "{}"),
       this.browserConfig.userAgent as string,
-      this.proxyHeader,
+      Proxy.toConfig(this.proxy)
     );
   }
 
@@ -32,7 +31,7 @@ export class LinkedinService {
       await this.linkedinAutomationService.sendConenctionInvite(
         profileUrl,
         message,
-        { dryRun },
+        { dryRun }
       );
 
       logger.info("Connection invite sent.", {
@@ -99,8 +98,9 @@ export class LinkedinService {
         source: "LinkedinService",
       });
 
-      const result =
-        await this.linkedinAutomationService.getCompanyPeople(companyName);
+      const result = await this.linkedinAutomationService.getCompanyPeople(
+        companyName
+      );
 
       logger.info("Company people scraped.", {
         source: "LinkedinService",
@@ -129,7 +129,7 @@ export class LinkedinService {
       await this.linkedinAutomationService.sendMessageToConnection(
         profileUrl,
         message,
-        { dryRun },
+        { dryRun }
       );
 
       logger.info("Message sent", {
@@ -153,7 +153,8 @@ export class LinkedinService {
       logger.info("Getting connection status", {
         source: "LinkedinService",
       });
-      const connectionStatus = await this.linkedinAutomationService.checkConnectionStatus(profileUrl);
+      const connectionStatus =
+        await this.linkedinAutomationService.checkConnectionStatus(profileUrl);
 
       logger.info("Connection status retrieved", {
         source: "LinkedinService",
@@ -176,7 +177,8 @@ export class LinkedinService {
       logger.info("Retrieving recent posts", {
         source: "LinkedinService",
       });
-      const recentPosts = await this.linkedinAutomationService.retrieveRecentPosts(profileUrl);
+      const recentPosts =
+        await this.linkedinAutomationService.retrieveRecentPosts(profileUrl);
 
       logger.info("Recent posts retrieved", {
         source: "LinkedinService",
@@ -199,7 +201,9 @@ export class LinkedinService {
       logger.info("Getting messages", {
         source: "LinkedinService",
       });
-      const messages = await this.linkedinAutomationService.retrieveMessages(profileUrl);
+      const messages = await this.linkedinAutomationService.retrieveMessages(
+        profileUrl
+      );
 
       logger.info("Messages retrieved", {
         source: "LinkedinService",

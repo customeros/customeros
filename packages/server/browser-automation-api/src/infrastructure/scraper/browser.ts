@@ -4,79 +4,41 @@ import type {
   BrowserContextOptions,
   Browser as BrowserType,
 } from "playwright";
+import { Hyperbrowser } from "@hyperbrowser/sdk";
 import { ErrorParser, StandardError } from "@/util/error";
 
 import { logger } from "../logger";
 
-const bcatUrl = process.env.BROWSERCAT_API_URL;
-const apiKey = process.env.BROWSERCAT_API_KEY;
+export type ProxyConfig = {
+  proxyServer: string;
+  proxyServerUsername: string;
+  proxyServerPassword: string;
+};
+
+const bcatUrl = process.env.HYPERBROWSER_API_URL;
+const apiKey = process.env.HYPERBROWSER_API_KEY ?? "";
+
+const hyperbrowser = new Hyperbrowser({
+  apiKey,
+});
 
 export class Browser {
   private static instances: Map<string, Browser>;
   public browser: BrowserType | null = null;
 
-  constructor(private debug?: boolean, private debugBrowserCat?: boolean) {}
-
-  public static async getInstance(
-    proxyConfig: string,
-    options?: {
-      debug?: boolean;
-      debugBrowserCat?: boolean;
-    }
-  ): Promise<Browser> {
-    if (!Browser.instances) {
-      Browser.instances = new Map();
-    }
-
-    if (!Browser.instances.has(proxyConfig)) {
-      logger.info("Creating new browser instance entry.", {
-        source: "Browser",
-      });
-      const instance = new Browser(options?.debug, options?.debugBrowserCat);
-      Browser.instances.set(proxyConfig, instance);
-
-      logger.info("Initiating the browser instance...", {
-        source: "Browser",
-      });
-      await instance.init(proxyConfig);
-      logger.info("Browser instance initiated ok.", {
-        source: "Browser",
-      });
-    }
-
-    logger.info("Retriving browser instance from cache.", {
-      source: "Browser",
-    });
-    const instance = Browser.instances.get(proxyConfig);
-    logger.info("Browser instance retrieved ok.", {
-      source: "Browser",
-    });
-
-    if (!instance) {
-      throw new StandardError({
-        code: "INTERNAL_ERROR",
-        message: "Browser instance not found for the given proxy config",
-        severity: "critical",
-      });
-    }
-
-    logger.debug("Returning browser instance", {
-      source: "Browser",
-    });
-    return instance;
-  }
+  constructor(private debug?: boolean, private debugRemote?: boolean) {}
 
   public static async getFreshInstance(
-    proxyConfig: string,
+    proxyConfig: ProxyConfig,
     options?: {
       debug?: boolean;
-      debugBrowserCat?: boolean;
+      debugRemote?: boolean;
     }
   ): Promise<Browser> {
     logger.info("Creating fresh browser instance.", {
       source: "Browser",
     });
-    const instance = new Browser(options?.debug, options?.debugBrowserCat);
+    const instance = new Browser(options?.debug, options?.debugRemote);
     await instance.init(proxyConfig);
     logger.info("Fresh browser instance created ok.", {
       source: "Browser",
@@ -85,7 +47,7 @@ export class Browser {
     return instance;
   }
 
-  private async init(proxyConfig: string) {
+  private async init(proxyConfig: ProxyConfig) {
     return new Promise<void>(async (resolve, reject) => {
       if (!this.browser) {
         try {
@@ -111,21 +73,31 @@ export class Browser {
             if (!apiKey || !bcatUrl) {
               throw new StandardError({
                 code: "INTERNAL_ERROR",
-                message: "Browsercat API key or url is not provided",
+                message: "Remote Browser API key or url is not provided",
                 severity: "critical",
               });
             }
 
-            logger.info("Connecting to Browsercat", {
+            const session = await hyperbrowser.sessions.create({
+              useStealth: true,
+              ...proxyConfig,
+            });
+
+            if (!session.wsEndpoint) {
+              throw new StandardError({
+                code: "EXTERNAL_ERROR",
+                message: `Failed to create a remote browser session.`,
+                severity: "critical",
+              });
+            }
+
+            logger.info("Connecting to remote browser", {
               source: "Browser",
             });
-            const browser = await chromium.connect(bcatUrl, {
-              headers: {
-                "api-key": apiKey,
-                "browsercat-opts": proxyConfig,
-              },
+
+            const browser = await chromium.connectOverCDP(session.wsEndpoint, {
               logger: {
-                isEnabled: (_name, severity) => !!this.debugBrowserCat,
+                isEnabled: (_name, severity) => !!this.debugRemote,
                 log: (name, _severity, message, _args) => {
                   if (message instanceof Error) {
                     return logger.error(message.message, {

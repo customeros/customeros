@@ -18,6 +18,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@hyperbrowser/sdk": "^0.29.0",
     "adm-zip": "^0.5.16",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
