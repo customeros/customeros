@@ -108,7 +108,7 @@ export const OrganizationDetails = observer(
               {organization?.value?.name ?? ''}
             </p>
 
-            <div className='flex items-center justify-between gap-x-2'>
+            <div className='flex justify-between items-start h-full gap-x-2 mt-[11px]'>
               {organization.value?.referenceId && (
                 <div className='ml-4'>
                   <Tooltip asChild={false} label={'Copy ID'}>

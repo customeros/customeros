@@ -38,7 +38,7 @@ export const Tag = forwardRef<HTMLDivElement, TagProps>(
       TagLeftIcon,
       TagRightIcon,
       TagLabel,
-      TagCloseButton,
+      TagRightButton,
     );
 
     const tagVariant = allVariants[variant];
@@ -85,6 +85,7 @@ export const TagRightIcon = forwardRef<
 
   return cloneElement(children as React.ReactElement, {
     ref,
+
     className: twMerge('flex items-center ml-2', className),
     ...rest,
   });
@@ -110,10 +111,11 @@ interface TagCloseButtonProps
   size?: 'sm' | 'md' | 'lg';
 }
 
-export const TagCloseButton = ({
+export const TagRightButton = ({
   size = 'md',
   className,
   colorScheme,
+  children,
   ...props
 }: TagCloseButtonProps) => {
   const iconStyle = useMemo(
@@ -134,8 +136,13 @@ export const TagCloseButton = ({
     [size],
   )[size];
 
+  if (!isValidElement(children)) return <>{children}</>;
+  const icon = cloneElement(children as React.ReactElement, {
+    className: twMerge(className, iconStyle),
+  });
+
   return (
-    <span
+    <div
       className={cn(
         wrapperStyle,
         `flex items-center ml-1 cursor-pointer mr-0 rounded-e-md px-0.5 transition ease-in-out`,
@@ -144,7 +151,7 @@ export const TagCloseButton = ({
       )}
       {...props}
     >
-      <XClose className={iconStyle} />
-    </span>
+      {icon}
+    </div>
   );
 };

@@ -4,9 +4,10 @@ import { cn } from '@ui/utils/cn.ts';
 import { Combobox } from '@ui/form/Combobox';
 import { Plus } from '@ui/media/icons/Plus.tsx';
 import { useStore } from '@shared/hooks/useStore';
+import { XClose } from '@ui/media/icons/XClose.tsx';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { SelectOption } from '@shared/types/SelectOptions.ts';
-import { Tag, TagLabel, TagCloseButton } from '@ui/presentation/Tag';
+import { Tag, TagLabel, TagRightButton } from '@ui/presentation/Tag';
 import {
   Popover,
   PopoverContent,
@@ -71,12 +72,14 @@ export const Tags = observer(
                       }
                     >
                       <TagLabel>{option.label}</TagLabel>
-                      <TagCloseButton
+                      <TagRightButton
                         onClick={(e) => {
                           e.stopPropagation();
                           handleClear(option.value);
                         }}
-                      />
+                      >
+                        <XClose />
+                      </TagRightButton>
                     </Tag>
                   );
                 })

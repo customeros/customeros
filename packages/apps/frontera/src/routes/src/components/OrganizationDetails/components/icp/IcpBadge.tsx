@@ -10,7 +10,12 @@ import { Icon, IconName } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
 import { Button } from '@ui/form/Button/Button.tsx';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/overlay/Popover';
-import { Tag, TagLabel, TagLeftIcon, TagRightIcon } from '@ui/presentation/Tag';
+import {
+  Tag,
+  TagLabel,
+  TagLeftIcon,
+  TagRightButton,
+} from '@ui/presentation/Tag';
 
 const icpData: Record<
   IcpFit,
@@ -32,7 +37,7 @@ const icpData: Record<
   },
   [IcpFit.IcpNotSet]: {
     label: 'ICP not set',
-    icon: 'target-04',
+    icon: undefined,
     colorScheme: 'gray',
   },
 };
@@ -100,19 +105,17 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
             </TagLeftIcon>
           )}
 
-          <TagLabel className='flex items-center'>{data.label}</TagLabel>
-          <TagRightIcon className='ml-1'>
-            <div>
-              <Icon
-                width={12}
-                height={12}
-                name='chevron-down'
-                className={cn('size-3 text-gray-500', {
-                  [`text-${data?.colorScheme}-500`]: true,
-                })}
-              />
-            </div>
-          </TagRightIcon>
+          <TagLabel className='flex items-center whitespace-nowrap'>
+            {data.label}
+          </TagLabel>
+          <TagRightButton>
+            <Icon
+              name={open ? 'chevron-up' : 'chevron-down'}
+              className={cn('text-gray-500 ml-0', {
+                [`text-${data?.colorScheme}-500`]: true,
+              })}
+            />
+          </TagRightButton>
         </Tag>
       </PopoverTrigger>
       <PopoverContent align='end' side='bottom' className='text-sm'>
@@ -122,9 +125,7 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
               <p>
                 To determine whether this company fits your ideal customer
                 profile, configure and enable the
-                <span className='mx-1 font-medium underline underline-offset-1'>
-                  ICP qualifier
-                </span>
+                <span className='mx-1 font-medium'>ICP qualifier</span>
                 agent.
               </p>
               <Button
@@ -144,7 +145,14 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
             <>
               <p>
                 The
-                <span className='mx-1 font-medium underline underline-offset-1'>
+                <span
+                  tabIndex={0}
+                  role={'button'}
+                  className='mx-1 font-medium underline underline-offset-1 cursor-pointer'
+                  onClick={() => {
+                    navigate(`/agents/${icpAgent?.id}`);
+                  }}
+                >
                   ICP qualifier
                 </span>
                 agent determined that this company{' '}
@@ -194,7 +202,14 @@ export const IcpBadge = observer(({ id }: IcpBadgeProps) => {
             icpProfilingInProgress && (
               <p>
                 The
-                <span className='mx-1 font-medium underline underline-offset-1'>
+                <span
+                  tabIndex={0}
+                  role={'button'}
+                  className='mx-1 font-medium underline underline-offset-1 cursor-pointer'
+                  onClick={() => {
+                    navigate(`/agents/${icpAgent?.id}`);
+                  }}
+                >
                   ICP qualifier
                 </span>
                 agent is busy determining whether this company fits your ideal
