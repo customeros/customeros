@@ -2,7 +2,7 @@ import { SVGAttributes } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 
-type LogoName =
+export type LogoName =
   | 'google'
   | 'facebook'
   | 'linkedin'
