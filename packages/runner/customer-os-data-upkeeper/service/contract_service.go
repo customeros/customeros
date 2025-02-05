@@ -6,7 +6,6 @@ import (
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
@@ -20,31 +19,24 @@ type ContractService interface {
 }
 
 type contractService struct {
-	cfg                    *config.Config
-	log                    logger.Logger
-	repositories           *repository.Repositories
-	eventsProcessingClient *grpc_client.Clients
-	services               *service.CommonServices
+	cfg          *config.Config
+	log          logger.Logger
+	repositories *repository.Repositories
+	services     *service.CommonServices
 }
 
-func NewContractService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *grpc_client.Clients, services *service.CommonServices) ContractService {
+func NewContractService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, services *service.CommonServices) ContractService {
 	return &contractService{
-		cfg:                    cfg,
-		log:                    log,
-		repositories:           repositories,
-		eventsProcessingClient: client,
-		services:               services,
+		cfg:          cfg,
+		log:          log,
+		repositories: repositories,
+		services:     services,
 	}
 }
 
 func (s *contractService) UpkeepContracts() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
-
-	if s.eventsProcessingClient == nil {
-		s.log.Warn("eventsProcessingClient is nil. Will not update next cycle date.")
-		return
-	}
 
 	now := utils.Now()
 

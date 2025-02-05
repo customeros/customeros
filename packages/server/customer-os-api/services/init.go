@@ -2,7 +2,6 @@ package cosapi_services
 
 import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/caches"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
@@ -82,7 +81,7 @@ type Services struct {
 	WebhookService              cosapi_interfaces.WebhookService
 }
 
-func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, cfg *config.Config, grpcClients *grpc_client.Clients) *Services {
+func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, cfg *config.Config) *Services {
 	repositories := repository.InitRepos(driver, cfg.Common.Infrastructure.Neo4jConfig.Database, postgresDB)
 
 	commonServices := commonService.InitCommonServices(
@@ -90,7 +89,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 		repositories.Neo4jRepositories,
 		repositories.PostgresRepositories,
 		cfg.Common,
-		grpcClients,
 		&commonService.InitOptions{LoadPersonalEmailProviders: true},
 	)
 
@@ -109,7 +107,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 		CustomFieldService:          api_customfields.NewCustomFieldService(log, repositories),
 		CustomFieldsTemplateService: api_custom_fields_template.NewCustomFieldTemplateService(log, repositories),
 		DashboardService:            api_dashboard.NewDashboardService(log, repositories),
-		EmailService:                api_email.NewEmailService(log, repositories, grpcClients),
+		EmailService:                api_email.NewEmailService(log, repositories),
 		ExternalSystemService:       api_external_system.NewExternalSystemService(log, repositories),
 		IssueService:                api_issue.NewIssueService(log, repositories),
 		JWTService:                  *api_jwt.NewJWTTenantUserService(&cfg.Common.Internal.FileStoreConfig),
@@ -122,14 +120,13 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 		TenantSettingsService:       api_tenant_settings.NewTenantSettingsService(log, cfg, repositories.PostgresRepositories),
 		TimelineEventService:        api_timeline_event.NewTimelineEventService(log, repositories),
 		WebhookService:              api_webhook.NewWebhookService(log, repositories),
-		UserService:                 api_user.NewUserService(log, repositories, grpcClients),
+		UserService:                 api_user.NewUserService(log, repositories),
 	}
 
 	// has dependencies
 	services.ContractService = api_contract.NewContractService(
 		log,
 		repositories,
-		grpcClients,
 		commonServices.TenantSettingsService,
 		commonServices.ContractService,
 		commonServices.OpportunityService,
@@ -138,14 +135,12 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 	services.InvoiceService = api_invoice.NewInvoiceService(
 		log,
 		repositories,
-		grpcClients,
 		commonServices.InvoiceService,
 	)
 
 	services.OpportunityService = api_opportunity.NewOpportunityService(
 		log,
 		repositories,
-		grpcClients,
 		commonServices.OpportunityService,
 		commonServices.OrganizationService,
 	)
@@ -153,7 +148,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 	services.OrganizationService = api_organization.NewOrganizationService(
 		log,
 		repositories,
-		grpcClients,
 		commonServices.Events,
 		commonServices.OrganizationService,
 	)
@@ -161,7 +155,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 	services.ContactService = api_contact.NewContactService(
 		log,
 		repositories,
-		grpcClients,
 		commonServices.ContactService,
 		commonServices.EmailService,
 		commonServices.PhoneNumberService,
@@ -171,7 +164,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, postgresDB
 	services.ServiceLineItemService = api_sli.NewServiceLineItemService(
 		log,
 		repositories,
-		grpcClients,
 		commonServices.ServiceLineItemService,
 		services.ContractService,
 		commonServices.TenantSettingsService,

@@ -29,24 +29,16 @@ type InvoiceCreateFields struct {
 	BillingCycleInMonths int64                   `json:"billingCycleInMonths"`
 	Status               neo4jenum.InvoiceStatus `json:"status"`
 	Note                 string                  `json:"note"`
+	Source               string                  `json:"source"`
+	AppSource            string                  `json:"appSource"`
 }
 
 type InvoiceFillFields struct {
 	Amount                       float64                 `json:"amount"`
 	VAT                          float64                 `json:"vat"`
 	TotalAmount                  float64                 `json:"totalAmount"`
-	ContractId                   string                  `json:"contractId"`
-	Currency                     neo4jenum.Currency      `json:"currency"`
-	DryRun                       bool                    `json:"dryRun"`
-	OffCycle                     bool                    `json:"offCycle"`
-	Postpaid                     bool                    `json:"postpaid"`
-	Preview                      bool                    `json:"preview"`
 	InvoiceNumber                string                  `json:"invoiceNumber"`
-	PeriodStartDate              time.Time               `json:"periodStartDate"`
-	PeriodEndDate                time.Time               `json:"periodEndDate"`
-	BillingCycleInMonths         int64                   `json:"billingCycleInMonths"`
 	Status                       neo4jenum.InvoiceStatus `json:"status"`
-	Note                         string                  `json:"note"`
 	CustomerName                 string                  `json:"customerName"`
 	CustomerEmail                string                  `json:"customerEmail"`
 	CustomerAddressLine1         string                  `json:"customerAddressLine1"`
@@ -75,18 +67,17 @@ type InvoiceUpdateFields struct {
 }
 
 type InvoiceWriteRepository interface {
-	CreateInvoiceForContract(ctx context.Context, tenant, invoiceId string, data InvoiceCreateFields) error
-	FillInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceFillFields) error
-	InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string) error
+	CreateInvoiceForContract(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId string, data InvoiceCreateFields) error
+	FillInvoice(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId string, data InvoiceFillFields) error
+	InvoicePdfGenerated(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId, repositoryFileId string) error
 	UpdateInvoice(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId string, data InvoiceUpdateFields) error
 	MarkPayNotificationRequested(ctx context.Context, tenant, invoiceId string, requestedAt time.Time) error
 	MarkPaymentLinkRequested(ctx context.Context, tenant, invoiceId string) error
 	SetPaidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	SetVoidInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
 	SetPayInvoiceNotificationSentAt(ctx context.Context, tenant, invoiceId string) error
-	DeleteInitializedInvoice(ctx context.Context, tenant, invoiceId string) error
 	DeletePreviewCycleInvoices(ctx context.Context, tenant, contractId, skipInvoiceId string) error
-	DeletePreviewCycleInitializedInvoices(ctx context.Context, tenant, contractId, skipInvoiceId string) error
+	DeletePreviewCycleInitializedInvoices(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contractId, skipInvoiceId string) error
 	DeleteDryRunInvoice(ctx context.Context, tenant, invoiceId string) error
 }
 
@@ -102,7 +93,7 @@ func NewInvoiceWriteRepository(driver *neo4j.DriverWithContext, database string)
 	}
 }
 
-func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, tenant, invoiceId string, data InvoiceCreateFields) error {
+func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId string, data InvoiceCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.CreateInvoiceForContract")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -112,16 +103,14 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
 							MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId}) 
-							ON CREATE SET
-								i.status=$status
 							SET 
 								i:Invoice_%s,
+								i.status=$status
 								i.createdAt=$createdAt,
 								i.updatedAt=datetime(),
 								i.dueDate=$dueDate,
 								i.issuedDate=$issuedDate,
 								i.source=$source,
-								i.sourceOfTruth=$sourceOfTruth,
 								i.appSource=$appSource,
 								i.dryRun=$dryRun,
 								i.offCycle=$offCycle,
@@ -143,7 +132,6 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 		"dueDate":              utils.ToNeo4jDateAsAny(&data.DueDate),
 		"issuedDate":           utils.ToDate(data.IssuedDate),
 		"source":               data.SourceFields.Source,
-		"sourceOfTruth":        data.SourceFields.Source,
 		"appSource":            data.SourceFields.AppSource,
 		"dryRun":               data.DryRun,
 		"offCycle":             data.OffCycle,
@@ -159,32 +147,23 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
 	return err
 }
 
-func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoiceId string, data InvoiceFillFields) error {
+func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId string, data InvoiceFillFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.FillInvoice")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
-							MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId}) 
-							ON CREATE SET
-								i:Invoice_%s,
-								i.currency=$currency,
-								i.dryRun=$dryRun,
-								i.offCycle=$offCycle,
-								i.postpaid=$postpaid,
-								i.preview=$preview,
-								i.periodStartDate=$periodStart,
-								i.periodEndDate=$periodEnd,
-								i.billingCycleInMonths=$billingCycleInMonths
+	cypher := `MATCH (i:Invoice {id:$invoiceId}) 
 							SET 
 								i.updatedAt=datetime(),
 								i.number=$number,
@@ -192,7 +171,6 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.vat=$vat,
 								i.totalAmount=$totalAmount,
 								i.status=$status,
-								i.note=$note,
 								i.customerName=$customerName,
 								i.customerEmail=$customerEmail,
 								i.customerAddressLine1=$customerAddressLine1,
@@ -212,25 +190,14 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 								i.providerAddressRegion=$providerAddressRegion
 							WITH c, i 
 							MERGE (c)-[:HAS_INVOICE]->(i) 
-							`, tenant)
+							`
 	params := map[string]any{
-		"tenant":                       tenant,
-		"contractId":                   data.ContractId,
 		"invoiceId":                    invoiceId,
 		"amount":                       data.Amount,
 		"vat":                          data.VAT,
 		"totalAmount":                  data.TotalAmount,
-		"dryRun":                       data.DryRun,
-		"offCycle":                     data.OffCycle,
-		"postpaid":                     data.Postpaid,
-		"preview":                      data.Preview,
 		"number":                       data.InvoiceNumber,
-		"currency":                     data.Currency.String(),
-		"periodStart":                  utils.ToNeo4jDateAsAny(&data.PeriodStartDate),
-		"periodEnd":                    utils.ToNeo4jDateAsAny(&data.PeriodEndDate),
-		"billingCycleInMonths":         data.BillingCycleInMonths,
 		"status":                       data.Status.String(),
-		"note":                         data.Note,
 		"customerName":                 data.CustomerName,
 		"customerEmail":                data.CustomerEmail,
 		"customerAddressLine1":         data.CustomerAddressLine1,
@@ -253,7 +220,9 @@ func (r *invoiceWriteRepository) FillInvoice(ctx context.Context, tenant, invoic
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -296,12 +265,12 @@ func (r *invoiceWriteRepository) UpdateInvoice(ctx context.Context, tx *neo4j.Ma
 	return err
 }
 
-func (r *invoiceWriteRepository) InvoicePdfGenerated(ctx context.Context, tenant, id, repositoryFileId string) error {
+func (r *invoiceWriteRepository) InvoicePdfGenerated(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId, repositoryFileId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoicingCycleWriteRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, id)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice_%s {id:$id}) 
 							SET 
@@ -309,14 +278,16 @@ func (r *invoiceWriteRepository) InvoicePdfGenerated(ctx context.Context, tenant
 								i.updatedAt=datetime()`, tenant)
 	params := map[string]any{
 		"tenant":           tenant,
-		"id":               id,
+		"id":               invoiceId,
 		"repositoryFileId": repositoryFileId,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -425,32 +396,6 @@ func (r *invoiceWriteRepository) SetPayInvoiceNotificationSentAt(ctx context.Con
 	return err
 }
 
-func (r *invoiceWriteRepository) DeleteInitializedInvoice(ctx context.Context, tenant, invoiceId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceWriteRepository.DeleteInitializedInvoice")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, invoiceId)
-
-	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[r1:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId})<-[r2:HAS_INVOICE]-(:Contract)
-							WHERE i:Invoice_%s AND i.status=$initializedStatus
-							DELETE r1,r2,i`, tenant)
-	params := map[string]any{
-		"tenant":            tenant,
-		"invoiceId":         invoiceId,
-		"initializedStatus": neo4jenum.InvoiceStatusInitialized.String(),
-	}
-
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-}
-
 func (r *invoiceWriteRepository) DeletePreviewCycleInvoices(ctx context.Context, tenant, contractId, skipInvoiceId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.DeletePreviewCycleInvoices")
 	defer span.Finish()
@@ -478,7 +423,7 @@ func (r *invoiceWriteRepository) DeletePreviewCycleInvoices(ctx context.Context,
 	return err
 }
 
-func (r *invoiceWriteRepository) DeletePreviewCycleInitializedInvoices(ctx context.Context, tenant, contractId, skipInvoiceId string) error {
+func (r *invoiceWriteRepository) DeletePreviewCycleInitializedInvoices(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contractId, skipInvoiceId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.DeletePreviewCycleInitializedInvoices")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -498,11 +443,12 @@ func (r *invoiceWriteRepository) DeletePreviewCycleInitializedInvoices(ctx conte
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
-
 	return err
 }
 

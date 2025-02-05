@@ -9,7 +9,6 @@ import (
 	"errors"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/customeros/customeros/packages/server/customer-os-api/constants"
 	"github.com/customeros/customeros/packages/server/customer-os-api/dataloader"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/generated"
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
@@ -216,7 +215,7 @@ func (r *mutationResolver) InvoiceVoid(ctx context.Context, id string) (*model.I
 		}}, nil
 	}
 
-	err = r.Services.CommonServices.InvoiceService.VoidInvoice(ctx, id, constants.AppSourceCustomerOsApi)
+	err = r.Services.CommonServices.InvoiceService.VoidInvoice(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to void invoice %s", id)

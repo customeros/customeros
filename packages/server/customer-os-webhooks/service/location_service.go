@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
@@ -19,14 +18,12 @@ type LocationService interface {
 type locationService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
 }
 
-func NewLocationService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) LocationService {
+func NewLocationService(log logger.Logger, repositories *repository.Repositories) LocationService {
 	return &locationService{
 		log:          log,
 		repositories: repositories,
-		grpcClients:  grpcClients,
 	}
 }
 

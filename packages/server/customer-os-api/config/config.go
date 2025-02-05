@@ -47,6 +47,7 @@ type CommonConfig struct {
 	Scrapin          commonconf.ScrapinConfig
 	SlackConfig      commonconf.SlackConfig
 	Temporal         commonconf.TemporalConfig
+	PdfConverter     commonconf.PdfConverterConfig
 }
 
 type AppConfig struct {
@@ -140,6 +141,7 @@ func InitConfig() (*Config, error) {
 			FileStoreConfig:     cmnCfg.FileStore,
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,
 			MailstackConfig:     cmnCfg.Mailstack,
+			PdfConverterConfig:  cmnCfg.PdfConverter,
 		},
 	}
 

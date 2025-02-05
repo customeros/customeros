@@ -5,8 +5,6 @@ volumes:
   rabbitmq_data:
   postgres_data:
   neo4j_data:
-  eventstore-volume-data:
-  eventstore-volume-index:
   provision:
 
 services:
@@ -114,23 +112,6 @@ services:
       done &&
       cat /provision/neo4j.cypher | cypher-shell -u neo4j -p password --format plain -a bolt://neo4j:7687"
 
-  eventstore:
-    image: eventstore/eventstore:22.10.3-alpha-arm64v8
-    environment:
-      - EVENTSTORE_INSECURE=true # let eventstore run without ceritficate
-      - EVENTSTORE_EXT_TCP_PORT=1113 # set internal tcp port
-      - EVENTSTORE_HTTP_PORT=2113 # set internal admin ui port
-      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
-    networks:
-      - openline
-    ports:
-      - "1113:1113"
-      - "2113:2113"
-    volumes:
-      - type: volume
-        source: eventstore-volume-data
-        target: /var/lib/eventstore-data
-
   temporal:
     container_name: temporal
     depends_on:
@@ -185,7 +166,6 @@ services:
     depends_on:
       - postgres-sidecar
       - neo4j-sidecar
-      - eventstore
     networks:
       - openline
     ports:
@@ -200,7 +180,6 @@ services:
     depends_on:
       - postgres-sidecar
       - neo4j-sidecar
-      - eventstore
       - rabbitmq
     environment:
       - POSTGRES_HOST=postgres
@@ -219,35 +198,6 @@ services:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
-      - RABBITMQ_URL=amqp://host.docker.internal:5672
-
-  events-processing-platform:
-    image: ghcr.io/customeros/customeros/events-processing-platform:latest
-    networks:
-      - openline
-    ports:
-      - "5001:5001"
-    depends_on:
-      - customer-os-platform-admin-api
-    environment:
-      - EVENT_STORE_CONNECTION_STRING=esdb://host.docker.internal:2113
-      - POSTGRES_HOST=postgres
-      - NEO4J_TARGET=neo4j://neo4j:7687
-      - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
-      - RABBITMQ_URL=amqp://host.docker.internal:5672
-
-  events-processing-platform-subscribers:
-    image: ghcr.io/customeros/customeros/events-processing-platform-subscribers:latest
-    networks:
-      - openline
-    depends_on:
-      - customer-os-platform-admin-api
-    environment:
-      - EVENT_STORE_CONNECTION_STRING=esdb://host.docker.internal:2113
-      - POSTGRES_HOST=postgres
-      - NEO4J_TARGET=neo4j://neo4j:7687
-      - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
-      - AI_API_PATH=http://host.docker.internal:10101
       - RABBITMQ_URL=amqp://host.docker.internal:5672
 
   events-subscribers:

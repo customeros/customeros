@@ -18,7 +18,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -105,17 +104,8 @@ func (server *server) Run(parentCtx context.Context) error {
 		server.log.Fatalf("Could not verify connectivity with neo4j at: %v, error: %v", server.cfg.Common.Infrastructure.Neo4jConfig.Target, err.Error())
 	}
 
-	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(&server.cfg.Common.Infrastructure.GrpcClientConfig)
-	gRPCconn, err := df.GetEventsProcessingPlatformConn()
-	if err != nil {
-		server.log.Fatalf("Failed to connect: %v", err)
-	}
-	defer df.Close(gRPCconn)
-	grpcContainer := grpc_client.InitClients(gRPCconn)
-
 	// Set up services
-	serviceContainer := cosapi_services.InitServices(server.log, &neo4jDriver, postgresDb, server.cfg, grpcContainer)
+	serviceContainer := cosapi_services.InitServices(server.log, &neo4jDriver, postgresDb, server.cfg)
 
 	// Set up handlers
 	adminApiHandler := graphHandler.NewAdminApiHandler(server.cfg, serviceContainer.Repositories.Neo4jRepositories)
@@ -161,11 +151,11 @@ func (server *server) Run(parentCtx context.Context) error {
 		tracing.GraphQlTracingEnhancer(ctx),
 		apiKeyCheckerHTTPMiddleware(serviceContainer.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, serviceContainer.Repositories.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(serviceContainer.Cache)),
 		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, serviceContainer.Repositories.Neo4jRepositories, security.WithCache(serviceContainer.Cache)),
-		server.graphqlHandler(grpcContainer, serviceContainer))
+		server.graphqlHandler(serviceContainer))
 	r.POST("/admin/query",
 		tracing.GraphQlTracingEnhancer(ctx),
 		adminApiHandler.GetAdminApiHandlerEnhancer(),
-		server.graphqlHandler(grpcContainer, serviceContainer))
+		server.graphqlHandler(serviceContainer))
 
 	// graphql playground
 	if server.cfg.App.GraphQL.PlaygroundEnabled {
@@ -247,9 +237,9 @@ func isIntrospectionQuery(req *http.Request) bool {
 	return false
 }
 
-func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, serviceContainer *cosapi_services.Services) gin.HandlerFunc {
+func (server *server) graphqlHandler(serviceContainer *cosapi_services.Services) gin.HandlerFunc {
 	// instantiate graph resolver
-	graphResolver := resolver.NewResolver(server.log, serviceContainer, grpcContainer, serviceContainer.Cfg)
+	graphResolver := resolver.NewResolver(server.log, serviceContainer, serviceContainer.Cfg)
 	// make a data loader
 	loader := dataloader.NewDataLoader(serviceContainer)
 	schemaConfig := generated.Config{Resolvers: graphResolver}

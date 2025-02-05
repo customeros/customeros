@@ -16,7 +16,6 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
@@ -37,7 +36,6 @@ type ActionLikelihoodMetadata struct {
 
 type opportunityService struct {
 	log            logger.Logger
-	grpc           *grpc_client.Clients
 	neo4j          *neo4j_repository.Repositories
 	events         *events.EventsService
 	contract       interfaces.ContractService
@@ -45,10 +43,9 @@ type opportunityService struct {
 	tenantSettings interfaces.TenantSettingsService
 }
 
-func NewOpportunityService(log logger.Logger, grpc *grpc_client.Clients, neo4j *neo4j_repository.Repositories, events *events.EventsService, contract interfaces.ContractService, org interfaces.OrganizationService, tenantSettings interfaces.TenantSettingsService) interfaces.OpportunityService {
+func NewOpportunityService(log logger.Logger, neo4j *neo4j_repository.Repositories, events *events.EventsService, contract interfaces.ContractService, org interfaces.OrganizationService, tenantSettings interfaces.TenantSettingsService) interfaces.OpportunityService {
 	return &opportunityService{
 		log:            log,
-		grpc:           grpc,
 		neo4j:          neo4j,
 		events:         events,
 		contract:       contract,

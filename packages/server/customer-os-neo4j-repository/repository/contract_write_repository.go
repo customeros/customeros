@@ -3,29 +3,29 @@ package neo4j_repository
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	model2 "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
 type ContractWriteRepository interface {
-	CreateForOrganization(ctx context.Context, tenant, contractId string, data data_fields.ContractSaveFields) error
-	UpdateContract(ctx context.Context, tenant, contractId string, data data_fields.ContractSaveFields) error
+	CreateForOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contractId string, data data_fields.ContractSaveFields) error
+	UpdateContract(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contractId string, data data_fields.ContractSaveFields) error
 	UpdateStatus(ctx context.Context, tenant, contractId, status string) error
 	SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error
 	ActivateSuspendedRenewalOpportunity(ctx context.Context, tenant, contractId string) error
 	ContractCausedOnboardingStatusChange(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contractId string) error
 	MarkStatusRenewalRequested(ctx context.Context, tenant, contractId string) error
 	MarkRolloutRenewalRequested(ctx context.Context, tenant, contractId string) error
-	MarkCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
-	MarkOffCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
-	MarkNextPreviewInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error
+	MarkCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingRequestedAt time.Time) error
+	MarkOffCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingRequestedAt time.Time) error
+	MarkNextPreviewInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingRequestedAt time.Time) error
 	SoftDelete(ctx context.Context, tenant, contractId string) error
 	SetLtv(ctx context.Context, tenant, contractId string, ltv float64) error
 }
@@ -42,7 +42,7 @@ func NewContractWriteRepository(driver *neo4j.DriverWithContext, database string
 	}
 }
 
-func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, tenant, contractId string, data data_fields.ContractSaveFields) error {
+func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contractId string, data data_fields.ContractSaveFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.CreateForOrganization")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -122,14 +122,17 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+	return nil
 }
 
-func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, contractId string, data data_fields.ContractSaveFields) error {
+func (r *contractWriteRepository) UpdateContract(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contractId string, data data_fields.ContractSaveFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.UpdateContract")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -277,11 +280,14 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+	return nil
 }
 
 func (r *contractWriteRepository) UpdateStatus(ctx context.Context, tenant, contractId, status string) error {

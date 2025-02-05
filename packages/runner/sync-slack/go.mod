@@ -4,8 +4,6 @@ go 1.23
 
 toolchain go1.23.1
 
-replace github.com/customeros/customeros/packages/server/events-processing-proto => ../../server/events-processing-proto
-
 replace github.com/customeros/customeros/packages/server/customer-os-common-module => ./../../server/customer-os-common-module
 
 replace github.com/customeros/customeros/packages/server/customer-os-neo4j-repository => ./../../server/customer-os-neo4j-repository

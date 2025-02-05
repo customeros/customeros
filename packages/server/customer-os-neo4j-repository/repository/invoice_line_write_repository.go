@@ -6,7 +6,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/model"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -14,23 +13,24 @@ import (
 )
 
 type InvoiceLineCreateFields struct {
-	CreatedAt               time.Time          `json:"createdAt"`
-	SourceFields            model.SourceFields `json:"sourceFields"`
-	SkuId                   string             `json:"skuId"`
-	SkuName                 string             `json:"skuName"`
-	Name                    string             `json:"name"` //deprecated
-	Price                   float64            `json:"price"`
-	Quantity                int64              `json:"quantity"`
-	Amount                  float64            `json:"amount"`
-	VAT                     float64            `json:"vat"`
-	TotalAmount             float64            `json:"totalAmount"`
-	ServiceLineItemId       string             `json:"serviceLineItemId"`
-	ServiceLineItemParentId string             `json:"serviceLineItemParentId"`
-	BilledType              enum.BilledType    `json:"billedType"`
+	CreatedAt               time.Time       `json:"createdAt"`
+	SkuId                   string          `json:"skuId"`
+	SkuName                 string          `json:"skuName"`
+	Name                    string          `json:"name"` //deprecated
+	Price                   float64         `json:"price"`
+	Quantity                int64           `json:"quantity"`
+	Amount                  float64         `json:"amount"`
+	VAT                     float64         `json:"vat"`
+	TotalAmount             float64         `json:"totalAmount"`
+	ServiceLineItemId       string          `json:"serviceLineItemId"`
+	ServiceLineItemParentId string          `json:"serviceLineItemParentId"`
+	BilledType              enum.BilledType `json:"billedType"`
+	Source                  string          `json:"source"`
+	AppSource               string          `json:"appSource"`
 }
 
 type InvoiceLineWriteRepository interface {
-	CreateInvoiceLine(ctx context.Context, tenant, invoiceId, invoiceLineId string, data InvoiceLineCreateFields) error
+	CreateInvoiceLine(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId, invoiceLineId string, data InvoiceLineCreateFields) error
 }
 
 type invoiceLineWriteRepository struct {
@@ -45,7 +45,7 @@ func NewInvoiceLineWriteRepository(driver *neo4j.DriverWithContext, database str
 	}
 }
 
-func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tenant, invoiceId, invoiceLineId string, data InvoiceLineCreateFields) error {
+func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, invoiceId, invoiceLineId string, data InvoiceLineCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceLineWriteRepository.CreateInvoiceLine")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -69,7 +69,6 @@ func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tena
 								il.billedType=$billedType,
 								il.source=$source,
 								il.appSource=$appSource,
-								il.sourceOfTruth=$sourceOfTruth,
 								il.serviceLineItemId=$serviceLineItemId,
 								il.serviceLineItemParentId=$serviceLineItemParentId
 							WITH il
@@ -90,9 +89,8 @@ func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tena
 		"vat":                     data.VAT,
 		"totalAmount":             data.TotalAmount,
 		"billedType":              data.BilledType.String(),
-		"source":                  data.SourceFields.Source,
-		"appSource":               data.SourceFields.AppSource,
-		"sourceOfTruth":           data.SourceFields.Source,
+		"source":                  data.Source,
+		"appSource":               data.AppSource,
 		"serviceLineItemId":       data.ServiceLineItemId,
 		"serviceLineItemParentId": data.ServiceLineItemParentId,
 	}
@@ -100,7 +98,9 @@ func (r *invoiceLineWriteRepository) CreateInvoiceLine(ctx context.Context, tena
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return tx.Run(ctx, cypher, params)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}

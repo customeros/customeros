@@ -3,9 +3,6 @@ package api_email
 import (
 	"context"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonModel "github.com/customeros/customeros/packages/server/customer-os-common-module/model"
@@ -13,6 +10,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -23,14 +22,12 @@ import (
 type emailService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
 }
 
-func NewEmailService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) cosapi_interfaces.EmailService {
+func NewEmailService(log logger.Logger, repositories *repository.Repositories) cosapi_interfaces.EmailService {
 	return &emailService{
 		log:          log,
 		repositories: repositories,
-		grpcClients:  grpcClients,
 	}
 }
 

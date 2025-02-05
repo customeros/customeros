@@ -183,11 +183,11 @@ func lockAndRunJob(cont *container.Container, groupName string, job func(*contai
 // JOB IMPLEMENTATIONS
 // Organization Jobs
 func updateOrganizations(cont *container.Container) {
-	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventProcessingServicesClient).UpkeepOrganizations()
+	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).UpkeepOrganizations()
 }
 
 func icpCheck(cont *container.Container) {
-	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventProcessingServicesClient).IcpCheck()
+	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).IcpCheck()
 }
 
 func syncDataToGlobalOrgs(cont *container.Container) {
@@ -200,44 +200,44 @@ func processWebsiteForGlobalOrgs(cont *container.Container) {
 
 // Contract Jobs
 func updateContractsStatusAndRenewal(cont *container.Container) {
-	service.NewContractService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient, cont.CommonServices).UpkeepContracts()
+	service.NewContractService(cont.Cfg, cont.Log, cont.Repositories, cont.CommonServices).UpkeepContracts()
 }
 
 // Invoice Jobs
 func generateCycleInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).GenerateCycleInvoices()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateCycleInvoices()
 }
 
 func generateOffCycleInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).GenerateOffCycleInvoices()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateOffCycleInvoices()
 }
 
 func generateNextPreviewInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).GenerateNextPreviewInvoices()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateNextPreviewInvoices()
 }
 
 func generateInvoicePaymentLinks(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).GenerateInvoicePaymentLinks()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).GenerateInvoicePaymentLinks()
 }
 
 func sendInvoiceFinalizedEvents(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).SendInvoiceFinalizedEvent()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).SendInvoiceFinalizedEvent()
 }
 
 func cleanupInvoices(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).CleanupInvoices()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).CleanupInvoices()
 }
 
 func adjustInvoiceStatus(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).AdjustInvoiceStatus()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).AdjustInvoiceStatus()
 }
 
 func sendPayInvoiceNotifications(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).SendPayNotifications()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).SendPayNotifications()
 }
 
 func sendRemindInvoiceNotifications(cont *container.Container) {
-	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories, cont.EventProcessingServicesClient).SendRemindNotifications()
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.CommonServices, cont.Repositories).SendRemindNotifications()
 }
 
 // Contact Jobs
@@ -317,7 +317,7 @@ func rampUpMailboxes(cont *container.Container) {
 
 // Other Jobs
 func refreshLastTouchpoint(cont *container.Container) {
-	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventProcessingServicesClient).RefreshLastTouchpoint()
+	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).RefreshLastTouchpoint()
 }
 
 func getCurrencyRatesECB(cont *container.Container) {
@@ -341,7 +341,7 @@ func enrichGlobalOrganization(cont *container.Container) {
 }
 
 func sendReminders(cont *container.Container) {
-	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventProcessingServicesClient).SendReminders()
+	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices).SendReminders()
 }
 
 func processWebSessions(cont *container.Container) {

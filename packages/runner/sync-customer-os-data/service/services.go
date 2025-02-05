@@ -1,12 +1,11 @@
 package service
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/config"
 	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/logger"
 	"github.com/customeros/customeros/packages/runner/sync-customer-os-data/repository"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type Services struct {
@@ -25,7 +24,7 @@ type Services struct {
 	InteractionEventDefaultSyncService SyncService
 }
 
-func InitServices(cfg *config.Config, log logger.Logger, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, airbyteStoreDb *config.RawDataStoreDB, grpcClients *grpc_client.Clients) *Services {
+func InitServices(cfg *config.Config, log logger.Logger, driver *neo4j.DriverWithContext, postgresDB *commonConfig.PostgresDB, airbyteStoreDb *config.RawDataStoreDB) *Services {
 	repositories := repository.InitRepos(driver, postgresDB, airbyteStoreDb, log)
 
 	services := new(Services)

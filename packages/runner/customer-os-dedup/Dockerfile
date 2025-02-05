@@ -8,7 +8,6 @@ RUN mkdir /app/packages/server
 COPY server/customer-os-common-module/. /app/packages/server/customer-os-common-module/
 COPY server/customer-os-neo4j-repository/. /app/packages/server/customer-os-neo4j-repository/
 COPY server/customer-os-postgres-repository/. /app/packages/server/customer-os-postgres-repository/
-COPY server/events-processing-proto/. /app/packages/server/events-processing-proto/
 COPY runner/customer-os-dedup/. /app/packages/runner/customer-os-dedup
 
 WORKDIR /app/packages/runner/customer-os-dedup

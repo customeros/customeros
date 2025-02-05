@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -42,17 +41,15 @@ type OrganizationService interface {
 type organizationService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
 	services     *Services
 	cache        *caches.Cache
 	maxWorkers   int
 }
 
-func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services, cache *caches.Cache) OrganizationService {
+func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, services *Services, cache *caches.Cache) OrganizationService {
 	return &organizationService{
 		log:          log,
 		repositories: repositories,
-		grpcClients:  grpcClients,
 		services:     services,
 		maxWorkers:   services.cfg.App.ConcurrencyConfig.OrganizationSyncConcurrency,
 		cache:        cache,

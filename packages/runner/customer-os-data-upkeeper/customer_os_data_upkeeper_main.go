@@ -16,7 +16,6 @@ import (
 	localcron "github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/cron"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/customeros/customeros/packages/runner/customer-os-data-upkeeper/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -53,26 +52,13 @@ func main() {
 	}
 	defer (neo4jDriver).Close(ctx)
 
-	// Events processing
-	var epClient *grpc_client.Clients
-	if cfg.Common.Infrastructure.GrpcClientConfig.EventsProcessingPlatformEnabled {
-		df := grpc_client.NewDialFactory(&cfg.Common.Infrastructure.GrpcClientConfig)
-		gRPCconn, err := df.GetEventsProcessingPlatformConn()
-		defer df.Close(gRPCconn)
-		if err != nil {
-			appLogger.Fatalf("Failed to connect: %v", err)
-		}
-		epClient = grpc_client.InitClients(gRPCconn)
-	}
-
 	repositories := repository.InitRepositories(cfg, &neo4jDriver, postgresDb)
 
 	cntnr := &container.Container{
-		Cfg:                           cfg,
-		Log:                           appLogger,
-		Repositories:                  repositories,
-		CommonServices:                commonService.InitCommonServices(appLogger, repositories.Neo4jRepositories, repositories.PostgresRepositories, cfg.Common, epClient, &commonService.InitOptions{LoadPersonalEmailProviders: true}),
-		EventProcessingServicesClient: epClient,
+		Cfg:            cfg,
+		Log:            appLogger,
+		Repositories:   repositories,
+		CommonServices: commonService.InitCommonServices(appLogger, repositories.Neo4jRepositories, repositories.PostgresRepositories, cfg.Common, &commonService.InitOptions{LoadPersonalEmailProviders: true}),
 	}
 
 	crons := localcron.StartCron(cntnr)

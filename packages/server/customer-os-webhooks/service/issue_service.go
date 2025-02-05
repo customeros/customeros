@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
@@ -33,16 +32,14 @@ type IssueService interface {
 type issueService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
 	services     *Services
 	maxWorkers   int
 }
 
-func NewIssueService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) IssueService {
+func NewIssueService(log logger.Logger, repositories *repository.Repositories, services *Services) IssueService {
 	return &issueService{
 		log:          log,
 		repositories: repositories,
-		grpcClients:  grpcClients,
 		services:     services,
 		maxWorkers:   services.cfg.App.ConcurrencyConfig.IssueSyncConcurrency,
 	}

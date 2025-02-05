@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -32,7 +31,6 @@ import (
 type contractService struct {
 	log            logger.Logger
 	repositories   *repository.Repositories
-	grpcClients    *grpc_client.Clients
 	tenantSettings interfaces.TenantSettingsService
 	contract       interfaces.ContractService
 	opportunity    interfaces.OpportunityService
@@ -41,7 +39,6 @@ type contractService struct {
 func NewContractService(
 	log logger.Logger,
 	repositories *repository.Repositories,
-	grpcClients *grpc_client.Clients,
 	tenantSettings interfaces.TenantSettingsService,
 	contract interfaces.ContractService,
 	opportunity interfaces.OpportunityService,
@@ -49,7 +46,6 @@ func NewContractService(
 	return &contractService{
 		log:            log,
 		repositories:   repositories,
-		grpcClients:    grpcClients,
 		tenantSettings: tenantSettings,
 		contract:       contract,
 		opportunity:    opportunity,
@@ -171,7 +167,7 @@ func (s *contractService) Create(ctx context.Context, contractDetails *cosapi_in
 		}
 	}
 
-	contractId, err := s.contract.Save(ctx, nil, contractDataFields)
+	contractId, err := s.contract.Save(ctx, nil, nil, contractDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from create contract %s", err.Error())
@@ -324,7 +320,7 @@ func (s *contractService) Update(ctx context.Context, input model.ContractUpdate
 	}
 	contractDataFields.AutoRenew = input.AutoRenew
 
-	_, err := s.contract.Save(ctx, &input.ContractID, contractDataFields)
+	_, err := s.contract.Save(ctx, nil, &input.ContractID, contractDataFields)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("Error from events processing: %s", err.Error())

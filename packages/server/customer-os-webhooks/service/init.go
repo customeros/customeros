@@ -1,7 +1,6 @@
 package service
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
@@ -38,7 +37,6 @@ func InitServices(log logger.Logger,
 	repositories *repository.Repositories,
 	cfg *config.Config,
 	commonServices *commonService.CommonServices,
-	grpcClients *grpc_client.Clients,
 	cache *caches.Cache,
 ) *Services {
 	services := Services{
@@ -47,19 +45,19 @@ func InitServices(log logger.Logger,
 		PostgresRepository: repositories.PostgresRepositories,
 
 		TenantService:             NewTenantService(log, repositories, cache),
-		LocationService:           NewLocationService(log, repositories, grpcClients),
+		LocationService:           NewLocationService(log, repositories),
 		SyncStatusService:         NewSyncStatusService(log, repositories),
-		InteractionSessionService: NewInteractionSessionService(log, repositories, grpcClients),
+		InteractionSessionService: NewInteractionSessionService(log, repositories),
 	}
 	services.cfg = cfg
 	services.ExternalSystemService = NewExternalSystemService(log, repositories, cache, &services)
-	services.UserService = NewUserService(log, repositories, grpcClients, &services)
-	services.OrganizationService = NewOrganizationService(log, repositories, grpcClients, &services, cache)
-	services.ContactService = NewContactService(log, repositories, grpcClients, &services)
-	services.LogEntryService = NewLogEntryService(log, repositories, grpcClients, &services)
-	services.IssueService = NewIssueService(log, repositories, grpcClients, &services)
+	services.UserService = NewUserService(log, repositories, &services)
+	services.OrganizationService = NewOrganizationService(log, repositories, &services, cache)
+	services.ContactService = NewContactService(log, repositories, &services)
+	services.LogEntryService = NewLogEntryService(log, repositories, &services)
+	services.IssueService = NewIssueService(log, repositories, &services)
 	services.FinderService = NewFinderService(log, repositories, &services)
-	services.CommentService = NewCommentService(log, repositories, grpcClients, &services)
-	services.InvoiceService = NewInvoiceService(log, repositories, grpcClients, &services)
+	services.CommentService = NewCommentService(log, repositories, &services)
+	services.InvoiceService = NewInvoiceService(log, repositories, &services)
 	return &services
 }

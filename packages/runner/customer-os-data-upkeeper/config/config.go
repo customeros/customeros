@@ -25,6 +25,8 @@ type CommonConfig struct {
 	Neo4j            commonconf.Neo4jConfig
 	Mailsherpa       commonconf.MailSherpaApiConfig
 	FileStore        commonconf.FileStoreConfig
+	PdfConverter     commonconf.PdfConverterConfig
+	SlackConfig      commonconf.SlackConfig
 }
 
 type AppConfig struct {
@@ -92,11 +94,13 @@ func Load() *Config {
 			ScrubbyIoConfig:     cmnCfg.ScrubbyIo,
 			AnthropicConfig:     cmnCfg.Anthropic,
 			BetterContactConfig: cmnCfg.BetterContact,
+			SlackConfig:         cmnCfg.SlackConfig,
 		},
 		Internal: commonconf.InternalServicesConfig{
 			CustomerOsApi:       cmnCfg.CustomerOsApi,
 			MailSherpaApiConfig: cmnCfg.Mailsherpa,
 			FileStoreConfig:     cmnCfg.FileStore,
+			PdfConverterConfig:  cmnCfg.PdfConverter,
 		},
 	}
 

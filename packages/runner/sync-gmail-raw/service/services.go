@@ -4,7 +4,6 @@ import (
 	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/config"
 	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/logger"
 	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/repository"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	commonService "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 	neo4jrepository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
@@ -36,7 +35,6 @@ func InitServices(driver *neo4j.DriverWithContext, postgresDB *commonConfig.Post
 		neo4jRepositories,
 		postgresRepositories,
 		&cfg.CommonConfig,
-		grpc_client.InitClients(nil),
 		&commonService.InitOptions{},
 	)
 

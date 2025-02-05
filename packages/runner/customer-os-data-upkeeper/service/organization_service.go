@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -30,18 +29,16 @@ type OrganizationService interface {
 }
 
 type organizationService struct {
-	cfg                    *config.Config
-	log                    logger.Logger
-	commonServices         *commonService.CommonServices
-	eventsProcessingClient *grpc_client.Clients
+	cfg            *config.Config
+	log            logger.Logger
+	commonServices *commonService.CommonServices
 }
 
-func NewOrganizationService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices, client *grpc_client.Clients) OrganizationService {
+func NewOrganizationService(cfg *config.Config, log logger.Logger, commonServices *commonService.CommonServices) OrganizationService {
 	return &organizationService{
-		cfg:                    cfg,
-		log:                    log,
-		commonServices:         commonServices,
-		eventsProcessingClient: client,
+		cfg:            cfg,
+		log:            log,
+		commonServices: commonServices,
 	}
 }
 
@@ -137,11 +134,6 @@ func (s *organizationService) RefreshLastTouchpoint() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	if s.eventsProcessingClient == nil {
-		s.log.Warn("eventsProcessingClient is nil.")
-		return
-	}
-
 	limit := 50
 	delayFromPreviousCheckInMinutes := 60 // 60 minutes
 
@@ -199,11 +191,6 @@ func (s *organizationService) RefreshLastTouchpoint() {
 func (s *organizationService) UpkeepOrganizations() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
-
-	if s.eventsProcessingClient == nil {
-		s.log.Warn("eventsProcessingClient is nil.")
-		return
-	}
 
 	s.updateDerivedNextRenewalDates(ctx)
 	s.linkWithDomain(ctx)

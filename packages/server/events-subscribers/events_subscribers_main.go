@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
@@ -109,17 +108,6 @@ func (a *App) initDatabases() error {
 }
 
 func (a *App) initServices() error {
-	// Initialize gRPC clients
-	var eventsProcessingGrpcClient *grpc_client.Clients
-	if a.config.Common.Infrastructure.GrpcClientConfig.EventsProcessingPlatformEnabled {
-		df := grpc_client.NewDialFactory(&a.config.Common.Infrastructure.GrpcClientConfig)
-		gRPCconn, err := df.GetEventsProcessingPlatformConn()
-		if err != nil {
-			return fmt.Errorf("failed to connect to gRPC: %w", err)
-		}
-		eventsProcessingGrpcClient = grpc_client.InitClients(gRPCconn)
-	}
-
 	// Initialize repositories
 	postgresRepositories := postgres_repository.InitRepositories(a.postgresDB)
 	neo4jRepositories := neo4j_repository.InitNeo4jRepositories(a.neo4jDriver, a.config.Common.Infrastructure.Neo4jConfig.Database)
@@ -130,14 +118,12 @@ func (a *App) initServices() error {
 		neo4jRepositories,
 		postgresRepositories,
 		a.config.Common,
-		eventsProcessingGrpcClient,
 		&service.InitOptions{LoadPersonalEmailProviders: true},
 	)
 
 	// Initialize dependency container
 	a.deps = &model.DependencyContainer{
 		Logger:               a.logger,
-		GRPCClients:          eventsProcessingGrpcClient,
 		CommonConfig:         a.config.Common,
 		PostgresRepositories: postgresRepositories,
 		Neo4jRepositories:    neo4jRepositories,
