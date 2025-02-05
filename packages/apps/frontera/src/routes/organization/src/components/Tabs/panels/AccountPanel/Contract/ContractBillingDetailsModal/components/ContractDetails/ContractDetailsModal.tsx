@@ -320,7 +320,7 @@ export const ContractDetailsModal = observer(
               placeholder='Add contract name'
               onFocus={(e) => e.target.select()}
               value={contractStore?.tempValue?.contractName}
-              className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis'
+              className='font-semibold no-border-bottom hover:border-none focus:border-none max-h-6 min-h-0 w-full overflow-hidden overflow-ellipsis truncate'
               onChange={(e) =>
                 contractStore?.updateTemp((prev) => ({
                   ...prev,
