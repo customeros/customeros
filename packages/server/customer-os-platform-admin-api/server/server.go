@@ -8,7 +8,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/clients/grpc_client"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent"
@@ -69,21 +68,11 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer neo4jDriver.Close(ctx)
 	neo4jRepositories := neo4jRepository.InitNeo4jRepositories(&neo4jDriver, server.cfg.Common.Infrastructure.Neo4jConfig.Database)
 
-	// Setting up gRPC client
-	df := grpc_client.NewDialFactory(&server.cfg.Common.Infrastructure.GrpcClientConfig)
-	gRPCconn, err := df.GetEventsProcessingPlatformConn()
-	if err != nil {
-		server.log.Fatalf("Failed to connect: %v", err)
-	}
-	defer df.Close(gRPCconn)
-	grpcContainer := grpc_client.InitClients(gRPCconn)
-
 	// Setting up services
 	commonServices := service.InitServices(
 		postgresRepositories,
 		neo4jRepositories,
 		server.cfg,
-		grpcContainer,
 		server.log,
 	)
 
