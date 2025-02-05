@@ -46,8 +46,8 @@ export const TimelineEventPreviewHeader = ({
                   className='mr-1'
                   colorScheme='gray'
                   aria-label={copyLabel}
-                  onClick={() => copy(window.location.href)}
                   icon={<Link01 className='text-gray-500' />}
+                  onClick={() => copy(window.location.href, 'Link copied')}
                 />
               </div>
             </Tooltip>

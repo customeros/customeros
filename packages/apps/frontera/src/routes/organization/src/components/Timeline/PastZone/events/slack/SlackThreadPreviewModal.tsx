@@ -1,5 +1,3 @@
-import copy from 'copy-to-clipboard';
-
 import { DateTimeUtils } from '@utils/date';
 import { Link01 } from '@ui/media/icons/Link01';
 import { XClose } from '@ui/media/icons/XClose';
@@ -8,6 +6,7 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { CardHeader, CardContent } from '@ui/presentation/Card/Card';
+import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { InteractionEvent, InteractionEventParticipant } from '@graphql/types';
 import { useGetTimelineEventsQuery } from '@organization/graphql/getTimelineEvents.generated';
 import { SlackMessageCard } from '@organization/components/Timeline/PastZone/events/slack/SlackMessageCard';
@@ -28,6 +27,7 @@ export const SlackThreadPreviewModal = () => {
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
   const event = modalContent as InteractionEvent;
+  const [_, copy] = useCopyToClipboard();
 
   const timelineEventsIds =
     event?.interactionSession?.events?.map((e) => e.id) || [];
@@ -59,8 +59,8 @@ export const SlackThreadPreviewModal = () => {
                   color='gray.500'
                   className='mr-1'
                   aria-label='Copy link to this thread'
-                  onClick={() => copy(window.location.href)}
                   icon={<Link01 className='text-gray-500 size-4' />}
+                  onClick={() => copy(window.location.href, 'Link copied')}
                 />
               </div>
             </Tooltip>

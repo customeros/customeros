@@ -46,7 +46,7 @@ export const InvoicePreviewModal = observer(() => {
                 colorScheme='gray'
                 aria-label='Copy invoice link'
                 icon={<Link01 color='text-inherit' />}
-                onClick={() => copy(window.location.href)}
+                onClick={() => copy(window.location.href, 'Link copied')}
               />
             </Tooltip>
             <Tooltip
