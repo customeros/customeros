@@ -1,5 +1,6 @@
 import React, { useState, MouseEvent, KeyboardEvent } from 'react';
 
+import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
@@ -100,6 +101,8 @@ export const AddContactsBulk = observer(() => {
     }
   };
 
+  useKey('Escape', () => handleClose);
+
   return (
     <Command shouldFilter={false} label='Add contacts'>
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100 max-h-[580px]'>
@@ -145,6 +148,11 @@ export const AddContactsBulk = observer(() => {
             type={type}
             namespace={'add-new-contacts-bulk'}
             className={'max-h-[324px] overflow-y-auto p-2'}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                handleClose;
+              }
+            }}
             onChange={(newValue) => {
               if (showEmptyError) {
                 setShowEmptyError(false);

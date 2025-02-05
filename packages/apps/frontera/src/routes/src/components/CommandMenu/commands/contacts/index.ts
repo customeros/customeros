@@ -2,8 +2,6 @@ export * from './EditPersonaTag';
 export * from './EditEmail';
 export * from './EditName';
 export * from './EditJobTitle';
-export * from './EditTimeZone';
-export * from './ChangeOrAddJobRoles';
 export * from './EditContactFlow.tsx';
 export * from './ContactEmailVerificationInfoModal';
 export * from './UnlinkContactFromFlow.tsx';

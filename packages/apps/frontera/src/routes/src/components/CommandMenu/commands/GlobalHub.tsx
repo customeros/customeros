@@ -45,9 +45,6 @@ export const GlobalSharedCommands = observer(
     const store = useStore();
     const navigate = useNavigate();
     const showCustomerMap = useFeatureIsOn('show-customer-map');
-
-    const targetsPreset = store.tableViewDefs.targetsPreset;
-    const customersPreset = store.tableViewDefs.customersPreset;
     const organizationsPreset = store.tableViewDefs.organizationsPreset;
     const contactsPreset = store.tableViewDefs.contactsPreset;
     const upcomingInvoicesPreset = store.tableViewDefs.upcomingInvoicesPreset;
@@ -85,15 +82,6 @@ export const GlobalSharedCommands = observer(
     return (
       <>
         <CommandItem
-          dataTest={`${dataTest}-gt`}
-          leftAccessory={<ArrowNarrowRight />}
-          keywords={navigationKeywords.go_to_targets}
-          rightAccessory={<KeyboardShortcut shortcut='T' />}
-          onSelect={() => handleGoTo('/finder', targetsPreset)}
-        >
-          Go to Targets
-        </CommandItem>
-        <CommandItem
           dataTest={`${dataTest}-go`}
           leftAccessory={<ArrowNarrowRight />}
           onSelect={() => handleGoTo('/prospects')}
@@ -102,21 +90,12 @@ export const GlobalSharedCommands = observer(
         >
           Go to Opportunities
         </CommandItem>
-        <CommandItem
-          dataTest={`${dataTest}-gc`}
-          leftAccessory={<ArrowNarrowRight />}
-          keywords={navigationKeywords.go_to_customers}
-          rightAccessory={<KeyboardShortcut shortcut='C' />}
-          onSelect={() => handleGoTo('/finder', customersPreset)}
-        >
-          Go to Customers
-        </CommandItem>
 
         <CommandItem
           dataTest={`${dataTest}-gz`}
           leftAccessory={<ArrowNarrowRight />}
           keywords={navigationKeywords.go_to_address_book}
-          rightAccessory={<KeyboardShortcut shortcut='Z' />}
+          rightAccessory={<KeyboardShortcut shortcut='C' />}
           onSelect={() => handleGoTo('/finder', organizationsPreset)}
         >
           Go to Companies
