@@ -10,6 +10,7 @@ config :realtime, RealtimeWeb.Endpoint,
   check_origin: [
     "https://app.customeros.dev",
     "https://app.customeros.ai",
+    "https://app.customeros.local",
     "https://frontera.customeros.ai",
     "https://frontera.openline.dev",
     "//*.localcan.dev"
