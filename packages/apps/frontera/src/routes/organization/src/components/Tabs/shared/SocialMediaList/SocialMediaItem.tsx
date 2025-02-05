@@ -53,13 +53,13 @@ export const SocialMediaItem = observer(
 
     return (
       <>
-        <div className='w-full group'>
-          <div className='h-full relative w-full flex items-center'>
+        <div className='group'>
+          <div className='h-full relative flex items-center'>
             <div className='h-full flex items-center'>
               <div
                 tabIndex={0}
                 data-test={dataTest}
-                className='text-sm truncate cursor-default overflow-hidden overflow-ellipsis mr-3'
+                className='text-sm truncate cursor-default overflow-hidden overflow-ellipsis'
               >
                 <Popover open={openActionBar} onOpenChange={setIsOpenActionBar}>
                   <PopoverTrigger>
@@ -86,7 +86,7 @@ export const SocialMediaItem = observer(
                     className='bg-gray-700 z-[99999999]'
                   >
                     <div className=' flex items-center text-white'>
-                      <span className=' mr-2 text-sm truncate w-[150px]'>
+                      <span className='mr-2 text-sm truncate w-[150px]'>
                         {formatSocialUrl(value)}
                       </span>
                       <Divider className='bg-gray-500 w-3 rotate-90 h-[1px] border-0' />

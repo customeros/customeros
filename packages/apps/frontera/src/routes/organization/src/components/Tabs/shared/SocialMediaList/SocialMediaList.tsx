@@ -33,9 +33,9 @@ export const SocialMediaList = observer(
     }));
 
     return (
-      <div className='flex flex-wrap gap-2'>
+      <div className='flex flex-wrap gap-3'>
         {socialOptions.map(({ value: v, label: l }: SelectOption) => (
-          <div key={v} className='w-auto '>
+          <div key={v} className='w-fit '>
             <SocialMediaItem
               id={v}
               value={l}
