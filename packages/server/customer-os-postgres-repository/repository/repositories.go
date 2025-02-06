@@ -171,6 +171,7 @@ func (r *Repositories) Migration(postgresDB *config.PostgresDB) {
 		&postgres_entity.AgentRegistry{},
 		&postgres_entity.AgentExecution{},
 		&postgres_entity.Agent{},
+		&postgres_entity.AgentPlay{},
 		&postgres_entity.AiLocationMapping{},
 		&postgres_entity.AiPromptLog{},
 		&postgres_entity.ApiBillableEvent{},
