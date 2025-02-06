@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"github.com/opentracing/opentracing-go/log"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -109,8 +110,12 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 		}
 		if capability == nil {
 			err = errors.New("cannot identify capability")
-			span.LogKV("agentID", agent.ID)
-			span.LogKV("capabilityType", capabilityType)
+			tracing.TraceErr(span, err, log.String("capabilityType", capabilityType.String()), log.String("agentID", agent.ID))
+			return err
+		}
+
+		if !capability.Active {
+			continue
 		}
 
 		executionContainer := interfaces.ExecutionContainer{
