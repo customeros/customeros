@@ -145,7 +145,7 @@ func (r *authenticationReadRepository) GetTenants(ctx context.Context, authUserI
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := fmt.Sprintf(`MATCH (a:Authentication)-[:%s]->(u:AuthenticationUser {id:$authUserId})-[:%s]->(t:Tenant) RETURN t`, model.HAS.String(), model.HAS_WORKSPACE.String())
+	query := fmt.Sprintf(`MATCH (u:AuthenticationUser {id:$authUserId})-[:%s]->(t:Tenant) RETURN t`, model.HAS_WORKSPACE.String())
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query),
@@ -173,7 +173,7 @@ func (r *authenticationReadRepository) GetTenants(ctx context.Context, authUserI
 }
 
 func (r *authenticationReadRepository) GetTenantsForImpersonation(ctx context.Context, authUserId string) ([]*TenantHasWorkspace, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationReadRepository.GetTenants")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationReadRepository.GetTenantsForImpersonation")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 

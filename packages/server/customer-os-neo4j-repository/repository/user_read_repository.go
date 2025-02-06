@@ -281,7 +281,7 @@ func (u *userReadRepository) toStringList(values []interface{}) []string {
 }
 
 func (r *userReadRepository) GetAuthenticatedUserInTenant(ctx context.Context, authUserId, email string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetUserForAuthentication")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetAuthenticatedUserInTenant")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
