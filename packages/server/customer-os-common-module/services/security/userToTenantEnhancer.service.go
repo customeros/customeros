@@ -68,7 +68,7 @@ func TenantUserContextEnhancer(cr *neo4jrepository.Repositories, opts ...CommonS
 
 			if allUsers == nil || len(allUsers) != 1 {
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errors": []gin.H{{"message": fmt.Sprintf("failed to find user: %v", err)}},
+					"errors": []gin.H{{"message": "X-Openline-TENANT header must be specified"}},
 				})
 				c.Abort()
 				return
