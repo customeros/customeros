@@ -266,7 +266,7 @@ func (a *agentService) updateCapabilities(ctx context.Context, agentEntity *post
 	agentEntity.UpdateCapabilities(capabilities)
 
 	allCapabilitiesValid := true
-	for _, capability := range agentEntity.Capabilities {
+	for i, capability := range agentEntity.Capabilities {
 		if !capability.Active {
 			// Not active => auto valid
 			continue
@@ -294,6 +294,7 @@ func (a *agentService) updateCapabilities(ctx context.Context, agentEntity *post
 				tracing.TraceErr(span, err)
 				return err
 			}
+			agentEntity.Capabilities[i] = capability
 		}
 	}
 	agentEntity.Configured = allCapabilitiesValid
