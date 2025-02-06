@@ -41,6 +41,30 @@ func (r *Agent) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
+func (a *Agent) UpdateCapabilities(updatedCaps []Capability) {
+	// Build a lookup map of existing capabilities by ID.
+	existingMap := make(map[string]*Capability, len(a.Capabilities))
+	for i := range a.Capabilities {
+		existingMap[a.Capabilities[i].ID] = &a.Capabilities[i]
+	}
+
+	// Iterate over the provided updated capabilities.
+	for _, upd := range updatedCaps {
+		// Skip if the updated capability has no ID.
+		if upd.ID == "" {
+			continue
+		}
+		// Check if a capability with this ID exists in the agent.
+		if existingCap, ok := existingMap[upd.ID]; ok {
+			// Update allowed fields.
+			existingCap.Name = upd.Name
+			existingCap.Config = upd.Config
+			existingCap.Active = upd.Active
+			existingCap.Description = upd.Description
+		}
+	}
+}
+
 // Capability as a separate entity
 type Capability struct {
 	ID          string               `gorm:"primaryKey;type:varchar(32)" json:"id"`
@@ -126,7 +150,7 @@ func (c *Capability) SetConfig(config any) error {
 			c.Config = nil
 			return nil
 		}
-		c.Config = JSONConfig(data)
+		c.Config = data
 	}
 	return nil
 }
@@ -138,7 +162,7 @@ func (c *Capability) GetConfig(configPtr any) error {
 	if _, ok := configPtr.(*NoConfig); ok {
 		return nil
 	}
-	return json.Unmarshal([]byte(c.Config), configPtr)
+	return json.Unmarshal(c.Config, configPtr)
 }
 
 func (c *Capability) GetConfigString() string {

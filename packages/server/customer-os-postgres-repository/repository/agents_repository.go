@@ -3,7 +3,6 @@ package postgres_repository
 import (
 	"context"
 	"errors"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -23,7 +22,7 @@ type AgentRepository interface {
 	GetActiveConfiguredAgentsByTypes(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
 	GetActiveConfiguredAgentsByTypesCrossTenant(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
 	Update(ctx context.Context, agent postgres_entity.Agent) (*postgres_entity.Agent, error)
-	UpsertCapabilities(ctx context.Context, agentID string, capabilities []postgres_entity.Capability) error
+	UpdateCapabilities(ctx context.Context, capabilities []postgres_entity.Capability) error
 	FindCapability(ctx context.Context, agentID string, capabilityType enum.AgentCapability) (*postgres_entity.Capability, error)
 }
 
@@ -248,15 +247,8 @@ func (f *agentsRepository) Update(ctx context.Context, agent postgres_entity.Age
 
 	err := f.gormDb.Transaction(func(tx *gorm.DB) error {
 		// Update agent
-		if err := tx.Model(&agent).Updates(&agent).Error; err != nil {
+		if err := tx.Model(&agent).Omit("Capabilities").Save(&agent).Error; err != nil {
 			return err
-		}
-
-		// Handle capabilities if they exist
-		if len(agent.Capabilities) > 0 {
-			if err := f.UpsertCapabilities(ctx, agent.ID, agent.Capabilities); err != nil {
-				return err
-			}
 		}
 
 		return nil
@@ -278,29 +270,23 @@ func (f *agentsRepository) Update(ctx context.Context, agent postgres_entity.Age
 	return &updatedAgent, nil
 }
 
-func (f *agentsRepository) UpsertCapabilities(ctx context.Context, agentID string, capabilities []postgres_entity.Capability) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.UpsertCapabilities")
+func (f *agentsRepository) UpdateCapabilities(ctx context.Context, capabilities []postgres_entity.Capability) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.UpdateCapabilities")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
 	return f.gormDb.Transaction(func(tx *gorm.DB) error {
-		// Delete existing capabilities
-		if err := tx.Where("agent_id = ?", agentID).Delete(&postgres_entity.Capability{}).Error; err != nil {
-			return err
-		}
-
-		// Set agent ID for all capabilities
-		for i := range capabilities {
-			capabilities[i].AgentID = agentID
-		}
-
-		// Create new capabilities
-		if len(capabilities) > 0 {
-			if err := tx.Create(&capabilities).Error; err != nil {
+		for _, capability := range capabilities {
+			// Skip records with no ID
+			if capability.ID == "" {
+				continue
+			}
+			// Save() will update the record with the primary key cap.ID.
+			if err := tx.Save(&capability).Error; err != nil {
+				tracing.TraceErr(span, err)
 				return err
 			}
 		}
-
 		return nil
 	})
 }

@@ -113,6 +113,7 @@ type ComplexityRoot struct {
 		ID           func(childComplexity int) int
 		Icon         func(childComplexity int) int
 		IsActive     func(childComplexity int) int
+		IsConfigured func(childComplexity int) int
 		Name         func(childComplexity int) int
 		Type         func(childComplexity int) int
 		UpdatedAt    func(childComplexity int) int
@@ -2474,6 +2475,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Agent.IsActive(childComplexity), true
+
+	case "Agent.isConfigured":
+		if e.complexity.Agent.IsConfigured == nil {
+			break
+		}
+
+		return e.complexity.Agent.IsConfigured(childComplexity), true
 
 	case "Agent.name":
 		if e.complexity.Agent.Name == nil {
@@ -13348,6 +13356,7 @@ type Agent {
   capabilities: [Capability!]!
   goal: String!
   isActive: Boolean!
+  isConfigured: Boolean!
   flowId: ID
   visible: Boolean!
   createdAt: Time!
@@ -28105,6 +28114,50 @@ func (ec *executionContext) _Agent_isActive(ctx context.Context, field graphql.C
 }
 
 func (ec *executionContext) fieldContext_Agent_isActive(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_isConfigured(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_isConfigured(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IsConfigured, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_isConfigured(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Agent",
 		Field:      field,
@@ -62126,6 +62179,8 @@ func (ec *executionContext) fieldContext_Mutation_agent_Save(ctx context.Context
 				return ec.fieldContext_Agent_goal(ctx, field)
 			case "isActive":
 				return ec.fieldContext_Agent_isActive(ctx, field)
+			case "isConfigured":
+				return ec.fieldContext_Agent_isConfigured(ctx, field)
 			case "flowId":
 				return ec.fieldContext_Agent_flowId(ctx, field)
 			case "visible":
@@ -91953,6 +92008,8 @@ func (ec *executionContext) fieldContext_Query_agents(_ context.Context, field g
 				return ec.fieldContext_Agent_goal(ctx, field)
 			case "isActive":
 				return ec.fieldContext_Agent_isActive(ctx, field)
+			case "isConfigured":
+				return ec.fieldContext_Agent_isConfigured(ctx, field)
 			case "flowId":
 				return ec.fieldContext_Agent_flowId(ctx, field)
 			case "visible":
@@ -92056,6 +92113,8 @@ func (ec *executionContext) fieldContext_Query_agent(ctx context.Context, field 
 				return ec.fieldContext_Agent_goal(ctx, field)
 			case "isActive":
 				return ec.fieldContext_Agent_isActive(ctx, field)
+			case "isConfigured":
+				return ec.fieldContext_Agent_isConfigured(ctx, field)
 			case "flowId":
 				return ec.fieldContext_Agent_flowId(ctx, field)
 			case "visible":
@@ -119182,6 +119241,11 @@ func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "isActive":
 			out.Values[i] = ec._Agent_isActive(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isConfigured":
+			out.Values[i] = ec._Agent_isConfigured(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

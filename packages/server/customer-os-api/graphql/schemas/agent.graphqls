@@ -54,6 +54,7 @@ type Agent {
   capabilities: [Capability!]!
   goal: String!
   isActive: Boolean!
+  isConfigured: Boolean!
   flowId: ID
   visible: Boolean!
   createdAt: Time!

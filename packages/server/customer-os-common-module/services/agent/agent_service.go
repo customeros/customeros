@@ -233,16 +233,21 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	if agentFields.FlowID != nil {
 		agentEntity.FlowID = *agentFields.FlowID
 	}
-	validateCapabilities := false
 	if len(capabilities) != 0 {
-		agentEntity.Capabilities = capabilities
-		validateCapabilities = true
+		err = a.updateCapabilities(ctx, agentEntity, capabilities)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
 	}
 
-	if validateCapabilities {
-		// todo
+	if len(capabilities) != 0 {
+		err = a.postgresRepositories.AgentRepository.UpdateCapabilities(ctx, agentEntity.Capabilities)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
 	}
-
 	updatedAgent, err := a.postgresRepositories.AgentRepository.Update(ctx, *agentEntity)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -256,6 +261,43 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	}
 
 	return updatedAgent, nil
+}
+
+func (a *agentService) updateCapabilities(ctx context.Context, agentEntity *postgresentity.Agent, capabilities []postgresentity.Capability) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.ValidateCapabilities")
+	defer span.Finish()
+
+	agentEntity.UpdateCapabilities(capabilities)
+
+	allCapabilitiesValid := true
+	for i := range agentEntity.Capabilities {
+		capability := &capabilities[i] // pointer so we can update error
+		if !capability.Active {
+			// Not active => auto valid
+			continue
+		}
+
+		executor, err := a.agentCapabilities.GetExecutor(capability.Type)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		config := executor.DefaultConfig()
+		err = capability.GetConfig(&config)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		// see if typedConfig implements ConfigValidator
+		if validator, ok := config.(agent_capability.ConfigValidator); ok {
+			if !validator.Validate() {
+				allCapabilitiesValid = false
+			}
+		}
+	}
+	agentEntity.Configured = allCapabilitiesValid
+	return nil
 }
 
 func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent postgresentity.Agent, triggerEvent, traceId string) (string, error) {

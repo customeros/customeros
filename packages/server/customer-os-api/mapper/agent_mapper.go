@@ -13,17 +13,18 @@ func MapAgentToModel(entity *postgresEntity.Agent) *model.Agent {
 		return nil
 	}
 	agentModel := model.Agent{
-		ID:        entity.ID,
-		Name:      entity.Name,
-		Icon:      entity.Icon,
-		CreatedAt: entity.CreatedAt,
-		UpdatedAt: utils.IfNotNilTimeWithDefault(entity.UpdatedAt, entity.CreatedAt),
-		Type:      enummapper.MapAgentTypeToModel(entity.Type),
-		Color:     entity.Color,
-		Goal:      entity.Goal,
-		IsActive:  entity.IsActive,
-		Visible:   entity.VisibleInUI,
-		FlowID:    utils.StringPtr(entity.FlowID),
+		ID:           entity.ID,
+		Name:         entity.Name,
+		Icon:         entity.Icon,
+		CreatedAt:    entity.CreatedAt,
+		UpdatedAt:    utils.IfNotNilTimeWithDefault(entity.UpdatedAt, entity.CreatedAt),
+		Type:         enummapper.MapAgentTypeToModel(entity.Type),
+		Color:        entity.Color,
+		Goal:         entity.Goal,
+		IsActive:     entity.IsActive,
+		IsConfigured: entity.Configured,
+		Visible:      entity.VisibleInUI,
+		FlowID:       utils.StringPtr(entity.FlowID),
 	}
 	for _, capability := range entity.Capabilities {
 		agentModel.Capabilities = append(agentModel.Capabilities, &model.Capability{
