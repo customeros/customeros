@@ -18,7 +18,7 @@ export class ImpersonateAccountsStore extends Store<
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, {
       name: 'ImpersonateAccounts',
-      getId: (data) => data?.id,
+      getId: (data) => data?.tenant,
       factory: ImpersonateAccount,
     });
 
