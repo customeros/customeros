@@ -45,12 +45,36 @@ func TenantUserContextEnhancer(cr *neo4jrepository.Repositories, opts ...CommonS
 			log.String("header.tenant", tenantHeader),
 			log.String("header.username", usernameHeader))
 
-		if tenantHeader == "" || usernameHeader == "" {
+		if tenantHeader == "" && usernameHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"errors": []gin.H{{"message": "X-Openline-USERNAME AND X-Openline-TENANT must be specified"}},
 			})
 			c.Abort()
 			return
+		}
+
+		//TODO remove this after 01.03.2025
+		//fallback for missing tenant header
+		// should work for all customers until 01.03.2025. should be removed after that
+		if tenantHeader == "" {
+			allUsers, err := cr.UserReadRepository.FindAllUsersWithRolesByEmail(ctx, usernameHeader)
+			if err != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"errors": []gin.H{{"message": fmt.Sprintf("failed to find user: %v", err)}},
+				})
+				c.Abort()
+				return
+			}
+
+			if allUsers == nil || len(allUsers) != 1 {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"errors": []gin.H{{"message": fmt.Sprintf("failed to find user: %v", err)}},
+				})
+				c.Abort()
+				return
+			}
+
+			tenantHeader = allUsers[0].Tenant
 		}
 
 		authenticatedUserInTenant, err := checkUsernameHeader(c, tenantHeader, usernameHeader, cr, ctx, config.cache)

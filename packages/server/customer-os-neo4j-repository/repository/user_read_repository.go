@@ -24,6 +24,7 @@ type UserReadRepository interface {
 	GetAllForTenant(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 	GetUserById(ctx context.Context, tenant, userId string) (*dbtype.Node, error)
+	FindAllUsersWithRolesByEmail(ctx context.Context, email string) ([]*AuthenticatedUserInTenant, error)
 	FindFirstUserWithRolesByEmail(ctx context.Context, tenant, email string) (*AuthenticatedUserInTenant, error)
 	FindTestUser(ctx context.Context) (*dbtype.Node, error)
 	GetAuthenticatedUserInTenant(ctx context.Context, authUserId, email string) (*dbtype.Node, error)
@@ -159,6 +160,65 @@ func (r *userReadRepository) GetUserById(ctx context.Context, tenant, userId str
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (u *userReadRepository) FindAllUsersWithRolesByEmail(ctx context.Context, email string) ([]*AuthenticatedUserInTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.FindAllUsersWithRolesByEmail")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.String("email", email))
+
+	session := utils.NewNeo4jReadSession(ctx, *u.driver)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(`
+			MATCH (e:Email)<-[:HAS]-(u:User)-[:AUTHENTICATED_BY]->(au:AuthenticationUser)-[:HAS_WORKSPACE]->(t:Tenant)
+			WHERE e.email=$email OR e.rawEmail=$email
+			RETURN t.name, au.id, u.id, u.roles ORDER BY u.createdAt ASC`),
+			map[string]interface{}{
+				"email": email,
+			})
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if len(records.([]*neo4j.Record)) > 0 {
+
+		var result []*AuthenticatedUserInTenant
+
+		for _, record := range records.([]*neo4j.Record) {
+
+			tenant := record.Values[0].(string)
+			authenticatedUserId := record.Values[1].(string)
+			userId := record.Values[2].(string)
+			roleList, ok := record.Values[3].([]interface{})
+			var roles []string
+			if !ok {
+				roles = []string{}
+			} else {
+				roles = u.toStringList(roleList)
+			}
+
+			result = append(result, &AuthenticatedUserInTenant{
+				Tenant:              tenant,
+				AuthenticatedUserId: authenticatedUserId,
+				UserId:              userId,
+				Roles:               roles,
+			})
+		}
+
+		return result, nil
+	} else {
+		return nil, nil
+	}
 }
 
 func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, tenant, email string) (*AuthenticatedUserInTenant, error) {
