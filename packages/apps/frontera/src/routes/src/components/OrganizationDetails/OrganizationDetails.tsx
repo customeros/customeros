@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
-import { SaveOrganizationUseCase } from '@domain/usecases/organization-details/save-organization.usecase';
 import { EditOrganizationTagUsecase } from '@domain/usecases/organization-details/edit-organization-tag.usecase';
+import { SaveOrganizationRelationshipAndStageUsecase } from '@domain/usecases/organization-details/save-organization-relationship-and-stage.usecase';
 
 import { cn } from '@ui/utils/cn';
 import { Icon } from '@ui/media/Icon';
@@ -77,8 +77,8 @@ export const OrganizationDetails = observer(
     );
 
     const tagsUsecase = useMemo(() => new EditOrganizationTagUsecase(id), [id]);
-    const saveOrganizationUseCase = useMemo(
-      () => new SaveOrganizationUseCase(id),
+    const saveRelationshipAndStageUsecase = useMemo(
+      () => new SaveOrganizationRelationshipAndStageUsecase(id),
       [id],
     );
 
@@ -206,7 +206,7 @@ export const OrganizationDetails = observer(
                       <MenuItem
                         key={option.value}
                         onClick={() => {
-                          saveOrganizationUseCase.execute({
+                          saveRelationshipAndStageUsecase.execute({
                             relationship: option.value,
                           });
                         }}
@@ -241,7 +241,7 @@ export const OrganizationDetails = observer(
                         <MenuItem
                           key={option.value}
                           onClick={() => {
-                            saveOrganizationUseCase.execute({
+                            saveRelationshipAndStageUsecase.execute({
                               stage: option.value,
                             });
                           }}
