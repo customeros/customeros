@@ -331,7 +331,7 @@ export const ContractBillingDetailsForm = observer(
                     }
                   >
                     <div className='text-sm font-normal whitespace-nowrap'>
-                      Auto-charge card via Stripe
+                      Checkout with Stripe (Card & ACH)
                     </div>
                   </PaymentDetailsPopover>
 
@@ -373,7 +373,7 @@ export const ContractBillingDetailsForm = observer(
                 >
                   <div className='flex flex-col gap-2 items-start'>
                     <Radio value={'true'}>
-                      <span>Auto-charge card</span>
+                      <span>Auto-charge invoices</span>
                     </Radio>
                     <Radio value={'false'}>
                       <span>One-off payment link</span>
