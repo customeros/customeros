@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useMemo, useEffect } from 'react';
 
 import { toJS } from 'mobx';
 import get from 'lodash/get';
@@ -9,6 +9,7 @@ import { Tracer } from '@infra/tracer';
 import { type RootStore } from '@store/root';
 import { Observer, observer } from 'mobx-react-lite';
 import { CommonStore } from '@store/Common/Common.store';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
 import { X } from '@ui/media/icons/X';
@@ -47,9 +48,13 @@ type StoreReturnType =
 
 export const Devtools = observer(() => {
   const store = useStore();
+  const hasFlagEnabled = useFeatureIsOn('devtools');
   const { open, onOpen, onClose, onToggle } = useDisclosure();
 
-  const ENABLED = import.meta.env.DEV;
+  const ENABLED = useMemo(
+    () => import.meta.env.DEV || hasFlagEnabled,
+    [hasFlagEnabled],
+  );
 
   const defaultWidht = window.innerWidth / 2;
   const defaultX = window.innerWidth - defaultWidht * 1.5;
