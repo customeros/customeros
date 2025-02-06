@@ -13,7 +13,7 @@ export const SwitchWorkspace = observer(() => {
   const [searchTerm, setSearchTerm] = useState('');
   const store = useStore();
 
-  const swithcWorkspaceUsecase = useMemo(() => {
+  const switchWorkspaceUsecase = useMemo(() => {
     return new SwitchWorkspaceUsecase();
   }, []);
 
@@ -23,7 +23,7 @@ export const SwitchWorkspace = observer(() => {
   });
 
   return (
-    <Command shouldFilter={false} label='Switch workspace'>
+    <Command label='Switch workspace'>
       <CommandInput
         label={''}
         value={searchTerm}
@@ -41,7 +41,7 @@ export const SwitchWorkspace = observer(() => {
             <CommandItem
               key={option?.tenant}
               onSelect={() => {
-                swithcWorkspaceUsecase.execute(option?.tenant);
+                switchWorkspaceUsecase.execute(option?.tenant);
               }}
               rightAccessory={
                 option.tenant === store.session.value.tenant ? (
