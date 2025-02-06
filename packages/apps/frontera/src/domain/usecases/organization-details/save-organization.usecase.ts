@@ -12,6 +12,6 @@ export class SaveOrganizationUseCase {
 
   @action
   public execute(payload: Partial<OrganizationDatum>) {
-    this.orgService.saveOragnization(payload, this.orgId);
+    this.orgService.setRelationshipAndStage(payload, this.orgId);
   }
 }
