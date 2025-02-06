@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -10,7 +11,9 @@ export const SettingsPage = () => {
   const store = useStore();
   const tab = searchParams?.get('tab') ?? 'workspace';
 
-  store.ui.commandMenu.setType('GlobalHub');
+  useEffect(() => {
+    store.ui.commandMenu.setType('GlobalHub');
+  }, []);
 
   return (
     <TabsContainer>
