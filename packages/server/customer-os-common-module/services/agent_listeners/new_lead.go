@@ -61,7 +61,7 @@ func (l *NewLeadListener) Handle(ctx context.Context, baseEvent any) error {
 		return err
 	}
 
-	return l.handleExecution(ctx, event.Event.EntityId, event.Event.EventType)
+	return l.handleExecution(ctx, event.Event.EntityId, event.Event.AgentEventName)
 }
 
 func (l *NewLeadListener) handleExecution(ctx context.Context, orgID string, eventName string) error {

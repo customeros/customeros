@@ -13,6 +13,8 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -440,14 +442,20 @@ func (r *RabbitMQPublisher) publishEventOnExchange(ctx context.Context, entityId
 		messageType = messageType.Elem()
 	}
 
+	var eventName enum.AgentListenerEvent
+	if dto, ok := message.(interfaces.AgentEvents); ok {
+		eventName = dto.Name()
+	}
+
 	eventMessage := dto.Event{
 		Event: dto.EventDetails{
-			Id:         utils.GenerateNanoIdWithPrefix("event", 21),
-			EntityId:   entityId,
-			EntityType: entityType,
-			Tenant:     common.GetTenantFromContext(ctx),
-			EventType:  messageType.Name(),
-			Data:       message,
+			Id:             utils.GenerateNanoIdWithPrefix("event", 21),
+			EntityId:       entityId,
+			EntityType:     entityType,
+			Tenant:         common.GetTenantFromContext(ctx),
+			EventType:      messageType.Name(),
+			AgentEventName: eventName.String(),
+			Data:           message,
 		},
 		Metadata: dto.EventMetadata{
 			UberTraceId: tracingData["uber-trace-id"],

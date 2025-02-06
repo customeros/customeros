@@ -46,7 +46,7 @@ func NewAgentRunnerService(
 	}
 }
 
-func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agent, eventName string, initialParams map[string]any) error {
+func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agent, agentEventName string, initialParams map[string]any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.Run")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -66,14 +66,14 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 		return err
 	}
 
-	triggerEvent, err := enum.GetAgentListener(eventName)
+	triggerEvent, err := enum.GetAgentListener(agentEventName)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
 	// create execution record
-	executionID, err := a.createAgentExecutionRecord(ctx, agent.ID, eventName, tracing.GetTraceId(span))
+	executionID, err := a.createAgentExecutionRecord(ctx, agent.ID, agentEventName, tracing.GetTraceId(span))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to create agent execution record"))
 		return err

@@ -32,6 +32,7 @@ func NewWebVisitorNotIdentifiedListener(
 			events.GetEventType[dto.WebVisitorNotIdentified](), // subscribed event
 			events.QueueAgents, // listening on Agents queue
 		),
+		postgresRepositories: postgresRepositories,
 	}
 }
 
@@ -54,7 +55,7 @@ func (l *WebVisitorNotIdentifiedListener) Handle(ctx context.Context, baseEvent 
 		return err
 	}
 
-	return l.handleGoalAchieved(ctx, event.Event.EntityId, event.Event.EventType)
+	return l.handleGoalAchieved(ctx, event.Event.EntityId, event.Event.AgentEventName)
 }
 
 func (l *WebVisitorNotIdentifiedListener) handleGoalAchieved(ctx context.Context, orgId, eventName string) error {
