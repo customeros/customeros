@@ -3333,6 +3333,8 @@ const (
 	CapabilityTypeApplyTag                        CapabilityType = "APPLY_TAG"
 	CapabilityTypeCreateMarkdownTimelineEvent     CapabilityType = "CREATE_MARKDOWN_TIMELINE_EVENT"
 	CapabilityTypeIcpQualify                      CapabilityType = "ICP_QUALIFY"
+	CapabilityTypeGatherCompanyIntelligence       CapabilityType = "GATHER_COMPANY_INTELLIGENCE"
+	CapabilityTypeUpdateCompanyStatus             CapabilityType = "UPDATE_COMPANY_STATUS"
 )
 
 var AllCapabilityType = []CapabilityType{
@@ -3344,11 +3346,13 @@ var AllCapabilityType = []CapabilityType{
 	CapabilityTypeApplyTag,
 	CapabilityTypeCreateMarkdownTimelineEvent,
 	CapabilityTypeIcpQualify,
+	CapabilityTypeGatherCompanyIntelligence,
+	CapabilityTypeUpdateCompanyStatus,
 }
 
 func (e CapabilityType) IsValid() bool {
 	switch e {
-	case CapabilityTypeIdentifyWebVisitor, CapabilityTypeCreateOrganization, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeSendSLACkNotification, CapabilityTypeWebVisitorSendSLACkNotification, CapabilityTypeApplyTag, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeIcpQualify:
+	case CapabilityTypeIdentifyWebVisitor, CapabilityTypeCreateOrganization, CapabilityTypeAnalyzeWebSessionIntent, CapabilityTypeSendSLACkNotification, CapabilityTypeWebVisitorSendSLACkNotification, CapabilityTypeApplyTag, CapabilityTypeCreateMarkdownTimelineEvent, CapabilityTypeIcpQualify, CapabilityTypeGatherCompanyIntelligence, CapabilityTypeUpdateCompanyStatus:
 		return true
 	}
 	return false
