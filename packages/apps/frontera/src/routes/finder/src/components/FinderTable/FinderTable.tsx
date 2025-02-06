@@ -416,6 +416,7 @@ export const FinderTable = observer(() => {
         columns={columns}
         tableRef={tableRef}
         rowHeight={rowHeight}
+        id={tableViewDef?.id}
         totalItems={totalItems}
         getRowId={(row) => row.id}
         enableColumnResizing={true}
@@ -424,9 +425,9 @@ export const FinderTable = observer(() => {
         onResizeColumn={handleColumnSizing}
         onSelectionChange={onSelectionChange}
         onFocusedRowChange={handleSetFocused}
-        tableId={tableViewDef?.value?.tableId}
         dataTest={`finder-table-${tableType}`}
         enableRowSelection={enableRowSelection}
+        tableType={tableViewDef?.value?.tableId}
         isLoading={store.organizations.isLoading}
         fullRowSelection={tableType === TableViewType.Invoices}
         enableKeyboardShortcuts={

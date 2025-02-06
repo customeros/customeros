@@ -21,13 +21,8 @@ import React, {
 
 import { twMerge } from 'tailwind-merge';
 import { difference, intersection } from 'lodash';
+import { Virtualizer, useVirtualizer } from '@tanstack/react-virtual';
 import { useKey, useMergeRefs, useKeyBindings, useOutsideClick } from 'rooks';
-import {
-  Range,
-  Virtualizer,
-  useVirtualizer,
-  defaultRangeExtractor,
-} from '@tanstack/react-virtual';
 import {
   createRow,
   flexRender,
@@ -62,10 +57,11 @@ interface TableProps<T extends object> {
   rowHeight?: number;
   isLoading?: boolean;
   totalItems?: number;
+  id?: string | number;
   borderColor?: string;
-  tableId?: TableIdType;
   sorting?: SortingState;
   canFetchMore?: boolean;
+  tableType?: TableIdType;
   onFetchMore?: () => void;
   manualFiltering?: boolean;
   fullRowSelection?: boolean;
@@ -84,7 +80,6 @@ interface TableProps<T extends object> {
   onSelectionChange?: (selectedIds: string[]) => void;
   tableRef?: MutableRefObject<TableInstance<T> | null>;
   onSelectedIndexChange?: (index: number | null) => void;
-  onRowRangeChange?: (startIndex: number, endIndex: number) => void;
   onFocusedRowChange?: (index: number | null, selectedIds: string[]) => void;
   // REASON: Typing TValue is too exhaustive and has no benefit
   renderTableActions?: (
@@ -95,11 +90,13 @@ interface TableProps<T extends object> {
 }
 
 export const Table = <T extends object>({
+  id,
   data,
-  dataTest,
   columns,
+  dataTest,
   tableRef,
   getRowId,
+  tableType,
   isLoading,
   onFetchMore,
   canFetchMore,
@@ -117,11 +114,9 @@ export const Table = <T extends object>({
   manualFiltering,
   onFocusedRowChange,
   onFullRowSelection,
-  onRowRangeChange,
   enableKeyboardShortcuts,
   enableColumnResizing = false,
   onResizeColumn,
-  tableId,
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -211,12 +206,6 @@ export const Table = <T extends object>({
     onColumnSizingChange: onResizeColumn,
   });
 
-  const rangeExtractor = useCallback((r: Range) => {
-    onRowRangeChange?.(0, r.endIndex + r.overscan);
-
-    return defaultRangeExtractor(r);
-  }, []);
-
   const getEstimateSize = useCallback(() => rowHeight, [rowHeight]);
 
   const { rows } = table.getRowModel();
@@ -225,7 +214,7 @@ export const Table = <T extends object>({
     overscan: 20,
     getScrollElement: () => scrollElementRef.current,
     estimateSize: getEstimateSize,
-    rangeExtractor,
+    initialOffset: 0,
   });
 
   const columnSizeVars = React.useMemo(() => {
@@ -243,6 +232,10 @@ export const Table = <T extends object>({
   }, [table.getState().columnSizingInfo, table.getState().columnSizing, data]);
 
   const virtualRows = rowVirtualizer.getVirtualItems();
+
+  useEffect(() => {
+    rowVirtualizer.scrollToIndex(0);
+  }, [id]);
 
   useEffect(() => {
     const [lastItem] = [...virtualRows].reverse();
@@ -457,7 +450,7 @@ export const Table = <T extends object>({
 
         <TableBody
           table={table}
-          tableId={tableId}
+          tableId={tableType}
           dataTest={dataTest}
           isLoading={isLoading}
           totalItems={totalItems}
@@ -525,7 +518,14 @@ const TableBody = <T extends object>({
   );
 
   return (
-    <TBody className='w-full' data-test={dataTest}>
+    <TBody
+      className='w-full'
+      data-test={dataTest}
+      style={{
+        transform: 'translate3d(0, 0, 0)',
+        willChange: 'transform',
+      }}
+    >
       {!virtualRows.length && !isLoading && <NoResults tableId={tableId} />}
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index];
