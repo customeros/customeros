@@ -302,7 +302,7 @@ func (f *agentsRepository) FindCapability(ctx context.Context, agentID string, c
 
 	var capability postgres_entity.Capability
 	err := f.gormDb.
-		Where("agent_id = ? AND type = ? AND active = ?", agentID, capabilityType.String(), true).
+		Where("agent_id = ? AND type = ?", agentID, capabilityType.String()).
 		First(&capability).
 		Error
 	if err != nil {
