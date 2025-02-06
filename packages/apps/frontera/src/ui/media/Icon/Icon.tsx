@@ -57,6 +57,13 @@ export type IconName =
   | 'activity'
   | 'thumbs-down'
   | 'message-question-circle'
+  | 'book-closed'
+  | 'code-browser'
+  | 'keyboard-02'
+  | 'help-circle'
+  | 'message-smile-square'
+  | 'arrow-narrow-up-right'
+  | 'arrow-switch-horizontal-02'
   | 'x-circle';
 
 interface IconProps extends SVGAttributes<SVGElement> {
