@@ -8,6 +8,7 @@ import (
 	common_srv "github.com/customeros/customeros/packages/server/customer-os-common-module/services/common"
 	common_utils "github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	neoEntity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
@@ -105,6 +106,13 @@ func (a *authenticationService) CreateUserInTenant(ctx context.Context, txWithPo
 				Type: model.USER,
 				Id:   userId,
 			})
+			if err != nil {
+				return "", err
+			}
+		} else {
+			emailEntity := mapper.MapDbNodeToEmailEntity(emailNode)
+
+			err = a.neo4j.EmailWriteRepository.LinkWithUser(ctx, txWithPostCommit.Tx, tenant, userId, emailEntity.Id, true)
 			if err != nil {
 				return "", err
 			}
