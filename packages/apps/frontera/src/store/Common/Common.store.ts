@@ -17,9 +17,9 @@ export class CommonStore {
 
   constructor(private root: RootStore) {
     reaction(
-      () => this.root.globalCache.value?.isPlatformOwner,
+      () => this.root?.globalCache?.value?.isPlatformOwner,
       () => {
-        if (this.root.globalCache.value?.isPlatformOwner) {
+        if (this.root?.globalCache?.value?.isPlatformOwner) {
           this.fetchImpersonateAccounts.bind(this)();
         }
       },

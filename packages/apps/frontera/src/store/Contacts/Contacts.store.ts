@@ -15,7 +15,7 @@ import { FlowContactsView } from './__views__/FlowContacts.view';
 import { TargetsContactsView } from './__views__/TargetsContacts.view';
 
 export class ContactsStore extends Store<ContactDatum, Contact> {
-  private chunkSize = 1000;
+  private chunkSize = 500;
   private service = ContactService.getInstance();
   @observable accessor cursors: Map<string, number> = new Map();
   @observable accessor availableCounts: Map<string, number> = new Map();
@@ -26,8 +26,6 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
       getId: (data) => data?.id,
       factory: Contact,
     });
-
-    this.hydrate();
 
     new ContactsView(this);
     new FlowContactsView(this);
