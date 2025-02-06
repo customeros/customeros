@@ -117,6 +117,7 @@ export const useFileUploader = ({
         'Authorization',
         `Bearer ${store.session.sessionToken}`,
       );
+      xhr.setRequestHeader('X-Openline-TENANT', store.session.value.tenant);
       xhr.setRequestHeader(
         'X-Openline-USERNAME',
         store.session.value.profile.email,
