@@ -3,6 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { Icon } from '@ui/media/Icon';
 import { Image } from '@ui/media/Image/Image';
 import { Spinner } from '@ui/feedback/Spinner';
+import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 
@@ -26,13 +27,21 @@ export const LogoSection = observer(() => {
           {store.settings.tenant.value?.workspaceName || 'CustomerOS'}
         </span>
 
-        {/*<IconButton*/}
-        {/*  size='xxs'*/}
-        {/*  variant='ghost'*/}
-        {/*  aria-label='Switch workspace'*/}
-        {/*  dataTest={'switch-workspace-button'}*/}
-        {/*  icon={<Icon name={'arrow-switch-horizontal-02'} />}*/}
-        {/*/>*/}
+        {store.common?.impersonateAccounts?.length > 1 && (
+          <Tooltip label='Switch workspaces (G then W)'>
+            <IconButton
+              size='xxs'
+              variant='ghost'
+              aria-label='Switch workspace'
+              dataTest={'switch-workspace-button'}
+              icon={<Icon name={'arrow-switch-horizontal-02'} />}
+              onClick={() => {
+                store.ui.commandMenu.setType('SwitchWorkspace');
+                store.ui.commandMenu.setOpen(true);
+              }}
+            />
+          </Tooltip>
+        )}
       </div>
 
       {(store.isSyncing || store.isBootstrapping) &&

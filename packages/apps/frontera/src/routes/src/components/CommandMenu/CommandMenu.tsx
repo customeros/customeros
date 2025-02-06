@@ -50,6 +50,7 @@ import {
   ContactCommands,
   EditContactFlow,
   AddContactsBulk,
+  SwitchWorkspace,
   ChangeFlowStatus,
   AddSingleContact,
   ChangeArrEstimate,
@@ -87,6 +88,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   // Shared
   EditName: <EditName />,
   GlobalHub: <GlobalHub />,
+  SwitchWorkspace: <SwitchWorkspace />,
   ChangeTags: <ChangeTags />,
   DuplicateView: <DuplicateView />,
   ChangeStage: <ChangeStage />,
