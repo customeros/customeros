@@ -213,7 +213,7 @@ async function handleExtensionButtonClick(tab: chrome.tabs.Tab) {
       });
       await chrome.sidePanel.setOptions({
         tabId: tab.id,
-        path: "sidepanel.html",
+        path: "sidepanel/index.html",
         enabled: true,
       });
       console.log("Sidepanel opened for LinkedIn");
@@ -234,7 +234,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (url.host === "www.linkedin.com" || url.host === "linkedin.com") {
       chrome.sidePanel.setOptions({
         tabId: tabId,
-        path: "sidepanel.html",
+        path: "sidepanel/index.html",
         enabled: true,
       });
     } else {
@@ -246,6 +246,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "openTab") {
+    chrome.tabs.create({ url: message.url, active: true });
+    sendResponse({ success: true });
+  }
+});
+
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
   const tab = await chrome.tabs.get(activeInfo.tabId);
   if (tab.url) {
@@ -253,7 +260,7 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
     if (url.host === "www.linkedin.com" || url.host === "linkedin.com") {
       chrome.sidePanel.setOptions({
         tabId: activeInfo.tabId,
-        path: "sidepanel.html",
+        path: "sidepanel/index.html",
         enabled: true,
       });
     } else {

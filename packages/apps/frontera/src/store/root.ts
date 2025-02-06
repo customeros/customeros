@@ -47,8 +47,8 @@ export class RootStore {
   flows: FlowsStore;
   agents: AgentStore;
   common: CommonStore;
-  session: SessionStore;
   settings: SettingsStore;
+  session: SessionStore;
   invoices: InvoicesStore;
   contacts: ContactsStore;
   flowSenders: FlowSendersStore;
@@ -79,6 +79,7 @@ export class RootStore {
 
     this.common = new CommonStore(this);
     this.tableViewDefs = new TableViewDefStore(this, this.transport);
+    this.settings = new SettingsStore(this, this.transport);
     this.ui = new UIStore(this, this.transport);
     this.windowManager = new WindowManager(this);
     this.mail = new MailStore(this, this.transport);
@@ -89,7 +90,6 @@ export class RootStore {
     this.agents = new AgentStore(this, this.transport);
     this.session = new SessionStore(this, this.transport);
     this.industries = new IndustriesStore(this, this.transport);
-    this.settings = new SettingsStore(this, this.transport);
     this.mailboxes = new MailboxesStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
     this.jobRoles = new JobRolesStore(this, this.transport);

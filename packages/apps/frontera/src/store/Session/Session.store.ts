@@ -32,6 +32,7 @@ type Session = {
     locale: string;
     picture: string;
     given_name: string;
+    workspaceName?: string;
     verified_email: boolean;
   };
 };
@@ -52,6 +53,7 @@ const defaultSession: Session = {
     picture: '',
     given_name: '',
     verified_email: false,
+    workspaceName: '',
   },
 };
 

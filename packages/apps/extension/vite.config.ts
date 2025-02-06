@@ -1,4 +1,7 @@
+import path from "path";
+
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import fs from "fs";
 
@@ -7,49 +10,64 @@ export default defineConfig({
     outDir: "dist",
     rollupOptions: {
       input: {
-        background: "./src/background.ts",
-        contentScript: "./src/contentScript.ts",
-        sidepanel: "./src/sidepanel.ts",
-        sidepanelHtml: "./src/sidepanel.html", // Add this line
+        background: resolve(__dirname, "src/background.ts"),
+        contentScript: resolve(__dirname, "src/contentScript.ts"),
+        main: resolve(__dirname, "src/sidepanel/main.tsx"),
       },
       output: {
-        entryFileNames: "[name].js",
-        assetFileNames: "[name].[ext]",
-        format: "es",
-      },
-    },
-  },
-  resolve: {
-    alias: {
-      "@": "/src",
-    },
-  },
-  plugins: [
-    {
-      name: "html-transform",
-      transformIndexHtml: {
-        enforce: "pre",
-        transform(html, ctx) {
-          if (ctx.path.endsWith("sidepanel.html")) {
-            return {
-              html,
-              tags: [
-                {
-                  tag: "script",
-                  attrs: { src: "sidepanel.ts", type: "module" },
-                  injectTo: "body",
-                },
-              ],
-            };
+        entryFileNames: (chunkInfo) => {
+          if (chunkInfo.name === "main") {
+            return "sidepanel/[name].js";
           }
+          return "[name].js";
+        },
+        chunkFileNames: "sidepanel/chunks/[name].js",
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name?.split(".") ?? [];
+          const extType = info[info.length - 1];
+
+          if (extType === "css") {
+            return "sidepanel/styles/tailwind.[ext]";
+          }
+          return "assets/[name].[ext]";
         },
       },
     },
+  },
+  css: {
+    postcss: "./postcss.config.js",
+  },
+  plugins: [
+    react(),
     {
       name: "copy-sidepanel-html",
       writeBundle() {
-        fs.copyFileSync("./src/sidepanel.html", "./dist/sidepanel.html");
+        // Copy HTML file
+        let html = fs.readFileSync("./src/sidepanel/index.html", "utf-8");
+        fs.mkdirSync("./dist/sidepanel", { recursive: true });
+        fs.writeFileSync("./dist/sidepanel/index.html", html);
+
+        // Copy assets
+        if (fs.existsSync("./src/sidepanel/assets")) {
+          fs.mkdirSync("./dist/src/assets", { recursive: true });
+          fs.cpSync("./src/sidepanel/assets", "./dist/src/assets", {
+            recursive: true,
+          });
+        }
+
+        // Copy UI components
+        if (fs.existsSync("./src/sidepanel/ui")) {
+          fs.mkdirSync("./dist/sidepanel/ui", { recursive: true });
+          fs.cpSync("./src/sidepanel/ui", "./dist/sidepanel/ui", {
+            recursive: true,
+          });
+        }
       },
     },
   ],
+  resolve: {
+    alias: {
+      "@ui": path.resolve(__dirname, "./src/sidepanel/ui"),
+    },
+  },
 });

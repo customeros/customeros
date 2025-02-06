@@ -36,6 +36,8 @@ export class TenantStore {
 
       runInAction(() => {
         this.value = tenantSettings;
+        this.root.session.value.profile.workspaceName =
+          this.value.workspaceName ?? undefined;
         this.isBootstrapped = true;
       });
     } catch (err) {

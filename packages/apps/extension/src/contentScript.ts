@@ -32,7 +32,7 @@ function sendSessionData() {
       if (sessionData && sessionData.profile) {
         const email: string | null = sessionData.profile.email || null;
         const apiKeyRequest: IDBRequest = objectStore.get("tenantApiKey");
-        const tenantName: string | null = sessionData.tenant;
+        const workspaceName: string | null = sessionData.profile.workspaceName;
         apiKeyRequest.onerror = function (event: Event) {
           console.error(
             "Error reading tenantApiKey from IndexedDB:",
@@ -48,7 +48,7 @@ function sendSessionData() {
               action: "COS_SESSION_DATA",
               email,
               apiKey,
-              tenantName,
+              workspaceName,
             });
           }
         };
