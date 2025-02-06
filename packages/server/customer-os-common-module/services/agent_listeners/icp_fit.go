@@ -54,7 +54,7 @@ func (l *IcpFitListener) Handle(ctx context.Context, baseEvent any) error {
 		return err
 	}
 
-	return l.handleGoalAchieved(ctx, event.Event.EntityId, event.Event.EventType)
+	return l.handleGoalAchieved(ctx, event.Event.EntityId, event.Event.AgentEventName)
 }
 
 func (l *IcpFitListener) handleGoalAchieved(ctx context.Context, orgId, eventName string) error {
