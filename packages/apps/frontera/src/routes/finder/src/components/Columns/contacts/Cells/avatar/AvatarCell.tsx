@@ -51,7 +51,6 @@ export const AvatarCell = observer(
                 alt={fullName}
                 loading='lazy'
                 decoding='async'
-                fetchPriority='low'
                 onError={() => setStatus('error')}
                 onLoad={() => setStatus('loaded')}
                 className={cn('w-full h-full object-contain rounded-full', {
