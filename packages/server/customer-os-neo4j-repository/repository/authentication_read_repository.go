@@ -181,12 +181,13 @@ func (r *authenticationReadRepository) GetTenantsForImpersonation(ctx context.Co
 	defer session.Close(ctx)
 
 	query := `
-			MATCH (au:AuthenticationUser{id:$authUserId})-[:HAS_WORKSPACE]-(t:Tenant)
-			OPTIONAL MATCH (t)-[r]-(w:Workspace)
+			MATCH (au:AuthenticationUser {id: $authUserId})-[:HAS_WORKSPACE]-(t:Tenant)
+			OPTIONAL MATCH (t)-[:HAS_WORKSPACE]-(w:Workspace)
+			WITH t, COUNT(w) AS workspaceCount
 			RETURN 
-			t.name,
-			t.createdBy,
-			CASE WHEN w IS NULL THEN true ELSE false END AS isPersonal`
+				t.name,
+				t.createdBy,
+				CASE WHEN workspaceCount = 0 THEN true ELSE false END AS isPersonal`
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query),
