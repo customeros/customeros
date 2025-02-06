@@ -9,6 +9,7 @@ import {
   useNavigationManager,
   usePreferencesManager,
 } from '@shared/components/RootSidenav/hooks';
+import { SettingsSection } from '@shared/components/RootSidenav/components/sections/SettingsSection.tsx';
 import {
   LogoSection,
   NavigationSections,
@@ -69,6 +70,7 @@ export const RootSidenav = observer(() => {
       />
       {/* <UserActionSection /> */}
       <SystemUpdateNotification />
+      <SettingsSection />
     </div>
   );
 });
