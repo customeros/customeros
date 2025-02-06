@@ -233,20 +233,16 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	if agentFields.FlowID != nil {
 		agentEntity.FlowID = *agentFields.FlowID
 	}
-	if len(capabilities) != 0 {
-		err = a.updateCapabilities(ctx, agentEntity, capabilities)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
+	err = a.updateCapabilities(ctx, agentEntity, capabilities)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
-	if len(capabilities) != 0 {
-		err = a.postgresRepositories.AgentRepository.UpdateCapabilities(ctx, agentEntity.Capabilities)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
+	err = a.postgresRepositories.AgentRepository.UpdateCapabilities(ctx, agentEntity.Capabilities)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 	updatedAgent, err := a.postgresRepositories.AgentRepository.Update(ctx, *agentEntity)
 	if err != nil {
@@ -270,8 +266,7 @@ func (a *agentService) updateCapabilities(ctx context.Context, agentEntity *post
 	agentEntity.UpdateCapabilities(capabilities)
 
 	allCapabilitiesValid := true
-	for i := range agentEntity.Capabilities {
-		capability := &capabilities[i] // pointer so we can update error
+	for _, capability := range agentEntity.Capabilities {
 		if !capability.Active {
 			// Not active => auto valid
 			continue
@@ -293,6 +288,11 @@ func (a *agentService) updateCapabilities(ctx context.Context, agentEntity *post
 		if validator, ok := config.(agent_capability.ConfigValidator); ok {
 			if !validator.Validate() {
 				allCapabilitiesValid = false
+			}
+			err = capability.SetConfig(config)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
 			}
 		}
 	}
