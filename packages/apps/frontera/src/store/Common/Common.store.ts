@@ -69,7 +69,9 @@ export class CommonStore {
   }
 
   async bootstrap() {
-    await this.fetchImpersonateAccounts();
+    if (this.root.globalCache.value?.isPlatformOwner) {
+      await this.fetchImpersonateAccounts();
+    }
     await this.fetchSlackChannels();
   }
 }
