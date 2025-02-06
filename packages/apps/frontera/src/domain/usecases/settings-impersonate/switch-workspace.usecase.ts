@@ -1,10 +1,10 @@
 import { action } from 'mobx';
 import { RootStore } from '@store/root.ts';
-import { TenantService } from '@domain/services/tenant/tenant.service';
+import { CommonService } from '@domain/services/common/common.service';
 
 export class SwitchWorkspaceUsecase {
   private root = RootStore.getInstance();
-  private service = new TenantService();
+  private service = new CommonService();
 
   @action
   execute(tenant: string) {

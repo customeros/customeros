@@ -2,7 +2,8 @@ import { Transport } from '@infra/transport';
 
 import GetSlackChannelsDocument from './queries/getSlackChannels.graphql';
 import { GetSlackChannelsQuery } from './queries/getSlackChannels.generated';
-
+import TenantImpersonateListDocument from './queries/impersonateList.graphql';
+import { TenantImpersonateListQuery } from '../common/queries/impersonateList.generated';
 export class CommonRepository {
   static instance: CommonRepository | null = null;
   private transport = Transport.getInstance();
@@ -18,6 +19,12 @@ export class CommonRepository {
   async getSlackChannels() {
     return this.transport.graphql.request<GetSlackChannelsQuery>(
       GetSlackChannelsDocument,
+    );
+  }
+
+  async getTenantImpersonateList() {
+    return this.transport.graphql.request<TenantImpersonateListQuery>(
+      TenantImpersonateListDocument,
     );
   }
 }
