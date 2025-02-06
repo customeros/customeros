@@ -51,7 +51,6 @@ type CommonConfig struct {
 }
 
 type AppConfig struct {
-	Admin                                  AdminConfig
 	AuthConfig                             AuthConfig
 	CORS                                   CORSConfig
 	EncodedEncryptionKey                   string   `env:"ENCODED_ENCRYPTION_KEY"`
@@ -73,10 +72,6 @@ type AuthConfig struct {
 type GraphQLConfig struct {
 	PlaygroundEnabled    bool `env:"GRAPHQL_PLAYGROUND_ENABLED" envDefault:"false"`
 	FixedComplexityLimit int  `env:"GRAPHQL_FIXED_COMPLEXITY_LIMIT" envDefault:"200"`
-}
-
-type AdminConfig struct {
-	Key string `env:"ADMIN_KEY,required"`
 }
 
 type ObservabilityConfig struct {

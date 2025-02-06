@@ -74,6 +74,20 @@ func MapDbNodeToWorkspaceEntity(dbNode *dbtype.Node) *neo4j_entity.WorkspaceEnti
 	return &workspace
 }
 
+func MapDbNodeToAuthenticationUserEntity(dbNode *dbtype.Node) *neo4j_entity.AuthenticationUserEntity {
+	if dbNode == nil {
+		return &neo4j_entity.AuthenticationUserEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	authenticationUser := neo4j_entity.AuthenticationUserEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		FirstName:     utils.GetStringPropOrEmpty(props, "firstName"),
+		LastName:      utils.GetStringPropOrEmpty(props, "lastName"),
+		DefaultTenant: utils.GetStringPropOrEmpty(props, "defaultTenant"),
+	}
+	return &authenticationUser
+}
+
 func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *neo4j_entity.InvoiceEntity {
 	if dbNode == nil {
 		return &neo4j_entity.InvoiceEntity{}
@@ -296,10 +310,9 @@ func MapDbNodeToTenantEntity(dbNode *dbtype.Node) *neo4j_entity.TenantEntity {
 	tenant := neo4j_entity.TenantEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		CreatedBy: utils.GetStringPropOrEmpty(props, "createdBy"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:    neo4j_entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		Active:    utils.GetBoolPropOrTrue(props, "active"),
 	}
 	return &tenant

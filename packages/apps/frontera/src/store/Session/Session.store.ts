@@ -2,8 +2,8 @@ import type { RootStore } from '@store/root';
 
 import { match } from 'ts-pattern';
 import { AxiosError } from 'axios';
-import { Transport } from '@infra/transport';
 import { Persister } from '@store/persister';
+import { Transport } from '@infra/transport.ts';
 import { toJS, autorun, runInAction, makeAutoObservable } from 'mobx';
 
 // temporary - will be removed once we drop react-query and getGraphQLClient
@@ -11,6 +11,7 @@ declare global {
   interface Window {
     __COS_SESSION__?: {
       email: string;
+      tenant: string;
       apiKey: string | null;
       sessionToken: string | null;
     };
@@ -23,6 +24,7 @@ type Session = {
   tenant: string;
   campaign: string;
   access_token: string;
+  defaultTenant: string;
   refresh_token: string;
   integrations_token: string;
   profile: {
@@ -40,6 +42,7 @@ const defaultSession: Session = {
   exp: 0,
   iat: 0,
   tenant: '',
+  defaultTenant: '',
   campaign: '',
   access_token: '',
   refresh_token: '',
@@ -79,6 +82,7 @@ export class SessionStore {
       if (this.sessionToken) {
         this.transport.setHeaders({
           Authorization: `Bearer ${this.sessionToken}`,
+          'X-Openline-TENANT': this.value.tenant ?? '',
           'X-Openline-USERNAME': this.value.profile.email ?? '',
         });
 
@@ -125,6 +129,7 @@ export class SessionStore {
       runInAction(() => {
         this.sessionToken = sessionToken;
         this.value.tenant = jwtParsed?.tenant ?? '';
+        this.value.defaultTenant = jwtParsed?.defaultTenant ?? '';
         this.value.profile.email = jwtParsed?.profile?.email ?? '';
         this.value.profile.id = jwtParsed?.profile?.id ?? '';
         this.value.campaign = jwtParsed?.campaign ?? '';
@@ -269,6 +274,7 @@ export class SessionStore {
     window.localStorage.setItem(
       '__COS_SESSION__',
       JSON.stringify({
+        tenant: this.value.tenant,
         email: this.value.profile.email,
         sessionToken: this.sessionToken,
         apiKey: this.root.settings.tenantApiKey,
@@ -276,6 +282,7 @@ export class SessionStore {
     );
 
     window.__COS_SESSION__ = {
+      tenant: this.value.tenant,
       email: this.value.profile.email,
       sessionToken: this.sessionToken,
       apiKey: this.root.settings.tenantApiKey,

@@ -15,7 +15,6 @@ type UserService interface {
 	GetById(ctx context.Context, userId string) (*neo4jentity.UserEntity, error)
 	GetAllUsersForTenant(ctx context.Context, tenant string) ([]*neo4jentity.UserEntity, error)
 	FindUserByEmail(parentCtx context.Context, email string) (*neo4jentity.UserEntity, error)
-	IsOwner(ctx context.Context, id string) (bool, error)
 	GetContactOwner(ctx context.Context, contactId string) (*neo4jentity.UserEntity, error)
 	GetNoteCreator(ctx context.Context, noteId string) (*neo4jentity.UserEntity, error)
 	GetUsersConnectedForContacts(ctx context.Context, contactIds []string) (*neo4jentity.UserEntities, error)

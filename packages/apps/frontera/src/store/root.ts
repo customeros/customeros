@@ -1,6 +1,7 @@
 import { Transport } from '@infra/transport';
 import { when, makeAutoObservable } from 'mobx';
 import { SkusStore } from '@store/Sku/Skus.store.ts';
+import { ImpersonateAccountsStore } from '@store/ImpersonateAccounts/ImpersonateAccounts.store.ts';
 
 import { Persister } from './persister';
 import { UIStore } from './UI/UI.store';
@@ -69,6 +70,7 @@ export class RootStore {
   externalSystemInstances: ExternalSystemInstancesStore;
   jobRoles: JobRolesStore;
   skus: SkusStore;
+  impersonateAccounts: ImpersonateAccountsStore;
 
   static instance: RootStore;
 
@@ -106,6 +108,10 @@ export class RootStore {
     this.contractLineItems = new ContractLineItemsStore(this, this.transport);
     this.flowEmailVariables = new FlowEmailVariablesStore(this, this.transport);
     this.skus = new SkusStore(this, this.transport);
+    this.impersonateAccounts = new ImpersonateAccountsStore(
+      this,
+      this.transport,
+    );
 
     this.externalSystemInstances = new ExternalSystemInstancesStore(
       this,
@@ -148,6 +154,9 @@ export class RootStore {
       this.skus.bootstrap(),
       this.agents.bootstrap(),
       this.common.bootstrap(),
+
+      // todo - call only when globalCache is bootstrapped and is platform owner is true
+      this.impersonateAccounts.bootstrap(),
     ]);
   }
 

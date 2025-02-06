@@ -67,6 +67,10 @@ func (s *emailService) Merge(ctx context.Context, txWithPostCommit *utils.TxWith
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", emailFields)
 
+	if linkWith != nil {
+		tracing.LogObjectAsJson(span, "linkWith", linkWith)
+	}
+
 	if common.GetTenantFromContext(ctx) == "" {
 		tracing.TraceErr(span, errors.New("tenant is missing in context"))
 	}

@@ -84,7 +84,7 @@ async function customerOsSignIn(
   },
 ) {
   try {
-    await fetch(`${process.env.CUSTOMER_OS_API_PATH}/signin`, {
+    return fetch(`${process.env.CUSTOMER_OS_API_PATH}/signin`, {
       method: 'POST',
       headers: {
         'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
@@ -95,23 +95,6 @@ async function customerOsSignIn(
   } catch (err) {
     console.error(err);
   }
-}
-
-function fetchTenant(email) {
-  return fetch(`${process.env.CUSTOMER_OS_API_PATH + '/query'}`, {
-    method: 'POST',
-    headers: {
-      'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
-      'X-Openline-USERNAME': email,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      operationName: 'tenant',
-      query: `query tenant {
-        tenant
-      }`,
-    }),
-  });
 }
 
 function fetchMagicLink(email) {
@@ -338,17 +321,18 @@ async function createServer() {
       const magicLinkReq = await verifyMagicLink(body.code);
       const magicLinkRes = await magicLinkReq.json();
 
-      if (!magicLinkRes?.tenant) {
+      if (!magicLinkRes?.currentTenant) {
         throw new Error(magicLinkRes?.result);
       }
 
       const integrations_token = createIntegrationAppToken(
-        magicLinkRes?.tenant,
+        magicLinkRes?.currentTenant,
       );
 
       const sessionToken = jwt.sign(
         {
-          tenant: magicLinkRes?.tenant,
+          tenant: magicLinkRes?.currentTenant,
+          defaultTenant: magicLinkRes?.defaultTenant,
           access_token: '',
           refresh_token: '',
           integrations_token,
@@ -461,7 +445,7 @@ async function createServer() {
 
       const loggedInEmail = stateParsed?.email ?? profileRes.data.email;
 
-      await customerOsSignIn({
+      const loginResponsePromise = await customerOsSignIn({
         tenant: stateParsed?.tenant ?? '',
         loggedInEmail: loggedInEmail,
         provider: 'google',
@@ -478,19 +462,19 @@ async function createServer() {
           idToken: tokens.id_token,
         },
       });
+      const loginResponse = await loginResponsePromise.json();
 
-      const tenantReq = await fetchTenant(loggedInEmail);
-      const tenantRes = await tenantReq.json();
-      const tenant = tenantRes?.data?.tenant ?? '';
-
-      const integrations_token = createIntegrationAppToken(tenant);
+      const integrations_token = createIntegrationAppToken(
+        loginResponse.currentTenant,
+      );
 
       const campaign =
         new URLSearchParams(stateParsed?.origin).get('campaign') ?? '';
 
       const sessionToken = jwt.sign(
         {
-          tenant,
+          tenant: loginResponse.currentTenant,
+          defaultTenant: loginResponse.defaultTenant,
           campaign,
           access_token,
           refresh_token,
@@ -562,7 +546,7 @@ async function createServer() {
 
       const loggedInEmail = stateParsed?.email ?? profileRes?.userPrincipalName;
 
-      await customerOsSignIn({
+      const loginResponsePromise = await customerOsSignIn({
         tenant: stateParsed?.tenant ?? '',
         loggedInEmail: loggedInEmail,
         provider: 'azure-ad',
@@ -576,12 +560,12 @@ async function createServer() {
           providerAccountId: profileRes.id,
         },
       });
+      const loginResponse = await loginResponsePromise.json();
 
-      const tenantReq = await fetchTenant(loggedInEmail);
-      const tenantRes = await tenantReq.json();
-      const tenant = tenantRes?.data?.tenant ?? '';
+      const integrations_token = createIntegrationAppToken(
+        loginResponse.currentTenant,
+      );
 
-      const integrations_token = createIntegrationAppToken(tenant);
       const campaign =
         new URLSearchParams(stateParsed?.origin).get('campaign') ?? '';
 
@@ -597,7 +581,8 @@ async function createServer() {
 
       const sessionToken = jwt.sign(
         {
-          tenant,
+          tenant: loginResponse.currentTenant,
+          defaultTenant: loginResponse.defaultTenant,
           campaign,
           access_token,
           refresh_token,
@@ -627,6 +612,53 @@ async function createServer() {
 
   app.use('/session', (req, res) => {
     res.json({ session: req?.session ?? null });
+  });
+
+  app.use('/switchWorkspace', async (req, res) => {
+    const resp = await fetch(`${process.env.CUSTOMER_OS_API_PATH + '/query'}`, {
+      method: 'POST',
+      headers: {
+        'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY,
+        'X-Openline-USERNAME': req.session.profile.email,
+        'X-Openline-TENANT': req.session.tenant,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        operationName: 'admin_switchCurrentWorkspace',
+        query: `
+      mutation admin_switchCurrentWorkspace {
+        admin_switchCurrentWorkspace(switchToTenant: "${req.query.tenant}")
+      }`,
+      }),
+    });
+
+    const switchTenantResponse = await resp.json();
+
+    if (resp.status !== 200) {
+      return res.json({
+        redirectUrl: `${process.env.VITE_CLIENT_APP_URL}/auth/failure?message=${switchTenantResponse.message}`,
+      });
+    }
+
+    const newSessionToken = jwt.sign(
+      {
+        tenant: req.query.tenant,
+        defaultTenant: req.session.defaultTenant,
+        campaign: req.session.campaign,
+        access_token: req.session.access_token,
+        refresh_token: req.session.refresh_token,
+        integrations_token: req.session.integrations_token, //TODO we need to fetch a new integration app token for this tenant
+        profile: req.session.profile,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '30d',
+      },
+    );
+
+    const redirectURL = `${process.env.VITE_CLIENT_APP_URL}/auth/success?sessionToken=${newSessionToken}`;
+
+    res.json({ redirectUrl: redirectURL });
   });
 
   app.listen(5174);

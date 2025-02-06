@@ -23,6 +23,12 @@ export class WindowManager {
       },
     );
 
+    window.addEventListener('focus', () => {
+      // todo call graphql
+      // query version {
+      //   version
+      // }
+    });
     window.addEventListener('blur', () => {
       this.persistLastActiveAt();
     });

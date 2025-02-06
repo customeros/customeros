@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
@@ -43,9 +44,23 @@ export const RootSidenav = observer(() => {
       !store.ui.isFilteringTable,
   });
 
+  const [isWorkspaceNameHidden, setIsWorkspaceNameHidden] = useState(false);
+  const isPlatformOwner = store?.globalCache?.value?.isPlatformOwner ?? false;
+
   return (
     <div className='pb-4 h-full w-12.5 bg-white flex flex-col border-r border-gray-200 overflow-hidden'>
       <LogoSection />
+      {isPlatformOwner && !isWorkspaceNameHidden && (
+        <div className='px-4 text-xs font-bold'>
+          Workspace: {store?.session?.value?.tenant}
+          <button
+            className='text-blue-600 underline'
+            onClick={() => setIsWorkspaceNameHidden(true)}
+          >
+            Hide workspace name
+          </button>
+        </div>
+      )}
       <NavigationSections
         preferences={preferences}
         checkIsActive={checkIsActive}

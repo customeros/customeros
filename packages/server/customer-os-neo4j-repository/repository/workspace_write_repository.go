@@ -14,7 +14,7 @@ import (
 )
 
 type WorkspaceWriteRepository interface {
-	Merge(ctx context.Context, tenant string, workspace neo4j_entity.WorkspaceEntity) (*dbtype.Node, error)
+	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, workspace neo4j_entity.WorkspaceEntity) (*dbtype.Node, error)
 }
 
 type workspaceWriteRepository struct {
@@ -29,22 +29,28 @@ func NewWorkspaceWriteRepository(driver *neo4j.DriverWithContext, database strin
 	}
 }
 
-func (r *workspaceWriteRepository) Merge(ctx context.Context, tenant string, workspace neo4j_entity.WorkspaceEntity) (*dbtype.Node, error) {
+func (r *workspaceWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, workspace neo4j_entity.WorkspaceEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	tracing.TagTenant(span, tenant)
 
-	cypher := `MERGE (w:Workspace {name:$name, provider:$provider}) 
-		 ON CREATE SET 
-		  w.id=randomUUID(), 
-		  w.createdAt=datetime(), 
-		  w.updatedAt=datetime(), 
-		  w.source=$source, 
-		  w.sourceOfTruth=$sourceOfTruth, 
-		  w.appSource=$appSource 
-		 RETURN w`
+	cypher := `
+				MATCH (t:Tenant {name: $tenant}) 
+				MERGE (w:Workspace {name: $name, provider: $provider}) 
+				ON CREATE SET 
+				  w.id = randomUUID(), 
+				  w.createdAt = datetime(), 
+				  w.updatedAt = datetime(), 
+				  w.source = $source, 
+				  w.sourceOfTruth = $sourceOfTruth, 
+				  w.appSource = $appSource 
+				
+				MERGE (t)-[:HAS_WORKSPACE]->(w) 
+				
+				RETURN t, w`
 	params := map[string]any{
+		"tenant":        tenant,
 		"name":          workspace.Name,
 		"provider":      workspace.Provider,
 		"source":        utils.StringFirstNonEmpty(workspace.Source.String(), neo4j_entity.DataSourceOpenline.String()),
@@ -54,15 +60,17 @@ func (r *workspaceWriteRepository) Merge(ctx context.Context, tenant string, wor
 	tracing.LogObjectAsJson(span, "params", params)
 	span.LogFields(log.String("cypher", cypher))
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, cypher, params)
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	}); err != nil {
+	queryResult, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		qr, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, qr, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
-	} else {
-		return result.(*dbtype.Node), nil
 	}
+
+	return queryResult.(*neo4j.Node), nil
 }

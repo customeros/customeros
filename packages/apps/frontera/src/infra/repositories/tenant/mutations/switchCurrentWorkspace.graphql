@@ -1,0 +1,3 @@
+mutation admin_switchCurrentWorkspace($tenant: String!) {
+  admin_switchCurrentWorkspace(switchToTenant: $tenant)
+}

@@ -10,6 +10,7 @@ export type GlobalCacheQuery = {
     contactRegions: Array<string>;
     contactCities: Array<string>;
     mailboxes: Array<string>;
+    isPlatformOwner: boolean;
     isOwner: boolean;
     minARRForecastValue: number;
     maxARRForecastValue: number;

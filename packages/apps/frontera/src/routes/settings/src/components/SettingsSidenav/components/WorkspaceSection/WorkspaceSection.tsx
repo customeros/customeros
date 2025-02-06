@@ -1,3 +1,4 @@
+import { useStore } from '@shared/hooks/useStore';
 import { Building03 } from '@ui/media/icons/Building03';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 
@@ -13,6 +14,9 @@ export const WorkspaceSection = ({
   handleItemClick,
   checkIsActive,
 }: WorkspaceSectionProps) => {
+  const store = useStore();
+  const isPlatformOwner = store?.globalCache?.value?.isPlatformOwner ?? false;
+
   return (
     <div className='flex flex-col gap-2'>
       <div className='flex items-center gap-2 px-3'>
@@ -30,7 +34,6 @@ export const WorkspaceSection = ({
           isActive={checkIsActive('tags')}
           onClick={handleItemClick('tags')}
         />
-
         <SidenavItem
           label='API'
           isActive={checkIsActive('api')}
@@ -48,6 +51,14 @@ export const WorkspaceSection = ({
           isActive={checkIsActive('products')}
           onClick={handleItemClick('products')}
         />
+        {isPlatformOwner && (
+          <SidenavItem
+            label='Impersonate'
+            isActive={checkIsActive('impersonate')}
+            dataTest='sideNav-settings-impersonate'
+            onClick={handleItemClick('impersonate')}
+          />
+        )}
       </div>
     </div>
   );

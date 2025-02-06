@@ -189,19 +189,6 @@ func (s *userService) FindUserByEmail(parentCtx context.Context, email string) (
 	return mapper.MapDbNodeToUserEntity(userDbNode), nil
 }
 
-func (s *userService) IsOwner(parentCtx context.Context, userId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.IsOwner")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	isOwner, err := s.neo4j.UserReadRepository.IsOwner(ctx, common.GetContext(ctx).Tenant, userId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return false, err
-	}
-	return isOwner, nil
-}
-
 func (s *userService) GetContactOwner(parentCtx context.Context, contactId string) (*neo4jentity.UserEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetContactOwner")
 	defer span.Finish()

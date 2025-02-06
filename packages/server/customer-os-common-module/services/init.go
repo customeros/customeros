@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/authentication"
 	"log"
 	"reflect"
 
@@ -78,6 +79,7 @@ type CommonServices struct {
 	PostgresRepositories *postgres_repository.Repositories
 
 	// Services
+	AuthenticationService      interfaces.AuthenticationService
 	ActionService              interfaces.ActionService
 	AgentService               interfaces.AgentService
 	AIService                  interfaces.AIService
@@ -212,6 +214,7 @@ func InitCommonServices(
 	reminderImpl := reminders.NewReminderService(neo4jRepositories, novuImpl)
 
 	// Complex dependencies (ordered by dependency chain)
+	authenticationImpl := authentication.NewAuthenticationService(neo4jRepositories, nil, nil)
 	emailImpl := email.NewEmailService(neo4jRepositories, eventsImpl, nil, nil, nil)
 	jobroleImpl := jobrole.NewJobRoleService(neo4jRepositories, eventsImpl, nil)
 	issueImpl := issue.NewIssueService(log, neo4jRepositories, eventsImpl, nil)
@@ -236,6 +239,8 @@ func InitCommonServices(
 	actionImpl := action.NewActionService(log, neo4jRepositories, eventsImpl, orgImpl)
 
 	// Resolve circular dependencies
+	authenticationImpl.SetUserService(userImpl)
+	authenticationImpl.SetEmailService(emailImpl)
 	emailImpl.SetContactService(contactImpl)
 	emailImpl.SetOrganizationService(orgImpl)
 	emailImpl.SetDomainService(domainImpl)
@@ -280,6 +285,7 @@ func InitCommonServices(
 		PostgresRepositories: postgresRepositories,
 
 		// All other services (alphabetically)
+		AuthenticationService:      authenticationImpl,
 		ActionService:              actionImpl,
 		AgentService:               agentImpl,
 		AIService:                  aiImpl,

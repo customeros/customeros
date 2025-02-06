@@ -14,10 +14,9 @@ const (
 type TenantEntity struct {
 	Id                   string
 	Name                 string
+	CreatedBy            string
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
-	Source               DataSource
-	AppSource            string
 	Settings             TenantSettingsEntity
 	Active               bool
 	TenantInternalFields TenantInternalFields

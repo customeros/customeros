@@ -14,6 +14,7 @@ const config: CodegenConfig = {
       [`${process.env.CUSTOMER_OS_API_PATH}/query`]: {
         headers: {
           'X-Openline-API-KEY': process.env.CUSTOMER_OS_API_KEY as string,
+          'X-Openline-TENANT': 'customerosai',
           'X-Openline-USERNAME': 'edi@customeros.ai',
         },
       },

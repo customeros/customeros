@@ -1872,6 +1872,7 @@ export type GlobalCache = {
   inactiveEmailTokens: Array<GlobalCacheEmailToken>;
   isFirstLogin: Scalars['Boolean']['output'];
   isOwner: Scalars['Boolean']['output'];
+  isPlatformOwner: Scalars['Boolean']['output'];
   mailboxes: Array<Scalars['String']['output']>;
   maxARRForecastValue: Scalars['Float']['output'];
   minARRForecastValue: Scalars['Float']['output'];
@@ -2516,6 +2517,10 @@ export type MetadataInterface = {
 export type Mutation = {
   __typename?: 'Mutation';
   addTag: Scalars['ID']['output'];
+  admin_addWorkspaceAccess: Scalars['Boolean']['output'];
+  admin_removeWorkspaceAccess: Scalars['Boolean']['output'];
+  admin_switchCurrentWorkspace: Scalars['Boolean']['output'];
+  admin_tenant_hardDelete: Scalars['Boolean']['output'];
   agent_Save: Agent;
   attachment_Create: Attachment;
   bankAccount_Create: BankAccount;
@@ -2692,12 +2697,30 @@ export type Mutation = {
   tenant_UpdateBillingProfile: TenantBillingProfile;
   tenant_UpdateSettings: TenantSettings;
   tenant_UpdateSettingsOpportunityStage: ActionResponse;
-  tenant_hardDelete: Scalars['Boolean']['output'];
   user_UpdateOnboardingDetails: User;
 };
 
 export type MutationAddTagArgs = {
   input: AddTagInput;
+};
+
+export type MutationAdmin_AddWorkspaceAccessArgs = {
+  authenticatedUserEmail: Scalars['String']['input'];
+  tenant: Scalars['String']['input'];
+};
+
+export type MutationAdmin_RemoveWorkspaceAccessArgs = {
+  authenticatedUserEmail: Scalars['String']['input'];
+  tenant: Scalars['String']['input'];
+};
+
+export type MutationAdmin_SwitchCurrentWorkspaceArgs = {
+  switchToTenant: Scalars['String']['input'];
+};
+
+export type MutationAdmin_Tenant_HardDeleteArgs = {
+  confirmTenant: Scalars['String']['input'];
+  tenant: Scalars['String']['input'];
 };
 
 export type MutationAgent_SaveArgs = {
@@ -3427,11 +3450,6 @@ export type MutationTenant_UpdateSettingsArgs = {
 
 export type MutationTenant_UpdateSettingsOpportunityStageArgs = {
   input: TenantSettingsOpportunityStageConfigurationInput;
-};
-
-export type MutationTenant_HardDeleteArgs = {
-  confirmTenant: Scalars['String']['input'];
-  tenant: Scalars['String']['input'];
 };
 
 export type MutationUser_UpdateOnboardingDetailsArgs = {
@@ -4233,6 +4251,7 @@ export type Query = {
   tenantBillingProfile: TenantBillingProfile;
   tenantBillingProfiles: Array<TenantBillingProfile>;
   tenantSettings: TenantSettings;
+  tenant_impersonateList: Array<TenantImpersonateDetails>;
   timelineEvents: Array<TimelineEvent>;
   ui_contacts: Array<ContactUiDetails>;
   ui_contacts_search: ContactSearchResult;
@@ -4241,6 +4260,7 @@ export type Query = {
   user: User;
   user_ByEmail: User;
   users: UserPage;
+  version: Scalars['Float']['output'];
 };
 
 export type QueryAgentArgs = {
@@ -4577,6 +4597,7 @@ export type Result = {
 
 export enum Role {
   Admin = 'ADMIN',
+  Impersonated = 'IMPERSONATED',
   Owner = 'OWNER',
   PlatformOwner = 'PLATFORM_OWNER',
   User = 'USER',
@@ -5026,6 +5047,13 @@ export type TenantBillingProfileUpdateInput = {
   sendInvoicesFrom?: InputMaybe<Scalars['String']['input']>;
   vatNumber?: InputMaybe<Scalars['String']['input']>;
   zip?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type TenantImpersonateDetails = {
+  __typename?: 'TenantImpersonateDetails';
+  createdBy: Scalars['String']['output'];
+  personal: Scalars['Boolean']['output'];
+  tenant: Scalars['String']['output'];
 };
 
 export type TenantInput = {

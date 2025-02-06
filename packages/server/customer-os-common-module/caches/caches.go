@@ -2,6 +2,7 @@ package caches
 
 import (
 	"encoding/json"
+	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
 	"log"
 	"strconv"
 	"strings"
@@ -24,12 +25,6 @@ const (
 	expire24Hours  = 24 * 60 * 60        // 24 hours
 	expire9999Days = 9999 * 24 * 60 * 60 // 9999 days
 )
-
-type UserDetail struct {
-	UserId string   `json:"userId"`
-	Tenant string   `json:"tenant"`
-	Roles  []string `json:"roles"`
-}
 
 type Cache struct {
 	apiKeyCache                                *freecache.Cache
@@ -105,32 +100,27 @@ func (c *Cache) CheckTenant(tenant string) bool {
 }
 
 // GetUserDetailsFromCache retrieves user details from the cache
-func (c *Cache) GetUserDetailsFromCache(username string) (string, string, []string, bool) {
-	keyBytes := []byte(username)
+func (c *Cache) GetUserDetailsFromCache(tenant, username string) (*neo4j_repository.AuthenticatedUserInTenant, bool) {
+	keyBytes := []byte(tenant + "-" + username)
 
 	valueBytes, err := c.userDetailCache.Get(keyBytes)
 	if err != nil {
-		return "", "", []string{}, false
+		return nil, false
 	}
 
-	var userDetail UserDetail
+	var userDetail neo4j_repository.AuthenticatedUserInTenant
 	err = json.Unmarshal(valueBytes, &userDetail)
 	if err != nil {
-		return "", "", []string{}, false
+		return nil, false
 	}
 
-	return userDetail.UserId, userDetail.Tenant, userDetail.Roles, true
+	return &userDetail, true
 }
 
 // AddUserDetailsToCache stores user details in the cache
-func (c *Cache) AddUserDetailsToCache(username, userId, tenant string, roles []string) {
-	keyBytes := []byte(username)
+func (c *Cache) AddUserDetailsToCache(tenant, username string, userDetail *neo4j_repository.AuthenticatedUserInTenant) {
+	keyBytes := []byte(tenant + "-" + username)
 
-	userDetail := UserDetail{
-		UserId: userId,
-		Tenant: tenant,
-		Roles:  roles,
-	}
 	valueBytes, _ := json.Marshal(userDetail)
 
 	_ = c.userDetailCache.Set(keyBytes, valueBytes, expire15Min)

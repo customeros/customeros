@@ -15,6 +15,7 @@ enum Role {
     OWNER
     ADMIN
     PLATFORM_OWNER
+    IMPERSONATED
 }
 
 directive @hasTenant on FIELD_DEFINITION

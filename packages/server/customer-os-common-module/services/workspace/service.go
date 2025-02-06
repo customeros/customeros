@@ -2,13 +2,12 @@ package workspace
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -28,32 +27,20 @@ func NewWorkspaceService(neo4j *neo4j_repository.Repositories) interfaces.Worksp
 	}
 }
 
-func (s *workspaceService) CheckEmailBelongsToTenant(ctx context.Context, email string) (bool, error) {
-	tenantDomains, err := s.GetWorkspaceDomainsForTenant(ctx)
+func (s *workspaceService) MergeToTenant(ctx context.Context, tx *neo4j.ManagedTransaction, workspaceEntity neo4jentity.WorkspaceEntity, tenant string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceService.MergeToTenant")
+	defer span.Finish()
+
+	span.LogKV("workspaceEntity", workspaceEntity)
+	span.LogKV("tenant", tenant)
+
+	_, err := s.neo4j.WorkspaceWriteRepository.Merge(ctx, tx, tenant, workspaceEntity)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return false, err
 	}
 
-	validation := mailvalidate.ValidateEmailSyntax(email)
-	if !validation.IsValid {
-		return false, errors.New("Email is invalid")
-	}
-
-	for _, domain := range tenantDomains {
-		if domain == validation.Domain {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
-func (s *workspaceService) MergeToTenant(ctx context.Context, workspaceEntity neo4jentity.WorkspaceEntity, tenant string) (bool, error) {
-	_, err := s.neo4j.WorkspaceWriteRepository.Merge(ctx, tenant, workspaceEntity)
-	if err != nil {
-		return false, fmt.Errorf("MergeToTenant: %w", err)
-	}
-	result, err := s.neo4j.TenantWriteRepository.LinkWithWorkspace(ctx, tenant, workspaceEntity)
-	return result, err
+	return true, err
 }
 
 func (s *workspaceService) GetWorkspaceDomainsForTenant(ctx context.Context) ([]string, error) {
