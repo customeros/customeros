@@ -33,7 +33,7 @@ export const AboutTabField = ({
   return (
     <div className='flex group'>
       <Tooltip align='start' label={label}>
-        <div className='text-sm flex items-center cursor-default '>
+        <div className='text-sm flex items-center cursor-default bunica-class'>
           <div className='flex items-center'>{icon}</div>
           {value ? (
             <span>{value}</span>
