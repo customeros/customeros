@@ -14,12 +14,10 @@ export default {
       body: ["IBM Plex Sans"],
       sticky: ["var(--font-merriweather)"],
     },
-    extend: {
-      colors: {
-        ...colors,
-        transparent: "transparent",
-        current: "currentColor",
-      },
+    colors: {
+      ...colors,
+      transparent: "transparent",
+      current: "currentColor",
     },
   },
   extend: {
