@@ -126,8 +126,6 @@ func (c *EvaluateICPFitCapability) ValidateInput(input EvaluateICPFitInput) erro
 		return errors.New("missing required input: EmployeeCount cannot be 0")
 	case input.CompanyCountryA2 == "":
 		return errors.New("missing required input: CompanyCountryA2")
-	case input.CompanyName == "":
-		return errors.New("missing required input: CompanyName")
 	default:
 		return nil
 	}
@@ -221,7 +219,7 @@ Analyze the company and respond in this exact JSON format:
 Important: Always provide exactly three reasons, and format as valid JSON.  Please pay special attention to location criteria in your decision making.`
 
 	var descLines []string
-	descriptions := []string{company.CompanyDescriptions.Description2, company.CompanyDescriptions.Description3, company.CompanyDescriptions.Description4}
+	descriptions := []string{company.CompanyDescriptions.Description2, company.CompanyDescriptions.Description3, company.CompanyDescriptions.Description4, company.CompanyDescriptions.Description5}
 	for i, d := range descriptions {
 		if strings.TrimSpace(d) != "" {
 			descLines = append(descLines, fmt.Sprintf("Description Line %d: %s", i+1, d))
@@ -234,7 +232,7 @@ Important: Always provide exactly three reasons, and format as valid JSON.  Plea
         ICP Disqualification Criteria: %s
         Company Name: %s
         Company Domain: %s
-        Year Founded: %d
+        Year Founded: %s
         Employee Count: %d
         Location: %s, %s, %s
         Industry Name: %s
