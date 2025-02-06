@@ -105,7 +105,7 @@ func (r *invoiceWriteRepository) CreateInvoiceForContract(ctx context.Context, t
 							MERGE (t)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$invoiceId}) 
 							SET 
 								i:Invoice_%s,
-								i.status=$status
+								i.status=$status,
 								i.createdAt=$createdAt,
 								i.updatedAt=datetime(),
 								i.dueDate=$dueDate,
