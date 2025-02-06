@@ -14,11 +14,11 @@ import { PreviewCard } from '@shared/components/PreviewCard';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { ContactDetails } from '@shared/components/ContactDetails';
 import { OrganizationDetails } from '@shared/components/OrganizationDetails';
+import { ShortcutsPanel } from '@shared/components/PreviewCard/components/ShortcutsPanel';
 import {
   TableIdType,
   TableViewType,
 } from '@shared/types/__generated__/graphql.types';
-import { ShortcutsPanel } from '@shared/components/PreviewCard/components/ShortcutsPanel.tsx';
 
 import { Search } from './src/components/Search';
 
