@@ -13,6 +13,6 @@ export class EditOrganizationStageUseCase {
 
   @action
   public execute(stage: OrganizationStage) {
-    this.orgService.saveOragnization({ stage: stage }, this.orgId);
+    this.orgService.setRelationshipAndStage({ stage: stage }, this.orgId);
   }
 }

@@ -16,8 +16,6 @@ interface ProvidersProps {
   children: React.ReactNode;
 }
 
-const IS_DEV = import.meta.env.DEV;
-
 export const Providers = ({ children, isProduction }: ProvidersProps) => {
   const [queryClient] = useState(
     () =>
@@ -33,7 +31,7 @@ export const Providers = ({ children, isProduction }: ProvidersProps) => {
   return (
     <QueryClientProvider client={queryClient}>
       <StoreProvider>
-        {IS_DEV && <Devtools />}
+        <Devtools />
         <PhoenixSocketProvider>
           <RecoilRoot>
             <IntegrationsProvider>

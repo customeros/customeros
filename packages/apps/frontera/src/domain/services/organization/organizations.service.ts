@@ -288,25 +288,21 @@ export class OrganizationService {
     return [res, err];
   }
 
-  public async saveOragnization(
+  public async setRelationshipAndStage(
     payload: Partial<OrganizationDatum>,
     orgId: string,
   ) {
-    const prevRelationship =
-      this.root.organizations.getById(orgId)?.value.relationship;
+    const organization = this.root.organizations.getById(orgId);
+    const prevRelationship = organization?.value.relationship;
 
-    this.root.organizations
-      .getById(orgId)
-      ?.setRelationship(
-        payload.relationship ?? OrganizationRelationship.Prospect,
-      );
-    this.root.organizations
-      .getById(orgId)
-      ?.setStage(
-        payload.stage ??
-          this.root.organizations.getById(orgId)?.value.stage ??
-          OrganizationStage.Target,
-      );
+    organization?.setRelationship(
+      payload.relationship ?? OrganizationRelationship.Prospect,
+    );
+    organization?.setStage(
+      payload.stage ??
+        this.root.organizations.getById(orgId)?.value.stage ??
+        OrganizationStage.Target,
+    );
 
     const [res, err] = await unwrap(
       this.orgRepo.saveOrganization({

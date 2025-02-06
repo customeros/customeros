@@ -15,7 +15,7 @@ import { FlowContactsView } from './__views__/FlowContacts.view';
 import { TargetsContactsView } from './__views__/TargetsContacts.view';
 
 export class ContactsStore extends Store<ContactDatum, Contact> {
-  private chunkSize = 50;
+  private chunkSize = 1000;
   private service = ContactService.getInstance();
   @observable accessor cursors: Map<string, number> = new Map();
   @observable accessor availableCounts: Map<string, number> = new Map();
@@ -52,28 +52,6 @@ export class ContactsStore extends Store<ContactDatum, Contact> {
     ids.forEach((id) => {
       this.softDelete(id);
     });
-  };
-
-  public setView = async (
-    key: string,
-    filterFn: (records: Contact[]) => Contact[],
-  ) => {
-    const ids = this.searchResults.get(key);
-    const cursor = this.cursors.get(key) ?? 0;
-    const chunkedIds = (ids ?? []).slice(
-      0,
-      this.chunkSize * cursor + this.chunkSize,
-    );
-
-    const records: Contact[] = [];
-
-    chunkedIds.forEach((id) => {
-      if (this.value?.has(id)) {
-        records.push(this.value.get(id) as Contact);
-      }
-    });
-
-    this.views.set(key, filterFn(records));
   };
 
   public getById(id: string) {
