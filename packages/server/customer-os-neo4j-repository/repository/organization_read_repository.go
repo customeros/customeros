@@ -1156,7 +1156,7 @@ func (r *organizationReadRepository) GetOrganizationsForIcpCheck(ctx context.Con
 		"tenants":                   tenants,
 		"limit":                     limit,
 		"delayFromPreviousCheckMin": delayFromPreviousCheckMin,
-		"delayFromCreatedAt":        10,
+		"delayFromCreatedAt":        5,
 		"icpNotSet":                 commonenum.IcpNotSet.String(),
 		"leadStage":                 neo4jenum.Lead.String(),
 	}
