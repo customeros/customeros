@@ -135,7 +135,7 @@ export const ContactTableActions = observer(
     );
 
     useKeys(
-      ['Shift', 'Q'],
+      ['Shift', 'A'],
       (e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -150,6 +150,14 @@ export const ContactTableActions = observer(
       },
       { when: enableKeyboardShortcuts },
     );
+
+    useKeyBindings({
+      c: (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        handleOpen('AddContactsBulk');
+      },
+    });
 
     useKeyBindings(
       {

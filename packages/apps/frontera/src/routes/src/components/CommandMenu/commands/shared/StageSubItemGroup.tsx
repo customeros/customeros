@@ -29,20 +29,6 @@ export const StageSubItemGroup = ({
   return (
     <>
       <CommandSubItem
-        rightLabel='Lead'
-        icon={<Columns03 />}
-        leftLabel='Change org stage'
-        keywords={organizationKeywords.change_org_stage_to_lead}
-        rightAccessory={
-          isSelected() === OrganizationStage.Lead ? <Check /> : null
-        }
-        onSelectAction={() => {
-          updateStage(selectedIds, OrganizationStage.Lead);
-          closeMenu();
-        }}
-      />
-
-      <CommandSubItem
         rightLabel='Engaged'
         icon={<Columns03 />}
         leftLabel='Change org stage'

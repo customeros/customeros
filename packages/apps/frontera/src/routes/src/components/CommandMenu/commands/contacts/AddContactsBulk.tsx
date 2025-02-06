@@ -1,5 +1,6 @@
-import React, { useState, MouseEvent, KeyboardEvent } from 'react';
+import React, { useState, KeyboardEvent } from 'react';
 
+import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
@@ -24,9 +25,7 @@ export const AddContactsBulk = observer(() => {
   const [loadingError, setLoadingError] = useState<string>('');
   const [showEmptyError, setShowEmptyError] = useState<boolean>(false);
 
-  const handleClose = (
-    e: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>,
-  ) => {
+  const handleClose = (e: KeyboardEvent) => {
     e.stopPropagation();
     e.preventDefault();
     store.ui.commandMenu.toggle('AddContactsBulk');
@@ -100,6 +99,8 @@ export const AddContactsBulk = observer(() => {
     }
   };
 
+  useKey('Escape', (e) => handleClose(e as unknown as KeyboardEvent));
+
   return (
     <Command shouldFilter={false} label='Add contacts'>
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100 max-h-[580px]'>
@@ -107,7 +108,12 @@ export const AddContactsBulk = observer(() => {
           <h1 className='text-base font-semibold'>
             Add one or many contacts via...
           </h1>
-          <CommandCancelIconButton onClose={handleClose} />
+          <CommandCancelIconButton
+            onClose={() => {
+              store.ui.commandMenu.toggle('AddContactsBulk');
+              store.ui.commandMenu.clearContext();
+            }}
+          />
         </div>
 
         <div className='text-sm flex flex-col gap-4'>
@@ -145,6 +151,11 @@ export const AddContactsBulk = observer(() => {
             type={type}
             namespace={'add-new-contacts-bulk'}
             className={'max-h-[324px] overflow-y-auto p-2'}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                handleClose(e);
+              }
+            }}
             onChange={(newValue) => {
               if (showEmptyError) {
                 setShowEmptyError(false);
@@ -185,8 +196,11 @@ export const AddContactsBulk = observer(() => {
             size='sm'
             variant='outline'
             className='w-full'
-            onClick={handleClose}
             onFocus={(e) => e.preventDefault()}
+            onClick={() => {
+              store.ui.commandMenu.toggle('AddContactsBulk');
+              store.ui.commandMenu.clearContext();
+            }}
           >
             Cancel
           </Button>

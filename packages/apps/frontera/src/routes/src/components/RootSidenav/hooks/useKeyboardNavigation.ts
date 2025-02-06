@@ -24,30 +24,13 @@ export const useKeyboardNavigation = (
 
   useSequentialShortcut(
     'G',
-    'T',
-    () => {
-      if (!presets.targetsPreset) return;
-      navigate(`/finder?preset=${presets.targetsPreset}`);
-    },
-    options,
-  );
-  useSequentialShortcut(
-    'G',
     'O',
     () => {
       navigate(`/prospects`);
     },
     options,
   );
-  useSequentialShortcut(
-    'G',
-    'C',
-    () => {
-      if (!presets.customersPreset) return;
-      navigate(`/finder?preset=${presets.customersPreset}`);
-    },
-    options,
-  );
+
   useSequentialShortcut(
     'G',
     'F',
@@ -60,7 +43,7 @@ export const useKeyboardNavigation = (
 
   useSequentialShortcut(
     'G',
-    'Z',
+    'C',
     () => {
       if (!presets.organizationsPreset) return;
       navigate(`/finder?preset=${presets.organizationsPreset}`);

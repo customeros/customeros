@@ -32,8 +32,6 @@ export type CommandMenuType =
   | 'EditEmail'
   | 'EditName'
   | 'EditJobTitle'
-  | 'ChangeOrAddJobRoles'
-  | 'EditTimeZone'
   | 'RenameTableViewDef'
   | 'AddSingleContact'
   | 'ContactEmailVerificationInfoModal'

@@ -5,7 +5,6 @@ import { useLocalStorage } from 'usehooks-ts';
 
 import { Eye } from '@ui/media/icons/Eye.tsx';
 import { Tag01 } from '@ui/media/icons/Tag01';
-import { Clock } from '@ui/media/icons/Clock';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { Delete } from '@ui/media/icons/Delete';
@@ -17,11 +16,9 @@ import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
 import { Building07 } from '@ui/media/icons/Building07.tsx';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
-import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline.tsx';
 import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 
-import { AddJobRolesSubItemGroup } from './contacts/AddJobRolesSubItemGroup';
 import { AddPersonaTagSubItemGroup } from './contacts/AddPersonaTagSubItemGroup';
 import { AddContactFlowSubItemGroup } from './contacts/AddContactFlowSubItemGroup.tsx';
 
@@ -38,6 +35,7 @@ export const ContactCommands = observer(() => {
       <>
         <CommandItem
           leftAccessory={<User03 />}
+          rightAccessory={<Kbd>C</Kbd>}
           keywords={contactKeywords.add_contact}
           onSelect={() => {
             if (
@@ -83,7 +81,7 @@ export const ContactCommands = observer(() => {
               <Kbd>
                 <ArrowBlockUp className='text-inherit size-3' />
               </Kbd>
-              <Kbd>Q</Kbd>
+              <Kbd>A</Kbd>
             </>
           }
         >
@@ -134,23 +132,12 @@ export const ContactCommands = observer(() => {
               <Kbd>
                 <ArrowBlockUp className='text-inherit size-3' />
               </Kbd>
-              <Kbd>A</Kbd>
+              <Kbd>E</Kbd>
             </>
           }
         >
-          Add Email
+          Add new email
         </CommandItem>
-
-        {contact && !contact.value.linkedInUrl && (
-          <CommandItem
-            leftAccessory={<LinkedinOutline />}
-            onSelect={() => {
-              store.ui.commandMenu.setType('AddLinkedin');
-            }}
-          >
-            Add LinkedIn URL
-          </CommandItem>
-        )}
 
         <CommandItem
           leftAccessory={previewCard ? <EyeOff /> : <Eye />}
@@ -188,7 +175,7 @@ export const ContactCommands = observer(() => {
             store.ui.commandMenu.setType('EditLatestOrgActive');
           }}
         >
-          Edit company
+          Change company
         </CommandItem>
         {/* <CommandItem
           leftAccessory={<Phone />}
@@ -207,25 +194,6 @@ export const ContactCommands = observer(() => {
           }}
         >
           Edit job title
-        </CommandItem>
-        <CommandItem
-          leftAccessory={<Certificate02 />}
-          keywords={contactKeywords.edit_job_roles}
-          onSelect={() => {
-            store.ui.commandMenu.setType('ChangeOrAddJobRoles');
-          }}
-        >
-          Edit job roles...
-        </CommandItem>
-        <AddJobRolesSubItemGroup />
-        <CommandItem
-          leftAccessory={<Clock />}
-          keywords={contactKeywords.edit_time_zone}
-          onSelect={() => {
-            store.ui.commandMenu.setType('EditTimeZone');
-          }}
-        >
-          Edit time zone...
         </CommandItem>
 
         {contact?.hasFlows && (

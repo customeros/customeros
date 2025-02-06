@@ -4,13 +4,9 @@ import { useLocalStorage } from 'usehooks-ts';
 import { Icon } from '@ui/media/Icon';
 import { Delete } from '@ui/media/icons/Delete';
 import { useStore } from '@shared/hooks/useStore';
+import { OrganizationRelationship } from '@graphql/types';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp';
 import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
-import {
-  InternalType,
-  InternalStage,
-  OrganizationRelationship,
-} from '@graphql/types';
 import { organizationKeywords } from '@shared/components/CommandMenu/commands/organization/keywords.ts';
 import {
   CommandsContainer,
@@ -194,7 +190,7 @@ export const OrganizationCommands = observer(() => {
           Assign owner...
         </CommandItem>
         <OwnerSubItemGroup />
-
+        {/* 
         <CommandItem
           rightAccessory={<Kbd>O</Kbd>}
           leftAccessory={<Icon name='coins-stacked-01' />}
@@ -215,7 +211,7 @@ export const OrganizationCommands = observer(() => {
           }}
         >
           Create new opportunity
-        </CommandItem>
+        </CommandItem> */}
 
         {/*<CommandItem*/}
         {/*  leftAccessory={<Trophy01 />}*/}
