@@ -13,7 +13,7 @@ export class EditOrganizationRelationshipUseCase {
 
   @action
   public execute(relationship: OrganizationRelationship) {
-    this.orgService.saveOragnization(
+    this.orgService.setRelationshipAndStage(
       { relationship: relationship },
       this.orgId,
     );

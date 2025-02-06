@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useMemo, useEffect } from 'react';
 
 import { toJS } from 'mobx';
 import get from 'lodash/get';
@@ -9,6 +9,7 @@ import { Tracer } from '@infra/tracer';
 import { type RootStore } from '@store/root';
 import { Observer, observer } from 'mobx-react-lite';
 import { CommonStore } from '@store/Common/Common.store';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
 import { X } from '@ui/media/icons/X';
@@ -47,15 +48,23 @@ type StoreReturnType =
 
 export const Devtools = observer(() => {
   const store = useStore();
+  const hasFlagEnabled = useFeatureIsOn('devtools');
   const { open, onOpen, onClose, onToggle } = useDisclosure();
+
+  const ENABLED = useMemo(
+    () => import.meta.env.DEV || hasFlagEnabled,
+    [hasFlagEnabled],
+  );
 
   const defaultWidht = window.innerWidth / 2;
   const defaultX = window.innerWidth - defaultWidht * 1.5;
   const defaultY = window.innerHeight / 3;
 
-  useKey('`', onToggle);
+  useKey('`', onToggle, { when: ENABLED });
 
   useEffect(() => {
+    if (!ENABLED) return;
+
     const handleGqlReq = (e: unknown) => {
       const reqId = get(e, 'detail.reqId');
       const reqName = get(e, 'detail.name');
@@ -86,6 +95,7 @@ export const Devtools = observer(() => {
     window.addEventListener('gql-res', handleGqlRes);
 
     return () => {
+      if (!ENABLED) return;
       window.removeEventListener('gql-req', handleGqlReq);
       window.removeEventListener('gql-res', handleGqlRes);
     };
@@ -145,6 +155,8 @@ export const Devtools = observer(() => {
       .with('agents', () => get(entity, 'value.name', 'Unnamed'))
       .with('common.slackChannels', () => get(entity, 'name', 'Unnamed'))
       .otherwise(() => 'Unnamed');
+
+  if (!ENABLED) return null;
 
   return createPortal(
     open ? (

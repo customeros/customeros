@@ -2,7 +2,7 @@ import { action } from 'mobx';
 import { OrganizationService } from '@domain/services';
 import { OrganizationDatum } from '@store/Organizations/Organization.dto';
 
-export class SaveOrganizationUseCase {
+export class SaveOrganizationRelationshipAndStageUsecase {
   private orgService = new OrganizationService();
   private orgId: string;
 
@@ -12,6 +12,6 @@ export class SaveOrganizationUseCase {
 
   @action
   public execute(payload: Partial<OrganizationDatum>) {
-    this.orgService.saveOragnization(payload, this.orgId);
+    this.orgService.setRelationshipAndStage(payload, this.orgId);
   }
 }
