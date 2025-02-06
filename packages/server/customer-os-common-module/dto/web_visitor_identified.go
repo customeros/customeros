@@ -6,18 +6,18 @@ import (
 )
 
 var (
-	_ interfaces.AgentEvents = (*WebVisitorIdentified)(nil)
-	_ interfaces.AgentEvents = (*WebVisitorNotIdentified)(nil)
+	_ interfaces.AgentEvents = WebVisitorIdentified{}
+	_ interfaces.AgentEvents = WebVisitorNotIdentified{}
 )
 
 type WebVisitorIdentified struct{}
 
-func (e *WebVisitorIdentified) Name() enum.AgentListenerEvent {
+func (e WebVisitorIdentified) Name() enum.AgentListenerEvent {
 	return enum.EventWebVisitorIdentified
 }
 
 type WebVisitorNotIdentified struct{}
 
-func (e *WebVisitorNotIdentified) Name() enum.AgentListenerEvent {
+func (e WebVisitorNotIdentified) Name() enum.AgentListenerEvent {
 	return enum.EventWebVisitorNotIdentified
 }

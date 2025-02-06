@@ -5,10 +5,10 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 )
 
-var _ interfaces.AgentEvents = (*NewLead)(nil)
+var _ interfaces.AgentEvents = NewLead{}
 
 type NewLead struct{}
 
-func (e *NewLead) Name() enum.AgentListenerEvent {
+func (e NewLead) Name() enum.AgentListenerEvent {
 	return enum.EventNewLead
 }
