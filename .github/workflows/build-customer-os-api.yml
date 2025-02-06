@@ -282,7 +282,7 @@ jobs:
   
 
   build-publish:
-    needs: [ test, test-resolver ]
+    needs: [ test ]
     runs-on: ubicloud-standard-2
     if: github.ref == 'refs/heads/otter' || github.event_name == 'release'
     steps:
