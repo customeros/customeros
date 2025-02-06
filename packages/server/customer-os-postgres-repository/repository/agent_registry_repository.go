@@ -62,7 +62,7 @@ func (r *agentRegistryRepository) FindPlay(ctx context.Context, agentType enum.A
 
 	var play postgres_entity.AgentPlay
 	err := r.gormDb.WithContext(ctx).
-		Where("agent_type = ? AND trigger_type = ?", agentType.String(), triggerEvent.String()).
+		Where("agent_type = ? AND trigger_event = ?", agentType.String(), triggerEvent.String()).
 		First(&play).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
