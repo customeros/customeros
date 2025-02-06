@@ -4,6 +4,7 @@ import { computed, observable, runInAction } from 'mobx';
 import {
   CommonRepository,
   SlackChannelDatum,
+  TenantImpersonateDatum,
 } from '@infra/repositories/common';
 
 import { unwrap } from '@utils/unwrap';
@@ -12,6 +13,7 @@ export class CommonStore {
   private repository = CommonRepository.getInstance();
   @observable accessor slackChannels: Map<string, SlackChannelDatum> =
     new Map();
+  @observable accessor impersonateAccounts: TenantImpersonateDatum[] = [];
 
   constructor(private root: RootStore) {}
 
@@ -43,7 +45,33 @@ export class CommonStore {
     span.end();
   }
 
+  async fetchImpersonateAccounts() {
+    const span = Tracer.span('CommonStore.fetchImpersonateAccounts');
+    const [data, err] = await unwrap(
+      this.repository.getTenantImpersonateList(),
+    );
+
+    if (err) {
+      console.error(
+        'CommonStore.fetchImpersonateAccounts',
+        'Failed to fetch impersonate accounts',
+        err,
+      );
+
+      return;
+    }
+
+    runInAction(() => {
+      this.impersonateAccounts = data?.tenant_impersonateList ?? [];
+    });
+
+    span.end();
+  }
+
   async bootstrap() {
+    if (this.root.globalCache.value?.isPlatformOwner) {
+      await this.fetchImpersonateAccounts();
+    }
     await this.fetchSlackChannels();
   }
 }

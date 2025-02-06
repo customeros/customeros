@@ -1,6 +1,6 @@
 import { RootStore } from '@store/root';
 
-export class TenantService {
+export class CommonService {
   private root = RootStore.getInstance();
 
   constructor() {}

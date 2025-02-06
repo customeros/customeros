@@ -13,7 +13,6 @@ export const Impersonate = observer(() => {
   const swithcWorkspaceUsecase = useMemo(() => {
     return new SwitchWorkspaceUsecase();
   }, []);
-  const list = store.impersonateAccounts.toArray();
 
   return (
     <div className='px-6 pb-4 pt-2 max-w-[500px] border-r border-gray-200 h-full'>
@@ -22,14 +21,14 @@ export const Impersonate = observer(() => {
           <Button colorScheme='primary'>Switch workspace</Button>
         </MenuButton>
         <MenuList side='bottom' align='start'>
-          {list.map((option) => (
+          {store.common?.impersonateAccounts?.map((option) => (
             <MenuItem
-              key={option?.value.tenant}
+              key={option?.tenant}
               onClick={() => {
-                swithcWorkspaceUsecase.execute(option?.value.tenant);
+                swithcWorkspaceUsecase.execute(option?.tenant);
               }}
             >
-              {option?.value.tenant}
+              {option?.tenant}
             </MenuItem>
           ))}
         </MenuList>
