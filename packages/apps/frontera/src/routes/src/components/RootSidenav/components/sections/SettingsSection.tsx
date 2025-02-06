@@ -51,25 +51,26 @@ export const SettingsSection = observer(() => {
         </Tooltip>
 
         <Menu>
-          <MenuButton
-            data-test='help-button'
-            className='flex items-center gap-1.5 !outline-none'
-          >
-            <Tooltip label='Help me'>
+          <Tooltip label='Help me'>
+            <MenuButton
+              asChild
+              data-test='help-button'
+              className='flex items-center gap-1.5 !outline-none'
+            >
               <IconButton
                 size={'xs'}
                 variant='ghost'
                 aria-label={'Help'}
                 icon={<Icon name={'help-circle'} />}
               />
-            </Tooltip>
-          </MenuButton>
+            </MenuButton>
+          </Tooltip>
+
           <MenuList side='top' align='start' className='w-[184px]'>
             <MenuItem
-              disabled
               className='group'
               data-test='help-item-settings'
-              onClick={() => navigate('/settings')}
+              onClick={() => store.ui.setShortcutsPanel(true)}
             >
               <div
                 data-test='logo-settings'

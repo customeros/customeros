@@ -14,7 +14,6 @@ interface OrganizationCellProps {
 export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
   const store = useStore();
   const org = store.organizations.getById(id);
-  const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
   const name = org?.value?.name;
   const isEnriching = org?.isEnriching;
@@ -57,11 +56,11 @@ export const OrganizationCell = observer(({ id }: OrganizationCellProps) => {
         icon={<Eye className='text-gray-500' />}
         className='opacity-0 group-hover/orgName:opacity-100 cursor-pointer'
         onClick={() => {
-          if (previewCard === true && store.ui.focusRow === id) {
-            setPreviewCard(false);
+          if (store.ui.showPreviewCard && store.ui.focusRow === id) {
+            store.ui.setShowPreviewCard(false);
           } else {
             store.ui.setFocusRow(id);
-            setPreviewCard(true);
+            store.ui.setShowPreviewCard(true);
           }
         }}
       />

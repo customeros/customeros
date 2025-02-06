@@ -145,7 +145,7 @@ export const Domains = observer(({ id }: { id: string }) => {
                   handleMenuOpen(domainGroup.primaryDomain.domain, isOpen)
                 }
               >
-                <MenuButton>
+                <MenuButton asChild>
                   <IconButton
                     size='xxs'
                     variant='ghost'

@@ -305,7 +305,7 @@ export const BillingPanel = observer(() => {
 
             {tenantSettingsData?.billingEnabled && (
               <Menu>
-                <MenuButton>
+                <MenuButton asChild>
                   <IconButton
                     size='xs'
                     variant='ghost'

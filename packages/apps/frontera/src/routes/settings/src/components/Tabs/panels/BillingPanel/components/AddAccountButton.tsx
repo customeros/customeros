@@ -21,7 +21,7 @@ export const AddAccountButton = observer(
     return (
       <>
         <Menu>
-          <MenuButton>
+          <MenuButton asChild>
             <Tooltip label='Add new bank account'>
               <IconButton
                 size='sm'

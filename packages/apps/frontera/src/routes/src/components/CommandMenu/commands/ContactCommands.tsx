@@ -1,7 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-import { useLocalStorage } from 'usehooks-ts';
 
 import { Eye } from '@ui/media/icons/Eye.tsx';
 import { Tag01 } from '@ui/media/icons/Tag01';
@@ -28,7 +27,6 @@ export const ContactCommands = observer(() => {
   const contact = store.contacts.value.get(id);
   const label = `Contact - ${contact?.name}`;
   const [searchParams] = useSearchParams();
-  const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
   return (
     <CommandsContainer label={label}>
@@ -140,14 +138,16 @@ export const ContactCommands = observer(() => {
         </CommandItem>
 
         <CommandItem
-          leftAccessory={previewCard ? <EyeOff /> : <Eye />}
+          leftAccessory={store.ui.showPreviewCard ? <EyeOff /> : <Eye />}
           rightAccessory={<Kbd className='size-auto h-5 px-1.5'>Space</Kbd>}
           onSelect={() => {
-            setPreviewCard(!previewCard);
+            store.ui.setShowPreviewCard(!store.ui.showPreviewCard);
             store.ui.commandMenu.setOpen(false);
           }}
         >
-          {previewCard ? 'Hide contact preview' : 'Preview contact'}
+          {store.ui.showPreviewCard
+            ? 'Hide contact preview'
+            : 'Preview contact'}
         </CommandItem>
 
         <CommandItem
