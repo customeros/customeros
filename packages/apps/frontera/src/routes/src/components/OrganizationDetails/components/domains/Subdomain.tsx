@@ -39,7 +39,7 @@ export const Subdomain = observer(({ domain }: { domain: string }) => {
         <span className='hover:underline'>{domain}</span>
       </a>
       <Menu onOpenChange={(data) => setShowMenu(data)}>
-        <MenuButton>
+        <MenuButton asChild>
           <IconButton
             size='xxs'
             variant='ghost'

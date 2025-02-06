@@ -10,7 +10,6 @@ import {
 import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
-import { useLocalStorage } from 'usehooks-ts';
 import { ColumnSort } from '@tanstack/table-core';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { useColumnSizing } from '@finder/hooks/useColumnSizing';
@@ -41,7 +40,6 @@ export const FinderTable = observer(() => {
   const params = useParams();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const tableRef = useRef<TableInstance<object> | null>(null);
@@ -258,12 +256,6 @@ export const FinderTable = observer(() => {
     if (selectedIds.length > 0) return;
 
     if (tableType === TableViewType.Organizations) {
-      if (!previewCard) {
-        if (index !== null) {
-          store.ui.setFocusRow(data?.[index]?.id);
-        }
-      }
-
       if (typeof index !== 'number') {
         store.ui.commandMenu.setType('OrganizationHub');
 
@@ -280,12 +272,6 @@ export const FinderTable = observer(() => {
     }
 
     if (tableType === TableViewType.Contacts) {
-      if (!previewCard) {
-        if (index !== null) {
-          store.ui.setFocusRow(data?.[index]?.id);
-        }
-      }
-
       if (typeof index !== 'number') {
         store.ui.commandMenu.setType('ContactHub');
 
@@ -340,22 +326,18 @@ export const FinderTable = observer(() => {
 
   useEffect(() => {
     return () => {
-      setPreviewCard(false);
+      store.ui.setShowPreviewCard(false);
     };
   }, [preset]);
 
   useKeyBindings(
     {
       Escape: () => {
-        setPreviewCard(false);
-      },
-      Space: (e) => {
-        e.preventDefault();
-        setPreviewCard(false);
+        store.ui.setShowPreviewCard(false);
       },
     },
     {
-      when: previewCard,
+      when: store.ui.showPreviewCard,
     },
   );
 

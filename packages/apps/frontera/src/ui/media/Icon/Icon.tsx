@@ -63,6 +63,11 @@ export type IconName =
   | 'help-circle'
   | 'message-smile-square'
   | 'arrow-narrow-up-right'
+  | 'search-sm'
+  | 'command'
+  | 'delete'
+  | 'arrow-block-up'
+  | 'arrow-block-down'
   | 'check'
   | 'arrow-switch-horizontal-02'
   | 'x-circle';

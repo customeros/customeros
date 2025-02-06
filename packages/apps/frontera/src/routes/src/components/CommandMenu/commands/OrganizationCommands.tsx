@@ -1,5 +1,4 @@
 import { observer } from 'mobx-react-lite';
-import { useLocalStorage } from 'usehooks-ts';
 
 import { Icon } from '@ui/media/Icon';
 import { Delete } from '@ui/media/icons/Delete';
@@ -27,7 +26,6 @@ export const OrganizationCommands = observer(() => {
   const id = (store.ui.commandMenu.context.ids as string[])?.[0];
   const organization = store.organizations.getById(id);
   const label = `Company - ${organization?.value.name}`;
-  const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
   return (
     <CommandsContainer label={label}>
@@ -147,14 +145,18 @@ export const OrganizationCommands = observer(() => {
         </CommandItem>
 
         <CommandItem
-          leftAccessory={<Icon name={previewCard ? 'eye-off' : 'eye'} />}
           rightAccessory={<Kbd className='size-auto h-5 px-1.5'>Space</Kbd>}
+          leftAccessory={
+            <Icon name={store.ui.showPreviewCard ? 'eye-off' : 'eye'} />
+          }
           onSelect={() => {
-            setPreviewCard(!previewCard);
+            store.ui.setShowPreviewCard(!store.ui.showPreviewCard);
             store.ui.commandMenu.setOpen(false);
           }}
         >
-          {previewCard ? 'Hide company preview' : 'Preview company'}
+          {store.ui.showPreviewCard
+            ? 'Hide company preview'
+            : 'Preview company'}
         </CommandItem>
 
         <CommandItem

@@ -2,7 +2,6 @@ import { useParams } from 'react-router-dom';
 import { useMemo, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { useLocalStorage } from 'usehooks-ts';
 import { ContactDetailsUseCase } from '@domain/usecases/contact-details/contact-details.usecase';
 import { EditContactTagUsecase } from '@domain/usecases/edit-contact-tags-select/edit-contact-tag.usecase';
 
@@ -50,7 +49,6 @@ interface ContactDetailsProps {
 export const ContactDetails = observer(
   ({ id, isExpandble = false, expandAll = false }: ContactDetailsProps) => {
     const store = useStore();
-    const [__, setPreviewCard] = useLocalStorage('previewCard', false);
 
     const [isExpanded, setIsExpanded] = useState(false);
     const { dispatchEvent } = useEvent('openEmailEditor');
@@ -153,7 +151,7 @@ export const ContactDetails = observer(
                   variant='ghost'
                   icon={<XClose />}
                   aria-label='close-contact-overview'
-                  onClick={() => setPreviewCard(false)}
+                  onClick={() => store.ui.setShowPreviewCard(false)}
                 />
               </div>
             )}

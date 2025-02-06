@@ -15,7 +15,7 @@ export const BankTransferCurrencySelect = ({
 }) => {
   return (
     <Menu>
-      <MenuButton>
+      <MenuButton asChild>
         <IconButton
           size='xs'
           variant='outline'

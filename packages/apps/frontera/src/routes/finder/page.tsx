@@ -3,7 +3,6 @@ import { useEffect, MouseEventHandler } from 'react';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
-import { useLocalStorage } from 'usehooks-ts';
 import { Preview } from '@invoices/components/Preview';
 import { FinderTable } from '@finder/components/FinderTable';
 import { FinderFilters } from '@finder/components/FinderFilters/FinderFilters';
@@ -15,6 +14,7 @@ import { PreviewCard } from '@shared/components/PreviewCard';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { ContactDetails } from '@shared/components/ContactDetails';
 import { OrganizationDetails } from '@shared/components/OrganizationDetails';
+import { ShortcutsPanel } from '@shared/components/PreviewCard/components/ShortcutsPanel';
 import {
   TableIdType,
   TableViewType,
@@ -26,7 +26,6 @@ export const FinderPage = observer(() => {
   const store = useStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
-  const [previewCard] = useLocalStorage('previewCard', false);
 
   const defaultPreset = store.tableViewDefs.defaultPreset;
   const currentPreset = store.tableViewDefs
@@ -113,7 +112,7 @@ export const FinderPage = observer(() => {
             </div>
             <FinderTable />
           </div>
-          {previewCard && !store.ui.isSearching && (
+          {store.ui.showPreviewCard && !store.ui.isSearching && (
             <PreviewCard>
               {tableViewDef?.value.tableType === TableViewType.Contacts && (
                 <ContactDetails
@@ -125,6 +124,11 @@ export const FinderPage = observer(() => {
                 store.ui.focusRow && (
                   <OrganizationDetails id={store.ui.focusRow} />
                 )}
+            </PreviewCard>
+          )}
+          {store.ui.showShortcutsPanel && (
+            <PreviewCard>
+              <ShortcutsPanel />
             </PreviewCard>
           )}
         </div>

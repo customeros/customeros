@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { useLocalStorage } from 'usehooks-ts';
 import { useKeys, useKeyBindings } from 'rooks';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 import { Organization } from '@store/Organizations/Organization.dto';
@@ -39,7 +38,6 @@ export const OrganizationTableActions = observer(
     const store = useStore();
 
     const [_targetId, setTargetId] = useState<string | null>(null);
-    const [_, setPreviewCard] = useLocalStorage('previewCard', false);
 
     const selectCount = selection?.length;
 
@@ -192,7 +190,19 @@ export const OrganizationTableActions = observer(
         Space: (e) => {
           e.stopPropagation();
           e.preventDefault();
-          setPreviewCard(true);
+
+          if (store.ui.showPreviewCard && focusedId) {
+            if (focusedId === store.ui.focusRow) {
+              store.ui.setShowPreviewCard(false);
+
+              return;
+            }
+
+            store.ui.setFocusRow(focusedId);
+
+            return;
+          }
+          store.ui.setShowPreviewCard(true);
         },
       },
       { when: !!focusedId },

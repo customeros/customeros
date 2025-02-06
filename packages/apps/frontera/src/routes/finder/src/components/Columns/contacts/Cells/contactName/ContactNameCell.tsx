@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { useLocalStorage } from 'usehooks-ts';
 
 import { cn } from '@ui/utils/cn';
 import { Icon } from '@ui/media/Icon';
@@ -14,7 +13,6 @@ interface ContactNameCellProps {
 export const ContactNameCell = observer(
   ({ contactId }: ContactNameCellProps) => {
     const store = useStore();
-    const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
 
     const contactStore = store.contacts.value.get(contactId);
     const contactName = contactStore?.name;
@@ -31,11 +29,11 @@ export const ContactNameCell = observer(
           <p
             className='text-gray-700 font-medium no-underline hover:no-underline cursor-pointer'
             onClick={() => {
-              if (previewCard === true && store.ui.focusRow === contactId) {
-                setPreviewCard(false);
+              if (store.ui.showPreviewCard && store.ui.focusRow === contactId) {
+                store.ui.setShowPreviewCard(false);
               } else {
                 store.ui.setFocusRow(contactId);
-                setPreviewCard(true);
+                store.ui.setShowPreviewCard(true);
               }
             }}
           >
@@ -50,11 +48,11 @@ export const ContactNameCell = observer(
               'overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline',
             )}
             onClick={() => {
-              if (previewCard === true && store.ui.focusRow === contactId) {
-                setPreviewCard(false);
+              if (store.ui.showPreviewCard && store.ui.focusRow === contactId) {
+                store.ui.setShowPreviewCard(false);
               } else {
                 store.ui.setFocusRow(contactId);
-                setPreviewCard(true);
+                store.ui.setShowPreviewCard(true);
               }
             }}
           >
@@ -65,11 +63,11 @@ export const ContactNameCell = observer(
           name={'eye'}
           className='text-gray-400 ml-2 opacity-0 group-hover/contact-preview:opacity-100 cursor-pointer'
           onClick={() => {
-            if (previewCard === true && store.ui.focusRow === contactId) {
-              setPreviewCard(false);
+            if (store.ui.showPreviewCard && store.ui.focusRow === contactId) {
+              store.ui.setShowPreviewCard(false);
             } else {
               store.ui.setFocusRow(contactId);
-              setPreviewCard(true);
+              store.ui.setShowPreviewCard(true);
             }
           }}
         />

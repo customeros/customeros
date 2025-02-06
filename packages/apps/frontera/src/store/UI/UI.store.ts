@@ -23,6 +23,8 @@ export class UIStore {
   activeConfirmation: string | null = null;
   movedIcpOrganization: number = 0;
   focusRow: string | null = null;
+  showShortcutsPanel: boolean = false;
+  showPreviewCard: boolean = false;
   emailAdress: string = '';
   commandMenu = new CommandMenuStore();
   selectionId: number | null = null;
@@ -61,6 +63,21 @@ export class UIStore {
 
   setIsSearching(value: string | null) {
     this.isSearching = value;
+  }
+
+  setShortcutsPanel(value: boolean) {
+    if (value && this.showPreviewCard) {
+      this.showPreviewCard = false;
+    }
+
+    this.showShortcutsPanel = value;
+  }
+
+  setShowPreviewCard(value: boolean) {
+    if (value && this.showShortcutsPanel) {
+      this.showShortcutsPanel = false;
+    }
+    this.showPreviewCard = value;
   }
 
   setIsFilteringTable(value: boolean) {

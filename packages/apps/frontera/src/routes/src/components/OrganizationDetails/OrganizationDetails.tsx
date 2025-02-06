@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { EditOrganizationTagUsecase } from '@domain/usecases/organization-details/edit-organization-tag.usecase';
 import { SaveOrganizationRelationshipAndStageUsecase } from '@domain/usecases/organization-details/save-organization-relationship-and-stage.usecase';
@@ -50,7 +49,7 @@ interface OrganizationDetailsProps {
 export const OrganizationDetails = observer(
   ({ id }: OrganizationDetailsProps) => {
     const store = useStore();
-    const [previewCard, setPreviewCard] = useLocalStorage('previewCard', false);
+    const organization = store.organizations.getById(id);
 
     const [_, copyToClipboard] = useCopyToClipboard();
 
@@ -59,21 +58,6 @@ export const OrganizationDetails = observer(
     );
     const parentRelationshipReadOnly = useFeatureIsOn(
       'parent-relationship-selector-read-only',
-    );
-    const organization = store.organizations.getById(id);
-
-    if (!organization) return null;
-
-    const selectedRelationshipOption = relationshipOptions.find(
-      (option) => option.value === organization.value?.relationship,
-    );
-
-    const selectedStageOption = stageOptions.find(
-      (option) => option.value === organization.value?.stage,
-    );
-
-    const applicableStageOptions = getStageOptions(
-      organization.value?.relationship,
     );
 
     const tagsUsecase = useMemo(() => new EditOrganizationTagUsecase(id), [id]);
@@ -86,7 +70,21 @@ export const OrganizationDetails = observer(
       tagsUsecase.create();
     };
 
-    const isEnriching = organization.isEnriching;
+    const isEnriching = organization?.isEnriching;
+
+    if (!organization) return null;
+
+    const applicableStageOptions = getStageOptions(
+      organization?.value?.relationship,
+    );
+
+    const selectedRelationshipOption = relationshipOptions.find(
+      (option) => option.value === organization?.value?.relationship,
+    );
+
+    const selectedStageOption = stageOptions.find(
+      (option) => option.value === organization?.value?.stage,
+    );
 
     return (
       <div className='flex pt-[6px] px-6 w-full h-full  flex-1 bg-gray-25 rounded-2xl'>
@@ -132,13 +130,13 @@ export const OrganizationDetails = observer(
               )}
 
               <IcpBadge id={store.ui.focusRow ?? id} />
-              {previewCard && (
+              {store.ui.showPreviewCard && (
                 <IconButton
                   size='xxs'
                   variant='ghost'
                   aria-label='close preview company'
-                  onClick={() => setPreviewCard(false)}
                   icon={<Icon name='x-close' className='size-4' />}
+                  onClick={() => store.ui.setShowPreviewCard(false)}
                 />
               )}
             </div>
