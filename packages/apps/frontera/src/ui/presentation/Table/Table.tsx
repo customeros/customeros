@@ -90,7 +90,7 @@ interface TableProps<T extends object> {
 }
 
 export const Table = <T extends object>({
-  id,
+  id = '1',
   data,
   columns,
   dataTest,
@@ -234,7 +234,9 @@ export const Table = <T extends object>({
   const virtualRows = rowVirtualizer.getVirtualItems();
 
   useEffect(() => {
-    rowVirtualizer.scrollToIndex(0);
+    if (data.length > 0) {
+      rowVirtualizer?.scrollToIndex(0);
+    }
   }, [id]);
 
   useEffect(() => {
