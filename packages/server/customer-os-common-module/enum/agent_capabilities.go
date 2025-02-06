@@ -29,7 +29,7 @@ const (
 	CapabilityIdentifyWebVisitor                 AgentCapability = "identify_web_visitor"
 	CapabilityManageBouncedEmail                 AgentCapability = "manage_bounced_email"
 	CapabilityMonitorAccountsReceivable          AgentCapability = "monitor_accounts_receivable"
-	CapabilityMonitorSupportPages                AgentCapability = "monitor_support_pages"
+	CapabilityMonitorSupportVisits               AgentCapability = "monitor_support_visits"
 	CapabilityProcessRefund                      AgentCapability = "process_refund"
 	CapabilityScheduleEmailDelivery              AgentCapability = "schedule_email_delivery"
 	CapabilitySelectOptimalSendingMailbox        AgentCapability = "select_optimal_sending_mailbox"
@@ -72,7 +72,7 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityIdentifyWebVisitor,
 		CapabilityManageBouncedEmail,
 		CapabilityMonitorAccountsReceivable,
-		CapabilityMonitorSupportPages,
+		CapabilityMonitorSupportVisits,
 		CapabilityProcessRefund,
 		CapabilityScheduleEmailDelivery,
 		CapabilitySelectOptimalSendingMailbox,
