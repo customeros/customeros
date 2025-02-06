@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	"strconv"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -41,6 +42,7 @@ type CompanyDescriptions struct {
 	Description2 string `json:"description2"`
 	Description3 string `json:"description3"`
 	Description4 string `json:"description4"`
+	Description5 string `json:"description5"`
 }
 
 func NewGatherCompanyIntelligenceCapability(
@@ -131,8 +133,9 @@ func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, execu
 	result.CompanyDescriptions.Description2 = company.SourceDescription1
 	result.CompanyDescriptions.Description3 = company.SourceDescription2
 	result.CompanyDescriptions.Description4 = company.SourceDescription3
+	result.CompanyDescriptions.Description5 = company.SourceDescription4
 	result.IndustryNAICSName = company.IndustryNaicsName
-	result.YearCompanyFounded = string(company.YearFounded)
+	result.YearCompanyFounded = strconv.Itoa(company.YearFounded)
 	result.EmployeeCount = company.EmployeeCount
 	result.CompanyCity = company.City
 	result.CompanyRegion = company.Region
