@@ -1,6 +1,6 @@
 import { Tracer } from '@infra/tracer';
 import { RootStore } from '@store/root';
-import { computed, observable, runInAction } from 'mobx';
+import { computed, reaction, observable, runInAction } from 'mobx';
 import {
   CommonRepository,
   SlackChannelDatum,
@@ -15,7 +15,16 @@ export class CommonStore {
     new Map();
   @observable accessor impersonateAccounts: TenantImpersonateDatum[] = [];
 
-  constructor(private root: RootStore) {}
+  constructor(private root: RootStore) {
+    reaction(
+      () => this.root.globalCache.value?.isPlatformOwner,
+      () => {
+        if (this.root.globalCache.value?.isPlatformOwner) {
+          this.fetchImpersonateAccounts.bind(this)();
+        }
+      },
+    );
+  }
 
   @computed
   get slackChannelsArray() {
@@ -69,9 +78,6 @@ export class CommonStore {
   }
 
   async bootstrap() {
-    if (this.root.globalCache.value?.isPlatformOwner) {
-      await this.fetchImpersonateAccounts();
-    }
     await this.fetchSlackChannels();
   }
 }
