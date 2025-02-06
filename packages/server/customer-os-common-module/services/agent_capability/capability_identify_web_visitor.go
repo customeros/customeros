@@ -62,6 +62,7 @@ func (c *IdentifyWebsiteVisitorCapability) NewConfig() IdentifyWebsiteVisitorCon
 
 func (c *IdentifyWebsiteVisitorCapability) DefaultConfig() any {
 	config := c.NewConfig()
+	config.Websites.Value = []string{}
 	return &config
 }
 

@@ -114,7 +114,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 
 	// build capabilities from registry
 	var agentCapabilities []postgresentity.Capability
-	for _, registryCapability := range agentRegistry.Capabilities {
+	for i, registryCapability := range agentRegistry.Capabilities {
 		// get default config for each capability
 		capabilityType, err := enum.GetAgentCapability(registryCapability)
 		if err != nil {
@@ -126,7 +126,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
-		defaultCapability, err := a.createDefaultCapability(ctx, capabilityType, executor.Name())
+		defaultCapability, err := a.createDefaultCapability(ctx, capabilityType, executor.Name(), i+1)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -166,7 +166,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	return newAgent, nil
 }
 
-func (a *agentService) createDefaultCapability(ctx context.Context, capabilityType enum.AgentCapability, capabilityName string) (*postgres_entity.Capability, error) {
+func (a *agentService) createDefaultCapability(ctx context.Context, capabilityType enum.AgentCapability, capabilityName string, position int) (*postgres_entity.Capability, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.createDefaultCapability")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -178,12 +178,18 @@ func (a *agentService) createDefaultCapability(ctx context.Context, capabilityTy
 	}
 	config := executor.DefaultConfig()
 	agentCapability := postgresentity.Capability{
-		ID:     utils.GenerateNanoIdWithPrefix("cap", 16),
-		Name:   capabilityName,
-		Type:   capabilityType,
-		Active: true,
+		ID:       utils.GenerateNanoIdWithPrefix("cap", 16),
+		Name:     capabilityName,
+		Type:     capabilityType,
+		Active:   true,
+		Tenant:   common.GetTenantFromContext(ctx),
+		Position: position,
 	}
-	agentCapability.SetConfig(config)
+	err = agentCapability.SetConfig(config)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
 
 	return &agentCapability, nil
 }

@@ -15,7 +15,7 @@ import (
 type Agent struct {
 	ID           string         `gorm:"primaryKey;type:varchar(32)" json:"id"`
 	Type         enum.AgentType `gorm:"column:type;type:varchar(50);not null;" json:"type"`
-	Tenant       string         `gorm:"column:tenant;type:varchar(255);not null;uniqueIndex:idx_tenant_name" json:"tenant" binding:"required"`
+	Tenant       string         `gorm:"column:tenant;type:varchar(255);not null" json:"tenant" binding:"required"`
 	Name         string         `gorm:"column:name;type:varchar(255);not null" json:"name" binding:"required"`
 	Configured   bool           `gorm:"column:configured;type:boolean;default:false" json:"capabilitiesConfigured"`
 	Goal         string         `gorm:"column:goal;type:text" json:"goal"`
@@ -44,6 +44,8 @@ func (r *Agent) BeforeCreate(tx *gorm.DB) error {
 // Capability as a separate entity
 type Capability struct {
 	ID          string               `gorm:"primaryKey;type:varchar(32)" json:"id"`
+	Tenant      string               `gorm:"column:tenant;type:varchar(255)" json:"tenant"`
+	Position    int                  `gorm:"column:position;type:integer" json:"order"`
 	AgentID     string               `gorm:"column:agent_id;type:varchar(32);not null" json:"agentId"`
 	Name        string               `gorm:"column:name;type:varchar(255);not null" json:"name"`
 	Type        enum.AgentCapability `gorm:"column:type;type:varchar(50);not null" json:"type"`
@@ -67,7 +69,7 @@ func (c *Capability) BeforeCreate(tx *gorm.DB) error {
 // JSONConfig type for handling the config JSON field
 type JSONConfig json.RawMessage
 
-func (j *JSONConfig) Scan(value interface{}) error {
+func (j *JSONConfig) Scan(value any) error {
 	if value == nil {
 		*j = nil
 		return nil
@@ -90,7 +92,7 @@ func (j JSONConfig) Value() (driver.Value, error) {
 }
 
 // Helper methods for Capability
-func (c *Capability) SetConfig(config interface{}) error {
+func (c *Capability) SetConfig(config any) error {
 	if config == nil || config == "" {
 		c.Config = nil
 		return nil
@@ -102,7 +104,7 @@ func (c *Capability) SetConfig(config interface{}) error {
 			c.Config = nil
 			return nil
 		}
-		var configMap map[string]interface{}
+		var configMap map[string]any
 		if err := json.Unmarshal([]byte(v), &configMap); err != nil {
 			return err
 		}
@@ -113,7 +115,7 @@ func (c *Capability) SetConfig(config interface{}) error {
 		if err != nil {
 			return err
 		}
-		c.Config = JSONConfig(data)
+		c.Config = data
 
 	default:
 		data, err := json.Marshal(config)
@@ -129,7 +131,7 @@ func (c *Capability) SetConfig(config interface{}) error {
 	return nil
 }
 
-func (c *Capability) GetConfig(configPtr interface{}) error {
+func (c *Capability) GetConfig(configPtr any) error {
 	if c.Config == nil {
 		return nil
 	}
@@ -152,12 +154,12 @@ func (c *Capability) GetConfigString() string {
 
 type NoConfig struct{}
 
-func replaceNullWithEmptyString(m map[string]interface{}) {
+func replaceNullWithEmptyString(m map[string]any) {
 	for k, v := range m {
 		switch val := v.(type) {
 		case nil:
 			m[k] = ""
-		case map[string]interface{}:
+		case map[string]any:
 			replaceNullWithEmptyString(val)
 		}
 	}
