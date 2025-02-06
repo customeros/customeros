@@ -260,8 +260,8 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 	var authUserId string
 	var tenant string
 	var availableTenants []string
-
 	var userId string
+	var isNewTenant bool
 
 	_, err = common_utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, services.CommonServices.Neo4jRepositories.Neo4jDriver, services.CommonServices.Neo4jRepositories.Database, nil, func(txWithPostCommit *common_utils.TxWithPostCommit) (any, error) {
 
@@ -358,6 +358,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		if tenants != nil && len(tenants) > 0 {
 			tenantProps := common_utils.GetPropsFromNode(*tenants[0])
 			tenant = common_utils.GetStringPropOrEmpty(tenantProps, "name")
+			isNewTenant = false
 
 			for _, tenantNode := range tenants {
 				tenantProps := common_utils.GetPropsFromNode(*tenantNode)
@@ -376,6 +377,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			}
 			span.LogFields(tracingLog.Bool("isPersonalEmail", isPersonalEmail))
 
+			isNewTenant = true
 			tenantStr := ""
 			if isPersonalEmail {
 				tenantStr = utils.GenerateName()
@@ -488,28 +490,29 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		return
 	}
 
-	if !isPersonalEmail {
+	if !isPersonalEmail && isNewTenant {
 		err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
 	}
 
-	go func() {
-		c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
-		defer cancelFunc()
+	if isNewTenant {
+		go func() {
+			c, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
+			defer cancelFunc()
 
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - register new tenant", ginContext.Request.Header)
-		defer span.Finish()
+			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/signin - register new tenant", ginContext.Request.Header)
+			defer span.Finish()
+			err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
 
-		err = registerNewTenantAsLeadInProviderTenant(ctx, config, services, signInRequest.LoggedInEmail)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return
-		}
-
-		span.LogFields(tracingLog.String("result", "ok"))
-	}()
+			span.LogFields(tracingLog.String("result", "ok"))
+		}()
+	}
 
 	// handle email token
 	// Handle Google provider

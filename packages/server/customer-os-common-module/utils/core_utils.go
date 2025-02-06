@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"math"
 	"math/rand"
 	"reflect"
 	"runtime"
@@ -404,4 +405,30 @@ func IsStringInSlice(s string, slice []string) bool {
 		}
 	}
 	return false
+}
+
+func Mask(input string) string {
+	n := len(input)
+	if n == 0 {
+		return ""
+	}
+
+	// If token is too short, return exactly three stars.
+	if n < 6 {
+		return "***"
+	}
+
+	// Calculate how many characters from the start to show: at least 20% of length, minimum 1.
+	firstCount := int(math.Round(0.2 * float64(n)))
+	if firstCount < 1 {
+		firstCount = 1
+	}
+	// Ensure there's room for at least 2 characters at the end.
+	if firstCount+2 > n {
+		firstCount = n - 2
+	}
+
+	prefix := input[:firstCount]
+	suffix := input[n-2:]
+	return prefix + "***" + suffix
 }

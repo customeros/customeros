@@ -231,6 +231,7 @@ func (s *slackService) getBotToken(ctx context.Context) (string, error) {
 		return "", err
 	}
 
+	span.LogFields(log.String("result.AccessToken", utils.Mask(slackSettingsEntity.AccessToken)))
 	return slackSettingsEntity.AccessToken, nil
 }
 
