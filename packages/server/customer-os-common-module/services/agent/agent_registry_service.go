@@ -100,7 +100,7 @@ func (r *agentRegistryService) SyncRegistry(ctx context.Context) error {
 }
 
 func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filename string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "agentRegistryService.processAgentConfigFile")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryService.processAgentConfigFile")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -171,7 +171,7 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 }
 
 func (r *agentRegistryService) getAgentConfigFiles(ctx context.Context) ([]string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "agentRegistryService.getAgentConfigFile")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryService.getAgentConfigFile")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -179,7 +179,7 @@ func (r *agentRegistryService) getAgentConfigFiles(ctx context.Context) ([]strin
 }
 
 func (r *agentRegistryService) getAgentConfig(ctx context.Context, filename string) (*Agent, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "agentRegistryService.getAgentConfig")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryService.getAgentConfig")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -193,7 +193,7 @@ func (r *agentRegistryService) getAgentConfig(ctx context.Context, filename stri
 }
 
 func (r *agentRegistryService) loadAgentConfig(ctx context.Context, file string) (*Agent, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "agentRegistryService.loadAgentConfig")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRegistryService.loadAgentConfig")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
