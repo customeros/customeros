@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CustomerOS",
-  "version": "1.2",
+  "version": "2.0",
   "description": "CustomerOS Extension",
   "permissions": [
     "cookies",
@@ -29,19 +29,19 @@
       "matches": [
         "http://localhost/*",
         "https://localhost/*",
-        "https://app.customeros.ai/*"
+        "https://app.customeros.ai/*",
+        "https://www.linkedin.com/*"
       ],
-      "js": [
-        "contentScript.js"
-      ]
+      "js": ["contentScript.js"]
     }
   ],
   "side_panel": {
-    "default_path": "sidepanel.html"
+    "default_path": "sidepanel/index.html"
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none';"
   },
+
   "host_permissions": [
     "https://app.customeros.ai/*",
     "https://bas.customeros.ai/*",
@@ -49,6 +49,7 @@
     "https://localhost:5173/*",
     "https://www.linkedin.com/*",
     "https://cos.customeros.ai/*",
-    "https://api.customeros.ai/*"
+    "https://api.customeros.ai/*",
+    "<all_urls>"
   ]
 }
