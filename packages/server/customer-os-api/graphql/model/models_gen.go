@@ -109,6 +109,7 @@ type Agent struct {
 	Capabilities []*Capability `json:"capabilities"`
 	Goal         string        `json:"goal"`
 	IsActive     bool          `json:"isActive"`
+	IsConfigured bool          `json:"isConfigured"`
 	FlowID       *string       `json:"flowId,omitempty"`
 	Visible      bool          `json:"visible"`
 	CreatedAt    time.Time     `json:"createdAt"`
