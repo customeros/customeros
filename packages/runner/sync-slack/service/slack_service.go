@@ -150,6 +150,7 @@ func (s *slackService) FetchNewMessagesFromSlackChannel(ctx context.Context, ten
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("channelId", channelId), log.Object("from", from), log.Object("to", to))
+	span.LogFields(log.String("token", utils.Mask(token)))
 
 	client := slack.New(token)
 
