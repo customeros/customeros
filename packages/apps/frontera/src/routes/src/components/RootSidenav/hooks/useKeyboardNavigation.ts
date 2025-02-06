@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 
+import { useStore } from '@shared/hooks/useStore';
 import { useSequentialShortcut } from '@shared/hooks';
 
 interface KeyboardNavigationOptions {
@@ -21,6 +22,7 @@ export const useKeyboardNavigation = (
   options: KeyboardNavigationOptions = { when: true },
 ) => {
   const navigate = useNavigate();
+  const store = useStore();
 
   useSequentialShortcut(
     'G',
@@ -74,6 +76,15 @@ export const useKeyboardNavigation = (
     'S',
     () => {
       navigate('/settings');
+    },
+    options,
+  );
+  useSequentialShortcut(
+    'G',
+    'W',
+    () => {
+      store.ui.commandMenu.setType('SwitchWorkspace');
+      store.ui.commandMenu.setOpen(true);
     },
     options,
   );

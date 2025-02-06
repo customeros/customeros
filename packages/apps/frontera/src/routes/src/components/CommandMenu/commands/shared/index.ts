@@ -3,3 +3,4 @@ export * from './DeleteConfirmationModal.tsx';
 export * from './AssignOwner';
 export * from './StageSubItemGroup';
 export * from './CommandsContainer';
+export * from './SwitchWorkspace';

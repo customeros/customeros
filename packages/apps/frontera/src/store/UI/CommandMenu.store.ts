@@ -61,6 +61,7 @@ export type CommandMenuType =
   | 'ContactBulkCommands'
   | 'EditLatestOrgActive'
   | 'EditSku'
+  | 'SwitchWorkspace'
   | 'AddNewSku';
 
 export type Context = {

@@ -7,7 +7,7 @@ export class SwitchWorkspaceUsecase {
   private service = new CommonService();
 
   @action
-  execute(tenant: string) {
+  execute(tenant: string | undefined) {
     if (!tenant) {
       this.root.ui.toastError(
         'Please select a workspace',
