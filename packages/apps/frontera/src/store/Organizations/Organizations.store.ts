@@ -30,7 +30,7 @@ import { Organization, type OrganizationDatum } from './Organization.dto';
 type SaveOrganizationPayload = SaveOrganizationMutationVariables['input'];
 
 export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
-  chunkSize = 1000;
+  chunkSize = 500;
   private repository = OrganizationRepository.getInstance();
   @observable accessor cursors: Map<string, number> = new Map();
   @observable accessor availableCounts: Map<string, number> = new Map();
@@ -41,8 +41,6 @@ export class OrganizationsStore extends Store<OrganizationDatum, Organization> {
       getId: (data) => data?.id,
       factory: Organization,
     });
-
-    this.hydrate();
 
     new ProfileView(this);
     new CustomersView(this);
