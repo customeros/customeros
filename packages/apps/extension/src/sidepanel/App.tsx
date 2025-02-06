@@ -215,7 +215,7 @@ export const App = () => {
               )
             }
           >
-            {isLoading ? "Add contact to CustomerOS" : "Adding to CustomerOS…"}
+            {!isLoading ? "Add contact to CustomerOS" : "Adding to CustomerOS…"}
           </Button>
         </div>
       )}
