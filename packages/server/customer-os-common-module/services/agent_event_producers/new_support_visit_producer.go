@@ -36,7 +36,7 @@ func NewNewSupportVisitProducer(
 
 const WebSessionLookbackPeriodInHours = 48
 
-type NewSupporVisitConfig struct {
+type NewSupportVisitConfig struct {
 	Webpages    agent_capability.ConfigMultipleValues `json:"webpages"`
 	UrlPatterns agent_capability.ConfigMultipleValues `json:"urlPatterns"`
 }
@@ -48,8 +48,8 @@ func (p *NewSupportVisitProducer) subscribedAgents() []enum.AgentType {
 	}
 }
 
-func (p *NewSupportVisitProducer) NewConfig() NewSupporVisitConfig {
-	return NewSupporVisitConfig{}
+func (p *NewSupportVisitProducer) NewConfig() NewSupportVisitConfig {
+	return NewSupportVisitConfig{}
 }
 
 func (p *NewSupportVisitProducer) Execute() {

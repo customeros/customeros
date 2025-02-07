@@ -279,7 +279,7 @@ func (r *webSessionEventsRepository) UpdateSupportSignals(ctx context.Context, s
 	tracing.TagComponentPostgresRepository(span)
 
 	if supportSignal != postgres_entity.SupportNeedDetected && supportSignal != postgres_entity.SupportNeedDetected {
-		err := errors.New("invalid intentSingal value")
+		err := errors.New("invalid supportSignal value")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
