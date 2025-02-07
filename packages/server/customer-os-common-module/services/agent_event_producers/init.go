@@ -3,8 +3,9 @@ package agent_producers
 import service "github.com/customeros/customeros/packages/server/customer-os-common-module/services"
 
 type AgentProducers struct {
-	NewLeadProducer       *NewLeadProducer
-	NewWebSessionProducer *NewWebSessionProducer
+	NewLeadProducer         *NewLeadProducer
+	NewSupportVisitProducer *NewSupportVisitProducer
+	NewWebSessionProducer   *NewWebSessionProducer
 }
 
 func InitAgentProducers(services *service.CommonServices) *AgentProducers {
@@ -14,6 +15,10 @@ func InitAgentProducers(services *service.CommonServices) *AgentProducers {
 			services.Neo4jRepositories,
 			services.OrganizationService,
 			services.Events,
+		),
+		NewSupportVisitProducer: NewNewSupportVisitProducer(
+			services.Events,
+			services.PostgresRepositories,
 		),
 		NewWebSessionProducer: NewNewWebSessionProducer(
 			services.Events,

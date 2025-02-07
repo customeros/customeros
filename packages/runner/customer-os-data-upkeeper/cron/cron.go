@@ -169,7 +169,7 @@ func registerJobs(c *cron.Cron, cont *container.Container) {
 	addJob(cont.Cfg.App.Cron.CronScheduleMailstackReputation, GroupMailstack, checkMailstackDomainReputation, "checkMailstackDomainReputation")
 	addJob(cont.Cfg.App.Cron.CronScheduleSendOrganizationsReminders, GroupReminder, sendReminders, "sendReminders")
 	addJob(cont.Cfg.App.Cron.CronScheduleProcessWebSessions, GroupWebSession, processWebSessions, "processWebSessions")
-	addJob(cont.Cfg.App.Cron.CronScheduleAnalyzeWebSessionIntent, GroupWebSession, analyzeWebSessionIntent, "analyzeWebSessionIntent")
+	addJob(cont.Cfg.App.Cron.CronScheduleAnalyzeWebSessionsForSupport, GroupWebSession, analyzeWebSessionForSupport, "analyzeWebSessionForSupport")
 }
 
 // HELPER FUNCTIONS
@@ -187,7 +187,7 @@ func updateOrganizations(cont *container.Container) {
 }
 
 func findLeads(cont *container.Container) {
-	cont.AgentProducers.NewLeadProducer.NewLeads()
+	cont.AgentProducers.NewLeadProducer.Execute()
 }
 
 func syncDataToGlobalOrgs(cont *container.Container) {
@@ -345,11 +345,11 @@ func sendReminders(cont *container.Container) {
 }
 
 func processWebSessions(cont *container.Container) {
-	cont.AgentProducers.NewWebSessionProducer.ProcessWebSessions()
+	cont.AgentProducers.NewWebSessionProducer.Execute()
 }
 
-func analyzeWebSessionIntent(cont *container.Container) {
-	service.NewWebSessionService(cont.Cfg, cont.Log, cont.CommonServices).ProcessIntentSignals()
+func analyzeWebSessionForSupport(cont *container.Container) {
+	cont.AgentProducers.NewSupportVisitProducer.Execute()
 }
 
 func syncGlobalOrgsToTenantOrganizations(cont *container.Container) {

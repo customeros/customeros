@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/lib/pq"
@@ -19,13 +20,13 @@ type WebSessionRepository interface {
 	FindAllActiveSessions(ctx context.Context, webWebSessionData postgres_entity.WebSession, sessionTimeoutInMins *int) ([]postgres_entity.WebSession, error)
 	FindSession(ctx context.Context, webSessionData postgres_entity.WebSession, lookbackPeriodInMins *int) (*postgres_entity.WebSession, error)
 	FindLastNotification(ctx context.Context, tenant, domain string) (*postgres_entity.WebSession, error)
-	FindAllSessionsForIntentAnalysis(ctx context.Context) ([]postgres_entity.WebSession, error)
+	FindAllSessionsForSupportAnalysis(ctx context.Context) ([]postgres_entity.WebSession, error)
 	UpdateLastActivity(ctx context.Context, sessionID, eventType string) (*postgres_entity.WebSession, error)
 	UpdateSessionEnd(ctx context.Context, sessionID string, endTime time.Time) (*postgres_entity.WebSession, error)
 	UpdateSessionWithDomain(ctx context.Context, sessionID, domain string) (*postgres_entity.WebSession, error)
 	UpdateSessionWithOrganization(ctx context.Context, sessionID, organizationId string) error
 	UpdateSessionPageViews(ctx context.Context, sessionID, tenant string, pageViews []string) (*postgres_entity.WebSession, error)
-	UpdateIntentSignal(ctx context.Context, sessionID, tenant string, intentSignal int8) (*postgres_entity.WebSession, error)
+	UpdateSupportSignals(ctx context.Context, sessionID, tenant string, supportSignal int8) (*postgres_entity.WebSession, error)
 }
 
 type webSessionEventsRepository struct {
@@ -90,14 +91,22 @@ func (r *webSessionEventsRepository) FindAllActiveSessions(ctx context.Context, 
 	return results, nil
 }
 
-func (r *webSessionEventsRepository) FindAllSessionsForIntentAnalysis(ctx context.Context) ([]postgres_entity.WebSession, error) {
+func (r *webSessionEventsRepository) FindAllSessionsForSupportAnalysis(ctx context.Context) ([]postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.FindAllSessionsForIntentAnalysis")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
+	tenant := common.GetTenantFromContext(ctx)
+	if tenant == "" {
+		err := errors.New("tenant not set on context")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	var results []postgres_entity.WebSession
 	err := r.gormDb.Model(&postgres_entity.WebSession{}).
-		Where("intent_signals = ?", postgres_entity.IntentNotAnalyzed).
+		Where("tenant = ?", tenant).
+		Where("support_signals = ?", postgres_entity.SupportNotAnalyzed).
 		Where("is_active = ?", false).
 		Where("organization_id IS NOT NULL AND organization_id != ''").
 		Where("unique_page_views IS NOT NULL AND array_length(unique_page_views, 1) > 0").
@@ -264,13 +273,13 @@ func (r *webSessionEventsRepository) UpdateSessionPageViews(ctx context.Context,
 	return &updatedSession, nil
 }
 
-func (r *webSessionEventsRepository) UpdateIntentSignal(ctx context.Context, sessionID, tenant string, intentSignal int8) (*postgres_entity.WebSession, error) {
+func (r *webSessionEventsRepository) UpdateSupportSignals(ctx context.Context, sessionID, tenant string, supportSignal int8) (*postgres_entity.WebSession, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionRepository.UpdateSessionPageViews")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	if intentSignal != postgres_entity.IntentDetected && intentSignal != postgres_entity.NoIntentDetected {
-		err := errors.New("invalid intentSingal value")
+	if supportSignal != postgres_entity.SupportNeedDetected && supportSignal != postgres_entity.SupportNeedDetected {
+		err := errors.New("invalid supportSignal value")
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -278,7 +287,7 @@ func (r *webSessionEventsRepository) UpdateIntentSignal(ctx context.Context, ses
 	var updatedSession postgres_entity.WebSession
 	err := r.gormDb.Model(&postgres_entity.WebSession{}).
 		Where("id = ? AND tenant = ?", sessionID, tenant).
-		Update("intent_signals", intentSignal).
+		Update("support_signals", supportSignal).
 		First(&updatedSession).
 		Error
 	if err != nil {

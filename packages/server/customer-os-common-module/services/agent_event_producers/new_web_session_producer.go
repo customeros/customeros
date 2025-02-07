@@ -49,7 +49,7 @@ func (p *NewWebSessionProducer) subscribedAgents() []enum.AgentType {
 	}
 }
 
-func (s *NewWebSessionProducer) ProcessWebSessions() {
+func (s *NewWebSessionProducer) Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
