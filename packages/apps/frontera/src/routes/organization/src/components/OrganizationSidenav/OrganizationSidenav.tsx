@@ -44,6 +44,7 @@ export const OrganizationSidenav = observer(() => {
 
   const parentOrgId = organization?.value?.parentId;
   const parentOrgName = organization?.value?.parentName;
+  const isPlatformOwner = store?.globalCache?.value?.isPlatformOwner ?? false;
 
   const presets = {
     targetsPreset: store.tableViewDefs.targetsPreset,
@@ -54,12 +55,16 @@ export const OrganizationSidenav = observer(() => {
     flowSequencesPreset: store.tableViewDefs.flowsPreset,
   };
 
-  useKeyboardNavigation(presets, {
-    when:
-      !store.ui.commandMenu.isOpen &&
-      !store.ui.isEditingTableCell &&
-      !store.ui.isFilteringTable,
-  });
+  useKeyboardNavigation(
+    presets,
+    {
+      when:
+        !store.ui.commandMenu.isOpen &&
+        !store.ui.isEditingTableCell &&
+        !store.ui.isFilteringTable,
+    },
+    isPlatformOwner,
+  );
 
   if (!organization) return null;
 
