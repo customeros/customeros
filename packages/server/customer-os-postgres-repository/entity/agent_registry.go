@@ -18,7 +18,7 @@ type AgentRegistry struct {
 	ListenerEvents   pq.StringArray `gorm:"column:listener_events;type:varchar[]" json:"listenerEvents"`
 	Capabilities     pq.StringArray `gorm:"column:capabilities;type:varchar[]" json:"capabilities"`
 	Version          string         `gorm:"column:version;type:varchar(21)" json:"version"`
-	Goal             string         `gorm:"column:goal;type:varchar(255)" json:"goal"`
+	Goal             enum.AgentGoal `gorm:"column:goal;type:varchar(255)" json:"goal"`
 	IsActive         bool           `gorm:"column:is_active;type:boolean;default:true" json:"isActive"`
 	Icon             string         `gorm:"column:icon;type:text" json:"icon"`
 }

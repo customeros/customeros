@@ -42,3 +42,16 @@ const (
 func (t AgentGoal) String() string {
 	return string(t)
 }
+
+func GetAgentGoal(s string) (AgentGoal, error) {
+	switch AgentGoal(s) {
+	case
+		AgentGoalEvaluateICPFit,
+		AgentGoalIdentifyWebVisitor,
+		AgentGoalSpotHelpNeeded:
+		return AgentGoal(s), nil
+
+	default:
+		return "", fmt.Errorf("invalid Agent Goal: %s", s)
+	}
+}

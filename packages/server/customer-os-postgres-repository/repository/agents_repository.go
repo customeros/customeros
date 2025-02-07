@@ -23,6 +23,7 @@ type AgentRepository interface {
 	GetActiveConfiguredAgentsByTypesCrossTenant(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
 	Update(ctx context.Context, agent postgres_entity.Agent) (*postgres_entity.Agent, error)
 	UpdateCapabilities(ctx context.Context, capabilities []postgres_entity.Capability) error
+	UpdateListeners(ctx context.Context, capabilities []postgres_entity.Listener) error
 	FindCapability(ctx context.Context, agentID string, capabilityType enum.AgentCapability) (*postgres_entity.Capability, error)
 }
 
@@ -210,6 +211,9 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByTypesCrossTenant(ctx conte
 		Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
 			return db.Order("position ASC")
 		}).
+		Preload("Listeners", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position ASC")
+		}).
 		Where("is_active = ? AND configured = ?", true, true)
 	if len(types) > 0 {
 		query = query.Where("type IN (?)", types)
@@ -232,6 +236,9 @@ func (f *agentsRepository) Find(ctx context.Context, agent postgres_entity.Agent
 	var result postgres_entity.Agent
 	err := f.gormDb.
 		Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position ASC")
+		}).
+		Preload("Listeners", func(db *gorm.DB) *gorm.DB {
 			return db.Order("position ASC")
 		}).
 		Where(&agent).
@@ -276,6 +283,8 @@ func (f *agentsRepository) Update(ctx context.Context, agent postgres_entity.Age
 	var updatedAgent postgres_entity.Agent
 	if err := f.gormDb.Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
 		return db.Order("position ASC")
+	}).Preload("Listeners", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position ASC")
 	}).First(&updatedAgent, "id = ?", agent.ID).Error; err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -297,6 +306,27 @@ func (f *agentsRepository) UpdateCapabilities(ctx context.Context, capabilities 
 			}
 			// Save() will update the record with the primary key cap.ID.
 			if err := tx.Save(&capability).Error; err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (f *agentsRepository) UpdateListeners(ctx context.Context, listeners []postgres_entity.Listener) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.UpdateListeners")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	return f.gormDb.Transaction(func(tx *gorm.DB) error {
+		for _, listener := range listeners {
+			// Skip records with no ID
+			if listener.ID == "" {
+				continue
+			}
+			// Save() will update the record with the primary key listener.ID.
+			if err := tx.Save(&listener).Error; err != nil {
 				tracing.TraceErr(span, err)
 				return err
 			}

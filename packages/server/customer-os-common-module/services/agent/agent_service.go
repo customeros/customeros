@@ -153,7 +153,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		Icon:         newAgent.Icon,
 		Color:        newAgent.Color,
 		Capabilities: newAgent.Capabilities,
-		Goal:         newAgent.Goal,
+		Goal:         newAgent.Goal.String(),
 		Status:       newAgent.Status,
 		FlowID:       newAgent.FlowID,
 		VisibleInUI:  newAgent.VisibleInUI,
@@ -194,7 +194,7 @@ func (a *agentService) createDefaultCapability(ctx context.Context, capabilityTy
 	return &agentCapability, nil
 }
 
-func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilities []postgresentity.Capability) (*postgresentity.Agent, error) {
+func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilities []postgresentity.Capability, listeners []postgresentity.Listener) (*postgresentity.Agent, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.UpdateAgent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -215,9 +215,6 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	if agentFields.Name != nil {
 		agentEntity.Name = *agentFields.Name
 	}
-	if agentFields.Goal != nil {
-		agentEntity.Goal = *agentFields.Goal
-	}
 	if agentFields.Icon != nil {
 		agentEntity.Icon = *agentFields.Icon
 	}
@@ -233,13 +230,24 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	if agentFields.FlowID != nil {
 		agentEntity.FlowID = *agentFields.FlowID
 	}
+
 	err = a.updateCapabilities(ctx, agentEntity, capabilities)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	err = a.updateListeners(ctx, agentEntity, listeners)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	err = a.postgresRepositories.AgentRepository.UpdateCapabilities(ctx, agentEntity.Capabilities)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	err = a.postgresRepositories.AgentRepository.UpdateListeners(ctx, agentEntity.Listeners)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -260,7 +268,7 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 }
 
 func (a *agentService) updateCapabilities(ctx context.Context, agentEntity *postgresentity.Agent, capabilities []postgresentity.Capability) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.ValidateCapabilities")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.updateCapabilities")
 	defer span.Finish()
 
 	agentEntity.UpdateCapabilities(capabilities)
@@ -298,6 +306,17 @@ func (a *agentService) updateCapabilities(ctx context.Context, agentEntity *post
 		}
 	}
 	agentEntity.Configured = allCapabilitiesValid
+	return nil
+}
+
+func (a *agentService) updateListeners(ctx context.Context, agentEntity *postgresentity.Agent, listeners []postgresentity.Listener) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.updateListeners")
+	defer span.Finish()
+
+	agentEntity.UpdateListeners(listeners)
+
+	// TODO validate listeners
+
 	return nil
 }
 

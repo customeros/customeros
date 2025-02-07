@@ -11,7 +11,7 @@ import (
 
 type AgentService interface {
 	CreateAgent(ctx context.Context, agentType enum.AgentType) (*postgres_entity.Agent, error)
-	UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilities []postgres_entity.Capability) (*postgres_entity.Agent, error)
+	UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilities []postgres_entity.Capability, listeners []postgres_entity.Listener) (*postgres_entity.Agent, error)
 	GetAgentById(ctx context.Context, agentId string) (*postgres_entity.Agent, error)
 	GetAllAgentsByTenant(ctx context.Context) ([]*postgres_entity.Agent, error)
 

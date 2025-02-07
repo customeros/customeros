@@ -56,7 +56,6 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 	if input.Capabilities != nil {
 		capabilities := make([]postgresentity.Capability, 0, len(input.Capabilities))
 		for _, capability := range input.Capabilities {
-
 			dbCapability := postgresentity.Capability{
 				ID:     utils.IfNotNilString(capability.ID),
 				Name:   utils.IfNotNilString(capability.Name),
@@ -72,8 +71,27 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 		}
 		capabilitiesConfig = capabilities
 	}
+	var listenersConfig []postgresentity.Listener
+	if input.Listeners != nil {
+		listeners := make([]postgresentity.Listener, 0, len(input.Listeners))
+		for _, listener := range input.Listeners {
+			dbListener := postgresentity.Listener{
+				ID:     utils.IfNotNilString(listener.ID),
+				Name:   utils.IfNotNilString(listener.Name),
+				Error:  utils.IfNotNilString(listener.Errors),
+				Active: utils.IfNotNilBool(listener.Active),
+			}
+			dbListener.SetConfig(utils.IfNotNilString(listener.Config))
 
-	updatedAgentEntity, err := r.Services.CommonServices.AgentService.UpdateAgent(ctx, agentId, agentFields, capabilitiesConfig)
+			listeners = append(listeners, dbListener)
+			if listener.Type != nil {
+				listeners[len(listeners)-1].Type = enummapper.MapAgentListenerTypeFromModel(*listener.Type)
+			}
+		}
+		listenersConfig = listeners
+	}
+
+	updatedAgentEntity, err := r.Services.CommonServices.AgentService.UpdateAgent(ctx, agentId, agentFields, capabilitiesConfig, listenersConfig)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update agent")
