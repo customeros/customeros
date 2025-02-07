@@ -31,11 +31,11 @@ export const Providers = ({ children, isProduction }: ProvidersProps) => {
   return (
     <QueryClientProvider client={queryClient}>
       <StoreProvider>
-        <Devtools />
         <PhoenixSocketProvider>
           <RecoilRoot>
             <IntegrationsProvider>
               <GrowthbookProvider>
+                <Devtools />
                 <AnalyticsProvider isProduction={isProduction}>
                   {children}
                   <ToastContainer
