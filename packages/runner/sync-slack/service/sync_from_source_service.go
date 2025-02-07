@@ -3,8 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/google/uuid"
 	"github.com/customeros/customeros/packages/runner/sync-slack/caches"
 	"github.com/customeros/customeros/packages/runner/sync-slack/config"
 	"github.com/customeros/customeros/packages/runner/sync-slack/entity"
@@ -13,6 +11,7 @@ import (
 	rawrepo "github.com/customeros/customeros/packages/runner/sync-slack/repository/postgres_raw"
 	"github.com/customeros/customeros/packages/runner/sync-slack/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -418,23 +417,15 @@ func (s *syncFromSourceService) getSlackToken(ctx context.Context, tenant string
 	defer span.Finish()
 	span.SetTag("tenant", tenant)
 
-	queryResult := s.repositories.TenantSettingsRepository.FindForTenantName(ctx, tenant)
-	var settings entity.TenantSettings
-	var ok bool
-	if queryResult.Error != nil {
-		return "", queryResult.Error
-	} else if queryResult.Result == nil {
-		return "", fmt.Errorf("GetForTenant: no settings found for tenant %s", tenant)
-	} else {
-		settings, ok = queryResult.Result.(entity.TenantSettings)
-		if !ok {
-			return "", fmt.Errorf("GetForTenant: unexpected type %T", queryResult.Result)
-		}
+	slackSettings, err := s.repositories.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
 	}
-	if settings.SlackApiToken == nil {
-		return "", errors.New("GetForTenant: no slack api token found")
+	if slackSettings == nil || slackSettings.AccessToken == "" {
+		return "", errors.New("slack api token found")
 	}
-	return utils.IfNotNilStringWithDefault(settings.SlackApiToken, ""), nil
+	return slackSettings.AccessToken, nil
 }
 
 func (s *syncFromSourceService) getDb(tenant string) *gorm.DB {

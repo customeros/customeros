@@ -6,18 +6,18 @@ import (
 )
 
 var (
-	_ interfaces.AgentEvents = (*IcpFit)(nil)
-	_ interfaces.AgentEvents = (*IcpNotAFit)(nil)
+	_ interfaces.AgentEvents = IcpFit{}
+	_ interfaces.AgentEvents = IcpNotAFit{}
 )
 
 type IcpFit struct{}
 
-func (e *IcpFit) Name() enum.AgentListenerEvent {
+func (e IcpFit) Name() enum.AgentListenerEvent {
 	return enum.EventICPFit
 }
 
 type IcpNotAFit struct{}
 
-func (e *IcpNotAFit) Name() enum.AgentListenerEvent {
+func (e IcpNotAFit) Name() enum.AgentListenerEvent {
 	return enum.EventICPNotAFit
 }

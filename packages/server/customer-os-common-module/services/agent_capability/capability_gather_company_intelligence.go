@@ -127,7 +127,7 @@ func (c *GatherCompanyIntelligenceCapability) Execute(ctx context.Context, execu
 		return true, result, err
 	}
 
-	result.CompanyCity = company.Name
+	result.CompanyName = company.Name
 	result.PrimaryDomain = company.PrimaryDomain
 	result.CompanyDescriptions.Description1 = company.Description
 	result.CompanyDescriptions.Description2 = company.SourceDescription1

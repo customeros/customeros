@@ -48,13 +48,17 @@ export const SettingsSidenav = observer(() => {
     flowSequencesPreset: store.tableViewDefs.flowsPreset,
   };
 
-  useKeyboardNavigation(presets, {
-    when:
-      !hasCampaign &&
-      !store.ui.commandMenu.isOpen &&
-      !store.ui.isEditingTableCell &&
-      !store.ui.isFilteringTable,
-  });
+  useKeyboardNavigation(
+    presets,
+    {
+      when:
+        !hasCampaign &&
+        !store.ui.commandMenu.isOpen &&
+        !store.ui.isEditingTableCell &&
+        !store.ui.isFilteringTable,
+    },
+    store.globalCache.value?.isPlatformOwner ?? false,
+  );
 
   return (
     <div className='px-2 pt-[6px] h-full w-[200px] bg-white flex flex-col relative border-r border-gray-200'>

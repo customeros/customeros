@@ -5,7 +5,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 )
 
-var _ interfaces.AgentEvents = (*NewWebSession)(nil)
+var _ interfaces.AgentEvents = NewWebSession{}
 
 type NewWebSession struct {
 	WebSessionID string `json:"webSessionId"`
@@ -14,6 +14,6 @@ type NewWebSession struct {
 	Hostname     string `json:"hostname"`
 }
 
-func (f *NewWebSession) Name() enum.AgentListenerEvent {
+func (f NewWebSession) Name() enum.AgentListenerEvent {
 	return enum.EventNewWebSession
 }

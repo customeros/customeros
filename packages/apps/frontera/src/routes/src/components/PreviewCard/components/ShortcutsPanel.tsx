@@ -60,11 +60,8 @@ export const ShortcutsPanel = observer(() => {
   });
 
   return (
-    <div
-      style={{ paddingBottom: '10px' }}
-      className={cn('border-transparent', 'p-4')}
-    >
-      <div className='flex items-center justify-between'>
+    <div className={cn('border-transparent')}>
+      <div className='flex items-center justify-between pt-4 px-4'>
         <p className='text-base font-medium'>Keyboard shortcuts</p>
         <IconButton
           size='xs'
@@ -74,7 +71,7 @@ export const ShortcutsPanel = observer(() => {
           onClick={() => store.ui.setShortcutsPanel(false)}
         />
       </div>
-      <div className='mt-2 flex items-center gap-x-2'>
+      <div className='mt-2 flex items-center gap-x-2 px-4'>
         <Icon name={'search-sm'} className='size-4 text-gray-500' />
         <Input
           autoFocus
@@ -86,7 +83,10 @@ export const ShortcutsPanel = observer(() => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-      <div className='w-full bg-white overflow-y-auto h-screen'>
+      <div
+        style={{ height: `calc(100vh - 118px)` }}
+        className='w-full bg-white overflow-y-auto h-screen px-4 pb-6'
+      >
         <div className='mt-2'>
           {filteredSections.length > 0 ? (
             filteredSections.map((section, idx) => (

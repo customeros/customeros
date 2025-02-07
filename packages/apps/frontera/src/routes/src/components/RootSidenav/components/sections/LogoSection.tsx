@@ -11,6 +11,7 @@ import logoCustomerOs from '../../../../../src/assets/customer-os-small.png';
 
 export const LogoSection = observer(() => {
   const store = useStore();
+  const isPlatformOwner = store?.globalCache?.value?.isPlatformOwner ?? false;
 
   return (
     <div className='flex justify-between'>
@@ -27,7 +28,7 @@ export const LogoSection = observer(() => {
           {store.settings.tenant.value?.workspaceName || 'CustomerOS'}
         </span>
 
-        {store.common?.impersonateAccounts?.length > 1 && (
+        {store.common?.impersonateAccounts?.length > 1 && isPlatformOwner && (
           <Tooltip label='Switch workspaces (G then W)'>
             <IconButton
               size='xxs'

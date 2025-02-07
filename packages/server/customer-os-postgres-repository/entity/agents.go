@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -185,7 +186,7 @@ func (ch *configHandlerImpl) SetConfig(config any) error {
 			return err
 		}
 
-		replaceNullWithEmptyString(configMap)
+		replaceNullWithEmptyStringOrArray(configMap)
 
 		data, err := json.Marshal(configMap)
 		if err != nil {
@@ -209,6 +210,10 @@ func (ch *configHandlerImpl) SetConfig(config any) error {
 
 func (ch *configHandlerImpl) GetConfig(configPtr any) error {
 	if ch.Config == nil {
+		// If the config type expects an array, initialize it as empty
+		if reflect.TypeOf(configPtr).Elem().Kind() == reflect.Slice {
+			reflect.ValueOf(configPtr).Elem().Set(reflect.MakeSlice(reflect.TypeOf(configPtr).Elem(), 0, 0))
+		}
 		return nil
 	}
 	if _, ok := configPtr.(*NoConfig); ok {
@@ -230,13 +235,21 @@ func (ch *configHandlerImpl) GetConfigString() string {
 
 type NoConfig struct{}
 
-func replaceNullWithEmptyString(m map[string]any) {
+func replaceNullWithEmptyStringOrArray(m map[string]any) {
 	for k, v := range m {
 		switch val := v.(type) {
 		case nil:
 			m[k] = ""
+		case []interface{}:
+			// Handle array values
+			for i, item := range val {
+				if item == nil {
+					val[i] = ""
+				}
+			}
+			m[k] = val
 		case map[string]any:
-			replaceNullWithEmptyString(val)
+			replaceNullWithEmptyStringOrArray(val)
 		}
 	}
 }

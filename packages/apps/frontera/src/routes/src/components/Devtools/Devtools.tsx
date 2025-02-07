@@ -19,8 +19,6 @@ import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { Resizable } from '@ui/presentation/Resizable';
-import { Settings01 } from '@ui/media/icons/Settings01';
-import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import {
   ScrollAreaRoot,
   ScrollAreaThumb,
@@ -46,120 +44,125 @@ type StoreReturnType =
   | RootStore['common']
   | null;
 
-export const Devtools = observer(() => {
-  const store = useStore();
-  const hasFlagEnabled = useFeatureIsOn('devtools');
-  const { open, onOpen, onClose, onToggle } = useDisclosure();
+interface DevtoolsProps {
+  open: boolean;
+  onClose: () => void;
+  onToggle: () => void;
+}
 
-  const ENABLED = useMemo(
-    () => import.meta.env.DEV || hasFlagEnabled,
-    [hasFlagEnabled],
-  );
+export const Devtools = observer(
+  ({ open, onClose, onToggle }: DevtoolsProps) => {
+    const store = useStore();
+    const hasFlagEnabled = useFeatureIsOn('devtools');
 
-  const defaultWidht = window.innerWidth / 2;
-  const defaultX = window.innerWidth - defaultWidht * 1.5;
-  const defaultY = window.innerHeight / 3;
+    const ENABLED = useMemo(
+      () => import.meta.env.DEV || hasFlagEnabled,
+      [hasFlagEnabled],
+    );
 
-  useKey('`', onToggle, { when: ENABLED });
+    const defaultWidht = window.innerWidth / 2;
+    const defaultX = window.innerWidth - defaultWidht * 1.5;
+    const defaultY = window.innerHeight / 3;
 
-  useEffect(() => {
-    if (!ENABLED) return;
+    useKey('`', onToggle, { when: ENABLED });
 
-    const handleGqlReq = (e: unknown) => {
-      const reqId = get(e, 'detail.reqId');
-      const reqName = get(e, 'detail.name');
-      const reqVariables = get(e, 'detail.variables');
-
-      devTools.addGqlOp({
-        id: reqId ?? crypto.randomUUID(),
-        name: reqName ?? crypto.randomUUID(),
-        variables: reqVariables ?? null,
-      });
-    };
-
-    const handleGqlRes = (e: unknown) => {
-      const reqId = get(e, 'detail.reqId');
-      const resData = get(e, 'detail.data');
-      const resErrors = get(e, 'detail.errors');
-
-      if (!reqId) return;
-
-      devTools.addGqlRes({
-        id: reqId,
-        data: resData ?? null,
-        errors: resErrors ?? null,
-      });
-    };
-
-    window.addEventListener('gql-req', handleGqlReq);
-    window.addEventListener('gql-res', handleGqlRes);
-
-    return () => {
+    useEffect(() => {
       if (!ENABLED) return;
-      window.removeEventListener('gql-req', handleGqlReq);
-      window.removeEventListener('gql-res', handleGqlRes);
+
+      const handleGqlReq = (e: unknown) => {
+        const reqId = get(e, 'detail.reqId');
+        const reqName = get(e, 'detail.name');
+        const reqVariables = get(e, 'detail.variables');
+
+        devTools.addGqlOp({
+          id: reqId ?? crypto.randomUUID(),
+          name: reqName ?? crypto.randomUUID(),
+          variables: reqVariables ?? null,
+        });
+      };
+
+      const handleGqlRes = (e: unknown) => {
+        const reqId = get(e, 'detail.reqId');
+        const resData = get(e, 'detail.data');
+        const resErrors = get(e, 'detail.errors');
+
+        if (!reqId) return;
+
+        devTools.addGqlRes({
+          id: reqId,
+          data: resData ?? null,
+          errors: resErrors ?? null,
+        });
+      };
+
+      window.addEventListener('gql-req', handleGqlReq);
+      window.addEventListener('gql-res', handleGqlRes);
+
+      return () => {
+        if (!ENABLED) return;
+        window.removeEventListener('gql-req', handleGqlReq);
+        window.removeEventListener('gql-res', handleGqlRes);
+      };
+    }, []);
+
+    const detailedGqlOperation = devTools.gqlOperations.find(
+      (o) => o.id === devTools.openGqlOperationId,
+    );
+    const detailedGqlResponse = devTools.gqlResponses.get(
+      devTools.openGqlOperationId ?? '',
+    );
+    const detailedStore = match(devTools.detailedStore)
+      .returnType<StoreReturnType>()
+      .with('tableViewDefs', () => store.tableViewDefs)
+      .with('organizations', () => store.organizations)
+      .with('contacts', () => store.contacts)
+      .with('contracts', () => store.contracts)
+      .with('flows', () => store.flows)
+      .with('jobRoles', () => store.jobRoles)
+      .with('tags', () => store.tags)
+      .with('agents', () => store.agents)
+      .with('common.slackChannels', () => store.common)
+      .otherwise(() => null);
+
+    const getStoreValue = (store: StoreReturnType) => {
+      if (store instanceof CommonStore) {
+        return store.slackChannels;
+      }
+
+      return store?.value;
     };
-  }, []);
 
-  const detailedGqlOperation = devTools.gqlOperations.find(
-    (o) => o.id === devTools.openGqlOperationId,
-  );
-  const detailedGqlResponse = devTools.gqlResponses.get(
-    devTools.openGqlOperationId ?? '',
-  );
-  const detailedStore = match(devTools.detailedStore)
-    .returnType<StoreReturnType>()
-    .with('tableViewDefs', () => store.tableViewDefs)
-    .with('organizations', () => store.organizations)
-    .with('contacts', () => store.contacts)
-    .with('contracts', () => store.contracts)
-    .with('flows', () => store.flows)
-    .with('jobRoles', () => store.jobRoles)
-    .with('tags', () => store.tags)
-    .with('agents', () => store.agents)
-    .with('common.slackChannels', () => store.common)
-    .otherwise(() => null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const getEntityValue = (entity: Record<string, any>) =>
+      match(devTools.detailedStore)
+        .with('organizations', () => get(entity, 'value', {}))
+        .with('tableViewDefs', () => get(entity, 'value', {}))
+        .with('contacts', () => get(entity, 'value', {}))
+        .with('contracts', () => get(entity, 'value', {}))
+        .with('flows', () => get(entity, 'value', {}))
+        .with('jobRoles', () => get(entity, 'value', {}))
+        .with('tags', () => get(entity, 'value', {}))
+        .with('agents', () => get(entity, 'value', {}))
+        .with('common.slackChannels', () => entity)
+        .otherwise(() => entity);
 
-  const getStoreValue = (store: StoreReturnType) => {
-    if (store instanceof CommonStore) {
-      return store.slackChannels;
-    }
+    const getEntityName = (entity: Record<string, string>) =>
+      match(devTools.detailedStore)
+        .returnType<string>()
+        .with('organizations', () => get(entity, 'value.name', 'Unnamed'))
+        .with('tableViewDefs', () => get(entity, 'name', 'Unnamed'))
+        .with('contacts', () => get(entity, 'name', 'Unnamed'))
+        .with('contracts', () => get(entity, 'value.contractName', 'Unnamed'))
+        .with('flows', () => get(entity, 'value.name', 'Unnamed'))
+        .with('jobRoles', () => get(entity, 'value.jobTitle', 'Unnamed'))
+        .with('tags', () => get(entity, 'value.name', 'Unnamed'))
+        .with('agents', () => get(entity, 'value.name', 'Unnamed'))
+        .with('common.slackChannels', () => get(entity, 'name', 'Unnamed'))
+        .otherwise(() => 'Unnamed');
 
-    return store?.value;
-  };
+    if (!open) return null;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getEntityValue = (entity: Record<string, any>) =>
-    match(devTools.detailedStore)
-      .with('organizations', () => get(entity, 'value', {}))
-      .with('tableViewDefs', () => get(entity, 'value', {}))
-      .with('contacts', () => get(entity, 'value', {}))
-      .with('contracts', () => get(entity, 'value', {}))
-      .with('flows', () => get(entity, 'value', {}))
-      .with('jobRoles', () => get(entity, 'value', {}))
-      .with('tags', () => get(entity, 'value', {}))
-      .with('agents', () => get(entity, 'value', {}))
-      .with('common.slackChannels', () => entity)
-      .otherwise(() => entity);
-
-  const getEntityName = (entity: Record<string, string>) =>
-    match(devTools.detailedStore)
-      .returnType<string>()
-      .with('organizations', () => get(entity, 'value.name', 'Unnamed'))
-      .with('tableViewDefs', () => get(entity, 'name', 'Unnamed'))
-      .with('contacts', () => get(entity, 'name', 'Unnamed'))
-      .with('contracts', () => get(entity, 'value.contractName', 'Unnamed'))
-      .with('flows', () => get(entity, 'value.name', 'Unnamed'))
-      .with('jobRoles', () => get(entity, 'value.jobTitle', 'Unnamed'))
-      .with('tags', () => get(entity, 'value.name', 'Unnamed'))
-      .with('agents', () => get(entity, 'value.name', 'Unnamed'))
-      .with('common.slackChannels', () => get(entity, 'name', 'Unnamed'))
-      .otherwise(() => 'Unnamed');
-
-  if (!ENABLED) return null;
-
-  return createPortal(
-    open ? (
+    return createPortal(
       <Resizable
         defaultHeight={350}
         defaultWidth={window.innerWidth / 2}
@@ -493,18 +496,8 @@ export const Devtools = observer(() => {
             )}
           </Observer>
         )}
-      </Resizable>
-    ) : (
-      <div className='absolute right-2 bottom-2'>
-        <IconButton
-          size='lg'
-          onClick={onOpen}
-          icon={<Settings01 />}
-          className='rounded-2xl'
-          aria-label='frontera devtools'
-        />
-      </div>
-    ),
-    document.body,
-  );
-});
+      </Resizable>,
+      document.body,
+    );
+  },
+);

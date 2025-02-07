@@ -5,7 +5,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 )
 
-var _ interfaces.AgentEvents = (*IntentDetected)(nil)
+var _ interfaces.AgentEvents = IntentDetected{}
 
 type IntentDetected struct {
 	EventName      enum.AgentListenerEvent
@@ -19,6 +19,6 @@ type IntentDetected struct {
 	Preview        bool              `json:"preview"`
 }
 
-func (e *IntentDetected) Name() enum.AgentListenerEvent {
+func (e IntentDetected) Name() enum.AgentListenerEvent {
 	return enum.EventIntentSignal
 }
