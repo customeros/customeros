@@ -32,6 +32,7 @@ func NewIcpNotAFitListener(
 			events.GetEventType[dto.IcpNotAFit](), // subscribed event
 			events.QueueAgents,                    // listening on Agents queue
 		),
+		postgresRepositories: postgresRepositories,
 	}
 }
 

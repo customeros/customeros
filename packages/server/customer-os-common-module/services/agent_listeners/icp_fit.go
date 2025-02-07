@@ -32,6 +32,7 @@ func NewIcpFitListener(
 			events.GetEventType[dto.IcpFit](), // subscribed event
 			events.QueueAgents,                // listening on Agents queue
 		),
+		postgresRepositories: postgresRepositories,
 	}
 }
 

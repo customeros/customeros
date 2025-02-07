@@ -10,6 +10,7 @@ type CreateAgent struct {
 	Icon         string                       `json:"icon"`
 	Color        string                       `json:"color"`
 	Capabilities []postgres_entity.Capability `json:"capabilities"`
+	Listeners    []postgres_entity.Listener   `json:"listeners"`
 	Goal         string                       `json:"goal"`
 	Status       string                       `json:"status"`
 	FlowID       string                       `json:"flowId"`
