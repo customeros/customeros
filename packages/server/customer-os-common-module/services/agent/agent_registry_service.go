@@ -118,11 +118,19 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 		return err
 	}
 
+	agentGoal, err := enum.GetAgentGoal(agentConfig.Goal.Goal)
+	if err != nil {
+		span.LogKV("agentGoal", agentConfig.Goal.Goal)
+		err := errors.New("Not a valid agent goal")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
 	// Create agent registry entity
 	dbAgent := postgres_entity.AgentRegistry{
 		Type:             agentType,
+		Goal:             agentGoal,
 		AgentName:        agentConfig.Agent.Name,
-		Goal:             agentConfig.Goal.Goal,
 		CompletionEvents: agentConfig.Goal.CompletionEvents,
 		ListenerEvents:   agentConfig.Listeners.Events,
 		Capabilities:     agentConfig.Capabilities.Types,

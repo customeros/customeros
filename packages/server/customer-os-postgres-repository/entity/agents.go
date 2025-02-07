@@ -19,7 +19,7 @@ type Agent struct {
 	Tenant       string         `gorm:"column:tenant;type:varchar(255);not null" json:"tenant" binding:"required"`
 	Name         string         `gorm:"column:name;type:varchar(255);not null" json:"name" binding:"required"`
 	Configured   bool           `gorm:"column:configured;type:boolean;default:false" json:"capabilitiesConfigured"`
-	Goal         string         `gorm:"column:goal;type:text" json:"goal"`
+	Goal         enum.AgentGoal `gorm:"column:goal;type:text" json:"goal"`
 	Status       string         `gorm:"column:status;type:varchar(32)" json:"status"`
 	IsActive     bool           `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
 	FlowID       string         `gorm:"column:flow_id;type:varchar(255)" json:"flowId"`
@@ -112,6 +112,7 @@ func (c *Capability) BeforeCreate(tx *gorm.DB) error {
 type Listener struct {
 	ID        string                  `gorm:"primaryKey;type:varchar(32)" json:"id"`
 	Tenant    string                  `gorm:"column:tenant;type:varchar(255)" json:"tenant"`
+	Position  int                     `gorm:"column:position;type:integer" json:"order"`
 	AgentID   string                  `gorm:"column:agent_id;type:varchar(32);not null" json:"agentId"`
 	Name      string                  `gorm:"column:name;type:varchar(255);not null" json:"name"`
 	Type      enum.AgentListenerEvent `gorm:"column:type;type:varchar(50);not null" json:"type"`

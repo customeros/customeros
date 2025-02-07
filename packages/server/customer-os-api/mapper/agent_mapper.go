@@ -20,7 +20,8 @@ func MapAgentToModel(entity *postgresEntity.Agent) *model.Agent {
 		UpdatedAt:    utils.IfNotNilTimeWithDefault(entity.UpdatedAt, entity.CreatedAt),
 		Type:         enummapper.MapAgentTypeToModel(entity.Type),
 		Color:        entity.Color,
-		Goal:         entity.Goal,
+		GoalType:     entity.Goal.String(),
+		Goal:         enummapper.MapAgentGoalName(entity.Goal),
 		IsActive:     entity.IsActive,
 		IsConfigured: entity.Configured,
 		Visible:      entity.VisibleInUI,
@@ -34,6 +35,16 @@ func MapAgentToModel(entity *postgresEntity.Agent) *model.Agent {
 			Errors: utils.StringPtrNillable(capability.Error),
 			Active: capability.Active,
 			Config: capability.GetConfigString(),
+		})
+	}
+	for _, listener := range entity.Listeners {
+		agentModel.Listeners = append(agentModel.Listeners, &model.AgentListener{
+			ID:     listener.ID,
+			Name:   listener.Name,
+			Type:   enummapper.MapAgentListenerTypeToModel(listener.Type),
+			Errors: utils.StringPtrNillable(listener.Error),
+			Active: listener.Active,
+			Config: listener.GetConfigString(),
 		})
 	}
 	return &agentModel

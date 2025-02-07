@@ -110,14 +110,25 @@ type ComplexityRoot struct {
 		Error        func(childComplexity int) int
 		FlowID       func(childComplexity int) int
 		Goal         func(childComplexity int) int
+		GoalType     func(childComplexity int) int
 		ID           func(childComplexity int) int
 		Icon         func(childComplexity int) int
 		IsActive     func(childComplexity int) int
 		IsConfigured func(childComplexity int) int
+		Listeners    func(childComplexity int) int
 		Name         func(childComplexity int) int
 		Type         func(childComplexity int) int
 		UpdatedAt    func(childComplexity int) int
 		Visible      func(childComplexity int) int
+	}
+
+	AgentListener struct {
+		Active func(childComplexity int) int
+		Config func(childComplexity int) int
+		Errors func(childComplexity int) int
+		ID     func(childComplexity int) int
+		Name   func(childComplexity int) int
+		Type   func(childComplexity int) int
 	}
 
 	AgentSlackChannel struct {
@@ -201,7 +212,6 @@ type ComplexityRoot struct {
 	}
 
 	Capability struct {
-		Action func(childComplexity int) int
 		Active func(childComplexity int) int
 		Config func(childComplexity int) int
 		Errors func(childComplexity int) int
@@ -2455,6 +2465,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Agent.Goal(childComplexity), true
 
+	case "Agent.goalType":
+		if e.complexity.Agent.GoalType == nil {
+			break
+		}
+
+		return e.complexity.Agent.GoalType(childComplexity), true
+
 	case "Agent.id":
 		if e.complexity.Agent.ID == nil {
 			break
@@ -2483,6 +2500,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Agent.IsConfigured(childComplexity), true
 
+	case "Agent.listeners":
+		if e.complexity.Agent.Listeners == nil {
+			break
+		}
+
+		return e.complexity.Agent.Listeners(childComplexity), true
+
 	case "Agent.name":
 		if e.complexity.Agent.Name == nil {
 			break
@@ -2510,6 +2534,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Agent.Visible(childComplexity), true
+
+	case "AgentListener.active":
+		if e.complexity.AgentListener.Active == nil {
+			break
+		}
+
+		return e.complexity.AgentListener.Active(childComplexity), true
+
+	case "AgentListener.config":
+		if e.complexity.AgentListener.Config == nil {
+			break
+		}
+
+		return e.complexity.AgentListener.Config(childComplexity), true
+
+	case "AgentListener.errors":
+		if e.complexity.AgentListener.Errors == nil {
+			break
+		}
+
+		return e.complexity.AgentListener.Errors(childComplexity), true
+
+	case "AgentListener.id":
+		if e.complexity.AgentListener.ID == nil {
+			break
+		}
+
+		return e.complexity.AgentListener.ID(childComplexity), true
+
+	case "AgentListener.name":
+		if e.complexity.AgentListener.Name == nil {
+			break
+		}
+
+		return e.complexity.AgentListener.Name(childComplexity), true
+
+	case "AgentListener.type":
+		if e.complexity.AgentListener.Type == nil {
+			break
+		}
+
+		return e.complexity.AgentListener.Type(childComplexity), true
 
 	case "AgentSlackChannel.channelId":
 		if e.complexity.AgentSlackChannel.ChannelID == nil {
@@ -2944,13 +3010,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Calendar.UpdatedAt(childComplexity), true
-
-	case "Capability.action":
-		if e.complexity.Capability.Action == nil {
-			break
-		}
-
-		return e.complexity.Capability.Action(childComplexity), true
 
 	case "Capability.active":
 		if e.complexity.Capability.Active == nil {
@@ -13042,6 +13101,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAddTagInput,
+		ec.unmarshalInputAgentListenerSaveInput,
 		ec.unmarshalInputAgentSaveInput,
 		ec.unmarshalInputAttachmentInput,
 		ec.unmarshalInputBankAccountCreateInput,
@@ -13301,93 +13361,123 @@ type TenantImpersonateDetails {
     personal: Boolean!
 }`, BuiltIn: false},
 	{Name: "../schemas/agent.graphqls", Input: `extend type Query {
-  agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-  agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
+    agents: [Agent!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    agent(id: ID!): Agent @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-  slackChannelsWithBot: [AgentSlackChannel!]!
+    slackChannelsWithBot: [AgentSlackChannel!]!
     @hasRole(roles: [ADMIN, USER])
     @hasTenant
 }
 
 extend type Mutation {
-  agent_Save(input: AgentSaveInput!): Agent!
+    agent_Save(input: AgentSaveInput!): Agent!
     @hasRole(roles: [ADMIN, USER])
     @hasTenant
 }
 
 type AgentSlackChannel {
-  channelId: String!
-  name: String!
-}
-
-enum CapabilityType {
-  IDENTIFY_WEB_VISITOR
-  CREATE_ORGANIZATION
-  ANALYZE_WEB_SESSION_INTENT
-  SEND_SLACK_NOTIFICATION
-  WEB_VISITOR_SEND_SLACK_NOTIFICATION
-  APPLY_TAG
-  CREATE_MARKDOWN_TIMELINE_EVENT
-  ICP_QUALIFY
-  GATHER_COMPANY_INTELLIGENCE
-  UPDATE_COMPANY_STATUS
-}
-
-type Capability {
-  id: ID!
-  type: CapabilityType!
-  name: String!
-  action: String!
-  active: Boolean!
-  config: String!
-  errors: String
+    channelId: String!
+    name: String!
 }
 
 enum AgentType {
-  WEB_VISIT_IDENTIFIER
-  TAG_SUPPORT
-  ICP_QUALIFIER
+    WEB_VISIT_IDENTIFIER
+    TAG_SUPPORT
+    ICP_QUALIFIER
 }
 
 type Agent {
-  id: ID!
-  type: AgentType!
-  name: String!
-  capabilities: [Capability!]!
-  goal: String!
-  isActive: Boolean!
-  isConfigured: Boolean!
-  flowId: ID
-  visible: Boolean!
-  createdAt: Time!
-  updatedAt: Time!
-  error: String
-  color: String!
-  icon: String!
-}
-
-input CapabilitySaveInput {
-  id: ID
-  type: CapabilityType
-  name: String
-  action: String
-  active: Boolean
-  config: String
-  errors: String
+    id: ID!
+    type: AgentType!
+    name: String!
+    capabilities: [Capability!]!
+    listeners: [AgentListener!]!
+    goalType: String!
+    goal: String!
+    isActive: Boolean!
+    isConfigured: Boolean!
+    flowId: ID
+    visible: Boolean!
+    createdAt: Time!
+    updatedAt: Time!
+    error: String
+    color: String!
+    icon: String!
 }
 
 input AgentSaveInput {
-  id: ID
-  type: AgentType @deprecated
-  name: String
-  capabilities: [CapabilitySaveInput!]
-  goal: String
-  isActive: Boolean
-  flowId: ID
-  visible: Boolean
-  color: String
-  icon: String
+    id:             ID
+    type:           AgentType @deprecated ## field is not update-able
+    name:           String
+    capabilities:   [CapabilitySaveInput!]
+    listeners:      [AgentListenerSaveInput!]
+    goal:           String @deprecated ## field is not update-able
+    isActive:       Boolean
+    flowId:         ID
+    visible:        Boolean
+    color:          String
+    icon:           String
 }
+
+enum CapabilityType {
+    IDENTIFY_WEB_VISITOR
+    CREATE_ORGANIZATION
+    ANALYZE_WEB_SESSION_INTENT
+    SEND_SLACK_NOTIFICATION
+    WEB_VISITOR_SEND_SLACK_NOTIFICATION
+    APPLY_TAG
+    CREATE_MARKDOWN_TIMELINE_EVENT
+    ICP_QUALIFY
+    GATHER_COMPANY_INTELLIGENCE
+    UPDATE_COMPANY_STATUS
+}
+
+type Capability {
+    id:     ID!
+    type:   CapabilityType!
+    name:   String!
+    active: Boolean!
+    config: String!
+    errors: String
+}
+
+input CapabilitySaveInput {
+    id:     ID
+    type:   CapabilityType @deprecated ## field is not update-able
+    name:   String
+    active: Boolean
+    config: String
+    errors: String
+}
+
+enum AgentListenerEvent {
+    NEW_LEAD
+    ICP_FIT
+    ICP_NOT_A_FIT
+    RUN_ICP_QUALIFIER_AGENT
+    WEB_VISITOR_IDENTIFIED
+    WEB_VISITOR_NOT_IDENTIFIED
+    NEW_WEB_SESSION
+}
+
+type AgentListener {
+    id:     ID!
+    type:   AgentListenerEvent!
+    name:   String!
+    active: Boolean!
+    config: String!
+    errors: String
+}
+
+input AgentListenerSaveInput {
+    id:     ID
+    type:   AgentListenerEvent @deprecated ## field is not update-able
+    name:   String
+    active: Boolean
+    config: String
+    errors: String
+}
+
 `, BuiltIn: false},
 	{Name: "../schemas/attachment.graphqls", Input: `extend type Query {
     attachment(id: ID!): Attachment!
@@ -28023,8 +28113,6 @@ func (ec *executionContext) fieldContext_Agent_capabilities(_ context.Context, f
 				return ec.fieldContext_Capability_type(ctx, field)
 			case "name":
 				return ec.fieldContext_Capability_name(ctx, field)
-			case "action":
-				return ec.fieldContext_Capability_action(ctx, field)
 			case "active":
 				return ec.fieldContext_Capability_active(ctx, field)
 			case "config":
@@ -28033,6 +28121,108 @@ func (ec *executionContext) fieldContext_Agent_capabilities(_ context.Context, f
 				return ec.fieldContext_Capability_errors(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Capability", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_listeners(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_listeners(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Listeners, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.AgentListener)
+	fc.Result = res
+	return ec.marshalNAgentListener2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListenerᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_listeners(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_AgentListener_id(ctx, field)
+			case "type":
+				return ec.fieldContext_AgentListener_type(ctx, field)
+			case "name":
+				return ec.fieldContext_AgentListener_name(ctx, field)
+			case "active":
+				return ec.fieldContext_AgentListener_active(ctx, field)
+			case "config":
+				return ec.fieldContext_AgentListener_config(ctx, field)
+			case "errors":
+				return ec.fieldContext_AgentListener_errors(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AgentListener", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Agent_goalType(ctx context.Context, field graphql.CollectedField, obj *model.Agent) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Agent_goalType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GoalType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Agent_goalType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -28462,6 +28652,267 @@ func (ec *executionContext) _Agent_icon(ctx context.Context, field graphql.Colle
 func (ec *executionContext) fieldContext_Agent_icon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Agent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AgentListener_id(ctx context.Context, field graphql.CollectedField, obj *model.AgentListener) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AgentListener_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AgentListener_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AgentListener",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AgentListener_type(ctx context.Context, field graphql.CollectedField, obj *model.AgentListener) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AgentListener_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.AgentListenerEvent)
+	fc.Result = res
+	return ec.marshalNAgentListenerEvent2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListenerEvent(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AgentListener_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AgentListener",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type AgentListenerEvent does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AgentListener_name(ctx context.Context, field graphql.CollectedField, obj *model.AgentListener) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AgentListener_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AgentListener_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AgentListener",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AgentListener_active(ctx context.Context, field graphql.CollectedField, obj *model.AgentListener) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AgentListener_active(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AgentListener_active(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AgentListener",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AgentListener_config(ctx context.Context, field graphql.CollectedField, obj *model.AgentListener) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AgentListener_config(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Config, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AgentListener_config(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AgentListener",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AgentListener_errors(ctx context.Context, field graphql.CollectedField, obj *model.AgentListener) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AgentListener_errors(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Errors, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AgentListener_errors(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AgentListener",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -31243,50 +31694,6 @@ func (ec *executionContext) _Capability_name(ctx context.Context, field graphql.
 }
 
 func (ec *executionContext) fieldContext_Capability_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Capability",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Capability_action(ctx context.Context, field graphql.CollectedField, obj *model.Capability) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Capability_action(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Action, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Capability_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Capability",
 		Field:      field,
@@ -62175,6 +62582,10 @@ func (ec *executionContext) fieldContext_Mutation_agent_Save(ctx context.Context
 				return ec.fieldContext_Agent_name(ctx, field)
 			case "capabilities":
 				return ec.fieldContext_Agent_capabilities(ctx, field)
+			case "listeners":
+				return ec.fieldContext_Agent_listeners(ctx, field)
+			case "goalType":
+				return ec.fieldContext_Agent_goalType(ctx, field)
 			case "goal":
 				return ec.fieldContext_Agent_goal(ctx, field)
 			case "isActive":
@@ -92004,6 +92415,10 @@ func (ec *executionContext) fieldContext_Query_agents(_ context.Context, field g
 				return ec.fieldContext_Agent_name(ctx, field)
 			case "capabilities":
 				return ec.fieldContext_Agent_capabilities(ctx, field)
+			case "listeners":
+				return ec.fieldContext_Agent_listeners(ctx, field)
+			case "goalType":
+				return ec.fieldContext_Agent_goalType(ctx, field)
 			case "goal":
 				return ec.fieldContext_Agent_goal(ctx, field)
 			case "isActive":
@@ -92109,6 +92524,10 @@ func (ec *executionContext) fieldContext_Query_agent(ctx context.Context, field 
 				return ec.fieldContext_Agent_name(ctx, field)
 			case "capabilities":
 				return ec.fieldContext_Agent_capabilities(ctx, field)
+			case "listeners":
+				return ec.fieldContext_Agent_listeners(ctx, field)
+			case "goalType":
+				return ec.fieldContext_Agent_goalType(ctx, field)
 			case "goal":
 				return ec.fieldContext_Agent_goal(ctx, field)
 			case "isActive":
@@ -111572,6 +111991,68 @@ func (ec *executionContext) unmarshalInputAddTagInput(ctx context.Context, obj a
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAgentListenerSaveInput(ctx context.Context, obj any) (model.AgentListenerSaveInput, error) {
+	var it model.AgentListenerSaveInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "type", "name", "active", "config", "errors"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalOAgentListenerEvent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListenerEvent(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "active":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("active"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Active = data
+		case "config":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("config"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Config = data
+		case "errors":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("errors"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Errors = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, obj any) (model.AgentSaveInput, error) {
 	var it model.AgentSaveInput
 	asMap := map[string]any{}
@@ -111579,7 +112060,7 @@ func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "type", "name", "capabilities", "goal", "isActive", "flowId", "visible", "color", "icon"}
+	fieldsInOrder := [...]string{"id", "type", "name", "capabilities", "listeners", "goal", "isActive", "flowId", "visible", "color", "icon"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -111614,6 +112095,13 @@ func (ec *executionContext) unmarshalInputAgentSaveInput(ctx context.Context, ob
 				return it, err
 			}
 			it.Capabilities = data
+		case "listeners":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("listeners"))
+			data, err := ec.unmarshalOAgentListenerSaveInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListenerSaveInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Listeners = data
 		case "goal":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("goal"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -112291,7 +112779,7 @@ func (ec *executionContext) unmarshalInputCapabilitySaveInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "type", "name", "action", "active", "config", "errors"}
+	fieldsInOrder := [...]string{"id", "type", "name", "active", "config", "errors"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -112319,13 +112807,6 @@ func (ec *executionContext) unmarshalInputCapabilitySaveInput(ctx context.Contex
 				return it, err
 			}
 			it.Name = data
-		case "action":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("action"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Action = data
 		case "active":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("active"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -119234,6 +119715,16 @@ func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "listeners":
+			out.Values[i] = ec._Agent_listeners(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "goalType":
+			out.Values[i] = ec._Agent_goalType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "goal":
 			out.Values[i] = ec._Agent_goal(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -119278,6 +119769,67 @@ func (ec *executionContext) _Agent(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var agentListenerImplementors = []string{"AgentListener"}
+
+func (ec *executionContext) _AgentListener(ctx context.Context, sel ast.SelectionSet, obj *model.AgentListener) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, agentListenerImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AgentListener")
+		case "id":
+			out.Values[i] = ec._AgentListener_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._AgentListener_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._AgentListener_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "active":
+			out.Values[i] = ec._AgentListener_active(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "config":
+			out.Values[i] = ec._AgentListener_config(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "errors":
+			out.Values[i] = ec._AgentListener_errors(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -119745,11 +120297,6 @@ func (ec *executionContext) _Capability(ctx context.Context, sel ast.SelectionSe
 			}
 		case "name":
 			out.Values[i] = ec._Capability_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "action":
-			out.Values[i] = ec._Capability_action(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -135058,6 +135605,75 @@ func (ec *executionContext) marshalNAgent2ᚖgithubᚗcomᚋcustomerosᚋcustome
 	return ec._Agent(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNAgentListener2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListenerᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AgentListener) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAgentListener2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListener(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAgentListener2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListener(ctx context.Context, sel ast.SelectionSet, v *model.AgentListener) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AgentListener(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNAgentListenerEvent2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListenerEvent(ctx context.Context, v any) (model.AgentListenerEvent, error) {
+	var res model.AgentListenerEvent
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAgentListenerEvent2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListenerEvent(ctx context.Context, sel ast.SelectionSet, v model.AgentListenerEvent) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNAgentListenerSaveInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListenerSaveInput(ctx context.Context, v any) (*model.AgentListenerSaveInput, error) {
+	res, err := ec.unmarshalInputAgentListenerSaveInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNAgentSaveInput2githubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentSaveInput(ctx context.Context, v any) (model.AgentSaveInput, error) {
 	res, err := ec.unmarshalInputAgentSaveInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -140551,6 +141167,42 @@ func (ec *executionContext) marshalOAgent2ᚖgithubᚗcomᚋcustomerosᚋcustome
 		return graphql.Null
 	}
 	return ec._Agent(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOAgentListenerEvent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListenerEvent(ctx context.Context, v any) (*model.AgentListenerEvent, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.AgentListenerEvent)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAgentListenerEvent2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListenerEvent(ctx context.Context, sel ast.SelectionSet, v *model.AgentListenerEvent) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOAgentListenerSaveInput2ᚕᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListenerSaveInputᚄ(ctx context.Context, v any) ([]*model.AgentListenerSaveInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*model.AgentListenerSaveInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAgentListenerSaveInput2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentListenerSaveInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) unmarshalOAgentType2ᚖgithubᚗcomᚋcustomerosᚋcustomerosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphqlᚋmodelᚐAgentType(ctx context.Context, v any) (*model.AgentType, error) {

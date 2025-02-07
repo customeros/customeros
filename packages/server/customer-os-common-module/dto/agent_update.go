@@ -9,4 +9,5 @@ import (
 type UpdateAgent struct {
 	data_fields.AgentFields
 	Capabilities []postgresentity.Capability `json:"capabilities,omitempty"`
+	Listeners    []postgresentity.Listener   `json:"listeners,omitempty"`
 }
