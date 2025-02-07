@@ -390,7 +390,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	if !contactsFound {
 		tvDef, err := table_view.DefaultTableViewDefinitionContacts(span)
 		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for targets"))
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for contacts"))
 		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
