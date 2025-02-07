@@ -9,7 +9,9 @@
     "storage",
     "scripting",
     "alarms",
-    "sidePanel"
+    "sidePanel",
+    "activeTab"
+
   ],
   "background": {
     "service_worker": "background.js",
@@ -50,6 +52,5 @@
     "https://www.linkedin.com/*",
     "https://cos.customeros.ai/*",
     "https://api.customeros.ai/*",
-    "activeTab"
   ]
 }
