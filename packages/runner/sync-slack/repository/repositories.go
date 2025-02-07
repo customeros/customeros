@@ -1,17 +1,16 @@
 package repository
 
 import (
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	neo4jrepo "github.com/customeros/customeros/packages/runner/sync-slack/repository/neo4j"
 	postgresrepo "github.com/customeros/customeros/packages/runner/sync-slack/repository/postgres"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/config"
 	postgresRepository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type Repositories struct {
 	PostgresRepositories *postgresRepository.Repositories
 
-	TenantSettingsRepository    postgresrepo.TenantSettingsRepository
 	SlackSyncSettingsRepository postgresrepo.SlackSyncSettingsRepository
 	SlackSyncRunRepository      postgresrepo.SlackSyncRunRepository
 
@@ -23,7 +22,6 @@ func InitRepositories(driver *neo4j.DriverWithContext, postgresDB *config.Postgr
 	repositories := Repositories{
 		PostgresRepositories: postgresRepository.InitRepositories(postgresDB),
 
-		TenantSettingsRepository:    postgresrepo.NewTenantSettingsRepository(postgresDB.GormDB),
 		SlackSyncSettingsRepository: postgresrepo.NewSlackSyncSettingsRepository(postgresDB.GormDB),
 		SlackSyncRunRepository:      postgresrepo.NewSlackSyncRunRepository(postgresDB.GormDB),
 
