@@ -142,9 +142,7 @@ export const App = () => {
     } catch (error) {
       console.error("Error adding contact:", error);
       setErrorMessage("We couldn't add this contact");
-      if (errorMessage) {
-        setTimeout(() => setErrorMessage(null), 3000);
-      }
+      setTimeout(() => setErrorMessage(null), 3000);
     } finally {
       setIsLoading(false);
     }
@@ -171,8 +169,6 @@ export const App = () => {
       }
     };
   }, []);
-
-  console.log(workspaceName, "asidjashnoidfhjnsiodfjsdiofj");
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-4">
