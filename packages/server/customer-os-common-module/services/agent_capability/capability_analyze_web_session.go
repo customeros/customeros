@@ -167,7 +167,7 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 	}
 
 	// publish ready for analysis event
-	err = c.events.Publisher.PublishFanoutEvent(ctx, executionContainer.InputData.WebSessionID, model.WEB_SESSION, dto.WebSessionReadyForAnalysis{})
+	err = c.events.Publisher.PublishFanoutEvent(ctx, executionContainer.InputData.WebSessionID, model.WEB_SESSION, dto.NewSupportVisit{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return true, result, err
