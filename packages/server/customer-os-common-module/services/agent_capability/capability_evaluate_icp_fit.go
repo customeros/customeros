@@ -108,7 +108,7 @@ func (c *EvaluateICPFitCapability) ValidateInput(input EvaluateICPFitInput) erro
 		return errors.New("missing required input: PrimaryDomain")
 	case input.CompanyName == "":
 		return errors.New("missing required input: CompanyName")
-	case input.CompanyDescriptions.Description1 == "":
+	case input.CompanyDescriptions.Description1 == "" && input.CompanyDescriptions.Description2 == "":
 		return errors.New("missing required input: CompanyDescription")
 	case input.IndustryNAICSName == "":
 		return errors.New("missing required input: IndustryNAICSName")
@@ -135,6 +135,11 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 
 	result := EvaluateICPFitOutput{
 		IcpFit: enum.IcpNotSet,
+	}
+
+	if executionContainer.InputData.EmployeeCount == 0 {
+		result.IcpFit = enum.IcpNotFit
+		return true, result, nil
 	}
 
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
