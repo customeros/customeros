@@ -12,11 +12,15 @@ export const EditEmail = observer(() => {
   const context = store.ui.commandMenu.context;
 
   const contact = store.contacts.value.get(context.ids?.[0] as string);
+
   const label = `Contact - ${contact?.name}`;
 
   useEffect(() => {
     if (contact) {
       EditEmailCase.prototype.setEntity(contact);
+      EditEmailCase.prototype.setEmail(
+        contact.value.emails.filter((e) => e.primary)[0]?.email || '',
+      );
     }
   }, [contact?.id]);
 
