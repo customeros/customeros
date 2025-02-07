@@ -407,6 +407,14 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 						return nil, err
 					}
 
+					_, err = services.CommonServices.WorkspaceService.MergeToTenant(ctx, txWithPostCommit.Tx, neoEntity.WorkspaceEntity{
+						Name:     domain,
+						Provider: signInRequest.Provider,
+					}, tenantEntity.Name)
+					if err != nil {
+						return nil, err
+					}
+
 					currentTenant = tenantEntity.Name
 					defaultTenant = tenantEntity.Name
 				}
@@ -425,16 +433,6 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 			err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.SetCurrentTenant(ctx, txWithPostCommit.Tx, authUserId, defaultTenant)
 			if err != nil {
 				return nil, err
-			}
-
-			if !isPersonalEmail {
-				_, err := services.CommonServices.WorkspaceService.MergeToTenant(ctx, txWithPostCommit.Tx, neoEntity.WorkspaceEntity{
-					Name:     domain,
-					Provider: signInRequest.Provider,
-				}, currentTenant)
-				if err != nil {
-					return nil, err
-				}
 			}
 		}
 
