@@ -49,17 +49,14 @@ func (c *SendWebVisitorSlackNotificationConfig) Validate() bool {
 
 	// validate channel ID has slack channel format
 	if utils.IsBlank(c.ChannelID.Value) {
-		c.ChannelID.Error = "Please provide a Slack channel ID."
-		isValid = false
-	} else if !strings.HasPrefix(c.ChannelID.Value, "C") {
-		c.ChannelID.Error = "Channel ID must start with 'C'."
+		c.ChannelID.Error = "Please add a Slack channel"
 		isValid = false
 	} else {
 		c.ChannelID.Error = ""
 	}
 
 	if c.CooldownHours.Value < 0 {
-		c.CooldownHours.Error = "Please enter a positive number of hours for the cooldown."
+		c.CooldownHours.Error = "Cooldown period cannot be a negative number"
 		isValid = false
 	} else {
 		c.CooldownHours.Error = ""

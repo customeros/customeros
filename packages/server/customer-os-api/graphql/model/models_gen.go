@@ -103,33 +103,54 @@ type AddTagInput struct {
 }
 
 type Agent struct {
-	ID           string        `json:"id"`
-	Type         AgentType     `json:"type"`
-	Name         string        `json:"name"`
-	Capabilities []*Capability `json:"capabilities"`
-	Goal         string        `json:"goal"`
-	IsActive     bool          `json:"isActive"`
-	IsConfigured bool          `json:"isConfigured"`
-	FlowID       *string       `json:"flowId,omitempty"`
-	Visible      bool          `json:"visible"`
-	CreatedAt    time.Time     `json:"createdAt"`
-	UpdatedAt    time.Time     `json:"updatedAt"`
-	Error        *string       `json:"error,omitempty"`
-	Color        string        `json:"color"`
-	Icon         string        `json:"icon"`
+	ID           string           `json:"id"`
+	Type         AgentType        `json:"type"`
+	Name         string           `json:"name"`
+	Capabilities []*Capability    `json:"capabilities"`
+	Listeners    []*AgentListener `json:"listeners"`
+	GoalType     string           `json:"goalType"`
+	Goal         string           `json:"goal"`
+	IsActive     bool             `json:"isActive"`
+	IsConfigured bool             `json:"isConfigured"`
+	FlowID       *string          `json:"flowId,omitempty"`
+	Visible      bool             `json:"visible"`
+	CreatedAt    time.Time        `json:"createdAt"`
+	UpdatedAt    time.Time        `json:"updatedAt"`
+	Error        *string          `json:"error,omitempty"`
+	Color        string           `json:"color"`
+	Icon         string           `json:"icon"`
+}
+
+type AgentListener struct {
+	ID     string             `json:"id"`
+	Type   AgentListenerEvent `json:"type"`
+	Name   string             `json:"name"`
+	Active bool               `json:"active"`
+	Config string             `json:"config"`
+	Errors *string            `json:"errors,omitempty"`
+}
+
+type AgentListenerSaveInput struct {
+	ID     *string             `json:"id,omitempty"`
+	Type   *AgentListenerEvent `json:"type,omitempty"`
+	Name   *string             `json:"name,omitempty"`
+	Active *bool               `json:"active,omitempty"`
+	Config *string             `json:"config,omitempty"`
+	Errors *string             `json:"errors,omitempty"`
 }
 
 type AgentSaveInput struct {
-	ID           *string                `json:"id,omitempty"`
-	Type         *AgentType             `json:"type,omitempty"`
-	Name         *string                `json:"name,omitempty"`
-	Capabilities []*CapabilitySaveInput `json:"capabilities,omitempty"`
-	Goal         *string                `json:"goal,omitempty"`
-	IsActive     *bool                  `json:"isActive,omitempty"`
-	FlowID       *string                `json:"flowId,omitempty"`
-	Visible      *bool                  `json:"visible,omitempty"`
-	Color        *string                `json:"color,omitempty"`
-	Icon         *string                `json:"icon,omitempty"`
+	ID           *string                   `json:"id,omitempty"`
+	Type         *AgentType                `json:"type,omitempty"`
+	Name         *string                   `json:"name,omitempty"`
+	Capabilities []*CapabilitySaveInput    `json:"capabilities,omitempty"`
+	Listeners    []*AgentListenerSaveInput `json:"listeners,omitempty"`
+	Goal         *string                   `json:"goal,omitempty"`
+	IsActive     *bool                     `json:"isActive,omitempty"`
+	FlowID       *string                   `json:"flowId,omitempty"`
+	Visible      *bool                     `json:"visible,omitempty"`
+	Color        *string                   `json:"color,omitempty"`
+	Icon         *string                   `json:"icon,omitempty"`
 }
 
 type AgentSlackChannel struct {
@@ -323,7 +344,6 @@ type Capability struct {
 	ID     string         `json:"id"`
 	Type   CapabilityType `json:"type"`
 	Name   string         `json:"name"`
-	Action string         `json:"action"`
 	Active bool           `json:"active"`
 	Config string         `json:"config"`
 	Errors *string        `json:"errors,omitempty"`
@@ -333,7 +353,6 @@ type CapabilitySaveInput struct {
 	ID     *string         `json:"id,omitempty"`
 	Type   *CapabilityType `json:"type,omitempty"`
 	Name   *string         `json:"name,omitempty"`
-	Action *string         `json:"action,omitempty"`
 	Active *bool           `json:"active,omitempty"`
 	Config *string         `json:"config,omitempty"`
 	Errors *string         `json:"errors,omitempty"`
@@ -3185,6 +3204,57 @@ func (e *ActionType) UnmarshalGQL(v any) error {
 }
 
 func (e ActionType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type AgentListenerEvent string
+
+const (
+	AgentListenerEventNewLead                 AgentListenerEvent = "NEW_LEAD"
+	AgentListenerEventIcpFit                  AgentListenerEvent = "ICP_FIT"
+	AgentListenerEventIcpNotAFit              AgentListenerEvent = "ICP_NOT_A_FIT"
+	AgentListenerEventRunIcpQualifierAgent    AgentListenerEvent = "RUN_ICP_QUALIFIER_AGENT"
+	AgentListenerEventWebVisitorIdentified    AgentListenerEvent = "WEB_VISITOR_IDENTIFIED"
+	AgentListenerEventWebVisitorNotIdentified AgentListenerEvent = "WEB_VISITOR_NOT_IDENTIFIED"
+	AgentListenerEventNewWebSession           AgentListenerEvent = "NEW_WEB_SESSION"
+)
+
+var AllAgentListenerEvent = []AgentListenerEvent{
+	AgentListenerEventNewLead,
+	AgentListenerEventIcpFit,
+	AgentListenerEventIcpNotAFit,
+	AgentListenerEventRunIcpQualifierAgent,
+	AgentListenerEventWebVisitorIdentified,
+	AgentListenerEventWebVisitorNotIdentified,
+	AgentListenerEventNewWebSession,
+}
+
+func (e AgentListenerEvent) IsValid() bool {
+	switch e {
+	case AgentListenerEventNewLead, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified, AgentListenerEventNewWebSession:
+		return true
+	}
+	return false
+}
+
+func (e AgentListenerEvent) String() string {
+	return string(e)
+}
+
+func (e *AgentListenerEvent) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = AgentListenerEvent(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid AgentListenerEvent", str)
+	}
+	return nil
+}
+
+func (e AgentListenerEvent) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

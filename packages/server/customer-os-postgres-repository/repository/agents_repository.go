@@ -45,6 +45,9 @@ func (f *agentsRepository) GetById(ctx context.Context, id string) (*postgres_en
 		Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
 			return db.Order("position ASC")
 		}).
+		Preload("Listeners", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position ASC")
+		}).
 		Where("id = ?", id).
 		First(&agent).
 		Error
@@ -77,6 +80,8 @@ func (f *agentsRepository) Create(ctx context.Context, agent postgres_entity.Age
 	var created postgres_entity.Agent
 	if err := f.gormDb.Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
 		return db.Order("position ASC")
+	}).Preload("Listeners", func(db *gorm.DB) *gorm.DB {
+		return db.Order("position ASC")
 	}).First(&created, "id = ?", agent.ID).Error; err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -100,6 +105,9 @@ func (f *agentsRepository) GetAll(ctx context.Context) ([]*postgres_entity.Agent
 	var agents []*postgres_entity.Agent
 	query := f.gormDb.
 		Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position ASC")
+		}).
+		Preload("Listeners", func(db *gorm.DB) *gorm.DB {
 			return db.Order("position ASC")
 		}).
 		Where("tenant = ?", tenant)
@@ -131,6 +139,9 @@ func (f *agentsRepository) GetAllAgentsByTypes(ctx context.Context, agentTypes [
 
 	query := f.gormDb.
 		Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position ASC")
+		}).
+		Preload("Listeners", func(db *gorm.DB) *gorm.DB {
 			return db.Order("position ASC")
 		}).
 		Where("tenant = ?", tenant)
@@ -166,6 +177,9 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByTypes(ctx context.Context,
 
 	query := f.gormDb.
 		Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position ASC")
+		}).
+		Preload("Listeners", func(db *gorm.DB) *gorm.DB {
 			return db.Order("position ASC")
 		}).
 		Where("tenant = ? AND is_active = ? AND configured = ?", tenant, true, true)

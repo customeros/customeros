@@ -52,9 +52,17 @@ type EvaluateICPFitConfig struct {
 func (c *EvaluateICPFitConfig) Validate() bool {
 	isValid := true
 
-	if len(c.ICPCompanyExamples.Value) < MinICPCompanyExamples {
-		c.ICPCompanyExamples.Error = "Must provide at least 5 companies that match your ICP."
+	if c.QualificationCriteria.Value == "" {
+		c.QualificationCriteria.Error = "Please provide a qualification criteria"
 		isValid = false
+	} else {
+		c.QualificationCriteria.Error = ""
+	}
+	if len(c.ICPCompanyExamples.Value) < MinICPCompanyExamples {
+		c.ICPCompanyExamples.Error = "Please provide at least 5 companies that match your ICP."
+		isValid = false
+	} else {
+		c.ICPCompanyExamples.Error = ""
 	}
 
 	return isValid

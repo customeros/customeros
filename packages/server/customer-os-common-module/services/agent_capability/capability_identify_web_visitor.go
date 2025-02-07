@@ -83,7 +83,7 @@ func (c *IdentifyWebsiteVisitorConfig) Validate() bool {
 	isValid := true
 
 	if len(c.Websites.Value) == 0 {
-		c.Websites.Error = "Please provide at least one website for tracking."
+		c.Websites.Error = "Add at least 1 website"
 		isValid = false
 	} else {
 		c.Websites.Error = ""
