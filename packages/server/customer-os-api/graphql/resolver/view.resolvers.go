@@ -304,46 +304,61 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 
 	for _, def := range tableViewDefinitions {
 		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeCustomers) {
+			span.LogKV("customersTableId", def.ID)
 			customersFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeOrganizations) {
+			span.LogKV("organizationTableId", def.ID)
 			organizationFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeOrganizations) && def.TableId == string(postgresEntity.TableIDTypeTargets) {
+			span.LogKV("targetsTableId", def.ID)
 			targetsFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeContacts) {
+			span.LogKV("contactsTableId", def.ID)
 			contactsFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeContactsForTargetOrganizations) {
+			span.LogKV("contactsForTargetOrganizationsTableId", def.ID)
 			contactsForTargetOrganizationsFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeOpportunities) && def.TableId == string(postgresEntity.TableIDTypeOpportunities) {
+			span.LogKV("opportunitiesTableId", def.ID)
 			opportunitiesFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeOpportunities) && def.TableId == string(postgresEntity.TableIDTypeOpportunitiesRecords) {
+			span.LogKV("opportunitiesRecordsTableId", def.ID)
 			opportunitiesRecordsFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeContracts) && def.TableId == string(postgresEntity.TableIDTypeContracts) {
+			span.LogKV("contractsTableId", def.ID)
 			contractsFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeFlow) && def.TableId == string(postgresEntity.TableIDTypeFlowActions) {
+			span.LogKV("flowSequencesTableId", def.ID)
 			flowSequencesFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeContacts) && def.TableId == string(postgresEntity.TableIDTypeFlowContacts) {
+			span.LogKV("flowContactsTableId", def.ID)
 			flowContactsFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeInvoices) && def.TableId == string(postgresEntity.TableIDTypePastInvoices) {
+			span.LogKV("pastInvoicesTableId", def.ID)
 			pastInvoicesFound = true
 		}
 		if def.TableType == string(postgresEntity.TableViewTypeInvoices) && def.TableId == string(postgresEntity.TableIDTypeUpcomingInvoices) {
+			span.LogKV("upcomingInvoicesTableId", def.ID)
 			upcomingInvoiceFound = true
 		}
 	}
+
 	viewsUpdated := false
 	if !organizationFound {
 		tvDef, err := table_view.DefaultTableViewDefinitionOrganization(span)
-		if err == nil {
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for organizations"))
+		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
 			tvDef.UserId = userId
@@ -352,7 +367,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !customersFound {
 		tvDef, err := table_view.DefaultTableViewDefinitionCustomers(span)
-		if err == nil {
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for customers"))
+		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
 			tvDef.UserId = userId
@@ -361,7 +378,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !targetsFound {
 		tvDef, err := table_view.DefaultTableViewDefinitionTargets(span)
-		if err == nil {
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for targets"))
+		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
 			tvDef.UserId = userId
@@ -370,7 +389,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !contactsFound {
 		tvDef, err := table_view.DefaultTableViewDefinitionContacts(span)
-		if err == nil {
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for contacts"))
+		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
 			tvDef.UserId = userId
@@ -379,7 +400,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !contactsForTargetOrganizationsFound {
 		tvDef, err := table_view.DefaultTableViewDefinitionTargetOrganizationsContacts(span)
-		if err == nil {
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for target organizations contacts"))
+		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
 			tvDef.UserId = userId
@@ -388,7 +411,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !opportunitiesFound {
 		tvDef, err := table_view.DefaultTableViewDefinitionOpportunities(span)
-		if err == nil {
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for opportunities"))
+		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
@@ -396,7 +421,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !opportunitiesRecordsFound {
 		tvDef, err := table_view.DefaultTableViewDefinitionOpportunitiesRecords(span)
-		if err == nil {
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for opportunities records"))
+		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
 			tvDef.UserId = userId
@@ -405,7 +432,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !contractsFound {
 		tvDef, err := table_view.DefaultTableViewDefinitionContracts(span)
-		if err == nil {
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for contracts"))
+		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
 			tvDef.UserId = userId
@@ -414,7 +443,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !flowSequencesFound {
 		tvDef, err := table_view.DefaultTableViewDefinitionFlows(span)
-		if err == nil {
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for flows"))
+		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
 			tvDef.UserId = userId
@@ -423,7 +454,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !flowContactsFound {
 		tvDef, err := table_view.DefaultTableViewDefinitionFlowContacts(span)
-		if err == nil {
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for flow contacts"))
+		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
 			tvDef.UserId = userId
@@ -432,7 +465,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !pastInvoicesFound {
 		tvDef, err := table_view.DefaultTableViewDefinitionPastInvoices(span)
-		if err == nil {
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for past invoices"))
+		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
 			tvDef.UserId = userId
@@ -441,7 +476,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !upcomingInvoiceFound {
 		tvDef, err := table_view.DefaultTableViewDefinitionUpcomingInvoices(span)
-		if err == nil {
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to create default table view definition for upcoming invoices"))
+		} else {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
 			tvDef.UserId = userId
