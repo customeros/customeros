@@ -49,6 +49,7 @@
     "https://localhost:5173/*",
     "https://www.linkedin.com/*",
     "https://cos.customeros.ai/*",
-    "https://api.customeros.ai/*"
+    "https://api.customeros.ai/*",
+    "activeTab"
   ]
 }
