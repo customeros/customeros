@@ -5,7 +5,6 @@ import { RecoilRoot } from 'recoil';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { StoreProvider } from './StoreProvider';
-import { Devtools } from '../Devtools/Devtools';
 import { AnalyticsProvider } from './AnalyticsProvider';
 import { PhoenixSocketProvider } from './SocketProvider';
 import { GrowthbookProvider } from './GrowthbookProvider';
@@ -35,7 +34,6 @@ export const Providers = ({ children, isProduction }: ProvidersProps) => {
           <RecoilRoot>
             <IntegrationsProvider>
               <GrowthbookProvider>
-                <Devtools />
                 <AnalyticsProvider isProduction={isProduction}>
                   {children}
                   <ToastContainer
