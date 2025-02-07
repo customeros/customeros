@@ -18,6 +18,8 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
+const MinICPCompanyExamples = 5
+
 type EvaluateICPFitCapability struct {
 	aiService interfaces.AIService
 	events    *events.EventsService
@@ -42,29 +44,17 @@ type EvaluateICPFitOutput struct {
 }
 
 type EvaluateICPFitConfig struct {
-	QualificationCriteria    QualificationCriteriaConfig    `json:"qualificationCriteria"`
-	DisqualificationCriteria DisqualificationCriteriaConfig `json:"disqualificationCriteria"`
-}
-
-type QualificationCriteriaConfig struct {
-	Value string `json:"value"`
-	Error string `json:"error"`
-}
-
-type DisqualificationCriteriaConfig struct {
-	Value string `json:"value"`
-	Error string `json:"error"`
+	ICPCompanyExamples       ConfigMultipleValues `json:"icpCompanyExamples"`
+	QualificationCriteria    ConfigSingleValue    `json:"qualificationCriteria"`
+	DisqualificationCriteria ConfigSingleValue    `json:"disqualificationCriteria"`
 }
 
 func (c *EvaluateICPFitConfig) Validate() bool {
 	isValid := true
 
-	// validate qualification criteria is not empty
-	if c.QualificationCriteria.Value == "" {
-		c.QualificationCriteria.Error = "Please provide qualification criteria."
+	if len(c.ICPCompanyExamples.Value) < MinICPCompanyExamples {
+		c.ICPCompanyExamples.Error = "Must provide at lease 5 companies that match your ICP."
 		isValid = false
-	} else {
-		c.QualificationCriteria.Error = ""
 	}
 
 	return isValid
@@ -104,8 +94,8 @@ func (c *EvaluateICPFitCapability) DefaultConfig() any {
 }
 
 func (c *EvaluateICPFitCapability) ValidateConfig(config EvaluateICPFitConfig) error {
-	if config.QualificationCriteria.Value == "" {
-		return errors.New("missing required config: QualificationCriteria")
+	if len(config.ICPCompanyExamples.Value) < MinICPCompanyExamples {
+		return errors.New("missing required config: ICPCompanyExamples")
 	}
 	return nil
 }

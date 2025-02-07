@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -115,7 +116,6 @@ func (j JSONConfig) Value() (driver.Value, error) {
 	return []byte(j), nil
 }
 
-// Helper methods for Capability
 func (c *Capability) SetConfig(config any) error {
 	if config == nil || config == "" {
 		c.Config = nil
@@ -133,7 +133,7 @@ func (c *Capability) SetConfig(config any) error {
 			return err
 		}
 
-		replaceNullWithEmptyString(configMap)
+		replaceNullWithEmptyStringOrArray(configMap)
 
 		data, err := json.Marshal(configMap)
 		if err != nil {
@@ -157,6 +157,10 @@ func (c *Capability) SetConfig(config any) error {
 
 func (c *Capability) GetConfig(configPtr any) error {
 	if c.Config == nil {
+		// If the config type expects an array, initialize it as empty
+		if reflect.TypeOf(configPtr).Elem().Kind() == reflect.Slice {
+			reflect.ValueOf(configPtr).Elem().Set(reflect.MakeSlice(reflect.TypeOf(configPtr).Elem(), 0, 0))
+		}
 		return nil
 	}
 	if _, ok := configPtr.(*NoConfig); ok {
@@ -178,13 +182,21 @@ func (c *Capability) GetConfigString() string {
 
 type NoConfig struct{}
 
-func replaceNullWithEmptyString(m map[string]any) {
+func replaceNullWithEmptyStringOrArray(m map[string]any) {
 	for k, v := range m {
 		switch val := v.(type) {
 		case nil:
 			m[k] = ""
+		case []interface{}:
+			// Handle array values
+			for i, item := range val {
+				if item == nil {
+					val[i] = ""
+				}
+			}
+			m[k] = val
 		case map[string]any:
-			replaceNullWithEmptyString(val)
+			replaceNullWithEmptyStringOrArray(val)
 		}
 	}
 }
