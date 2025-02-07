@@ -258,7 +258,7 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 		return nil, err
 	}
 
-	eventFields := dto.UpdateAgent{AgentFields: agentFields, Capabilities: capabilities}
+	eventFields := dto.UpdateAgent{AgentFields: agentFields, Capabilities: capabilities, Listeners: listeners}
 	err = a.events.Publisher.PublishFanoutEvent(ctx, agentId, model.AGENT, eventFields)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateAgent"))
