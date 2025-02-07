@@ -61,10 +61,10 @@ func (l *NewLeadListener) Handle(ctx context.Context, baseEvent any) error {
 		return err
 	}
 
-	return l.handleExecution(ctx, event.Event.EntityId, event.Event.AgentEventName)
+	return l.handleExecution(ctx, event.Event.EntityId)
 }
 
-func (l *NewLeadListener) handleExecution(ctx context.Context, orgID string, eventName string) error {
+func (l *NewLeadListener) handleExecution(ctx context.Context, orgID string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NewLeadListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
@@ -91,7 +91,7 @@ func (l *NewLeadListener) handleExecution(ctx context.Context, orgID string, eve
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
 		}
-		err = l.agentRunnerService.Run(ctx, agent, eventName, initialParams)
+		err = l.agentRunnerService.Run(ctx, agent, dto.NewLead{}.Name().String(), initialParams)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
