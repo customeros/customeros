@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
@@ -16,6 +16,8 @@ import {
 export const SettingsSection = observer(() => {
   const store = useStore();
   const navigate = useNavigate();
+
+  const location = useLocation();
 
   const handleSignOutClick = () => {
     store.session.clearSession();
@@ -70,6 +72,7 @@ export const SettingsSection = observer(() => {
             <MenuItem
               className='group'
               data-test='help-item-settings'
+              disabled={location.pathname?.includes('agent')}
               onClick={() => store.ui.setShortcutsPanel(true)}
             >
               <div
