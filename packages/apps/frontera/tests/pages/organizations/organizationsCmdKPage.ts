@@ -1,15 +1,11 @@
 import { Page, expect, TestInfo } from '@playwright/test';
 
-// import { FlowsPage } from '../flows/flowsPage';
-import { TargetsPage } from '../targets/targetsPage';
 import { sideNavSelectors } from '../sideNavSelectors';
 import { SettingsPage } from '../settings/settingsPage';
 import { InvoicesPage } from '../invoices/invoicesPage';
 import { ContactsPage } from '../contacts/contactsPage';
 import { OrganizationsPage } from './organizationsPage';
 import { ContractsPage } from '../contracts/contractsPage';
-// import { CustomersPage } from '../customers/customersPage';
-// import { CustomerMapPage } from '../customer-map/customerMapPage';
 import { SettingsAccountsPage } from '../settings/settingsAccounts';
 import {
   ensureLocatorIsVisible,
@@ -28,20 +24,15 @@ export class OrganizationsCmdKPage {
   private organizationsHub = 'div[data-test="organization-hub"]';
   private organizationsHubSpan = 'div[data-test="organization-hub"] span';
   private organizationHubInput = 'input[data-test="organization-hub-input"]';
-  // private organizationHubNavigate =
-  //   'div[data-test="organization-hub-navigate"]';
   private organizationHubAddNewOrgs =
     'div[data-test="organization-hub-add-new-orgs"]';
-  private organizationHubGt = 'div[data-test="organization-hub-gt"]';
   private organizationHubGo = 'div[data-test="organization-hub-go"]';
   private organizationHubGc = 'div[data-test="organization-hub-gc"]';
   private organizationHubGz = 'div[data-test="organization-hub-gz"]';
   private organizationHubGn = 'div[data-test="organization-hub-gn"]';
   private organizationHubGi = 'div[data-test="organization-hub-gi"]';
   private organizationHubGr = 'div[data-test="organization-hub-gr"]';
-  // private organizationHubGf = 'div[data-test="organization-hub-gf"]';
   private organizationHubGs = 'div[data-test="organization-hub-gs"]';
-  // private organizationHubGd = 'div[data-test="organization-hub-gd"]';
 
   private async openCmdK() {
     await this.page.waitForSelector('div[data-test="search-orgs"]', {
@@ -128,10 +119,6 @@ export class OrganizationsCmdKPage {
       .locator('div[cmdk-item]')
       .all();
 
-    const organizationHubGt = this.page.locator(this.organizationHubGt);
-    const organizationHubGtText = await organizationHubGt.textContent();
-    const navigationItemTextOne = await navigationItems[0].textContent();
-
     const organizationHubGo = this.page.locator(this.organizationHubGo);
     const organizationHubGoText = await organizationHubGo.textContent();
     const navigationItemTextTwo = await navigationItems[1].textContent();
@@ -177,9 +164,6 @@ export class OrganizationsCmdKPage {
         .soft(organizationHubAddNewOrgsText.trim())
         .toBe('Add new companies...'),
       expect.soft(navigationItems).toHaveLength(10),
-      expect
-        .soft(organizationHubGtText.trim())
-        .toBe(navigationItemTextOne.trim()),
       expect
         .soft(organizationHubGoText.trim())
         .toBe(navigationItemTextTwo.trim()),
@@ -257,27 +241,6 @@ export class OrganizationsCmdKPage {
       false,
       testInfo,
     );
-    await organizationsPage.goToAllOrgs();
-  }
-
-  async verifyNavigationToTargets(page: Page) {
-    const targetsPage = new TargetsPage(page);
-    const organizationsPage = new OrganizationsPage(page);
-
-    await this.verifyNavigationWithKeyboard(
-      'KeyT',
-      targetsPage.sideNavItemTargets,
-    );
-
-    await this.page.goBack();
-    await this.page.waitForLoadState('load');
-
-    await this.openCmdK();
-    await this.verifyNavigationWithClick(
-      this.organizationHubGt,
-      targetsPage.sideNavItemTargets,
-    );
-
     await organizationsPage.goToAllOrgs();
   }
 

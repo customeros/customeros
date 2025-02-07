@@ -235,7 +235,6 @@ test('CmdK global menu', async ({ page }, testInfo) => {
   await organizationsCmdKPage.accessCmdK();
   await organizationsCmdKPage.verifyFinder();
   await organizationsCmdKPage.verifyOrganizationCreation(page, testInfo);
-  await organizationsCmdKPage.verifyNavigationToTargets(page);
   await organizationsCmdKPage.verifyNavigationToOpportunities(page);
   await organizationsCmdKPage.verifyNavigationToCustomers(page);
   await organizationsCmdKPage.verifyNavigationToContacts(page);
