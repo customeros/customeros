@@ -125,7 +125,7 @@ func (p *NewSupportVisitProducer) processAgent(ctx context.Context, agent postgr
 	return errs
 }
 
-func (p *NewSupportVisitProducer) processWebSessionForHelpNeeded(ctx context.Context, session postgres_entity.WebSession, config NewSupporVisitConfig) bool {
+func (p *NewSupportVisitProducer) processWebSessionForHelpNeeded(ctx context.Context, session postgres_entity.WebSession, config NewSupportVisitConfig) bool {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NewLeadProducer.processWebSessionForHelpNeeded")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
