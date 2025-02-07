@@ -30,6 +30,7 @@ type Agent struct {
 	Icon         string         `gorm:"column:icon;type:varchar(255)" json:"icon"`
 	RegistryID   string         `gorm:"column:registry_id;type:varchar(32)" json:"registryId"`
 	Capabilities []Capability   `gorm:"foreignKey:AgentID" json:"capabilities"`
+	Listeners    []Listener     `gorm:"foreignKey:AgentID" json:"listeners"`
 }
 
 func (Agent) TableName() string {
@@ -60,25 +61,42 @@ func (a *Agent) UpdateCapabilities(updatedCaps []Capability) {
 			existingCap.Name = upd.Name
 			existingCap.Config = upd.Config
 			existingCap.Active = upd.Active
-			existingCap.Description = upd.Description
+		}
+	}
+}
+
+func (a *Agent) UpdateListeners(updatedListeners []Listener) {
+	existingMap := make(map[string]*Listener, len(a.Listeners))
+	for i := range a.Listeners {
+		existingMap[a.Listeners[i].ID] = &a.Listeners[i]
+	}
+
+	for _, upd := range updatedListeners {
+		if upd.ID == "" {
+			continue
+		}
+		if existingListener, ok := existingMap[upd.ID]; ok {
+			existingListener.Name = upd.Name
+			existingListener.Config = upd.Config
+			existingListener.Active = upd.Active
 		}
 	}
 }
 
 // Capability as a separate entity
 type Capability struct {
-	ID          string               `gorm:"primaryKey;type:varchar(32)" json:"id"`
-	Tenant      string               `gorm:"column:tenant;type:varchar(255)" json:"tenant"`
-	Position    int                  `gorm:"column:position;type:integer" json:"order"`
-	AgentID     string               `gorm:"column:agent_id;type:varchar(32);not null" json:"agentId"`
-	Name        string               `gorm:"column:name;type:varchar(255);not null" json:"name"`
-	Type        enum.AgentCapability `gorm:"column:type;type:varchar(50);not null" json:"type"`
-	Error       string               `gorm:"column:error;type:varchar(255)" json:"error"`
-	Config      JSONConfig           `gorm:"column:config;type:jsonb" json:"config"`
-	Active      bool                 `gorm:"column:active;type:boolean;default:true" json:"active"`
-	Description string               `gorm:"column:description;type:text" json:"description"`
-	CreatedAt   time.Time            `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
-	UpdatedAt   *time.Time           `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	ID        string               `gorm:"primaryKey;type:varchar(32)" json:"id"`
+	Tenant    string               `gorm:"column:tenant;type:varchar(255)" json:"tenant"`
+	Position  int                  `gorm:"column:position;type:integer" json:"order"`
+	AgentID   string               `gorm:"column:agent_id;type:varchar(32);not null" json:"agentId"`
+	Name      string               `gorm:"column:name;type:varchar(255);not null" json:"name"`
+	Type      enum.AgentCapability `gorm:"column:type;type:varchar(50);not null" json:"type"`
+	Error     string               `gorm:"column:error;type:varchar(255)" json:"error"`
+	Config    JSONConfig           `gorm:"column:config;type:jsonb" json:"config"`
+	Active    bool                 `gorm:"column:active;type:boolean;default:true" json:"active"`
+	CreatedAt time.Time            `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
+	UpdatedAt *time.Time           `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	configHandlerImpl
 }
 
 func (Capability) TableName() string {
@@ -87,6 +105,29 @@ func (Capability) TableName() string {
 
 func (c *Capability) BeforeCreate(tx *gorm.DB) error {
 	c.ID = utils.GenerateNanoIdWithPrefix("cap", 16)
+	return nil
+}
+
+type Listener struct {
+	ID        string                  `gorm:"primaryKey;type:varchar(32)" json:"id"`
+	Tenant    string                  `gorm:"column:tenant;type:varchar(255)" json:"tenant"`
+	AgentID   string                  `gorm:"column:agent_id;type:varchar(32);not null" json:"agentId"`
+	Name      string                  `gorm:"column:name;type:varchar(255);not null" json:"name"`
+	Type      enum.AgentListenerEvent `gorm:"column:type;type:varchar(50);not null" json:"type"`
+	Error     string                  `gorm:"column:error;type:varchar(255)" json:"error"`
+	Config    JSONConfig              `gorm:"column:config;type:jsonb" json:"config"`
+	Active    bool                    `gorm:"column:active;type:boolean;default:true" json:"active"`
+	CreatedAt time.Time               `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
+	UpdatedAt *time.Time              `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	configHandlerImpl
+}
+
+func (Listener) TableName() string {
+	return "agent_listeners"
+}
+
+func (l *Listener) BeforeCreate(tx *gorm.DB) error {
+	l.ID = utils.GenerateNanoIdWithPrefix("lst", 16)
 	return nil
 }
 
@@ -115,17 +156,28 @@ func (j JSONConfig) Value() (driver.Value, error) {
 	return []byte(j), nil
 }
 
-// Helper methods for Capability
-func (c *Capability) SetConfig(config any) error {
+// ConfigHandler interface for common config operations
+type ConfigHandler interface {
+	SetConfig(config any) error
+	GetConfig(configPtr any) error
+	GetConfigString() string
+}
+
+// configHandlerImpl implements common config handling
+type configHandlerImpl struct {
+	Config JSONConfig `gorm:"column:config;type:jsonb" json:"config"`
+}
+
+func (ch *configHandlerImpl) SetConfig(config any) error {
 	if config == nil || config == "" {
-		c.Config = nil
+		ch.Config = nil
 		return nil
 	}
 
 	switch v := config.(type) {
 	case string:
 		if v == "" {
-			c.Config = nil
+			ch.Config = nil
 			return nil
 		}
 		var configMap map[string]any
@@ -139,7 +191,7 @@ func (c *Capability) SetConfig(config any) error {
 		if err != nil {
 			return err
 		}
-		c.Config = data
+		ch.Config = data
 
 	default:
 		data, err := json.Marshal(config)
@@ -147,29 +199,29 @@ func (c *Capability) SetConfig(config any) error {
 			return err
 		}
 		if string(data) == "{}" || string(data) == `""` {
-			c.Config = nil
+			ch.Config = nil
 			return nil
 		}
-		c.Config = data
+		ch.Config = data
 	}
 	return nil
 }
 
-func (c *Capability) GetConfig(configPtr any) error {
-	if c.Config == nil {
+func (ch *configHandlerImpl) GetConfig(configPtr any) error {
+	if ch.Config == nil {
 		return nil
 	}
 	if _, ok := configPtr.(*NoConfig); ok {
 		return nil
 	}
-	return json.Unmarshal(c.Config, configPtr)
+	return json.Unmarshal(ch.Config, configPtr)
 }
 
-func (c *Capability) GetConfigString() string {
-	if c.Config == nil {
+func (ch *configHandlerImpl) GetConfigString() string {
+	if ch.Config == nil {
 		return ""
 	}
-	str := string(c.Config)
+	str := string(ch.Config)
 	if str == "null" {
 		str = ""
 	}
