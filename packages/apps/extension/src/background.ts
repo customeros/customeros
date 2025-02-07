@@ -236,7 +236,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === "openTab") {
     chrome.tabs.create({ url: message.url, active: true });
     sendResponse({ success: true });
