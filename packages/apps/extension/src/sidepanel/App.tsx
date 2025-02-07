@@ -133,8 +133,7 @@ export const App = () => {
       );
 
       if (response.ok) {
-        // setSuccessMessage("Contact added");
-        setErrorMessage("We couldn't add this contact");
+        setSuccessMessage("Contact added");
 
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
