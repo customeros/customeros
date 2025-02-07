@@ -1,11 +1,14 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Icon } from '@ui/media/Icon';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
+import { Devtools } from '@shared/components/Devtools/Devtools';
 import {
   Menu,
   MenuItem,
@@ -16,6 +19,9 @@ import {
 export const SettingsSection = observer(() => {
   const store = useStore();
   const navigate = useNavigate();
+  const debuggerFlag = useFeatureIsOn('debugger');
+  const { open, onOpen, onClose, onToggle } = useDisclosure();
+  const isDebuggerEnabled = import.meta.env.DEV || debuggerFlag;
 
   const location = useLocation();
 
@@ -141,6 +147,16 @@ export const SettingsSection = observer(() => {
                 <span>Ask for help</span>
               </div>
             </MenuItem>
+
+            {isDebuggerEnabled && (
+              <MenuItem onClick={onOpen} className='group'>
+                <Icon
+                  name='code-square-02'
+                  className='group-hover:text-gray-700 text-gray-500'
+                />
+                <span>Debugger</span>
+              </MenuItem>
+            )}
           </MenuList>
         </Menu>
       </div>
@@ -154,6 +170,10 @@ export const SettingsSection = observer(() => {
           icon={<Icon name={'log-out-01'} />}
         />
       </Tooltip>
+
+      {isDebuggerEnabled && (
+        <Devtools open={open} onClose={onClose} onToggle={onToggle} />
+      )}
     </div>
   );
 });
