@@ -53,7 +53,7 @@ func (p *NewLeadProducer) subscribedAgents() []enum.AgentType {
 	}
 }
 
-func (p *NewLeadProducer) NewLeads() {
+func (p *NewLeadProducer) Execute() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 

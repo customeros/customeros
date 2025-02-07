@@ -23,12 +23,7 @@ type ApplyTagInput struct {
 }
 
 type ApplyTagConfig struct {
-	TagName TagConfig `json:"tagName"`
-}
-
-type TagConfig struct {
-	Value string `json:"value"`
-	Error string `json:"error"`
+	TagName ConfigSingleValue `json:"tagName"`
 }
 
 func NewApplyTagCapability(tagService interfaces.TagService) *ApplyTagCapability {

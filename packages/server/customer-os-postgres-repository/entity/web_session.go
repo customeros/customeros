@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	IntentNotAnalyzed int8 = 0
-	IntentDetected    int8 = 1
-	NoIntentDetected  int8 = 2
+	SupportNotAnalyzed    int8 = 0
+	SupportNeedDetected   int8 = 1
+	NoSupportNeedDetected int8 = 2
 )
 
 type WebSession struct {
@@ -31,7 +31,7 @@ type WebSession struct {
 	DetectedExit          bool           `gorm:"column:detected_exit;type:boolean;default:false" json:"detectedExit"`
 	PublishedEvent        bool           `gorm:"column:published_event;type:boolean;default:false" json:"publishedEvent"`
 	SentSlackNotification *time.Time     `gorm:"column:sent_slack_notification;type:timestamp;" json:"sentSlackNotification"`
-	IntentSignals         int8           `gorm:"column:intent_signals;type:smallint;default:0" json:"intentSignals"`
+	SupportSignals        int8           `gorm:"column:support_signals;type:smallint;default:0" json:"supportSignals"`
 	CreatedAt             time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"createdAt"`
 	UpdatedAt             *time.Time     `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
 }

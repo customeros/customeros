@@ -84,6 +84,15 @@ func (a *Agent) UpdateListeners(updatedListeners []Listener) {
 	}
 }
 
+func (a *Agent) GetListenerConfigByType(listenerType enum.AgentListenerEvent, configPtr any) error {
+	for _, listener := range a.Listeners {
+		if listener.Type == listenerType {
+			return listener.GetConfig(configPtr)
+		}
+	}
+	return fmt.Errorf("no listener found with type: %v", listenerType)
+}
+
 // Capability as a separate entity
 type Capability struct {
 	ID        string               `gorm:"primaryKey;type:varchar(32)" json:"id"`

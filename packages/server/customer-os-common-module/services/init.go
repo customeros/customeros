@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/authentication"
 	"log"
 	"reflect"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/ai"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/attachment"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/authentication"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/azure"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/cloudflare"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/comment"
@@ -36,7 +36,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/flow_execution"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/google"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/industry"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/intent_signals"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/interaction_event"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/interaction_session"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/invoice"
@@ -131,7 +130,6 @@ type CommonServices struct {
 	UserService                interfaces.UserService
 	VerifyService              interfaces.VerifyService
 	QuickbooksService          interfaces.QuickbooksService
-	WebVisitProcessor          *intent_signals.WebVisitProcessor
 	WorkflowService            interfaces.WorkflowService
 	WorkspaceService           interfaces.WorkspaceService
 
@@ -221,7 +219,6 @@ func InitCommonServices(
 	contactImpl := contact.NewContactService(log, neo4jRepositories, eventsImpl, domainImpl, emailImpl, nil, jobroleImpl, nil, nil)
 	socialImpl := social.NewSocialService(log, neo4jRepositories, eventsImpl, contactImpl)
 	orgImpl := organization.NewOrganizationService(log, postgresRepositories, neo4jRepositories, eventsImpl, domainImpl, industryImpl, socialImpl, userImpl, currencyImpl)
-	webVisitProcessorImpl := intent_signals.NewWebVisitProcessor(postgresRepositories, eventsImpl, orgImpl)
 	contractImpl := contract.NewContractService(log, neo4jRepositories, eventsImpl, nil, orgImpl)
 	opportunityImpl := opportunity.NewOpportunityService(log, neo4jRepositories, eventsImpl, contractImpl, orgImpl, tenantSettingsImpl)
 	sliImpl := sli.NewServiceLineItemService(log, eventsImpl, neo4jRepositories, contractImpl)
@@ -338,7 +335,6 @@ func InitCommonServices(
 		UserService:                userImpl,
 		VerifyService:              verifyImpl,
 		QuickbooksService:          quickbooksImpl,
-		WebVisitProcessor:          webVisitProcessorImpl,
 		WorkflowService:            workflowImpl,
 		WorkspaceService:           workspaceImpl,
 
