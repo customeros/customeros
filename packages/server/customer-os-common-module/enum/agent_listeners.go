@@ -8,16 +8,16 @@ import (
 type AgentListenerEvent string
 
 const (
-	EventDoesNotNeedHelp            AgentListenerEvent = "does_not_need_help"
-	EventICPFit                     AgentListenerEvent = "icp_fit"
-	EventICPNotAFit                 AgentListenerEvent = "icp_not_a_fit"
-	EventNeedsHelp                  AgentListenerEvent = "needs_help"
-	EventNewLead                    AgentListenerEvent = "new_lead"
-	EventNewWebSession              AgentListenerEvent = "new_web_session"
-	EventRunICPQualifierAgent       AgentListenerEvent = "run_icp_qualifier_agent"
-	EventWebSessionReadyForAnalysis AgentListenerEvent = "web_session_ready_for_analysis"
-	EventWebVisitorIdentified       AgentListenerEvent = "web_visitor_identified"
-	EventWebVisitorNotIdentified    AgentListenerEvent = "web_visitor_not_identified"
+	EventDoesNotNeedHelp         AgentListenerEvent = "does_not_need_help"
+	EventICPFit                  AgentListenerEvent = "icp_fit"
+	EventICPNotAFit              AgentListenerEvent = "icp_not_a_fit"
+	EventNeedsHelp               AgentListenerEvent = "needs_help"
+	EventNewLead                 AgentListenerEvent = "new_lead"
+	EventNewSupportVisit         AgentListenerEvent = "new_support_visit"
+	EventNewWebSession           AgentListenerEvent = "new_web_session"
+	EventRunICPQualifierAgent    AgentListenerEvent = "run_icp_qualifier_agent"
+	EventWebVisitorIdentified    AgentListenerEvent = "web_visitor_identified"
+	EventWebVisitorNotIdentified AgentListenerEvent = "web_visitor_not_identified"
 
 	EventFathomMeetingSummaryCreated AgentListenerEvent = "fathom.meeting_summary.created"
 	EventFlowContactAdded            AgentListenerEvent = "flow.contact.added"
@@ -57,7 +57,7 @@ func GetAgentListener(s string) (AgentListenerEvent, error) {
 		EventNeedsHelp,
 		EventNewLead,
 		EventNewWebSession,
-		EventWebSessionReadyForAnalysis,
+		EventNewSupportVisit,
 		EventWebVisitorIdentified,
 		EventWebVisitorNotIdentified,
 

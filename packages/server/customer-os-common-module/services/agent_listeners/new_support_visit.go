@@ -18,22 +18,22 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
-type WebSessionReadyForAnalysisListener struct {
+type NewSupportVisitListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
 	agentRunnerService   *agent.AgentRunnerService
 }
 
-func NewWebSessionReadyForAnalysisListener(
+func NewNewSupportVisitListener(
 	logger logger.Logger,
 	postresRepositories *postgres_repository.Repositories,
 	agentRunnerService *agent.AgentRunnerService,
 ) interfaces.EventListener {
-	return &WebSessionReadyForAnalysisListener{
+	return &NewSupportVisitListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
-			events.GetEventType[dto.WebSessionReadyForAnalysis](), // subscribed event
-			events.QueueAgents, // listening on Agents queue
+			events.GetEventType[dto.NewSupportVisit](), // subscribed event
+			events.QueueAgents,                         // listening on Agents queue
 		),
 		postgresRepositories: postresRepositories,
 		agentRunnerService:   agentRunnerService,
@@ -41,14 +41,14 @@ func NewWebSessionReadyForAnalysisListener(
 }
 
 // Add all Agent types subscribed to this event here
-func (h *WebSessionReadyForAnalysisListener) subscribedAgents() []enum.AgentType {
+func (h *NewSupportVisitListener) subscribedAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentSupportSpotter,
 	}
 }
 
-func (l *WebSessionReadyForAnalysisListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionReadyForAnalysisListener.Handle")
+func (l *NewSupportVisitListener) Handle(ctx context.Context, baseEvent any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NewSupportVisitListener.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
@@ -62,8 +62,8 @@ func (l *WebSessionReadyForAnalysisListener) Handle(ctx context.Context, baseEve
 	return l.handleExecution(ctx, event.Event.EntityId)
 }
 
-func (l *WebSessionReadyForAnalysisListener) handleExecution(ctx context.Context, webSessionID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionReadyForAnalysisListener.handle")
+func (l *NewSupportVisitListener) handleExecution(ctx context.Context, webSessionID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NewSupportVisitListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
@@ -86,7 +86,7 @@ func (l *WebSessionReadyForAnalysisListener) handleExecution(ctx context.Context
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
 		}
-		err = l.agentRunnerService.Run(ctx, agent, dto.WebSessionReadyForAnalysis{}.Name().String(), initialParams)
+		err = l.agentRunnerService.Run(ctx, agent, dto.NewSupportVisit{}.Name().String(), initialParams)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
@@ -96,8 +96,8 @@ func (l *WebSessionReadyForAnalysisListener) handleExecution(ctx context.Context
 	return errs
 }
 
-func (h *WebSessionReadyForAnalysisListener) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "WebSessionReadyForAnalysisListener.lookupActiveAgents")
+func (h *NewSupportVisitListener) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NewSupportVisitListener.lookupActiveAgents")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
