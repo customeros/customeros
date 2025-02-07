@@ -256,6 +256,12 @@ export const FinderTable = observer(() => {
     if (selectedIds.length > 0) return;
 
     if (tableType === TableViewType.Organizations) {
+      if (!store.ui.showPreviewCard) {
+        if (index !== null) {
+          store.ui.setFocusRow(data?.[index]?.id);
+        }
+      }
+
       if (typeof index !== 'number') {
         store.ui.commandMenu.setType('OrganizationHub');
 
@@ -272,6 +278,12 @@ export const FinderTable = observer(() => {
     }
 
     if (tableType === TableViewType.Contacts) {
+      if (!store.ui.showPreviewCard) {
+        if (index !== null) {
+          store.ui.setFocusRow(data?.[index]?.id);
+        }
+      }
+
       if (typeof index !== 'number') {
         store.ui.commandMenu.setType('ContactHub');
 
@@ -327,6 +339,7 @@ export const FinderTable = observer(() => {
   useEffect(() => {
     return () => {
       store.ui.setShowPreviewCard(false);
+      store.ui.setShortcutsPanel(false);
     };
   }, [preset]);
 

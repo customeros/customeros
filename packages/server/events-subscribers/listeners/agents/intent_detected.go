@@ -72,7 +72,7 @@ func (l *IntentDetectedListener) handle(ctx context.Context, message dto.IntentD
 	var agentTypes []enum.AgentType
 	switch message.IntentType {
 	case enum.IntentSupportRequired:
-		agentTypes = append(agentTypes, enum.AgentSupportSignalDetector)
+		agentTypes = append(agentTypes, enum.AgentSupportSpotter)
 	case enum.IntentIcpCheck:
 		agentTypes = append(agentTypes, enum.AgentICPQualifier)
 	case enum.IntentGenerateCycleInvoice:

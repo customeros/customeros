@@ -33,7 +33,7 @@ func InitCapabilities(
 	}
 
 	// Register each capability with its corresponding type.
-	capabilities.executors[enum.CapabilityAnalyzeWebSessionIntent] = NewAnalyzeWebSessionCapability(postgresRepositories, actionService)
+	capabilities.executors[enum.CapabilityAnalyzeWebSessionIntent] = NewAnalyzeWebSessionCapability(events, postgresRepositories, actionService)
 	capabilities.executors[enum.CapabilityApplyTag] = NewApplyTagCapability(tagService)
 	capabilities.executors[enum.CapabilityCreateAndEnrichCompany] = NewCreateOrganizationCapability(organizationService)
 	capabilities.executors[enum.CapabilityCreateMarkdownTimelineEvent] = NewCreateMarkdownTimelineEventCapability(markdownService)

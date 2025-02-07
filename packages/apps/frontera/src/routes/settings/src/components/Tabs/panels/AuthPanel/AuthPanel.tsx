@@ -85,8 +85,8 @@ export const AuthPanel = observer(() => {
 
         <div className='p-6 pr-0 pt-0'>
           <p className='line-clamp-2 mt-2 mb-3 text-sm'>
-            Sync Slack messages to your organizations’ timeline and direct
-            website visitors to specified channels
+            Sync Slack messages to your company’s timeline and direct website
+            visitors to specified channels
           </p>
         </div>
       </article>

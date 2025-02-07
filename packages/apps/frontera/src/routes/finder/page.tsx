@@ -112,6 +112,7 @@ export const FinderPage = observer(() => {
             </div>
             <FinderTable />
           </div>
+
           {store.ui.showPreviewCard && !store.ui.isSearching && (
             <PreviewCard>
               {tableViewDef?.value.tableType === TableViewType.Contacts && (

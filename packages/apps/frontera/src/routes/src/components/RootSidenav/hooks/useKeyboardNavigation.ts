@@ -20,6 +20,7 @@ interface Presets {
 export const useKeyboardNavigation = (
   presets: Presets,
   options: KeyboardNavigationOptions = { when: true },
+  isPlatformOwner: boolean,
 ) => {
   const navigate = useNavigate();
   const store = useStore();
@@ -86,7 +87,9 @@ export const useKeyboardNavigation = (
       store.ui.commandMenu.setType('SwitchWorkspace');
       store.ui.commandMenu.setOpen(true);
     },
-    options,
+    {
+      when: options.when && isPlatformOwner,
+    },
   );
 
   // useSequentialShortcut(

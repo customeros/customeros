@@ -1,5 +1,6 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+import { useUnmount } from 'usehooks-ts';
 import { observer } from 'mobx-react-lite';
 import { FinderTable } from '@finder/components/FinderTable';
 import { FinderFilters } from '@finder/components/FinderFilters/FinderFilters';
@@ -11,7 +12,9 @@ import { useStore } from '@shared/hooks/useStore';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { Columns03 } from '@ui/media/icons/Columns03';
 import { TableIdType, TableViewType } from '@graphql/types';
+import { PreviewCard } from '@shared/components/PreviewCard';
 import { ViewSettings } from '@shared/components/ViewSettings';
+import { ShortcutsPanel } from '@shared/components/PreviewCard/components/ShortcutsPanel';
 
 import { Search } from './src/components/Search';
 import { ProspectsBoard } from './src/components/ProspectsBoard';
@@ -25,10 +28,14 @@ export const ProspectsBoardPage = observer(() => {
     store.tableViewDefs.opportunitiesTablePreset ?? '',
   );
 
+  useUnmount(() => {
+    store.ui.setShortcutsPanel(false);
+  });
+
   const showFinder = searchParams.get('show') === 'finder';
 
   return (
-    <div className='flex flex-col text-gray-700 overflow-auto bg-white'>
+    <div className='flex flex-col text-gray-700 overflow-hidden bg-white'>
       <div className='flex justify-between pr-4 border-b border-b-gray-200 bg-gray-25'>
         <Search />
 
@@ -61,42 +68,42 @@ export const ProspectsBoardPage = observer(() => {
           </ButtonGroup>
         </div>
       </div>
-      <div
-        className={cn(
-          'flex justify-between items-center py-2 border-b-gray-200 mx-4',
-          {
-            'border-b ': !showFinder,
-          },
+
+      <div className='flex'>
+        <div className=' w-full overflow-auto'>
+          <div className='flex justify-between mx-4 my-2 items-start'>
+            {showFinder && (
+              <FinderFilters
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                type={TableViewType.Opportunities as any}
+                tableId={TableIdType.OpportunitiesRecords}
+              />
+            )}
+            <div
+              className={cn({
+                'my-[1px]': !showFinder,
+              })}
+            >
+              <ViewSettings
+                type={TableViewType.Opportunities}
+                tableId={
+                  showFinder
+                    ? TableIdType.OpportunitiesRecords
+                    : TableIdType.Opportunities
+                }
+              />
+            </div>
+          </div>
+          {showFinder && <FinderTable />}
+          {!showFinder && <ProspectsBoard />}
+        </div>
+
+        {store.ui.showShortcutsPanel && (
+          <PreviewCard>
+            <ShortcutsPanel />
+          </PreviewCard>
         )}
-      >
-        <div>
-          {showFinder && (
-            <FinderFilters
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              type={TableViewType.Opportunities as any}
-              tableId={TableIdType.OpportunitiesRecords}
-            />
-          )}
-        </div>
-
-        <div
-          className={cn({
-            'my-[1px]': !showFinder,
-          })}
-        >
-          <ViewSettings
-            type={TableViewType.Opportunities}
-            tableId={
-              showFinder
-                ? TableIdType.OpportunitiesRecords
-                : TableIdType.Opportunities
-            }
-          />
-        </div>
       </div>
-
-      {showFinder && <FinderTable />}
-      {!showFinder && <ProspectsBoard />}
     </div>
   );
 });

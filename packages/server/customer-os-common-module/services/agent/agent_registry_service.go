@@ -25,7 +25,7 @@ const (
 type Agent struct {
 	Agent        AgentMetadata   `toml:"agent"`
 	Goal         GoalConfig      `toml:"goal"`
-	Watchers     WatchersConfig  `toml:"watchers"`
+	Listeners    ListenersConfig `toml:"listeners"`
 	Capabilities CapabilityTypes `toml:"capabilities"`
 	Plays        Plays           `toml:"plays"`
 }
@@ -42,7 +42,7 @@ type GoalConfig struct {
 	CompletionEvents []string `toml:"completion_events"`
 }
 
-type WatchersConfig struct {
+type ListenersConfig struct {
 	Events []string `toml:"events"`
 }
 
@@ -124,7 +124,7 @@ func (r *agentRegistryService) processAgentConfigFile(ctx context.Context, filen
 		AgentName:        agentConfig.Agent.Name,
 		Goal:             agentConfig.Goal.Goal,
 		CompletionEvents: agentConfig.Goal.CompletionEvents,
-		ListenerEvents:   agentConfig.Watchers.Events,
+		ListenerEvents:   agentConfig.Listeners.Events,
 		Capabilities:     agentConfig.Capabilities.Types,
 		Version:          agentConfig.Agent.Version,
 		Filename:         filename,

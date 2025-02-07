@@ -8,11 +8,14 @@ import (
 type AgentListenerEvent string
 
 const (
-	EventNewLead                 AgentListenerEvent = "new_lead"
+	EventDoesNotNeedHelp         AgentListenerEvent = "does_not_need_help"
 	EventICPFit                  AgentListenerEvent = "icp_fit"
 	EventICPNotAFit              AgentListenerEvent = "icp_not_a_fit"
-	EventRunICPQualifierAgent    AgentListenerEvent = "run_icp_qualifier_agent"
+	EventNeedsHelp               AgentListenerEvent = "needs_help"
+	EventNewLead                 AgentListenerEvent = "new_lead"
+	EventNewSupportVisit         AgentListenerEvent = "new_support_visit"
 	EventNewWebSession           AgentListenerEvent = "new_web_session"
+	EventRunICPQualifierAgent    AgentListenerEvent = "run_icp_qualifier_agent"
 	EventWebVisitorIdentified    AgentListenerEvent = "web_visitor_identified"
 	EventWebVisitorNotIdentified AgentListenerEvent = "web_visitor_not_identified"
 
@@ -48,12 +51,16 @@ func (e AgentListenerEvent) ExternalSystem() (system Source, err error) {
 func GetAgentListener(s string) (AgentListenerEvent, error) {
 	switch AgentListenerEvent(s) {
 	case
-		EventNewLead,
-		EventNewWebSession,
-		EventWebVisitorIdentified,
-		EventWebVisitorNotIdentified,
+		EventDoesNotNeedHelp,
 		EventICPFit,
 		EventICPNotAFit,
+		EventNeedsHelp,
+		EventNewLead,
+		EventNewWebSession,
+		EventNewSupportVisit,
+		EventWebVisitorIdentified,
+		EventWebVisitorNotIdentified,
+
 		EventRunICPQualifierAgent,
 		EventFathomMeetingSummaryCreated,
 		EventFlowContactAdded,
