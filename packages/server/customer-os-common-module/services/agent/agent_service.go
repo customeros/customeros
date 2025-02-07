@@ -153,6 +153,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		Icon:         newAgent.Icon,
 		Color:        newAgent.Color,
 		Capabilities: newAgent.Capabilities,
+		Listeners:    newAgent.Listeners,
 		Goal:         newAgent.Goal.String(),
 		Status:       newAgent.Status,
 		FlowID:       newAgent.FlowID,

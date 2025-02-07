@@ -59,7 +59,6 @@ func (a *Agent) UpdateCapabilities(updatedCaps []Capability) {
 		// Check if a capability with this ID exists in the agent.
 		if existingCap, ok := existingMap[upd.ID]; ok {
 			// Update allowed fields.
-			existingCap.Name = upd.Name
 			existingCap.Config = upd.Config
 			existingCap.Active = upd.Active
 		}
@@ -77,7 +76,6 @@ func (a *Agent) UpdateListeners(updatedListeners []Listener) {
 			continue
 		}
 		if existingListener, ok := existingMap[upd.ID]; ok {
-			existingListener.Name = upd.Name
 			existingListener.Config = upd.Config
 			existingListener.Active = upd.Active
 		}
@@ -95,18 +93,17 @@ func (a *Agent) GetListenerConfigByType(listenerType enum.AgentListenerEvent, co
 
 // Capability as a separate entity
 type Capability struct {
-	ID        string               `gorm:"primaryKey;type:varchar(32)" json:"id"`
-	Tenant    string               `gorm:"column:tenant;type:varchar(255)" json:"tenant"`
-	Position  int                  `gorm:"column:position;type:integer" json:"order"`
-	AgentID   string               `gorm:"column:agent_id;type:varchar(32);not null" json:"agentId"`
-	Name      string               `gorm:"column:name;type:varchar(255);not null" json:"name"`
-	Type      enum.AgentCapability `gorm:"column:type;type:varchar(50);not null" json:"type"`
-	Error     string               `gorm:"column:error;type:varchar(255)" json:"error"`
-	Config    JSONConfig           `gorm:"column:config;type:jsonb" json:"config"`
-	Active    bool                 `gorm:"column:active;type:boolean;default:true" json:"active"`
-	CreatedAt time.Time            `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
-	UpdatedAt *time.Time           `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
-	configHandlerImpl
+	ID                string               `gorm:"primaryKey;type:varchar(32)" json:"id"`
+	Tenant            string               `gorm:"column:tenant;type:varchar(255)" json:"tenant"`
+	Position          int                  `gorm:"column:position;type:integer" json:"order"`
+	AgentID           string               `gorm:"column:agent_id;type:varchar(32);not null" json:"agentId"`
+	Name              string               `gorm:"column:name;type:varchar(255);not null" json:"name"`
+	Type              enum.AgentCapability `gorm:"column:type;type:varchar(50);not null" json:"type"`
+	Error             string               `gorm:"column:error;type:varchar(255)" json:"error"`
+	Active            bool                 `gorm:"column:active;type:boolean;default:true" json:"active"`
+	CreatedAt         time.Time            `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
+	UpdatedAt         *time.Time           `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	ConfigHandlerImpl `gorm:"embedded"`
 }
 
 func (Capability) TableName() string {
@@ -119,25 +116,24 @@ func (c *Capability) BeforeCreate(tx *gorm.DB) error {
 }
 
 type Listener struct {
-	ID        string                  `gorm:"primaryKey;type:varchar(32)" json:"id"`
-	Tenant    string                  `gorm:"column:tenant;type:varchar(255)" json:"tenant"`
-	Position  int                     `gorm:"column:position;type:integer" json:"order"`
-	AgentID   string                  `gorm:"column:agent_id;type:varchar(32);not null" json:"agentId"`
-	Name      string                  `gorm:"column:name;type:varchar(255);not null" json:"name"`
-	Type      enum.AgentListenerEvent `gorm:"column:type;type:varchar(50);not null" json:"type"`
-	Error     string                  `gorm:"column:error;type:varchar(255)" json:"error"`
-	Config    JSONConfig              `gorm:"column:config;type:jsonb" json:"config"`
-	Active    bool                    `gorm:"column:active;type:boolean;default:true" json:"active"`
-	CreatedAt time.Time               `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
-	UpdatedAt *time.Time              `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
-	configHandlerImpl
+	ID                string                  `gorm:"primaryKey;type:varchar(32)" json:"id"`
+	Tenant            string                  `gorm:"column:tenant;type:varchar(255)" json:"tenant"`
+	Position          int                     `gorm:"column:position;type:integer" json:"order"`
+	AgentID           string                  `gorm:"column:agent_id;type:varchar(32);not null" json:"agentId"`
+	Name              string                  `gorm:"column:name;type:varchar(255);not null" json:"name"`
+	Type              enum.AgentListenerEvent `gorm:"column:type;type:varchar(50);not null" json:"type"`
+	Error             string                  `gorm:"column:error;type:varchar(255)" json:"error"`
+	Active            bool                    `gorm:"column:active;type:boolean;default:true" json:"active"`
+	CreatedAt         time.Time               `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
+	UpdatedAt         *time.Time              `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	ConfigHandlerImpl `gorm:"embedded"`
 }
 
 func (Listener) TableName() string {
 	return "agent_listeners"
 }
 
-func (l *Listener) BeforeCreate(tx *gorm.DB) error {
+func (l *Listener) BeforeCreate(*gorm.DB) error {
 	l.ID = utils.GenerateNanoIdWithPrefix("lst", 16)
 	return nil
 }
@@ -174,12 +170,12 @@ type ConfigHandler interface {
 	GetConfigString() string
 }
 
-// configHandlerImpl implements common config handling
-type configHandlerImpl struct {
+// ConfigHandlerImpl implements common config handling
+type ConfigHandlerImpl struct {
 	Config JSONConfig `gorm:"column:config;type:jsonb" json:"config"`
 }
 
-func (ch *configHandlerImpl) SetConfig(config any) error {
+func (ch *ConfigHandlerImpl) SetConfig(config any) error {
 	if config == nil || config == "" {
 		ch.Config = nil
 		return nil
@@ -218,7 +214,7 @@ func (ch *configHandlerImpl) SetConfig(config any) error {
 	return nil
 }
 
-func (ch *configHandlerImpl) GetConfig(configPtr any) error {
+func (ch *ConfigHandlerImpl) GetConfig(configPtr any) error {
 	if ch.Config == nil {
 		// If the config type expects an array, initialize it as empty
 		if reflect.TypeOf(configPtr).Elem().Kind() == reflect.Slice {
@@ -232,7 +228,7 @@ func (ch *configHandlerImpl) GetConfig(configPtr any) error {
 	return json.Unmarshal(ch.Config, configPtr)
 }
 
-func (ch *configHandlerImpl) GetConfigString() string {
+func (ch *ConfigHandlerImpl) GetConfigString() string {
 	if ch.Config == nil {
 		return ""
 	}
