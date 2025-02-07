@@ -381,32 +381,35 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 				}
 
 				if tenantWithWorkspace != nil {
-					isNewTenant = false
-
 					tenantEntity := mapper.MapDbNodeToTenantEntity(tenantWithWorkspace)
 
+					isNewTenant = false
 					currentTenant = tenantEntity.Name
 					defaultTenant = tenantEntity.Name
 				} else {
 					isNewTenant = true
+				}
+			}
 
-					tenantStr := ""
-					if isPersonalEmail {
-						tenantStr = utils.GenerateName()
-					} else {
-						tenantStr = utils.Sanitize(domain)
-					}
+			if isNewTenant {
+				tenantStr := ""
+				if isPersonalEmail {
+					tenantStr = utils.GenerateName()
+				} else {
+					tenantStr = utils.Sanitize(domain)
+				}
 
-					span.LogFields(tracingLog.String("newTenantCreationWith", tenantStr))
+				span.LogFields(tracingLog.String("newTenantCreationWith", tenantStr))
 
-					tenantEntity, err := services.CommonServices.TenantService.Merge(ctx, *txWithPostCommit.Tx, neoEntity.TenantEntity{
-						Name:      tenantStr,
-						CreatedBy: signInRequest.LoggedInEmail,
-					})
-					if err != nil {
-						return nil, err
-					}
+				tenantEntity, err := services.CommonServices.TenantService.Merge(ctx, *txWithPostCommit.Tx, neoEntity.TenantEntity{
+					Name:      tenantStr,
+					CreatedBy: signInRequest.LoggedInEmail,
+				})
+				if err != nil {
+					return nil, err
+				}
 
+				if !isPersonalEmail {
 					_, err = services.CommonServices.WorkspaceService.MergeToTenant(ctx, txWithPostCommit.Tx, neoEntity.WorkspaceEntity{
 						Name:     domain,
 						Provider: signInRequest.Provider,
@@ -414,10 +417,10 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 					if err != nil {
 						return nil, err
 					}
-
-					currentTenant = tenantEntity.Name
-					defaultTenant = tenantEntity.Name
 				}
+
+				currentTenant = tenantEntity.Name
+				defaultTenant = tenantEntity.Name
 			}
 
 			err = services.CommonServices.Neo4jRepositories.AuthenticationWriteRepository.LinkAuthenticationUserWithTenant(ctx, txWithPostCommit.Tx, authUserId, defaultTenant)
