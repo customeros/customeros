@@ -2,9 +2,6 @@ package enum
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type AgentCapability string
@@ -29,7 +26,7 @@ const (
 	CapabilityIdentifyWebVisitor                 AgentCapability = "identify_web_visitor"
 	CapabilityManageBouncedEmail                 AgentCapability = "manage_bounced_email"
 	CapabilityMonitorAccountsReceivable          AgentCapability = "monitor_accounts_receivable"
-	CapabilityMonitorSupportPages                AgentCapability = "monitor_support_pages"
+	CapabilityMonitorSupportVisits               AgentCapability = "monitor_support_visits"
 	CapabilityProcessRefund                      AgentCapability = "process_refund"
 	CapabilityScheduleEmailDelivery              AgentCapability = "schedule_email_delivery"
 	CapabilitySelectOptimalSendingMailbox        AgentCapability = "select_optimal_sending_mailbox"
@@ -72,7 +69,7 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityIdentifyWebVisitor,
 		CapabilityManageBouncedEmail,
 		CapabilityMonitorAccountsReceivable,
-		CapabilityMonitorSupportPages,
+		CapabilityMonitorSupportVisits,
 		CapabilityProcessRefund,
 		CapabilityScheduleEmailDelivery,
 		CapabilitySelectOptimalSendingMailbox,
@@ -92,10 +89,4 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 	default:
 		return "", fmt.Errorf("invalid Agent Capability: %s", s)
 	}
-}
-
-// Get name returns a friendly name for the capability, by removing _ and capitalizing the first letter of each word
-func (t AgentCapability) GetName() string {
-	name := strings.ReplaceAll(string(t), "_", " ")
-	return utils.CapitalizeAllParts(name, []string{" "})
 }

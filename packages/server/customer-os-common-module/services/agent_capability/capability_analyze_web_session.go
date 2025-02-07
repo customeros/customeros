@@ -14,22 +14,28 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/coserrors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type AnalyzeWebSessionCapability struct {
+	events               *events.EventsService
 	postgresRepositories *postgres_repository.Repositories
 	actionService        interfaces.ActionService
 }
 
 func NewAnalyzeWebSessionCapability(
+	events *events.EventsService,
 	postgresRepositories *postgres_repository.Repositories,
 	actionService interfaces.ActionService,
 ) *AnalyzeWebSessionCapability {
 	return &AnalyzeWebSessionCapability{
+		events:               events,
 		postgresRepositories: postgresRepositories,
 		actionService:        actionService,
 	}
@@ -155,6 +161,13 @@ func (c *AnalyzeWebSessionCapability) Execute(ctx context.Context, executionCont
 
 	// write event to timeline
 	err = c.writeSessionToTimeline(ctx, executionContainer.InputData.OrganizationID, timelineMessage)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return true, result, err
+	}
+
+	// publish ready for analysis event
+	err = c.events.Publisher.PublishFanoutEvent(ctx, executionContainer.InputData.WebSessionID, model.WEB_SESSION, dto.NewSupportVisit{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return true, result, err

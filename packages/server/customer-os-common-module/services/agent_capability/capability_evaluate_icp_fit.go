@@ -53,7 +53,7 @@ func (c *EvaluateICPFitConfig) Validate() bool {
 	isValid := true
 
 	if len(c.ICPCompanyExamples.Value) < MinICPCompanyExamples {
-		c.ICPCompanyExamples.Error = "Must provide at lease 5 companies that match your ICP."
+		c.ICPCompanyExamples.Error = "Must provide at least 5 companies that match your ICP."
 		isValid = false
 	}
 
