@@ -201,27 +201,27 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 async function handleExtensionButtonClick(tab: chrome.tabs.Tab) {
-  if (tab.url) {
-    const url = new URL(tab.url);
-    if (url.host === "www.linkedin.com" || url.host === "linkedin.com") {
-      // Open side panel for LinkedIn
-      chrome.windows.getCurrent((window) => {
-        chrome.sidePanel.open({
-          tabId: Number(tab.id),
-          windowId: window?.id,
-        });
-      });
-      await chrome.sidePanel.setOptions({
-        tabId: tab.id,
-        path: "sidepanel/index.html",
-        enabled: true,
-      });
-      console.log("Sidepanel opened for LinkedIn");
-    } else if (url.host !== "app.customeros.ai") {
-      // Open CustomerOS app in a new tab
-      await chrome.tabs.create({ url: "https://app.customeros.ai/" });
-    }
-  }
+  // if (tab.url) {
+  //   const url = new URL(tab.url);
+  //   if (url.host === "www.linkedin.com" || url.host === "linkedin.com") {
+  //     // Open side panel for LinkedIn
+  chrome.windows.getCurrent((window) => {
+    chrome.sidePanel.open({
+      tabId: Number(tab.id),
+      windowId: window?.id,
+    });
+  });
+  await chrome.sidePanel.setOptions({
+    tabId: tab.id,
+    path: "sidepanel/index.html",
+    enabled: true,
+  });
+  console.log("Sidepanel opened for LinkedIn");
+  // } else if (url.host !== "app.customeros.ai") {
+  //   // Open CustomerOS app in a new tab
+  //   await chrome.tabs.create({ url: "https://app.customeros.ai/" });
+  // }
+  // }
 }
 
 chrome.action.onClicked.addListener((tab: chrome.tabs.Tab) =>

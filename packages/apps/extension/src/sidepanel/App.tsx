@@ -4,9 +4,10 @@ import { Button } from "@ui/form/Button/Button";
 
 export const App = () => {
   const [workspaceName, setWorkspaceName] = useState<string | null>(null);
-  const [appIsOpen, setAppIsOpen] = useState(false);
+  const [_appIsOpen, setAppIsOpen] = useState(false);
   const [linkedInUrl, setLinkedInUrl] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -132,13 +133,19 @@ export const App = () => {
       );
 
       if (response.ok) {
-        setSuccessMessage("Contact added successfully");
+        // setSuccessMessage("Contact added");
+        setErrorMessage("We couldn't add this contact");
+
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
         console.error("Failed to add contact");
       }
     } catch (error) {
       console.error("Error adding contact:", error);
+      setErrorMessage("We couldn't add this contact");
+      if (errorMessage) {
+        setTimeout(() => setErrorMessage(null), 3000);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -165,6 +172,9 @@ export const App = () => {
       }
     };
   }, []);
+
+  console.log(workspaceName, "asidjashnoidfhjnsiodfjsdiofj");
+
   return (
     <div className="flex flex-col items-center justify-center h-full p-4">
       <div className="flex items-center flex-col gap-1">
@@ -175,21 +185,33 @@ export const App = () => {
           className="size-8"
         />
         <span className="font-semibold text-[16px]">CustomerOS</span>
-        {workspaceName && appIsOpen && (
+        {!workspaceName && !linkedInUrl && (
+          <span className="text-center max-w-[250px]">
+            Sign into the{" "}
+            <a id="customerOSLink" href="#" className="underline">
+              CustomerOS app
+            </a>{" "}
+            and go to any LinkedIn profile to start adding contacts to your
+            workspace
+          </span>
+        )}
+        {workspaceName && (
           <span className="bg-gray-100">Signed into {workspaceName}</span>
         )}
-        {!linkedInUrl && (
+        {!linkedInUrl && workspaceName && (
           <span className="text-center max-w-[250px] ">
             Go to any LinkedIn profile to instantly add contacts to CustomerOS
           </span>
         )}
-        {!appIsOpen && (
+        {!workspaceName && linkedInUrl && (
           <span className="text-center max-w-[250px] ">
-            Open the{" "}
-            <a id="customerOSLink" href="#" className="underline">
-              CustomerOS app
-            </a>{" "}
-            to start adding contacts to your workspace instantly
+            Sign into the CustomerOS app to start adding contacts to your
+            workspace
+          </span>
+        )}
+        {workspaceName && linkedInUrl && (
+          <span className="text-center max-w-[250px] ">
+            Instantly add LinkedIn contacts to CustomerOS{" "}
           </span>
         )}
       </div>
@@ -224,9 +246,23 @@ export const App = () => {
           <img
             src={chrome.runtime.getURL("src/assets/check-circle.svg")}
             alt="Success Icon"
-            className="text-success-700"
+            className="text-success-500"
           />
-          <span id="success-message">{successMessage}</span>
+          <span id="success-message" className="text-success-500">
+            {successMessage}
+          </span>
+        </div>
+      )}
+      {errorMessage && (
+        <div className="flex items-center gap-2 mt-2">
+          <img
+            src={chrome.runtime.getURL("src/assets/x-circle.svg")}
+            alt="Error Icon"
+            className="text-error-500"
+          />
+          <span id="error-message" className="text-error-500">
+            {errorMessage}
+          </span>
         </div>
       )}
     </div>
