@@ -1,15 +1,6 @@
 import { runInAction, makeAutoObservable } from 'mobx';
 
-export type FlowStepCommandMenuType =
-  // triggers
-  | 'TriggersHub'
-  | 'RecordAddedManually'
-  | 'RecordCreated'
-  | 'RecordUpdated'
-  | 'RecordMatchesCondition'
-  | 'Webhook'
-  // steps
-  | 'StepsHub';
+export type FlowStepCommandMenuType = 'StepsHub';
 
 export type Context = {
   id: string;
@@ -28,7 +19,7 @@ const makeDefaultContext = () => ({
 
 export class FlowStepCommandMenuStore {
   isOpen = false;
-  type: FlowStepCommandMenuType = 'TriggersHub';
+  type: FlowStepCommandMenuType = 'StepsHub';
   context: Context = makeDefaultContext();
 
   constructor() {
@@ -83,7 +74,7 @@ export class FlowStepCommandMenuStore {
   reset() {
     runInAction(() => {
       this.isOpen = false;
-      this.type = 'TriggersHub';
+      this.type = 'StepsHub';
       this.clearContext();
     });
   }

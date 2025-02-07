@@ -7,7 +7,7 @@ import { Divider } from '@ui/presentation/Divider';
 
 import { FlowSender } from './FlowSender';
 import { SenderDropdown } from './SenderDropdown';
-import { SenderStatus } from './MailboxStatus.tsx';
+import { MailboxStatus } from './MailboxStatus.tsx';
 
 export const SenderSettings = observer(
   ({
@@ -29,7 +29,7 @@ export const SenderSettings = observer(
       <>
         <div className='flex flex-col gap-2'>
           <h3 className='text-sm font-medium'>Senders</h3>
-          <SenderStatus
+          <MailboxStatus
             id={id}
             hasEmailNodes={hasEmailNodes}
             hasLinkedInNodes={hasLinkedInNodes}

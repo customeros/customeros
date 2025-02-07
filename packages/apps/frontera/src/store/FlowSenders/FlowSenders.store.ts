@@ -75,16 +75,13 @@ export class FlowSendersStore implements GroupStore<FlowSender> {
           action: 'INVALIDATE',
           ids: [flowId],
         });
-        this.root.ui.toastSuccess(
-          'Sender added to flow',
-          'link-sender-to-flow',
-        );
+        this.root.ui.toastSuccess('Sender added', 'link-sender-to-flow');
       });
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error).message;
         this.root.ui.toastError(
-          "We couldn't add a sender to a flow",
+          "We couldn't add this sender",
           'link-sender-to-flow-error',
         );
       });

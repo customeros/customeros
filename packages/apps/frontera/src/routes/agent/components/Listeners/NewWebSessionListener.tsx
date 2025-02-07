@@ -2,14 +2,19 @@ import { useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-import { AddWebsiteToTrackUsecase } from '@domain/usecases/agents/capabilities/add-website-to-track.usecase';
+import { AddWebsiteToTrackUsecase } from '@domain/usecases/agents/capabilities/add-website-to-track.usecase.ts';
 
 import { Icon } from '@ui/media/Icon';
 import { Input } from '@ui/form/Input';
-import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
+import { Button } from '@ui/form/Button/Button.tsx';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
+import {
+  Menu,
+  MenuList,
+  MenuItem,
+  MenuButton,
+} from '@ui/overlay/Menu/Menu.tsx';
 import {
   AlertDialog,
   AlertDialogBody,
@@ -18,7 +23,7 @@ import {
   AlertDialogContent,
   AlertDialogOverlay,
   AlertDialogCloseIconButton,
-} from '@ui/overlay/AlertDialog/AlertDialog';
+} from '@ui/overlay/AlertDialog/AlertDialog.tsx';
 
 const SCRIPT = `<script id="customeros-tracker" type="text/javascript">
   (function (c, u, s, t, o, m, e, r, O, S) { 

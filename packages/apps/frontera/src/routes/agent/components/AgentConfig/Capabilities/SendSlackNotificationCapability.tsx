@@ -6,12 +6,12 @@ import {
   cooldownPeriods,
   cooldownPeriodsMap,
   AddSlackChannelUsecase,
-} from '@domain/usecases/agents/capabilities/add-slack-channel.usecase';
+} from '@domain/usecases/agents/capabilities/add-slack-channel.usecase.ts';
 
 import { Icon } from '@ui/media/Icon';
 import { Combobox } from '@ui/form/Combobox';
-import { Slack } from '@ui/media/logos/Slack';
-import { Button } from '@ui/form/Button/Button';
+import { Slack } from '@ui/media/logos/Slack.tsx';
+import { Button } from '@ui/form/Button/Button.tsx';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/overlay/Popover';
 

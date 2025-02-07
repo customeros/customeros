@@ -286,7 +286,7 @@ export class FlowStore implements Store<Flow> {
         );
 
         this.root.ui.toastSuccess(
-          `Contact added to flow`,
+          `Contact added`,
           'link-contact-to-flows-success',
         );
         contactStore?.invalidate();
@@ -297,7 +297,7 @@ export class FlowStore implements Store<Flow> {
     } catch (e) {
       runInAction(() => {
         this.root.ui.toastError(
-          "We couldn't add a contact to a flow",
+          "We couldn't add this contact",
           'link-contact-to-flows-error',
         );
       });
