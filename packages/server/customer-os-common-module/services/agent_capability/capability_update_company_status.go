@@ -166,7 +166,7 @@ func (c *UpdateCompanyStatusCapability) processICPNotAFit(ctx context.Context, o
 }
 
 func (c *UpdateCompanyStatusCapability) publishIcpFitEvent(ctx context.Context, icpFitResult enum.IcpFit, agentExecutionID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EvaluateICPFitCapability.publishIcpFitEvent")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateCompanyStatusCapability.publishIcpFitEvent")
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
