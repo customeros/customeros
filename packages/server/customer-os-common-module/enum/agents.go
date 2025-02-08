@@ -55,3 +55,26 @@ func GetAgentGoal(s string) (AgentGoal, error) {
 		return "", fmt.Errorf("invalid Agent Goal: %s", s)
 	}
 }
+
+type AgentScope string
+
+const (
+	AgentScopePersonal  AgentScope = "personal"
+	AgentScopeWorkspace AgentScope = "workspace"
+)
+
+func (t AgentScope) String() string {
+	return string(t)
+}
+
+func GetAgentScope(s string) (AgentScope, error) {
+	switch AgentScope(s) {
+	case
+		AgentScopePersonal,
+		AgentScopeWorkspace:
+		return AgentScope(s), nil
+
+	default:
+		return "", fmt.Errorf("invalid Agent Scope: %s", s)
+	}
+}

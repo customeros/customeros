@@ -2,7 +2,6 @@ package agent
 
 import (
 	"context"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -17,6 +16,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -104,6 +104,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	// build new agent
 	agent := postgresentity.Agent{
 		Type:        agentType,
+		Scope:       agentRegistry.Scope,
 		Tenant:      tenant,
 		Name:        agentRegistry.AgentName,
 		Goal:        agentRegistry.Goal,
@@ -112,6 +113,10 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 		Icon:        agentRegistry.Icon,
 		Color:       utils.GetRandomColor(),
 		RegistryID:  agentRegistry.ID,
+	}
+
+	if agentRegistry.Scope == enum.AgentScopePersonal {
+		agent.User = common.GetUserIdFromContext(ctx)
 	}
 
 	// build capabilities from registry
