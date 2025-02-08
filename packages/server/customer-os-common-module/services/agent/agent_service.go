@@ -116,7 +116,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 	}
 
 	if agentRegistry.Scope == enum.AgentScopePersonal {
-		agent.User = common.GetUserIdFromContext(ctx)
+		agent.Owner = common.GetUserIdFromContext(ctx)
 	}
 
 	// build capabilities from registry
