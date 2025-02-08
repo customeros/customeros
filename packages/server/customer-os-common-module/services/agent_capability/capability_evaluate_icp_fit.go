@@ -141,11 +141,6 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 		IcpFit: enum.IcpNotSet,
 	}
 
-	if executionContainer.InputData.EmployeeCount == 0 {
-		result.IcpFit = enum.IcpNotFit
-		return true, result, nil
-	}
-
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
 		return false, result, err
@@ -171,7 +166,13 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 		tracing.TraceErr(span, err)
 		return true, result, err
 	}
+
 	result.IcpFitRationale = parsedAnswer.Reasons
+	if parsedAnswer.ICPFit {
+		result.IcpFit = enum.IcpIsFit
+	} else {
+		result.IcpFit = enum.IcpNotFit
+	}
 	tracing.LogObjectAsJson(span, "result", result)
 
 	return true, result, nil

@@ -149,11 +149,8 @@ type ListServersResponse struct {
 }
 
 type ServerDetails struct {
-	ID        int64  `json:"ID"`
-	Name      string `json:"Name"`
-	APITokens []struct {
-		ServerToken string `json:"ServerToken"`
-	} `json:"ApiTokens"`
+	ID   int64  `json:"ID"`
+	Name string `json:"Name"`
 	// ...other fields as needed
 }
 

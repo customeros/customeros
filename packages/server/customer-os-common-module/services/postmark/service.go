@@ -244,13 +244,6 @@ func (s *postmarkService) CreateServerIfNotExists(ctx context.Context) error {
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	// validate postmark is configured
-	if s.postmarkConfig == nil || s.postmarkConfig.Url == "" || s.postmarkConfig.AccountApiKey == "" {
-		err := errors.New("postmark url not configured")
-		tracing.TraceErr(span, err)
-		return err
-	}
-
 	// validate tenant
 	err := common.ValidateTenant(ctx)
 	if err != nil {
@@ -259,7 +252,12 @@ func (s *postmarkService) CreateServerIfNotExists(ctx context.Context) error {
 	}
 	tenant := common.GetTenantFromContext(ctx)
 
-	// check postmark url and api key
+	// validate postmark is configured
+	if s.postmarkConfig == nil {
+		err := errors.New("postmark not configured")
+		tracing.TraceErr(span, err)
+		return err
+	}
 	if s.postmarkConfig.Url == "" {
 		err := errors.New("postmark url not configured")
 		tracing.TraceErr(span, err)
