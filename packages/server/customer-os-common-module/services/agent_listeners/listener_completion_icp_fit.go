@@ -72,13 +72,13 @@ func (l *IcpFitListener) Handle(ctx context.Context, baseEvent any) error {
 		return err
 	}
 
-	agentExecutionId := ""
-	data, ok := event.Event.Data.(map[string]interface{})
-	if ok {
-		agentExecutionId = data["agentExecutionId"].(string)
+	data, err := events.DecodeEventData[dto.IcpFit](ctx, event)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
-	return l.handleGoalAchieved(ctx, agentExecutionId)
+	return l.handleGoalAchieved(ctx, data.AgentExecutionId)
 }
 
 func (l *IcpFitListener) handleGoalAchieved(ctx context.Context, agentExecutionId string) error {
