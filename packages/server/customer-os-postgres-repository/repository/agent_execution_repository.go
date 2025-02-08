@@ -18,18 +18,19 @@ import (
 type AgentExecutionRepository interface {
 	Create(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error)
 	Find(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error)
-	Update(ctx context.Context, executionID string, completedAt *time.Time, errorMessage *string, goalAchieved bool) (*postgres_entity.AgentExecution, error)
+	Update(ctx context.Context, executionID string, completedAt *time.Time, errorMessage string, goalAchieved bool) (*postgres_entity.AgentExecution, error)
+	GetById(ctx context.Context, executionID string) (*postgres_entity.AgentExecution, error)
 }
 
-type flowAgentExecutionRepository struct {
+type agentExecutionRepository struct {
 	gormDb *gorm.DB
 }
 
 func NewAgentExecutionRepository(gormDb *gorm.DB) AgentExecutionRepository {
-	return &flowAgentExecutionRepository{gormDb: gormDb}
+	return &agentExecutionRepository{gormDb: gormDb}
 }
 
-func (f *flowAgentExecutionRepository) Create(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error) {
+func (f *agentExecutionRepository) Create(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Create")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -53,15 +54,15 @@ func (f *flowAgentExecutionRepository) Create(ctx context.Context, executionReco
 	return &executionRecord, nil
 }
 
-func (f *flowAgentExecutionRepository) Find(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error) {
+func (f *agentExecutionRepository) Find(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Find")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 
-	var flowAgentExecution postgres_entity.AgentExecution
+	var agentExecution postgres_entity.AgentExecution
 	err := f.gormDb.
 		Where(&executionRecord).
-		First(&flowAgentExecution).Error
+		First(&agentExecution).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -69,10 +70,10 @@ func (f *flowAgentExecutionRepository) Find(ctx context.Context, executionRecord
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return &flowAgentExecution, nil
+	return &agentExecution, nil
 }
 
-func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionID string, completedAt *time.Time, errorMessage *string, goalAchieved bool) (*postgres_entity.AgentExecution, error) {
+func (f *agentExecutionRepository) Update(ctx context.Context, executionID string, completedAt *time.Time, errorMessage string, goalAchieved bool) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.UpdateToCompleted")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -84,7 +85,7 @@ func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionID s
 	}
 
 	status := enum.AgentExecutionCompleted.String()
-	if errorMessage != nil {
+	if errorMessage != "" {
 		status = enum.AgentExecutionFail.String()
 	}
 
@@ -106,4 +107,26 @@ func (f *flowAgentExecutionRepository) Update(ctx context.Context, executionID s
 	}
 
 	return &updatedRecord, nil
+}
+
+func (f *agentExecutionRepository) GetById(ctx context.Context, executionID string) (*postgres_entity.AgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.GetById")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.String("executionID", executionID))
+
+	var agentExecution postgres_entity.AgentExecution
+	err := f.gormDb.
+		Where("id = ?", executionID).
+		First(&agentExecution).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &agentExecution, nil
 }

@@ -73,10 +73,10 @@ func (l *WebVisitorNotIdentifiedListener) Handle(ctx context.Context, baseEvent 
 		return err
 	}
 
-	return l.handleGoalAchieved(ctx, event.Event.EntityId, event.Event.AgentEventName)
+	return l.handleGoalAchieved(ctx, event.Event.EntityId)
 }
 
-func (l *WebVisitorNotIdentifiedListener) handleGoalAchieved(ctx context.Context, orgId, eventName string) error {
+func (l *WebVisitorNotIdentifiedListener) handleGoalAchieved(ctx context.Context, agent string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WebVisitorNotIdentifiedListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)

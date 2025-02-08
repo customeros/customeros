@@ -108,7 +108,7 @@ func (l *NewLeadListener) handleExecution(ctx context.Context, orgID string) err
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
 		}
-		err = l.agentRunnerService.Run(ctx, agent, dto.NewLead{}.Name().String(), initialParams)
+		err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)

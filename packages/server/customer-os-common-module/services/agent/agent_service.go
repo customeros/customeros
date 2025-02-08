@@ -431,7 +431,7 @@ func (a *agentService) CreateAgentExecutionRecord(ctx context.Context, agent pos
 		Tenant:       agent.Tenant,
 		AgentID:      &agent.ID,
 		TriggerEvent: triggerEvent,
-		Status:       enum.AgentExecutionRunning.String(),
+		Status:       enum.AgentExecutionRunning,
 		StartedAt:    utils.NowPtr(),
 		TraceId:      traceId,
 	}
@@ -464,7 +464,7 @@ func (a *agentService) SaveAgentExecutionCompleted(ctx context.Context, executio
 		return err
 	}
 
-	executionRecord.Status = enum.AgentExecutionCompleted.String()
+	executionRecord.Status = enum.AgentExecutionCompleted
 	executionRecord.CompletedAt = utils.NowPtr()
 	executionRecord.GoalAchieved = goalAchieved
 	// update
@@ -485,7 +485,7 @@ func (a *agentService) SaveAgentExecutionError(ctx context.Context, executionID,
 		return err
 	}
 
-	executionRecord.Status = enum.AgentExecutionFail.String()
+	executionRecord.Status = enum.AgentExecutionFail
 	executionRecord.ErrorMessage = &errorMessage
 	// update
 

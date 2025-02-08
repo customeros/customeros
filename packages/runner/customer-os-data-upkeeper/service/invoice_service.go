@@ -103,7 +103,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 	dryRun := false
 	preview := false
 
-	limit := 100
+	limit := 0
 
 	for {
 		select {
@@ -159,8 +159,8 @@ func (s *invoiceService) GenerateCycleInvoices() {
 			}
 
 			event := dto.IntentDetected{
-				EventName:  enum.EventIntentSignal,
-				IntentType: enum.IntentGenerateCycleInvoice,
+				EventName: enum.EventIntentSignal,
+				//IntentType: enum.IntentGenerateCycleInvoice,
 				ContractID: contract.Id,
 				DryRun:     dryRun,
 				Preview:    preview,

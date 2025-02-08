@@ -134,7 +134,7 @@ func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 
 	if capErr != nil {
 		tracing.TraceErr(span, capErr)
-		_, dbErr := a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, nil, utils.StringPtr(capErr.Error()), false)
+		_, dbErr := a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, nil, capErr.Error(), false)
 		if dbErr != nil {
 			tracing.TraceErr(span, errors.Wrap(dbErr, "unable to update agent execution record"))
 			return dbErr
@@ -143,7 +143,7 @@ func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	}
 
 	// update agentExecutionRecord
-	_, err = a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, utils.NowPtr(), nil, true)
+	_, err = a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, utils.NowPtr(), "", true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

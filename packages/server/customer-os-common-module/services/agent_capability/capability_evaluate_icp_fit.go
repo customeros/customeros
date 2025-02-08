@@ -194,10 +194,14 @@ func (c *EvaluateICPFitCapability) publishIcpFitEvent(ctx context.Context, icpFi
 
 	switch icpFitResult {
 	case enum.IcpIsFit:
-		return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.IcpFit{})
+		return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.IcpFit{
+			AgentExecutionId: agentExecutionID,
+		})
 
 	case enum.IcpNotFit:
-		return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.IcpNotAFit{})
+		return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.IcpNotAFit{
+			AgentExecutionId: agentExecutionID,
+		})
 
 	default:
 		return errors.New("ICP Fit not set")

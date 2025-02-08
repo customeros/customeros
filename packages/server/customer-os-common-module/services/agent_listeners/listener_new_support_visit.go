@@ -101,7 +101,7 @@ func (l *NewSupportVisitListener) handleExecution(ctx context.Context, webSessio
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)
 		}
-		err = l.agentRunnerService.Run(ctx, agent, dto.NewSupportVisit{}.Name().String(), initialParams)
+		err = l.agentRunnerService.Run(ctx, agent, l.Type().String(), initialParams)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			errs = multierr.Append(errs, err)

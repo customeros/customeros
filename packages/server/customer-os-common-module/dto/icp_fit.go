@@ -10,13 +10,17 @@ var (
 	_ interfaces.AgentEvents = IcpNotAFit{}
 )
 
-type IcpFit struct{}
+type IcpFit struct {
+	AgentExecutionId string `json:"agentExecutionId"`
+}
 
 func (e IcpFit) Name() enum.AgentListenerEvent {
 	return enum.EventICPFit
 }
 
-type IcpNotAFit struct{}
+type IcpNotAFit struct {
+	AgentExecutionId string `json:"agentExecutionId"`
+}
 
 func (e IcpNotAFit) Name() enum.AgentListenerEvent {
 	return enum.EventICPNotAFit
