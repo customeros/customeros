@@ -26,6 +26,7 @@ type IcpFitListener struct {
 // Compile-time interface check for AgentListenerUntyped
 var (
 	_ interfaces.AgentListenerUntyped = (*IcpFitListener)(nil)
+	_ interfaces.EventListener        = (*IcpFitListener)(nil)
 )
 
 func NewIcpFitListener(

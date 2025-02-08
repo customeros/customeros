@@ -73,10 +73,6 @@ func (l *IntentDetectedListener) handle(ctx context.Context, message dto.IntentD
 	switch message.IntentType {
 	case enum.IntentSupportRequired:
 		agentTypes = append(agentTypes, enum.AgentSupportSpotter)
-	case enum.IntentIcpCheck:
-		agentTypes = append(agentTypes, enum.AgentICPQualifier)
-	case enum.IntentGenerateCycleInvoice:
-		agentTypes = append(agentTypes, enum.AgentCashflowGuardian)
 	default:
 		err := errors.New("IntentType not supported")
 		tracing.TraceErr(span, err)

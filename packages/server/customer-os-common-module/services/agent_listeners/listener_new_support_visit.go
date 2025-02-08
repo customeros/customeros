@@ -25,6 +25,7 @@ type NewSupportVisitListener struct {
 // Compile-time interface check for AgentListenerUntyped
 var (
 	_ interfaces.AgentListenerUntyped = (*NewSupportVisitListener)(nil)
+	_ interfaces.EventListener        = (*NewSupportVisitListener)(nil)
 )
 
 func NewNewSupportVisitListener(

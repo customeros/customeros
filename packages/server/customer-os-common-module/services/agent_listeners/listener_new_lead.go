@@ -29,6 +29,7 @@ type NewLeadListener struct {
 // Compile-time interface check for AgentListenerUntyped
 var (
 	_ interfaces.AgentListenerUntyped = (*NewLeadListener)(nil)
+	_ interfaces.EventListener        = (*NewLeadListener)(nil)
 )
 
 func NewNewLeadListener(

@@ -26,6 +26,7 @@ type WebVisitorIdentifiedListener struct {
 // Compile-time interface check for AgentListenerUntyped
 var (
 	_ interfaces.AgentListenerUntyped = (*WebVisitorIdentifiedListener)(nil)
+	_ interfaces.EventListener        = (*WebVisitorIdentifiedListener)(nil)
 )
 
 func NewWebVisitorIdentifiedListener(
