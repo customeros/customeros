@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -25,14 +26,15 @@ type agentService struct {
 	postgresRepositories            *postgresrepository.Repositories
 	events                          *events.EventsService
 	agentCapabilities               *agent_capability.AgentCapabilities
+	agentListeners                  *agent_listeners.AgentListeners
 	agentCapabilityExecutionService interfaces.AgentCapabilityExecutionService
 }
 
-func NewAgentService(
-	postgresRepositories *postgresrepository.Repositories,
-	events *events.EventsService,
-	agentCapabilities *agent_capability.AgentCapabilities,
-) interfaces.AgentService {
+func (a *agentService) SetListeners(listeners any) {
+	a.agentListeners = listeners.(*agent_listeners.AgentListeners)
+}
+
+func NewAgentService(postgresRepositories *postgresrepository.Repositories, events *events.EventsService, agentCapabilities *agent_capability.AgentCapabilities) interfaces.AgentService {
 	return &agentService{
 		postgresRepositories:            postgresRepositories,
 		events:                          events,
