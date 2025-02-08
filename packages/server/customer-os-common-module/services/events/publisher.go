@@ -442,9 +442,9 @@ func (r *RabbitMQPublisher) publishEventOnExchange(ctx context.Context, entityId
 		messageType = messageType.Elem()
 	}
 
-	var eventName enum.AgentListenerEvent
+	var agentListenerEvent enum.AgentListenerEvent
 	if dto, ok := message.(interfaces.AgentEvents); ok {
-		eventName = dto.Name()
+		agentListenerEvent = dto.Name()
 	}
 
 	eventMessage := dto.Event{
@@ -454,7 +454,7 @@ func (r *RabbitMQPublisher) publishEventOnExchange(ctx context.Context, entityId
 			EntityType:     entityType,
 			Tenant:         common.GetTenantFromContext(ctx),
 			EventType:      messageType.Name(),
-			AgentEventName: eventName.String(),
+			AgentEventName: agentListenerEvent.String(),
 			Data:           message,
 		},
 		Metadata: dto.EventMetadata{

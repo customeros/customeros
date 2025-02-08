@@ -13,7 +13,7 @@ type EventDetails struct {
 	EntityId       string           `json:"entityId"`
 	EntityType     model.EntityType `json:"entityType"`
 	EventType      string           `json:"eventType"`
-	AgentEventName string           `json:"eventName"`
+	AgentEventName string           `json:"eventName"` //Deprecated, replicates AgentListenerUntyped.Type()
 	Data           interface{}      `json:"data"`
 }
 
