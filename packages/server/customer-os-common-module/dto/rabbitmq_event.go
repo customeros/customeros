@@ -8,13 +8,12 @@ type Event struct {
 }
 
 type EventDetails struct {
-	Id             string           `json:"id"`
-	Tenant         string           `json:"tenant"`
-	EntityId       string           `json:"entityId"`
-	EntityType     model.EntityType `json:"entityType"`
-	EventType      string           `json:"eventType"`
-	AgentEventName string           `json:"eventName"` //Deprecated, replicates AgentListenerUntyped.Type()
-	Data           interface{}      `json:"data"`
+	Id         string           `json:"id"`
+	Tenant     string           `json:"tenant"`
+	EntityId   string           `json:"entityId"`
+	EntityType model.EntityType `json:"entityType"`
+	EventType  string           `json:"eventType"`
+	Data       interface{}      `json:"data"`
 }
 
 type EventMetadata struct {
