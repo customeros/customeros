@@ -60,7 +60,7 @@ func (c *AddMeetingNotesToCompanyCapability) DefaultConfig() any {
 func (c *AddMeetingNotesToCompanyCapability) ValidateInput(input AddMeetingNotesToCompanyInput) error {
 	switch {
 	case input.MeetingTimestamp.IsZero():
-		return errors.New("Meeting timespamp cannot be empty")
+		return errors.New("Meeting timestamp cannot be empty")
 	case input.MeetingRecordingUrl == "":
 		return errors.New("Meeting recording url cannot be empty")
 	case len(input.MeetingParticipantEmails) == 0:
