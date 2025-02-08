@@ -482,7 +482,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		return
 	}
 
-	if !isPersonalEmail {
+	if !isPersonalEmail && isNewTenant {
 		err = services.CommonServices.RegistrationService.PrepareDefaultTenantSetup(ctx, signInRequest.LoggedInEmail)
 		if err != nil {
 			tracing.TraceErr(span, err)
