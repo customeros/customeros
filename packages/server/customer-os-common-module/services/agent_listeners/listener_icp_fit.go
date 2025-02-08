@@ -2,19 +2,21 @@ package agent_listeners
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
 type IcpFitListener struct {
@@ -75,7 +77,11 @@ func (l *IcpFitListener) Handle(ctx context.Context, baseEvent any) error {
 	agentExecutionId := ""
 	data, ok := event.Event.Data.(map[string]interface{})
 	if ok {
-		agentExecutionId = data["agentExecutionId"].(string)
+		agentExecutionId, ok = data["agentExecutionId"].(string)
+		if !ok {
+			return errors.New("agentExecutionId is not a string")
+		}
+
 	}
 
 	return l.handleGoalAchieved(ctx, agentExecutionId, event.Event.EntityId)

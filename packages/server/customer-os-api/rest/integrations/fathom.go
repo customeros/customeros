@@ -6,10 +6,13 @@ import (
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	commontracing "github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
@@ -47,10 +50,10 @@ func (h *IntegrationHandler) FathomZapier(c *gin.Context) {
 		return
 	}
 
-	// if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
-	// 	handlers.SendError(c, span, http.StatusForbidden, enum.ErrForbidden)
-	// 	return
-	// }
+	if !strings.EqualFold(c.Request.UserAgent(), "Zapier") {
+		h.responseHandler.HandleError(c, http.StatusForbidden, nil)
+		return
+	}
 
 	h.handleFathomAISummaryZapier(c, ctx)
 }
@@ -67,6 +70,15 @@ func (h *IntegrationHandler) handleFathomAISummaryZapier(c *gin.Context, ctx con
 		h.responseHandler.HandleError(c, http.StatusBadRequest, &message)
 		return
 	}
+
+	userEmailValidation := mailvalidate.ValidateEmailSyntax(aiSummaryDataPayload.FathomUser.Email)
+	email := userEmailValidation.CleanEmail
+	if email == "" {
+		message := "Cannot find user"
+		h.responseHandler.HandleError(c, http.StatusNotFound, &message)
+		return
+	}
+	ctx = common.SetUserEmailInContext(ctx, email)
 
 	aiSummaryData := &aiSummaryDataPayload
 	err = aiSummaryData.toCleanPayload()
@@ -97,28 +109,27 @@ func (h *IntegrationHandler) publishFathomMeetingSummaryCreatedEvent(c *gin.Cont
 	defer span.Finish()
 	commontracing.TagComponentRest(span)
 
-	var meetingSummary data_fields.MeetingSummaryEvent
-
+	meetingID := aiSummaryData.ID
+	participants := aiSummaryData.Meeting.participantEmails()
 	content, err := aiSummaryData.toMarkdownContent()
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to convert Fathom AI summary to markdown"))
 		return err
 	}
 
-	// build meeting summary
-	meetingSummary.Tenant = common.GetTenantFromContext(ctx)
-	meetingSummary.MeetingID = aiSummaryData.ID
-	meetingSummary.Content = &content
-	participants := aiSummaryData.Meeting.participantEmails()
-	meetingSummary.ParticipantEmails = &participants
-
-	if aiSummaryData.Meeting.ScheduledStartTime.IsZero() {
-		meetingSummary.Timestamp = utils.NowPtr()
-	} else {
-		meetingSummary.Timestamp = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
+	event := dto.NewMeetingRecording{
+		Source:            enum.SourceFathom,
+		Content:           &content,
+		ParticipantEmails: &participants,
 	}
 
-	pubErr := h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, meetingSummary.MeetingID, "", meetingSummary)
+	if aiSummaryData.Meeting.ScheduledStartTime.IsZero() {
+		event.Timestamp = utils.NowPtr()
+	} else {
+		event.Timestamp = utils.TimePtr(aiSummaryData.Meeting.ScheduledStartTime.UTC())
+	}
+
+	pubErr := h.services.CommonServices.Events.Publisher.PublishFanoutEvent(ctx, meetingID, model.MEETING, event)
 	if pubErr != nil {
 		tracing.TraceErr(span, errors.Wrap(pubErr, "failed to publish event"))
 	}

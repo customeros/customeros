@@ -3,6 +3,7 @@ package postgres_repository
 import (
 	"context"
 	"errors"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -20,6 +21,7 @@ type AgentRepository interface {
 	GetAll(ctx context.Context) ([]*postgres_entity.Agent, error)
 	GetAllAgentsByTypes(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
 	GetActiveConfiguredAgentsByTypes(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
+	GetActiveConfiguredAgentsByUserAndType(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
 	GetActiveConfiguredAgentsByTypesCrossTenant(ctx context.Context, agents []enum.AgentType) ([]postgres_entity.Agent, error)
 	Update(ctx context.Context, agent postgres_entity.Agent) (*postgres_entity.Agent, error)
 	UpdateCapabilities(ctx context.Context, capabilities []postgres_entity.Capability) error
@@ -184,6 +186,45 @@ func (f *agentsRepository) GetActiveConfiguredAgentsByTypes(ctx context.Context,
 			return db.Order("position ASC")
 		}).
 		Where("tenant = ? AND is_active = ? AND configured = ?", tenant, true, true)
+	if len(types) > 0 {
+		query = query.Where("type IN (?)", types)
+	}
+
+	err := query.Find(&records).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return records, nil
+}
+
+func (f *agentsRepository) GetActiveConfiguredAgentsByUserAndType(ctx context.Context, agentTypes []enum.AgentType) ([]postgres_entity.Agent, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRepository.GetActiveConfiguredAgentsByUserAndType")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	tenant := common.GetTenantFromContext(ctx)
+	userEmail := common.GetUserEmailFromContext(ctx)
+	if tenant == "" || userEmail == "" {
+		err := errors.New("tenant or userEmail not set")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var records []postgres_entity.Agent
+	types := make([]string, len(agentTypes))
+	for i, agentType := range agentTypes {
+		types[i] = agentType.String()
+	}
+
+	query := f.gormDb.
+		Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position ASC")
+		}).
+		Preload("Listeners", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position ASC")
+		}).
+		Where("tenant = ? AND is_active = ? AND configured = ? AND owner = ?", tenant, true, true, userEmail)
 	if len(types) > 0 {
 		query = query.Where("type IN (?)", types)
 	}

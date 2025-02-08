@@ -5,6 +5,10 @@ import (
 )
 
 var (
+	// context errors
+	ErrUserEmailNotSet = errors.New("User email not set")
+	ErrTenantNotSet    = errors.New("Tenant not set")
+
 	ErrAccessDenied        = errors.New("Access denied")
 	ErrInvalidEntityType   = errors.New("Invalid entity type")
 	ErrNotSupported        = errors.New("Not supported")
@@ -23,11 +27,13 @@ var (
 	ErrMailboxExists = errors.New("mailbox already exists")
 
 	// validation errors
-	ErrLinkedInUsed = errors.New("linkedin url is already used")
-	ErrEmailUsed    = errors.New("Email is already used")
+	ErrLinkedInUsed       = errors.New("linkedin url is already used")
+	ErrEmailUsed          = errors.New("Email is already used")
+	ErrCannotIdentifyUser = errors.New("Cannot identify CustomerOS user")
 
 	// Capability errors
 	ErrCapabilityDomainMissing         = errors.New("Missing domain")
+	ErrCapabilityContactMissing        = errors.New("Missing contact email")
 	ErrCapabilityHostnameNotConfigured = errors.New("Hostname not configured")
 )
 
@@ -41,6 +47,7 @@ func SkipTracing(err error) bool {
 		ErrLinkedInUsed,
 		ErrEmailUsed,
 		ErrCapabilityDomainMissing,
+		ErrCapabilityContactMissing,
 		ErrCapabilityHostnameNotConfigured,
 	}
 

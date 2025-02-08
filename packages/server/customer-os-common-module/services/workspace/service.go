@@ -3,11 +3,11 @@ package workspace
 import (
 	"context"
 	"fmt"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
 	neo4jentity "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/mapper"
 	neo4j_repository "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 
@@ -30,6 +30,7 @@ func NewWorkspaceService(neo4j *neo4j_repository.Repositories) interfaces.Worksp
 func (s *workspaceService) MergeToTenant(ctx context.Context, tx *neo4j.ManagedTransaction, workspaceEntity neo4jentity.WorkspaceEntity, tenant string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceService.MergeToTenant")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	span.LogKV("workspaceEntity", workspaceEntity)
 	span.LogKV("tenant", tenant)
@@ -46,6 +47,7 @@ func (s *workspaceService) MergeToTenant(ctx context.Context, tx *neo4j.ManagedT
 func (s *workspaceService) GetWorkspaceDomainsForTenant(ctx context.Context) ([]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "WorkspaceService.GetWorkspaceDomainsForTenant")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	// validate tenant
 	err := common.ValidateTenant(ctx)

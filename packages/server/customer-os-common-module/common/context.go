@@ -2,9 +2,10 @@ package common
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 type CustomContext struct {
@@ -75,6 +76,12 @@ func GetUserEmailFromContext(ctx context.Context) string {
 func SetAppSourceInContext(ctx context.Context, appSource string) context.Context {
 	customContext := GetContext(ctx)
 	customContext.AppSource = appSource
+	return WithCustomContext(ctx, customContext)
+}
+
+func SetUserEmailInContext(ctx context.Context, userEmail string) context.Context {
+	customContext := GetContext(ctx)
+	customContext.UserEmail = userEmail
 	return WithCustomContext(ctx, customContext)
 }
 

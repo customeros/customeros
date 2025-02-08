@@ -1,8 +1,9 @@
 package neo4j_entity
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 	"time"
+
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
 )
 
 type UserProperty string
