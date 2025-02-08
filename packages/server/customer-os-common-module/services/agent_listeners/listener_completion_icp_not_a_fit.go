@@ -17,51 +17,51 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type IcpFitListener struct {
+type IcpNotAFitListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
 }
 
 // Compile-time interface check for AgentListenerUntyped
 var (
-	_ interfaces.AgentListenerUntyped = (*IcpFitListener)(nil)
-	_ interfaces.EventListener        = (*IcpFitListener)(nil)
+	_ interfaces.AgentListenerUntyped = (*IcpNotAFitListener)(nil)
+	_ interfaces.EventListener        = (*IcpNotAFitListener)(nil)
 )
 
-func NewIcpFitListener(
+func NewIcpNotAFitListener(
 	logger logger.Logger,
 	postgresRepositories *postgres_repository.Repositories,
-) *IcpFitListener {
-	return &IcpFitListener{
+) *IcpNotAFitListener {
+	return &IcpNotAFitListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
-			events.GetEventType[dto.IcpFit](), // subscribed event
-			events.QueueAgents,                // listening on Agents queue
+			events.GetEventType[dto.IcpNotAFit](), // subscribed event
+			events.QueueAgents,                    // listening on Agents queue
 		),
 		postgresRepositories: postgresRepositories,
 	}
 }
 
-func (l *IcpFitListener) Type() enum.AgentListenerEvent {
-	return enum.EventICPFit
+func (l *IcpNotAFitListener) Type() enum.AgentListenerEvent {
+	return enum.EventICPNotAFit
 }
 
-func (l *IcpFitListener) Name() string {
-	return "ICP Fit"
+func (l *IcpNotAFitListener) Name() string {
+	return "ICP Not A Fit"
 }
 
-func (l *IcpFitListener) DefaultConfig() any {
+func (l *IcpNotAFitListener) DefaultConfig() any {
 	return &postgres_entity.NoConfig{}
 }
 
-func (l *IcpFitListener) SubscribedAgents() []enum.AgentType {
+func (l *IcpNotAFitListener) SubscribedAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentICPQualifier,
 	}
 }
 
-func (l *IcpFitListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpFitListener.Handle")
+func (l *IcpNotAFitListener) Handle(ctx context.Context, baseEvent any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpNotAFitListener.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
@@ -78,14 +78,16 @@ func (l *IcpFitListener) Handle(ctx context.Context, baseEvent any) error {
 		agentExecutionId = data["agentExecutionId"].(string)
 	}
 
-	return l.handleGoalAchieved(ctx, agentExecutionId, event.Event.EntityId)
+	return l.handleGoalAchieved(ctx, agentExecutionId)
 }
 
-func (l *IcpFitListener) handleGoalAchieved(ctx context.Context, agentExecutionId, orgId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpFitListener.handle")
+func (l *IcpNotAFitListener) handleGoalAchieved(ctx context.Context, agentExecutionId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpNotAFitListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
-	span.LogFields(log.String("agentExecutionId", agentExecutionId), log.String("orgId", orgId))
+
+	tracing.SetDefaultListenerSpanTags(ctx, span)
+	span.LogFields(log.String("agentExecutionId", agentExecutionId))
 
 	var agentExecution *postgres_entity.AgentExecution
 	var err error
@@ -97,22 +99,22 @@ func (l *IcpFitListener) handleGoalAchieved(ctx context.Context, agentExecutionI
 		}
 	}
 	if agentExecution == nil {
-		// TODO find agent execution by orgId
+		err = fmt.Errorf("agent execution not found")
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	// update execution with goal achieved
-	if agentExecution != nil {
-		if agentExecution.Status == enum.AgentExecutionCompleted || agentExecution.Status == enum.AgentExecutionFail {
-			err = fmt.Errorf("agent execution already completed or failed")
-			tracing.TraceErr(span, err)
-			return err
-		}
-		agentExecution.GoalAchieved = true
-		_, err = l.postgresRepositories.AgentExecutionRepository.Update(ctx, agentExecution.ID, utils.NowPtr(), "", true)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
+	if agentExecution.Status == enum.AgentExecutionCompleted || agentExecution.Status == enum.AgentExecutionFail {
+		err = fmt.Errorf("agent execution already completed or failed")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	agentExecution.GoalAchieved = true
+	_, err = l.postgresRepositories.AgentExecutionRepository.Update(ctx, agentExecution.ID, utils.NowPtr(), "", true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	return nil
