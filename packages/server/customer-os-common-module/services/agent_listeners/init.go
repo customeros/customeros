@@ -28,6 +28,7 @@ func InitAgentListeners(
 	listeners = append(listeners, NewNewWebSessionListener(logger, postgresRepositories, agentRunnerService))
 	listeners = append(listeners, NewWebVisitorIdentifiedListener(logger, postgresRepositories))
 	listeners = append(listeners, NewWebVisitorNotIdentifiedListener(logger, postgresRepositories))
+	listeners = append(listeners, NewRunIcpQualifierAgent(logger, postgresRepositories, agentRunnerService))
 
 	agentListeners := AgentListeners{
 		listeners: make(map[enum.AgentListenerEvent]interfaces.AgentListenerUntyped),
