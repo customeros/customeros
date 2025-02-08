@@ -34,13 +34,13 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewApplyTagCapability(tagService))
 	capabilities = append(capabilities, NewCreateOrganizationCapability(organizationService))
 	capabilities = append(capabilities, NewCreateMarkdownTimelineEventCapability(markdownService))
-	capabilities = append(capabilities, NewEvaluateICPFitCapability(aiService, events))
+	capabilities = append(capabilities, NewEvaluateICPFitCapability(aiService))
 	capabilities = append(capabilities, NewGatherCompanyIntelligenceCapability(postgresRepositories, organizationService))
 	capabilities = append(capabilities, NewGenerateInvoiceCapability(postgresRepositories, invoiceService))
 	capabilities = append(capabilities, NewIdentifyWebsiteVisitorCapability(events, postgresRepositories, enrichmentService, domainService))
 	capabilities = append(capabilities, NewSendSlackNotificationCapability(notificationService))
 	capabilities = append(capabilities, NewSendWebVisitorSlackNotificationCapability(postgresRepositories, notificationService, workspaceService))
-	capabilities = append(capabilities, NewUpdateCompanyStatusCapability(organizationService))
+	capabilities = append(capabilities, NewUpdateCompanyStatusCapability(organizationService, events))
 
 	agentCapabilities := AgentCapabilities{
 		executors: make(map[enum.AgentCapability]interfaces.AgentCapabilityUntyped),
