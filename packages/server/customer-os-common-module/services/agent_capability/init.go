@@ -19,24 +19,28 @@ func InitCapabilities(
 	postgresRepositories *postgres_repository.Repositories,
 	actionService interfaces.ActionService,
 	aiService interfaces.AIService,
+	contactService interfaces.ContactService,
+	domainService interfaces.DomainService,
 	enrichmentService interfaces.EnrichmentService,
+	invoiceService interfaces.InvoiceService,
+	markdownService interfaces.MarkdownEventService,
 	notificationService interfaces.NotificationService,
 	organizationService interfaces.OrganizationService,
 	tagService interfaces.TagService,
 	workspaceService interfaces.WorkspaceService,
-	markdownService interfaces.MarkdownEventService,
-	domainService interfaces.DomainService,
-	invoiceService interfaces.InvoiceService,
 ) *AgentCapabilities {
-
 	var capabilities []interfaces.AgentCapabilityUntyped
+	capabilities = append(capabilities, NewAddMeetingNotesToCompanyCapability(organizationService, markdownService))
 	capabilities = append(capabilities, NewAnalyzeWebSessionCapability(events, postgresRepositories, actionService))
 	capabilities = append(capabilities, NewApplyTagCapability(tagService))
 	capabilities = append(capabilities, NewCreateOrganizationCapability(organizationService))
+	capabilities = append(capabilities, NewCreateContactCapability(contactService))
 	capabilities = append(capabilities, NewCreateMarkdownTimelineEventCapability(markdownService))
 	capabilities = append(capabilities, NewEvaluateICPFitCapability(aiService, events))
+	capabilities = append(capabilities, NewExtractMeetingHighlightsCapability(aiService))
 	capabilities = append(capabilities, NewGatherCompanyIntelligenceCapability(postgresRepositories, organizationService))
 	capabilities = append(capabilities, NewGenerateInvoiceCapability(postgresRepositories, invoiceService))
+	capabilities = append(capabilities, NewIdentifyMeetingParticipantsCapability(workspaceService))
 	capabilities = append(capabilities, NewIdentifyWebsiteVisitorCapability(events, postgresRepositories, enrichmentService, domainService))
 	capabilities = append(capabilities, NewSendSlackNotificationCapability(notificationService))
 	capabilities = append(capabilities, NewSendWebVisitorSlackNotificationCapability(postgresRepositories, notificationService, workspaceService))

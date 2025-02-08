@@ -11,6 +11,7 @@ const (
 	CapabilityAnalyzeWebSessionIntent            AgentCapability = "analyze_web_session_for_intent"
 	CapabilityApplyTag                           AgentCapability = "apply_tag"
 	CapabilityBuildCampaignList                  AgentCapability = "build_campaign_list"
+	CapabilityCheckSupportNeed                   AgentCapability = "check_support_need"
 	CapabilityCollectPayments                    AgentCapability = "collect_payment"
 	CapabilityCreateAndEnrichContact             AgentCapability = "create_and_enrich_contact"
 	CapabilityCreateAndEnrichCompany             AgentCapability = "create_and_enrich_company"
@@ -56,6 +57,7 @@ func GetAgentCapability(s string) (AgentCapability, error) {
 		CapabilityAnalyzeWebSessionIntent,
 		CapabilityApplyTag,
 		CapabilityBuildCampaignList,
+		CapabilityCheckSupportNeed,
 		CapabilityCollectPayments,
 		CapabilityCreateAndEnrichContact,
 		CapabilityCreateAndEnrichCompany,
