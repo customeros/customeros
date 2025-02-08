@@ -93,6 +93,7 @@ func (c *EvaluateICPFitCapability) NewConfig() EvaluateICPFitConfig {
 
 func (c *EvaluateICPFitCapability) DefaultConfig() any {
 	config := c.NewConfig()
+	config.ICPCompanyExamples.Value = []string{}
 	return &config
 }
 
