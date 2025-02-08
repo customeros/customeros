@@ -136,8 +136,52 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 
 		agentCapabilities = append(agentCapabilities, *defaultCapability)
 	}
-
 	agent.Capabilities = agentCapabilities
+
+	// build listeners from registry
+	var agentListeners []postgresentity.Listener
+	position := 1
+	for _, registryListener := range agentRegistry.ListenerEvents {
+		listenerEvent, err := enum.GetAgentListener(registryListener)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		listenerHandler, err := a.agentListeners.GetListener(listenerEvent)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		defaultListener, err := a.createDefaultListener(ctx, listenerEvent, listenerHandler.Name(), position)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		position++
+
+		agentListeners = append(agentListeners, *defaultListener)
+	}
+	for _, registryListener := range agentRegistry.CompletionEvents {
+		listenerEvent, err := enum.GetAgentListener(registryListener)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		listenerHandler, err := a.agentListeners.GetListener(listenerEvent)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		defaultListener, err := a.createDefaultListener(ctx, listenerEvent, listenerHandler.Name(), position)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		position++
+
+		agentListeners = append(agentListeners, *defaultListener)
+	}
+	agent.Listeners = agentListeners
 
 	// create agent instance in database
 	newAgent, err := a.postgresRepositories.AgentRepository.Create(ctx, agent)
@@ -195,6 +239,34 @@ func (a *agentService) createDefaultCapability(ctx context.Context, capabilityTy
 	}
 
 	return &agentCapability, nil
+}
+
+func (a *agentService) createDefaultListener(ctx context.Context, listenerEvent enum.AgentListenerEvent, listenerName string, position int) (*postgres_entity.Listener, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.createDefaultListener")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	handler, err := a.agentListeners.GetListener(listenerEvent)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	config := handler.DefaultConfig()
+	agentListener := postgresentity.Listener{
+		ID:       utils.GenerateNanoIdWithPrefix("lst", 16),
+		Name:     listenerName,
+		Type:     listenerEvent,
+		Active:   true,
+		Tenant:   common.GetTenantFromContext(ctx),
+		Position: position,
+	}
+	err = agentListener.SetConfig(config)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &agentListener, nil
 }
 
 func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFields data_fields.AgentFields, capabilities []postgresentity.Capability, listeners []postgresentity.Listener) (*postgresentity.Agent, error) {
@@ -318,8 +390,35 @@ func (a *agentService) updateListeners(ctx context.Context, agentEntity *postgre
 
 	agentEntity.UpdateListeners(listeners)
 
-	// TODO validate listeners
+	for i, listener := range agentEntity.Listeners {
+		if !listener.Active {
+			// Not active => auto valid
+			continue
+		}
 
+		handler, err := a.agentListeners.GetListener(listener.Type)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		config := handler.DefaultConfig()
+		err = listener.GetConfig(&config)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		// see if typedConfig implements ConfigValidator
+		if validator, ok := config.(agent_capability.ConfigValidator); ok {
+			validator.Validate()
+			err = listener.SetConfig(config)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+			agentEntity.Listeners[i] = listener
+		}
+	}
 	return nil
 }
 
