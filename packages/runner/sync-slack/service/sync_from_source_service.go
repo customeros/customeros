@@ -423,7 +423,7 @@ func (s *syncFromSourceService) getSlackToken(ctx context.Context, tenant string
 		return "", err
 	}
 	if slackSettings == nil || slackSettings.AccessToken == "" {
-		return "", errors.New("slack api token found")
+		return "", errors.New("slack api token not found")
 	}
 	return slackSettings.AccessToken, nil
 }

@@ -26,5 +26,4 @@ type AgentRegistry interface {
 }
 
 type AgentEvents interface {
-	Name() enum.AgentListenerEvent
 }

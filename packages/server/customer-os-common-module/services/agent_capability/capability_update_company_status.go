@@ -2,6 +2,9 @@ package agent_capability
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 
 	neo4jenum "github.com/customeros/customeros/packages/server/customer-os-neo4j-repository/enum"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -18,6 +21,7 @@ import (
 
 type UpdateCompanyStatusCapability struct {
 	organizationService interfaces.OrganizationService
+	events              *events.EventsService
 }
 
 type UpdateCompanyStatusInput struct {
@@ -28,9 +32,10 @@ type UpdateCompanyStatusInput struct {
 	IcpFitRationale          []string    `json:"icpFitRationale"`
 }
 
-func NewUpdateCompanyStatusCapability(orgSrv interfaces.OrganizationService) *UpdateCompanyStatusCapability {
+func NewUpdateCompanyStatusCapability(orgSrv interfaces.OrganizationService, events *events.EventsService) *UpdateCompanyStatusCapability {
 	return &UpdateCompanyStatusCapability{
 		organizationService: orgSrv,
+		events:              events,
 	}
 }
 
@@ -60,7 +65,7 @@ func (c *UpdateCompanyStatusCapability) DefaultConfig() any {
 	return &config
 }
 
-func (c *UpdateCompanyStatusCapability) ValidateConfig(config postgres_entity.NoConfig) error {
+func (c *UpdateCompanyStatusCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }
 
@@ -98,18 +103,30 @@ func (c *UpdateCompanyStatusCapability) Execute(ctx context.Context, executionCo
 		return false, NoOutput{}, err
 	}
 
+	var err error
 	switch {
 	case executionContainer.InputData.IcpFit == enum.IcpIsFit:
-		return true, NoOutput{}, c.processICPFit(ctx, executionContainer.InputData.OrganizationID, executionContainer.InputData.IcpFitRationale)
+		err = c.processICPFit(ctx, executionContainer.InputData.OrganizationID, executionContainer.InputData.IcpFitRationale)
 
 	case executionContainer.InputData.IcpFit == enum.IcpNotFit:
-		return true, NoOutput{}, c.processICPNotAFit(ctx, executionContainer.InputData.OrganizationID, executionContainer.InputData.IcpFitRationale)
+		err = c.processICPNotAFit(ctx, executionContainer.InputData.OrganizationID, executionContainer.InputData.IcpFitRationale)
 
 	default:
-		err := errors.New("Not implemented yet")
+		err = errors.New("Not implemented yet")
 		tracing.TraceErr(span, err)
 		return false, NoOutput{}, err
 	}
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return true, NoOutput{}, err
+	}
+
+	publishErr := c.publishIcpFitEvent(ctx, executionContainer.InputData.IcpFit, executionContainer.AgentExecutionID)
+	if publishErr != nil {
+		tracing.TraceErr(span, publishErr)
+	}
+
+	return true, NoOutput{}, err
 }
 
 func (c *UpdateCompanyStatusCapability) processICPFit(ctx context.Context, organizationID string, reasons []string) error {
@@ -146,4 +163,25 @@ func (c *UpdateCompanyStatusCapability) processICPNotAFit(ctx context.Context, o
 		return err
 	}
 	return nil
+}
+
+func (c *UpdateCompanyStatusCapability) publishIcpFitEvent(ctx context.Context, icpFitResult enum.IcpFit, agentExecutionID string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UpdateCompanyStatusCapability.publishIcpFitEvent")
+	defer span.Finish()
+	tracing.TagComponentService(span)
+
+	switch icpFitResult {
+	case enum.IcpIsFit:
+		return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.IcpFit{
+			AgentExecutionId: agentExecutionID,
+		})
+
+	case enum.IcpNotFit:
+		return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.IcpNotAFit{
+			AgentExecutionId: agentExecutionID,
+		})
+
+	default:
+		return errors.New("ICP Fit not set")
+	}
 }

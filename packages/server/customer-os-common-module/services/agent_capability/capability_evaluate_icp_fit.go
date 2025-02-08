@@ -10,11 +10,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
@@ -22,7 +19,6 @@ const MinICPCompanyExamples = 5
 
 type EvaluateICPFitCapability struct {
 	aiService interfaces.AIService
-	events    *events.EventsService
 }
 
 type EvaluateICPFitInput struct {
@@ -68,10 +64,9 @@ func (c *EvaluateICPFitConfig) Validate() bool {
 	return isValid
 }
 
-func NewEvaluateICPFitCapability(aiService interfaces.AIService, events *events.EventsService) *EvaluateICPFitCapability {
+func NewEvaluateICPFitCapability(aiService interfaces.AIService) *EvaluateICPFitCapability {
 	return &EvaluateICPFitCapability{
 		aiService: aiService,
-		events:    events,
 	}
 }
 
@@ -98,6 +93,7 @@ func (c *EvaluateICPFitCapability) NewConfig() EvaluateICPFitConfig {
 
 func (c *EvaluateICPFitCapability) DefaultConfig() any {
 	config := c.NewConfig()
+	config.ICPCompanyExamples.Value = []string{}
 	return &config
 }
 
@@ -145,11 +141,6 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 		IcpFit: enum.IcpNotSet,
 	}
 
-	if executionContainer.InputData.EmployeeCount == 0 {
-		result.IcpFit = enum.IcpNotFit
-		return true, result, nil
-	}
-
 	if err := c.ValidateInput(executionContainer.InputData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid input"))
 		return false, result, err
@@ -175,37 +166,16 @@ func (c *EvaluateICPFitCapability) Execute(ctx context.Context, executionContain
 		tracing.TraceErr(span, err)
 		return true, result, err
 	}
+
 	result.IcpFitRationale = parsedAnswer.Reasons
+	if parsedAnswer.ICPFit {
+		result.IcpFit = enum.IcpIsFit
+	} else {
+		result.IcpFit = enum.IcpNotFit
+	}
 	tracing.LogObjectAsJson(span, "result", result)
 
-	err = c.publishIcpFitEvent(ctx, result.IcpFit, executionContainer.AgentExecutionID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return true, result, err
-	}
-
 	return true, result, nil
-}
-
-func (c *EvaluateICPFitCapability) publishIcpFitEvent(ctx context.Context, icpFitResult enum.IcpFit, agentExecutionID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EvaluateICPFitCapability.publishIcpFitEvent")
-	defer span.Finish()
-	tracing.TagComponentService(span)
-
-	switch icpFitResult {
-	case enum.IcpIsFit:
-		return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.IcpFit{
-			AgentExecutionId: agentExecutionID,
-		})
-
-	case enum.IcpNotFit:
-		return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.IcpNotAFit{
-			AgentExecutionId: agentExecutionID,
-		})
-
-	default:
-		return errors.New("ICP Fit not set")
-	}
 }
 
 func (c *EvaluateICPFitCapability) buildPrompts(executionContainer interfaces.TypedExecutionContainer[EvaluateICPFitInput, EvaluateICPFitConfig]) (string, string) {

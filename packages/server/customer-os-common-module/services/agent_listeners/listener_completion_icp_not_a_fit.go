@@ -72,22 +72,22 @@ func (l *IcpNotAFitListener) Handle(ctx context.Context, baseEvent any) error {
 		return err
 	}
 
-	agentExecutionId := ""
-	data, ok := event.Event.Data.(map[string]interface{})
-	if ok {
-		agentExecutionId = data["agentExecutionId"].(string)
+	data, err := events.DecodeEventData[dto.IcpNotAFit](ctx, event)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
-	return l.handleGoalAchieved(ctx, agentExecutionId, event.Event.EntityId)
+	return l.handleGoalAchieved(ctx, data.AgentExecutionId)
 }
 
-func (l *IcpNotAFitListener) handleGoalAchieved(ctx context.Context, agentExecutionId, orgId string) error {
+func (l *IcpNotAFitListener) handleGoalAchieved(ctx context.Context, agentExecutionId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpNotAFitListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
 	tracing.SetDefaultListenerSpanTags(ctx, span)
-	span.LogFields(log.String("agentExecutionId", agentExecutionId), log.String("orgId", orgId))
+	span.LogFields(log.String("agentExecutionId", agentExecutionId))
 
 	var agentExecution *postgres_entity.AgentExecution
 	var err error
@@ -99,22 +99,22 @@ func (l *IcpNotAFitListener) handleGoalAchieved(ctx context.Context, agentExecut
 		}
 	}
 	if agentExecution == nil {
-		// TODO find agent execution by orgId
+		err = fmt.Errorf("agent execution not found")
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	// update execution with goal achieved
-	if agentExecution != nil {
-		if agentExecution.Status == enum.AgentExecutionCompleted || agentExecution.Status == enum.AgentExecutionFail {
-			err = fmt.Errorf("agent execution already completed or failed")
-			tracing.TraceErr(span, err)
-			return err
-		}
-		agentExecution.GoalAchieved = true
-		_, err = l.postgresRepositories.AgentExecutionRepository.Update(ctx, agentExecution.ID, utils.NowPtr(), "", true)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
+	if agentExecution.Status == enum.AgentExecutionCompleted || agentExecution.Status == enum.AgentExecutionFail {
+		err = fmt.Errorf("agent execution already completed or failed")
+		tracing.TraceErr(span, err)
+		return err
+	}
+	agentExecution.GoalAchieved = true
+	_, err = l.postgresRepositories.AgentExecutionRepository.Update(ctx, agentExecution.ID, utils.NowPtr(), "", true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	return nil
