@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 )
 
@@ -10,14 +9,10 @@ var (
 	_ interfaces.AgentEvents = WebVisitorNotIdentified{}
 )
 
-type WebVisitorIdentified struct{}
-
-func (e WebVisitorIdentified) Name() enum.AgentListenerEvent {
-	return enum.EventWebVisitorIdentified
+type WebVisitorIdentified struct {
+	AgentExecutionId string `json:"agentExecutionId"`
 }
 
-type WebVisitorNotIdentified struct{}
-
-func (e WebVisitorNotIdentified) Name() enum.AgentListenerEvent {
-	return enum.EventWebVisitorNotIdentified
+type WebVisitorNotIdentified struct {
+	AgentExecutionId string `json:"agentExecutionId"`
 }

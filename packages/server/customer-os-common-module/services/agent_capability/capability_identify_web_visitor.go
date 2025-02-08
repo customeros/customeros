@@ -185,7 +185,9 @@ func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorIdentifiedEvent(ctx 
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
-	return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.WebVisitorIdentified{})
+	return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.WebVisitorIdentified{
+		AgentExecutionId: agentExecutionID,
+	})
 }
 
 func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorNotIdentifiedEvent(ctx context.Context, agentExecutionID string) error {
@@ -193,7 +195,9 @@ func (c *IdentifyWebsiteVisitorCapability) publishWebVisitorNotIdentifiedEvent(c
 	defer span.Finish()
 	tracing.TagComponentService(span)
 
-	return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.WebVisitorNotIdentified{})
+	return c.events.Publisher.PublishFanoutEvent(ctx, agentExecutionID, model.AGENT_EXECUTION, dto.WebVisitorNotIdentified{
+		AgentExecutionId: agentExecutionID,
+	})
 }
 
 func (c *IdentifyWebsiteVisitorCapability) acceptHostname(ctx context.Context, hostname string, websites []string) error {
