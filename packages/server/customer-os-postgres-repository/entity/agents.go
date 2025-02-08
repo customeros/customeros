@@ -9,6 +9,7 @@ import (
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -17,7 +18,8 @@ type Agent struct {
 	Type         enum.AgentType  `gorm:"column:type;type:varchar(50);not null;" json:"type"`
 	Scope        enum.AgentScope `gorm:"column:agent_scope;type:varchar(255)" json:"agentScope"`
 	Tenant       string          `gorm:"column:tenant;type:varchar(255);not null" json:"tenant" binding:"required"`
-	User         string          `gorm:"column:user;type:varchar(255)" json:"user"`
+	Owner        string          `gorm:"column:owner;type:varchar(255)" json:"owner"`
+	Managers     pq.StringArray  `gorm:"column:managers;type:varchar[]" json:"managers"`
 	Name         string          `gorm:"column:name;type:varchar(255);not null" json:"name" binding:"required"`
 	Configured   bool            `gorm:"column:configured;type:boolean;default:false" json:"capabilitiesConfigured"`
 	Goal         enum.AgentGoal  `gorm:"column:goal;type:text" json:"goal"`
