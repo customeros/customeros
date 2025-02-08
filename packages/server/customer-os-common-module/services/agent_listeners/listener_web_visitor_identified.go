@@ -3,6 +3,7 @@ package agent_listeners
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -17,34 +18,50 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
-type IcpFitListener struct {
+type WebVisitorIdentifiedListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
 }
 
-func NewIcpFitListener(
+// Compile-time interface check for AgentListenerUntyped
+var (
+	_ interfaces.AgentListenerUntyped = (*WebVisitorIdentifiedListener)(nil)
+)
+
+func NewWebVisitorIdentifiedListener(
 	logger logger.Logger,
 	postgresRepositories *postgres_repository.Repositories,
-) *IcpFitListener {
-	return &IcpFitListener{
+) *WebVisitorIdentifiedListener {
+	return &WebVisitorIdentifiedListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
-			events.GetEventType[dto.IcpFit](), // subscribed event
-			events.QueueAgents,                // listening on Agents queue
+			events.GetEventType[dto.WebVisitorIdentified](), // subscribed event
+			events.QueueAgents, // listening on Agents queue
 		),
 		postgresRepositories: postgresRepositories,
 	}
 }
 
-// Add all Agent types subscribed to this event here
-func (l *IcpFitListener) subscribedAgents() []enum.AgentType {
+func (l *WebVisitorIdentifiedListener) Type() enum.AgentListenerEvent {
+	return enum.EventWebVisitorIdentified
+}
+
+func (l *WebVisitorIdentifiedListener) Name() string {
+	return "Web Visitor Identified"
+}
+
+func (l *WebVisitorIdentifiedListener) DefaultConfig() any {
+	return &postgres_entity.NoConfig{}
+}
+
+func (l *WebVisitorIdentifiedListener) SubscribedAgents() []enum.AgentType {
 	return []enum.AgentType{
-		enum.AgentICPQualifier,
+		enum.AgentWebVisitorIdentifier,
 	}
 }
 
-func (l *IcpFitListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpFitListener.Handle")
+func (l *WebVisitorIdentifiedListener) Handle(ctx context.Context, baseEvent any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebVisitorIdentifiedListener.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
@@ -58,14 +75,14 @@ func (l *IcpFitListener) Handle(ctx context.Context, baseEvent any) error {
 	return l.handleGoalAchieved(ctx, event.Event.EntityId, event.Event.AgentEventName)
 }
 
-func (l *IcpFitListener) handleGoalAchieved(ctx context.Context, orgId, eventName string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpFitListener.handle")
+func (l *WebVisitorIdentifiedListener) handleGoalAchieved(ctx context.Context, orgId, eventName string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebVisitorIdentifiedListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	subscribedAgents := l.subscribedAgents()
+	subscribedAgents := l.SubscribedAgents()
 	if len(subscribedAgents) == 0 {
-		err := errors.New("No agent types configured for company stage lead listener")
+		err := errors.New("No agent types configured for WebVisitorIdentified event")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -80,8 +97,8 @@ func (l *IcpFitListener) handleGoalAchieved(ctx context.Context, orgId, eventNam
 	return errs
 }
 
-func (l *IcpFitListener) lookupActiveAgents(ctx context.Context, agentTypes []enum.AgentType) []postgres_entity.Agent {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpFitListener.lookupActiveAgents")
+func (l *WebVisitorIdentifiedListener) lookupActiveAgents(ctx context.Context, agentTypes []enum.AgentType) []postgres_entity.Agent {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "WebVisitorIdentifiedListener.lookupActiveAgents")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	span.LogFields(log.String("agentTypes", fmt.Sprintf("%v", agentTypes)))

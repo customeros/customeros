@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"log"
 	"reflect"
 
@@ -135,7 +136,7 @@ type CommonServices struct {
 
 	// Agents
 	AgentCapabilities  *agent_capability.AgentCapabilities
-	AgentRunnerService *agent.AgentRunnerService
+	AgentRunnerService interfaces.AgentRunnerService
 }
 
 type InitOptions struct {
@@ -270,6 +271,10 @@ func InitCommonServices(
 	agentImpl := agent.NewAgentService(postgresRepositories, eventsImpl, capabilityImpl)
 	capabilityExecutionImpl := agent_capability.NewAgentCapabilityExecutionService()
 	agentRunnerImpl := agent.NewAgentRunnerService(postgresRepositories, capabilityImpl, agentImpl, capabilityExecutionImpl)
+
+	// initialize agent listeners
+	agentListenerImpl := agent_listeners.InitAgentListeners(log, postgresRepositories, agentRunnerImpl)
+	agentImpl.SetListeners(agentListenerImpl)
 
 	// initialize registration service
 	registrationImpl := registration.NewRegistrationService(eventsImpl, postgresRepositories, neo4jRepositories, contactImpl, emailImpl, flowImpl, mailboxImpl, orgImpl, postmarkImpl, userImpl, agentImpl)

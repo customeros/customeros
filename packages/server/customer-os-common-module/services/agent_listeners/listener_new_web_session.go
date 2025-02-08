@@ -2,7 +2,6 @@ package agent_listeners
 
 import (
 	"context"
-
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -13,7 +12,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -22,27 +20,43 @@ import (
 type NewWebSessionListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
-	agentRunnerService   *agent.AgentRunnerService
+	agentRunnerService   interfaces.AgentRunnerService
 }
+
+// Compile-time interface check for AgentListenerUntyped
+var (
+	_ interfaces.AgentListenerUntyped = (*NewWebSessionListener)(nil)
+)
 
 func NewNewWebSessionListener(
 	logger logger.Logger,
-	postresRepositories *postgres_repository.Repositories,
-	agentRunnerService *agent.AgentRunnerService,
-) interfaces.EventListener {
+	postgresRepositories *postgres_repository.Repositories,
+	agentRunnerService interfaces.AgentRunnerService,
+) *NewWebSessionListener {
 	return &NewWebSessionListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
 			events.GetEventType[dto.NewWebSession](), // subscribed event
 			events.QueueAgents,                       // listening on Agents queue
 		),
-		postgresRepositories: postresRepositories,
+		postgresRepositories: postgresRepositories,
 		agentRunnerService:   agentRunnerService,
 	}
 }
 
-// Add all Agent types subscribed to this event here
-func (h *NewWebSessionListener) subscribedAgents() []enum.AgentType {
+func (l *NewWebSessionListener) Type() enum.AgentListenerEvent {
+	return enum.EventNewWebSession
+}
+
+func (l *NewWebSessionListener) Name() string {
+	return "New Web Session"
+}
+
+func (l *NewWebSessionListener) DefaultConfig() any {
+	return &postgres_entity.NoConfig{}
+}
+
+func (l *NewWebSessionListener) SubscribedAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentWebVisitorIdentifier,
 	}
@@ -103,12 +117,12 @@ func (l *NewWebSessionListener) handleExecution(ctx context.Context, data dto.Ne
 	return errs
 }
 
-func (h *NewWebSessionListener) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
+func (l *NewWebSessionListener) lookupActiveAgents(ctx context.Context) []postgres_entity.Agent {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NewWebSessionListener.lookupActiveAgents")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	agents, err := h.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, h.subscribedAgents())
+	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.SubscribedAgents())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil

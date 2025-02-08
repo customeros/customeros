@@ -3,6 +3,7 @@ package agent_listeners
 import (
 	"context"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
@@ -17,34 +18,50 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
-type IcpNotAFitListener struct {
+type IcpFitListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
 }
 
-func NewIcpNotAFitListener(
+// Compile-time interface check for AgentListenerUntyped
+var (
+	_ interfaces.AgentListenerUntyped = (*IcpFitListener)(nil)
+)
+
+func NewIcpFitListener(
 	logger logger.Logger,
 	postgresRepositories *postgres_repository.Repositories,
-) *IcpNotAFitListener {
-	return &IcpNotAFitListener{
+) *IcpFitListener {
+	return &IcpFitListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
-			events.GetEventType[dto.IcpNotAFit](), // subscribed event
-			events.QueueAgents,                    // listening on Agents queue
+			events.GetEventType[dto.IcpFit](), // subscribed event
+			events.QueueAgents,                // listening on Agents queue
 		),
 		postgresRepositories: postgresRepositories,
 	}
 }
 
-// Add all Agent types subscribed to this event here
-func (l *IcpNotAFitListener) subscribedAgents() []enum.AgentType {
+func (l *IcpFitListener) Type() enum.AgentListenerEvent {
+	return enum.EventICPFit
+}
+
+func (l *IcpFitListener) Name() string {
+	return "ICP Fit"
+}
+
+func (l *IcpFitListener) DefaultConfig() any {
+	return &postgres_entity.NoConfig{}
+}
+
+func (l *IcpFitListener) SubscribedAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentICPQualifier,
 	}
 }
 
-func (l *IcpNotAFitListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpNotAFitListener.Handle")
+func (l *IcpFitListener) Handle(ctx context.Context, baseEvent any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpFitListener.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
@@ -58,12 +75,12 @@ func (l *IcpNotAFitListener) Handle(ctx context.Context, baseEvent any) error {
 	return l.handleGoalAchieved(ctx, event.Event.EntityId, event.Event.AgentEventName)
 }
 
-func (l *IcpNotAFitListener) handleGoalAchieved(ctx context.Context, orgId, eventName string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpNotAFitListener.handle")
+func (l *IcpFitListener) handleGoalAchieved(ctx context.Context, orgId, eventName string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpFitListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	subscribedAgents := l.subscribedAgents()
+	subscribedAgents := l.SubscribedAgents()
 	if len(subscribedAgents) == 0 {
 		err := errors.New("No agent types configured for company stage lead listener")
 		tracing.TraceErr(span, err)
@@ -80,8 +97,8 @@ func (l *IcpNotAFitListener) handleGoalAchieved(ctx context.Context, orgId, even
 	return errs
 }
 
-func (l *IcpNotAFitListener) lookupActiveAgents(ctx context.Context, agentTypes []enum.AgentType) []postgres_entity.Agent {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpNotAFitListener.lookupActiveAgents")
+func (l *IcpFitListener) lookupActiveAgents(ctx context.Context, agentTypes []enum.AgentType) []postgres_entity.Agent {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpFitListener.lookupActiveAgents")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	span.LogFields(log.String("agentTypes", fmt.Sprintf("%v", agentTypes)))

@@ -48,7 +48,8 @@ func (c *CreateMarkdownTimelineEventCapability) NewConfig() postgres_entity.NoCo
 }
 
 func (c *CreateMarkdownTimelineEventCapability) DefaultConfig() any {
-	return &postgres_entity.NoConfig{}
+	config := c.NewConfig()
+	return &config
 }
 
 func (c *CreateMarkdownTimelineEventCapability) Type() enum.AgentCapability {

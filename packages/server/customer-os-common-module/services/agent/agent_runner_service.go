@@ -2,21 +2,19 @@ package agent
 
 import (
 	"context"
-	"github.com/opentracing/opentracing-go/log"
-
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/pkg/errors"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 )
 
-type AgentRunnerService struct {
+type agentRunnerService struct {
 	postgresRepositories       *postgres_repository.Repositories
 	agentCapabilitiesService   *agent_capability.AgentCapabilities
 	agentService               interfaces.AgentService
@@ -28,7 +26,7 @@ func NewAgentRunnerService(
 	agentCapabilities *agent_capability.AgentCapabilities,
 	agentService interfaces.AgentService,
 	capabilityExecution interfaces.AgentCapabilityExecutionService,
-) *AgentRunnerService {
+) interfaces.AgentRunnerService {
 	if postgresRepositories == nil {
 		panic("postgresRepositories cannot be nil")
 	}
@@ -39,15 +37,14 @@ func NewAgentRunnerService(
 		panic("agentService cannot be nil")
 	}
 
-	return &AgentRunnerService{
+	return &agentRunnerService{
 		postgresRepositories:       postgresRepositories,
 		agentCapabilitiesService:   agentCapabilities,
 		agentService:               agentService,
 		capabilityExecutionService: capabilityExecution,
 	}
 }
-
-func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agent, agentEventName string, initialParams map[string]any) error {
+func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agent, agentEventName string, initialParams map[string]any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.Run")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -155,7 +152,7 @@ func (a *AgentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	return nil
 }
 
-func (a *AgentRunnerService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEventName, traceId string) (string, error) {
+func (a *agentRunnerService) createAgentExecutionRecord(ctx context.Context, agentID, triggerEventName, traceId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentRunnerService.createAgentExecutionRecord")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)

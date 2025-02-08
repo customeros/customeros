@@ -63,7 +63,8 @@ func (c *AnalyzeWebSessionCapability) NewConfig() postgres_entity.NoConfig {
 }
 
 func (c *AnalyzeWebSessionCapability) DefaultConfig() any {
-	return &postgres_entity.NoConfig{}
+	config := c.NewConfig()
+	return &config
 }
 
 func (c *AnalyzeWebSessionCapability) ValidateInput(data AnalyzeWebSessionInput) error {

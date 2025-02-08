@@ -2,7 +2,6 @@ package agent_listeners
 
 import (
 	"context"
-
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -12,7 +11,6 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
@@ -21,27 +19,43 @@ import (
 type NewSupportVisitListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
-	agentRunnerService   *agent.AgentRunnerService
+	agentRunnerService   interfaces.AgentRunnerService
 }
+
+// Compile-time interface check for AgentListenerUntyped
+var (
+	_ interfaces.AgentListenerUntyped = (*NewSupportVisitListener)(nil)
+)
 
 func NewNewSupportVisitListener(
 	logger logger.Logger,
-	postresRepositories *postgres_repository.Repositories,
-	agentRunnerService *agent.AgentRunnerService,
-) interfaces.EventListener {
+	postgresRepositories *postgres_repository.Repositories,
+	agentRunnerService interfaces.AgentRunnerService,
+) *NewSupportVisitListener {
 	return &NewSupportVisitListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
 			events.GetEventType[dto.NewSupportVisit](), // subscribed event
 			events.QueueAgents,                         // listening on Agents queue
 		),
-		postgresRepositories: postresRepositories,
+		postgresRepositories: postgresRepositories,
 		agentRunnerService:   agentRunnerService,
 	}
 }
 
-// Add all Agent types subscribed to this event here
-func (h *NewSupportVisitListener) subscribedAgents() []enum.AgentType {
+func (l *NewSupportVisitListener) Type() enum.AgentListenerEvent {
+	return enum.EventNewSupportVisit
+}
+
+func (l *NewSupportVisitListener) Name() string {
+	return "New Support Visit"
+}
+
+func (h *NewSupportVisitListener) DefaultConfig() any {
+	return &postgres_entity.NoConfig{}
+}
+
+func (h *NewSupportVisitListener) SubscribedAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentSupportSpotter,
 	}
@@ -101,7 +115,7 @@ func (h *NewSupportVisitListener) lookupActiveAgents(ctx context.Context) []post
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	agents, err := h.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, h.subscribedAgents())
+	agents, err := h.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, h.SubscribedAgents())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil

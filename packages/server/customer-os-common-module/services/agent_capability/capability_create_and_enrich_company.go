@@ -48,7 +48,8 @@ func (c *CreateOrganizationCapability) NewConfig() postgres_entity.NoConfig {
 }
 
 func (c *CreateOrganizationCapability) DefaultConfig() any {
-	return &postgres_entity.NoConfig{}
+	config := c.NewConfig()
+	return &config
 }
 
 func (c *CreateOrganizationCapability) ValidateInput(input CreateOrganizationInput) error {
