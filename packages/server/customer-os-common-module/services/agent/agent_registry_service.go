@@ -34,6 +34,7 @@ type AgentMetadata struct {
 	Version string `toml:"version"`
 	Name    string `toml:"name"`
 	Type    string `toml:"type"`
+	Scope   string `toml:"scope"`
 	Icon    string `toml:"icon"`
 }
 

@@ -12,26 +12,27 @@ import (
 	"gorm.io/gorm"
 )
 
-// Agent entity without the embedded capabilities
 type Agent struct {
-	ID           string         `gorm:"primaryKey;type:varchar(32)" json:"id"`
-	Type         enum.AgentType `gorm:"column:type;type:varchar(50);not null;" json:"type"`
-	Tenant       string         `gorm:"column:tenant;type:varchar(255);not null" json:"tenant" binding:"required"`
-	Name         string         `gorm:"column:name;type:varchar(255);not null" json:"name" binding:"required"`
-	Configured   bool           `gorm:"column:configured;type:boolean;default:false" json:"capabilitiesConfigured"`
-	Goal         enum.AgentGoal `gorm:"column:goal;type:text" json:"goal"`
-	Status       string         `gorm:"column:status;type:varchar(32)" json:"status"`
-	IsActive     bool           `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
-	FlowID       string         `gorm:"column:flow_id;type:varchar(255)" json:"flowId"`
-	VisibleInUI  bool           `gorm:"column:visible_in_ui;type:boolean;default:true" json:"visibleInUI"`
-	CreatedAt    time.Time      `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
-	UpdatedAt    *time.Time     `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
-	ErrorMessage *string        `gorm:"column:error_message;type:varchar(255)" json:"errorMessage"`
-	Color        string         `gorm:"column:color;type:varchar(255)" json:"color"`
-	Icon         string         `gorm:"column:icon;type:varchar(255)" json:"icon"`
-	RegistryID   string         `gorm:"column:registry_id;type:varchar(32)" json:"registryId"`
-	Capabilities []Capability   `gorm:"foreignKey:AgentID" json:"capabilities"`
-	Listeners    []Listener     `gorm:"foreignKey:AgentID" json:"listeners"`
+	ID           string          `gorm:"primaryKey;type:varchar(32)" json:"id"`
+	Type         enum.AgentType  `gorm:"column:type;type:varchar(50);not null;" json:"type"`
+	Scope        enum.AgentScope `gorm:"column:agent_scope;type:varchar(255)" json:"agentScope"`
+	Tenant       string          `gorm:"column:tenant;type:varchar(255);not null" json:"tenant" binding:"required"`
+	User         string          `gorm:"column:user;type:varchar(255)" json:"user"`
+	Name         string          `gorm:"column:name;type:varchar(255);not null" json:"name" binding:"required"`
+	Configured   bool            `gorm:"column:configured;type:boolean;default:false" json:"capabilitiesConfigured"`
+	Goal         enum.AgentGoal  `gorm:"column:goal;type:text" json:"goal"`
+	Status       string          `gorm:"column:status;type:varchar(32)" json:"status"`
+	IsActive     bool            `gorm:"column:is_active;type:boolean;default:false" json:"isActive"`
+	FlowID       string          `gorm:"column:flow_id;type:varchar(255)" json:"flowId"`
+	VisibleInUI  bool            `gorm:"column:visible_in_ui;type:boolean;default:true" json:"visibleInUI"`
+	CreatedAt    time.Time       `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
+	UpdatedAt    *time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	ErrorMessage *string         `gorm:"column:error_message;type:varchar(255)" json:"errorMessage"`
+	Color        string          `gorm:"column:color;type:varchar(255)" json:"color"`
+	Icon         string          `gorm:"column:icon;type:varchar(255)" json:"icon"`
+	RegistryID   string          `gorm:"column:registry_id;type:varchar(32)" json:"registryId"`
+	Capabilities []Capability    `gorm:"foreignKey:AgentID" json:"capabilities"`
+	Listeners    []Listener      `gorm:"foreignKey:AgentID" json:"listeners"`
 }
 
 func (Agent) TableName() string {

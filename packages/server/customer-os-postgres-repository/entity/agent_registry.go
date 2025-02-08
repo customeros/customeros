@@ -10,17 +10,18 @@ import (
 )
 
 type AgentRegistry struct {
-	ID               string         `gorm:"primaryKey;type:varchar(21)" json:"id"`
-	Type             enum.AgentType `gorm:"column:type;type:varchar(255);not null;index" json:"type" binding:"required"`
-	AgentName        string         `gorm:"column:agent_name;type:varchar(255)" json:"agentName"`
-	Filename         string         `gorm:"column:filename;type:varchar(255)" json:"filename"`
-	CompletionEvents pq.StringArray `gorm:"column:completion_events;type:varchar[]" json:"completionEvents"`
-	ListenerEvents   pq.StringArray `gorm:"column:listener_events;type:varchar[]" json:"listenerEvents"`
-	Capabilities     pq.StringArray `gorm:"column:capabilities;type:varchar[]" json:"capabilities"`
-	Version          string         `gorm:"column:version;type:varchar(21)" json:"version"`
-	Goal             enum.AgentGoal `gorm:"column:goal;type:varchar(255)" json:"goal"`
-	IsActive         bool           `gorm:"column:is_active;type:boolean;default:true" json:"isActive"`
-	Icon             string         `gorm:"column:icon;type:text" json:"icon"`
+	ID               string          `gorm:"primaryKey;type:varchar(21)" json:"id"`
+	Type             enum.AgentType  `gorm:"column:type;type:varchar(255);not null;index" json:"type" binding:"required"`
+	AgentName        string          `gorm:"column:agent_name;type:varchar(255)" json:"agentName"`
+	Scope            enum.AgentScope `gorm:"column:agent_scope;type:varchar(255)" json:"agentScope"`
+	Filename         string          `gorm:"column:filename;type:varchar(255)" json:"filename"`
+	CompletionEvents pq.StringArray  `gorm:"column:completion_events;type:varchar[]" json:"completionEvents"`
+	ListenerEvents   pq.StringArray  `gorm:"column:listener_events;type:varchar[]" json:"listenerEvents"`
+	Capabilities     pq.StringArray  `gorm:"column:capabilities;type:varchar[]" json:"capabilities"`
+	Version          string          `gorm:"column:version;type:varchar(21)" json:"version"`
+	Goal             enum.AgentGoal  `gorm:"column:goal;type:varchar(255)" json:"goal"`
+	IsActive         bool            `gorm:"column:is_active;type:boolean;default:true" json:"isActive"`
+	Icon             string          `gorm:"column:icon;type:text" json:"icon"`
 }
 
 func (AgentRegistry) TableName() string {
