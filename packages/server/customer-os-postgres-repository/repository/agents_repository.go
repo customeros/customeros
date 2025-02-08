@@ -268,7 +268,7 @@ func (f *agentsRepository) Update(ctx context.Context, agent postgres_entity.Age
 
 	err := f.gormDb.Transaction(func(tx *gorm.DB) error {
 		// Update agent
-		if err := tx.Model(&agent).Omit("Capabilities").Save(&agent).Error; err != nil {
+		if err := tx.Model(&agent).Omit("Capabilities").Omit("Listeners").Save(&agent).Error; err != nil {
 			return err
 		}
 
