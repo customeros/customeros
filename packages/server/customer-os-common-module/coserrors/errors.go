@@ -34,6 +34,7 @@ var (
 	// Capability errors
 	ErrCapabilityDomainMissing         = errors.New("Missing domain")
 	ErrCapabilityContactMissing        = errors.New("Missing contact email")
+	ErrMeetingContentMissing           = errors.New("Missing meeting content")
 	ErrCapabilityHostnameNotConfigured = errors.New("Hostname not configured")
 )
 
@@ -48,6 +49,7 @@ func SkipTracing(err error) bool {
 		ErrEmailUsed,
 		ErrCapabilityDomainMissing,
 		ErrCapabilityContactMissing,
+		ErrMeetingContentMissing,
 		ErrCapabilityHostnameNotConfigured,
 	}
 

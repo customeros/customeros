@@ -11,10 +11,12 @@ import (
 var _ interfaces.AgentEvents = NewMeetingRecording{}
 
 type NewMeetingRecording struct {
-	ParticipantEmails *[]string   `json:"meetingParticipantEmails,omitempty"`
-	Content           *string     `json:"meetingContent,omitempty"`
-	Timestamp         *time.Time  `json:"meetingTimestamp,omitempty"`
-	Source            enum.Source `json:"meetingSource,omitempty"`
+	MeetingTitle        string      `json:"meetingTitle,omitempty"`
+	ParticipantEmails   *[]string   `json:"meetingParticipantEmails,omitempty"`
+	Content             *string     `json:"meetingContent,omitempty"`
+	Timestamp           *time.Time  `json:"meetingTimestamp,omitempty"`
+	Source              enum.Source `json:"meetingSource,omitempty"`
+	MeetingRecordingUrl string      `json:"meetingRecordingUrl"`
 }
 
 func (m NewMeetingRecording) Name() enum.AgentListenerEvent {

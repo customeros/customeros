@@ -1,10 +1,13 @@
 package agent_capability
 
 import (
+	"time"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 )
 
 type CapabilityParams struct {
+	ActionItems                    []string    `json:"actionItems"`
 	ContactEmails                  []string    `json:"contactEmails"`
 	ContactIDs                     []string    `json:"contactIds"`
 	CompanyName                    string      `json:"companyName"`
@@ -25,10 +28,17 @@ type CapabilityParams struct {
 	IsNewPersonVisit               bool        `json:"isNewPersonVisit"`
 	LinkedInSlug                   string      `json:"linkedinSlug"`
 	MarkdownEventID                string      `json:"markdownEventId"`
+	MeetingContent                 string      `json:"meetingContent"`
 	MeetingParticipantEmails       []string    `json:"meetingParticipantEmails"`
 	MeetingParticipantEmailsTenant []string    `json:"meetingParticipantEmailsTenant"`
+	MeetingRecordingUrl            string      `json:"meetingRecordingUrl"`
+	MeetingSource                  string      `json:"meetingSource"`
+	MeetingSummary                 string      `json:"meetingSummary"`
+	MeetingTimestamp               time.Time   `json:"meetingTimestamp"`
+	MeetingTitle                   string      `json:"MeetingTitle"`
 	Message                        string      `json:"message"`
 	OrganizationID                 string      `json:"organizationId"`
+	OrganizationIDs                []string    `json:"organizationIds"`
 	PageViews                      []string    `json:"pageViews"`
 	PrimaryDomain                  string      `json:"primaryDomain"`
 	QualificationCriteria          string      `json:"qualificationCriteria"`

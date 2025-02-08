@@ -7,6 +7,7 @@ import (
 type AgentCapability string
 
 const (
+	CapabilityAddMeetingNotesToCompany           AgentCapability = "add_meeting_notes_to_company"
 	CapabilityAnalyzeWebSessionIntent            AgentCapability = "analyze_web_session_for_intent"
 	CapabilityApplyTag                           AgentCapability = "apply_tag"
 	CapabilityBuildCampaignList                  AgentCapability = "build_campaign_list"
@@ -51,6 +52,7 @@ func (t AgentCapability) String() string {
 func GetAgentCapability(s string) (AgentCapability, error) {
 	switch AgentCapability(s) {
 	case
+		CapabilityAddMeetingNotesToCompany,
 		CapabilityAnalyzeWebSessionIntent,
 		CapabilityApplyTag,
 		CapabilityBuildCampaignList,

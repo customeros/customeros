@@ -118,9 +118,11 @@ func (h *IntegrationHandler) publishFathomMeetingSummaryCreatedEvent(c *gin.Cont
 	}
 
 	event := dto.NewMeetingRecording{
-		Source:            enum.SourceFathom,
-		Content:           &content,
-		ParticipantEmails: &participants,
+		MeetingTitle:        aiSummaryData.Meeting.Title,
+		Source:              enum.SourceFathom,
+		Content:             &content,
+		ParticipantEmails:   &participants,
+		MeetingRecordingUrl: aiSummaryData.Recording.ShareURL,
 	}
 
 	if aiSummaryData.Meeting.ScheduledStartTime.IsZero() {

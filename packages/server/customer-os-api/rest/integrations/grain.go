@@ -133,9 +133,11 @@ func (h *IntegrationHandler) publishGrainMeetingSummaryCreatedEvent(c *gin.Conte
 	meetingID := grainData.RecordingData.ID
 
 	event := dto.NewMeetingRecording{
-		Source:            enum.SourceGrain,
-		Content:           &content,
-		ParticipantEmails: &participants,
+		MeetingTitle:        grainData.RecordingData.Title,
+		Source:              enum.SourceGrain,
+		Content:             &content,
+		ParticipantEmails:   &participants,
+		MeetingRecordingUrl: grainData.RecordingData.PublicURL,
 	}
 
 	if grainData.RecordingData.StartDatetime.IsZero() {
