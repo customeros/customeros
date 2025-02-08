@@ -20,6 +20,7 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 )
 
+// TODO do we need this listener ?
 type RunIcpQualifierAgent struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories

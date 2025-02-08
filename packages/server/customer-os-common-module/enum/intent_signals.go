@@ -5,10 +5,8 @@ import "fmt"
 type IntentSignal string
 
 const (
-	IntentChurnRisk            IntentSignal = "churn_risk"
-	IntentSupportRequired      IntentSignal = "support_required"
-	IntentIcpCheck             IntentSignal = "icp_check"
-	IntentGenerateCycleInvoice IntentSignal = "generate_cycle_invoice"
+	IntentChurnRisk       IntentSignal = "churn_risk"
+	IntentSupportRequired IntentSignal = "support_required"
 )
 
 func (t IntentSignal) String() string {
@@ -18,9 +16,7 @@ func (t IntentSignal) String() string {
 func GetIntentSignal(s string) (IntentSignal, error) {
 	switch IntentSignal(s) {
 	case
-		IntentIcpCheck,
 		IntentChurnRisk,
-		IntentGenerateCycleInvoice,
 		IntentSupportRequired:
 
 		return IntentSignal(s), nil
