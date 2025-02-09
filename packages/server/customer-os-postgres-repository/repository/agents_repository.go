@@ -53,10 +53,12 @@ func (f *agentsRepository) GetById(ctx context.Context, id string) (*postgres_en
 		First(&agent).
 		Error
 	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
+	span.LogFields(log.Bool("result.found", true))
 	return &agent, nil
 }
 
