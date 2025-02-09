@@ -79,6 +79,7 @@ func (r *authenticationReadRepository) GetByAuthId(ctx context.Context, authId s
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AuthenticationReadRepository.GetByAuthId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogKV("authId", authId)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -98,6 +99,8 @@ func (r *authenticationReadRepository) GetByAuthId(ctx context.Context, authId s
 	if err != nil {
 		return nil, fmt.Errorf("error getting player by authId: %w", err)
 	}
+
+	span.LogFields(log.Int("result.found", len(result.([]*dbtype.Node))))
 
 	return result.([]*dbtype.Node), nil
 }

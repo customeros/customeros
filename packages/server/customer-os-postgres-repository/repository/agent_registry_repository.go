@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/opentracing/opentracing-go/log"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
@@ -52,6 +53,7 @@ func (r *agentRegistryRepository) FindAll(ctx context.Context) ([]postgres_entit
 		return nil, fmt.Errorf("failed to find agents: %w", err)
 	}
 
+	span.LogFields(log.Int("result.count", len(agents)))
 	return agents, nil
 }
 
@@ -65,6 +67,7 @@ func (r *agentRegistryRepository) FindPlay(ctx context.Context, agentType enum.A
 		Where("agent_type = ? AND trigger_event = ?", agentType.String(), triggerEvent.String()).
 		First(&play).Error
 	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -73,6 +76,7 @@ func (r *agentRegistryRepository) FindPlay(ctx context.Context, agentType enum.A
 			agentType.String(), triggerEvent.String(), err)
 	}
 
+	span.LogFields(log.Bool("result.found", true))
 	return &play, nil
 }
 
@@ -86,6 +90,7 @@ func (r *agentRegistryRepository) FindByType(ctx context.Context, agentType enum
 		Where("is_active = ? AND type = ?", true, agentType.String()).
 		First(&agent).Error
 	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -93,6 +98,7 @@ func (r *agentRegistryRepository) FindByType(ctx context.Context, agentType enum
 		return nil, fmt.Errorf("failed to find agent: %w", err)
 	}
 
+	span.LogFields(log.Bool("result.found", true))
 	return &agent, nil
 }
 

@@ -362,6 +362,7 @@ func signIn(ctx context.Context, services *cosapi_services.Services, ginContext 
 		if tenants == nil || len(tenants) == 0 {
 
 			domain := common_utils.ExtractDomain(signInRequest.LoggedInEmail)
+			span.LogFields(tracingLog.String("domainExtractedFromEmail", domain))
 
 			// check if the user is using a personal email provider
 			for _, personalEmailProviderItem := range personalEmailProviders {
@@ -670,7 +671,7 @@ func Revoke(s *cosapi_services.Services) gin.HandlerFunc {
 }
 
 func validateRequestAtProvider(c context.Context, config *config.Config, signInRequest SignInRequest) (string, string, error) {
-	span, ctx := opentracing.StartSpanFromContext(c, "Registration.getUserInfoFromGoogle")
+	span, ctx := opentracing.StartSpanFromContext(c, "Registration.validateRequestAtProvider")
 	defer span.Finish()
 
 	if signInRequest.Provider == common_enum.WorkspaceProviderMagicLink.String() {
