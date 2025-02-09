@@ -24,6 +24,7 @@ func GetAgentExecutionStatus(s string) (AgentExecutionStatus, error) {
 		AgentExecutionFail,
 		AgentExecutionPending,
 		AgentExecutionRunning,
+		AgentExecutionFinished,
 		AgentExecutionCompleted:
 		return AgentExecutionStatus(s), nil
 
