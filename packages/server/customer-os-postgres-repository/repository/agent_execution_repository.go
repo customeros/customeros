@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"time"
-
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
@@ -18,7 +17,7 @@ import (
 type AgentExecutionRepository interface {
 	Create(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error)
 	Find(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error)
-	Update(ctx context.Context, executionID string, completedAt *time.Time, errorMessage string, goalAchieved bool) (*postgres_entity.AgentExecution, error)
+	Update(ctx context.Context, executionID string, status enum.AgentExecutionStatus, errorMessage *string, goalAchieved bool) (*postgres_entity.AgentExecution, error)
 	GetById(ctx context.Context, executionID string) (*postgres_entity.AgentExecution, error)
 }
 
@@ -54,10 +53,13 @@ func (f *agentExecutionRepository) Create(ctx context.Context, executionRecord p
 	return &executionRecord, nil
 }
 
-func (f *agentExecutionRepository) Update(ctx context.Context, executionID string, completedAt *time.Time, errorMessage string, goalAchieved bool) (*postgres_entity.AgentExecution, error) {
+func (f *agentExecutionRepository) Update(ctx context.Context, executionID string, status enum.AgentExecutionStatus, errorMessage *string, goalAchieved bool) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.UpdateToCompleted")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.String("executionID", executionID))
+	span.LogFields(log.String("errorMessage", utils.IfNotNilString(errorMessage)))
+	span.LogFields(log.Bool("goalAchieved", goalAchieved))
 
 	if executionID == "" {
 		err := errors.New("ID is missing")
@@ -65,21 +67,34 @@ func (f *agentExecutionRepository) Update(ctx context.Context, executionID strin
 		return nil, err
 	}
 
-	status := enum.AgentExecutionCompleted.String()
-	if errorMessage != "" {
-		status = enum.AgentExecutionFail.String()
+	// load the record
+	currentExecution, err := f.GetById(ctx, executionID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	if currentExecution.Status == enum.AgentExecutionCompleted && status != enum.AgentExecutionCompleted {
+		err = errors.New("agent execution already completed")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	fields := map[string]interface{}{
+		"status":        status.String(),
+		"goal_achieved": goalAchieved,
+	}
+	if errorMessage != nil {
+		fields["error_message"] = *errorMessage
+	}
+	if status == enum.AgentExecutionCompleted {
+		fields["completed_at"] = utils.NowPtr()
 	}
 
 	var updatedRecord postgres_entity.AgentExecution
-	err := f.gormDb.
+	err = f.gormDb.
 		Model(&postgres_entity.AgentExecution{}).
 		Where("id = ?", executionID).
-		Updates(map[string]interface{}{
-			"status":        status,
-			"completed_at":  completedAt,
-			"error_message": errorMessage,
-			"goalAchieved":  goalAchieved,
-		}).
+		Updates(fields).
 		First(&updatedRecord, "id = ?", executionID).
 		Error
 	if err != nil {

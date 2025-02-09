@@ -76,6 +76,7 @@ func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 		tracing.TraceErr(span, errors.Wrap(err, "unable to create agent execution record"))
 		return err
 	}
+	span.LogFields(log.String("result.executionID", executionID))
 
 	// Create a copy of initialParams to avoid mutating the original map
 	allParams := make(map[string]any)
@@ -134,7 +135,7 @@ func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 
 	if capErr != nil {
 		tracing.TraceErr(span, capErr)
-		_, dbErr := a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, nil, capErr.Error(), false)
+		_, dbErr := a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, enum.AgentExecutionFail, utils.StringPtr(capErr.Error()), false)
 		if dbErr != nil {
 			tracing.TraceErr(span, errors.Wrap(dbErr, "unable to update agent execution record"))
 			return dbErr
@@ -143,7 +144,7 @@ func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	}
 
 	// update agentExecutionRecord
-	_, err = a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, utils.NowPtr(), "", true)
+	_, err = a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, enum.AgentExecutionFinished, nil, false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -172,5 +173,10 @@ func (a *agentRunnerService) createAgentExecutionRecord(ctx context.Context, age
 		return "", err
 	}
 
-	return a.agentService.CreateAgentExecutionRecord(ctx, *agent, triggerEventName, traceId)
+	createdRecordId, err := a.agentService.CreateAgentExecutionRecord(ctx, *agent, triggerEventName, traceId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	span.LogFields(log.String("result.agentExecutionId", createdRecordId))
+	return createdRecordId, err
 }
