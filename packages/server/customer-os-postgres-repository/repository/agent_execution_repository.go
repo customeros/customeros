@@ -54,25 +54,6 @@ func (f *agentExecutionRepository) Create(ctx context.Context, executionRecord p
 	return &executionRecord, nil
 }
 
-func (f *agentExecutionRepository) Find(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Find")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-
-	var agentExecution postgres_entity.AgentExecution
-	err := f.gormDb.
-		Where(&executionRecord).
-		First(&agentExecution).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return &agentExecution, nil
-}
-
 func (f *agentExecutionRepository) Update(ctx context.Context, executionID string, completedAt *time.Time, errorMessage string, goalAchieved bool) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.UpdateToCompleted")
 	defer span.Finish()
@@ -109,6 +90,27 @@ func (f *agentExecutionRepository) Update(ctx context.Context, executionID strin
 	return &updatedRecord, nil
 }
 
+func (f *agentExecutionRepository) Find(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Find")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var agentExecution postgres_entity.AgentExecution
+	err := f.gormDb.
+		Where(&executionRecord).
+		First(&agentExecution).Error
+	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Bool("result.found", true))
+	return &agentExecution, nil
+}
+
 func (f *agentExecutionRepository) GetById(ctx context.Context, executionID string) (*postgres_entity.AgentExecution, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.GetById")
 	defer span.Finish()
@@ -121,6 +123,7 @@ func (f *agentExecutionRepository) GetById(ctx context.Context, executionID stri
 		First(&agentExecution).
 		Error
 	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -128,5 +131,6 @@ func (f *agentExecutionRepository) GetById(ctx context.Context, executionID stri
 		return nil, err
 	}
 
+	span.LogFields(log.Bool("result.found", true))
 	return &agentExecution, nil
 }
