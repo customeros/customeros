@@ -209,11 +209,11 @@ func (s *serviceLineItemService) Save(ctx context.Context, txWithPostCommit *uti
 			}
 			contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
-			err = s.contract.UpdateActiveRenewalOpportunityArr(ctx, *dataFields.ContractId)
+			err = s.contract.UpdateActiveRenewalOpportunityArr(ctx, contractEntity.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
-			err = s.contract.RecalculateContractLtv(ctx, *dataFields.ContractId)
+			err = s.contract.RecalculateContractLtv(ctx, contractEntity.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
