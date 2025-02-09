@@ -17,8 +17,10 @@ import (
 type AgentExecutionRepository interface {
 	Create(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error)
 	Find(ctx context.Context, executionRecord postgres_entity.AgentExecution) (*postgres_entity.AgentExecution, error)
-	Update(ctx context.Context, executionID string, status enum.AgentExecutionStatus, errorMessage *string, goalAchieved bool) (*postgres_entity.AgentExecution, error)
 	GetById(ctx context.Context, executionID string) (*postgres_entity.AgentExecution, error)
+	Update(ctx context.Context, executionID string, status enum.AgentExecutionStatus, errorMessage *string, goalAchieved bool) (*postgres_entity.AgentExecution, error)
+	Finish(ctx context.Context, executionID string) (*postgres_entity.AgentExecution, error)
+	Completed(ctx context.Context, executionID string, goalAchieved bool) (*postgres_entity.AgentExecution, error)
 }
 
 type agentExecutionRepository struct {
@@ -54,7 +56,7 @@ func (f *agentExecutionRepository) Create(ctx context.Context, executionRecord p
 }
 
 func (f *agentExecutionRepository) Update(ctx context.Context, executionID string, status enum.AgentExecutionStatus, errorMessage *string, goalAchieved bool) (*postgres_entity.AgentExecution, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.UpdateToCompleted")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Update")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("executionID", executionID))
@@ -95,6 +97,66 @@ func (f *agentExecutionRepository) Update(ctx context.Context, executionID strin
 		Model(&postgres_entity.AgentExecution{}).
 		Where("id = ?", executionID).
 		Updates(fields).
+		First(&updatedRecord, "id = ?", executionID).
+		Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &updatedRecord, nil
+}
+
+func (f *agentExecutionRepository) Completed(ctx context.Context, executionID string, goalAchieved bool) (*postgres_entity.AgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Completed")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.String("executionID", executionID))
+	span.LogFields(log.Bool("goalAchieved", goalAchieved))
+
+	if executionID == "" {
+		err := errors.New("ID is missing")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// load the record
+	fields := map[string]interface{}{
+		"status":        enum.AgentExecutionCompleted.String(),
+		"goal_achieved": goalAchieved,
+		"completed_at":  utils.NowPtr(),
+	}
+
+	var updatedRecord postgres_entity.AgentExecution
+	err := f.gormDb.
+		Model(&postgres_entity.AgentExecution{}).
+		Where("id = ?", executionID).
+		Updates(fields).
+		First(&updatedRecord, "id = ?", executionID).
+		Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return &updatedRecord, nil
+}
+
+func (f *agentExecutionRepository) Finish(ctx context.Context, executionID string) (*postgres_entity.AgentExecution, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentExecutionRepository.Finish")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.String("executionID", executionID))
+
+	var updatedRecord postgres_entity.AgentExecution
+	// only running agent executions can be finished
+	err := f.gormDb.
+		Model(&postgres_entity.AgentExecution{}).
+		Where("id = ?", executionID).
+		Where("status = ?", enum.AgentExecutionRunning.String()).
+		Updates(map[string]interface{}{
+			"status": enum.AgentExecutionFinished.String(),
+		}).
 		First(&updatedRecord, "id = ?", executionID).
 		Error
 	if err != nil {

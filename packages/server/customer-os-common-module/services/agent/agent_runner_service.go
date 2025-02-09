@@ -144,7 +144,7 @@ func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	}
 
 	// update agentExecutionRecord
-	_, err = a.postgresRepositories.AgentExecutionRepository.Update(ctx, executionID, enum.AgentExecutionFinished, nil, false)
+	_, err = a.postgresRepositories.AgentExecutionRepository.Finish(ctx, executionID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

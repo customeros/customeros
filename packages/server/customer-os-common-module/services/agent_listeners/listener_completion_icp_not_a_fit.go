@@ -109,7 +109,7 @@ func (l *IcpNotAFitListener) handleGoalAchieved(ctx context.Context, agentExecut
 		return err
 	}
 	agentExecution.GoalAchieved = true
-	_, err = l.postgresRepositories.AgentExecutionRepository.Update(ctx, agentExecution.ID, enum.AgentExecutionCompleted, nil, true)
+	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

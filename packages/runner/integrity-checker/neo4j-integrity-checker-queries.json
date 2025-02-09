@@ -162,7 +162,7 @@
         },
         {
           "name": "Emails shared between users",
-          "query": "MATCH (u:User)-[r1:HAS]->(e:Email)<-[r2:HAS]-(n:User) WHERE u <> n return count(e)"
+          "query": "MATCH (u:User)-[r1:HAS]->(e:Email)<-[r2:HAS]-(n:User) WHERE u <> n AND NOT n.roles CONTAINS 'IMPERSONATED' return count(e)"
         }
       ]
     },

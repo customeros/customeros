@@ -107,7 +107,7 @@ func (l *WebVisitorNotIdentifiedListener) handleGoalAchieved(ctx context.Context
 		return err
 	}
 	agentExecution.GoalAchieved = true
-	_, err = l.postgresRepositories.AgentExecutionRepository.Update(ctx, agentExecution.ID, enum.AgentExecutionCompleted, nil, false)
+	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, false)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
