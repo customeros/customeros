@@ -95,6 +95,18 @@ func (a *agentRunnerService) Run(ctx context.Context, agent postgres_entity.Agen
 	var capErr error
 	for _, capabilityTypeStr := range *&play.Capabilities {
 
+		// ensure execution is not completed yet
+		execution, err := a.postgresRepositories.AgentExecutionRepository.GetById(ctx, executionID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			capErr = err
+			break
+		}
+		// execution already completed, stop
+		if execution.Status == enum.AgentExecutionCompleted {
+			break
+		}
+
 		capabilityType, err := enum.GetAgentCapability(capabilityTypeStr)
 		if err != nil {
 			tracing.TraceErr(span, err)
