@@ -8,16 +8,14 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
-	postgresentity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	"github.com/opentracing/opentracing-go"
-
 	"github.com/customeros/customeros/packages/server/customer-os-api/graphql/model"
 	"github.com/customeros/customeros/packages/server/customer-os-api/mapper"
 	enummapper "github.com/customeros/customeros/packages/server/customer-os-api/mapper/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-api/tracing"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 )
 
 // AgentSave is the resolver for the agent_Save field.
@@ -27,10 +25,105 @@ func (r *mutationResolver) AgentSave(ctx context.Context, input model.AgentSaveI
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	if input.ID == nil {
-		return r.createNewAgent(ctx, input)
+	buildAgentFields := func(input model.AgentSaveInput) data_fields.AgentFields {
+		return data_fields.AgentFields{
+			Active:      input.IsActive,
+			VisibleInUI: input.Visible,
+			Color:       input.Color,
+			Icon:        input.Icon,
+			Name:        input.Name,
+			FlowID:      input.FlowID,
+			Goal:        input.Goal,
+		}
 	}
-	return r.updateExistingAgent(ctx, *input.ID, input)
+
+	buildCapabilities := func(inputCapabilities []*model.CapabilitySaveInput) []postgres_entity.Capability {
+		if inputCapabilities == nil {
+			return nil
+		}
+
+		capabilities := make([]postgres_entity.Capability, 0, len(inputCapabilities))
+		for _, capability := range inputCapabilities {
+			dbCapability := postgres_entity.Capability{
+				ID:     utils.IfNotNilString(capability.ID),
+				Name:   utils.IfNotNilString(capability.Name),
+				Error:  utils.IfNotNilString(capability.Errors),
+				Active: utils.IfNotNilBool(capability.Active),
+			}
+			dbCapability.SetConfig(utils.IfNotNilString(capability.Config))
+
+			if capability.Type != nil {
+				dbCapability.Type = enummapper.MapAgentCapabilityTypeFromModel(*capability.Type)
+			}
+
+			capabilities = append(capabilities, dbCapability)
+		}
+
+		return capabilities
+	}
+
+	buildListeners := func(inputListeners []*model.AgentListenerSaveInput) []postgres_entity.Listener {
+		if inputListeners == nil {
+			return nil
+		}
+
+		listeners := make([]postgres_entity.Listener, 0, len(inputListeners))
+		for _, listener := range inputListeners {
+			dbListener := postgres_entity.Listener{
+				ID:     utils.IfNotNilString(listener.ID),
+				Name:   utils.IfNotNilString(listener.Name),
+				Error:  utils.IfNotNilString(listener.Errors),
+				Active: utils.IfNotNilBool(listener.Active),
+			}
+			dbListener.SetConfig(utils.IfNotNilString(listener.Config))
+
+			if listener.Type != nil {
+				dbListener.Type = enummapper.MapAgentListenerTypeFromModel(*listener.Type)
+			}
+
+			listeners = append(listeners, dbListener)
+		}
+
+		return listeners
+	}
+
+	// Handle creation of new agent
+	if input.ID == nil {
+		if input.Type == nil {
+			graphql.AddErrorf(ctx, "Type is required")
+			return nil, nil
+		}
+
+		agentType := enummapper.MapAgentTypeFromModel(*input.Type)
+		agentEntity, err := r.Services.CommonServices.AgentService.CreateAgent(ctx, agentType)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to create agent")
+			return nil, nil
+		}
+
+		return mapper.MapAgentToModel(agentEntity), nil
+	}
+
+	// Handle updating existing agent
+	agentFields := buildAgentFields(input)
+	capabilities := buildCapabilities(input.Capabilities)
+	listeners := buildListeners(input.Listeners)
+
+	updatedAgentEntity, err := r.Services.CommonServices.AgentService.UpdateAgent(
+		ctx,
+		*input.ID,
+		agentFields,
+		capabilities,
+		listeners,
+	)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update agent")
+		return nil, nil
+	}
+
+	return mapper.MapAgentToModel(updatedAgentEntity), nil
 }
 
 // Agents is the resolver for the agents field.
@@ -103,106 +196,4 @@ func (r *queryResolver) SlackChannelsWithBot(ctx context.Context) ([]*model.Agen
 	}
 
 	return agentSlackChannels, nil
-}
-
-func (r *mutationResolver) createNewAgent(ctx context.Context, input model.AgentSaveInput) (*model.Agent, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.createNewAgent")
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	if input.Type == nil {
-		graphql.AddErrorf(ctx, "Type is required")
-		return nil, nil
-	}
-
-	agentType := enummapper.MapAgentTypeFromModel(*input.Type)
-	agentEntity, err := r.Services.CommonServices.AgentService.CreateAgent(ctx, agentType)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to create agent")
-		return nil, nil
-	}
-
-	return mapper.MapAgentToModel(agentEntity), nil
-}
-
-func (r *mutationResolver) updateExistingAgent(ctx context.Context, agentID string, input model.AgentSaveInput) (*model.Agent, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "QueryResolver.updateExistingAgent")
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	agentFields := r.buildAgentFields(input)
-	capabilities := r.buildCapabilities(input.Capabilities)
-	listeners := r.buildListeners(input.Listeners)
-
-	updatedAgentEntity, err := r.Services.CommonServices.AgentService.UpdateAgent(ctx, agentID, agentFields, capabilities, listeners)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to update agent")
-		return nil, nil
-	}
-
-	return mapper.MapAgentToModel(updatedAgentEntity), nil
-}
-
-func (r *mutationResolver) buildAgentFields(input model.AgentSaveInput) data_fields.AgentFields {
-	return data_fields.AgentFields{
-		Active:      input.IsActive,
-		VisibleInUI: input.Visible,
-		Color:       input.Color,
-		Icon:        input.Icon,
-		Name:        input.Name,
-		FlowID:      input.FlowID,
-		Goal:        input.Goal,
-	}
-}
-
-func (r *mutationResolver) buildCapabilities(inputCapabilities []*model.CapabilitySaveInput) []postgresentity.Capability {
-	if inputCapabilities == nil {
-		return nil
-	}
-
-	capabilities := make([]postgresentity.Capability, 0, len(inputCapabilities))
-	for _, capability := range inputCapabilities {
-		dbCapability := postgresentity.Capability{
-			ID:     utils.IfNotNilString(capability.ID),
-			Name:   utils.IfNotNilString(capability.Name),
-			Error:  utils.IfNotNilString(capability.Errors),
-			Active: utils.IfNotNilBool(capability.Active),
-		}
-		dbCapability.SetConfig(utils.IfNotNilString(capability.Config))
-
-		if capability.Type != nil {
-			dbCapability.Type = enummapper.MapAgentCapabilityTypeFromModel(*capability.Type)
-		}
-
-		capabilities = append(capabilities, dbCapability)
-	}
-
-	return capabilities
-}
-
-func (r *mutationResolver) buildListeners(inputListeners []*model.AgentListenerSaveInput) []postgresentity.Listener {
-	if inputListeners == nil {
-		return nil
-	}
-
-	listeners := make([]postgresentity.Listener, 0, len(inputListeners))
-	for _, listener := range inputListeners {
-		dbListener := postgresentity.Listener{
-			ID:     utils.IfNotNilString(listener.ID),
-			Name:   utils.IfNotNilString(listener.Name),
-			Error:  utils.IfNotNilString(listener.Errors),
-			Active: utils.IfNotNilBool(listener.Active),
-		}
-		dbListener.SetConfig(utils.IfNotNilString(listener.Config))
-
-		if listener.Type != nil {
-			dbListener.Type = enummapper.MapAgentListenerTypeFromModel(*listener.Type)
-		}
-
-		listeners = append(listeners, dbListener)
-	}
-
-	return listeners
 }

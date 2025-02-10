@@ -1896,7 +1896,8 @@ func (this Metadata) GetAppSource() string         { return this.AppSource }
 func (Metadata) IsNode()            {}
 func (this Metadata) GetID() string { return this.ID }
 
-type Mutation struct{}
+type Mutation struct {
+}
 
 type Note struct {
 	ID            string        `json:"id"`
@@ -2482,7 +2483,8 @@ type PhoneNumberUpdateInput struct {
 	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 }
 
-type Query struct{}
+type Query struct {
+}
 
 type Reminder struct {
 	Metadata  *Metadata  `json:"metadata"`
@@ -3215,6 +3217,7 @@ const (
 	AgentListenerEventWebVisitorIdentified    AgentListenerEvent = "WEB_VISITOR_IDENTIFIED"
 	AgentListenerEventWebVisitorNotIdentified AgentListenerEvent = "WEB_VISITOR_NOT_IDENTIFIED"
 	AgentListenerEventNewWebSession           AgentListenerEvent = "NEW_WEB_SESSION"
+	AgentListenerEventNewMeetingRecording     AgentListenerEvent = "NEW_MEETING_RECORDING"
 )
 
 var AllAgentListenerEvent = []AgentListenerEvent{
@@ -3225,11 +3228,12 @@ var AllAgentListenerEvent = []AgentListenerEvent{
 	AgentListenerEventWebVisitorIdentified,
 	AgentListenerEventWebVisitorNotIdentified,
 	AgentListenerEventNewWebSession,
+	AgentListenerEventNewMeetingRecording,
 }
 
 func (e AgentListenerEvent) IsValid() bool {
 	switch e {
-	case AgentListenerEventNewLead, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified, AgentListenerEventNewWebSession:
+	case AgentListenerEventNewLead, AgentListenerEventIcpFit, AgentListenerEventIcpNotAFit, AgentListenerEventRunIcpQualifierAgent, AgentListenerEventWebVisitorIdentified, AgentListenerEventWebVisitorNotIdentified, AgentListenerEventNewWebSession, AgentListenerEventNewMeetingRecording:
 		return true
 	}
 	return false
@@ -3274,11 +3278,7 @@ var AllAgentType = []AgentType{
 
 func (e AgentType) IsValid() bool {
 	switch e {
-	case
-		AgentTypeIcpQualifier,
-		AgentTypeMeetingKeeper,
-		AgentTypeSupportSpotter,
-		AgentTypeWebVisitIdentifier:
+	case AgentTypeIcpQualifier, AgentTypeMeetingKeeper, AgentTypeSupportSpotter, AgentTypeWebVisitIdentifier:
 		return true
 	}
 	return false

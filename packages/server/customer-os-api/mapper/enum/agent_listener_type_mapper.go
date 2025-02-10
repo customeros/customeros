@@ -15,6 +15,7 @@ var agentListenerEventByModel = map[model.AgentListenerEvent]enum.AgentListenerE
 	model.AgentListenerEventNewWebSession:           enum.EventNewWebSession,
 	model.AgentListenerEventWebVisitorIdentified:    enum.EventWebVisitorIdentified,
 	model.AgentListenerEventWebVisitorNotIdentified: enum.EventWebVisitorNotIdentified,
+	model.AgentListenerEventNewMeetingRecording:     enum.EventNewMeetingRecording,
 }
 
 var agentListenerEventByValue = utils.ReverseMap(agentListenerEventByModel)
