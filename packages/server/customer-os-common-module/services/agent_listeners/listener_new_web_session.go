@@ -23,6 +23,28 @@ type NewWebSessionListener struct {
 	agentRunnerService   interfaces.AgentRunnerService
 }
 
+type IdentifyWebsiteVisitorConfig struct {
+	Websites WebsitesConfig `json:"websites"`
+}
+
+type WebsitesConfig struct {
+	Value []string `json:"value"`
+	Error string   `json:"error"`
+}
+
+func (c *IdentifyWebsiteVisitorConfig) Validate() bool {
+	isValid := true
+
+	if len(c.Websites.Value) == 0 {
+		c.Websites.Error = "Add at least 1 website"
+		isValid = false
+	} else {
+		c.Websites.Error = ""
+	}
+
+	return isValid
+}
+
 // Compile-time interface check for AgentListenerUntyped
 var (
 	_ interfaces.AgentListenerUntyped = (*NewWebSessionListener)(nil)
@@ -54,7 +76,9 @@ func (l *NewWebSessionListener) Name() string {
 }
 
 func (l *NewWebSessionListener) DefaultConfig() any {
-	return &postgres_entity.NoConfig{}
+	config := IdentifyWebsiteVisitorConfig{}
+	config.Websites.Value = []string{}
+	return &config
 }
 
 func (l *NewWebSessionListener) SubscribedAgents() []enum.AgentType {

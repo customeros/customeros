@@ -2,6 +2,7 @@ package agent_capability
 
 import (
 	"context"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -56,13 +57,12 @@ func (c *IdentifyWebsiteVisitorCapability) NewInput() IdentifyWebsiteVisitorInpu
 	return IdentifyWebsiteVisitorInput{}
 }
 
-func (c *IdentifyWebsiteVisitorCapability) NewConfig() IdentifyWebsiteVisitorConfig {
-	return IdentifyWebsiteVisitorConfig{}
+func (c *IdentifyWebsiteVisitorCapability) NewConfig() postgres_entity.NoConfig {
+	return postgres_entity.NoConfig{}
 }
 
 func (c *IdentifyWebsiteVisitorCapability) DefaultConfig() any {
 	config := c.NewConfig()
-	config.Websites.Value = []string{}
 	return &config
 }
 
@@ -79,20 +79,7 @@ func (c *IdentifyWebsiteVisitorCapability) ValidateInput(data IdentifyWebsiteVis
 	return nil
 }
 
-func (c *IdentifyWebsiteVisitorConfig) Validate() bool {
-	isValid := true
-
-	if len(c.Websites.Value) == 0 {
-		c.Websites.Error = "Add at least 1 website"
-		isValid = false
-	} else {
-		c.Websites.Error = ""
-	}
-
-	return isValid
-}
-
-func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(IdentifyWebsiteVisitorConfig) error {
+func (c *IdentifyWebsiteVisitorCapability) ValidateConfig(postgres_entity.NoConfig) error {
 	return nil
 }
 
@@ -106,15 +93,6 @@ type IdentifyWebsiteVisitorInput struct {
 type IdentifyWebsiteVisitorOutput struct {
 	Domain       string `json:"domain"`
 	LinkedInSlug string `json:"linkedinSlug"`
-}
-
-type IdentifyWebsiteVisitorConfig struct {
-	Websites WebsitesConfig `json:"websites"`
-}
-
-type WebsitesConfig struct {
-	Value []string `json:"value"`
-	Error string   `json:"error"`
 }
 
 func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorConfig]) (bool, IdentifyWebsiteVisitorOutput, error) {

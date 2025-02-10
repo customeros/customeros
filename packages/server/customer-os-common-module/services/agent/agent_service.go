@@ -374,6 +374,7 @@ func (a *agentService) updateListeners(ctx context.Context, agentEntity *postgre
 
 	agentEntity.UpdateListeners(listeners)
 
+	allListenersValid := true
 	for i, listener := range agentEntity.Listeners {
 		if !listener.Active {
 			// Not active => auto valid
@@ -394,7 +395,9 @@ func (a *agentService) updateListeners(ctx context.Context, agentEntity *postgre
 
 		// see if typedConfig implements ConfigValidator
 		if validator, ok := config.(agent_capability.ConfigValidator); ok {
-			validator.Validate()
+			if !validator.Validate() {
+				allListenersValid = false
+			}
 			err = listener.SetConfig(config)
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -403,6 +406,7 @@ func (a *agentService) updateListeners(ctx context.Context, agentEntity *postgre
 			agentEntity.Listeners[i] = listener
 		}
 	}
+	agentEntity.Configured = agentEntity.Configured && allListenersValid
 	return nil
 }
 
