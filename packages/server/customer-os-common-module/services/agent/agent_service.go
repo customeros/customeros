@@ -166,6 +166,7 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 
 		agentListeners = append(agentListeners, *defaultListener)
 	}
+	agent.Listeners = agentListeners
 
 	// create agent instance in database
 	newAgent, err := a.postgresRepositories.AgentRepository.Create(ctx, agent)
@@ -320,7 +321,7 @@ func (a *agentService) UpdateAgent(ctx context.Context, agentId string, agentFie
 	eventFields := dto.UpdateAgent{AgentFields: agentFields, Capabilities: capabilities, Listeners: listeners}
 	err = a.events.Publisher.PublishFanoutEvent(ctx, agentId, model.AGENT, eventFields)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateAgent"))
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message {UpdateAgent}"))
 	}
 
 	return updatedAgent, nil
@@ -330,27 +331,10 @@ func (a *agentService) updateCapabilities(ctx context.Context, agentEntity *post
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.updateCapabilities")
 	defer span.Finish()
 
-	agentCapabilityIds := []string{}
-	for _, capability := range agentEntity.Capabilities {
-		agentCapabilityIds = append(agentCapabilityIds, capability.ID)
-	}
-
 	agentEntity.UpdateCapabilities(capabilities)
 
 	allCapabilitiesValid := true
 	for i, capability := range agentEntity.Capabilities {
-		if capability.ID == "" {
-			err := errors.New("capability ID not set")
-			tracing.TraceErr(span, err)
-			return err
-		}
-		// check capability id belongs to agent
-		if !utils.IsStringInSlice(capability.ID, agentCapabilityIds) {
-			err := errors.New("capability does not belong to agent")
-			tracing.TraceErr(span, err)
-			return err
-		}
-
 		if !capability.Active {
 			// Not active => auto valid
 			continue
@@ -389,27 +373,10 @@ func (a *agentService) updateListeners(ctx context.Context, agentEntity *postgre
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AgentService.updateListeners")
 	defer span.Finish()
 
-	agentListenerIds := []string{}
-	for _, listener := range agentEntity.Listeners {
-		agentListenerIds = append(agentListenerIds, listener.ID)
-	}
-
 	agentEntity.UpdateListeners(listeners)
 
 	allListenersValid := true
 	for i, listener := range agentEntity.Listeners {
-		if listener.ID == "" {
-			err := errors.New("listener ID not set")
-			tracing.TraceErr(span, err)
-			return err
-		}
-		// check listener id belongs to agent
-		if !utils.IsStringInSlice(listener.ID, agentListenerIds) {
-			err := errors.New("listener does not belong to agent")
-			tracing.TraceErr(span, err)
-			return err
-		}
-
 		if !listener.Active {
 			// Not active => auto valid
 			continue

@@ -35,7 +35,14 @@ type WebsitesConfig struct {
 func (c *IdentifyWebsiteVisitorConfig) Validate() bool {
 	isValid := true
 
-	if len(c.Websites.Value) == 0 {
+	websiteConfigured := false
+	for _, website := range c.Websites.Value {
+		if !utils.IsBlank(website) {
+			websiteConfigured = true
+			break
+		}
+	}
+	if !websiteConfigured {
 		c.Websites.Error = "Add at least 1 website"
 		isValid = false
 	} else {
