@@ -28,26 +28,28 @@ type CommonConfig struct {
 	Neo4j            commonconf.Neo4jConfig
 	CosApi           commonconf.CustomerOsApiConfig
 
-	Anthropic        commonconf.AnthropicConfig
-	BetterContact    commonconf.BetterContactConfig
-	Brandfetch       commonconf.BrandfetchConfig
-	Cloudflare       commonconf.CloudflareConfig
-	Deepseek         commonconf.DeepseekConfig
-	FileStore        commonconf.FileStoreConfig
-	IntegrationApp   commonconf.IntegrationAppConfig
-	IpData           commonconf.IpDataConfig
-	Mailsherpa       commonconf.MailSherpaApiConfig
-	Mailstack        commonconf.MailstackConfig
-	Namecheap        commonconf.NamecheapConfig
-	Novu             commonconf.NovuConfig
-	OpenSRS          commonconf.OpenSRSConfig
-	Postmark         commonconf.PostmarkConfig
-	QuickbooksConfig commonconf.QuickbooksConfig
-	Stripe           commonconf.StripeConfig
-	Scrapin          commonconf.ScrapinConfig
-	SlackConfig      commonconf.SlackConfig
-	Temporal         commonconf.TemporalConfig
-	PdfConverter     commonconf.PdfConverterConfig
+	Anthropic         commonconf.AnthropicConfig
+	BetterContact     commonconf.BetterContactConfig
+	Brandfetch        commonconf.BrandfetchConfig
+	Cloudflare        commonconf.CloudflareConfig
+	Deepseek          commonconf.DeepseekConfig
+	FileStore         commonconf.FileStoreConfig
+	IntegrationApp    commonconf.IntegrationAppConfig
+	IpData            commonconf.IpDataConfig
+	Mailsherpa        commonconf.MailSherpaApiConfig
+	Mailstack         commonconf.MailstackConfig
+	Namecheap         commonconf.NamecheapConfig
+	Novu              commonconf.NovuConfig
+	OpenSRS           commonconf.OpenSRSConfig
+	Postmark          commonconf.PostmarkConfig
+	QuickbooksConfig  commonconf.QuickbooksConfig
+	Stripe            commonconf.StripeConfig
+	Scrapin           commonconf.ScrapinConfig
+	SlackConfig       commonconf.SlackConfig
+	Temporal          commonconf.TemporalConfig
+	PdfConverter      commonconf.PdfConverterConfig
+	GoogleOAuthConfig commonconf.GoogleOAuthConfig
+	AzureOAuthConfig  commonconf.AzureOAuthConfig
 }
 
 type AppConfig struct {
@@ -112,6 +114,8 @@ func InitConfig() (*Config, error) {
 			PostgresConfig:      cmnCfg.Postgres,
 			PostgresAsyncConfig: cmnCfg.PostgresAsync,
 			Neo4jConfig:         cmnCfg.Neo4j,
+			GoogleOAuthConfig:   cmnCfg.GoogleOAuthConfig,
+			AzureOAuthConfig:    cmnCfg.AzureOAuthConfig,
 		},
 		External: commonconf.ExternalServicesConfig{
 			AnthropicConfig:      cmnCfg.Anthropic,

@@ -199,9 +199,21 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 		Endpoint:     google.Endpoint,
 	}
 
+	accessToken, err := postgresEntity.DecryptToken(s.cfg.EncryptionKey, tokenEntity.AccessToken)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	refreshToken, err := postgresEntity.DecryptToken(s.cfg.EncryptionKey, tokenEntity.RefreshToken)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	token := oauth2.Token{
-		AccessToken:  tokenEntity.AccessToken,
-		RefreshToken: tokenEntity.RefreshToken,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 		Expiry:       tokenEntity.ExpiresAt,
 	}
 
@@ -222,9 +234,19 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 			return nil, err
 		}
 
-		if newToken.AccessToken != tokenEntity.AccessToken {
+		if newToken.AccessToken != accessToken {
 
-			_, err := s.postgres.OAuthTokenRepository.Update(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
+			accessToken, err = postgresEntity.EncryptToken(s.cfg.EncryptionKey, newToken.AccessToken)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			refreshToken, err = postgresEntity.EncryptToken(s.cfg.EncryptionKey, newToken.RefreshToken)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			_, err := s.postgres.OAuthTokenRepository.Update(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider, accessToken, refreshToken, newToken.Expiry)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
@@ -282,6 +304,18 @@ func (s *googleService) GetGCalServiceWithOauthToken(ctx context.Context, tokenE
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleService.GetGCalServiceWithOauthToken")
 	defer span.Finish()
 
+	accessToken, err := postgresEntity.DecryptToken(s.cfg.EncryptionKey, tokenEntity.AccessToken)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	refreshToken, err := postgresEntity.DecryptToken(s.cfg.EncryptionKey, tokenEntity.RefreshToken)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	oauth2Config := &oauth2.Config{
 		ClientID:     s.cfg.ClientId,
 		ClientSecret: s.cfg.ClientSecret,
@@ -289,8 +323,8 @@ func (s *googleService) GetGCalServiceWithOauthToken(ctx context.Context, tokenE
 	}
 
 	token := oauth2.Token{
-		AccessToken:  tokenEntity.AccessToken,
-		RefreshToken: tokenEntity.RefreshToken,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 		Expiry:       tokenEntity.ExpiresAt,
 	}
 
@@ -311,9 +345,19 @@ func (s *googleService) GetGCalServiceWithOauthToken(ctx context.Context, tokenE
 			return nil, err
 		}
 
-		if newToken.AccessToken != tokenEntity.AccessToken {
+		if newToken.AccessToken != accessToken {
 
-			_, err := s.postgres.OAuthTokenRepository.Update(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider, newToken.AccessToken, newToken.RefreshToken, newToken.Expiry)
+			accessToken, err = postgresEntity.EncryptToken(s.cfg.EncryptionKey, newToken.AccessToken)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			refreshToken, err = postgresEntity.EncryptToken(s.cfg.EncryptionKey, newToken.RefreshToken)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
+			_, err := s.postgres.OAuthTokenRepository.Update(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider, accessToken, refreshToken, newToken.Expiry)
 			if err != nil {
 				logrus.Errorf("failed to update token: %v", err)
 				return nil, err

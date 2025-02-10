@@ -152,7 +152,7 @@ func (repo oAuthTokenRepository) GetByPlayerId(ctx context.Context, tenant, prov
 
 	err := repo.db.
 		Where("tenant_name = ?", tenant).
-		Where("player_idpostgres_entity_id = ?", playerId).
+		Where("player_identity_id = ?", playerId).
 		Where("provider = ?", provider).
 		First(&oAuthTokenEntity).Error
 
