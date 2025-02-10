@@ -162,7 +162,11 @@
         },
         {
           "name": "Emails shared between users",
-          "query": "MATCH (u:User)-[r1:HAS]->(e:Email)<-[r2:HAS]-(n:User) WHERE u <> n AND NOT n.roles CONTAINS 'IMPERSONATED' return count(e)"
+          "query": "MATCH (u:User)-[r1:HAS]->(e:Email)<-[r2:HAS]-(n:User) WHERE u <> n return count(e)"
+        },
+        {
+          "name": "Impersonated user without internal flag",
+          "query": "MATCH (u:User) WHERE 'IMPERSONATED' IN u.roles AND (u.internal = false OR u.internal IS NULL) RETURN count(u)"
         }
       ]
     },
