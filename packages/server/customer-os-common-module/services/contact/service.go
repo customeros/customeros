@@ -885,3 +885,28 @@ func (s *contactService) GetFirstContactByEmail(ctx context.Context, email strin
 	}
 	return neo4jmapper.MapDbNodeToContactEntity(contactDbNodes[0]), nil
 }
+
+func (s *contactService) TouchContact(ctx context.Context, txWithPostCommit *utils.TxWithPostCommit, contactId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.TouchContact")
+	defer span.Finish()
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	_, err = utils.ExecuteWriteInTransactionWithPostCommitActions(ctx, s.neo4j.Neo4jDriver, s.neo4j.Database, txWithPostCommit, func(txWithPostCommit *utils.TxWithPostCommit) (any, error) {
+		err = s.neo4j.CommonWriteRepository.TouchEntity(ctx, txWithPostCommit.Tx, common.GetTenantFromContext(ctx), model.NodeLabelContact, contactId)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	return nil
+}
