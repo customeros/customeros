@@ -8,7 +8,6 @@ import (
 	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/logger"
 	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/service"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	"github.com/joho/godotenv"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
@@ -45,25 +44,6 @@ func main() {
 	appLogger.WithName("sync-gmail-raw")
 
 	services := service.InitServices(neo4jDriver, postgresDb, config, appLogger)
-
-	all, err := services.CommonServices.PostgresRepositories.OAuthTokenRepository.GetAll(ctx)
-
-	for _, v := range all {
-
-		v.AccessToken, err = postgres_entity.EncryptToken(config.GoogleOAuthConfig.EncryptionKey, v.AccessToken)
-		if err != nil {
-			appLogger.Error(err)
-		}
-		v.RefreshToken, err = postgres_entity.EncryptToken(config.GoogleOAuthConfig.EncryptionKey, v.RefreshToken)
-		if err != nil {
-			appLogger.Error(err)
-		}
-		_, err := services.CommonServices.PostgresRepositories.OAuthTokenRepository.Update(ctx, v.TenantName, v.PlayerIdentityId, v.Provider, v.AccessToken, v.RefreshToken, v.ExpiresAt)
-		if err != nil {
-			appLogger.Error(err)
-		}
-
-	}
 
 	cronJobs := localCron.StartCronJobs(config, services)
 
