@@ -1896,8 +1896,7 @@ func (this Metadata) GetAppSource() string         { return this.AppSource }
 func (Metadata) IsNode()            {}
 func (this Metadata) GetID() string { return this.ID }
 
-type Mutation struct {
-}
+type Mutation struct{}
 
 type Note struct {
 	ID            string        `json:"id"`
@@ -2483,8 +2482,7 @@ type PhoneNumberUpdateInput struct {
 	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 }
 
-type Query struct {
-}
+type Query struct{}
 
 type Reminder struct {
 	Metadata  *Metadata  `json:"metadata"`
@@ -3261,20 +3259,26 @@ func (e AgentListenerEvent) MarshalGQL(w io.Writer) {
 type AgentType string
 
 const (
-	AgentTypeWebVisitIdentifier AgentType = "WEB_VISIT_IDENTIFIER"
-	AgentTypeTagSupport         AgentType = "TAG_SUPPORT"
 	AgentTypeIcpQualifier       AgentType = "ICP_QUALIFIER"
+	AgentTypeMeetingKeeper      AgentType = "MEETING_KEEPER"
+	AgentTypeSupportSpotter     AgentType = "SUPPORT_SPOTTER"
+	AgentTypeWebVisitIdentifier AgentType = "WEB_VISIT_IDENTIFIER"
 )
 
 var AllAgentType = []AgentType{
-	AgentTypeWebVisitIdentifier,
-	AgentTypeTagSupport,
 	AgentTypeIcpQualifier,
+	AgentTypeMeetingKeeper,
+	AgentTypeSupportSpotter,
+	AgentTypeWebVisitIdentifier,
 }
 
 func (e AgentType) IsValid() bool {
 	switch e {
-	case AgentTypeWebVisitIdentifier, AgentTypeTagSupport, AgentTypeIcpQualifier:
+	case
+		AgentTypeIcpQualifier,
+		AgentTypeMeetingKeeper,
+		AgentTypeSupportSpotter,
+		AgentTypeWebVisitIdentifier:
 		return true
 	}
 	return false
