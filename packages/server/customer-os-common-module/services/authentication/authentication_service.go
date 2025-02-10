@@ -63,9 +63,11 @@ func (a *authenticationService) CreateUserInTenant(ctx context.Context, txWithPo
 
 	span.LogKV("user_already_exists", false)
 
+	internal := false
 	roles := []string{"USER"}
 
 	if impersonating {
+		internal = true
 		roles = append(roles, "IMPERSONATED")
 	} else {
 		roles = append(roles, "OWNER")
@@ -82,6 +84,7 @@ func (a *authenticationService) CreateUserInTenant(ctx context.Context, txWithPo
 			FirstName: &firstName,
 			LastName:  &lastName,
 			Roles:     common_utils.ToPtr(roles),
+			Internal:  &internal,
 		})
 		if err != nil {
 			return "", err

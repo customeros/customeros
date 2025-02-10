@@ -56,6 +56,13 @@ export class AuthMiddleware {
         username
       );
 
+      if (user.roles.includes("IMPERSONATED")) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized. User is impersonated.",
+        });
+      }
+
       if (!user) {
         return res.status(401).json({
           success: false,
