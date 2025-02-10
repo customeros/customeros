@@ -33,7 +33,7 @@ func InitCapabilities(
 	capabilities = append(capabilities, NewAddMeetingNotesToCompanyCapability(organizationService, markdownService))
 	capabilities = append(capabilities, NewAnalyzeWebSessionCapability(events, postgresRepositories, actionService))
 	capabilities = append(capabilities, NewApplyTagToCompanyCapability(tagService))
-	capabilities = append(capabilities, NewCreateOrganizationCapability(organizationService))
+	capabilities = append(capabilities, NewCreateOrganizationCapability(events, organizationService))
 	capabilities = append(capabilities, NewCreateContactCapability(contactService))
 	capabilities = append(capabilities, NewCreateMarkdownTimelineEventCapability(markdownService))
 	capabilities = append(capabilities, NewEvaluateICPFitCapability(aiService))
