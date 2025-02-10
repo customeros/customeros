@@ -14,66 +14,66 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
-type ApplyTagCapability struct {
+type ApplyTagToCompanyCapability struct {
 	tagService interfaces.TagService
 }
 
-type ApplyTagInput struct {
+type ApplyTagToCompanyInput struct {
 	OrganizationID string `json:"organizationId"`
 }
 
-type ApplyTagConfig struct {
+type ApplyTagToCompanyConfig struct {
 	TagName ConfigSingleValue `json:"tagName"`
 }
 
-func NewApplyTagCapability(tagService interfaces.TagService) *ApplyTagCapability {
-	return &ApplyTagCapability{
+func NewApplyTagToCompanyCapability(tagService interfaces.TagService) *ApplyTagToCompanyCapability {
+	return &ApplyTagToCompanyCapability{
 		tagService: tagService,
 	}
 }
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapability[ApplyTagInput, NoOutput, ApplyTagConfig] = (*ApplyTagCapability)(nil)
+	_ interfaces.AgentCapability[ApplyTagToCompanyInput, NoOutput, ApplyTagToCompanyConfig] = (*ApplyTagToCompanyCapability)(nil)
 )
 
-func (c *ApplyTagCapability) Type() enum.AgentCapability {
-	return enum.CapabilityApplyTag
+func (c *ApplyTagToCompanyCapability) Type() enum.AgentCapability {
+	return enum.CapabilityApplyTagToCompany
 }
 
-func (c *ApplyTagCapability) Name() string {
-	return "Apply a tag"
+func (c *ApplyTagToCompanyCapability) Name() string {
+	return "Apply a tag to company"
 }
 
-func (c *ApplyTagCapability) NewInput() ApplyTagInput {
-	return ApplyTagInput{}
+func (c *ApplyTagToCompanyCapability) NewInput() ApplyTagToCompanyInput {
+	return ApplyTagToCompanyInput{}
 }
 
-func (c *ApplyTagCapability) NewConfig() ApplyTagConfig {
-	return ApplyTagConfig{}
+func (c *ApplyTagToCompanyCapability) NewConfig() ApplyTagToCompanyConfig {
+	return ApplyTagToCompanyConfig{}
 }
 
-func (c *ApplyTagCapability) DefaultConfig() any {
+func (c *ApplyTagToCompanyCapability) DefaultConfig() any {
 	config := c.NewConfig()
 	config.TagName.Value = "Support"
 	return &config
 }
 
-func (c *ApplyTagCapability) ValidateConfig(config ApplyTagConfig) error {
+func (c *ApplyTagToCompanyCapability) ValidateConfig(config ApplyTagToCompanyConfig) error {
 	if config.TagName.Value == "" {
 		return errors.New("Tag not configured")
 	}
 	return nil
 }
 
-func (c *ApplyTagCapability) ValidateInput(input ApplyTagInput) error {
+func (c *ApplyTagToCompanyCapability) ValidateInput(input ApplyTagToCompanyInput) error {
 	if input.OrganizationID == "" {
 		return errors.New("OrganizationID cannot be empty")
 	}
 	return nil
 }
 
-func (c *ApplyTagCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ApplyTagInput, ApplyTagConfig]) (bool, NoOutput, error) {
+func (c *ApplyTagToCompanyCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[ApplyTagToCompanyInput, ApplyTagToCompanyConfig]) (bool, NoOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -107,7 +107,7 @@ func (c *ApplyTagCapability) Execute(ctx context.Context, executionContainer int
 	return true, result, nil
 }
 
-func (c *ApplyTagCapability) applyTag(ctx context.Context, entityType model.EntityType, entityId string, tagName string) error {
+func (c *ApplyTagToCompanyCapability) applyTag(ctx context.Context, entityType model.EntityType, entityId string, tagName string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ApplyTagCapability.applyTag")
 	defer span.Finish()
 	tracing.TagComponentService(span)

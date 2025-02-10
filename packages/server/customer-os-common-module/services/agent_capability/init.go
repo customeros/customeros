@@ -28,10 +28,9 @@ func InitCapabilities(
 	domainService interfaces.DomainService,
 	invoiceService interfaces.InvoiceService,
 ) *AgentCapabilities {
-
 	var capabilities []interfaces.AgentCapabilityUntyped
 	capabilities = append(capabilities, NewAnalyzeWebSessionCapability(events, postgresRepositories, actionService))
-	capabilities = append(capabilities, NewApplyTagCapability(tagService))
+	capabilities = append(capabilities, NewApplyTagToCompanyCapability(tagService))
 	capabilities = append(capabilities, NewCreateOrganizationCapability(organizationService))
 	capabilities = append(capabilities, NewCreateMarkdownTimelineEventCapability(markdownService))
 	capabilities = append(capabilities, NewEvaluateICPFitCapability(aiService))

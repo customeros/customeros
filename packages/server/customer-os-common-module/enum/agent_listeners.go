@@ -8,22 +8,21 @@ import (
 type AgentListenerEvent string
 
 const (
+	EventCompanyIdentified       AgentListenerEvent = "company_identified"
+	EventCompanyNeedsHelp        AgentListenerEvent = "company_needs_help"
 	EventDoesNotNeedHelp         AgentListenerEvent = "does_not_need_help"
 	EventICPFit                  AgentListenerEvent = "icp_fit"
 	EventICPNotAFit              AgentListenerEvent = "icp_not_a_fit"
-	EventNeedsHelp               AgentListenerEvent = "needs_help"
+	EventMeetingLogged           AgentListenerEvent = "meeting_logged"
 	EventNewLead                 AgentListenerEvent = "new_lead"
+	EventNewMeetingRecording     AgentListenerEvent = "new_meeting_recording"
 	EventNewSupportVisit         AgentListenerEvent = "new_support_visit"
 	EventNewWebSession           AgentListenerEvent = "new_web_session"
 	EventRunICPQualifierAgent    AgentListenerEvent = "run_icp_qualifier_agent"
 	EventWebVisitorIdentified    AgentListenerEvent = "web_visitor_identified"
 	EventWebVisitorNotIdentified AgentListenerEvent = "web_visitor_not_identified"
 
-	EventFathomMeetingSummaryCreated AgentListenerEvent = "fathom.meeting_summary.created"
-	EventFlowContactAdded            AgentListenerEvent = "flow.contact.added"
-	EventGrainMeetingSummaryCreated  AgentListenerEvent = "grain.meeting_summary.created"
-	EventIntentSignal                AgentListenerEvent = "generic.intent_signal.detected"
-	NotSet                           AgentListenerEvent = ""
+	EventNotSet AgentListenerEvent = ""
 )
 
 func (e AgentListenerEvent) String() string {
@@ -51,21 +50,21 @@ func (e AgentListenerEvent) ExternalSystem() (system Source, err error) {
 func GetAgentListener(s string) (AgentListenerEvent, error) {
 	switch AgentListenerEvent(s) {
 	case
+		EventCompanyIdentified,
+		EventCompanyNeedsHelp,
 		EventDoesNotNeedHelp,
 		EventICPFit,
 		EventICPNotAFit,
-		EventNeedsHelp,
+		EventMeetingLogged,
 		EventNewLead,
+		EventNewMeetingRecording,
 		EventNewWebSession,
 		EventNewSupportVisit,
+		EventRunICPQualifierAgent,
 		EventWebVisitorIdentified,
 		EventWebVisitorNotIdentified,
 
-		EventRunICPQualifierAgent,
-		EventFathomMeetingSummaryCreated,
-		EventFlowContactAdded,
-		EventGrainMeetingSummaryCreated,
-		EventIntentSignal:
+		EventNotSet:
 
 		return AgentListenerEvent(s), nil
 	default:
