@@ -166,27 +166,6 @@ func (a *agentService) CreateAgent(ctx context.Context, agentType enum.AgentType
 
 		agentListeners = append(agentListeners, *defaultListener)
 	}
-	for _, registryListener := range agentRegistry.CompletionEvents {
-		listenerEvent, err := enum.GetAgentListener(registryListener)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		listenerHandler, err := a.agentListeners.GetListener(listenerEvent)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		defaultListener, err := a.createDefaultListener(ctx, listenerEvent, listenerHandler.Name(), position)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		position++
-
-		agentListeners = append(agentListeners, *defaultListener)
-	}
-	agent.Listeners = agentListeners
 
 	// create agent instance in database
 	newAgent, err := a.postgresRepositories.AgentRepository.Create(ctx, agent)
