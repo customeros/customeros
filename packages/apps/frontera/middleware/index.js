@@ -212,7 +212,7 @@ async function createServer() {
     target: process.env.INTERNAL_API_PATH,
     changeOrigin: true,
     headers: {
-      'X-Openline-API-KEY': process.env.INTERNAL_API_PATH,
+      'X-Openline-API-KEY': process.env.INTERNAL_API_KEY,
     },
     logger: console,
     preserveHeaderKeyCase: true,
