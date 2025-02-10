@@ -42,7 +42,7 @@ func NewIdentifyWebsiteVisitorCapability(
 
 // Compile-time interface check
 var (
-	_ interfaces.AgentCapability[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorOutput, IdentifyWebsiteVisitorConfig] = (*IdentifyWebsiteVisitorCapability)(nil)
+	_ interfaces.AgentCapability[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorOutput, postgres_entity.NoConfig] = (*IdentifyWebsiteVisitorCapability)(nil)
 )
 
 func (c *IdentifyWebsiteVisitorCapability) Type() enum.AgentCapability {
@@ -95,7 +95,7 @@ type IdentifyWebsiteVisitorOutput struct {
 	LinkedInSlug string `json:"linkedinSlug"`
 }
 
-func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IdentifyWebsiteVisitorInput, IdentifyWebsiteVisitorConfig]) (bool, IdentifyWebsiteVisitorOutput, error) {
+func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executionContainer interfaces.TypedExecutionContainer[IdentifyWebsiteVisitorInput, postgres_entity.NoConfig]) (bool, IdentifyWebsiteVisitorOutput, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IdentifyWebsiteVisitorCapability.Execute")
 	defer span.Finish()
 	tracing.TagComponentService(span)
@@ -111,14 +111,6 @@ func (c *IdentifyWebsiteVisitorCapability) Execute(ctx context.Context, executio
 	if err := c.ValidateConfig(executionContainer.ConfigData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "invalid config"))
 		return false, result, err
-	}
-
-	// check if website input hostname configured by current agent
-	err := c.acceptHostname(ctx, executionContainer.InputData.Hostname, executionContainer.ConfigData.Websites.Value)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		tracing.LogObjectAsJson(span, "result", result)
-		return true, result, err
 	}
 
 	domain, linkedInSlug, err := c.identifyIP(ctx, executionContainer.InputData.IPAddress)
