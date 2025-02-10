@@ -8,7 +8,7 @@ import {
   clickLocatorsThatAreVisible,
 } from '../../helper';
 
-export class OrganizationTimelinePage {
+export class CompanyTimelinePage {
   constructor(page: Page) {
     this.page = page;
   }

@@ -1,10 +1,10 @@
 import { Page, expect, TestInfo } from '@playwright/test';
 
+import { CompaniesPage } from './companiesPage';
 import { sideNavSelectors } from '../sideNavSelectors';
 import { SettingsPage } from '../settings/settingsPage';
 import { InvoicesPage } from '../invoices/invoicesPage';
 import { ContactsPage } from '../contacts/contactsPage';
-import { OrganizationsPage } from './organizationsPage';
 import { ContractsPage } from '../contracts/contractsPage';
 import { SettingsAccountsPage } from '../settings/settingsAccounts';
 import {
@@ -13,14 +13,14 @@ import {
 } from '../../helper';
 import { OpportunitiesKanbanPage } from '../opportunitiesKanban/opportunitiesKanbanPage';
 
-export class OrganizationsCmdKPage {
+export class CompanyCmdKPage {
   private page: Page;
 
   constructor(page: Page) {
     this.page = page;
   }
 
-  private sideNavItemCustomersSelected = sideNavSelectors.sideNavItemCustomers;
+  private sideNavItemCompaniesSelected = sideNavSelectors.sideNavItemCompanies;
   private organizationsHub = 'div[data-test="organization-hub"]';
   private organizationsHubSpan = 'div[data-test="organization-hub"] span';
   private organizationHubInput = 'input[data-test="organization-hub-input"]';
@@ -28,9 +28,9 @@ export class OrganizationsCmdKPage {
     'div[data-test="organization-hub-add-new-orgs"]';
   private organizationHubGo = 'div[data-test="organization-hub-go"]';
   private organizationHubGc = 'div[data-test="organization-hub-gc"]';
-  private organizationHubGz = 'div[data-test="organization-hub-gz"]';
   private organizationHubGn = 'div[data-test="organization-hub-gn"]';
   private organizationHubGi = 'div[data-test="organization-hub-gi"]';
+  private organizationHubGf = 'div[data-test="organization-hub-gf"]';
   private organizationHubGr = 'div[data-test="organization-hub-gr"]';
   private organizationHubGs = 'div[data-test="organization-hub-gs"]';
 
@@ -121,35 +121,31 @@ export class OrganizationsCmdKPage {
 
     const organizationHubGo = this.page.locator(this.organizationHubGo);
     const organizationHubGoText = await organizationHubGo.textContent();
-    const navigationItemTextTwo = await navigationItems[1].textContent();
+    const navigationItemTextTwo = await navigationItems[0].textContent();
 
     const organizationHubGc = this.page.locator(this.organizationHubGc);
     const organizationHubGcText = await organizationHubGc.textContent();
-    const navigationItemTextThree = await navigationItems[2].textContent();
-
-    const organizationHubGz = this.page.locator(this.organizationHubGz);
-    const organizationHubGzText = await organizationHubGz.textContent();
-    const navigationItemTextFour = await navigationItems[3].textContent();
+    const navigationItemTextThree = await navigationItems[1].textContent();
 
     const organizationHubGn = this.page.locator(this.organizationHubGn);
     const organizationHubGnText = await organizationHubGn.textContent();
-    const navigationItemTextFive = await navigationItems[4].textContent();
+    const navigationItemTextFive = await navigationItems[2].textContent();
 
     const organizationHubGi = this.page.locator(this.organizationHubGi);
     const organizationHubGiText = await organizationHubGi.textContent();
-    const navigationItemTextSix = await navigationItems[5].textContent();
+    const navigationItemTextSix = await navigationItems[3].textContent();
 
     const organizationHubGr = this.page.locator(this.organizationHubGr);
     const organizationHubGrText = await organizationHubGr.textContent();
-    const navigationItemTextSeven = await navigationItems[6].textContent();
+    const navigationItemTextSeven = await navigationItems[4].textContent();
 
-    // const organizationHubGf = this.page.locator(this.organizationHubGf);
-    // const organizationHubGfText = await organizationHubGf.textContent();
-    // const navigationItemTextEight = await navigationItems[7].textContent();
+    const organizationHubGf = this.page.locator(this.organizationHubGf);
+    const organizationHubGfText = await organizationHubGf.textContent();
+    const navigationItemTextEight = await navigationItems[5].textContent();
 
     const organizationHubGs = this.page.locator(this.organizationHubGs);
     const organizationHubGsText = await organizationHubGs.textContent();
-    const navigationItemTextNine = await navigationItems[8].textContent();
+    const navigationItemTextNine = await navigationItems[6].textContent();
 
     // const organizationHubGd = this.page.locator(this.organizationHubGd);
     // const organizationHubGdText = await organizationHubGd.textContent();
@@ -163,16 +159,13 @@ export class OrganizationsCmdKPage {
       expect
         .soft(organizationHubAddNewOrgsText.trim())
         .toBe('Add new companies...'),
-      expect.soft(navigationItems).toHaveLength(10),
+      expect.soft(navigationItems).toHaveLength(8),
       expect
         .soft(organizationHubGoText.trim())
         .toBe(navigationItemTextTwo.trim()),
       expect
         .soft(organizationHubGcText.trim())
         .toBe(navigationItemTextThree.trim()),
-      expect
-        .soft(organizationHubGzText.trim())
-        .toBe(navigationItemTextFour.trim()),
       expect
         .soft(organizationHubGnText.trim())
         .toBe(navigationItemTextFive.trim()),
@@ -182,9 +175,9 @@ export class OrganizationsCmdKPage {
       expect
         .soft(organizationHubGrText.trim())
         .toBe(navigationItemTextSeven.trim()),
-      // expect
-      //   .soft(organizationHubGfText.trim())
-      //   .toBe(navigationItemTextEight.trim()),
+      expect
+        .soft(organizationHubGfText.trim())
+        .toBe(navigationItemTextEight.trim()),
       expect
         .soft(organizationHubGsText.trim())
         .toBe(navigationItemTextNine.trim()),
@@ -207,7 +200,7 @@ export class OrganizationsCmdKPage {
 
     await this.page
       .locator(this.organizationHubInput)
-      .pressSequentially('go to customer');
+      .pressSequentially('go to companies');
 
     const navigationGroup = this.page
       .locator(this.organizationsHub)
@@ -232,8 +225,8 @@ export class OrganizationsCmdKPage {
     await this.page.keyboard.press('Escape');
   }
 
-  async verifyOrganizationCreation(page: Page, testInfo: TestInfo) {
-    const organizationsPage = new OrganizationsPage(page);
+  async verifyCompanyCreation(page: Page, testInfo: TestInfo) {
+    const organizationsPage = new CompaniesPage(page);
 
     await this.openCmdK();
     await organizationsPage.addOrganization(
@@ -241,12 +234,12 @@ export class OrganizationsCmdKPage {
       false,
       testInfo,
     );
-    await organizationsPage.goToAllOrgs();
+    await organizationsPage.goToCompanies();
   }
 
   async verifyNavigationToOpportunities(page: Page) {
     const opportunitiesPage = new OpportunitiesKanbanPage(page);
-    const organizationsPage = new OrganizationsPage(page);
+    const organizationsPage = new CompaniesPage(page);
 
     await this.verifyNavigationWithKeyboard(
       'KeyO',
@@ -261,16 +254,15 @@ export class OrganizationsCmdKPage {
       opportunitiesPage.sideNavItemOpportunities,
     );
 
-    await organizationsPage.goToAllOrgs();
+    await organizationsPage.goToCompanies();
   }
 
-  async verifyNavigationToCustomers(page: Page) {
-    // const customersPage = new CustomersPage(page);
-    const organizationsPage = new OrganizationsPage(page);
+  async verifyNavigationToCompanies(page: Page) {
+    const organizationsPage = new CompaniesPage(page);
 
     await this.verifyNavigationWithKeyboard(
       'KeyC',
-      this.sideNavItemCustomersSelected,
+      this.sideNavItemCompaniesSelected,
     );
 
     await this.page.goBack();
@@ -278,15 +270,15 @@ export class OrganizationsCmdKPage {
     await this.openCmdK();
     await this.verifyNavigationWithClick(
       this.organizationHubGc,
-      this.sideNavItemCustomersSelected,
+      this.sideNavItemCompaniesSelected,
     );
 
-    await organizationsPage.goToAllOrgs();
+    await organizationsPage.goToCompanies();
   }
 
   async verifyNavigationToContacts(page: Page) {
     const contactsPage = new ContactsPage(page);
-    const organizationsPage = new OrganizationsPage(page);
+    const organizationsPage = new CompaniesPage(page);
 
     await this.verifyNavigationWithKeyboard(
       'KeyN',
@@ -301,12 +293,12 @@ export class OrganizationsCmdKPage {
       contactsPage.sideNavItemAllContacts,
     );
 
-    await organizationsPage.goToAllOrgs();
+    await organizationsPage.goToCompanies();
   }
 
   async verifyNavigationToInvoices(page: Page) {
     const invoicesPage = new InvoicesPage();
-    const organizationsPage = new OrganizationsPage(page);
+    const organizationsPage = new CompaniesPage(page);
 
     await this.verifyNavigationWithKeyboard(
       'KeyI',
@@ -321,12 +313,12 @@ export class OrganizationsCmdKPage {
       invoicesPage.sideNavItemAllUpcoming,
     );
 
-    await organizationsPage.goToAllOrgs();
+    await organizationsPage.goToCompanies();
   }
 
   async verifyNavigationToContracts(page: Page) {
     const contractsPage = new ContractsPage();
-    const organizationsPage = new OrganizationsPage(page);
+    const organizationsPage = new CompaniesPage(page);
 
     await this.verifyNavigationWithKeyboard(
       'KeyR',
@@ -341,7 +333,7 @@ export class OrganizationsCmdKPage {
       contractsPage.sideNavItemAllContracts,
     );
 
-    await organizationsPage.goToAllOrgs();
+    await organizationsPage.goToCompanies();
   }
 
   // async verifyNavigationToFlows(page: Page) {

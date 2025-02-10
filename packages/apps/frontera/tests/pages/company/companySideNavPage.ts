@@ -5,7 +5,7 @@ import {
   clickLocatorsThatAreVisible,
 } from '../../helper';
 
-export class OrganizationSideNavPage {
+export class CompanySideNavPage {
   constructor(page: Page) {
     this.page = page;
   }

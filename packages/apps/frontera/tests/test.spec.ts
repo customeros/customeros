@@ -1,6 +1,6 @@
 // import { test } from '@playwright/test';
 import { test } from './videoFixture';
-import { organizations } from './test-data';
+import { companies } from './test-data';
 // import { FlowPage } from './pages/flows/flowPage';
 // import { ContactsPage } from './pages/contacts/contactsPage';
 // import { FlowsPage } from './pages/flows/flowsPage';
@@ -10,154 +10,140 @@ import { SettingsPage } from './pages/settings/settingsPage';
 import { MailboxesPage } from './pages/settings/mailboxesPage';
 // import { ContactsPage } from './pages/contacts/contactsPage';
 import { CustomersPage } from './pages/customers/customersPage';
+import { CompaniesPage } from './pages/companies/companiesPage';
 import { WinRatesFor } from './pages/opportunitiesKanban/winRates';
 import { KanbanColumns } from './pages/opportunitiesKanban/columns';
-import { OrganizationsPage } from './pages/organizations/organizationsPage';
+import { CompanyCmdKPage } from './pages/companies/companyCmdKPage';
+import { CompanyAboutPage } from './pages/company/companyAboutPage';
+import { CompanyPeoplePage } from './pages/company/companyPeoplePage';
+import { CompanySideNavPage } from './pages/company/companySideNavPage';
+import { CompanyAccountPage } from './pages/company/companyAccountPage';
+import { CompanyTimelinePage } from './pages/company/companyTimelinePage';
 import { SettingsProductsPage } from './pages/settings/settingsProductsPage';
 import { SkuType } from '../src/routes/src/types/__generated__/graphql.types';
-import { OrganizationAboutPage } from './pages/organization/organizationAboutPage';
-import { OrganizationsCmdKPage } from './pages/organizations/organizationsCmdKPage';
-import { OrganizationPeoplePage } from './pages/organization/organizationPeoplePage';
-import { OrganizationAccountPage } from './pages/organization/organizationAccountPage';
-import { OrganizationSideNavPage } from './pages/organization/organizationSideNavPage';
-import { OrganizationTimelinePage } from './pages/organization/organizationTimelinePage';
 import { OpportunitiesKanbanPage } from './pages/opportunitiesKanban/opportunitiesKanbanPage';
 
 test.setTimeout(300000);
 
-test('Convert an Organization to Customer [COS-6448]', async ({
-  page,
-}, testInfo) => {
+test.only('Convert a Company to Customer', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
-  const organizationsPage = new OrganizationsPage(page);
+  const companiesPage = new CompaniesPage(page);
   const customersPage = new CustomersPage(page);
 
   // Login
   await loginPage.login();
-  // Wait for redirect and load All Orgs page
-  await organizationsPage.goToAllOrgs();
+  // Wait for redirect and load Companies page
+  await companiesPage.goToCompanies();
 
-  // Add organization and check new entry
-  const organizationName = await organizationsPage.addNonInitialOrganization(
-    testInfo,
-  );
+  // Add company and check new entry
+  const companyName = await companiesPage.addNonInitialCompany(testInfo);
 
-  await organizationsPage.checkNewOrganizationEntry(organizationName);
+  await companiesPage.checkNewCompanyEntry(companyName);
 
-  // Go to Customers page and ensure no new org
-  await organizationsPage.goToCustomersPage();
+  // Go to Customers page and ensure no new company
+  await companiesPage.goToCustomersPage();
   // await customersPage.ensureNumberOfCustomersExist(0);
-  await customersPage.ensureCustomerExists(organizationName, false);
+  await customersPage.ensureCustomerExists(companyName, false);
 
-  // Go back to All Orgs page
-  await organizationsPage.goToAllOrgsPage();
+  // Go back to Companies page
+  await companiesPage.goToCompaniesPage();
 
-  // Make the organization a customer
-  await organizationsPage.updateOrgToCustomer(organizationName);
+  // Make the company a customer
+  await companiesPage.updateCompanyToCustomer(companyName);
 
   // Go to Customers page and ensure we have a new customer
-  await organizationsPage.goToCustomersPage();
+  await companiesPage.goToCustomersPage();
   // await customersPage.ensureNumberOfCustomersExist(1);
-  await customersPage.ensureCustomerExists(organizationName, true);
+  await customersPage.ensureCustomerExists(companyName, true);
 });
 
-test('Add About information to an Organization [COS-6528]', async ({
-  page,
-}, testInfo) => {
+test('Add About information to a Company', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
-  const organizationsPage = new OrganizationsPage(page);
-  const organizationAboutPage = new OrganizationAboutPage(page);
-  const organizationSideNavPage = new OrganizationSideNavPage(page);
+  const companiesPage = new CompaniesPage(page);
+  const companyAboutPage = new CompanyAboutPage(page);
+  const companySideNavPage = new CompanySideNavPage(page);
 
   // Login
   await loginPage.login();
-  // Wait for redirect and load All Orgs page
-  await organizationsPage.goToAllOrgs();
+  // Wait for redirect and load Companies page
+  await companiesPage.goToCompanies();
 
-  // Add organization and check new entry
-  const organizationName = await organizationsPage.addNonInitialOrganization(
-    testInfo,
-  );
+  // Add company and check new entry
+  const companyName = await companiesPage.addNonInitialCompany(testInfo);
 
-  //Access newly created organization
+  //Access newly created company
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await organizationsPage.goToOrganization(organizationName);
+  await companiesPage.goToCompany(companyName);
 
-  await organizationSideNavPage.goToAbout();
+  await companySideNavPage.goToAbout();
 
   //Check enrichment
-  await organizationAboutPage.enrichOrganization(organizations.create.domain);
-  organizations.create.name = organizationName;
-  await organizationAboutPage.checkEnrichedAboutFields(organizations.create);
+  await companyAboutPage.enrichCompany(companies.create.domain);
+  companies.create.name = companyName;
+  await companyAboutPage.checkEnrichedAboutFields(companies.create);
 
   //Check updates that override the enrichment
-  // await organizationAboutPage.populateAboutFields(organizations.update);
-  // await organizationAboutPage.checkPopulatedAboutFields(organizations.update);
+  // await companyAboutPage.populateAboutFields(companies.update);
+  // await companyAboutPage.checkPopulatedAboutFields(companies.update);
 });
 
-test('Create People entry in an Organization', async ({ page }, testInfo) => {
+test('Create People entry in Company', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
-  const organizationsPage = new OrganizationsPage(page);
-  const organizationPeoplePage = new OrganizationPeoplePage(page);
-  const organizationSideNavPage = new OrganizationSideNavPage(page);
+  const companiesPage = new CompaniesPage(page);
+  const companyPeoplePage = new CompanyPeoplePage(page);
+  const companySideNavPage = new CompanySideNavPage(page);
 
   // Login
   await loginPage.login();
-  // Wait for redirect and load All Orgs page
-  await organizationsPage.goToAllOrgs();
+  // Wait for redirect and load Companies page
+  await companiesPage.goToCompanies();
 
-  // Add organization and check new entry
-  const organizationName = await organizationsPage.addNonInitialOrganization(
-    testInfo,
-  );
+  // Add company and check new entry
+  const companyName = await companiesPage.addNonInitialCompany(testInfo);
 
-  //Access newly created organization
+  //Access newly created company
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await organizationsPage.goToOrganization(organizationName);
+  await companiesPage.goToCompany(companyName);
 
   // Go to People page
-  await organizationSideNavPage.goToPeople();
-  await organizationPeoplePage.createContactFromEmpty();
+  await companySideNavPage.goToPeople();
+  await companyPeoplePage.createContactFromEmpty();
 });
 
-test('Create Timeline entries in an Organization', async ({
-  page,
-}, testInfo) => {
+test('Create Timeline entries in an Company', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
-  const organizationsPage = new OrganizationsPage(page);
-  const organizationSideNavPage = new OrganizationSideNavPage(page);
-  const organizationTimelinePage = new OrganizationTimelinePage(page);
+  const companiesPage = new CompaniesPage(page);
+  const companySideNavPage = new CompanySideNavPage(page);
+  const companyTimelinePage = new CompanyTimelinePage(page);
 
   // Login
   await loginPage.login();
-  // Wait for redirect and load All Orgs page
-  await organizationsPage.goToAllOrgs();
+  // Wait for redirect and load Companies page
+  await companiesPage.goToCompanies();
 
-  // Add organization and check new entry
-  const organizationName = await organizationsPage.addNonInitialOrganization(
-    testInfo,
-  );
+  // Add company and check new entry
+  const companyName = await companiesPage.addNonInitialCompany(testInfo);
 
-  //Access newly created organization
+  //Access newly created company
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await organizationsPage.goToOrganization(organizationName);
+  await companiesPage.goToCompany(companyName);
 
-  // Go to Account page and update org
-  await organizationSideNavPage.goToAccount();
-  await organizationTimelinePage.ensureEmailPermissionPromptIsRedirecting();
+  // Go to Account page and update company
+  await companySideNavPage.goToAccount();
+  await companyTimelinePage.ensureEmailPermissionPromptIsRedirecting();
   await page.goBack();
-  await organizationTimelinePage.ensureLogEntryCanBeAdded();
-  await organizationTimelinePage.ensureReminderCanBeAdded();
+  await companyTimelinePage.ensureLogEntryCanBeAdded();
+  await companyTimelinePage.ensureReminderCanBeAdded();
 });
 
-test('Create Contracts in an Organization', async ({ page }, testInfo) => {
+test('Create Contracts in an Company', async ({ page }, testInfo) => {
   const logoPage = new LogoPage(page);
   const loginPage = new LoginPage(page);
   const settingsPage = new SettingsPage(page);
   const settingsProductsPage = new SettingsProductsPage(page);
-  const organizationsPage = new OrganizationsPage(page);
-  const organizationAccountPage = new OrganizationAccountPage(page);
-  const organizationSideNavPage = new OrganizationSideNavPage(page);
+  const companiesPage = new CompaniesPage(page);
+  const companyAccountPage = new CompanyAccountPage(page);
+  const companySideNavPage = new CompanySideNavPage(page);
 
   // Login
   await loginPage.login();
@@ -167,90 +153,86 @@ test('Create Contracts in an Organization', async ({ page }, testInfo) => {
   await settingsProductsPage.addProduct(SkuType.OneTime, 'o1', '111.99');
 
   await settingsPage.goBack();
-  // Wait for redirect and load All Orgs page
-  await organizationsPage.goToAllOrgs();
+  // Wait for redirect and load Companies page
+  await companiesPage.goToCompanies();
 
-  // Add organization and check new entry
-  const organizationName = await organizationsPage.addNonInitialOrganization(
-    testInfo,
-  );
+  // Add company and check new entry
+  const companyName = await companiesPage.addNonInitialCompany(testInfo);
 
-  //Access newly created organization
+  //Access newly created company
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await organizationsPage.goToOrganization(organizationName);
+  await companiesPage.goToCompany(companyName);
 
-  // Go to Account page and update org
-  await organizationSideNavPage.goToAccount();
-  await organizationAccountPage.updateOrgToCustomer();
+  // Go to Account page and update company
+  await companySideNavPage.goToAccount();
+  await companyAccountPage.updateCompanyToCustomer();
 
-  // Add the first contract to organization and check new entry
-  await organizationAccountPage.addContractEmpty();
-  await organizationAccountPage.addBillingAddress(0);
-  await organizationAccountPage.checkContractsCount(1);
-  await organizationAccountPage.addSLIsToContract(0);
-  await organizationAccountPage.checkSLIsInAccountPanel();
+  // Add the first contract to company and check new entry
+  await companyAccountPage.addContractEmpty();
+  await companyAccountPage.addBillingAddress(0);
+  await companyAccountPage.checkContractsCount(1);
+  await companyAccountPage.addSLIsToContract(0);
+  await companyAccountPage.checkSLIsInAccountPanel();
 
-  // Add the second first contract to organization
-  await organizationAccountPage.addContractNonEmpty();
-  await organizationAccountPage.checkContractsCount(2);
+  // Add the second first contract to company
+  await companyAccountPage.addContractNonEmpty();
+  await companyAccountPage.checkContractsCount(2);
 
   // Delete a contract
-  await organizationAccountPage.deleteContract(1);
-  await organizationAccountPage.checkContractsCount(1);
+  await companyAccountPage.deleteContract(1);
+  await companyAccountPage.checkContractsCount(1);
 });
 
-test('Create Note in an Organization', async ({ page }, testInfo) => {
+test('Create Note in an Company', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
-  const organizationsPage = new OrganizationsPage(page);
-  const organizationAccountPage = new OrganizationAccountPage(page);
-  const organizationSideNavPage = new OrganizationSideNavPage(page);
+  const companiesPage = new CompaniesPage(page);
+  const companyAccountPage = new CompanyAccountPage(page);
+  const companySideNavPage = new CompanySideNavPage(page);
 
   // Login
   await loginPage.login();
-  // Wait for redirect and load All Orgs page
-  await organizationsPage.goToAllOrgs();
+  // Wait for redirect and load Companies page
+  await companiesPage.goToCompanies();
 
-  // Add organization and check new entry
-  const organizationName = await organizationsPage.addNonInitialOrganization(
-    testInfo,
-  );
+  // Add company and check new entry
+  const companyName = await companiesPage.addNonInitialCompany(testInfo);
 
-  //Access newly created organization
+  //Access newly created company
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await organizationsPage.goToOrganization(organizationName);
+  await companiesPage.goToCompany(companyName);
 
-  // Go to Account page and update org
-  await organizationSideNavPage.goToAccount();
-  await organizationAccountPage.addNoteToOrg();
+  // Go to Account page and update company
+  await companySideNavPage.goToAccount();
+  await companyAccountPage.addNoteToCompany();
 });
 
 test('CmdK global menu', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
-  const organizationsPage = new OrganizationsPage(page);
-  const organizationsCmdKPage = new OrganizationsCmdKPage(page);
+  const companiesPage = new CompaniesPage(page);
+  const companiesCmdKPage = new CompanyCmdKPage(page);
 
   await loginPage.login();
-  await organizationsPage.goToAllOrgs();
+  await companiesPage.goToCompanies();
 
-  await organizationsCmdKPage.accessCmdK();
-  await organizationsCmdKPage.verifyFinder();
-  await organizationsCmdKPage.verifyOrganizationCreation(page, testInfo);
-  await organizationsCmdKPage.verifyNavigationToOpportunities(page);
-  await organizationsCmdKPage.verifyNavigationToCustomers(page);
-  await organizationsCmdKPage.verifyNavigationToContacts(page);
-  await organizationsCmdKPage.verifyNavigationToInvoices(page);
-  await organizationsCmdKPage.verifyNavigationToContracts(page);
-  // await organizationsCmdKPage.verifyNavigationToFlows(page);
-  await organizationsCmdKPage.verifyNavigationToSettings(page);
+  await companiesCmdKPage.accessCmdK();
+  await companiesCmdKPage.verifyFinder();
+  await companiesCmdKPage.verifyCompanyCreation(page, testInfo);
+  await companiesCmdKPage.verifyNavigationToOpportunities(page);
+  await companiesCmdKPage.verifyNavigationToCompanies(page);
+  await companiesCmdKPage.verifyNavigationToContacts(page);
+  await companiesCmdKPage.verifyNavigationToInvoices(page);
+  await companiesCmdKPage.verifyNavigationToContracts(page);
+  // await companiesCmdKPage.verifyNavigationToFlows(page);
+  await companiesCmdKPage.verifyNavigationToSettings(page);
 });
 
 // test('Assign contact to flow', async ({ page }, testInfo) => {
 //   const loginPage = new LoginPage(page);
 //   const flowsPage = new FlowsPage(page);
 //   const flowPage = new FlowPage(page);
-//   const organizationsPage = new OrganizationsPage(page);
-//   const organizationPeoplePage = new OrganizationPeoplePage(page);
-//   const organizationSideNavPage = new OrganizationSideNavPage(page);
+//   const companiesPage = new companiesPage(page);
+//   const companyPeoplePage = new companyPeoplePage(page);
+//   const companySideNavPage = new companySideNavPage(page);
 //   const contactsPage = new ContactsPage(page);
 //
 //   //
@@ -263,23 +245,23 @@ test('CmdK global menu', async ({ page }, testInfo) => {
 //   // await flowPage.goToFlows();
 //   await flowsPage.checkNewFlowEntry(flowName, flow.create);
 //
-//   await organizationsPage.goToAllOrgs();
+//   await companiesPage.goToAllCompanies();
 //
-//   // Add organization and check new entry
-//   const organizationName = await organizationsPage.addNonInitialOrganization(
+//   // Add company and check new entry
+//   const companyName = await companiesPage.addNonInitialCompany(
 //     testInfo,
 //   );
 //
-//   //Access newly created organization
+//   //Access newly created company
 //   await new Promise((resolve) => setTimeout(resolve, 1500));
-//   await organizationsPage.goToOrganization(organizationName);
+//   await companiesPage.goToCompany(companyName);
 //
 //   // Go to People page
-//   await organizationSideNavPage.goToPeople();
+//   await companySideNavPage.goToPeople();
 //
-//   const contactName = await organizationPeoplePage.createContactFromEmpty();
+//   const contactName = await companyPeoplePage.createContactFromEmpty();
 //
-//   await organizationSideNavPage.goBack();
+//   await companySideNavPage.goBack();
 //   await contactsPage.waitForPageLoad();
 //   await contactsPage.updateContactFlow(contactName, flowName);
 //   await flowsPage.goToFlows();
@@ -288,15 +270,13 @@ test('CmdK global menu', async ({ page }, testInfo) => {
 
 test('Create opportunities', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
-  const organizationsPage = new OrganizationsPage(page);
+  const companiesPage = new CompaniesPage(page);
   const opportunitiesKanbanPage = new OpportunitiesKanbanPage(page);
 
   await loginPage.login();
-  await organizationsPage.goToAllOrgs();
+  await companiesPage.goToCompanies();
 
-  const organizationName = await organizationsPage.addNonInitialOrganization(
-    testInfo,
-  );
+  const companyName = await companiesPage.addNonInitialCompany(testInfo);
 
   await opportunitiesKanbanPage.goToOpportunitiesKanban();
   await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
@@ -305,10 +285,10 @@ test('Create opportunities', async ({ page }, testInfo) => {
     0,
     0,
   );
-  await opportunitiesKanbanPage.addOpportunity(organizationName);
+  await opportunitiesKanbanPage.addOpportunity(companyName);
 
   const opportunityName = await opportunitiesKanbanPage.updateOpportunityName(
-    organizationName,
+    companyName,
   );
 
   await opportunitiesKanbanPage.setOpportunityArrEstimate(opportunityName);
