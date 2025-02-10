@@ -38,7 +38,7 @@ func NewMailHandler(services *cosapi_services.Services, responseHandler *respons
 
 func (h *MailHandler) SendEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "mail/send", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/mail/send", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 

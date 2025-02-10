@@ -206,6 +206,20 @@ async function createServer() {
     followRedirects: true,
   });
 
+  const internalApiProxy = createProxyMiddleware({
+    pathFilter: '/internal',
+    pathRewrite: { '^/internal': '' },
+    target: process.env.INTERNAL_API_PATH,
+    changeOrigin: true,
+    headers: {
+      'X-Openline-API-KEY': process.env.INTERNAL_API_PATH,
+    },
+    logger: console,
+    preserveHeaderKeyCase: true,
+    followRedirects: true,
+  });
+
+  // deprecated
   const settingsApiProxy = createProxyMiddleware({
     pathFilter: '/sa',
     pathRewrite: { '^/sa': '' },
@@ -219,6 +233,7 @@ async function createServer() {
     followRedirects: true,
   });
 
+  // deprecated
   const userAdminApiProxy = createProxyMiddleware({
     pathFilter: '/ua',
     pathRewrite: { '^/ua': '' },
@@ -232,6 +247,7 @@ async function createServer() {
     followRedirects: true,
   });
 
+  // deprecated
   const fileStorageApiProxy = createProxyMiddleware({
     pathFilter: '/fs',
     pathRewrite: { '^/fs': '' },
@@ -247,6 +263,7 @@ async function createServer() {
 
   app.use(customerOsApiGqlProxy);
   app.use(customerOsApiRestProxy);
+  app.use(internalApiProxy);
   app.use(settingsApiProxy);
   app.use(userAdminApiProxy);
   app.use(fileStorageApiProxy);
