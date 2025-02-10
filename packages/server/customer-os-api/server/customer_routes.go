@@ -16,7 +16,6 @@ const (
 	BillingPath      = "/billing/v1"
 	CustomerBasePath = "/customerbase/v1"
 	EnrichPath       = "/enrich/v1"
-	FlowsPath        = "/flows/v1"
 	MailstackPath    = "/mailstack/v1"
 	OutreachPath     = "/outreach/v1"
 	RevealPath       = "/reveal/v1"
@@ -126,8 +125,8 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 	// webhook admin
 	registerRoute(ctx, r, RouteConfig{
 		method:    "GET",
-		path:      fmt.Sprintf("%s/hooks", FlowsPath),
-		handler:   h.Webhooks.GetActiveWebhooks(CustomerOSAPIURL(), FlowsPath),
+		path:      fmt.Sprintf("%s/hooks", WebhooksPath),
+		handler:   h.Webhooks.GetActiveWebhooks(CustomerOSAPIURL(), WebhooksPath),
 		routeType: RouteCustomer,
 		services:  s,
 		cache:     s.Cache,
@@ -135,8 +134,8 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
-		path:      fmt.Sprintf("%s/hooks", FlowsPath),
-		handler:   h.Webhooks.CreateWebhook(CustomerOSAPIURL(), FlowsPath),
+		path:      fmt.Sprintf("%s/hooks", WebhooksPath),
+		handler:   h.Webhooks.CreateWebhook(CustomerOSAPIURL(), WebhooksPath),
 		routeType: RouteCustomer,
 		services:  s,
 		cache:     s.Cache,
@@ -144,8 +143,8 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "POST",
-		path:      fmt.Sprintf("%s/:tenantId/i/:integrationId/rotate", FlowsPath),
-		handler:   h.Webhooks.RotateWebhook(CustomerOSAPIURL(), FlowsPath),
+		path:      fmt.Sprintf("%s/:tenantId/i/:integrationId/rotate", WebhooksPath),
+		handler:   h.Webhooks.RotateWebhook(CustomerOSAPIURL(), WebhooksPath),
 		routeType: RouteCustomer,
 		services:  s,
 		cache:     s.Cache,
@@ -153,7 +152,7 @@ func registerFlowRoutes(ctx context.Context, r *gin.Engine, s *cosapi_services.S
 
 	registerRoute(ctx, r, RouteConfig{
 		method:    "DELETE",
-		path:      fmt.Sprintf("%s/:tenantId/i/:integrationId", FlowsPath),
+		path:      fmt.Sprintf("%s/:tenantId/i/:integrationId", WebhooksPath),
 		handler:   h.Webhooks.DeactivateWebhook(),
 		routeType: RouteCustomer,
 		services:  s,
