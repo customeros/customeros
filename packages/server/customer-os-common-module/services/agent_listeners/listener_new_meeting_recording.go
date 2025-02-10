@@ -76,9 +76,10 @@ func (l *NewMeetingRecordingListener) DefaultConfig() any {
 	}
 }
 
-func (l *NewMeetingRecordingListener) SubscribedAgents() []enum.AgentType {
+func (l *NewMeetingRecordingListener) ExecutingAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentMeetingKeeper,
+		enum.AgentSupportSpotter,
 	}
 }
 
@@ -107,7 +108,7 @@ func (l *NewMeetingRecordingListener) Handle(ctx context.Context, baseEvent any)
 	}
 
 	if data.Source == enum.SourceUnknown {
-		err := errors.New("Meeging source cannot be unknown")
+		err := errors.New("Meeting source cannot be unknown")
 		tracing.TraceErr(span, err)
 		return err
 	}
@@ -139,15 +140,6 @@ func (l *NewMeetingRecordingListener) handleExecution(ctx context.Context, data 
 
 	var errs error
 	for _, agent := range activeAgents {
-		// get listener config for agent
-		config := NewMeetingRecordingListenerConfig{}
-		agent.GetListenerConfigByType(l.Type(), &config)
-
-		// validate config
-		if config.MeetingSource == enum.SourceUnknown || config.MeetingSource != data.Source {
-			continue
-		}
-
 		// map event data to execution input
 		initialParams, err := utils.StructToMap(data)
 		if err != nil {
@@ -171,7 +163,7 @@ func (l *NewMeetingRecordingListener) lookupActiveAgentsForUser(ctx context.Cont
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByUserAndType(ctx, l.SubscribedAgents())
+	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByUserAndType(ctx, l.ExecutingAgents())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil

@@ -7,7 +7,7 @@ import (
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
+	"go.uber.org/multierr"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
@@ -17,51 +17,49 @@ import (
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
-type IcpNotAFitListener struct {
+type CompanyNeedsHelpListener struct {
 	events.BaseEventListener
 	postgresRepositories *postgres_repository.Repositories
 }
 
 // Compile-time interface check for AgentListenerUntyped
 var (
-	_ interfaces.AgentListenerUntyped = (*IcpNotAFitListener)(nil)
-	_ interfaces.EventListener        = (*IcpNotAFitListener)(nil)
+	_ interfaces.AgentListenerUntyped = (*CompanyNeedsHelpListener)(nil)
+	_ interfaces.EventListener        = (*CompanyNeedsHelpListener)(nil)
 )
 
-func NewIcpNotAFitListener(
+func NewCompanyNeedsHelpListener(
 	logger logger.Logger,
 	postgresRepositories *postgres_repository.Repositories,
-) *IcpNotAFitListener {
-	return &IcpNotAFitListener{
+) *CompanyNeedsHelpListener {
+	return &CompanyNeedsHelpListener{
 		BaseEventListener: events.NewBaseEventListener(
 			logger,
-			events.GetEventType[dto.IcpNotAFit](), // subscribed event
-			events.QueueAgents,                    // listening on Agents queue
+			events.GetEventType[dto.CompanyNeedsHelp](), // subscribed event
+			events.QueueAgents,                          // listening on Agents queue
 		),
 		postgresRepositories: postgresRepositories,
 	}
 }
 
-func (l *IcpNotAFitListener) Type() enum.AgentListenerEvent {
-	return enum.EventICPNotAFit
+func (l *CompanyNeedsHelpListener) Type() enum.AgentListenerEvent {
+	return enum.EventNewSupportVisit
 }
 
-func (l *IcpNotAFitListener) Name() string {
-	return "ICP Not A Fit"
+func (l *CompanyNeedsHelpListener) Name() string {
+	return "New Support Visit"
 }
 
-func (l *IcpNotAFitListener) DefaultConfig() any {
+func (h *CompanyNeedsHelpListener) DefaultConfig() any {
 	return &postgres_entity.NoConfig{}
 }
 
-func (l *IcpNotAFitListener) ExecutingAgents() []enum.AgentType {
-	return []enum.AgentType{
-		enum.AgentICPQualifier,
-	}
+func (h *CompanyNeedsHelpListener) ExecutingAgents() []enum.AgentType {
+	return []enum.AgentType{}
 }
 
-func (l *IcpNotAFitListener) Handle(ctx context.Context, baseEvent any) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpNotAFitListener.Handle")
+func (l *CompanyNeedsHelpListener) Handle(ctx context.Context, baseEvent any) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CompanyNeedsHelpListener.Handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "baseEvent", baseEvent)
@@ -72,22 +70,29 @@ func (l *IcpNotAFitListener) Handle(ctx context.Context, baseEvent any) error {
 		return err
 	}
 
-	data, err := events.DecodeEventData[dto.IcpNotAFit](ctx, event)
+	data, err := events.DecodeEventData[dto.CompanyNeedsHelp](ctx, event)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	return l.handleGoalAchieved(ctx, data.AgentExecutionId)
+	var errs error
+	if data.AgentExecutionId != "" {
+		err = l.handleGoalAchieved(ctx, data.AgentExecutionId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			errs = multierr.Append(errs, err)
+		}
+	}
+
+	return errs
 }
 
-func (l *IcpNotAFitListener) handleGoalAchieved(ctx context.Context, agentExecutionId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "IcpNotAFitListener.handle")
+func (l *CompanyNeedsHelpListener) handleGoalAchieved(ctx context.Context, agentExecutionId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CompanyNeedsHelpListener.handle")
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
-
-	tracing.SetDefaultListenerSpanTags(ctx, span)
-	span.LogFields(log.String("agentExecutionId", agentExecutionId))
+	span.LogKV("agentExecutionId", agentExecutionId)
 
 	var agentExecution *postgres_entity.AgentExecution
 	var err error
@@ -110,7 +115,6 @@ func (l *IcpNotAFitListener) handleGoalAchieved(ctx context.Context, agentExecut
 		tracing.TraceErr(span, err)
 		return err
 	}
-	agentExecution.GoalAchieved = true
 	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, true)
 	if err != nil {
 		tracing.TraceErr(span, err)

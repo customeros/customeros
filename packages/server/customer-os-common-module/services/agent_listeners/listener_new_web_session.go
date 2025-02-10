@@ -2,6 +2,7 @@ package agent_listeners
 
 import (
 	"context"
+
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -88,7 +89,7 @@ func (l *NewWebSessionListener) DefaultConfig() any {
 	return &config
 }
 
-func (l *NewWebSessionListener) SubscribedAgents() []enum.AgentType {
+func (l *NewWebSessionListener) ExecutingAgents() []enum.AgentType {
 	return []enum.AgentType{
 		enum.AgentWebVisitorIdentifier,
 	}
@@ -154,7 +155,7 @@ func (l *NewWebSessionListener) lookupActiveAgents(ctx context.Context) []postgr
 	defer span.Finish()
 	tracing.SetDefaultListenerSpanTags(ctx, span)
 
-	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.SubscribedAgents())
+	agents, err := l.postgresRepositories.AgentRepository.GetActiveConfiguredAgentsByTypes(ctx, l.ExecutingAgents())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil

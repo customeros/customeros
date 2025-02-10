@@ -20,17 +20,17 @@ func InitAgentListeners(
 	agentRunnerService interfaces.AgentRunnerService,
 ) *AgentListeners {
 	var listeners []interfaces.AgentListenerUntyped
+	listeners = append(listeners, NewCompanyIdentifiedListener(logger, postgresRepositories, agentRunnerService))
+	listeners = append(listeners, NewCompanyNeedsHelpListener(logger, postgresRepositories))
 	listeners = append(listeners, NewIcpFitListener(logger, postgresRepositories))
 	listeners = append(listeners, NewIcpNotAFitListener(logger, postgresRepositories))
+	listeners = append(listeners, NewMeetingLoggedListener(logger, postgresRepositories))
 	listeners = append(listeners, NewNewLeadListener(logger, postgresRepositories, agentRunnerService))
-	listeners = append(listeners, NewNewSupportVisitListener(logger, postgresRepositories, agentRunnerService))
+	listeners = append(listeners, NewNewMeetingRecordingListener(logger, postgresRepositories, agentRunnerService))
 	listeners = append(listeners, NewNewWebSessionListener(logger, postgresRepositories, agentRunnerService))
+	listeners = append(listeners, NewRunIcpQualifierAgent(logger, postgresRepositories, agentRunnerService))
 	listeners = append(listeners, NewWebVisitorIdentifiedListener(logger, postgresRepositories))
 	listeners = append(listeners, NewWebVisitorNotIdentifiedListener(logger, postgresRepositories))
-	listeners = append(listeners, NewRunIcpQualifierAgent(logger, postgresRepositories, agentRunnerService))
-	listeners = append(listeners, NewCompanyIdentifiedListener(logger, postgresRepositories))
-	listeners = append(listeners, NewNewMeetingRecordingListener(logger, postgresRepositories, agentRunnerService))
-	listeners = append(listeners, NewMeetingLoggedListener(logger, postgresRepositories))
 
 	agentListeners := AgentListeners{
 		listeners: make(map[enum.AgentListenerEvent]interfaces.AgentListenerUntyped),

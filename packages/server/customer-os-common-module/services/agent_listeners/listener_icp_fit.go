@@ -54,10 +54,8 @@ func (l *IcpFitListener) DefaultConfig() any {
 	return &postgres_entity.NoConfig{}
 }
 
-func (l *IcpFitListener) SubscribedAgents() []enum.AgentType {
-	return []enum.AgentType{
-		enum.AgentICPQualifier,
-	}
+func (l *IcpFitListener) ExecutingAgents() []enum.AgentType {
+	return []enum.AgentType{}
 }
 
 func (l *IcpFitListener) Handle(ctx context.Context, baseEvent any) error {
@@ -78,7 +76,11 @@ func (l *IcpFitListener) Handle(ctx context.Context, baseEvent any) error {
 		return err
 	}
 
-	return l.handleGoalAchieved(ctx, data.AgentExecutionId)
+	if data.AgentExecutionId != "" {
+		return l.handleGoalAchieved(ctx, data.AgentExecutionId)
+	}
+
+	return nil
 }
 
 func (l *IcpFitListener) handleGoalAchieved(ctx context.Context, agentExecutionId string) error {

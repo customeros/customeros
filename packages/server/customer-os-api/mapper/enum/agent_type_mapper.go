@@ -8,10 +8,10 @@ import (
 )
 
 var agentTypeByModel = map[model.AgentType]enum.AgentType{
-	model.AgentTypeWebVisitIdentifier: enum.AgentWebVisitorIdentifier,
 	model.AgentTypeIcpQualifier:       enum.AgentICPQualifier,
 	model.AgentTypeMeetingKeeper:      enum.AgentMeetingKeeper,
 	model.AgentTypeSupportSpotter:     enum.AgentSupportSpotter,
+	model.AgentTypeWebVisitIdentifier: enum.AgentWebVisitorIdentifier,
 }
 
 var agentTypeByValue = utils.ReverseMap(agentTypeByModel)

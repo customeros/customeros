@@ -3,16 +3,18 @@ package agent_listeners
 import (
 	"context"
 	"fmt"
+
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 type WebVisitorNotIdentifiedListener struct {
@@ -52,10 +54,8 @@ func (l *WebVisitorNotIdentifiedListener) DefaultConfig() any {
 	return &postgres_entity.NoConfig{}
 }
 
-func (l *WebVisitorNotIdentifiedListener) SubscribedAgents() []enum.AgentType {
-	return []enum.AgentType{
-		enum.AgentWebVisitorIdentifier,
-	}
+func (l *WebVisitorNotIdentifiedListener) ExecutingAgents() []enum.AgentType {
+	return []enum.AgentType{}
 }
 
 func (l *WebVisitorNotIdentifiedListener) Handle(ctx context.Context, baseEvent any) error {
@@ -76,7 +76,10 @@ func (l *WebVisitorNotIdentifiedListener) Handle(ctx context.Context, baseEvent 
 		return err
 	}
 
-	return l.handleGoalAchieved(ctx, data.AgentExecutionId)
+	if data.AgentExecutionId != "" {
+		return l.handleGoalAchieved(ctx, data.AgentExecutionId)
+	}
+	return nil
 }
 
 func (l *WebVisitorNotIdentifiedListener) handleGoalAchieved(ctx context.Context, agentExecutionId string) error {
@@ -87,12 +90,10 @@ func (l *WebVisitorNotIdentifiedListener) handleGoalAchieved(ctx context.Context
 
 	var agentExecution *postgres_entity.AgentExecution
 	var err error
-	if agentExecutionId != "" {
-		agentExecution, err = l.postgresRepositories.AgentExecutionRepository.GetById(ctx, agentExecutionId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
+	agentExecution, err = l.postgresRepositories.AgentExecutionRepository.GetById(ctx, agentExecutionId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 	if agentExecution == nil {
 		err = fmt.Errorf("agent execution not found")

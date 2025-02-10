@@ -8,5 +8,5 @@ type AgentListenerUntyped interface {
 	Type() enum.AgentListenerEvent
 	Name() string
 	DefaultConfig() any
-	SubscribedAgents() []enum.AgentType
+	ExecutingAgents() []enum.AgentType
 }

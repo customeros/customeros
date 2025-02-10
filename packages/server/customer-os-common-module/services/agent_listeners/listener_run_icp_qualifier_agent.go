@@ -1,14 +1,14 @@
 package agent_listeners
 
 import (
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
+	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
+	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/logger"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
-	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
-	postgres_repository "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/repository"
 )
 
 type RunIcpQualifierAgent struct {
@@ -38,6 +38,12 @@ func NewRunIcpQualifierAgent(
 	}
 }
 
+func (l *RunIcpQualifierAgent) ExecutingAgents() []enum.AgentType {
+	return []enum.AgentType{
+		enum.AgentICPQualifier,
+	}
+}
+
 func (l *RunIcpQualifierAgent) Type() enum.AgentListenerEvent {
 	return enum.EventRunICPQualifierAgent
 }
@@ -48,10 +54,4 @@ func (l *RunIcpQualifierAgent) Name() string {
 
 func (l *RunIcpQualifierAgent) DefaultConfig() any {
 	return &postgres_entity.NoConfig{}
-}
-
-func (l *RunIcpQualifierAgent) SubscribedAgents() []enum.AgentType {
-	return []enum.AgentType{
-		enum.AgentICPQualifier,
-	}
 }
