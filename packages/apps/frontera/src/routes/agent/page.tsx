@@ -9,7 +9,7 @@ import { cn } from '@ui/utils/cn';
 import { Icon, IconName } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
 
-import { Header, configs } from './components';
+import { goals, Header, configs } from './components';
 
 const goalMap = {
   identify_web_visitor:
@@ -73,20 +73,22 @@ export const AgentPage = observer(() => {
 
           <h2 className='mb-2 font-medium text-sm'>It's goal is to</h2>
           <ul className='space-y-1 mb-4'>
-            <div
-              className={cn(
-                'flex items-center px-2 py-1 justify-between rounded-lg select-none',
-              )}
-            >
-              <div className='flex items-center gap-2'>
-                <Icon
-                  stroke='none'
-                  name='dot-single'
-                  className={'text-grayModern-500'}
-                />
-                <p className='text-sm'>{'Unknown'}</p>
-              </div>
-            </div>
+            {agent &&
+              goals[agent?.value.type]?.map((goal) => (
+                <div
+                  key={goal}
+                  className='flex items-center px-2 py-1 justify-between rounded-lg select-none'
+                >
+                  <div className='flex items-center gap-2'>
+                    <Icon
+                      stroke='none'
+                      name='dot-single'
+                      className={'text-grayModern-500'}
+                    />
+                    <p className='text-sm'>{goal}</p>
+                  </div>
+                </div>
+              ))}
           </ul>
 
           <h2 className='mb-2 font-medium text-sm'>It listens for</h2>

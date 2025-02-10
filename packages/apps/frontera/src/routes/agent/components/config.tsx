@@ -1,4 +1,4 @@
-import { CapabilityType, AgentListenerEvent } from '@graphql/types';
+import { AgentType, CapabilityType, AgentListenerEvent } from '@graphql/types';
 
 import {
   EvaluateCompanyIcpFit,
@@ -35,4 +35,10 @@ export const configs: Record<
   [AgentListenerEvent.RunIcpQualifierAgent]: () => <></>,
   [AgentListenerEvent.WebVisitorIdentified]: () => <></>,
   [AgentListenerEvent.WebVisitorNotIdentified]: () => <></>,
+};
+
+export const goals: Record<AgentType, string[]> = {
+  [AgentType.WebVisitIdentifier]: ['Identify companies that visit my website'],
+  [AgentType.IcpQualifier]: ['Qualify companies'],
+  [AgentType.TagSupport]: ['Spot interactions where help might be needed'],
 };
