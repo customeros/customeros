@@ -312,10 +312,9 @@ func (f *agentsRepository) Update(ctx context.Context, agent postgres_entity.Age
 
 	err := f.gormDb.Transaction(func(tx *gorm.DB) error {
 		// Update agent
-		if err := tx.Model(&agent).Omit("Capabilities").Omit("Listeners").Save(&agent).Error; err != nil {
+		if err := tx.Model(&agent).Omit("Capabilities", "Listeners").Save(&agent).Error; err != nil {
 			return err
 		}
-
 		return nil
 	})
 	if err != nil {
@@ -325,11 +324,14 @@ func (f *agentsRepository) Update(ctx context.Context, agent postgres_entity.Age
 
 	// Fetch updated agent with capabilities
 	var updatedAgent postgres_entity.Agent
-	if err := f.gormDb.Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
-		return db.Order("position ASC")
-	}).Preload("Listeners", func(db *gorm.DB) *gorm.DB {
-		return db.Order("position ASC")
-	}).First(&updatedAgent, "id = ?", agent.ID).Error; err != nil {
+	if err := f.gormDb.
+		Preload("Capabilities", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position ASC")
+		}).
+		Preload("Listeners", func(db *gorm.DB) *gorm.DB {
+			return db.Order("position ASC")
+		}).
+		First(&updatedAgent, "id = ?", agent.ID).Error; err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
