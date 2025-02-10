@@ -6,7 +6,7 @@ extend type Query {
 type GlobalCache {
     user:                   User!
     isPlatformOwner:        Boolean!
-    isOwner:                Boolean! #derecated. not used on UI
+    isOwner:                Boolean! #deprecated. not used on UI
     inactiveEmailTokens:    [GlobalCacheEmailToken!]!
     activeEmailTokens:      [GlobalCacheEmailToken!]!
     mailboxes:              [String!]!
