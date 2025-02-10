@@ -43,15 +43,11 @@ export class MailStore {
 
     try {
       this.isLoading = true;
-      await this.transport.http.post(
-        `/cos/internal/v1/mail/send`,
-        decoratedPayload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+      await this.transport.http.post(`/internal/mail/send`, decoratedPayload, {
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+      });
 
       runInAction(() => {
         this.root.ui.toastSuccess(
