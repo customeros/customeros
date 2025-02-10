@@ -135,6 +135,8 @@ export class SessionStore {
         this.value.profile.email = jwtParsed?.profile?.email ?? '';
         this.value.profile.id = jwtParsed?.profile?.id ?? '';
         this.value.campaign = jwtParsed?.campaign ?? '';
+        this.value.profile.workspaceName =
+          jwtParsed?.profile?.workspaceName ?? '';
       });
 
       return;
