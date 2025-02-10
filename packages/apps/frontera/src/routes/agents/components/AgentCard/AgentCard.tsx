@@ -17,11 +17,12 @@ export const AgentCard = ({
   id,
   name,
   icon,
-  color = 'grayModern',
   status,
+  hasError,
+  color = 'grayModern',
 }: AgentCardProps) => {
   const navigate = useNavigate();
-  const tagColor = status === 'ON' ? 'success' : 'error';
+  const tagColor = hasError ? 'error' : status === 'ON' ? 'success' : 'error';
 
   const [ring, bg, iconColor] = colorMap[color];
 
@@ -48,7 +49,13 @@ export const AgentCard = ({
           <TagLabel className='flex items-center gap-1'>
             <Icon
               stroke='none'
-              name={status === 'OFF' ? 'dot-single' : 'dot-live-success'}
+              name={
+                hasError
+                  ? 'dot-single'
+                  : status === 'OFF'
+                  ? 'dot-single'
+                  : 'dot-live-success'
+              }
             />
             {status}
           </TagLabel>

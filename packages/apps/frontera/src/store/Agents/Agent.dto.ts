@@ -72,12 +72,26 @@ export class Agent extends Entity<AgentDatum> {
     this.commit({ syncOnly: true });
   }
 
-  public toPayload(): Omit<AgentDatum, 'createdAt' | 'updatedAt'> {
-    return omit(this.value, ['createdAt', 'updatedAt', 'error']);
+  public toPayload(): Omit<
+    AgentDatum,
+    'createdAt' | 'updatedAt' | 'isConfigured'
+  > {
+    return omit(this.value, [
+      'createdAt',
+      'updatedAt',
+      'error',
+      'isConfigured',
+    ]);
   }
 
   static parseCapabilityConfig(raw: string): CapabilityConfig | null {
     const span = Tracer.span('Agent.parseCapabilityConfig', { raw });
+
+    if (raw === '') {
+      span.end();
+
+      return {};
+    }
 
     const parsed = JSON.parse(raw);
 
@@ -93,10 +107,9 @@ export class Agent extends Entity<AgentDatum> {
         name: 'Unknown',
         tenant: '',
         listeners: [],
-        goalType: '',
-        isConfigured: false,
         capabilities: [],
         goal: '',
+        goalType: '',
         type: AgentType.WebVisitIdentifier,
         icon: '',
         color: '',
@@ -104,6 +117,7 @@ export class Agent extends Entity<AgentDatum> {
         isActive: true,
         flowId: '',
         error: null,
+        isConfigured: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },

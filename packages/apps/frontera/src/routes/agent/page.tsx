@@ -9,7 +9,7 @@ import { cn } from '@ui/utils/cn';
 import { Icon, IconName } from '@ui/media/Icon';
 import { useStore } from '@shared/hooks/useStore';
 
-import { Header, capabilities } from './components';
+import { Header, configs } from './components';
 
 const goalMap = {
   identify_web_visitor:
@@ -32,19 +32,17 @@ export const AgentPage = observer(() => {
     [id],
   );
 
-  const ActiveCapability = useMemo(
+  const ActiveConfig = useMemo(
     () =>
-      usecase.activeCapability
-        ? capabilities[usecase.activeCapability.type]
-        : () => null,
-    [usecase?.activeCapability?.type],
+      usecase.activeConfig ? configs[usecase.activeConfig.type] : () => null,
+    [usecase?.activeConfig?.type],
   );
 
   useEffect(() => {
     if (!queryParams.get('cid')) {
       setQueryParams((params) => {
-        if (!usecase.activeCapability) return params;
-        params.set('cid', usecase.activeCapability?.id);
+        if (!usecase.activeConfig) return params;
+        params.set('cid', usecase.activeConfig?.id);
 
         return params;
       });
@@ -73,7 +71,64 @@ export const AgentPage = observer(() => {
             </p>
           </div>
 
-          <h2 className='mb-2 font-medium text-sm'>This agent will:</h2>
+          <h2 className='mb-2 font-medium text-sm'>It's goal is to</h2>
+          <ul className='space-y-1 mb-4'>
+            <div
+              className={cn(
+                'flex items-center px-2 py-1 justify-between rounded-lg select-none',
+              )}
+            >
+              <div className='flex items-center gap-2'>
+                <Icon
+                  stroke='none'
+                  name='dot-single'
+                  className={'text-grayModern-500'}
+                />
+                <p className='text-sm'>{'Unknown'}</p>
+              </div>
+            </div>
+          </ul>
+
+          <h2 className='mb-2 font-medium text-sm'>It listens for</h2>
+          <ul className='space-y-1 mb-4'>
+            {agent?.value.listeners.map((listener) => (
+              <div
+                key={listener.id}
+                onClick={() => {
+                  if (listener.config.length) {
+                    usecase.setActiveConfig(listener);
+                    navigate(`?lid=${listener.id}`);
+                  }
+                }}
+                className={cn(
+                  'flex items-center px-2 py-1 justify-between rounded-lg select-none',
+                  listener.config.length &&
+                    'hover:bg-grayModern-200 cursor-pointer',
+                  listener.id === usecase?.activeConfig?.id &&
+                    'bg-grayModern-100 hover:bg-grayModern-100',
+                )}
+              >
+                <div className='flex items-center gap-2'>
+                  <Icon
+                    stroke={listener.errors ? 'currentColor' : 'none'}
+                    name={listener.errors ? 'radio-dot' : 'dot-single'}
+                    className={
+                      listener.errors ? 'text-error-500' : 'text-grayModern-500'
+                    }
+                  />
+                  <p className='text-sm'>{listener.name ?? 'Unknown'}</p>
+                </div>
+
+                {listener.config.length > 0 && (
+                  <Icon name='settings-02' className='text-grayModern-500' />
+                )}
+              </div>
+            ))}
+          </ul>
+
+          <h2 className='mb-2 font-medium text-sm'>
+            It can perform these actions
+          </h2>
 
           <ul className='space-y-1'>
             {agent?.value.capabilities.map((capability) => (
@@ -81,7 +136,7 @@ export const AgentPage = observer(() => {
                 key={capability.id}
                 onClick={() => {
                   if (capability.config.length) {
-                    usecase.setActiveCapability(capability);
+                    usecase.setActiveConfig(capability);
                     navigate(`?cid=${capability.id}`);
                   }
                 }}
@@ -89,7 +144,7 @@ export const AgentPage = observer(() => {
                   'flex items-center px-2 py-1 justify-between rounded-lg select-none',
                   capability.config.length &&
                     'hover:bg-grayModern-200 cursor-pointer',
-                  capability.id === usecase?.activeCapability?.id &&
+                  capability.id === usecase?.activeConfig?.id &&
                     'bg-grayModern-100 hover:bg-grayModern-100',
                 )}
               >
@@ -114,9 +169,9 @@ export const AgentPage = observer(() => {
           </ul>
         </div>
 
-        {usecase.activeCapability && (
+        {usecase.activeConfig && (
           <div className='w-[418px] border-r border-r-grayModern-200 px-4 py-3'>
-            <ActiveCapability />
+            <ActiveConfig />
           </div>
         )}
       </div>

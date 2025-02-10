@@ -1,2 +1,2 @@
 export * from './Header/Header';
-export * from './Capabilities';
+export * from './config';

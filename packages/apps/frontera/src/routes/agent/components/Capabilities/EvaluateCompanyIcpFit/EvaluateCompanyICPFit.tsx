@@ -6,7 +6,6 @@ import { EditIcpQualificationCriteriaUsecase } from '@domain/usecases/agents/cap
 import { EditIcpDisqualificationCriteriaUsecase } from '@domain/usecases/agents/capabilities/edit-icp-disqualification-criteria.usecase';
 
 import { Icon } from '@ui/media/Icon';
-import { useStore } from '@shared/hooks/useStore';
 import { Textarea } from '@ui/form/Textarea/Textarea';
 import {
   ScrollAreaRoot,
@@ -18,17 +17,15 @@ import {
 const disqualificationCriteriaUsecase =
   new EditIcpDisqualificationCriteriaUsecase();
 const qualificationCriteriaUsecase = new EditIcpQualificationCriteriaUsecase();
+
 export const EvaluateCompanyIcpFit = observer(() => {
   const { id } = useParams<{ id: string }>();
-  const store = useStore();
 
   useEffect(() => {
-    if (!id || store.agents.value.size === 0) return;
-    disqualificationCriteriaUsecase.setAgentId(id);
-    qualificationCriteriaUsecase.setAgentId(id);
-    disqualificationCriteriaUsecase.init();
-    qualificationCriteriaUsecase.init();
-  }, [id, store.agents.value.size]);
+    if (!id) return;
+    disqualificationCriteriaUsecase.init(id);
+    qualificationCriteriaUsecase.init(id);
+  }, [id]);
 
   return (
     <article className='flex flex-col gap-4 -mr-4'>

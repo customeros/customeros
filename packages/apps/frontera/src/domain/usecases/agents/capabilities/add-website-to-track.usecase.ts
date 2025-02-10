@@ -15,6 +15,7 @@ export class AddWebsiteToTrackUsecase {
   @observable accessor isOpen: boolean = false;
   @observable accessor websites: string[] = [];
   @observable accessor validationError: string = '';
+  @observable accessor websitesError: string = '';
 
   constructor(private agentId: string) {
     this.toggle = this.toggle.bind(this);
@@ -166,6 +167,7 @@ export class AddWebsiteToTrackUsecase {
     }
 
     this.websites = config.websites.value as string[];
+    // this.websitesError = config.websites.error ?? '';
     span.end({
       websites: config.websites.value,
     });

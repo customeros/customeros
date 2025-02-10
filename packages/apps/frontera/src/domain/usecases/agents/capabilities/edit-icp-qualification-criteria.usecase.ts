@@ -25,11 +25,6 @@ export class EditIcpQualificationCriteriaUsecase {
   }
 
   @action
-  setAgentId(agentId: string) {
-    this.agentId = agentId;
-  }
-
-  @action
   setInputValue(val: string) {
     this.inputValue = val;
   }
@@ -61,10 +56,13 @@ export class EditIcpQualificationCriteriaUsecase {
   }
 
   @action
-  init() {
+  init(agentId: string) {
     const span = Tracer.span('EditIcpQualificationCriteriaUsecase.init', {
       inputValue: this.inputValue,
     });
+
+    this.agentId = agentId;
+
     const agent = this.root.agents.getById(this.agentId);
 
     if (!agent) {

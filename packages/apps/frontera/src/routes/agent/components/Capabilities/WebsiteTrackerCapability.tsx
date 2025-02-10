@@ -88,6 +88,17 @@ export const WebsiteTrackerCapability = observer(() => {
             </div>
           ))}
 
+          {usecase.websitesError.length > 0 && (
+            <p className='text-sm text-error-500 ml-2'>
+              <Icon
+                stroke='none'
+                name='dot-single'
+                className='text-error-500 mr-2'
+              />
+              {usecase.websitesError}
+            </p>
+          )}
+
           <Button
             size='xs'
             variant='ghost'
