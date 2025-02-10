@@ -35,7 +35,7 @@ func NewBrowserExtensionHandler(services *cosapi_services.Services, responseHand
 
 func (h *BrowserExtensionHandler) CreateContact() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "Customerbase.CreateContact", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BrowserExtensionHandler.CreateContact", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
@@ -46,12 +46,12 @@ func (h *BrowserExtensionHandler) CreateContact() gin.HandlerFunc {
 			return
 		}
 
-		h.handleJSONRequest(c)
+		h.handleCreateContactJSONRequest(c)
 	}
 }
 
-func (h *BrowserExtensionHandler) handleJSONRequest(c *gin.Context) {
-	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "Customerbase.handleJSONRequest")
+func (h *BrowserExtensionHandler) handleCreateContactJSONRequest(c *gin.Context) {
+	span, _ := opentracing.StartSpanFromContext(c.Request.Context(), "BrowserExtensionHandler.handleCreateContactJSONRequest")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
@@ -64,7 +64,7 @@ func (h *BrowserExtensionHandler) handleJSONRequest(c *gin.Context) {
 			h.responseHandler.HandleError(c, http.StatusBadRequest, &errMessage)
 			return
 		}
-		contactRecord.ContactId = h.processContact(c.Request.Context(), contactRecord)
+		contactRecord.ContactId = h.processCreateContact(c.Request.Context(), contactRecord)
 		resp := customerbase.SingleContactResponse{
 			Contact: contactRecord,
 		}
@@ -73,23 +73,8 @@ func (h *BrowserExtensionHandler) handleJSONRequest(c *gin.Context) {
 	}
 }
 
-func (h *BrowserExtensionHandler) validateContactRecord(record *customerbase.ContactRecord) (error, string) {
-	var errValue string
-	linkedInUrl := strings.TrimSpace(record.LinkedInURL)
-	if linkedInUrl == "" {
-		return errors.New("must provide either email or LinkedIn URL"), errValue
-	}
-
-	if linkedInUrl != "" && !isValidLinkedinContactUrl(linkedInUrl) {
-		errValue = linkedInUrl
-		return errors.New("invalid LinkedIn URL format"), errValue
-	}
-
-	return nil, errValue
-}
-
-func (h *BrowserExtensionHandler) processContact(ctx context.Context, record customerbase.ContactRecord) string {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Customerbase.processContact")
+func (h *BrowserExtensionHandler) processCreateContact(ctx context.Context, record customerbase.ContactRecord) string {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "BrowserExtensionHandler.processCreateContact")
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 	tenant := common.GetTenantFromContext(ctx)
@@ -120,6 +105,21 @@ func (h *BrowserExtensionHandler) processContact(ctx context.Context, record cus
 	return createdContactId
 }
 
+func (h *BrowserExtensionHandler) validateContactRecord(record *customerbase.ContactRecord) (error, string) {
+	var errValue string
+	linkedInUrl := strings.TrimSpace(record.LinkedInURL)
+	if linkedInUrl == "" {
+		return errors.New("must provide either email or LinkedIn URL"), errValue
+	}
+
+	if linkedInUrl != "" && !isValidLinkedinContactUrl(linkedInUrl) {
+		errValue = linkedInUrl
+		return errors.New("invalid LinkedIn URL format"), errValue
+	}
+
+	return nil, errValue
+}
+
 func isValidLinkedinContactUrl(s string) bool {
 	s = strings.TrimSpace(s)
 	if !strings.HasPrefix(s, "http") {
@@ -132,4 +132,76 @@ func isValidLinkedinContactUrl(s string) bool {
 		return false
 	}
 	return matched
+}
+
+func (h *BrowserExtensionHandler) GetContact() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BrowserExtensionHandler.GetContact", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+
+		tenant := common.GetTenantFromContext(ctx)
+		if tenant == "" {
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
+			return
+		}
+
+		// get linked in query param
+		linkedInUrl := c.Query("linkedin")
+		if linkedInUrl == "" {
+			h.responseHandler.HandleError(c, http.StatusBadRequest, utils.StringPtr("linkedin param is required"))
+			return
+		}
+
+		contactFound, contactId, err := h.services.CommonServices.ContactService.CheckContactExistsWithLinkedIn(c.Request.Context(), linkedInUrl, "", "")
+		if err != nil {
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
+
+		if !contactFound {
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
+			return
+		}
+
+		var contactRecord customerbase.ContactRecord
+		contactRecord.ContactId = contactId
+		resp := customerbase.SingleContactResponse{
+			Contact: contactRecord,
+		}
+		h.responseHandler.HandleSuccess(c, resp)
+		return
+	}
+}
+
+func (h *BrowserExtensionHandler) TouchContact() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BrowserExtensionHandler.GetContact", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+
+		tenant := common.GetTenantFromContext(ctx)
+		if tenant == "" {
+			h.responseHandler.HandleError(c, http.StatusNotFound, nil)
+			return
+		}
+
+		// get id path param
+		contactId := c.Param("id")
+		if contactId == "" {
+			h.responseHandler.HandleError(c, http.StatusBadRequest, utils.StringPtr("id param is missing"))
+			return
+		}
+
+		err := h.services.CommonServices.ContactService.TouchContact(c.Request.Context(), nil, contactId)
+		if err != nil {
+			h.responseHandler.HandleError(c, http.StatusInternalServerError, nil)
+			return
+		}
+
+		h.responseHandler.HandleSuccess(c, nil)
+		return
+	}
 }

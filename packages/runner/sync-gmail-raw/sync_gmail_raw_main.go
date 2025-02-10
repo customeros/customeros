@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"github.com/caarlos0/env/v6"
-	"github.com/joho/godotenv"
 	syncGmailRawConfig "github.com/customeros/customeros/packages/runner/sync-gmail-raw/config"
 	localCron "github.com/customeros/customeros/packages/runner/sync-gmail-raw/cron"
 	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/logger"
 	"github.com/customeros/customeros/packages/runner/sync-gmail-raw/service"
 	commonConfig "github.com/customeros/customeros/packages/server/customer-os-common-module/config"
+	"github.com/joho/godotenv"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
 	"os"
