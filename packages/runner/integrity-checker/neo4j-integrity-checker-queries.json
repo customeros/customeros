@@ -309,6 +309,18 @@
         {
           "name": "Country codes instead of names",
           "query": "MATCH (l:Location) WHERE size(l.country) = 2 OR size(l.country) = 3 RETURN count(l)"
+        },
+        {
+          "name": "Missing country names",
+          "query": "MATCH (l:Location) WHERE l.countryCodeA2 <> '' AND l.countryCodeA2 IS NOT NULL AND (l.country IS NULL OR l.country = '') RETURN count(l)"
+        },
+        {
+          "name": "Missing country code A3",
+          "query": "MATCH (l:Location) WHERE l.countryCodeA2 <> '' AND l.countryCodeA2 IS NOT NULL AND (l.countryCodeA3 IS NULL OR l.countryCodeA3 = '') RETURN count(l)"
+        },
+        {
+          "name": "Missing country code A2",
+          "query": "MATCH (l:Location) WHERE l.country <> '' AND l.country IS NOT NULL AND (l.countryCodeA2 IS NULL OR l.countryCodeA2 = '') RETURN count(l)"
         }
       ]
     },
