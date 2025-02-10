@@ -8,13 +8,16 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/common"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/dto"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/interfaces"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/model"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/events"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 )
 
 type ApplyTagToCompanyCapability struct {
+	events     *events.EventsService
 	tagService interfaces.TagService
 }
 
@@ -26,8 +29,9 @@ type ApplyTagToCompanyConfig struct {
 	TagName ConfigSingleValue `json:"tagName"`
 }
 
-func NewApplyTagToCompanyCapability(tagService interfaces.TagService) *ApplyTagToCompanyCapability {
+func NewApplyTagToCompanyCapability(tagService interfaces.TagService, events *events.EventsService) *ApplyTagToCompanyCapability {
 	return &ApplyTagToCompanyCapability{
+		events:     events,
 		tagService: tagService,
 	}
 }
@@ -98,6 +102,14 @@ func (c *ApplyTagToCompanyCapability) Execute(ctx context.Context, executionCont
 	}
 
 	err := c.applyTag(ctx, entityType, entityID, executionContainer.ConfigData.TagName.Value)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return true, result, err
+	}
+
+	err = c.events.Publisher.PublishFanoutEvent(ctx, executionContainer.InputData.OrganizationID, model.ORGANIZATION, dto.CompanyNeedsHelp{
+		AgentExecutionId: executionContainer.AgentExecutionID,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return true, result, err

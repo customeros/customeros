@@ -25,12 +25,7 @@ type NewWebSessionListener struct {
 }
 
 type IdentifyWebsiteVisitorConfig struct {
-	Websites WebsitesConfig `json:"websites"`
-}
-
-type WebsitesConfig struct {
-	Value []string `json:"value"`
-	Error string   `json:"error"`
+	Websites ConfigMultipleValues `json:"websites"`
 }
 
 func (c *IdentifyWebsiteVisitorConfig) Validate() bool {
