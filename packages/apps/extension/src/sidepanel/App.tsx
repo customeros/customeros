@@ -30,23 +30,34 @@ export const App = () => {
       changeInfo: chrome.tabs.TabChangeInfo,
       tab: chrome.tabs.Tab
     ) => {
-      if (changeInfo.url && tab.active && tab.url?.length) {
-        setLinkedInUrl(tab.url.includes("linkedin.com/in") ? tab.url : null);
-        chrome.runtime.sendMessage({ action: "REQUEST_COS_SESSION_DATA" });
+      if (changeInfo.url && tab.active) {
+        updateLinkedInUrlFromTab(tab);
       }
     };
 
-    chrome.tabs.onUpdated.addListener(handleTabUpdate);
+    const handleActiveTabChange = (activeInfo: chrome.tabs.TabActiveInfo) => {
+      chrome.tabs.get(activeInfo.tabId, (tab) => {
+        updateLinkedInUrlFromTab(tab);
+      });
+    };
+
+    const updateLinkedInUrlFromTab = (tab: chrome.tabs.Tab) => {
+      const isLinkedInProfile = tab.url?.includes("linkedin.com/in");
+      setLinkedInUrl(isLinkedInProfile ? tab.url || null : null);
+    };
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const url = tabs.find((tab) => tab.url?.includes("linkedin.com/in"))?.url;
-      setLinkedInUrl(url || null);
+      if (tabs[0]) {
+        updateLinkedInUrlFromTab(tabs[0]);
+      }
     });
 
-    chrome.runtime.sendMessage({ action: "REQUEST_COS_SESSION_DATA" });
+    chrome.tabs.onUpdated.addListener(handleTabUpdate);
+    chrome.tabs.onActivated.addListener(handleActiveTabChange);
 
     return () => {
       chrome.tabs.onUpdated.removeListener(handleTabUpdate);
+      chrome.tabs.onActivated.removeListener(handleActiveTabChange);
     };
   }, []);
 
@@ -109,7 +120,6 @@ export const App = () => {
       };
 
       chrome.runtime.onMessage.addListener(messageHandler);
-      chrome.runtime.sendMessage({ action: "REQUEST_COS_SESSION_DATA" });
     });
 
     if (!sessionData?.apiKey) {
@@ -148,28 +158,6 @@ export const App = () => {
     }
   };
 
-  useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      event.preventDefault();
-      chrome.runtime.sendMessage({
-        action: "openTab",
-        url: "https://app.customeros.ai",
-      });
-    };
-
-    const link = document.getElementById("customerOSLink");
-    if (link) {
-      link.addEventListener("click", handleClick);
-    }
-
-    return () => {
-      const link = document.getElementById("customerOSLink");
-      if (link) {
-        link.removeEventListener("click", handleClick);
-      }
-    };
-  }, []);
-
   return (
     <div className="flex flex-col items-center justify-center h-full p-4">
       <div className="flex items-center flex-col gap-1">
@@ -183,11 +171,40 @@ export const App = () => {
         {!workspaceName && !linkedInUrl && (
           <span className="text-center max-w-[250px]">
             Sign into the{" "}
-            <a id="customerOSLink" href="#" className="underline">
+            <a
+              id="customerOSLink"
+              href="#"
+              className="underline"
+              onClick={() => {
+                chrome.runtime.sendMessage({
+                  action: "openTab",
+                  url: "https://app.customeros.ai",
+                });
+              }}
+            >
               CustomerOS app
             </a>{" "}
             and go to any LinkedIn profile to start adding contacts to your
             workspace
+          </span>
+        )}
+        {!workspaceName && linkedInUrl && (
+          <span className="text-center max-w-[250px] ">
+            Sign into the{" "}
+            <a
+              id="customerOSLink"
+              href="#"
+              className="underline"
+              onClick={() => {
+                chrome.runtime.sendMessage({
+                  action: "openTab",
+                  url: "https://app.customeros.ai",
+                });
+              }}
+            >
+              CustomerOS app
+            </a>{" "}
+            app to start adding contacts to your workspace
           </span>
         )}
         {workspaceName && (
@@ -198,12 +215,7 @@ export const App = () => {
             Go to any LinkedIn profile to instantly add contacts to CustomerOS
           </span>
         )}
-        {!workspaceName && linkedInUrl && (
-          <span className="text-center max-w-[250px] ">
-            Sign into the CustomerOS app to start adding contacts to your
-            workspace
-          </span>
-        )}
+
         {workspaceName && linkedInUrl && (
           <span className="text-center max-w-[250px] ">
             Instantly add LinkedIn contacts to CustomerOS{" "}
