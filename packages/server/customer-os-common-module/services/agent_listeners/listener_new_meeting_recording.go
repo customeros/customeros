@@ -48,8 +48,18 @@ func NewNewMeetingRecordingListener(
 	}
 }
 
-type NewMeegingRecordingListenerConfig struct {
+type NewMeetingRecordingListenerConfig struct {
 	MeetingSource enum.Source
+}
+
+func (l *NewMeetingRecordingListenerConfig) Validate() bool {
+	switch {
+	case l.MeetingSource == enum.SourceFathom:
+		return true
+	case l.MeetingSource == enum.SourceGrain:
+		return true
+	}
+	return false
 }
 
 func (l *NewMeetingRecordingListener) Type() enum.AgentListenerEvent {
@@ -61,7 +71,7 @@ func (l *NewMeetingRecordingListener) Name() string {
 }
 
 func (l *NewMeetingRecordingListener) DefaultConfig() any {
-	return &NewMeegingRecordingListenerConfig{
+	return &NewMeetingRecordingListenerConfig{
 		MeetingSource: enum.SourceUnknown,
 	}
 }
@@ -130,7 +140,7 @@ func (l *NewMeetingRecordingListener) handleExecution(ctx context.Context, data 
 	var errs error
 	for _, agent := range activeAgents {
 		// get listener config for agent
-		config := NewMeegingRecordingListenerConfig{}
+		config := NewMeetingRecordingListenerConfig{}
 		agent.GetListenerConfigByType(l.Type(), &config)
 
 		// validate config

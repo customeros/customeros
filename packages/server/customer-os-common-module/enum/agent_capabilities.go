@@ -13,7 +13,7 @@ const (
 	CapabilityBuildCampaignList                  AgentCapability = "build_campaign_list"
 	CapabilityCheckSupportNeed                   AgentCapability = "check_support_need"
 	CapabilityCollectPayments                    AgentCapability = "collect_payment"
-	CapabilityCreateAndEnrichContact             AgentCapability = "create_and_enrich_contact"
+	CapabilityCreateAndEnrichContact             AgentCapability = "create_and_enrich_contacts"
 	CapabilityCreateAndEnrichCompany             AgentCapability = "create_and_enrich_company"
 	CapabilityCreateMarkdownTimelineEvent        AgentCapability = "create_markdown_timeline_event"
 	CapabilityDetectNewLead                      AgentCapability = "detect_new_lead"

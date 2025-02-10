@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/data_fields"
@@ -23,7 +24,4 @@ type AgentService interface {
 
 type AgentRegistry interface {
 	SyncRegistry(ctx context.Context) error
-}
-
-type AgentEvents interface {
 }
