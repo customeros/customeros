@@ -25,7 +25,7 @@ import { OpportunitiesKanbanPage } from './pages/opportunitiesKanban/opportuniti
 
 test.setTimeout(300000);
 
-test.only('Convert a Company to Customer', async ({ page }, testInfo) => {
+test('Convert a Company to Customer', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const companiesPage = new CompaniesPage(page);
   const customersPage = new CustomersPage(page);
