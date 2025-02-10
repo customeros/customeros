@@ -108,7 +108,6 @@ func (l *IcpFitListener) handleGoalAchieved(ctx context.Context, agentExecutionI
 		tracing.TraceErr(span, err)
 		return err
 	}
-	agentExecution.GoalAchieved = true
 	_, err = l.postgresRepositories.AgentExecutionRepository.Completed(ctx, agentExecution.ID, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
