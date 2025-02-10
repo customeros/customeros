@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_listeners"
 	"net/http"
 	"strings"
 
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/enum"
-	"github.com/customeros/customeros/packages/server/customer-os-common-module/services/agent_capability"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/tracing"
 	"github.com/customeros/customeros/packages/server/customer-os-common-module/utils"
 	postgres_entity "github.com/customeros/customeros/packages/server/customer-os-postgres-repository/entity"
@@ -163,13 +163,13 @@ func (h *WebsiteTrackerEventsHandler) checkAgentForOrigin(ctx context.Context, a
 	defer span.Finish()
 	tracing.TagComponentRest(span)
 
-	for _, capability := range agent.Capabilities {
-		if capability.Type != enum.CapabilityIdentifyWebVisitor {
+	for _, listener := range agent.Listeners {
+		if listener.Type != enum.EventNewWebSession {
 			continue
 		}
 
-		var config agent_capability.IdentifyWebsiteVisitorConfig
-		err := capability.GetConfig(&config)
+		var config agent_listeners.IdentifyWebsiteVisitorConfig
+		err := listener.GetConfig(&config)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return ""
